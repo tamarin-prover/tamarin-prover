@@ -45,6 +45,7 @@ library
       , fclabels
       , mtl
       , pretty
+      , safe
       , syb
       , time
       , transformers

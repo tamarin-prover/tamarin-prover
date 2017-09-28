@@ -1,0 +1,4464 @@
+theory CTA begin
+
+// Function signature and definition of the equational theory E
+
+functions: comb/2, dec/2, enc/2, fst/1, h/1, pair/2, pdec/2, pk/1,
+           plus/2, snd/1, split/2, transform/1
+equations:
+    comb(pdec(c, sk1), pdec(c, sk2)) = dec(c, plus(sk1, sk2)),
+    dec(enc(m, pk(sk)), sk) = m,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    transform(pdec(c, pk)) = dec(c, pk)
+
+rule (modulo E) Get_pk:
+   [ !Pk( Server, Auth, Sibling, pk ) ] --> [ Out( pk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Register:
+   [ Fr( ~x ), Fr( ~y ) ]
+  --[ Register( $Server, $Auth, $Sibling ) ]->
+   [
+   !LtkAuth( $Auth, $Server, ~x ), !LtkSib( $Sibling, $Server, ~y ),
+   !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_LtkA:
+   [ !LtkAuth( $Auth, $Server, ~ltk ) ]
+  --[ LtkRevealA( $Auth, $Server ) ]->
+   [ Out( ~ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_LtkAs:
+   [ !LtkSib( $Sibling, $Server, ~ltk ) ]
+  --[ LtkRevealAs( $Sibling, $Server ) ]->
+   [ Out( ~ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Compromise_Secret_Channel:
+   [ !Secret( $Sibling, pdec(enc(~n, pk), y) ) ]
+  --[ ReadSecret( $Sibling, pdec(enc(~n, pk), y) ) ]->
+   [ Out( pdec(enc(~n, pk), y) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_1:
+   [ !Pk( $Server, $Auth, $Sibling, pk ) ]
+  --[ RequestAuth( $Server, $Auth, $Sibling ) ]->
+   [ Out( pk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Server_1:
+   [ In( pk ), Fr( ~n ), !Pk( $Server, $Auth, $Sibling, pk ) ]
+  --[ InitAuth( $Server, $Auth, $Sibling, enc(~n, pk) ) ]->
+   [ Out( enc(~n, pk) ), Server_1( pk, ~n ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Authenticator_1:
+   [ In( enc(~n, pk) ), !Pk( $Server, $Auth, $Sibling, pk ) ]
+  -->
+   [ Out( enc(~n, pk) ), Authenticator_1( $Auth, enc(~n, pk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Sibling_1:
+   [
+   In( enc(~n, pk) ), !LtkSib( $Sibling, $Server, y ),
+   !Pk( $Server, $Auth, $Sibling, pk )
+   ]
+  --[ Sibling( $Sibling, enc(~n, pk) ) ]->
+   [ !Secret( $Sibling, pdec(enc(~n, pk), y) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Authenticator_2:
+   [
+   !Secret( $Sibling, pdec(enc(~n, pk), y) ),
+   Authenticator_1( $Auth, enc(~n, pk) ), !LtkAuth( $Auth, $Server, x ),
+   !Pk( $Server, $Auth, $Sibling, pk )
+   ]
+  --[ Authenticator( $Auth, enc(~n, pk) ) ]->
+   [ Out( comb(pdec(enc(~n, pk), x), pdec(enc(~n, pk), y)) ) ]
+
+  /*
+  rule (modulo AC) Authenticator_2:
+     [
+     !Secret( $Sibling, pdec(enc(~n, pk), y) ),
+     Authenticator_1( $Auth, enc(~n, pk) ), !LtkAuth( $Auth, $Server, x ),
+     !Pk( $Server, $Auth, $Sibling, pk )
+     ]
+    --[ Authenticator( $Auth, enc(~n, pk) ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. ~n    = ~n.9
+       pk    = pk.9
+       x     = x.9
+       y     = y.9
+       z     = dec(enc(~n.9, pk.9), plus(x.9, y.9))
+    
+    2. ~n    = ~n.11
+       pk    = pk(plus(x.9, x.10))
+       x     = x.9
+       y     = x.10
+       z     = ~n.11
+  */
+
+rule (modulo E) Server_2:
+   [ In( n ), Server_1( pk, n ), !Pk( $Server, $Auth, $Sibling, pk ) ]
+  --[ Auth( $Server, $Auth, $Sibling, enc(n, pk) ) ]->
+   [ Out( 'ok' ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma ClientAuth:
+  exists-trace
+  "∃ Server Auth Sibling #i.
+    (Register( Server, Auth, Sibling ) @ #i) ∧
+    (∃ #j.
+      (RequestAuth( Server, Auth, Sibling ) @ #j) ∧
+      (∃ challenge #k.
+        (InitAuth( Server, Auth, Sibling, challenge ) @ #k) ∧
+        (∃ #l.
+          (Sibling( Sibling, challenge ) @ #l) ∧
+          (∃ #m.
+            (Authenticator( Auth, challenge ) @ #m) ∧
+            (∃ #n.
+              ((Auth( Server, Auth, Sibling, challenge ) @ #n) ∧
+               (¬(∃ #r. LtkRevealA( Auth, Server ) @ #r))) ∧
+              (¬(∃ #t. LtkRevealAs( Sibling, Server ) @ #t)))))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ Server Auth Sibling #i.
+  (Register( Server, Auth, Sibling ) @ #i)
+ ∧
+  ∃ #j.
+   (RequestAuth( Server, Auth, Sibling ) @ #j)
+  ∧
+   ∃ challenge #k.
+    (InitAuth( Server, Auth, Sibling, challenge ) @ #k)
+   ∧
+    ∃ #l.
+     (Sibling( Sibling, challenge ) @ #l)
+    ∧
+     ∃ #m.
+      (Authenticator( Auth, challenge ) @ #m)
+     ∧
+      ∃ #n.
+       (Auth( Server, Auth, Sibling, challenge ) @ #n)
+      ∧
+       (∀ #r. (LtkRevealA( Auth, Server ) @ #r) ⇒ ⊥) ∧
+       (∀ #t. (LtkRevealAs( Sibling, Server ) @ #t) ⇒ ⊥)"
+*/
+simplify
+solve( !Pk( $Server, $Auth, $Sibling, pk ) ▶₀ #j )
+  case Register
+  solve( !Pk( $Server, $Auth, $Sibling, pk ) ▶₂ #k )
+    case Register
+    solve( !LtkSib( $Sibling, $Server.1, y.3 ) ▶₁ #l )
+      case Register
+      solve( !Pk( $Server.1, $Auth.1, $Sibling, pk(plus(~x.2, ~y.2)) ) ▶₂ #l )
+        case Register
+        solve( !Secret( $Sibling.1, pdec(enc(~n, pk(plus(~x.2, ~y.2))), y.4)
+               ) ▶₀ #m )
+          case Sibling_1
+          solve( Authenticator_1( $Auth, enc(~n, pk(plus(~x.2, ~y.2))) ) ▶₁ #m )
+            case Authenticator_1
+            solve( !LtkAuth( $Auth, $Server.1, x.3 ) ▶₂ #m )
+              case Register
+              solve( !Pk( $Server.1, $Auth, $Sibling, pk(plus(~x.2, ~y.2)) ) ▶₃ #m )
+                case Register
+                solve( Server_1( pk(plus(~x.2, ~y.2)), ~n ) ▶₁ #n.1 )
+                  case Server_1
+                  solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x.2, ~y.2)) ) ▶₂ #n.1 )
+                    case Register
+                    solve( !KU( ~n ) @ #vk.2 )
+                      case Authenticator_2
+                      solve( splitEqs(4) )
+                        case split_case_1
+                        solve( !KU( pk(plus(~x.2, ~y.2)) ) @ #vk.1 )
+                          case Client_1
+                          solve( !KU( enc(~n, pk(plus(~x.4, ~y.4))) ) @ #vk.3 )
+                            case Server_1
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Client_Auth_Both_Responds_Or_Either_Revealed:
+  all-traces
+  "∀ S A As t #i.
+    (Auth( S, A, As, t ) @ #i) ⇒
+    (((∃ #j. (Authenticator( A, t ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #r. (LtkRevealA( A, S ) @ #r) ∧ (#r < #i))) ∧
+     ((∃ #k. (Sibling( As, t ) @ #k) ∧ (#k < #i)) ∨
+      (∃ #t.1. (LtkRevealAs( As, S ) @ #t.1) ∧ (#t.1 < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A As t #i.
+  (Auth( S, A, As, t ) @ #i)
+ ∧
+  (((∀ #j. (Authenticator( A, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #r. (LtkRevealA( A, S ) @ #r) ⇒ ¬(#r < #i))) ∨
+   ((∀ #k. (Sibling( As, t ) @ #k) ⇒ ¬(#k < #i)) ∧
+    (∀ #t.1. (LtkRevealAs( As, S ) @ #t.1) ⇒ ¬(#t.1 < #i))))"
+*/
+simplify
+solve( ((∀ #j. (Authenticator( $Auth, enc(n, pk) ) @ #j) ⇒ ¬(#j < #i)) ∧
+        (∀ #r. (LtkRevealA( $Auth, $Server ) @ #r) ⇒ ¬(#r < #i)))  ∥
+       ((∀ #k. (Sibling( $Sibling, enc(n, pk) ) @ #k) ⇒ ¬(#k < #i)) ∧
+        (∀ #t. (LtkRevealAs( $Sibling, $Server ) @ #t) ⇒ ¬(#t < #i))) )
+  case case_1
+  solve( Server_1( pk, n ) ▶₁ #i )
+    case Server_1
+    solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+      case Register
+      solve( !KU( ~n ) @ #vk )
+        case Authenticator_2
+        solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+          case Client_1
+          solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+            case Server_1
+            by contradiction /* from formulas */
+          next
+            case c_enc
+            by contradiction /* cyclic */
+          qed
+        next
+          case Get_pk
+          solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+            case Server_1
+            by contradiction /* from formulas */
+          next
+            case c_enc
+            by contradiction /* cyclic */
+          qed
+        next
+          case c_pk
+          solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+            case c_plus
+            solve( !KU( ~x ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( ~y ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkAs
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( ~y ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkAs
+                solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Reveal_LtkA
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      next
+        case Compromise_Secret_Channel
+        solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+          case Client_1
+          solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+            case c_pdec
+            solve( !KU( ~x.1 ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          qed
+        next
+          case Get_pk
+          solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+            case c_pdec
+            solve( !KU( ~x.1 ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          qed
+        next
+          case c_pk
+          solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+            case c_plus
+            solve( !KU( ~x ) @ #vk.5 )
+              case Authenticator_2
+              solve( !KU( ~y ) @ #vk.6 )
+                case Authenticator_2
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.10 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkAs
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( ~y ) @ #vk.6 )
+                case Authenticator_2
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.10 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.7 )
+                        case c_pdec
+                        solve( !KU( ~x.1 ) @ #vk.10 )
+                          case Authenticator_2
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Compromise_Secret_Channel
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Reveal_LtkA
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.11 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.7 )
+                        case c_pdec
+                        solve( !KU( ~x.1 ) @ #vk.11 )
+                          case Authenticator_2
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Compromise_Secret_Channel
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Reveal_LtkA
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkAs
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.7 )
+                        case c_pdec
+                        solve( !KU( ~x.1 ) @ #vk.9 )
+                          case Authenticator_2
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Compromise_Secret_Channel
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case Reveal_LtkA
+                          solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.9 )
+                            case c_enc
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkA
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      next
+        case Server_1
+        solve( !KU( ~x ) @ #vk.3 )
+          case Authenticator_2
+          solve( !KU( ~y ) @ #vk.4 )
+            case Authenticator_2
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          next
+            case Reveal_LtkAs
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( ~y ) @ #vk.4 )
+            case Authenticator_2
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Reveal_LtkAs
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case Reveal_LtkA
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( Server_1( pk, n ) ▶₁ #i )
+    case Server_1
+    solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+      case Register
+      solve( !KU( ~n ) @ #vk )
+        case Authenticator_2
+        solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+          case Client_1
+          solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+            case Server_1
+            by contradiction /* from formulas */
+          next
+            case c_enc
+            by contradiction /* cyclic */
+          qed
+        next
+          case Get_pk
+          solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+            case Server_1
+            by contradiction /* from formulas */
+          next
+            case c_enc
+            by contradiction /* cyclic */
+          qed
+        next
+          case c_pk
+          solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+            case c_plus
+            solve( !KU( ~x ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( ~y ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( ~y ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( ~y ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case Compromise_Secret_Channel
+        solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+          case Client_1
+          solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+            case c_pdec
+            solve( !KU( ~x.1 ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          qed
+        next
+          case Get_pk
+          solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+            case c_pdec
+            solve( !KU( ~x.1 ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                by contradiction /* from formulas */
+              next
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          qed
+        next
+          case c_pk
+          solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+            case c_plus
+            solve( !KU( ~x ) @ #vk.5 )
+              case Authenticator_2
+              solve( !KU( ~y ) @ #vk.6 )
+                case Authenticator_2
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.10 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( ~y ) @ #vk.6 )
+                case Authenticator_2
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.10 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.11 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            next
+              case Reveal_LtkA
+              solve( !KU( ~y ) @ #vk.6 )
+                case Authenticator_2
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case Server_1
+                      by contradiction /* from formulas */
+                    next
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkAs
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case Server_1
+        solve( !KU( ~x ) @ #vk.3 )
+          case Authenticator_2
+          solve( !KU( ~y ) @ #vk.4 )
+            case Authenticator_2
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          next
+            case Reveal_LtkAs
+            by contradiction /* from formulas */
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( ~y ) @ #vk.4 )
+            case Authenticator_2
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.8 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.9 )
+                  case Authenticator_2
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Reveal_LtkAs
+            by contradiction /* from formulas */
+          qed
+        next
+          case Reveal_LtkA
+          solve( !KU( ~y ) @ #vk.4 )
+            case Authenticator_2
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case Get_pk
+              solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_pk
+              solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                case c_enc
+                by contradiction /* cyclic */
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+              case Client_1
+              solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case Get_pk
+              solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case c_pk
+              solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                case c_pdec
+                solve( !KU( ~x.1 ) @ #vk.7 )
+                  case Authenticator_2
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkA
+                  solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Reveal_LtkAs
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised:
+  all-traces
+  "∀ S A As n #i.
+    (Auth( S, A, As, n ) @ #i) ⇒
+    ((((∃ #j. (Authenticator( A, n ) @ #j) ∧ (#j < #i)) ∧
+       (∃ #k. (Sibling( As, n ) @ #k) ∧ (#k < #i))) ∨
+      ((∃ #r. (LtkRevealA( A, S ) @ #r) ∧ (#r < #i)) ∧
+       (∃ #t. (LtkRevealAs( As, S ) @ #t) ∧ (#t < #i)))) ∨
+     (∃ t #u. ReadSecret( As, t ) @ #u))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A As n #i.
+  (Auth( S, A, As, n ) @ #i)
+ ∧
+  (((∀ #j. (Authenticator( A, n ) @ #j) ⇒ ¬(#j < #i)) ∨
+    (∀ #k. (Sibling( As, n ) @ #k) ⇒ ¬(#k < #i)))) ∧
+  (((∀ #r. (LtkRevealA( A, S ) @ #r) ⇒ ¬(#r < #i)) ∨
+    (∀ #t. (LtkRevealAs( As, S ) @ #t) ⇒ ¬(#t < #i)))) ∧
+  (∀ t #u. (ReadSecret( As, t ) @ #u) ⇒ ⊥)"
+*/
+simplify
+solve( (∀ #j. (Authenticator( $Auth, enc(n, pk) ) @ #j) ⇒ ¬(#j < #i))  ∥
+       (∀ #k. (Sibling( $Sibling, enc(n, pk) ) @ #k) ⇒ ¬(#k < #i)) )
+  case case_1
+  solve( (∀ #r. (LtkRevealA( $Auth, $Server ) @ #r) ⇒ ¬(#r < #i))  ∥
+         (∀ #t. (LtkRevealAs( $Sibling, $Server ) @ #t) ⇒ ¬(#t < #i)) )
+    case case_1
+    solve( Server_1( pk, n ) ▶₁ #i )
+      case Server_1
+      solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+        case Register
+        solve( !KU( ~n ) @ #vk )
+          case Authenticator_2
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case Get_pk
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              next
+                case Reveal_LtkA
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Get_pk
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.8 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkA
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case Server_1
+          solve( !KU( ~x ) @ #vk.3 )
+            case Authenticator_2
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Reveal_LtkA
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( Server_1( pk, n ) ▶₁ #i )
+      case Server_1
+      solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+        case Register
+        solve( !KU( ~n ) @ #vk )
+          case Authenticator_2
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case Get_pk
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Get_pk
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.8 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        next
+          case Server_1
+          solve( !KU( ~x ) @ #vk.3 )
+            case Authenticator_2
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_LtkA
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( (∀ #r. (LtkRevealA( $Auth, $Server ) @ #r) ⇒ ¬(#r < #i))  ∥
+         (∀ #t. (LtkRevealAs( $Sibling, $Server ) @ #t) ⇒ ¬(#t < #i)) )
+    case case_1
+    solve( Server_1( pk, n ) ▶₁ #i )
+      case Server_1
+      solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+        case Register
+        solve( !KU( ~n ) @ #vk )
+          case Authenticator_2
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case Get_pk
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              next
+                case Reveal_LtkA
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Get_pk
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.8 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case Reveal_LtkA
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case Server_1
+          solve( !KU( ~x ) @ #vk.3 )
+            case Authenticator_2
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Reveal_LtkA
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( Server_1( pk, n ) ▶₁ #i )
+      case Server_1
+      solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+        case Register
+        solve( !KU( ~n ) @ #vk )
+          case Authenticator_2
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case Get_pk
+            solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.2 )
+              case Server_1
+              by contradiction /* from formulas */
+            next
+              case c_enc
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.3 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( ~y ) @ #vk.5 )
+                  case Authenticator_2
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                    case Server_1
+                    by contradiction /* from formulas */
+                  next
+                    case c_enc
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        next
+          case Compromise_Secret_Channel
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case Get_pk
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Authenticator_2
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  by contradiction /* from formulas */
+                next
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          next
+            case c_pk
+            solve( !KU( plus(~x, ~y) ) @ #vk.4 )
+              case c_plus
+              solve( !KU( ~x ) @ #vk.5 )
+                case Authenticator_2
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Compromise_Secret_Channel
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.10 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Reveal_LtkA
+                solve( !KU( ~y ) @ #vk.6 )
+                  case Authenticator_2
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.8 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Compromise_Secret_Channel
+                  solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                    case c_pdec
+                    solve( !KU( ~x.1 ) @ #vk.9 )
+                      case Authenticator_2
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Compromise_Secret_Channel
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case Reveal_LtkA
+                      solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                        case Server_1
+                        by contradiction /* from formulas */
+                      next
+                        case c_enc
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                next
+                  case Reveal_LtkAs
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        next
+          case Server_1
+          solve( !KU( ~x ) @ #vk.3 )
+            case Authenticator_2
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~x, pk(plus(~x.2, ~y.2))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          next
+            case Compromise_Secret_Channel
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.8 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~x, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.9 )
+                    case Authenticator_2
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~x, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_LtkA
+            solve( !KU( ~y ) @ #vk.4 )
+              case Authenticator_2
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case Get_pk
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              next
+                case c_pk
+                solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.5 )
+                  case c_enc
+                  by contradiction /* cyclic */
+                qed
+              qed
+            next
+              case Compromise_Secret_Channel
+              solve( !KU( pk(plus(~x, ~y)) ) @ #vk.4 )
+                case Client_1
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case Get_pk
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              next
+                case c_pk
+                solve( !KU( pdec(enc(~y, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.5 )
+                  case c_pdec
+                  solve( !KU( ~x.1 ) @ #vk.7 )
+                    case Authenticator_2
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Compromise_Secret_Channel
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case Reveal_LtkA
+                    solve( !KU( enc(~y, pk(plus(~x.1, ~y.1))) ) @ #vk.7 )
+                      case c_enc
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case Reveal_LtkAs
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Client_Auth_Both_Responds_Or_Both_Revealed:
+  all-traces
+  "∀ S A As n #i.
+    (Auth( S, A, As, n ) @ #i) ⇒
+    (((∃ #j. (Authenticator( A, n ) @ #j) ∧ (#j < #i)) ∧
+      (∃ #k. (Sibling( As, n ) @ #k) ∧ (#k < #i))) ∨
+     ((∃ #r. (LtkRevealA( A, S ) @ #r) ∧ (#r < #i)) ∧
+      (∃ #t. (LtkRevealAs( As, S ) @ #t) ∧ (#t < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A As n #i.
+  (Auth( S, A, As, n ) @ #i)
+ ∧
+  (((∀ #j. (Authenticator( A, n ) @ #j) ⇒ ¬(#j < #i)) ∨
+    (∀ #k. (Sibling( As, n ) @ #k) ⇒ ¬(#k < #i)))) ∧
+  (((∀ #r. (LtkRevealA( A, S ) @ #r) ⇒ ¬(#r < #i)) ∨
+    (∀ #t. (LtkRevealAs( As, S ) @ #t) ⇒ ¬(#t < #i))))"
+*/
+simplify
+solve( (∀ #j. (Authenticator( $Auth, enc(n, pk) ) @ #j) ⇒ ¬(#j < #i))  ∥
+       (∀ #k. (Sibling( $Sibling, enc(n, pk) ) @ #k) ⇒ ¬(#k < #i)) )
+  case case_1
+  solve( (∀ #r. (LtkRevealA( $Auth, $Server ) @ #r) ⇒ ¬(#r < #i))  ∥
+         (∀ #t. (LtkRevealAs( $Sibling, $Server ) @ #t) ⇒ ¬(#t < #i)) )
+    case case_2
+    solve( Server_1( pk, n ) ▶₁ #i )
+      case Server_1
+      solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+        case Register
+        solve( !KU( ~n ) @ #vk )
+          case Compromise_Secret_Channel
+          solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+            case Client_1
+            solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+              case c_pdec
+              solve( !KU( ~x.1 ) @ #vk.4 )
+                case Reveal_LtkA
+                solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                  case Server_1
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Client_Auth_Both_Always_Responds:
+  all-traces
+  "∀ S A As n #i.
+    (Auth( S, A, As, n ) @ #i) ⇒
+    ((∃ #j. (Authenticator( A, n ) @ #j) ∧ (#j < #i)) ∧
+     (∃ #k. (Sibling( As, n ) @ #k) ∧ (#k < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A As n #i.
+  (Auth( S, A, As, n ) @ #i)
+ ∧
+  ((∀ #j. (Authenticator( A, n ) @ #j) ⇒ ¬(#j < #i)) ∨
+   (∀ #k. (Sibling( As, n ) @ #k) ⇒ ¬(#k < #i)))"
+*/
+simplify
+solve( (∀ #j. (Authenticator( $Auth, enc(n, pk) ) @ #j) ⇒ ¬(#j < #i))  ∥
+       (∀ #k. (Sibling( $Sibling, enc(n, pk) ) @ #k) ⇒ ¬(#k < #i)) )
+  case case_1
+  solve( Server_1( pk, n ) ▶₁ #i )
+    case Server_1
+    solve( !Pk( $Server, $Auth, $Sibling, pk(plus(~x, ~y)) ) ▶₂ #i )
+      case Register
+      solve( !KU( ~n ) @ #vk )
+        case Compromise_Secret_Channel
+        solve( !KU( pk(plus(~x, ~y)) ) @ #vk.1 )
+          case Client_1
+          solve( !KU( pdec(enc(~n, pk(plus(~x.1, ~y.1))), ~x.1) ) @ #vk.2 )
+            case c_pdec
+            solve( !KU( ~x.1 ) @ #vk.4 )
+              case Reveal_LtkA
+              solve( !KU( enc(~n, pk(plus(~x.1, ~y.1))) ) @ #vk.4 )
+                case Server_1
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/regression/trace/issue216.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/regression/trace/issue216.spthy
+
+  output:          examples/regression/trace/issue216.spthy.tmp
+  processing time: 13.936184s
+  ClientAuth (exists-trace): verified (16 steps)
+  Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
+  Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)
+  Client_Auth_Both_Responds_Or_Both_Revealed (all-traces): falsified - found trace (11 steps)
+  Client_Auth_Both_Always_Responds (all-traces): falsified - found trace (10 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue216.spthy
+
+  output:          examples/regression/trace/issue216.spthy.tmp
+  processing time: 13.936184s
+  ClientAuth (exists-trace): verified (16 steps)
+  Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
+  Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)
+  Client_Auth_Both_Responds_Or_Both_Revealed (all-traces): falsified - found trace (11 steps)
+  Client_Auth_Both_Always_Responds (all-traces): falsified - found trace (10 steps)
+
+==============================================================================
+*/

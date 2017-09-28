@@ -1,4 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 -- remove the two benign defaults
 
 -- |
@@ -13,6 +16,7 @@ module Data.Color (
     RGB(..)
   , HSV(..)
   , rgbToHex
+  , hexToRGB
   , hsvToHex
 
   -- ** Predefined colors
@@ -36,7 +40,12 @@ module Data.Color (
  -       palettes for reporting various data
  -}
 
-import Numeric (showHex)
+import GHC.Generics     (Generic)
+import Control.DeepSeq  (NFData)
+import Data.Binary      (Binary)
+import Data.Data        (Data)
+import Numeric          (showHex, readHex)
+import Safe             (headMay)
 
 -- import Text.XHtml.Strict
 -- import Text.XHtml.Table
@@ -46,7 +55,7 @@ data RGB a = RGB {
   , rgbG :: !a
   , rgbB :: !a
   }
-  deriving( Eq, Ord )
+  deriving( Eq, Ord, Generic, Data, NFData, Binary )
 
 instance Show a => Show (RGB a) where
   show (RGB r g b) = "RGB("++show r++", "++show g++", "++show b++")"
@@ -138,6 +147,14 @@ rgbToHex (RGB r g b) = ('#':) . showHex' r . showHex' g . showHex' b $ ""
           i :: Int
           i = max 0 (min 255 (floor (256 * f)))
 
+hexToRGB :: RealFrac t => String -> Maybe (RGB t)
+hexToRGB [r1,r2,g1,g2,b1,b2] = do
+    (r,_) <- headMay $ readHex [r1,r2]
+    (g,_) <- headMay $ readHex [g1,g2]
+    (b,_) <- headMay $ readHex [b1,b2]
+    return (RGB (r / 255) (g / 255) (b / 255))
+hexToRGB _ = Nothing
+
 -- | Hexadecimal representation of an HSV value; i.e., of its corresponding RGB
 -- value.
 hsvToHex :: RealFrac t => HSV t -> [Char]
@@ -196,7 +213,7 @@ genColorGroups (ColorParams {
 
 -- | A good default style for the 'genColorGroups' color palette function. The
 -- parameter shifts the hue for the first group.
-colorGroupStyle :: Double -> ColorParams Double
+colorGroupStyle :: RealFrac t => t -> ColorParams t
 colorGroupStyle zeroHue = ColorParams {
     cpScale   = 0.6
   , cpZeroHue = zeroHue
@@ -206,13 +223,13 @@ colorGroupStyle zeroHue = ColorParams {
 
 -- | Build color groups according to the list of group sizes using the default
 -- 'colorGroupStyle' for the function 'genColorGroups'.
-colorGroups :: Double -> [Int] -> [((Int, Int), HSV Double)]
+colorGroups :: RealFrac t => t -> [Int] -> [((Int, Int), HSV t)]
 colorGroups zeroHue = genColorGroups (colorGroupStyle zeroHue)
 
 
 -- | A good light color style for the @genColorGroups@ color palette
 -- function. The parameter shifts the hue for the first group.
-lightColorGroupStyle :: Double -> ColorParams Double
+lightColorGroupStyle :: RealFrac t => t -> ColorParams t
 lightColorGroupStyle zeroHue = ColorParams {
     cpScale   = 0.6
   , cpZeroHue = zeroHue
@@ -223,7 +240,7 @@ lightColorGroupStyle zeroHue = ColorParams {
 -- | Build color groups according to the list of group sizes using the
 -- default light 'lightColorGroupStyle' for the function
 -- 'genColorGroups'.
-lightColorGroups :: Double -> [Int] -> [((Int, Int), HSV Double)]
+lightColorGroups :: RealFrac t => t -> [Int] -> [((Int, Int), HSV t)]
 lightColorGroups zeroHue = genColorGroups (lightColorGroupStyle zeroHue)
 
 

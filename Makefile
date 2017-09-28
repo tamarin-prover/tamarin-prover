@@ -82,9 +82,6 @@ JKL3=JKL_TS3_2004_KI_wPFS.spthy JKL_TS3_2008_KI_wPFS.spthy
 UM=UM_wPFS.spthy UM_PFS.spthy
 
 
-TMPRES=case-studies/temp-analysis.spthy
-TMPOUT=case-studies/temp-output.spthy
-
 CSF12_CASE_STUDIES=$(JKL1) $(JKL2) $(KEA) $(NAXOS) $(UM) $(STS) $(SDH) $(KAS) $(DH2)
 CSF12_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf12/,$(CSF12_CASE_STUDIES)))
 
@@ -108,15 +105,16 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	mkdir -p case-studies/post17
+	mkdir -p case-studies/regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 
 ## Observational Equivalence
@@ -127,29 +125,31 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
 	mkdir -p case-studies/post17
+	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 # individual diff-based precomputed (no --prove) case studies
 case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
+	mkdir -p case-studies/regression/diff
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $@
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 CCS15_CASE_STUDIES=DDH.spthy  probEnc.spthy  rfid-feldhofer.spthy
 CCS15_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/ccs15/,$(CCS15_CASE_STUDIES)))
@@ -163,14 +163,18 @@ CCS15_TARGETS= $(CCS15_CS_TARGETS) $(CCS15_PCS_TARGETS)
 ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
+
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy
+REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
+
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
-TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES)))
+TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES))) $(REGRESSION_OBSEQ_TARGETS)
 
 OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
 
 #Observational equivalence test case studies:
 obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/features/equivalence/*.spthy case-studies/regression/diff/*.spthy
 
 #Observational equivalence case studies with CCS15
 obseq-case-studies:	$(OBSEQ_TARGETS)
@@ -247,7 +251,7 @@ AKE_BP_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/ake/bi
 
 # case studies
 ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/ake/dh/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/ake/bilinear/*.spthy
 
 
 ## Features
@@ -261,12 +265,19 @@ FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(F
 features-case-studies:	$(FEATURES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
+## Regression (old issues)
+##########################
+
+REGRESSION_CASE_STUDIES=issue216.spthy
+
+REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace/,$(REGRESSION_CASE_STUDIES)))
+
+# case studies
+regression-case-studies:	$(REGRESSION_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/regression/trace/*.spthy
 
 ## SAPIC
 ########
-
-TMPRESSAPIC=case-studies-sapic/temp-analysis.sapic
-TMPOUTSAPIC=case-studies-sapic/temp-output.spthy
 
 # sapic case studies
 case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
@@ -286,10 +297,10 @@ case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
 	mkdir -p case-studies-sapic/SCADA
 	mkdir -p case-studies-sapic/statVerifLeftRight
 	mkdir -p case-studies-sapic/Yubikey
-	$(SAPIC) $< $(TMPRESSAPIC) > $(TMPOUTSAPIC)
-	cat $(TMPOUTSAPIC) >>$(TMPRESSAPIC)
-	mv $(TMPRESSAPIC) $@
-	\rm -f $(TMPOUTSAPIC)
+	$(SAPIC) $< $<.tmp > $<.out
+	cat $<.out >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 SAPIC_CASE_STUDIES=basic/channels1.sapic basic/channels2.sapic basic/channels3.sapic basic/design-choices.sapic basic/exclusive-secrets.sapic basic/no-replication.sapic basic/replication.sapic  basic/running-example.sapic \
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.sapic encWrapDecUnwrap/encwrapdecunwrap.sapic \
@@ -330,14 +341,14 @@ case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAM
 	mkdir -p case-studies/sapic/SCADA
 	mkdir -p case-studies/sapic/fairexchange-mini
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$(TMPRES) >$(TMPOUT)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
-	echo "\n/* Output" >>$(TMPRES)
-	cat $(TMPOUT) >>$(TMPRES)
-	echo "*/" >>$(TMPRES)
-	mv $(TMPRES) $(subst case-studies,case-studies/sapic,$@)
-	\rm -f $(TMPOUT)
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $(subst case-studies,case-studies/sapic,$@)
+	\rm -f $<.out
 
 SAPIC_TAMARIN_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/running-example.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
@@ -364,7 +375,7 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/

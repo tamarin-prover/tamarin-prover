@@ -83,7 +83,7 @@ inferVersionFromGit version0 = do
   return version0
 
 {-
--- | Helper for replacing first occurence of character by another one.
+-- | Helper for replacing first occurrence of character by another one.
 replaceFirst :: Eq a => a -> a -> [a] -> [a]
 replaceFirst _ _ [] = []
 replaceFirst o r (x:xs) | o == x    = r : xs

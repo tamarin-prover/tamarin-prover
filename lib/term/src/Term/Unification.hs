@@ -15,6 +15,14 @@ module Term.Unification (
   , unifyLTermFactored
   , unifyLNTermFactored
 
+  -- * Unification without AC
+  , unifyLTermNoAC
+  , unifyLNTermNoAC
+  , unifiableLNTermsNoAC
+
+  , unifyLTermFactoredNoAC
+  , unifyLNTermFactoredNoAC
+
   -- * matching modulo AC
   -- ** Constructing matching problems
   , matchLVar
@@ -124,6 +132,44 @@ unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
 flattenUnif :: IsConst c => (LSubst c, [LSubstVFresh c]) -> [LSubstVFresh c]
 flattenUnif (subst, substs) = 
     (\res -> trace (show ("flattenUnif",subst, substs,res )) res) $ map (`composeVFresh` subst) substs
+
+-- Unification without AC
+----------------------------------------------------------------------
+
+-- | @unifyLTermFactoredAC sortOf eqs@ returns a complete set of unifiers for @eqs@ for terms without AC symbols.
+unifyLTermFactoredNoAC :: (IsConst c , Show (Lit c LVar))
+                   => (c -> LSort)
+                   -> [Equal (LTerm c)]
+                   -> [(SubstVFresh c LVar)]
+unifyLTermFactoredNoAC sortOf eqs = (\res -> trace (unlines $ ["unifyLTermFactoredNoAC: "++ show eqs, "result = "++  show res]) res) $ do
+    solve $ execRWST unif sortOf M.empty
+  where
+    unif = sequence [ unifyRaw t p | Equal t p <- eqs ]
+    solve Nothing         = []
+    solve (Just (m, []))  = [freeToFreshRaw (substFromMap m)]
+    -- if delayed AC unifications occur, we fail
+    solve (Just _     )   = error "No AC unification, but AC symbol found."
+
+
+-- | @unifyLNTermFactoredNoAC sortOf eqs@ returns a complete set of unifiers for @eqs@ for terms without AC symbols.
+unifyLNTermFactoredNoAC :: [Equal LNTerm]
+                    -> [(SubstVFresh Name LVar)]
+unifyLNTermFactoredNoAC = unifyLTermFactoredNoAC sortOfName
+
+-- | @unifyLNTermNoAC eqs@ returns a complete set of unifiers for @eqs@  for terms without AC symbols.
+unifyLTermNoAC :: (IsConst c , Show (Lit c LVar))
+           => (c -> LSort)
+           -> [Equal (LTerm c)]
+           -> [SubstVFresh c LVar]
+unifyLTermNoAC sortOf eqs = unifyLTermFactoredNoAC sortOf eqs
+
+-- | @unifyLNTermNoAC eqs@ returns a complete set of unifiers for @eqs@  for terms without AC symbols.
+unifyLNTermNoAC :: [Equal LNTerm] -> [SubstVFresh Name LVar]
+unifyLNTermNoAC = unifyLTermNoAC sortOfName
+
+-- | 'True' iff the terms are unifiable.
+unifiableLNTermsNoAC :: LNTerm -> LNTerm -> Bool
+unifiableLNTermsNoAC t1 t2 = not $ null $ unifyLNTermNoAC [Equal t1 t2]
 
 -- Matching modulo AC
 ----------------------------------------------------------------------

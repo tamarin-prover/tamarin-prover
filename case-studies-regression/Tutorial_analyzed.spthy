@@ -236,8 +236,8 @@ analyzing: examples/Tutorial.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/Tutorial.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.187935s
+  output:          examples/Tutorial.spthy.tmp
+  processing time: 0.201014s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -250,8 +250,8 @@ summary of summaries:
 
 analyzed: examples/Tutorial.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.187935s
+  output:          examples/Tutorial.spthy.tmp
+  processing time: 0.201014s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

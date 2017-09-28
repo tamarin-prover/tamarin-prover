@@ -1,0 +1,3264 @@
+theory issue223 begin
+
+// Function signature and definition of the equational theory E
+
+functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
+equations:
+    commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
+    fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
+    fst(<x.1, x.2>) = x.1,
+    open(commit(ni, r, pk(sk)), r, sk) = ni,
+    open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Attack3:
+   [ Fr( ~ni1 ), Fr( ~rnd1 ), Fr( ~ltkV1 ) ]
+  -->
+   [
+   Out( commit(~ni1, ~rnd1, pk(~ltkV1)) ),
+   Out( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ), Out( ~ltkV1 )
+   ]
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Attack3
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_0_open
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( commit(ni, r, pk(sk)) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case commit
+        by step( solve( !KU( ~rnd1 ) @ #vk ) )
+      next
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case commit
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+          next
+            case Attack3_case_2
+            by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+          qed
+        next
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case commit
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+            next
+              case Attack3_case_2
+              by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+            qed
+          next
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case commit
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+              next
+                case Attack3_case_2
+                by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+              qed
+            next
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case commit
+                step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+                next
+                  case Attack3_case_2
+                  by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+                qed
+              next
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( commit(ni, r, pk(sk)) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case commit
+        by step( solve( !KU( ~rnd1 ) @ #vk ) )
+      next
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case commit
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+          next
+            case Attack3_case_2
+            by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+          qed
+        next
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case commit
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+            next
+              case Attack3_case_2
+              by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+            qed
+          next
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case commit
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+              next
+                case Attack3_case_2
+                by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+              qed
+            next
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case commit
+                step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+                next
+                  case Attack3_case_2
+                  by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+                qed
+              next
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_1_commit
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+                  case c_pk
+                  step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+                case c_pk
+                step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+              case c_pk
+              step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ni1 ) @ #vk ) )
+          case Attack3_case_1
+          by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+        next
+          case Attack3_case_2
+          step( solve( !KU( pk(~ltkV1) ) @ #vk.1 ) )
+            case c_pk
+            step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+                  case c_pk
+                  step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+                case c_pk
+                step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+              case c_pk
+              step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ni1 ) @ #vk ) )
+          case Attack3_case_1
+          by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+        next
+          case Attack3_case_2
+          step( solve( !KU( pk(~ltkV1) ) @ #vk.1 ) )
+            case c_pk
+            step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_1_fake
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ni1 ) @ #vk ) )
+          case Attack3_case_1
+          by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ltkV1 ) @ #vk.1 ) )
+            case Attack3
+            step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+              case Attack3_case_1
+              MIRRORED
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_3
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_4
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_5
+              by step( contradiction /* cyclic */ )
+            next
+              case c_commit
+              by step( contradiction /* cyclic */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ni1 ) @ #vk ) )
+          case Attack3_case_1
+          by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ltkV1 ) @ #vk.1 ) )
+            case Attack3
+            step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+              case Attack3_case_1
+              MIRRORED
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_3
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_4
+              by step( contradiction /* cyclic */ )
+            next
+              case Attack3_case_5
+              by step( contradiction /* cyclic */ )
+            next
+              case c_commit
+              by step( contradiction /* cyclic */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_1_open
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ltkV1 ) @ #vk.1 ) )
+          case Attack3
+          step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.1 ) )
+            case Attack3_case_1
+            MIRRORED
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+            next
+              case Attack3_case_2
+              MIRRORED
+            qed
+          next
+            case Attack3_case_3
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case Attack3_case_4
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case Attack3_case_5
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case c_commit
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( fake(ni1, r, sk, ni2) ) ▶₀ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            next
+              case d_1_open
+              by step( contradiction /* forbidden chain */ )
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            by step( contradiction /* forbidden chain */ )
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          by step( contradiction /* forbidden chain */ )
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case fake
+        step( solve( !KU( ~ltkV1 ) @ #vk.1 ) )
+          case Attack3
+          step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.1 ) )
+            case Attack3_case_1
+            MIRRORED
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+            next
+              case Attack3_case_2
+              MIRRORED
+            qed
+          next
+            case Attack3_case_3
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case Attack3_case_4
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case Attack3_case_5
+            step( solve( !KU( ~ni1 ) @ #vk.3 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          next
+            case c_commit
+            step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+            next
+              case Attack3_case_2
+              by step( contradiction /* cyclic */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case commit
+        step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk ) )
+          case Attack3_case_1
+          MIRRORED
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_3
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_4
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_5
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case c_commit
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        qed
+      next
+        case d_0_open
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_ni1
+          by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+        qed
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case commit
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+              case c_pk
+              step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  MIRRORED
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_0_open
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case Var_fresh_ni1
+            step( solve( !KU( ~ni1 ) @ #vk ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+            next
+              case Attack3_case_2
+              by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+            qed
+          qed
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case commit
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( pk(~ltkV1) ) @ #vk.4 ) )
+                case c_pk
+                step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_0_open
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case Var_fresh_ni1
+              step( solve( !KU( ~ni1 ) @ #vk ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+              next
+                case Attack3_case_2
+                by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+              qed
+            qed
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case commit
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( pk(~ltkV1) ) @ #vk.5 ) )
+                  case c_pk
+                  step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case d_0_open
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case Var_fresh_ni1
+                step( solve( !KU( ~ni1 ) @ #vk ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+                next
+                  case Attack3_case_2
+                  by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+                qed
+              qed
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case commit
+                step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( pk(~ltkV1) ) @ #vk.6 ) )
+                    case c_pk
+                    step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                      case Attack3
+                      step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                        case Attack3_case_1
+                        MIRRORED
+                      next
+                        case Attack3_case_2
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_3
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_4
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_5
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case c_commit
+                        by step( contradiction /* cyclic */ )
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case d_0_open
+                step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
+                  case Var_fresh_ni1
+                  step( solve( !KU( ~ni1 ) @ #vk ) )
+                    case Attack3_case_1
+                    by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                  next
+                    case Attack3_case_2
+                    by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                  qed
+                qed
+              qed
+            next
+              case d_1_open
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case Var_msg_2_ni3
+                step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                    case Attack3_case_1
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_2
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_4
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case c_fake
+                    by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case Var_msg_1_ni3
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_4
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case c_fake
+                  by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case Var_msg_ni3
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                case Attack3_case_1
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  MIRRORED
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_2
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_4
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case c_fake
+                by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_ni1
+          step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+            case Attack3
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case fake
+        step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ) @ #vk ) )
+          case Attack3_case_1
+          MIRRORED
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case Attack3_case_3
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case Attack3_case_4
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case c_fake
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          next
+            case Attack3_case_2
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_fresh_ltkV1
+        step( solve( !KU( ~ltkV1 ) @ #vk ) )
+          case Attack3
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Attack3_case_1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case commit
+        step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk ) )
+          case Attack3_case_1
+          MIRRORED
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_3
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_4
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case Attack3_case_5
+          step( solve( !KU( ~ni1 ) @ #vk.2 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        next
+          case c_commit
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          next
+            case Attack3_case_2
+            by step( contradiction /* cyclic */ )
+          qed
+        qed
+      next
+        case d_0_open
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_ni1
+          by step( solve( !KU( ~rnd1 ) @ #vk.1 ) )
+        qed
+      qed
+    next
+      case Attack3_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_1_commit
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case commit
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( pk(~ltkV1) ) @ #vk.2 ) )
+              case c_pk
+              step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  MIRRORED
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_0_open
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case Var_fresh_ni1
+            step( solve( !KU( ~ni1 ) @ #vk ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+            next
+              case Attack3_case_2
+              by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+            qed
+          qed
+        qed
+      next
+        case d_1_fake
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case d_1_commit
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case commit
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( pk(~ltkV1) ) @ #vk.4 ) )
+                case c_pk
+                step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_0_open
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case Var_fresh_ni1
+              step( solve( !KU( ~ni1 ) @ #vk ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+              next
+                case Attack3_case_2
+                by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+              qed
+            qed
+          qed
+        next
+          case d_1_fake
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case d_1_commit
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case commit
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( pk(~ltkV1) ) @ #vk.5 ) )
+                  case c_pk
+                  step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case d_0_open
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case Var_fresh_ni1
+                step( solve( !KU( ~ni1 ) @ #vk ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+                next
+                  case Attack3_case_2
+                  by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+                qed
+              qed
+            qed
+          next
+            case d_1_fake
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case d_1_commit
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case commit
+                step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( pk(~ltkV1) ) @ #vk.6 ) )
+                    case c_pk
+                    step( solve( !KU( ~ltkV1 ) @ #vk.3 ) )
+                      case Attack3
+                      step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                        case Attack3_case_1
+                        MIRRORED
+                      next
+                        case Attack3_case_2
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_3
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_4
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case Attack3_case_5
+                        by step( contradiction /* cyclic */ )
+                      next
+                        case c_commit
+                        by step( contradiction /* cyclic */ )
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case d_0_open
+                step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
+                  case Var_fresh_ni1
+                  step( solve( !KU( ~ni1 ) @ #vk ) )
+                    case Attack3_case_1
+                    by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                  next
+                    case Attack3_case_2
+                    by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                  qed
+                qed
+              qed
+            next
+              case d_1_open
+              step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                case Var_msg_2_ni3
+                step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                  case Attack3_case_1
+                  by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                    case Attack3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case fake
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                    case Attack3_case_1
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_2
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_3
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case Attack3_case_4
+                    step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.6 ) )
+                      case Attack3_case_1
+                      MIRRORED
+                    next
+                      case Attack3_case_2
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_3
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_4
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case Attack3_case_5
+                      by step( contradiction /* cyclic */ )
+                    next
+                      case c_commit
+                      by step( contradiction /* cyclic */ )
+                    qed
+                  next
+                    case c_fake
+                    by step( solve( !KU( ~rnd1 ) @ #vk.7 ) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case d_1_open
+            step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+              case Var_msg_1_ni3
+              step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+                case Attack3_case_1
+                by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+              next
+                case Attack3_case_2
+                step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                  case Attack3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case fake
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                  case Attack3_case_1
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_2
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_3
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case Attack3_case_4
+                  step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                    case Attack3_case_1
+                    MIRRORED
+                  next
+                    case Attack3_case_2
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_3
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_4
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case Attack3_case_5
+                    by step( contradiction /* cyclic */ )
+                  next
+                    case c_commit
+                    by step( contradiction /* cyclic */ )
+                  qed
+                next
+                  case c_fake
+                  by step( solve( !KU( ~rnd1 ) @ #vk.6 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case d_1_open
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case Var_msg_ni3
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+                case Attack3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case fake
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ni3) ) @ #vk.2 ) )
+                case Attack3_case_1
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  MIRRORED
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_2
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_3
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case Attack3_case_4
+                step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                  case Attack3_case_1
+                  MIRRORED
+                next
+                  case Attack3_case_2
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_3
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_4
+                  by step( contradiction /* cyclic */ )
+                next
+                  case Attack3_case_5
+                  by step( contradiction /* cyclic */ )
+                next
+                  case c_commit
+                  by step( contradiction /* cyclic */ )
+                qed
+              next
+                case c_fake
+                by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_1_open
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_ni1
+          step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+            case Attack3
+            step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+              case Attack3_case_1
+              by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+            next
+              case Attack3_case_2
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.2 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        qed
+      next
+        case fake
+        step( solve( !KU( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ) @ #vk ) )
+          case Attack3_case_1
+          MIRRORED
+        next
+          case Attack3_case_2
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.3 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.3 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                MIRRORED
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case Attack3_case_3
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.4 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.4 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case Attack3_case_4
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.5 ) )
+          next
+            case Attack3_case_2
+            step( solve( !KU( ~ltkV1 ) @ #vk.2 ) )
+              case Attack3
+              step( solve( !KU( commit(~ni1, ~rnd1, pk(~ltkV1)) ) @ #vk.5 ) )
+                case Attack3_case_1
+                MIRRORED
+              next
+                case Attack3_case_2
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_3
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_4
+                by step( contradiction /* cyclic */ )
+              next
+                case Attack3_case_5
+                by step( contradiction /* cyclic */ )
+              next
+                case c_commit
+                by step( contradiction /* cyclic */ )
+              qed
+            qed
+          qed
+        next
+          case c_fake
+          step( solve( !KU( ~ni1 ) @ #vk.1 ) )
+            case Attack3_case_1
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          next
+            case Attack3_case_2
+            by step( solve( !KU( ~rnd1 ) @ #vk.2 ) )
+          qed
+        qed
+      qed
+    next
+      case Attack3_case_3
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_fresh_ltkV1
+        step( solve( !KU( ~ltkV1 ) @ #vk ) )
+          case Attack3
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/regression/diff/issue223.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/regression/diff/issue223.spthy
+
+  output:          examples/regression/diff/issue223.spthy.tmp
+  processing time: 4.269948s
+  DiffLemma:  Observational_equivalence : verified (1082 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/diff/issue223.spthy
+
+  output:          examples/regression/diff/issue223.spthy.tmp
+  processing time: 4.269948s
+  DiffLemma:  Observational_equivalence : verified (1082 steps)
+
+==============================================================================
+*/

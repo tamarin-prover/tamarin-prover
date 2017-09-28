@@ -208,6 +208,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
+import           Theory.Tools.IntruderRules
 -- import           Theory.Constraint.Solver.Types
 
 import           Term.Positions
@@ -297,10 +298,13 @@ openProtoRule = L.get cprRuleE
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
 closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 
--- | Close an intruder rule; i.e., compute maximum number of consecutive applications
-closeIntrRule :: MaudeHandle -> IntrRuleAC -> IntrRuleAC
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts)  =
-    (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
+-- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
+--   Should be parallelized like the variant computation for protocol rules (JD)
+closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts) =
+  if subterm then [ru] else variantsIntruder hnd id False ru
+    where
+      ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule 
@@ -308,7 +312,8 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               else 0) subterm constant) prems concs acts)
         where
            runMaude = (`runReader` hnd)
-closeIntrRule _ ir  = ir
+closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _) = variantsIntruder hnd id False ir
+closeIntrRule _   ir                                      = [ir]
 
 
 -- | Close a rule cache. Hower, note that the
@@ -345,7 +350,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
     hnd = L.get sigmMaudeHandle sig
     
     -- close intruder rules
-    intrRulesAC = map (closeIntrRule hnd) intrRules
+    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
     
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
@@ -884,7 +889,7 @@ openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
-    find ((name ==) . L.get rInfo) . theoryRules
+    find ((name ==) . L.get (preName . rInfo)) . theoryRules
 
 -- | Find the open protocol rule with the given name.
 -- REMOVE
@@ -895,7 +900,7 @@ lookupOpenProtoRule name =
 -- | Find the open protocol rule with the given name.
 lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
 lookupOpenDiffProtoDiffRule name =
-    find ((name ==) . L.get rInfo) . diffTheoryDiffRules
+    find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
@@ -905,7 +910,7 @@ addProtoRule ruE thy = do
     return $ modify thyItems (++ [RuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get rInfo ruE) thy
+        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
@@ -915,7 +920,7 @@ addProtoDiffRule ruE thy = do
     return $ modify diffThyItems (++ [DiffRuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get rInfo ruE) thy
+        maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add intruder proof rules.
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
