@@ -6,7 +6,7 @@
  * Status: 	wip 
  */
 
-theory Keyless_SSL_Modified
+theory Keyless_SSL_Clientdetect
 begin
 
 builtins: signing, hashing
@@ -26,7 +26,7 @@ let C =
         in  (<m2,sign{m2}sk($B)>);
         insert <'cc',$A,$B>, S(cc);
         out (<m3, sign{m3}sk($A)>);
-        event CSession($A,$B,~nc,nw,cc);
+        event CSession($A,$B,~nc,nw,S(cc));
         unlock $A
     else 
         insert <'cc',$A,$B>,'0';
@@ -47,6 +47,7 @@ let W =
         in  (<m3,sign{m3}sk($A)>);
         if xcc = S(cw) then 
             event WSession($A,$B,nc,~nw,xcc);
+            insert <'cw',$B,$A>,xcc;
             out (<m4,sign{m4}sk($B)>);
             unlock $B
         else
@@ -64,5 +65,27 @@ let W =
    )
    ||
 !( in($A); event Compromise($A); out(sk($A)))
+
+// SANITY lemmas: verify relatively fast 
+/* lemma exists_session: exists-trace */
+/*     "Ex a b ni nr c #i #j. */
+/*         CSession(a,b,ni,nr,c) @ j */ 
+/*         & WSession(a,b,ni,nr,c) @ i & #i < #j */
+/*         & not(Ex #k a . Compromise(a) @ k)" */
+
+/* lemma exists_second_session: exists-trace */
+/*     "Ex a b ni nr c ni2 nr2 c2 #i #j #i2 #j2. */
+/*         CSession(a,b,ni,nr,c) @ i */ 
+/*         & WSession(a,b,ni,nr,c) @ j & #j < #i */
+/*       & CSession(a,b,ni2,nr2,c2) @ i2 */ 
+/*         & WSession(a,b,ni2,nr2,c2) @ j2 & #j2 < #i2 */
+/*         & not(Ex #k a. Compromise(a) @ k)" */
+
+/* lemma exists_detect: exists-trace */
+/*     "Ex a b #i. */
+/*         Detect(a,b) @ i */ 
+/*         & not(Ex #j. Compromise(b) @ j)" */
+
+
 
 end
