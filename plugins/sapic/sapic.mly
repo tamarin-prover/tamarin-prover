@@ -433,9 +433,7 @@ lemma:
 	|     lemma_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallLemma($1, $4) }
 	|     lemma_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsLemma($1, $4) }
 	|     lemma_header DQUOTE formula DQUOTE	{ ForallLemma($1, $3) }
-	|     restriction_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallRestriction($1, $4) }
-	|     restriction_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsRestriction($1, $4) }
-	|     restriction_header DQUOTE formula DQUOTE	{ ForallRestriction($1, $3) }
+	|     restriction_header DQUOTE formula DQUOTE	{ Restriction($1, $3) }
 	|     lemma_header IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
             AccLemma( $1, Hashtbl.find verdictf_table $2, $6,( VarSet.of_list $11))
             with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }

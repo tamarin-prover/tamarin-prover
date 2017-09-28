@@ -13,9 +13,9 @@ builtins: signing, hashing
 functions: S/1, SInv/1,
   extract/1, sk/1[private]  // sign, verify, pk, and true are from builtins
 
-restriction keybinding_unique:
-    "All a ka ka2 #i #j.
-        (Key(a,ka) @ i & Key(a,ka2) @ j) ==> #i = #j"
+restriction unique:
+    "All m #i #j.
+        (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
 
 restriction pairings_unique:
     "All id1 id2 a b ka kb #i #j.
@@ -26,11 +26,14 @@ let C =
     let m1 = <'1',$A,$B,nc>
         m2 = <'2',$B,$A,nc,nw>
         m3 = <'3',$A,$B,h(<m1,m2>)> in
+    lock $A;
+    lookup <'cc',$A,$B> as cc;
     new ~nc;
     out (m1);
-    in  (<m2,sign{m2}ltkB>);
-    out (<m3, sign{m3}ltkA>);
-    out (<m4, sign{m4}ltkA>) 
+    in  (<m2,sign{m2}sk($B)>);
+    out (<m3, sign{m3}sk($A)>);
+    out (<m4, sign{m4}sk($A)>);
+    unlock $A
 
 
 let W = 
@@ -40,317 +43,20 @@ let W =
         m4 = <'4',$B,$A,h(<m1,m2,m3>),S(cw)> in
     new ~nw;
     in  (m1);
-    out (<m2,sign{m2}ltkB>);
-    in  (<m3,sign{m3}ltkA>);
-    out (<m4,sign{m4}ltkB>);
-
-new ~ltkA; new ~ltkB; 
-insert <'state',$A>,<'0',<'initnonce','initnonce'>,'initnonce','0'>;
-(C || W)
+    out (<m2,sign{m2}sk($B)>);
+    in  (<m3,sign{m3}sk($A)>);
+    out (<m4,sign{m4}sk($B)>)
 
 
-
-/* // MESSAGE RULES */
-/* rule C_0: */
-/*     [ St_C(id,ltkA,ltkB,$A,$B,cc,<nprev,injc>,nwprev,'0') */
-/*     , Fr(~nc) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , F_Nonce(id,~nc) */
-/*     , C(id,cc) */
-/*     , CInjectivity(id,injc,~nc) */
-/*     ]-> */
-/*     [ St_C(id,ltkA,ltkB,$A,$B,cc,~nc,nwprev,'1') */
-/*     , Out(m1) */
-/*     ] */
-
-/* rule RegisterKey: */
-/*     [ Fr(~ltkA) ] */
-/*     --[Key($A,~ltkA)]-> */
-/*     [!F_AgentKey($A,~ltkA), Out(pk(~ltkA))] */
-
-/* rule BindState: */
-/*     [ !F_AgentKey($A,ltkA) */
-/*     , !F_AgentKey($B,ltkB) */
-/*     , Fr(~id) */
-/*     ]--[ */
-/*       Paired(~id, $A, $B, ltkA, ltkB) */
-/*     , InEq($A,$B) */
-/*     , WCount(~id,'0') */
-/*     , CCount(~id,'0') */
-/*     ]-> */
-/*     [ St_C(~id,ltkA, ltkB, $A, $B, '0', <'initnonce','initnonce'>,'initnonce','0') */
-/*     , St_W(~id,ltkA, ltkB, $A, $B, '0', 'initnonce','initnonce','0') */
-/*     ] */
-
-/*  rule CompromiseKey: */
-/*       [!F_AgentKey($Agent,ltk)] */
-/*       --[ Compromise($Agent,ltk) ]-> */
-/*       [Out(ltk)] */
-
-/* // MESSAGE RULES */
-/* rule C_0: */
-/*     let m1 = <'1',$A,$B,~nc> in */
-/*     [ St_C(id,ltkA,ltkB,$A,$B,cc,<nprev,injc>,nwprev,'0') */
-/*     , Fr(~nc) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , F_Nonce(id,~nc) */
-/*     , C(id,cc) */
-/*     , CInjectivity(id,injc,~nc) */
-/*     ]-> */
-/*     [ St_C(id,ltkA,ltkB,$A,$B,cc,~nc,nwprev,'1') */
-/*     , Out(m1) */
-/*     ] */
-
-/* rule W_0: */
-/*     let m1 = <'1',$A,$B,nc> */
-/*         m2 = <'2',$B,$A,nc,~nw> in */
-/*     [ St_W(id,ltkA,ltkB,$A,$B,cw,nwprev,ncprev,'0') */
-/*     , Fr(~nw) */
-/*     , In(m1) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , WDHParams(id,nc,~nw) */
-/*     , NonceW(id,~nw) */
-/*     , W(id,cw) */
-/*     , WInjectivity(id,nwprev,~nw) */
-/*     ]-> */
-/*     [ St_W(id,ltkA,ltkB,$A,$B,cw,~nw,nc,'1') */
-/*     , Out(<m2,sign{m2}ltkB>) */
-/*     ] */
-
-/* rule C_1: */
-/*     let m1 = <'1',$A,$B,nc> */
-/*         m2 = <'2',$B,$A,nc,nw> */
-/*         m3 = <'3',$A,$B,h(<m1,m2>)> in */
-/*     [ St_C(id,ltkA,ltkB,$A,$B, cc, nc, nwprev, '1') */
-/*     , Fr(~injc) */
-/*     , In(<m2,sign{m2}ltkB>) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , CDHParams(id,nc,nw) */
-/*     , C(id,cc) */
-/*     , CInjectivity(id,nc,~injc) */
-/*     ]-> */
-/*     [ St_C(id,ltkA,ltkB,$A,$B, cc, <nc,~injc>, nw, '2') */
-/*     , Out(<m3, sign{m3}ltkA>) */ 
-/*     ] */
-
-/* rule W_1: */
-/*     let m1 = <'1',$A,$B,nc> */
-/*         m2 = <'2',$B,$A,nc,nw> */
-/*         m3 = <'3',$A,$B,h(<m1,m2>)> */
-/*         m4 = <'4',$B,$A,h(<m1,m2,m3>),S(cw)> in */
-/*     [ St_W(id,ltkA,ltkB,$A,$B, cw, nw, nc,'1') */
-/*     , Fr(~injw) */
-/*     , In(<m3, sign{m3}ltkA>) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , WCount(id,S(cw)) */
-/*     , WSession(id,nc,nw,S(cw)) */
-/*     , W(id,cw) */
-/*     , WInjectivity(id,nw,~injw) */
-/*     ]-> */
-/*     [ St_W(id,ltkA,ltkB,$A,$B,S(cw),~injw, nc,'0') */
-/*     , Out(<m4, sign{m4}ltkB>) */ 
-/*     ] */  
-
-
-
-/* rule C_detect: */
-/*     let m1 = <'1',$A,$B,nc> */
-/*         m2 = <'2',$B,$A,nc,nw> */
-/*         m3 = <'3',$A,$B,h(<m1,m2>)> */
-/*         m4 = <'4',$B,$A,h(<m1,m2,m3>),cw> in */
-/*     [ St_C(id,ltkA,ltkB,$A,$B, cc, <nc,injc>, nw, '2') */
-/*     , In(<m4, sign{m4}ltkB>) */ 
-/*     , Fr(~injc2) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , InEq(cw, S(cc)) */
-/*     , CSession(id,nc,nw,cw) */
-/*     , Detect(id) */
-/*     , CCount(id,S(cc)) */
-/*     , Bad_C(id,cc) */
-/*     , CInjectivity(id,injc,~injc2) */
-/*     ]-> */
-/*     [ Remediate_C(id,ltkA,ltkB,$A,$B, cw, <nc,~injc2>, nw, '0') */ 
-/*     ] */
-
-/* rule C_session: */
-/*     let m1 = <'1',$A,$B,nc> */
-/*         m2 = <'2',$B,$A,nc,nw> */
-/*         m3 = <'3',$A,$B,h(<m1,m2>)> */
-/*         m4 = <'4',$B,$A,h(<m1,m2,m3>),cw> in */
-/*     [ St_C(id,ltkA,ltkB,$A,$B, cc, <nc,injc>, nw, '2') */
-/*     , In(<m4, sign{m4}ltkB>) */ 
-/*     , Fr(~injc2) */
-/*     ]--[ */
-/*       Binding(id,$A,$B,ltkA,ltkB) */
-/*     , Eq(cw, S(cc)) */
-/*     , CSession(id,nc,nw,cw) */
-/*     , Completed(id) */
-/*     , CCount(id,S(cc)) */
-/*     , C(id,cc) */
-/*     , CInjectivity(id,injc,~injc2) */
-/*     ]-> */
-/*     [ St_C(id,ltkA,ltkB,$A,$B, cw, <nc,~injc2>, nw, '0') */ 
-/*     ] */
-
-
-
-/* /*///////////////////////////////////////////////////////////////////////////// */
-/*     TERMINATION AND STATE BINDING */
-/*     (just expanding the starting axiom of uniqueness, and id binding) */
-
-/*     Status: Autoproves trivially */
-/* */ */
-
-/* lemma state_was_paired[reuse,use_induction]: */
-/*     "All id a b ka kb #i. */
-/*         Binding(id,a,b,ka,kb) @ i ==> Ex #j. Paired(id,a,b,ka,kb) @ j & #j < #i" */
-
-
-/* lemma state_bindings_unique[reuse]: */
-/*     "(All id1 id2 a b1 b2 ka1 ka2 kb1 kb2 #i #j. */
-/*         Paired(id1,a,b1,ka1,kb1) @ i & Paired(id2,a,b2,ka2,kb2) @ j */
-/*     ==> ka1 = ka2) */
-/*     &(All id1 id2 a1 a2 b ka1 ka2 kb1 kb2 #i #j. */
-/*         Paired(id1,a1,b,ka1,kb1) @ i & Paired(id2,a2,b,ka2,kb2) @ j */
-/*     ==> kb1 = kb2) */
-/*     &(All id1 id2 a b ka kb #i #j. */
-/*         Paired(id1,a,b,ka,kb) @ i & Paired(id2,a,b,ka,kb) @ j */
-/*     ==> id1 = id2)" */
-
-/* lemma DHParams_unique[reuse]: */
-/*     "(All id id2 nc nw #i #j. */
-/*         CDHParams(id,nc,nw) @ i & CDHParams(id2,nc,nw) @ j */
-/*     ==> #i = #j & id = id2) */
-/*     &(All id id2 nc nw #i #j. */
-/*         WDHParams(id,nc,nw) @ i & WDHParams(id2,nc,nw) @ j */
-/*     ==> #i = #j & id = id2)" */
-
-/* lemma counter_unique[reuse,use_induction]: */
-/*     "(All id nc nw c #i nc2 nw2 c2 #i2. */
-/*         WSession(id,nc,nw,c) @ i & WSession(id,nc2,nw2,c2) @ i2 */
-/*         & (c2 = c) */
-/*     ==> #i = #i2)" */
-
-/* /*///////////////////////////////////////////////////////////////////////////// */
-/*     TRACE EXISTENCE */
-/*     Status: All autoprove (~15 minutes, almost entirely on exists_detect) */
-/* */ */
-
-/* lemma exists_session: exists-trace */
-/*     "Ex id ni nr c #i #j. */
-/*         CSession(id,ni,nr,c) @ j & Completed(id) @ j */
-/*         & WSession(id,ni,nr,c) @ i & #i < #j */
-/*         & not(Ex #k a ka. Compromise(a,ka) @ k)" */
-
-/* lemma exists_second_session: exists-trace */
-/*     "Ex id ni nr c ni2 nr2 c2 #i #j #i2 #j2. */
-/*         CSession(id,ni,nr,c) @ i & Completed(id) @ i */
-/*         & WSession(id,ni,nr,c) @ j & #j < #i */
-/*       & CSession(id,ni2,nr2,c2) @ i2 & Completed(id) @ i2 */
-/*         & WSession(id,ni2,nr2,c2) @ j2 & #j2 < #i2 */
-/*         & not(Ex #k a ka. Compromise(a,ka) @ k)" */
-
-/* lemma exists_detect: exists-trace */
-/*     "Ex id a b ka kb #i. */
-/*         Detect(id) @ i & Binding(id,a,b,ka,kb) @ i */
-/*         & not(Ex #j. Compromise(b,kb) @ j)" */
-
-/* /*///////////////////////////////////////////////////////////////////////////// */
-/*     PROTOCOL PROPERTIES & UTILITY LEMMAS */
-/*     Status: Autoproves in about ~12 minutes, almost entirely on soundness. */
-/* */ */
-
-/* //This takes a while to prove, and tends to greatly expand proof */
-/* //length of other lemmas so it should be hidden when possible. */
-/* //Unfortunately it is necessary to prove some properties that need */
-/* //ordering constraints. */
-/* lemma injectivity[reuse]: */
-/*     "(All id n1 n2 n3 #i #j on1 on2 #k. */
-/*         //Injective facts that are linked by n2 */
-/*         CInjectivity(id,n1,n2) @ i & CInjectivity(id,n2,n3) @ j */
-/*         //And some other injective fact with the same id with relation to j */
-/*         & CInjectivity(id,on1,on2) @ k & #k < #j */
-/*     ==> //can't be in between (might be equal to #i, though) */
-/*         not(#i < #k)) */
-/*     &(All id n1 n2 n3 #i #j on1 on2 #k. */
-/*         //Injective facts that are linked by n2 */
-/*         WInjectivity(id,n1,n2) @ i & WInjectivity(id,n2,n3) @ j */
-/*         //And some other injective fact with the same id with relation to j */
-/*         & WInjectivity(id,on1,on2) @ k & #k < #j */
-/*     ==> //can't be in between (might be equal to #i, though) */
-/*         not(#i < #k))" */
-
-/* lemma detect_last[reuse,use_induction]: */
-/*     "All id #i cc #j. */
-/*         Detect(id) @ i & C(id,cc) @ j */
-/*     ==> #j < #i" */
-
-/* lemma matching_DH_w_uncompromised: */
-/*     "All id nc nw #i. */
-/*         CDHParams(id,nc,nw) @ i */ 
-/*     ==>(Ex #j. #j < #i & WDHParams(id,nc,nw) @ j) */
-/*         | (Ex #k c w kc kw. Binding(id,c,w,kc,kw) @ i & #k < #i & Compromise(w,kw) @ k)" */
-
-/* //Protocol Property without compromise: */
-/* lemma correct_dolevyao: */
-/*     "All id nc nw c #i. */
-/*         CSession(id,nc,nw,c) @ i */
-/*     ==> (Ex c w kc kw. Binding(id,c,w,kc,kw) @ i */ 
-/*             & (Ex #j. Compromise(w,kw) @ j & #j < #i)) */
-/*         | (Ex #j. WSession(id,nc,nw,c) @ j & #j < #i)" */
-
-/* //This takes about ~10 minutes to prove */
-/* lemma detect_sound: */
-/*     "All id a b ka kb #i. */
-/*         Detect(id) @ i & Binding(id,a,b,ka,kb) @ i */ 
-/*     ==> (Ex #j. #j < #i & Compromise(b,kb) @ j) */
-/*         |(Ex #j. #j < #i & Compromise(a,ka) @ j)" */
-
-/* lemma no_detect_implies_rsession[reuse]: */
-/*     "All id ni nr nrp c #i a b ka kb. */
-/*         CSession(id,ni,<nr,nrp>,c) @ i & Completed(id) @ i */
-/*         & Binding(id,a,b,ka,kb) @ i */
-/*     ==> (Ex #j. #j < #i */ 
-/*             & WSession(id,ni,<nr,nrp>,c) @ j) */
-/*         | (Ex #j. #j < #i & Compromise(b,kb) @ j)" */
-
-/* lemma aposteriori_boundary_case[reuse]: */
-/*     "All id ni nr c #i niprev nrprev cprev #iprev. */
-/*         //Given an unmatching session */
-/*         CSession(id,niprev,nrprev,cprev) @ iprev */
-/*         & not(Ex #j. WSession(id,niprev,nrprev,cprev) @ j & #j < #iprev) */
-/*         //Then for the session immediately after that */
-/*         & CSession(id,ni,nr,c) @ i & #iprev < #i */
-/*         & (S(cprev) = c) */
-/*     ==> //Either this also was not a matching session */
-/*         not(Ex #j. WSession(id,ni,nr,c) @ j & #j < #i) */
-/*         //Or we've detected */
-/*         | (Ex #j. Detect(id) @ j) */
-/*         //Or B was compromised. Comment this out to see an attack */
-/*         //(tamarin will find find an attack after about ~10 minutes) */
-/*         | (Ex a b ka kb #k. Binding(id,a,b,ka,kb) @ i */ 
-/*             & Compromise(b,kb) @ k)" */
-
-/* lemma unmatching_implies_detect_with_one_uncompromised[use_induction]: */
-/*     "All id ni nr c #r #i niprev nrprev cprev #iprev. */
-/*         //Given an matching session */
-/*         CSession(id,ni,nr,c) @ i & WSession(id,ni,nr,c) @ r & #r < #i */
-/*         //Then for all sessions before that */
-/*         & CSession(id,niprev,nrprev,cprev) @ iprev & #iprev < #i */
-/*     ==> //Either that session was also matching */
-/*         (Ex #rprev. */
-/*             WSession(id,niprev,nrprev,cprev) @ rprev */
-/*                 & #rprev < #iprev & #rprev < #r) */
-/*         //Or we detected */
-/*         | (Ex a b ka kb #j. Binding(id,a,b,ka,kb) @ i & Detect(id) @ j) */
-/*         //Or B was compromised */
-/*         | (Ex a b ka kb #k. Binding(id,a,b,ka,kb) @ i */ 
-/*             & Compromise(b,kb) @ k)" */
+// not complete, forbids C and W running on same server
+// (but allows us to use pattern matching, as in Milner et.al.'s modelling
+!( in($A,$B);  
+   event Unique(<$A,$B>);
+   insert <'state',$A,$B>,<'0',<'initnonce','initnonce'>,'initnonce','0'>;
+   insert <'state',$B,$A>,<'0',<'initnonce','initnonce'>,'initnonce','0'>;
+   ! ( C || W  )
+   )
+   ||
+!( in($A); event Compromise($A); out(sk($A)))
 
 end

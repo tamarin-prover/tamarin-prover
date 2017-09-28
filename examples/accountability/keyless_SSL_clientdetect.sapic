@@ -1,0 +1,68 @@
+/*
+ * Protocol:    Modified Keyless SSL protocol
+ * Modeler: 	Robert Künnemann
+ * Date: 	Sep 2017
+ * Source:	Adapted from Milner,Cremers,Yu,Ryan: Automaticaly Detecting the Misuse of Secrets
+ * Status: 	wip 
+ */
+
+theory Keyless_SSL_Modified
+begin
+
+builtins: signing, hashing
+functions: 
+  extract/1, sk/1[private],
+  // sign, verify, pk, and true are from builtins
+  S/1
+
+let C = 
+    let m1 = <'1',$A,$B,~nc>
+        m2 = <'2',$B,$A,~nc,nw>
+        m3 = <'3',$A,$B,h(<m1,m2>),S(cc)> in
+    lock $A;
+    lookup <'cc',$A,$B> as cc in
+        new ~nc;
+        out (m1);
+        in  (<m2,sign{m2}sk($B)>);
+        insert <'cc',$A,$B>, S(cc);
+        out (<m3, sign{m3}sk($A)>);
+        event CSession($A,$B,~nc,nw,cc);
+        unlock $A
+    else 
+        insert <'cc',$A,$B>,'0';
+        unlock $A
+        
+
+
+let W = 
+    let m1 = <'1',$A,$B,nc>
+        m2 = <'2',$B,$A,nc,~nw>
+        m3 = <'3',$A,$B,h(<m1,m2>),xcc> 
+        m4 = <'4',$B,$A,h(<m1,m2,m3>)> in
+    lock $B;
+    in  (m1);
+    new ~nw;
+    lookup <'cw',$B,$A> as cw in (
+        out (<m2,sign{m2}sk($B)>);
+        in  (<m3,sign{m3}sk($A)>);
+        if xcc = S(cw) then 
+            event WSession($A,$B,nc,~nw,xcc);
+            out (<m4,sign{m4}sk($B)>);
+            unlock $B
+        else
+            event Detect($A,$B))
+    else 
+        insert <'cw',$B,$A>,'0';
+        unlock $B
+
+
+// not complete, forbids C and W running on same server
+// (but allows us to use pattern matching, as in Milner et.al.'s modelling
+!( in($A,$B);  
+   event Unique(<$A,$B>);
+   ! ( C || W  )
+   )
+   ||
+!( in($A); event Compromise($A); out(sk($A)))
+
+end
