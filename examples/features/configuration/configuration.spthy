@@ -1,0 +1,14 @@
+theory TestConfiguration
+configuration: "--partial-evaluation=verbose"
+begin
+
+rule Testing:
+  [ Fr(x) ]
+--[ Test(x) ]->
+  [ F1(x) ]
+
+lemma test_lemma:
+  exists-trace
+  "Ex x #i. Test(x) @ i"
+
+end
