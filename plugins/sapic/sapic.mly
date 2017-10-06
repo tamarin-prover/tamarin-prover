@@ -116,9 +116,11 @@ let location_rule=
 %left REP
 %left SEMICOLON
 
-%right ALL EXISTS IFF IMP 
+%right ALL EXISTS 
+%right IFF IMP  
 %right OR
 %right AND
+%nonassoc NOT
 
 
 /* entry point */
