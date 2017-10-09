@@ -18,14 +18,18 @@ functions:
 let C = 
     let m1 = <'1',$A,$B,~nc>
         m2 = <'2',$B,$A,~nc,nw>
-        m3 = <'3',$A,$B,h(<m1,m2>),S(cc)> in
+        m3 = <'3',$A,$B,h(<m1,m2>),S(cc)> 
+        m4 = <'4',$B,$A,h(<m1,m2,m3>)> in
     lock $A;
     lookup <'cc',$A,$B> as cc in
         new ~nc;
         out (m1);
         in  (<m2,sign{m2}sk($B)>);
+        event CCount($A,$B,cc,S(cc));
+        event CDHParams($A,$B,~nc,nw);
         insert <'cc',$A,$B>, S(cc);
         out (<m3, sign{m3}sk($A)>);
+        in (<m4, sign{m4}sk($B)>); 
         event CSession($A,$B,~nc,nw,S(cc));
         unlock $A
     else 
@@ -43,11 +47,14 @@ let W =
     in  (m1);
     new ~nw;
     lookup <'cw',$B,$A> as cw in (
+        event W($A,$B,cw);
+        event WDHParams($A,$B,nc,~nw);
         out (<m2,sign{m2}sk($B)>);
         in  (<m3,sign{m3}sk($A)>);
         if xcc = S(cw) then 
             event WSession($A,$B,nc,~nw,xcc);
-            insert <'cw',$B,$A>,xcc;
+            event WCount($A,$B,cw,S(cw));
+            insert <'cw',$B,$A>,S(cw);
             out (<m4,sign{m4}sk($B)>);
             unlock $B
         else
@@ -64,28 +71,143 @@ let W =
    ! ( C || W  )
    )
    ||
-!( in($A); event Compromise($A); out(sk($A)))
+!( in($A); event Corrupted($A); out(sk($A)))
+
+restriction unique:
+    "All m #i #j.
+        (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
+
+/* // verifies */ 
+lemma counter_unique_c[reuse,use_induction]:
+    "(All a b c oc oc2 #i c2 #i2.
+        CCount(a,b,oc,c) @ i & CCount(a,b,oc2, c2) @ i2
+        & (c2 = c)
+    ==> #i = #i2)"
+
+lemma counter_unique_w[reuse,use_induction]:
+    "(All a b c oc oc2 #i c2 #i2.
+        WCount(a,b,oc,c) @ i & WCount(a,b,oc2, c2) @ i2
+        & (c2 = c)
+    ==> #i = #i2)"
 
 // SANITY lemmas: verify relatively fast 
-/* lemma exists_session: exists-trace */
-/*     "Ex a b ni nr c #i #j. */
-/*         CSession(a,b,ni,nr,c) @ j */ 
-/*         & WSession(a,b,ni,nr,c) @ i & #i < #j */
-/*         & not(Ex #k a . Compromise(a) @ k)" */
+lemma exists_session: exists-trace
+    "Ex a b ni nr c #i #j.
+        CSession(a,b,ni,nr,c) @ j 
+        & WSession(a,b,ni,nr,c) @ i & #i < #j
+        & not(Ex #k a . Corrupted(a) @ k)"
 
-/* lemma exists_second_session: exists-trace */
-/*     "Ex a b ni nr c ni2 nr2 c2 #i #j #i2 #j2. */
-/*         CSession(a,b,ni,nr,c) @ i */ 
-/*         & WSession(a,b,ni,nr,c) @ j & #j < #i */
-/*       & CSession(a,b,ni2,nr2,c2) @ i2 */ 
-/*         & WSession(a,b,ni2,nr2,c2) @ j2 & #j2 < #i2 */
-/*         & not(Ex #k a. Compromise(a) @ k)" */
+lemma exists_second_session: exists-trace
+    "Ex a b ni nr c ni2 nr2 c2 #i #j #i2 #j2.
+        CSession(a,b,ni,nr,c) @ i 
+        & WSession(a,b,ni,nr,c) @ j & #j < #i
+      & CSession(a,b,ni2,nr2,c2) @ i2 
+        & WSession(a,b,ni2,nr2,c2) @ j2 & #j2 < #i2
+        & not(Ex #k a. Corrupted(a) @ k)"
 
-/* lemma exists_detect: exists-trace */
-/*     "Ex a b #i. */
-/*         Detect(a,b) @ i */ 
-/*         & not(Ex #j. Compromise(b) @ j)" */
+lemma exists_detect: exists-trace
+    "Ex a b #i.
+        Detect(a,b) @ i 
+        & not(Ex #j. Corrupted(b) @ j)"
 
+// verifies 
+lemma counter_inj_c[reuse,use_induction]:
+    "All a b oc1 oc2 c1 c2 c3 #i #j #k .
+        CCount(a,b,oc2,c2) @ i
+      & CCount(a,b,c2,c3) @ j
+      & CCount(a,b,oc1,c1) @ k
+      & #k<#j
+    ==> not ( #i < #k)"
+
+// verifies 7117 steps / 15min on colossus
+lemma counter_inj_w[reuse,use_induction]:
+    "All a b oc1 oc2 c1 c2 c3 #i #j #k .
+        WCount(a,b,oc2,c2) @ i
+      & WCount(a,b,c2,c3) @ j
+      & WCount(a,b,oc1,c1) @ k
+      & #k<#j
+    ==> not ( #i < #k)"
+
+// verifies quickly
+lemma detect_last[reuse,use_induction]:
+    "All a b  #i cc #j.
+        Detect(a,b) @ i & W(a,b,cc) @ j
+    ==> #j < #i"
+
+// verifies quickly
+lemma matching_DH_w_uncompromised:
+    "All a b nc nw #i.
+        CDHParams(a,b,nc,nw) @ i 
+    ==>(Ex #j. #j < #i & WDHParams(a,b,nc,nw) @ j)
+        | (Ex #k . #k < #i &  Corrupted(b) @ k)"
+
+// verifies quickly
+lemma correct_dolevyao:
+    "All a b nc nw c #i.
+        CSession(a,b,nc,nw,c) @ i
+    ==> (Ex #j. Corrupted(b) @ j & #j < #i)
+        | (Ex #j. WSession(a,b,nc,nw,c) @ j & #j < #i)"
+
+// can be proven by hand, more than 3 days on colossus
+lemma detect_sound:
+    "All a b #i.
+        Detect(a,b) @ i 
+    ==> (Ex #j. #j < #i & Corrupted(b) @ j)
+        |(Ex #j. #j < #i & Corrupted(a) @ j)"
+
+// verifies quickly
+lemma no_detect_implies_rsession[reuse]:
+    "All a b ni nr nrp c #i.
+        CSession(a,b,ni,<nr,nrp>,c) @ i
+    ==> (Ex #j. #j < #i 
+            & WSession(a,b,ni,<nr,nrp>,c) @ j)
+        | (Ex #j. #j < #i & Corrupted(b) @ j)"
+
+// verifies quickly
+lemma aposteriori_boundary_case[reuse]:
+    "All a b ni nr c #i niprev nrprev cprev #iprev.
+        //Given an unmatching session
+        CSession(a,b,niprev,nrprev,cprev) @ iprev
+        & not(Ex #j. WSession(a,b,niprev,nrprev,cprev) @ j & #j < #iprev)
+        //Then for the session immediately after that
+        & CSession(a,b,ni,nr,c) @ i & #iprev < #i
+        & (S(cprev) = c)
+    ==> //Either this also was not a matching session
+        not(Ex #j. WSession(a,b,ni,nr,c) @ j & #j < #i)
+        //Or we've detected
+        | (Ex #j. Detect(a,b) @ j)
+        //Or B was compromised. Comment this out to see an attack
+        //(tamarin will find find an attack after about ~10 minutes)
+        | (Ex #k. Corrupted(b) @ k)"
+
+//automated
+lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
+    "All a b ni nr c #r #i niprev nrprev cprev #iprev.
+        //Given an matching session
+        CSession(a,b,ni,nr,c) @ i & WSession(a,b,ni,nr,c) @ r & #r < #i
+        //Then for all sessions before that
+        & CSession(a,b,niprev,nrprev,cprev) @ iprev & #iprev < #i
+    ==> //Either that session was also matching
+        (Ex #rprev.
+            WSession(a,b,niprev,nrprev,cprev) @ rprev
+                & #rprev < #iprev & #rprev < #r)
+        //Or we detected
+        | (Ex #j.  Detect(a,b) @ j)
+        //Or B was compromised
+        | (Ex #k. Corrupted(b) @ k)"
+
+
+verdictfunction v1:
+    "Ex #i. Detect('A','B')@i " -> <'A'>,
+    otherwise -> <> 
+
+// exh is quick
+//
+lemma acc:
+    v1 accounts 
+    for "All ni nr c #i . CSession('A','B',ni,nr,c) @i 
+         ==> Ex #j . WSession('A','B',ni,nr,c)@j"
+    for parties <'A','B'>
 
 
 end
