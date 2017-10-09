@@ -42,11 +42,14 @@ equations:
 let Issuer = 0 //DAA issuer and verification of users, not explicit, but implicit in user definition
     
 let U =  // honest user posting a comment on $date at website $W, after registering
-    let cert = daa_cert(id,pk(sk_iss),sk_iss,)
+    let cert = daa_cert(id,pk(sk_iss),sk_iss)
         dom = <$date,$seq>
-        m1 = <'1',h(c),$date,$seq>
+        hash = h(<c,$W>)
+        m1 = <'1',h(<c,$W>),$date,$seq>
         m2 = <'2',sign(m1,sk($W))>
-        m3 = <'3',daa_pseudo(cert,dom),daa_sig(cert,dom,c),c>
+        m3 = <'3',<daa_pseudo(cert,dom),dom>,<daa_sig(cert,dom,hash),hash>>
+        m4 = <'4',sign(m3,sk('Log'))>
+        m5 = <'5',m3,m4,c>
     in
     new id;
     event Registered($U,cert);
@@ -54,27 +57,52 @@ let U =  // honest user posting a comment on $date at website $W, after register
         !( in ($seq); // adversary gets to chose which sequence number is used
            in (<$W,c>); // adversary gets to chose comment and website to post do
            event Unique(<$date,$seq>); // honest user uses each coin only once
+           event BelowThreshold(seq);
            out (m1);
            in (m2);
-           out (m3)
+           out (m3);
+           in (m4);
+           out (m5)
          )
      )
      || (event Corrupted($U); out (cert)))
 
-let W = 
+let W = //Webserver verifies comments with help of ledger before accepting them
     let dom = <$date,$seq>
-        m1 = <'1',h(c),$date,$seq>
+        m1 = <'1',h(<c,$W>),$date,$seq>
         m2 = <'2',sign(m1,sk($W))>
-        m3 = <'3',c,xdaapseudo,xdaasig>
+        m3 = <'3',<xdaapseudo,dom>,<xdaasig,xhash>>
+        m4 = <'4',sign(m3,sk('Log'))>
+        m5 = <'5',m3,m4,c>
     in
     event Webserver($W);
+    ( !(
     in (m1);
     out (m2);
-    in (m3);
-    if daa_ver(pk_iss,xdaapseudo,dom,xdaasig,c)=true() then
-        event Accept($W,c)
+    in (m5);
+    if daa_ver(pk_iss,xdaapseudo,dom,xdaasig,xhash)=true() then
+        if h(<c,$W>)=xhash then
+            event Accept($W,c)
+     ))
+     || (event Corrupted($W); out (sk($W)))
 
-/* let L = */ 
+let L = // public ledger, can be implemented as consensus mechanism
+    let dom = <$date,$seq>
+        key = <pseudo,dom>
+        val = <sig,h(<c,$W>)>
+        m3 = <'3',key,val>
+    in
+    !( in(m3); 
+       event BelowThreshold(seq);
+       if daa_ver(pk_iss,pseudo,dom,sig,h(<c,$W>))=true() then
+       lock key; // never unlocked, so we know same key was never used
+       insert key,val;
+       out (<'4',sign(m3,sk('Log'))>)
+    )
+    ||
+    !( in (key); lookup key as v in out (v))
+
+let R = 0// TODO comment registry / rainbow table. stores comments and their hashes
 
     (new sk_iss; 
      let pk_iss = pk(sk_iss)
@@ -83,10 +111,16 @@ let W =
      out (pk(sk($W)));
         !(in ($U); U) 
       ||!(in ($W); W)
+      ||! L
+      ||! R
     ) 
 
 restriction unique:
     "All m #i #j.
         (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
+
+restriction ledger_trusted:
+    "not (Ex #i. Webserver('Log')@i)"
+
 
 end
