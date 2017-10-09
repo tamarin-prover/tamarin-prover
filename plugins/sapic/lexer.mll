@@ -55,6 +55,7 @@ rule token = parse
      | "&"	   { AND }
      | "@"	   { AT }
      | "otherwise"	   { OTHERWISE }
+     | "empty"	   { EMPTY }
      | "accounts" { ACCOUNTS }
      | "for" { FOR }
      | "parties" { PARTIES }

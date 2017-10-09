@@ -238,7 +238,7 @@ verdictfunction v1:
   & (not Ex #j. NotHonestA()@#j)
   " -> <'S'>,
 
-  otherwise -> <>
+  otherwise -> empty
 
 /*verdictfunction v1:*/
   /*" not Ex #i #j. HonestS()@#i & HonestA()@#j*/

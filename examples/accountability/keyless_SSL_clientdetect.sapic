@@ -71,7 +71,17 @@ let W =
    ! ( C || W  )
    )
    ||
-!( in($A); event Corrupted($A); out(sk($A)))
+!( 
+    in($A);
+    event Corrupted($A); 
+    // output secrets
+    out(sk($A)); 
+    // allow to produce events relevant to property we account for
+    !( in (<$A,$B,~nc,nw,cc>);
+    event FalseCSession ($A,$B,~nc,nw,cc);
+    event CSession($A,$B,~nc,nw,cc)
+    ) 
+)
 
 restriction unique:
     "All m #i #j.
@@ -146,10 +156,13 @@ lemma correct_dolevyao:
     "All a b nc nw c #i.
         CSession(a,b,nc,nw,c) @ i
     ==> (Ex #j. Corrupted(b) @ j & #j < #i)
-        | (Ex #j. WSession(a,b,nc,nw,c) @ j & #j < #i)"
+        | (Ex #j. WSession(a,b,nc,nw,c) @ j & #j < #i)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,nc,nw,c) @ j & #j < #i)
+        "
 
 // can be proven by hand, more than 3 days on colossus
-lemma detect_sound:
+lemma detect_sound [reuse]:
     "All a b #i.
         Detect(a,b) @ i 
     ==> (Ex #j. #j < #i & Corrupted(b) @ j)
@@ -161,7 +174,10 @@ lemma no_detect_implies_rsession[reuse]:
         CSession(a,b,ni,<nr,nrp>,c) @ i
     ==> (Ex #j. #j < #i 
             & WSession(a,b,ni,<nr,nrp>,c) @ j)
-        | (Ex #j. #j < #i & Corrupted(b) @ j)"
+        | (Ex #j. #j < #i & Corrupted(b) @ j)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,ni,<nr,nrp>,c) @ j & #j < #i)
+        "
 
 // verifies quickly
 lemma aposteriori_boundary_case[reuse]:
@@ -178,7 +194,10 @@ lemma aposteriori_boundary_case[reuse]:
         | (Ex #j. Detect(a,b) @ j)
         //Or B was compromised. Comment this out to see an attack
         //(tamarin will find find an attack after about ~10 minutes)
-        | (Ex #k. Corrupted(b) @ k)"
+        | (Ex #k. Corrupted(b) @ k)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #i)
+        "
 
 //automated
 lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
@@ -194,14 +213,20 @@ lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
         //Or we detected
         | (Ex #j.  Detect(a,b) @ j)
         //Or B was compromised
-        | (Ex #k. Corrupted(b) @ k)"
+        | (Ex #k. Corrupted(b) @ k)
+        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #iprev)
+        "
+        /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
 
 
 verdictfunction v1:
     "Ex #i. Detect('A','B')@i " -> <'A'>,
-    otherwise -> <> 
+    otherwise -> empty
 
-// exh is quick
+// ex/exh is quick
+// suf_0 auto
+// suf_1 ctr-trace
+// uniq_0 ctr-trace
 //
 lemma acc:
     v1 accounts 
