@@ -37,10 +37,10 @@ test: $(TESTFILES)
 	$(PROVER) $(FLAGS) $<
 
 %.proof: %
-	$(PROVER) $(FLAGS) --prove $<
+	$(PROVER) $(FLAGS) --prove$(PROOFFLAGS) $<
 
 %.altproof: %
-	$(ALTPROVER) $(FLAGS) --prove $<
+	$(ALTPROVER) $(FLAGS) --prove$(PROOFFLAGS) $<
 
 %.interactive: %
 	$(PROVER) interactive $(INTERACTIVEFLAGS) $< 2> /dev/null & 
@@ -56,7 +56,7 @@ test: $(TESTFILES)
 
 %.remote-proof: %
 	scp $< cassis:spthy/
-	ssh cassis 'cd spthy; killall tamarin-prover; $(ULIMITS); $(REMOTEPROVER) --prove $(REMOTEFLAGS) $(notdir $<)'
+	ssh cassis 'cd spthy; killall tamarin-prover; $(ULIMITS); $(REMOTEPROVER) --prove$(PROOFFLAGS) $(REMOTEFLAGS) $(notdir $<)'
 
 %.remote-check: %
 	scp $< cassis:spthy/
@@ -64,16 +64,16 @@ test: $(TESTFILES)
 
 %.remote-quietproof: %
 	scp $< cassis:spthy/
-	ssh cassis "tmux new-window 'cd spthy; killall tamarin-prover; $(ULIMITS);LC_ALL=en_US.utf8 /usr/bin/time $(REMOTEPROVER) --prove $(REMOTEFLAGS) $(notdir $<) 2>$(notdir $<).errorlog | tee $(notdir $<).log '"
+	ssh cassis "tmux new-window 'cd spthy; killall tamarin-prover; $(ULIMITS);LC_ALL=en_US.utf8 /usr/bin/time $(REMOTEPROVER) --prove$(PROOFFLAGS) $(REMOTEFLAGS) $(notdir $<) 2>$(notdir $<).errorlog | tee $(notdir $<).log '"
 
 %.colossus: %
 	scp $< colossus:spthy/
-	ssh -L 3004:localhost:3001 \
+	ssh -t -L 3004:localhost:3001 \
 	colossus 'cd spthy; $(ULIMITScolossus); $(colossusPROVER) interactive $(colossusINTERACTIVEFLAGS) $(notdir $<)'
 
 %.colossus-proof: %
 	scp $< colossus:spthy/
-	ssh colossus 'cd spthy;  $(ULIMITScolossus); $(colossusPROVER) --prove $(colossusFLAGS) $(notdir $<)'
+	ssh colossus 'cd spthy;  $(ULIMITScolossus); $(colossusPROVER) --prove$(PROOFFLAGS) $(colossusFLAGS) $(notdir $<)'
 
 %.colossus-quietproof: %
 	scp $< colossus:spthy/
@@ -90,11 +90,11 @@ test: $(TESTFILES)
 
 %.colossus04-proof: %
 	scp $< colossus04:spthy/
-	ssh colossus04 'cd spthy; $(ULIMITScolossus04); $(colossus04PROVER) --prove $(colossus04FLAGS) $(notdir $<)'
+	ssh colossus04 'cd spthy; $(ULIMITScolossus04); $(colossus04PROVER) --prove$(PROOFFLAGS) $(colossus04FLAGS) $(notdir $<)'
 
 %.colossus04-quietproof: %
 	scp $< colossus04:spthy/
-	ssh colossus04 "tmux new-window 'cd spthy; $(ULIMITScolossus04);/usr/bin/time $(colossus04PROVER) --prove $(colossus04FLAGS) $(notdir $<) 2>$(notdir $<)-$(DATETIME).errorlog | tee $(notdir $<)-$(DATETIME).log '"
+	ssh colossus04 "tmux new-window 'cd spthy; $(ULIMITScolossus04);/usr/bin/time $(colossus04PROVER) --prove$(PROOFFLAGS) $(colossus04FLAGS) $(notdir $<) 2>$(notdir $<)-$(DATETIME).errorlog | tee $(notdir $<)-$(DATETIME).log '"
 
 %.colossus04-check: %
 	scp $< colossus04:spthy/
@@ -107,29 +107,29 @@ test: $(TESTFILES)
 
 %.colossus08-proof: %
 	scp $< colossus08:spthy/
-	ssh colossus08 'cd spthy; $(ULIMITScolossus08); $(colossus08PROVER) --prove $(colossus08FLAGS) $(notdir $<)'
+	ssh colossus08 'cd spthy; $(ULIMITScolossus08); $(colossus08PROVER) --prove$(PROOFFLAGS) $(colossus08FLAGS) $(notdir $<)'
 
 %.colossus08-quietproof: %
 	scp $< colossus08:spthy/
-	ssh colossus08 "tmux new-window 'cd spthy; $(ULIMITScolossus08);/usr/bin/time $(colossus08PROVER) --prove $(colossus08FLAGS) $(notdir $<) 2>$(notdir $<)-$(DATETIME).errorlog | tee $(notdir $<)-$(DATETIME).log '"
+	ssh colossus08 "tmux new-window 'cd spthy; $(ULIMITScolossus08);/usr/bin/time $(colossus08PROVER) --prove$(PROOFFLAGS) $(colossus08FLAGS) $(notdir $<) 2>$(notdir $<)-$(DATETIME).errorlog | tee $(notdir $<)-$(DATETIME).log '"
 
 %.colossus08-check: %
 	scp $< colossus08:spthy/
 	ssh colossus08 'cd spthy; killall tamarin-prover; $(ULIMITScolossus08); $(colossus08PROVER) $(colossus08FLAGS) $(notdir $<)'
 
 %.interactive-proof: %
-	$(PROVER) interactive $(FLAGS) --prove $<
+	$(PROVER) interactive $(FLAGS) --prove$(PROOFFLAGS) $<
 
 
 %.benchmark-rechen: %
 	scp $< rechen:spthy/
-	ssh rechen 'cd spthy; killall tamarin-prover; $(ULIMITSRECHEN); $(REMOTEPROVER) --prove $(REMOTEFLAGS) $<'
+	ssh rechen 'cd spthy; killall tamarin-prover; $(ULIMITSRECHEN); $(REMOTEPROVER) --prove$(PROOFFLAGS) $(REMOTEFLAGS) $<'
 
 %.benchmark: %
 	scp $< $(BENCHMARKMACHINE):spthy/
-	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove $(BENCHMARKFLAGS) $(notdir $<)' > $@-cert 2> $@
+	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove$(PROOFFLAGS) $(BENCHMARKFLAGS) $(notdir $<)' > $@-cert 2> $@
 
 %.benchmark-noh: %
 	scp $< $(BENCHMARKMACHINE):spthy/
-	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove $(BENCHMARKFLAGSNOH) $(notdir $<)' > $@-cert 2> $@
+	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove$(PROOFFLAGS) $(BENCHMARKFLAGSNOH) $(notdir $<)' > $@-cert 2> $@
 
