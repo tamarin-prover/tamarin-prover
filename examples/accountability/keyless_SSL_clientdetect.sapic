@@ -218,6 +218,8 @@ lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
         "
         /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
 
+restriction b_not_corrupted: // assume party B is not corrupted.
+    "not (Ex #k. Corrupted('B')@k)"
 
 verdictfunction v1:
     "Ex #i. Detect('A','B')@i " -> <'A'>,
@@ -225,14 +227,13 @@ verdictfunction v1:
 
 // ex/exh is quick
 // suf_0 auto
-// suf_1 ctr-trace
-// uniq_0 ctr-trace
-//
+// suf_1 trivial
+// min follows from lemma
+// uniq_0 not true: B can also be corrupted for detect to happen
 lemma acc:
     v1 accounts 
     for "All ni nr c #i . CSession('A','B',ni,nr,c) @i 
-         ==> Ex #j . WSession('A','B',ni,nr,c)@j"
+         ==> (Ex #j . WSession('A','B',ni,nr,c)@j)"
     for parties <'A','B'>
-
 
 end
