@@ -149,10 +149,14 @@ lemma sanity:
 lemma accept_sound:
     "All w c d s #i. Accept(w,c,d,s)@i ==> 
       (Ex #j. BelowThreshold(s)@j)
-    | (Ex #j. Now(d)@j & j<i //the ledger agreed that d is a current date ..
+    & (Ex #j. Now(d)@j & j<i //the ledger agreed that d is a current date ..
         & All #k dp. Now(dp)@k &  k<i ==> #k = #j | #k < j // and this was the last time the ledger agreed on something
         )
     "
+
+/* lemma accept_complete: */
+
+
 /* TODO: - incorporate fairexchange 
  *       - rainbow table: leave open
  *       - prove:
