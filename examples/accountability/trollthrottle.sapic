@@ -20,7 +20,9 @@ functions:
     ex_daa_cert_id/1,
     ex_daa_cert_pk/1,
     ex_daa_pseudo_dom/1,
-    ex_daa_pseudo_id/1
+    ex_daa_pseudo_id/1,
+   // model dates, sequence
+   zero/0,S/1
 
 
 equations:
@@ -57,7 +59,7 @@ let U =  // honest user posting a comment on $date at website $W, after register
         !( in ($seq); // adversary gets to chose which sequence number is used
            in (<$W,c>); // adversary gets to chose comment and website to post do
            event Unique(<$date,$seq>); // honest user uses each coin only once
-           event BelowThreshold(seq);
+           event BelowThreshold($seq);
            out (m1);
            in (m2);
            out (m3);
@@ -65,7 +67,10 @@ let U =  // honest user posting a comment on $date at website $W, after register
            out (m5)
          )
      )
-     || (event Corrupted($U); out (cert)))
+     || (event Corrupted($U); out (cert); 
+     /* !(in (x); event Claim(x)) */ 
+     0
+      ))
 
 let W = //Webserver verifies comments with help of ledger before accepting them
     let dom = <$date,$seq>
@@ -76,28 +81,31 @@ let W = //Webserver verifies comments with help of ledger before accepting them
         m5 = <'5',m3,m4,c>
     in
     event Webserver($W);
-    ( !(
+    (!(
     in (m1);
     out (m2);
     in (m5);
-    if daa_ver(pk_iss,xdaapseudo,dom,xdaasig,xhash)=true() then
-        if h(<c,$W>)=xhash then
-            event Accept($W,c)
-     ))
-     || (event Corrupted($W); out (sk($W)))
+    if h(<c,$W>)=xhash then
+        event Accept($W,c,$date,$seq)
+     )
+     || (event Corrupted($W); out (sk($W))))
 
 let L = // public ledger, can be implemented as consensus mechanism
     let dom = <$date,$seq>
         key = <pseudo,dom>
         val = <sig,h(<c,$W>)>
         m3 = <'3',key,val>
+        m4 = <'4',sign(m3,sk('Log'))>
     in
-    !( in(m3); 
-       event BelowThreshold(seq);
+    !( lock 'L';
+       in(m3); 
+       event BelowThreshold($seq);
+       event Now($date);
        if daa_ver(pk_iss,pseudo,dom,sig,h(<c,$W>))=true() then
        lock key; // never unlocked, so we know same key was never used
        insert key,val;
-       out (<'4',sign(m3,sk('Log'))>)
+       out (m4);
+       unlock 'L'
     )
     ||
     !( in (key); lookup key as v in out (v))
@@ -119,8 +127,36 @@ restriction unique:
     "All m #i #j.
         (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
 
-restriction ledger_trusted:
+restriction ledger_no_webserver:
     "not (Ex #i. Webserver('Log')@i)"
 
+restriction ledger_no_user:
+    "not (Ex #i c. Registered('Log',c)@i)"
+
+/* restriction threshold: */
+/*     " All s #i. BelowThreshold(s)@i ==> s=1 | s=2 | s=3" */
+
+lemma sanity:
+    exists-trace
+    " (Ex w c d s #i. Accept(w,c,d,s)@i )
+    & not (Ex p #j . Corrupted(p)@j)"
+    
+lemma accept_sound:
+    "All w c d s #i. Accept(w,c,d,s)@i ==> 
+      (Ex #j. BelowThreshold(s)@j)
+    | (Ex #j. Now(d)@j & j<i //the ledger agreed that d is a current date ..
+        & All #k dp. Now(dp)@k &  k<i ==> #k = #j | #k < j // and this was the last time the ledger agreed on something
+        )
+    "
+/* TODO: - substitute sign by secret channel modelling */
+/*       - incorporate fairexchange 
+ *       - rainbow table: leave open
+ *       - prove:
+ *              1. timeliness --> protocol finishes eventually 
+ *              2. accountability ... for bla and reverse 
+ *              3. unlinkability 
+ *
+ *
+ *       */
 
 end
