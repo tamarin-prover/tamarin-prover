@@ -73,7 +73,7 @@ lemma sanity_logAB:
 verdictfunction v1:
     "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> <'A','B'>,
     "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())" -> <'A'>,
-    otherwise -> <> 
+    otherwise -> empty 
 
 lemma acc:
     v1 accounts 

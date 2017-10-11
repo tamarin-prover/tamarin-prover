@@ -396,8 +396,8 @@ analyzing: examples/ake/bilinear/RYY_PFS.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 9.148186s
+  output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
+  processing time: 8.447581s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 
@@ -408,8 +408,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 9.148186s
+  output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
+  processing time: 8.447581s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 

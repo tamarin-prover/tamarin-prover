@@ -258,8 +258,8 @@ analyzing: examples/csf12/KAS1.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/KAS1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.734528s
+  output:          examples/csf12/KAS1.spthy.tmp
+  processing time: 0.673945s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -269,8 +269,8 @@ summary of summaries:
 
 analyzed: examples/csf12/KAS1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.734528s
+  output:          examples/csf12/KAS1.spthy.tmp
+  processing time: 0.673945s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

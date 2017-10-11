@@ -16,6 +16,7 @@ module Theory.Tools.IntruderRules (
   , multisetIntruderRules
   , mkDUnionRule
   , specialIntruderRules
+  , variantsIntruder
 
   -- ** Classifiers
   , isDExpRule
@@ -209,7 +210,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     , invRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     ] ++
-    concatMap (variantsIntruder hnd id)
+    concatMap (variantsIntruder hnd id True)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
       , invRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
       ]
@@ -235,16 +236,16 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
 
 -- | @variantsIntruder mh irule@ computes the deconstruction-variants
 -- of a given intruder rule @irule@
-variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> IntrRuleAC -> [IntrRuleAC]
-variantsIntruder hnd minimizeVariants ru = do
+variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> Bool -> IntrRuleAC -> [IntrRuleAC]
+variantsIntruder hnd minimizeVariants applyFilters ru = go [] $ reverse $ do
     let ruleTerms = concatMap factTerms
                               (get rPrems ru++get rConcs ru++get rActs ru)
     fsigma <- minimizeVariants $ computeVariants (fAppList ruleTerms) `runReader` hnd
     let sigma     = freshToFree fsigma `evalFreshAvoiding` ruleTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
-    guard (frees (get rConcs ruvariant) /= [] &&
+    guard (not applyFilters || frees (get rConcs ruvariant) /= [] &&
            -- ground terms are already deducible by applying construction rules
-           ruvariant /= ru &&
+           (not applyFilters || ruvariant /= ru) &&
            -- this is a construction rule
            (get rConcs ruvariant) \\ (get rPrems ruvariant) /= []
            -- The conclusion is included in the premises
@@ -254,6 +255,14 @@ variantsIntruder hnd minimizeVariants ru = do
         [viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
         _                              -> return ruvariant
+  where
+    go checked [] = checked
+    go checked (r:unchecked) = go checked' unchecked
+      where
+        checked' = if any (\r' -> equalRuleUpToRenaming r r' `runReader` hnd)
+                          (checked++unchecked)
+                   then checked
+                   else r:checked
 
 -- | @normRule irule@ computes the normal form of @irule@
 normRule' :: IntrRuleAC -> WithMaude IntrRuleAC
@@ -286,7 +295,7 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     , emapRule  (ConstrRule (append (pack "_") emapSymString))  kuFact return
     ]
     ++ -- pmult is similar to exp
-    (variantsIntruder hnd id $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
+    (variantsIntruder hnd id True $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
     ++ -- emap is different
     (bpVariantsIntruder hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False) kdFact (const []))
 
@@ -313,7 +322,7 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
 
 bpVariantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
 bpVariantsIntruder hnd ru = do
-    ruvariant <- variantsIntruder hnd minimizeVariants ru
+    ruvariant <- variantsIntruder hnd minimizeVariants True ru
 
     -- For the rules "x, pmult(y,z) -> em(x,z)^y" and
     -- "pmult(y,z),x -> em(z,x)^y", we

@@ -242,8 +242,8 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/KAS2_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.011161s
+  output:          examples/csf12/KAS2_eCK.spthy.tmp
+  processing time: 3.112278s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -253,8 +253,8 @@ summary of summaries:
 
 analyzed: examples/csf12/KAS2_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 3.011161s
+  output:          examples/csf12/KAS2_eCK.spthy.tmp
+  processing time: 3.112278s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

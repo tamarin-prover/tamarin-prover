@@ -130,7 +130,6 @@ executable tamarin-prover
       , blaze-builder
       , blaze-html
       , bytestring
-      , bytestring
       , cmdargs
       , conduit
       , containers

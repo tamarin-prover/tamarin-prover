@@ -1096,8 +1096,8 @@ analyzing: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.865814s
+  output:          case-studies-sapic-regression/predicates/decwrap_destr.spthy.tmp
+  processing time: 2.165315s
   WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1114,8 +1114,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/predicates/decwrap_destr.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.865814s
+  output:          case-studies-sapic-regression/predicates/decwrap_destr.spthy.tmp
+  processing time: 2.165315s
   WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   

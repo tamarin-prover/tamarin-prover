@@ -58,14 +58,15 @@ let sufficiency id op parties vf phi =
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* (suf-i) sufficiency of φ_i: exists-trace *) 
 (* ( φ_i && ( dishonest(B_i^1) | .. | dishonest(B_i^n)) && not (φ) ) *)
+(* unless V_i is empty verdict, then *)
+(* ( φ_i && dishonest(empty) && φ ) *)
     let sufficient i (f,v) = 
         let label = Printf.sprintf "%s_suf_%n" id i in
-        if v = [] then 
-            ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,phi)))
-            else 
-                ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi)))) (* Does not work. *)
+        match v with
+          [] -> ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,phi)))
+        | v  ->  ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi)))) (* Does not work. *)
         in
-        mapi sufficient vf 
+    mapi sufficient vf 
 
 let minimality id op parties vf phi = 
 (* for the each mapping φ_i → V_i *) 

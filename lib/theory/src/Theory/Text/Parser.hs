@@ -29,6 +29,7 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.List                  as L
+import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -134,6 +135,10 @@ parseLemma = parseString "<unknown source>" lemma
 llit :: Parser LNTerm
 llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
+-- | Parse an lit with logical variables without public names in single constants.
+llitNoPub :: Parser LNTerm
+llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
+
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
 lookupArity :: String -> Parser (Int, Privacy)
@@ -150,7 +155,7 @@ naryOpApp plit = do
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
-                     else commaSep (multterm plit)
+                     else commaSep (msetterm plit)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
@@ -171,7 +176,7 @@ binaryAlgApp plit = do
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
-  ts <- symbol "diff" *> parens (commaSep (multterm plit))
+  ts <- symbol "diff" *> parens (commaSep (msetterm plit))
   when (2 /= length ts) $ fail $
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
@@ -187,7 +192,7 @@ diffOp eqn plit = do
 term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
-    , parens (multterm plit)
+    , parens (msetterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp
@@ -205,7 +210,7 @@ term plit eqn = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (msetterm plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -213,19 +218,19 @@ multterm plit = do
     dh <- enableDH <$> getState
     if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else msetterm plit
+        else term plit False
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (term plit False) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else term plit False
+        then chainl1 (multterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else multterm plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 (multterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
@@ -236,7 +241,7 @@ fact plit = try (
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (commaSep (multterm plit))
+       ts    <- parens (commaSep (msetterm plit))
        mkProtoFact multi i ts
     <?> "fact" )
   where
@@ -281,17 +286,36 @@ typeAssertions = fmap TypingE $
     <|> pure []
 -}
 
+-- | Parse a 'RuleAttribute'.
+ruleAttribute :: Parser RuleAttribute
+ruleAttribute = asum
+    [ symbol "colour=" *> (RuleColor <$> parseColor)
+    , symbol "color="  *> (RuleColor <$> parseColor)
+    ]
+  where
+    parseColor = do
+        hc <- hexColor
+        case hexToRGB hc of
+            Just rgb  -> return rgb
+            Nothing -> fail $ "Color could not be parsed to RGB"
+
+-- | Parse RuleInfo
+protoRuleInfo :: Parser ProtoRuleEInfo
+protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
+                                        (symbol "rule" *> optional moduloE *> identifier))
+                               <*> (option [] $ list ruleAttribute)) <*  colon
+
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
-    name  <- try (symbol "rule" *> optional moduloE *> identifier <* colon)
+    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
     (ps,as,cs) <- genericRule
-    return $ apply subst $ Rule (StandRule name) ps cs as
+    return $ apply subst $ Rule ri ps cs as
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
@@ -299,7 +323,7 @@ letBlock = do
     toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> multterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -312,6 +336,7 @@ intrRule = do
         name     <- identifier
         limit    <- option 0 natural
 -- FIXME: Parse whether we have a subterm rule or a constant rule
+--        Currently we (wrongly) always assume that we have a subterm rule, this prohibits recomputing variants
         case name of
           'c':cname -> return $ ConstrRule (BC.pack cname)
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
@@ -420,7 +445,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (multterm llit <* opEqual) <*> multterm llit <?> "term equality"
+  , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
@@ -721,7 +746,7 @@ equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
-        rrule <- RRule <$> term llit True <*> (equalSign *> term llit True)
+        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)

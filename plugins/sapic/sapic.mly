@@ -107,7 +107,7 @@ let location_rule=
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
 %token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT 
-%token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE ACCOUNTS FOR PARTIES
+%token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE EMPTY ACCOUNTS FOR PARTIES
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
 
@@ -116,9 +116,11 @@ let location_rule=
 %left REP
 %left SEMICOLON
 
-%right ALL EXISTS IFF IMP 
+%right ALL EXISTS 
+%right IFF IMP  
 %right OR
 %right AND
+%nonassoc NOT
 
 
 /* entry point */
@@ -158,7 +160,7 @@ let location_rule=
 %type <rule> rule
 %type <actionlist> transition
 %type <string> letblock
-%type <string> id_eq_termseq
+%type <(string * Term.term) list> id_eq_termseq
 %type <string> identifierseq
 %type <string> formal_comment
 %type <string> id_not_res
@@ -301,7 +303,7 @@ case:
 ;
 
 verdict:
-  | LCB RCB  {[]} 
+  | EMPTY  {[]} 
   | LEQ pvarseq GEQ  {[VarSet.of_list $2]}
   | LEQ pvarseq GEQ OR verdict {(VarSet.of_list $2)::$5}
   ;
@@ -324,7 +326,7 @@ process:
     | IF if_cond THEN process                        { Node(Cond($2), $4, Node(Null, Empty, Empty)) }
     | LOOKUP term AS literal IN process ELSE process { Node(Lookup($2,Term.Var($4)), $6 , $8) }
     | LOOKUP term AS literal IN process              { Node(Lookup($2,Term.Var($4)), $6, Node(Null,Empty,Empty)) }
-    | LET id_not_res EQ multterm IN process          { substitute $2 $4 $6}
+    | LET id_eq_termseq IN process          { List.fold_right (fun (x,y) p -> substitute x y p) $2 $4 }
     | LET id_not_res EQ REPORT LP multterm RP IN process { substitute
 							     $2
 							     (Term.App("rep", [$6;Term.Var(Var.Msg("_loc_"))]))
@@ -433,9 +435,7 @@ lemma:
 	|     lemma_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallLemma($1, $4) }
 	|     lemma_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsLemma($1, $4) }
 	|     lemma_header DQUOTE formula DQUOTE	{ ForallLemma($1, $3) }
-	|     restriction_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallRestriction($1, $4) }
-	|     restriction_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsRestriction($1, $4) }
-	|     restriction_header DQUOTE formula DQUOTE	{ ForallRestriction($1, $3) }
+	|     restriction_header DQUOTE formula DQUOTE	{ Restriction($1, $3) }
 	|     lemma_header IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
             AccLemma( $1, Hashtbl.find verdictf_table $2, $6,( VarSet.of_list $11))
             with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
@@ -550,12 +550,14 @@ transition:
 
 letblock:
 	| /* empty */ {""}
-	| LET id_eq_termseq IN		{"\t let "^$2^" in\n"}
+	| LET id_eq_termseq IN		{  let to_str (x,y) =  x^"="^(Term.term2string y) in
+                                           let eq_list l =  String.concat " " (List.map to_str l) in
+                                                "\t let "^(eq_list $2)^" in\n"}
 ;	
 
 id_eq_termseq:
-	| IDENTIFIER EQ multterm {$1^"="^(Term.term2string $3)}
-	| IDENTIFIER EQ multterm id_eq_termseq {$1^"="^(Term.term2string $3)^" "^$4}
+        | id_not_res EQ multterm { [($1,$3)] }
+	| id_not_res EQ multterm id_eq_termseq { ($1,$3)::$4}
 ;
 
 identifierseq:

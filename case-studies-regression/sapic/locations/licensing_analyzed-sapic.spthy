@@ -811,8 +811,8 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.210888s
+  output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
+  processing time: 5.210468s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -827,8 +827,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.210888s
+  output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
+  processing time: 5.210468s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

@@ -48,8 +48,8 @@ analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.087076s
+  output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
+  processing time: 0.077409s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ------------------------------------------------------------------------------
@@ -59,8 +59,8 @@ summary of summaries:
 
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.087076s
+  output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
+  processing time: 0.077409s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ==============================================================================
