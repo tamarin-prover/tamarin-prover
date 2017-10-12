@@ -43,8 +43,8 @@ let dishonest parties b =
             (Atom True, 0) 
     with (r,_)->r
 
-let dishonest_disj parties v = 
-        List.fold_left (fun a b -> Or(dishonest parties b,a)) (Atom False) v 
+(* let dishonest_disj parties v = *) 
+(*         List.fold_left (fun a b -> Or(dishonest parties b,a)) (Atom False) v *) 
 
 let corrupted_conj = function [] -> Atom True
 | b ->
@@ -53,29 +53,45 @@ let corrupted_conj = function [] -> Atom True
         let conj = List.fold_left (fun a b -> And(b,a)) (Atom True) atoms in
         Ex (free_vars VarSet.empty conj,conj)
 
+let rec mapi_opt i f = function
+    [] -> []
+  | a::l -> match f i a with
+        Some (r) -> r :: mapi_opt (i + 1) f l
+       |None ->  mapi_opt (i + 1) f l
+
+let mapi_opt f l = mapi_opt 0 f l
+
 let sufficiency id op parties vf phi = 
-(* for the each mapping φ_i → V_i *) 
+(* for the each mapping φ_i → V_i  and V_i non-empty *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* (suf-i) sufficiency of φ_i: exists-trace *) 
-(* ( φ_i && ( dishonest(B_i^1) | .. | dishonest(B_i^n)) && not (φ) ) *)
-(* unless V_i is empty verdict, then *)
-(* ( φ_i && dishonest(empty) && φ ) *)
+(* ( φ_i && ( dishonest(union over  j: B_i^j) ) && not (φ) ) *)
     let sufficient i (f,v) = 
         let label = Printf.sprintf "%s_suf_%n" id i in
+        let union = List.fold_left (VarSet.union) VarSet.empty v in
         match v with
-          [] -> ExistsLemma ((label,op), And(f,And(dishonest parties VarSet.empty ,phi)))
-        | v  ->  ExistsLemma ((label,op), And(f,And(dishonest_disj parties v,Not(phi))))
+          [] -> None
+        | (x::xs)  ->  Some (ExistsLemma ((label,op), And(f,And(dishonest parties union,Not(phi)))))
         in
-    mapi sufficient vf 
+    mapi_opt sufficient vf 
+
+let completeness id op vf phi = 
+(* for the each mapping φ_i → V_i  and V_i empty *) 
+(* For all traces $t$: $φ_i(t) ⇒ φ(t)$. *)
+    let complete i (f,v) = 
+        let label = Printf.sprintf "%s_compl_%n" id i in
+        match v with
+          [] -> Some (ForallLemma ((label,op),Imp(f,phi)))
+        | (x::cs)  ->  None 
+        in
+    mapi_opt complete vf 
 
 let minimality id op parties vf phi = 
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* and for all strict subsets B' of some B_i^j: *)
 (* (min-i) Minimality of V_i: forall-trace *)
-(* not ( φ_i && Dishonest(B') ) *)
-(* TODO not sure, maybe instead need *)
-(* not ( φ_i && φ && Dishonest(B') ) *)
+(* not ( φ && Dishonest(B') ) *)
     (* let rec list_of_subsets b = *) 
     (*     if VarSet.is_empty b then [b] *)
     (*     else List.fold_left (fun a elem -> (list_of_subsets (VarSet.remove elem b))@a ) [b] (VarSet.elements b) *)
@@ -85,7 +101,7 @@ let minimality id op parties vf phi =
     in
     let minimal f i j k b' = 
         let label = Printf.sprintf "%s_min_%n_%n_%n" id i j k in
-        ForallLemma ((label,op), Not(And(f,dishonest parties b')))
+        ForallLemma ((label,op), Not(And(Not(phi),dishonest parties b')))
     in
         List.flatten
         ( List.flatten
@@ -117,6 +133,8 @@ let sufficient_conditions header parties vf phi =
     [exhaustiveness id op vf]
     @
     (sufficiency id op parties vf phi)
+    @
+    (completeness id op vf phi)
     @
     (minimality id op parties vf phi)
     @

@@ -226,14 +226,13 @@ verdictfunction v1:
     otherwise -> empty
 
 // ex/exh is quick
-// suf_0 auto
-// suf_1 trivial
-// min follows from lemma
-// uniq_0 not true: B can also be corrupted for detect to happen
 lemma acc:
     v1 accounts 
     for "All ni nr c #i . CSession('A','B',ni,nr,c) @i 
-         ==> (Ex #j . WSession('A','B',ni,nr,c)@j)"
+         ==> (Ex #j . WSession('A','B',ni,nr,c)@j)
+         |   (Ex #j . FalseCSession('A','B',ni,nr,c)@j)
+         /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
+         "
     for parties <'A','B'>
 
 end
