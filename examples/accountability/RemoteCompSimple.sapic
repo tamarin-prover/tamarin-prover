@@ -160,6 +160,7 @@ verdictfunction v1:
 
   " Ex #j. NotHonestA()@#j
   & (not Ex #i. NotHonestS()@#i) 
+  /* & (Ex #i. HonestS()@#i) */ 
   " -> <'A'>,
 
   " Ex #i. NotHonestS()@#i

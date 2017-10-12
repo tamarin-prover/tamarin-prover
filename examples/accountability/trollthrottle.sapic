@@ -154,17 +154,13 @@ lemma accept_sound:
         )
     "
 
-/* lemma accept_complete: */
-
 
 /* TODO: - incorporate fairexchange 
  *       - rainbow table: leave open
  *       - prove:
  *              1. timeliness --> protocol finishes eventually 
- *              2. accountability ... for bla and reverse 
+ *              2. accountability 
  *              3. unlinkability 
- *
- *
  *       */
 
 end
