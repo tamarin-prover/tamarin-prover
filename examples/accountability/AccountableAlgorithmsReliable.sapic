@@ -1,4 +1,4 @@
-theory RemoteCompSimple
+theory AccountableAlgorithmsReliable
 begin
 
 options: progress
@@ -165,6 +165,18 @@ verdictfunction v1:
 
   " Ex #i. NotHonestS()@#i
   & (not Ex #j. NotHonestA()@#j)
+  " -> <'S'>,
+
+  otherwise -> <>
+
+verdictfunction v2: 
+  " Ex #i #j. NotHonestS()@#i & NotHonestA()@#j
+  " -> <'A','S'>,
+
+  " Ex #i #j. NotHonestA()@#i & HonestS()@#j) 
+  " -> <'A'>,
+
+  " Ex #i #j . HonestA()@#i & NotHonestS()@#j)
   " -> <'S'>,
 
   otherwise -> <>
