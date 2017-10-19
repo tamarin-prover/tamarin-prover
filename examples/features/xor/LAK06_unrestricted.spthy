@@ -17,8 +17,7 @@ builtins: xor, hashing
 
 rule setup:
   [Fr(~k)]
---[ //OnlyOnce('setup')
-  ]->
+--[ ]->
   [!Reader(~k), !Tag(~k)]
 
 rule initiatereader:
@@ -42,9 +41,6 @@ rule accepttag:
 --[ Commit(<'T','R',<~k,r0,~r1>>)
   , FinTag()]->
   [ ]
-
-restriction onlyonce:
-  "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
 // PROVEN
 lemma executable:
