@@ -57,15 +57,15 @@ test: $(TESTFILES)
 
 %.remote-proof: %
 	scp $< $(HOST):spthy/
-	ssh $(HOST) 'cd spthy; killall tamarin-prover; $($(HOST)ULIMITS); $($(HOST)PROVER) --prove$(PROOFFLAGS) $($(HOST)FLAGS) $(notdir $<)'
+	ssh -t $(HOST) 'cd spthy; $($(HOST)ULIMITS); $($(HOST)PROVER) --prove$(PROOFFLAGS) $($(HOST)FLAGS) $(notdir $<)'
 
 %.remote-check: %
 	scp $< $(HOST):spthy/
-	ssh $(HOST) 'cd spthy; killall tamarin-prover; $($(HOST)ULIMITS); $($(HOST)PROVER) $($(HOST)FLAGS) $(notdir $<)'
+	ssh -t $(HOST) 'cd spthy; $($(HOST)ULIMITS); $($(HOST)PROVER) $($(HOST)FLAGS) $(notdir $<)'
 
 %.remote-quietproof: %
 	scp $< $(HOST):spthy/
-	ssh $(HOST) "tmux new-window 'cd spthy; killall tamarin-prover; $($(HOST)ULIMITS);LC_ALL=en_US.utf8 /usr/bin/time $($(HOST)PROVER) --prove$(PROOFFLAGS) $($(HOST)FLAGS) $(notdir $<) 2>$(notdir $<)-$(HOST)-$(DATETIME).errorlog | tee $(notdir $<)-$(HOST)-$(DATETIME).log '"
+	ssh $(HOST) "tmux new-window 'cd spthy; $($(HOST)ULIMITS);LC_ALL=en_US.utf8 /usr/bin/time $($(HOST)PROVER) --prove$(PROOFFLAGS) $($(HOST)FLAGS) $(notdir $<) 2>$(notdir $<)-$(HOST)-$(DATETIME).errorlog | tee $(notdir $<)-$(HOST)-$(DATETIME).log '"
 
 
 %.benchmark-rechen: %

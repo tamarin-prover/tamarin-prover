@@ -52,13 +52,19 @@ let W =
         out (<m2,sign{m2}sk($B)>);
         in  (<m3,sign{m3}sk($A)>);
         if xcc = S(cw) then 
-            event WSession($A,$B,nc,~nw,xcc);
+            event WSession($A,$B,nc,~nw,S(cw));
             event WCount($A,$B,cw,S(cw));
             insert <'cw',$B,$A>,S(cw);
             out (<m4,sign{m4}sk($B)>);
             unlock $B
         else
-            event Detect($A,$B))
+            event Detect($A,$B);
+            event WSession($A,$B,nc,~nw,S(cw));
+            event WCount($A,$B,cw,S(cw));
+            insert <'cw',$B,$A>,S(cw);
+            out (<m4,sign{m4}sk($B)>);
+            unlock $B
+        )
     else 
         insert <'cw',$B,$A>,'0';
         unlock $B
@@ -87,20 +93,23 @@ restriction unique:
     "All m #i #j.
         (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
 
-/* // verifies */ 
+/* C need to check again */
+
+/* // verifies 146063 steps / 24 (both counter_uniques) */  
 lemma counter_unique_c[reuse,use_induction]:
     "(All a b c oc oc2 #i c2 #i2.
         CCount(a,b,oc,c) @ i & CCount(a,b,oc2, c2) @ i2
         & (c2 = c)
     ==> #i = #i2)"
 
+/* // verifies 555004 steps / 24 (both counter_uniques) */   
 lemma counter_unique_w[reuse,use_induction]:
     "(All a b c oc oc2 #i c2 #i2.
         WCount(a,b,oc,c) @ i & WCount(a,b,oc2, c2) @ i2
         & (c2 = c)
     ==> #i = #i2)"
 
-// SANITY lemmas: verify relatively fast 
+// SANITY lemmas: verify relatively fast  C
 lemma exists_session: exists-trace
     "Ex a b ni nr c #i #j.
         CSession(a,b,ni,nr,c) @ j 
@@ -120,7 +129,7 @@ lemma exists_detect: exists-trace
         Detect(a,b) @ i 
         & not(Ex #j. Corrupted(b) @ j)"
 
-// verifies 
+// verifies  C
 lemma counter_inj_c[reuse,use_induction]:
     "All a b oc1 oc2 c1 c2 c3 #i #j #k .
         CCount(a,b,oc2,c2) @ i
@@ -129,7 +138,7 @@ lemma counter_inj_c[reuse,use_induction]:
       & #k<#j
     ==> not ( #i < #k)"
 
-// verifies 7117 steps / 15min on colossus
+// verifies 7117 steps / 15min on colossus C
 lemma counter_inj_w[reuse,use_induction]:
     "All a b oc1 oc2 c1 c2 c3 #i #j #k .
         WCount(a,b,oc2,c2) @ i
@@ -138,13 +147,13 @@ lemma counter_inj_w[reuse,use_induction]:
       & #k<#j
     ==> not ( #i < #k)"
 
-// verifies quickly
-lemma detect_last[reuse,use_induction]:
-    "All a b  #i cc #j.
-        Detect(a,b) @ i & W(a,b,cc) @ j
-    ==> #j < #i"
+// verifies quickly C -- does not hold if we detect during communication
+/* lemma detect_last[reuse,use_induction]: */
+/*     "All a b  #i cc #j. */
+/*         Detect(a,b) @ i & W(a,b,cc) @ j */
+/*     ==> #j < #i" */
 
-// verifies quickly
+// verifies quickly 
 lemma matching_DH_w_uncompromised:
     "All a b nc nw #i.
         CDHParams(a,b,nc,nw) @ i 
@@ -157,18 +166,20 @@ lemma correct_dolevyao:
         CSession(a,b,nc,nw,c) @ i
     ==> (Ex #j. Corrupted(b) @ j & #j < #i)
         | (Ex #j. WSession(a,b,nc,nw,c) @ j & #j < #i)
+        // or detected 
+        | (Ex #j. Detect(a,b) @ j & #j < #i)
         // Or A emitted false event
         | (Ex #j. FalseCSession(a,b,nc,nw,c) @ j & #j < #i)
         "
 
-// can be proven by hand, more than 3 days on colossus
+// can be proven by hand, not auto after more than 3 days on colossus C
 lemma detect_sound [reuse]:
     "All a b #i.
         Detect(a,b) @ i 
     ==> (Ex #j. #j < #i & Corrupted(b) @ j)
         |(Ex #j. #j < #i & Corrupted(a) @ j)"
 
-// verifies quickly
+// verifies quickly 
 lemma no_detect_implies_rsession[reuse]:
     "All a b ni nr nrp c #i.
         CSession(a,b,ni,<nr,nrp>,c) @ i
@@ -199,8 +210,8 @@ lemma aposteriori_boundary_case[reuse]:
         | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #i)
         "
 
-//automated
-lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
+//automated 912step / 1:30 colossus04
+lemma unmatching_implies_detect_with_one_uncompromised[use_induction,reuse]:
     "All a b ni nr c #r #i niprev nrprev cprev #iprev.
         //Given an matching session
         CSession(a,b,ni,nr,c) @ i & WSession(a,b,ni,nr,c) @ r & #r < #i
@@ -214,6 +225,7 @@ lemma unmatching_implies_detect_with_one_uncompromised[use_induction]:
         | (Ex #j.  Detect(a,b) @ j)
         //Or B was compromised
         | (Ex #k. Corrupted(b) @ k)
+        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j & #j < #i)
         | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #iprev)
         "
         /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
@@ -226,12 +238,31 @@ verdictfunction v1:
     otherwise -> empty
 
 // ex/exh is quick
-lemma acc:
+/* lemma acc: */
+/*     v1 accounts */ 
+/*     for "All ni nr c #i . CSession('A','B',ni,nr,c) @i */ 
+/*          ==>  (Ex #j . WSession('A','B',ni,nr,c)@j) */
+/*          |   (Ex #j . FalseCSession('A','B',ni,nr,c)@j) */
+/*          /1* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. *1/ */
+/*          " */
+/*     for parties <'A','B'> */
+
+// suf-0 is automated, but probably just a matter of time...
+lemma acc2:
     v1 accounts 
-    for "All ni nr c #i . CSession('A','B',ni,nr,c) @i 
-         ==> (Ex #j . WSession('A','B',ni,nr,c)@j)
-         |   (Ex #j . FalseCSession('A','B',ni,nr,c)@j)
-         /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
+    for /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
+        "All ni nr c #r #i niprev nrprev cprev #iprev.
+            //Given a matching session
+            CSession('A','B',ni,nr,c) @ i & WSession('A','B',ni,nr,c) @ r & #r < #i
+            //Then for all sessions before that
+            & CSession('A','B',niprev,nrprev,cprev) @ iprev & #iprev < #i
+        ==> //the session was also matching
+            (Ex #rprev.
+                WSession('A','B',niprev,nrprev,cprev) @ rprev
+                    & #rprev < #iprev & #rprev < #r)
+            // or faked
+          | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j & #j < #i) // added 
+          | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j & #j < #iprev)
          "
     for parties <'A','B'>
 

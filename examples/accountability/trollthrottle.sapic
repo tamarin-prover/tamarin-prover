@@ -12,7 +12,7 @@ begin
 builtins: signing, hashing
 functions: 
   extract/1, sk/1[private], // sign, verify, pk, and true are from builtins
-  // DAA
+  // direct anonymous attestation
   ipk/1,daa_cert/3,daa_sig/3,daa_pseudo/2,daa_ver/5,
    // extraction function for soundness, but not to be used in protocol
     ex_daa_sig_m/1,
@@ -48,7 +48,7 @@ equations:
 let Issuer = 0 //DAA issuer and verification of users, not explicit, but implicit in user definition
     
 let U =  // honest user posting a comment on $date at website $W, after registering
-    let cert = daa_cert(id,ipk(sk_iss),sk_iss)
+    let cert = daa_cert(id,ipk(sk_iss),sk_iss) 
         dom = <$date,$seq>
         hash = h(<c,$W>)
         m1 = <'1',h(<c,$W>),$date,$seq>
