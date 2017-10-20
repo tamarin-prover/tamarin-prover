@@ -132,6 +132,8 @@ data WebUI = WebUI
     -- ^ Close an open theory according to command-line arguments.
   , diffParseThy       :: String -> IO (Either String (ClosedDiffTheory))
     -- ^ Close an open theory according to command-line arguments.
+  , thyWf              :: String -> IO String
+    -- ^ Report on the wellformedness of a theory according to command-line arguments.
   , theoryVar          :: MVar (TheoryMap)
     -- ^ MVar that holds the theory map
   , threadVar          :: MVar ThreadMap
