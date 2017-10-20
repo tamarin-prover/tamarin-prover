@@ -84,6 +84,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (FilePath -> IO ClosedTheory)   -- ^ Theory loader (from file).
           -> (String -> IO (Either String ClosedTheory))
           -- ^ Theory loader (from string).
+          -> (String -> IO String)           -- ^ Report on wellformedness.
           -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> (String, FilePath)              -- ^ Path to graph rendering binary (dot or json)
@@ -93,7 +94,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (Application -> IO b)           -- ^ Function to execute
           -> Bool
           -> IO b
-withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
+withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser thWellformed debug'
           graphCmd' imgFormat' defaultAutoProver' f sapic
   = do
     thy    <- getTheos
@@ -110,6 +111,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
         , cacheDir           = cacheDir_
         , diffParseThy       = error "not in diff mode!"
         , parseThy           = liftIO . thParser
+        , thyWf              = liftIO . thWellformed
         , getStatic          = staticFiles
         , theoryVar          = thyVar
         , threadVar          = thrVar
@@ -154,6 +156,7 @@ withWebUIDiff :: String                      -- ^ Message to output once the sev
           -> (FilePath -> IO ClosedDiffTheory)   -- ^ Theory loader (from file).
           -> (String -> IO (Either String ClosedDiffTheory))
           -- ^ Theory loader (from string).
+          -> (String -> IO String)           -- ^ Report on wellformedness.
           -- -> (OpenTheory -> IO ClosedTheory) -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
           -> FilePath                        -- ^ Path to dot binary
@@ -161,7 +164,7 @@ withWebUIDiff :: String                      -- ^ Message to output once the sev
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debug'
+withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser thWellformed debug'
           dotCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
@@ -178,6 +181,7 @@ withWebUIDiff readyMsg cacheDir_ thDir loadState autosave thLoader thParser debu
         , cacheDir           = cacheDir_
         , parseThy           = error "in diff mode!"
         , diffParseThy       = liftIO . thParser
+        , thyWf              = liftIO . thWellformed
         , getStatic          = staticFiles
         , theoryVar          = thyVar
         , threadVar          = thrVar

@@ -493,7 +493,8 @@ postRootR = do
                       Right thy -> do
                           void $ putDiffTheory Nothing
                                   (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-                          setMessage "Loaded new theory!"
+                          wfReport <- liftIO $ thyWf yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
+                          setMessage $ toHtml $ "Loaded new theory!" ++  wfReport
                  else do
                     closedThy <- liftIO $ parseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
                     case closedThy of
@@ -501,7 +502,8 @@ postRootR = do
                       Right thy -> do
                           void $ putTheory Nothing
                                   (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-                          setMessage "Loaded new theory!"
+                          wfReport <- liftIO $ thyWf yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
+                          setMessage $ toHtml $ "Loaded new theory!" ++ wfReport
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"

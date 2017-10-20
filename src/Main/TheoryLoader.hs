@@ -19,6 +19,7 @@ module Main.TheoryLoader (
   , loadClosedThy
   , loadClosedThyWfReport
   , loadClosedThyString
+  , reportOnClosedThyStringWellformedness
 
   -- ** Loading open diff theories
   , loadOpenDiffThy
@@ -27,6 +28,7 @@ module Main.TheoryLoader (
   , loadClosedDiffThy
   , loadClosedDiffThyWfReport
   , loadClosedDiffThyString
+  , reportOnClosedDiffThyStringWellformedness
 
   
   -- ** Constructing automatic provers
@@ -66,6 +68,8 @@ import           Theory.Tools.Wellformedness
 
 import           Main.Console
 import           Main.Environment
+
+import           Text.Parsec                hiding ((<|>))
 
 
 ------------------------------------------------------------------------------
@@ -192,7 +196,41 @@ loadClosedDiffThyString as input =
         Right thy -> fmap Right $ do
           thy1 <- addMessageDeductionRuleVariantsDiff thy
           closeDiffThy as thy1
-             
+
+-- | Load an open theory from a string.
+loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
+loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as)
+
+-- | Load an open theory from a string.
+loadOpenDiffThyString :: Arguments -> String -> Either ParseError OpenDiffTheory
+loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ quitOnWarning as)
+
+-- | Load a close theory and only report on well-formedness errors.
+reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
+reportOnClosedThyStringWellformedness as input = do
+    case loadOpenThyString as input of
+      Left  err -> return $ "parse error: " ++ show err
+      Right thy ->
+        case checkWellformedness thy of
+          []     -> return ""
+          report -> do
+            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+
+-- | Load a closed diff theory and report on well-formedness errors.
+reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String
+reportOnClosedDiffThyStringWellformedness as input = do
+    case loadOpenDiffThyString as input of
+      Left  err   -> return $ "parse error: " ++ show err
+      Right thy0 -> do
+        thy1 <- addMessageDeductionRuleVariantsDiff thy0
+        -- report
+        case checkWellformednessDiff thy1 of
+          []     -> return ""
+          report -> do
+            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
 closeThy as thy0 = do
