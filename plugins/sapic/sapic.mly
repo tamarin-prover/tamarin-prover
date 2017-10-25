@@ -108,6 +108,7 @@ let location_rule=
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
 %token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT 
 %token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE EMPTY ACCOUNTS FOR PARTIES
+%token COARSE CASES
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
 
@@ -288,7 +289,7 @@ let_process:
 	 |    LET id_not_res EQ process			 {Hashtbl.add proc_table $2 $4; ()} 
 
 verdictf:
-	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 (wellformed $4); ()} 
+	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 $4; ()} 
 ;
 
 caseseq:
@@ -300,13 +301,19 @@ caseseq:
 
 case:
   | DQUOTE formula DQUOTE RIGHTARROW verdict {Case($2,$5)}
+  | DQUOTE formula DQUOTE RIGHTARROW LET IDENTIFIER EQ LEQ singleton_verdict GEQ {RefCase($6,$2,[$9])}
 ;
 
 verdict:
   | EMPTY  {[]} 
-  | LEQ pvarseq GEQ  {[VarSet.of_list $2]}
-  | LEQ pvarseq GEQ OR verdict {(VarSet.of_list $2)::$5}
+  | LEQ singleton_verdict GEQ  {[$2]}
+  | LEQ singleton_verdict GEQ OR verdict {$2::$5}
   ;
+
+singleton_verdict:
+    | pvarseq { VerdictPart(VarSet.of_list $1) } 
+    | IDENTIFIER {  Ref($1) }
+;
 
 pvarseq:
     |	/* empty */		{[]}
@@ -436,10 +443,9 @@ lemma:
 	|     lemma_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsLemma($1, $4) }
 	|     lemma_header DQUOTE formula DQUOTE	{ ForallLemma($1, $3) }
 	|     restriction_header DQUOTE formula DQUOTE	{ Restriction($1, $3) }
-	|     lemma_header IDENTIFIER ACCOUNTS FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
-            AccLemma( $1, Hashtbl.find verdictf_table $2, $6,( VarSet.of_list $11))
+	|     lemma_header IDENTIFIER ACCOUNTS account_attr_col FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
+            AccLemma($4, $1, Hashtbl.find verdictf_table $2, $7,( VarSet.of_list $12))
             with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
-
 ;
 
 lemma_header:
@@ -471,6 +477,16 @@ lemma_attr_seq:
 lemma_attr:
 	|     LEMMA_ATTR			{$1}
 	|     HIDE_LEMMA EQ IDENTIFIER	{"hide_lemma="^$3}
+;
+
+account_attr_col:
+	|     /* empty */ { Coarse }
+	|     LSB account_attr RSB { $2 }
+;
+
+account_attr:
+	|     COARSE			{Coarse}
+	|     CASES			{Cases}
 ;
 
 

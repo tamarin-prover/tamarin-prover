@@ -4,6 +4,9 @@ open List
 open Atomformulaaction
 open Var
 open Term
+open Deoptionalize
+open Verdict
+open Exceptions
 
 module VarSet = Set.Make( Var );;
 
@@ -20,7 +23,7 @@ let exclusiveness id op vf =
             mapi (fun j phi_j -> if i>=j then None else Some (exclusive i j phi_i phi_j)) vf' )
         vf' 
     in
-        Deoptionalize.deoptionalize (List.flatten option_list)
+        deoptionalize (List.flatten option_list)
 
 let exhaustiveness id op vf =
 (* (EV) Exhaustiveness: φ_1 && .. && φ_n *)
@@ -53,27 +56,57 @@ let corrupted_conj = function [] -> Atom True
         let conj = List.fold_left (fun a b -> And(b,a)) (Atom True) atoms in
         Ex (free_vars VarSet.empty conj,conj)
 
-let rec mapi_opt i f = function
-    [] -> []
-  | a::l -> match f i a with
-        Some (r) -> r :: mapi_opt (i + 1) f l
-       |None ->  mapi_opt (i + 1) f l
-
-let mapi_opt f l = mapi_opt 0 f l
 
 let sufficiency id op parties vf phi = 
 (* for the each mapping φ_i → V_i  and V_i non-empty *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
-(* (suf-i) sufficiency of φ_i: exists-trace *) 
-(* ( φ_i && ( dishonest(union over  j: B_i^j) ) && not (φ) ) *)
+(* (suf-i) sufficiency of φ_i and B_i^j :  *) 
+(* exists-trace: dishonest( B_i^j) && not (φ) *)
+(* TODO could optimize: some lemmas are created twice, if different verdicts have the same part *)
     let sufficient i (f,v) = 
-        let label = Printf.sprintf "%s_suf_%n" id i in
-        let union = List.fold_left (VarSet.union) VarSet.empty v in
+        let sufficient j x = 
+            let label = Printf.sprintf "%s_suf_%n_%n" id i j in
+            ExistsLemma ((label,op), And(dishonest parties x,Not(phi)))
+        in
         match v with
           [] -> None
-        | (x::xs)  ->  Some (ExistsLemma ((label,op), And(f,And(dishonest parties union,Not(phi)))))
+        | (x::xs)  ->  Some (mapi sufficient v)
+    in
+    flatten (mapi_opt sufficient vf)
+
+let sufficiencySingleton id op parties vf phi = 
+(* for the each mapping φ_i → V_i  and V_i singleton *) 
+(* i.e. V_i = B  *)
+(* exists-trace: dishonest( B_i^j) && not (φ) & φ_i *)
+    let sufficient i (f,v) = 
+        let sufficient' x = 
+            let label = Printf.sprintf "%s_suf_%n" id i in
+            ExistsLemma ((label,op), And(f,And(dishonest parties x,Not(phi))))
         in
-    mapi_opt sufficient vf 
+        match v with
+          [] -> None
+        | [x]  ->  Some (sufficient' x)
+        | (x::xs)  ->  None
+    in
+    mapi_opt sufficient vf
+
+let sufficiencyComposite id rel vf = 
+(* for the each mapping φ_i → V_i  and V_i not singleton *) 
+(* all cases are mapped to a singleton case by R *)
+(* rel is the non-reflexive part of R, and an associative list guaranteed to point 
+ * to singleton. Hence we only check for presence *)
+    mapi_opt (fun i -> function 
+        (_,[])
+        | (_,[_]) -> None
+        | _ ->
+        let print_rel rel = 
+            String.concat "   " (map (fun (x,y) -> Printf.sprintf "%s |-> %s" (string_of_int x)  (string_of_int y)) rel)
+        in
+        if mem_assoc i rel 
+                         then None 
+                         else raise (VerdictNotWellFormed ("Sufficiency of case "^string_of_int(i)^" in "^id^" has |verdict| >= 2. It needs to refer to singleton cases for these sufficient conditions. "^(print_rel rel)))
+        ) vf
+            
 
 let completeness id op vf phi = 
 (* for the each mapping φ_i → V_i  and V_i empty *) 
@@ -90,8 +123,7 @@ let minimality id op parties vf phi =
 (* for the each mapping φ_i → V_i *) 
 (* where V_i = B_i^1 | .. | B_i^n *)
 (* and for all strict subsets B' of some B_i^j: *)
-(* (min-i) Minimality of V_i: forall-trace *)
-(* not ( φ && Dishonest(B') ) *)
+(* forall-trace not ( φ && Dishonest(B') ) *)
     (* let rec list_of_subsets b = *) 
     (*     if VarSet.is_empty b then [b] *)
     (*     else List.fold_left (fun a elem -> (list_of_subsets (VarSet.remove elem b))@a ) [b] (VarSet.elements b) *)
@@ -112,6 +144,26 @@ let minimality id op parties vf phi =
             v)
         vf))
 
+let minimalitySingleton id op parties vf phi = 
+(* for the each mapping φ_i → V_i *) 
+(* where V_i = B *)
+(* and for all strict subsets B' of some B_i^j: *)
+(* forall-trace not ( φ && Dishonest(B') ) *)
+    let list_of_immeadeate_subsets b =
+        List.map (fun e -> VarSet.remove e b) (VarSet.elements b)
+    in
+    let minimal f i k b' = 
+        let label = Printf.sprintf "%s_min_%n_%n" id i k in
+        ForallLemma ((label,op), Not(And(Not(phi),dishonest parties b')))
+    in
+        List.flatten
+        (mapi_opt 
+        (fun i (f,v) -> match v with
+            [b] ->
+               Some ( mapi (minimal f i) (list_of_immeadeate_subsets b))
+            | _ -> None )
+        vf)
+
 let uniqueness id op vf = 
 (* (uni-i) Uniqueness of V_i *)
 (* for the each mapping φ_i → V_i *) 
@@ -125,18 +177,37 @@ let uniqueness id op vf =
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
-let sufficient_conditions header parties vf phi =
-    match header with
-    (id,op) -> (* ignore options for now *)
-    (exclusiveness id op vf )
-    @
-    [exhaustiveness id op vf]
-    @
-    (sufficiency id op parties vf phi)
-    @
-    (completeness id op vf phi)
-    @
-    (minimality id op parties vf phi)
-    @
-    (uniqueness id op vf)
+let sufficient_conditions kind (id,op) parties vf' phi =
+    let vf = wellformed vf'
+    and rel = compute_R vf'
+    in
+    match kind with
+    (* (id,op) -> (1* ignore options for now *1) *)
+    Coarse -> 
+        (exclusiveness id op vf )
+        @
+        [exhaustiveness id op vf]
+        @
+        (sufficiency id op parties vf phi)
+        @
+        (completeness id op vf phi)
+        @
+        (minimality id op parties vf phi)
+        @
+        (uniqueness id op vf)
+   | Cases ->
+        (exclusiveness id op vf )
+        @
+        [exhaustiveness id op vf]
+        @
+        (sufficiencySingleton id op parties vf phi)
+        @
+        (sufficiencyComposite id rel vf)
+        @
+        (completeness id op vf phi)
+        @
+        (minimalitySingleton id op parties vf phi)
+        (* TODO figure out a way to add lemmas for manual proofs *)
+        @
+        (uniqueness id op vf)
 

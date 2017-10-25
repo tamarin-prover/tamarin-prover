@@ -10,12 +10,13 @@ open Btree
 open Lemma
 open Term
 open Var
+open Verdict
 
 let rec lemma2string = function
     ForallLemma((id,op),formula) -> "lemma "^id^" "^op^":\n all-traces\n\""^(formula2string formula)^"\"\n"
     | ExistsLemma((id,op),formula) -> "lemma "^id^" "^op^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
     | Restriction(id,formula) -> "restriction "^id^":\n \""^(formula2string formula)^"\"\n"
-    | AccLemma(header, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions header parties verdictf formula )
+    | AccLemma(kind, header, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions kind header parties verdictf formula )
 and print_lemmas lemlist =
     (String.concat "\n") (List.map lemma2string lemlist)
 

@@ -57,6 +57,8 @@ rule token = parse
      | "otherwise"	   { OTHERWISE }
      | "empty"	   { EMPTY }
      | "accounts" { ACCOUNTS }
+     | "coarse" { COARSE }
+     | "cases" { CASES }
      | "for" { FOR }
      | "parties" { PARTIES }
      | "->"	   { RIGHTARROW }
