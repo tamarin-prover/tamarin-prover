@@ -135,6 +135,10 @@ parseLemma = parseString "<unknown source>" lemma
 llit :: Parser LNTerm
 llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 
+-- | Parse an lit with logical variables without public names in single constants.
+llitNoPub :: Parser LNTerm
+llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
+
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
 lookupArity :: String -> Parser (Int, Privacy)
@@ -760,7 +764,7 @@ equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
-        rrule <- RRule <$> term llit True <*> (equalSign *> term llit True)
+        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)

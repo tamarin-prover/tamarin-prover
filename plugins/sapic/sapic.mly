@@ -155,7 +155,7 @@ let location_rule=
 %type <rule> rule
 %type <actionlist> transition
 %type <string> letblock
-%type <string> id_eq_termseq
+%type <(string * Term.term) list> id_eq_termseq
 %type <string> identifierseq
 %type <string> formal_comment
 %type <string> id_not_res
@@ -294,7 +294,7 @@ process:
     | IF if_cond THEN process                        { Node(Cond($2), $4, Node(Null, Empty, Empty)) }
     | LOOKUP term AS literal IN process ELSE process { Node(Lookup($2,Term.Var($4)), $6 , $8) }
     | LOOKUP term AS literal IN process              { Node(Lookup($2,Term.Var($4)), $6, Node(Null,Empty,Empty)) }
-    | LET id_not_res EQ multterm IN process          { substitute $2 $4 $6}
+    | LET id_eq_termseq IN process          { List.fold_right (fun (x,y) p -> substitute x y p) $2 $4 }
     | LET id_not_res EQ REPORT LP multterm RP IN process { substitute
 							     $2
 							     (Term.App("rep", [$6;Term.Var(Var.Msg("_loc_"))]))
@@ -521,12 +521,14 @@ transition:
 
 letblock:
 	| /* empty */ {""}
-	| LET id_eq_termseq IN		{"\t let "^$2^" in\n"}
+	| LET id_eq_termseq IN		{  let to_str (x,y) =  x^"="^(Term.term2string y) in
+                                           let eq_list l =  String.concat " " (List.map to_str l) in
+                                                "\t let "^(eq_list $2)^" in\n"}
 ;	
 
 id_eq_termseq:
-	| IDENTIFIER EQ multterm {$1^"="^(Term.term2string $3)}
-	| IDENTIFIER EQ multterm id_eq_termseq {$1^"="^(Term.term2string $3)^" "^$4}
+        | id_not_res EQ multterm { [($1,$3)] }
+	| id_not_res EQ multterm id_eq_termseq { ($1,$3)::$4}
 ;
 
 identifierseq:
