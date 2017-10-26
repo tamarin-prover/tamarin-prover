@@ -22,7 +22,8 @@ functions:
     ex_daa_pseudo_dom/1,
     ex_daa_pseudo_id/1,
    // model authenticated channel from ledger to anyone
-   ledger/1[private],readl/1
+   ledger/1[private],readl/1,
+   kdf/1
 
 
 equations:
@@ -46,7 +47,7 @@ equations:
 
 
 let Issuer = 0 //DAA issuer and verification of users, not explicit, but implicit in user definition
-    
+
 let U =  // honest user posting a comment on $date at website $W, after registering
     let cert = daa_cert(id,ipk(sk_iss),sk_iss) 
         dom = <$date,$seq>
