@@ -50,6 +50,9 @@ module Theory.Model.Fact (
   , isKFact
   , isKUFact
   , isKDFact
+  
+  , convertKUtoKD
+  , convertKDtoKU
 
   -- ** Construction
   , freshFact
@@ -190,6 +193,16 @@ isKUFact _               = False
 isKDFact :: LNFact -> Bool
 isKDFact (Fact KDFact _) = True
 isKDFact _               = False
+
+-- | converts a KU-Fact into a KD-Fact with the same terms
+convertKUtoKD :: LNFact -> LNFact
+convertKUtoKD (Fact KUFact m) = (Fact KDFact m)
+convertKUtoKD f               = f
+
+-- | converts a KD-Fact into a KU-Fact with the same terms
+convertKDtoKU :: LNFact -> LNFact
+convertKDtoKU (Fact KDFact m) = (Fact KUFact m)
+convertKDtoKU f               = f
 
 -- | Mark a fact as malformed.
 errMalformed :: String -> LNFact -> a

@@ -588,16 +588,18 @@ intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
 -- | 'getOppositeRules' @ctxt@ @side@ @rule@ returns all rules with the same name as @rule@ in diff proof context @ctxt@ on the opposite side of side @side@.
 getOppositeRules :: DiffProofContext -> Side -> RuleACInst -> [RuleAC]
 getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
-               ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p) of
-                                   [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
-                                   x  -> x
-               IntrInfo  i -> case i of
-                                   (ConstrRule x) | x == BC.pack "_mult"  -> [(multRuleInstance (length prem))]
-                                   (ConstrRule x) | x == BC.pack "_union" -> [(unionRuleInstance (length prem))]
-                                   (ConstrRule x) | x == BC.pack "_xor"   -> [(xorRuleInstance (length prem))]
-                                   _                                      -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
-                                                                                 [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
-                                                                                 x  -> x
+    ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p) of
+        [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
+        x  -> x
+    IntrInfo  i -> case i of
+        (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
+        (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
+        (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
+                                                            (concat $ map destrRuleToConstrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
+        (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
+        _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
+                                                            [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
+                                                            x  -> x
                                                                                  
 -- | 'getOriginalRule' @ctxt@ @side@ @rule@ returns the original rule of protocol rule @rule@ in diff proof context @ctxt@ on side @side@.
 getOriginalRule :: DiffProofContext -> Side -> RuleACInst -> RuleAC
@@ -859,7 +861,7 @@ normDG ctxt sys = L.set sNodes normalizedNodes sys
 
 -- | Returns the mirrored DGs, if they exist.
 getMirrorDG :: DiffProofContext -> Side -> System -> [System]
-getMirrorDG ctxt side sys = fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshAndPubConstrRules, sys)
+getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndPubConstrRules, sys))) $-} fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshAndPubConstrRules, sys)
   where
     (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)

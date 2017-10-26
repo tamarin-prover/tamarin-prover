@@ -98,6 +98,9 @@ module Theory.Model.Rule (
   , ruleACIntrToRuleACInst
   , getLeftRule
   , getRightRule
+  , constrRuleToDestrRule
+  , destrRuleToConstrRule
+  , destrRuleToDestrRule
 
   -- ** Construction
   , someRuleACInst
@@ -448,6 +451,36 @@ ruleACIntrToRuleAC (Rule ri ps cs as nvs) = Rule (IntrInfo ri) ps cs as nvs
 -- | Converts between these two types of rules.
 ruleACIntrToRuleACInst :: IntrRuleAC -> RuleACInst
 ruleACIntrToRuleACInst (Rule ri ps cs as nvs) = Rule (IntrInfo ri) ps cs as nvs
+
+-- | Converts between constructor and destructor rules.
+constrRuleToDestrRule :: RuleAC -> Int -> Bool -> Bool -> [RuleAC]
+constrRuleToDestrRule (Rule (IntrInfo (ConstrRule name)) ps' cs _ _) i s c
+    -- we remove the actions and new variables as destructors do not have actions or new variables
+    = map toRule $ permutations ps'
+    where
+        toRule :: [LNFact] -> RuleAC 
+        toRule []     = error "Bug in constrRuleToDestrRule. Please report."
+        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c)) ((convertKUtoKD p):ps) (map convertKUtoKD cs) [] []
+constrRuleToDestrRule x _ _ _ = [x]
+
+-- | Converts between destructor and constructor rules.
+destrRuleToConstrRule :: RuleAC -> [RuleAC]
+destrRuleToConstrRule (Rule (IntrInfo (DestrRule name _ _ _)) ps cs _ _)
+    -- we add the conclusion as an action as constructors have this action
+    = [toRule (map convertKDtoKU ps)]
+    where
+        toRule ps' = Rule (IntrInfo (ConstrRule name)) ps' (map convertKDtoKU cs) (map convertKDtoKU cs) []
+destrRuleToConstrRule x = [x]
+
+-- | Creates variants of a destructor rule, where KD and KU facts are permuted.
+destrRuleToDestrRule :: RuleAC -> [RuleAC]
+destrRuleToDestrRule (Rule (IntrInfo (DestrRule name i s c)) ps' cs as nv)
+    = map toRule $ permutations (map convertKDtoKU ps')
+    where
+        toRule []     = error "Bug in destrRuleToDestrRule. Please report."
+        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c)) ((convertKUtoKD p):ps) cs as nv
+destrRuleToDestrRule x = [x]
+
 
 -- Instances
 ------------
