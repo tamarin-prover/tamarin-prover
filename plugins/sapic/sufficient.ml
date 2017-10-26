@@ -177,6 +177,27 @@ let uniqueness id op vf =
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
+let rec singletons = function 0 -> []
+                         |n -> (n,n)::(singletons (n-1))
+
+let relationManual id (vf:verdictf) rel =
+    let relate (i,j) = 
+        let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+        let phi k = match List.nth vf k with (f,_)-> formula2string f in
+        let lemma = Printf.sprintf "
+For all contexts u such that traces(P,u) in 
+    %s 
+and u' such that traces(P,u') in 
+    %s
+it holds that r(u,u')."
+        (phi i) (phi j) in
+        ManualLemma (label,lemma)
+    in
+        (map relate rel) (* for all explicit connections *)
+        @
+        (map relate (singletons (List.length vf - 1)))
+
+
 let sufficient_conditions kind (id,op) parties vf' phi =
     let vf = wellformed vf'
     and rel = compute_R vf'
@@ -207,7 +228,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (completeness id op vf phi)
         @
         (minimalitySingleton id op parties vf phi)
-        (* TODO figure out a way to add lemmas for manual proofs *)
         @
-        (uniqueness id op vf)
+        (relationManual id vf rel)
+        @
+        [ManualLemma (id, "r is transitive") ]
 

@@ -170,19 +170,22 @@ verdictfunction v1:
   otherwise -> <>
 
 verdictfunction v2: 
-  " Ex #i #j. NotHonestS()@#i & NotHonestA()@#j
-  " -> <'A','S'>,
+  "Ex #i #j. NotHonestS()@#i & NotHonestA()@#j"
+  -> <'A','S'>,
 
-  " Ex #i #j. NotHonestA()@#i & HonestS()@#j) 
-  " -> <'A'>,
+  "Ex #i #j. NotHonestA()@#i & HonestS()@#j"
+  -> <'A'>,
 
-  " Ex #i #j . HonestA()@#i & NotHonestS()@#j)
-  " -> <'S'>,
+  "Ex #i #j . HonestA()@#i & NotHonestS()@#j "
+  -> <'S'>,
 
   otherwise -> <>
 
+  // Note: need more fine-grained relation here
+  // to avoid 'A' case masking the 'A','S' case
+
 lemma acc: 
-  v1 accounts  
+  v2 accounts  
   for "
       ( All x z r #i. Accept(<x,z,r>)@#i
         ==> 
@@ -193,5 +196,18 @@ lemma acc:
       ) 
       "
   for parties <'A','S'> 
+
+
+verdictfunction v2: 
+  "Ex #i #j. NotHonestS(m,s)@#i & NotHonestA(m,s)@#j"
+  -> <'A','S'>,
+
+  "Ex #i #j. NotHonestA()@#i & HonestS()@#j"
+  -> <'A'>,
+
+  "Ex #i #j . HonestA()@#i & NotHonestS()@#j "
+  -> <'S'>,
+
+  otherwise -> <>
 
 end

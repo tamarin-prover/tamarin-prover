@@ -10,3 +10,4 @@ type lemma = ForallLemma of (string * string) * formula (* string is used for he
            | ExistsLemma of (string * string) * formula
            | AccLemma of acckind * (string * string)* proto_verdictf * formula * (VarSet.t)
            | Restriction of string * formula 
+           | ManualLemma of string * string
