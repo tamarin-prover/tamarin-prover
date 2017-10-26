@@ -15,10 +15,15 @@ begin
 
 builtins: xor, hashing
 
+/*
+  R -> T: r0
+  T -> R: r1, h(r0 XOR r1 XOR k) 
+  R -> R: h(h(r0 XOR r1 XOR k) XOR k XOR r0)
 
+*/
 rule setup:
   [Fr(~k)]
---[ OnlyOnce('setup') ]->
+--[ OnlyOnce('setup'), Create(~k) ]->
   [!Reader(~k), !Tag(~k)]
 
 rule initiatereader:
@@ -43,23 +48,27 @@ rule accepttag:
   , FinTag()]->
   [ ]
 
-restriction onlyonce:
-  "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
-// PROVEN
+// PROVEN, quick autoproof
 lemma executable:
   exists-trace
-  "Ex #i. FinTag()@i"
+  " (Ex #i. FinTag()@i)
+  & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN
-lemma noninjectiveagreementTAG:
+// PROVEN, quick autoproof
+lemma helpingSecrecy[reuse]:
+  "All k #i. 
+     Create(k)@i ==> not(Ex #j. K(k)@j)"
+
+// PROVEN, quick autoproof
+lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
 
-// FALSIFIED
-lemma noninjectiveagreementREADER:
+// FALSIFIED, quick autoproof
+lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
     ==> (Ex #j. Running(<'R','T',t>) @j)"
