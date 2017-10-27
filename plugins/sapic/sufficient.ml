@@ -144,25 +144,34 @@ let minimality id op parties vf phi =
             v)
         vf))
 
-let minimalitySingleton id op parties vf phi = 
-(* for the each mapping φ_i → V_i *) 
+let cartesian l l' = 
+  List.concat (List.map (fun e -> List.map (fun e' -> (e,e')) l') l)
+
+let minimalitySingleton id op rel parties vf phi = 
+(* for each mapping φ_i → V_i *) 
 (* where V_i = B *)
-(* and for all strict subsets B' of some B_i^j: *)
-(* forall-trace not ( φ && Dishonest(B') ) *)
+(* and R_i,j (typically, i=j) *)
+(* for all strict subsets B' of some B_i^j: *)
+(* forall-trace not ( φ_j && Dishonest(B') ) *)
     let list_of_immeadeate_subsets b =
         List.map (fun e -> VarSet.remove e b) (VarSet.elements b)
     in
-    let minimal f i k b' = 
-        let label = Printf.sprintf "%s_min_%n_%n" id i k in
-        ForallLemma ((label,op), Not(And(Not(phi),dishonest parties b')))
+    let phi j = match List.nth vf j with (f,_)-> f in
+    let related i = (* list of φ_j such that (i,j) in rel or j=i *)
+        map_opt (function (i',j) -> if i'=i then Some(phi j ) else None) rel
+        @ [phi i]
     in
-        List.flatten
-        (mapi_opt 
-        (fun i (f,v) -> match v with
-            [b] ->
-               Some ( mapi (minimal f i) (list_of_immeadeate_subsets b))
-            | _ -> None )
-        vf)
+    let minimal i k (b',f_j) = 
+        let label = Printf.sprintf "%s_min_%n_%n" id i k in
+        ForallLemma ((label,op), Not(And(f_j,dishonest parties b')))
+    in
+    let  cart_subsets_related i b =  (cartesian (list_of_immeadeate_subsets b) (related i))
+    in
+    let compute_singleton i = function 
+            (_,[b]) -> Some (mapi (minimal i) (cart_subsets_related i b))
+           | _      -> None
+    in
+        List.flatten (mapi_opt compute_singleton vf)
 
 let uniqueness id op vf = 
 (* (uni-i) Uniqueness of V_i *)
@@ -177,14 +186,16 @@ let uniqueness id op vf =
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
-let rec singletons = function 0 -> []
-                         |n -> (n,n)::(singletons (n-1))
+let rec make_list n l = if n = 0 then l else make_list (n - 1) (n :: l);;
+let rec listn n = make_list n []
+let rec singletons n = map (fun i -> (i,i)) (listn n)
 
-let relationManual id (vf:verdictf) rel =
+
+let relationLifting id (vf:verdictf) rel =
+    let phi k = match List.nth vf k with (f,_)-> formula2string f in
     let relate (i,j) = 
         let label = Printf.sprintf "%s_rel_%n_%n" id i j in
-        let phi k = match List.nth vf k with (f,_)-> formula2string f in
-        let lemma = Printf.sprintf "
+        let lemma= Printf.sprintf "
 For all contexts u such that traces(P,u) in 
     %s 
 and u' such that traces(P,u') in 
@@ -193,9 +204,27 @@ it holds that r(u,u')."
         (phi i) (phi j) in
         ManualLemma (label,lemma)
     in
-        (map relate rel) (* for all explicit connections *)
+    let unrelate (i,j) = 
+        let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+        let lemma= Printf.sprintf "
+For all contexts u such that traces(P,u) in 
+    %s 
+and u' such that traces(P,u') in 
+    %s
+it holds that NOT r(u,u')."
+        (phi i) (phi j) in
+        ManualLemma (label,lemma)
+    in
+    let n  = List.length vf - 1 in
+    let full_rel = rel @ (singletons n) in
+    let complement = 
+        List.filter
+        (fun x -> not (List.mem x full_rel))
+        (cartesian (listn n) (listn n))
+    in 
+        (map relate full_rel)
         @
-        (map relate (singletons (List.length vf - 1)))
+        (map unrelate complement)
 
 
 let sufficient_conditions kind (id,op) parties vf' phi =
@@ -227,9 +256,9 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (completeness id op vf phi)
         @
-        (minimalitySingleton id op parties vf phi)
+        (minimalitySingleton id op rel parties vf phi)
         @
-        (relationManual id vf rel)
+        (relationLifting id vf rel)
         @
         [ManualLemma (id, "r is transitive") ]
 

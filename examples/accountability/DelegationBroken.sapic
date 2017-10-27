@@ -76,7 +76,7 @@ verdictfunction v1:
     otherwise -> empty 
 
 lemma acc:
-    v1 accounts [cases]
+    v1 accounts [cases] 
     for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
     for parties <'A','B'>
 
