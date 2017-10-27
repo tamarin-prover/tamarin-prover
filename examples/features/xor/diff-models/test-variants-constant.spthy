@@ -2,9 +2,12 @@ theory Test_Variants_Constant
 begin
 
 builtins: symmetric-encryption //, xor
-functions: f/2
-equations: f(x,'L') = x,
-           f('L',x) = x
+functions: f/2, L/0
+equations: f(x,L) = x,
+           f(L,x) = x
+// previously it was the below, but string-constants are not allowed in the equational theory!
+//           f(x,'L') = x,
+//           f('L',x) = x
 
 /*
    Protocol:    A Test protocol to test variants and new variables
