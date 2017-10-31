@@ -89,7 +89,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|l|c|C|i|I)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|O|p|P|l|c|C|i|I)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -339,6 +339,7 @@ constructAutoProver as =
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
     ranking 'o' = OracleRanking
+    ranking 'O' = OracleSmartRanking
     ranking 'p' = SapicRanking
     ranking 'l' = SapicLivenessRanking
     ranking 'P' = SapicPKCS11Ranking
@@ -351,6 +352,7 @@ constructAutoProver as =
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
       \ 'o' for oracle ranking,\
+      \ 'O' for oracle ranking with smart ranking without loop breakers as underlying baseline,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'l' for the smart ranking optimized for translations coming from SAPIC proving liveness properties,\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC,\
