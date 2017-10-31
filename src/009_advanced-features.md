@@ -13,7 +13,7 @@ Heuristics
 The commandline option `--heuristic` can be used to select which heuristic for
 goal selection should be used by the automated proof methods. 
 The argument of the `--heuristic` flag is a word built from the
-alphabet `{s,S,c,C,i,o}`. Each of these letters describes a different way to rank
+alphabet `{s,S,c,C,i,o,O}`. Each of these letters describes a different way to rank
 the open goals of a constraint system.
 
 `s`:
