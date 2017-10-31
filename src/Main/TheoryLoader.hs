@@ -389,6 +389,7 @@ constructAutoDiffProver as =
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
     ranking 'o' = OracleRanking
+    ranking 'O' = OracleSmartRanking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $
