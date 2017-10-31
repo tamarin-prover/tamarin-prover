@@ -105,7 +105,7 @@ fAppZero :: Term a
 fAppZero = fAppNoEq zeroSym []
 
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
-fAppDiff, fAppPair, fAppExp,fAppPMult :: (Term a, Term a) -> Term a
+fAppDiff, fAppPair, fAppExp, fAppPMult :: (Term a, Term a) -> Term a
 fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
