@@ -4,14 +4,11 @@ begin
 // This theory models LAK06 as taken from "Attacks on RFID protocols" v1.1
 // from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
 //
-// This model is heavily restricted, allowing only one pair of Reader/Tag and
-// only one single run by the reader. Still, it shows that noninjective agreement
-// for the Reader is indeed violated (valid attack found!). The 'proof' for
+// This model only considers two pairs of Reader/Tag but fully models
+// the key chaining mechanism.
+// Still, it shows that noninjective agreement
+// for the Reader is indeed violated (valid attack found!). The proof for
 // noninjective agreement for the Tag only holds in this very restricted model.
-
-// The key chaining as in actual LAK06 is NOT part of this model, and neither
-// is a check for untraceability of the tag, which would require this key
-// chain to work.
 
 builtins: xor, hashing
 
@@ -34,8 +31,10 @@ rule setup:
   in
   [ Fr(~k), Fr(~id) ]
 --[ OnlyOnce('setup'), Key(k0), Key(k) ]->
-  [ !Reader(~id)
-  , !Tag(~id)
+  [ Reader(~id)
+  , Tag(~id)
+  , Reader(~id)
+  , Tag(~id)
   , ReaderK(~id, k0, k)
   , TagK(~id, k)
   ]
@@ -100,24 +99,28 @@ rule accepttag:
 restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
-// ???
+// PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma helpingSecrecy[use_induction, reuse]:
   "All k #i. 
      Key(k)@i ==> not(Ex #j. K(k)@j)"
 
-// ???
+// PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
 // PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
 // FALSIFIED, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
