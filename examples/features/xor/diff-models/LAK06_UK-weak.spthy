@@ -31,10 +31,10 @@ rule setup:
    ]
 --[ OnlyOnce('setup'), Create(~k1), Create(~k2) ]->
    [ TagRun(id1, 'learning')
-   // , ReaderRun(id1, 'learning')
-   , TagRun(id2, 'learning')
-   // , ReaderRun(id2, 'learning')
-   , TagRun(idb, 'guessing')
+    // , ReaderRun(id1, 'learning')
+    , TagRun(id2, 'learning')
+    // , ReaderRun(id2, 'learning')
+    , TagRun(idb, 'guessing')
    ]
 
 rule initiatereader:
@@ -83,6 +83,6 @@ lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
-// Observational Equivalence: PROVEN, autoproof (takes a while though, todo timing info)
-
+// Observational Equivalence: PROVEN, autoproof (takes a very long time and I had to prove one sub-case at a time)
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 end
