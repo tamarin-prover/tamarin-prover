@@ -7,8 +7,9 @@ begin
  * Based on: Charles Duménil's model of Chaum's Online Protocol
  * Status: in limbo
  * automatic verification works for all cases but for 
-   2 cases in Observational Equivalence Lemma:
-     Rule_Destrd_xor and Rule_Equality
+   1 case in Observational Equivalence Lemma:
+     Rule_Destrd_xor 
+   Automatic verification for Rule_Equality finds an attack
  */
 
 
