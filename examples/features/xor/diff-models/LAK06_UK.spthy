@@ -1,7 +1,6 @@
 theory LAK06_UK
 begin
 
-// Status: WIP, we need to fix the bug
 // This theory models LAK06 as taken from [1].
 //
 // The key chaining as in actual LAK06 is NOT part of this model.
@@ -9,6 +8,8 @@ begin
 // This models specifies strong unlinkability [2,3] for two sessions of tag and
 // reader. Tamarin finds the attack discussed in [2,3]. Note that, the protocol
 // is claimed to be untraceable in [1] for a weaker notion of unlinkability.
+// The notion of unlinkability that is being checked may be considered too strong
+// but [2,3] discuss how the attack found here is actually practical.
 
 // [1] "Attacks on RFID protocols" v1.1 from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
 // [2] L. Hirschi, D. Baelde and S. Delaune.$
@@ -25,8 +26,8 @@ builtins: xor, hashing, multiset
 */
 
 rule setup:
-   let left =  ~k1 + ~k2
-       right = ~k1 + ~k1
+   let left =  ~k1 + ~k1
+       right = ~k1 + ~k2
    in
    [ Fr( ~k1 )
    , Fr( ~k2)
@@ -35,20 +36,6 @@ rule setup:
    [ Tag(   diff(left,right))
    , Reader(diff(left,right))
    ]
-
-// rule select_tag:
-//   [ Tag( ~k + z ) ]
-//   --[ Tag( ~k + z ) ]->
-//   [ TagRun( ~k)
-//   , Tag(z) 
-//   ]
-
-// rule select_reader:
-//   [ Reader( ~k + z ) ]
-//   --[ Reader( ~k + z ) ]->
-//   [ ReaderRun( ~k )
-//   , Reader(z) 
-//   ]
 
 rule select_tag_reader:
   [ Tag(x1 + x2), Reader(z1 + z2) ]
@@ -84,21 +71,13 @@ rule accepttag:
 restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
-restriction ForceTwoReaders:
-  "Ex #i1 #i2. ReaderAccept()@i1 & ReaderAccept()@i2 & not(#i1 = #i2)"
-
-// restriction max_number_of_tags_tag:
-//   "All a b c #i. Tag(a+b+c)@i ==> F"
-
-// restriction max_number_of_tags_tag_reader:
-//   "All a b c #i. Reader(a+b+c)@i ==> F"
-
 // PROVEN, quick autoproof
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// Observational Equivalence: should be FALSIFIED but got weird results. WIP  // autoproof, takes several minutes though
+// Observational Equivalence: FALSIFIED, autoproof, takes ~1 hour though
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 
 end
