@@ -15,9 +15,9 @@ rule setup:
    ]
 --[ OnlyOnce('setup') ]->
    [ TagRun(data1, 'learning')
-    , ReaderRun(data1, 'learning')
+    // , ReaderRun(data1, 'learning')
     , TagRun(data2, 'learning')
-    , ReaderRun(data2, 'learning')
+    // , ReaderRun(data2, 'learning')
     , TagRun(datab, 'guessing')
    ]
 
