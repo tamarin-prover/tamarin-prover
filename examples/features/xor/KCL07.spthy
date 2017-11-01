@@ -65,12 +65,12 @@ restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
 
-// FINDS PROOF AUTOMATICALLY (2017-03-22)
+// FINDS PROOF AUTOMATICALLY (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
 
-// SHOWS CORRECT EXECUTION (2017-03-22)
+// SHOWS CORRECT EXECUTION (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
            // further restriction to automatically get the desired execution
