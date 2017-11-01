@@ -77,9 +77,7 @@ lemma executable:
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// Observational Equivalence: FALSIFIED, autoproof, takes several minutes though (if one first click on the Rule_equality subcase)
-// (2017-07-23 - b505d587c789ac667e80541fa4deac791bfd158e)
-// TODO: it seems to not terminate on the current version of Tamarin+XOR: wait and see
-
+// Observational Equivalence: FALSIFIED, autoproof, takes ~1 hour though
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 
 end
