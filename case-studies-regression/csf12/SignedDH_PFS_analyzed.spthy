@@ -152,7 +152,7 @@ solve( SessionKey( I, R, sessKey ) @ #i )
             case Resp
             by solve( !KU( ~ekI ) @ #vk.13 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ekI ) @ #vk.15 )
           qed
         next
@@ -186,7 +186,7 @@ next
           case Resp
           by solve( !KU( ~ekI ) @ #vk.8 )
         next
-          case cexp
+          case c_exp
           by solve( !KU( ~ekI ) @ #vk.10 )
         qed
       next
@@ -217,7 +217,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.517611s
+  processing time: 0.442067s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.517611s
+  processing time: 0.442067s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

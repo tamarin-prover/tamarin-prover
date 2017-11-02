@@ -209,11 +209,11 @@ constructionRules fSig =
 dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
-    , invRule (ConstrRule (append (pack "_") expSymString)) kuFact return
+    , invRule (ConstrRule (append (pack "_") invSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id True)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
-      , invRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
+      , invRule (DestrRule (append (pack "_") invSymString) 0 True False) kdFact (const [])
       ]
   where
     x_var_0 = varTerm (LVar "x" LSortMsg 0)
@@ -370,8 +370,8 @@ bpVariantsIntruder hnd ru = do
 
 isDRule :: ByteString -> Rule (RuleInfo t IntrRuleACInfo) -> Bool
 isDRule ruString ru = case get rInfo ru of
-    IntrInfo (DestrRule n _ _ _) | n == ruString -> True
-    _                                            -> False
+    IntrInfo (DestrRule n _ _ _) | n == (append (pack "_") ruString) -> True
+    _                                                                -> False
 
 isDExpRule, isDPMultRule, isDEMapRule
     :: Rule (RuleInfo t IntrRuleACInfo) -> Bool
