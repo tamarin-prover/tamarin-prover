@@ -325,7 +325,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
               solve( splitEqs(0) )
                 case split_case_01
                 solve( !KU( Y^~lkI ) @ #vk.6 )
-                  case cexp
+                  case c_exp
                   solve( !KU( ~lkI ) @ #vk.12 )
                     case Ltk_reveal
                     solve( !KU( Y^h1(<~eskI, ~lkI>) ) @ #vk.9 )
@@ -360,7 +360,7 @@ analyzing: examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 4.050978s
+  processing time: 3.028999s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -371,7 +371,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 4.050978s
+  processing time: 3.028999s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================
