@@ -209,6 +209,7 @@ dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     , invRule (ConstrRule (append (pack "_") invSymString)) kuFact return
+    , oneRule (ConstrRule (append (pack "_") oneSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id True)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
@@ -231,6 +232,12 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
       where
         bfact    = kudFact x_var_0
         conc     = fAppInv x_var_0
+        concfact = kudFact conc
+
+    oneRule mkInfo kudFact mkAction =
+        Rule mkInfo [] [concfact] (mkAction concfact)
+      where
+        conc     = fAppNoEq oneSym []
         concfact = kudFact conc
 
 

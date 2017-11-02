@@ -30,6 +30,7 @@ module Term.Term.FunctionSymbols (
     , pmultSymString
     , emapSymString
     , unionSymString
+    , oneSymString
 
     -- ** concrete symbols
     , diffSym
@@ -103,10 +104,11 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
+oneSymString = "one"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -125,7 +127,7 @@ expSym   = (expSymString,(2,Public))
 -- | The inverse in the groups of exponents.
 invSym   = (invSymString,(1,Public))
 -- | The one in the group of exponents.
-oneSym   = ("one",(0,Public))
+oneSym   = (oneSymString,(0,Public))
 -- | Projection of first component of pair.
 fstSym   = ("fst",(1,Public))
 -- | Projection of second component of pair.
