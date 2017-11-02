@@ -46,17 +46,17 @@ restriction unique:
 restriction inequality:
   "not (Ex x #i. Neq(x,x)@i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-03-23)
+// FINDS PROOF AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma alive:
   "All x y #i. Alive(x,y) @i ==> Ex #j. Response(y)@j"
 
-// FINDS ATTACK AUTOMATICALLY (2017-03-23)
+// FINDS ATTACK AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 // due to restriction on inequality of nonce with zero, we get a nicer looking attack
 lemma recentalive_tag:
   all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j #k. Challenge(x) @k & Response( y ) @ #j & k < j & j < i)"
 
 
-// SHOWS CORRECT EXECUTION (2017-03-23)
+// SHOWS CORRECT EXECUTION (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma executable:
   exists-trace
   "Ex x y #i #j. Alive(x,y)@i & Response(y)@j

@@ -115,7 +115,7 @@ follwing experiment. Comment out this sources invariant and then check the
 precomputed case distinctions in the GUI. Try to complete the proof of the
 'nonce_secrecy' lemma.
 */
-// FINDS ATTACK - as we only find attacks below, this is ok. (2017-03-22)
+// FINDS ATTACK - as we only find attacks below, this is ok. (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma types [sources]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
@@ -141,7 +141,7 @@ restriction onekeypername:
           Register(A) @i & Register(A) @j & (not ( #i = #j))
         )"
 
-// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-03-22)
+// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 // Nonce secrecy from the perspective of both the initiator and the responder.
 lemma nonce_secrecy:
   " /* It cannot be that */
@@ -156,7 +156,7 @@ lemma nonce_secrecy:
         & not (Ex #r. RevLtk(B) @ r)
        )"
 
-// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-03-22)
+// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 // Injective agreement from the perspective of both the initiator and the responder.
 lemma injective_agree:
   " /* Whenever somebody commits to running a session, then*/
@@ -175,7 +175,7 @@ lemma injective_agree:
         | (Ex #r. RevLtk(peer)  @ r)
   "
 
-// SHOWS CORRECT EXECUTION (2017-03-22)
+// SHOWS CORRECT EXECUTION (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 // Consistency check: ensure that secrets can be shared between honest agents.
 lemma session_key_setup_possible:
   exists-trace
