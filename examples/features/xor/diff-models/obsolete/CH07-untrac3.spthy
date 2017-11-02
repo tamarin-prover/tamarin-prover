@@ -1,5 +1,9 @@
 theory CH07_untrac3 begin
 
+// This model allows picking each reader and tag's identity from the
+// pool of identities very late, which allows everything to be easily
+//mirrored in a silly way. This model is not sensible and removed.
+
 builtins: xor, hashing, multiset
 functions: rot/2, lh/1, rh/1
 
