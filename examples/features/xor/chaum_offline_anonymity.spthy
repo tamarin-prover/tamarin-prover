@@ -100,5 +100,11 @@ lemma exec:
 lemma anonymity:
   "All C #i. TestSubject(C)@i ==> ((not Ex #j. !KU(C)@j) | (Ex x r #i #j. Spend(C,x,r)@i & Spend(C,x,r)@j & not #i = #j))"
 
+// TestSubject is NOT anonymous (subject's name not secret) if the subject double spends:
+lemma caught:
+  exists-trace
+  "Ex C #j x r #i1 #i2 #k. TestSubject(C)@j  & !KU(C)@k  & Spend(C,x,r)@i1 & Spend(C,x,r)@i2 & not (#i1 = #i2)"
+
+
 end
 
