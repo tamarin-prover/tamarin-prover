@@ -58,11 +58,11 @@ restriction equality:
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-10-31, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// FINDS PROOF AUTOMATICALLY (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// SHOWS CORRECT EXECUTION (2017-10-31, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// SHOWS CORRECT EXECUTION (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
            // further restriction to automatically get the desired execution
