@@ -57,6 +57,7 @@ module Term.Term (
     , emapSymString
     , unionSymString
     , oneSymString
+    , multSymString
     
     -- ** Function symbols
     , diffSym

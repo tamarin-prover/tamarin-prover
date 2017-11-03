@@ -207,9 +207,13 @@ constructionRules fSig =
 -- | @dhIntruderRules@ computes the intruder rules for DH
 dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
-    [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
-    , invRule (ConstrRule (append (pack "_") invSymString)) kuFact return
-    , oneRule (ConstrRule (append (pack "_") oneSymString)) kuFact return
+    [ expRule  (ConstrRule (append (pack "_") expSymString))  kuFact return
+    , invRule  (ConstrRule (append (pack "_") invSymString))  kuFact return
+    -- The constructors for one and mult are only necessary in diff mode.
+    -- They are never applied in trace mode as all corresponding goals are solved directly,
+    -- but they  will show up in the message theory, which is reassuring for users.
+    , oneRule  (ConstrRule (append (pack "_") oneSymString))  kuFact return
+    , multRule (ConstrRule (append (pack "_") multSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id True)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
@@ -225,6 +229,14 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
         bfact = kudFact x_var_0
         efact = kuFact  x_var_1
         conc = fAppExp (x_var_0, x_var_1)
+        concfact = kudFact conc
+
+    multRule mkInfo kudFact mkAction =
+        Rule mkInfo [bfact, efact] [concfact] (mkAction concfact)
+      where
+        bfact = kudFact x_var_0
+        efact = kuFact  x_var_1
+        conc = fAppAC Mult [x_var_0, x_var_1]
         concfact = kudFact conc
 
     invRule mkInfo kudFact mkAction =
@@ -282,7 +294,10 @@ normRule' (Rule i ps cs as) = reader $ \hnd ->
 ------------------------------------------------------------------------------
 
 multisetIntruderRules ::  [IntrRuleAC]
-multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var]
+multisetIntruderRules = [mkDUnionRule [x_var, y_var] x_var,
+    -- The constructor is only necessary in diff mode.
+    -- It is never applied in trace mode, but will show up in the message theory, which is reassuring for users.
+                         mkCUnionRule [x_var, y_var]]
   where x_var = varTerm (LVar "x"  LSortMsg   0)
         y_var = varTerm (LVar "y"  LSortMsg   0)
 
@@ -291,6 +306,12 @@ mkDUnionRule t_prems t_conc =
     Rule (DestrRule (append (pack "_") unionSymString) 0 True False)
          [kdFact $ fAppAC Union t_prems]
          [kdFact t_conc] []
+
+mkCUnionRule :: [LNTerm] -> IntrRuleAC
+mkCUnionRule terms =
+    Rule (ConstrRule (append (pack "_") unionSymString))
+         (map kuFact terms)
+         [kuFact $ fAppAC Union terms] []
 
 ------------------------------------------------------------------------------
 -- Bilinear Pairing Intruder rules.
