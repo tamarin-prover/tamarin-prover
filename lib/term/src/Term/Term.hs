@@ -58,9 +58,10 @@ module Term.Term (
     , pmultSymString
     , emapSymString
     , unionSymString
-    , xorSymString
     , oneSymString
+    , multSymString
     , zeroSymString
+    , xorSymString
     
     -- ** Function symbols
     , diffSym

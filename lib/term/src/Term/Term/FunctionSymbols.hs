@@ -30,9 +30,10 @@ module Term.Term.FunctionSymbols (
     , pmultSymString
     , emapSymString
     , unionSymString
-    , xorSymString
     , oneSymString
+    , multSymString
     , zeroSymString
+    , xorSymString
 
     -- ** concrete symbols
     , diffSym
@@ -108,13 +109,14 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
-xorSymString = "xor"
+multSymString = "mult"
 zeroSymString = "zero"
+xorSymString = "xor"
 
 unionSymString :: ByteString
 unionSymString = "union"
