@@ -38,15 +38,15 @@ restriction unique:
   "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
 */
 
-// FINDS PROOF AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// FINDS PROOF AUTOMATICALLY (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
 lemma alive:
   "All x #i. Alive(x) @i ==> Ex #j. Response(x)@j"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// FINDS PROOF AUTOMATICALLY (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
 lemma recentalive:
   "All x #i #k. Challenge(x)@i & Alive(x)@k ==> Ex #j. Response(x)@j & i < j & j < k"
   
-// SHOWS CORRECT EXECUTION (2017-11-02, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// SHOWS CORRECT EXECUTION (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
 lemma executable:
   exists-trace
   "Ex x #i #j. Alive(x)@i & Response(x)@j"
