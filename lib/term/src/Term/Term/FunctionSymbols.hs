@@ -31,6 +31,8 @@ module Term.Term.FunctionSymbols (
     , emapSymString
     , unionSymString
     , xorSymString
+    , oneSymString
+    , zeroSymString
 
     -- ** concrete symbols
     , diffSym
@@ -106,11 +108,13 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, xorSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
+oneSymString = "one"
 xorSymString = "xor"
+zeroSymString = "zero"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -129,7 +133,7 @@ expSym   = (expSymString,(2,Public))
 -- | The inverse in the groups of exponents.
 invSym   = (invSymString,(1,Public))
 -- | The one in the group of exponents.
-oneSym   = ("one",(0,Public))
+oneSym   = (oneSymString,(0,Public))
 -- | Projection of first component of pair.
 fstSym   = ("fst",(1,Public))
 -- | Projection of second component of pair.
@@ -137,7 +141,7 @@ sndSym   = ("snd",(1,Public))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
-zeroSym  = ("zero",(0,Public))
+zeroSym  = (zeroSymString,(0,Public))
 
 ----------------------------------------------------------------------
 -- Fixed signatures

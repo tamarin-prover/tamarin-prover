@@ -353,20 +353,28 @@ insertAction i fa parentXor = do
                     let part = map toXor partList
                     if partList == [ms]
                        then do
-                            insertGoal goal False
-                            return Changed
-                       else -- here we insert the node as we mark it as solved to have a cleaner output
-                            -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
-                            if not nodePresent
-                                then do
-                                    modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) part) ([fa]) ([fa]) []))
-                                    insertGoal goal False
-                                    markGoalAsSolved "xor" goal
-                                    mapM_ requiresKUXor part *> return Changed
-                                else do
-                                    insertGoal goal False
-                                    markGoalAsSolved "exists" goal
-                                    return Changed
+                          -- if the partition is equal to all the terms, the xor function is not actually applied, so no rule is inserted.
+                          -- TODO: insert coerce directly? (this is the only remaining option)
+                          insertGoal goal False
+                          return Unchanged
+                       else do
+                          if isdiff
+                             then do
+                               -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
+                               if not nodePresent
+                                  then do
+                                     modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map (\x -> Fact KUFact [x]) part) ([fa]) ([fa]) []))
+                                     insertGoal goal False
+                                     markGoalAsSolved "xor" goal
+                                     mapM_ requiresKUXor part *> return Changed
+                                  else do
+                                     insertGoal goal False
+                                     markGoalAsSolved "exists" goal
+                                     return Changed
+
+                             else do
+                               insertGoal goal False
+                               mapM_ requiresKUXor part *> return Changed
 
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal

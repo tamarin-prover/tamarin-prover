@@ -210,6 +210,7 @@ dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
 dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule (ConstrRule (append (pack "_") expSymString)) kuFact return
     , invRule (ConstrRule (append (pack "_") invSymString)) kuFact return
+    , oneRule (ConstrRule (append (pack "_") oneSymString)) kuFact return
     ] ++
     concatMap (variantsIntruder hnd id True)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
@@ -232,6 +233,12 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
       where
         bfact    = kudFact x_var_0
         conc     = fAppInv x_var_0
+        concfact = kudFact conc
+
+    oneRule mkInfo kudFact mkAction =
+        Rule mkInfo [] [concfact] (mkAction concfact) []
+      where
+        conc     = fAppNoEq oneSym []
         concfact = kudFact conc
 
 
@@ -293,10 +300,13 @@ mkDUnionRule t_prems t_conc =
 
 xorIntruderRules ::  [IntrRuleAC]
 xorIntruderRules = [mkDXorRule [x_var, y_var] [y_var, z_var] x_xor_z, 
-                    mkDXorRule [x_var, y_var] [y_var] x_var]
+                    mkDXorRule [x_var, y_var] [y_var] x_var,
+                    mkCXorRule x_var y_var x_xor_y,
+                    zeroConstructor]
     where x_var   = varTerm (LVar "x"  LSortMsg   0)
           y_var   = varTerm (LVar "y"  LSortMsg   0)
           z_var   = varTerm (LVar "z"  LSortMsg   0)
+          x_xor_y = fAppAC Xor [x_var, y_var]
           x_xor_z = fAppAC Xor [x_var, z_var]
 
 mkDXorRule :: [LNTerm] -> [LNTerm] -> LNTerm -> IntrRuleAC
@@ -304,6 +314,18 @@ mkDXorRule t_prems t_prems2 t_conc =
     Rule (DestrRule (append (pack "_") xorSymString) 1 True False)
          [kdFact $ fAppAC Xor t_prems, kuFact $ fAppAC Xor t_prems2]
          [kdFact t_conc] [] []
+
+mkCXorRule :: LNTerm -> LNTerm -> LNTerm -> IntrRuleAC
+mkCXorRule t_prems t_prems2 t_conc =
+    Rule (ConstrRule (append (pack "_") xorSymString))
+         [kuFact t_prems, kuFact t_prems2]
+         [kuFact t_conc] [kuFact t_conc] []
+
+zeroConstructor :: IntrRuleAC
+zeroConstructor = Rule (ConstrRule (append (pack "_") zeroSymString))
+        [] [kuZero] [kuZero] []
+    where
+        kuZero = kuFact $ fAppNoEq zeroSym []
 
 ------------------------------------------------------------------------------
 -- Bilinear Pairing Intruder rules.

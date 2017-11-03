@@ -4,6 +4,9 @@ rule (modulo AC) c_exp:
 rule (modulo AC) c_inv:
    [ !KU( x ) ] --[ !KU( inv(x) ) ]-> [ !KU( inv(x) ) ]
 
+rule (modulo AC) c_one:
+   [ ] --[ !KU( one ) ]-> [ !KU( one ) ]
+
 rule (modulo AC) d_exp:
    [ !KD( x.2^x.3 ), !KU( x.1 ) ] --> [ !KD( x.2^(x.1*x.3) ) ]
 

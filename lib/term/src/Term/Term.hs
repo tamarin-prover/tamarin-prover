@@ -59,11 +59,15 @@ module Term.Term (
     , emapSymString
     , unionSymString
     , xorSymString
+    , oneSymString
+    , zeroSymString
     
     -- ** Function symbols
     , diffSym
     , expSym
     , pmultSym
+    , oneSym
+    , zeroSym
 
     -- ** concrete signatures
     , dhFunSig

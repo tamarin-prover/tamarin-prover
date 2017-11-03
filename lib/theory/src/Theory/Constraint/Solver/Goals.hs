@@ -83,9 +83,6 @@ openGoals sys = do
           if get sDiffSystem sys 
              -- In a diff proof, all action goals need to be solved.
              then not (solved)
-                      -- handled by 'insertAction'
---                       || isPair m || isInverse m 
---                       || isProduct m || isUnion m) 
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
