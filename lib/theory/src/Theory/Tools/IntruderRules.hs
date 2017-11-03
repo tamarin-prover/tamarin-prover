@@ -311,7 +311,7 @@ mkCUnionRule :: [LNTerm] -> IntrRuleAC
 mkCUnionRule terms =
     Rule (ConstrRule (append (pack "_") unionSymString))
          (map kuFact terms)
-         [kuFact $ fAppAC Union terms] []
+         [kuFact $ fAppAC Union terms] [kuFact $ fAppAC Union terms]
 
 ------------------------------------------------------------------------------
 -- Bilinear Pairing Intruder rules.
