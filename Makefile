@@ -205,10 +205,11 @@ post17-case-studies:	$(POST17_TARGETS)
 XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy
 XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/,$(XOR_TRACE_CASE_STUDIES)))
 
-XOR_DIFF_CASE_STUDIES= LAK06_UK-weak.spthy LAK06_UK.spthy CH07-untrac.spthy
+XOR_DIFF_CASE_STUDIES= LAK06_UK-weak.spthy LAK06_UK.spthy
+#CH07-untrac.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
-# In seperate folders, so does not work for now: XOR_TARGETS= $(XOR_TRACE_TARGETS)  $(XOR_DIFF_TARGETS)
+# In separate folders, so does not work for now: XOR_TARGETS= $(XOR_TRACE_TARGETS)  $(XOR_DIFF_TARGETS)
 
 # XOR case studies
 xor-trace-case-studies:	$(XOR_TRACE_TARGETS)
