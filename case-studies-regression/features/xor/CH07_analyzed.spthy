@@ -1,0 +1,327 @@
+theory CH07 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup:
+   [ Fr( ~k ), Fr( ~id ) ] --> [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
+   [
+   Out( <~r2, lh(rot(~id, h((~k⊕~r2⊕r1))))> ),
+   TagState( ~k, r1, ~r2, h((~k⊕~r2⊕r1)) )
+   ]
+
+  /*
+  rule (modulo AC) tag1:
+     [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+    --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
+     [ Out( <~r2, lh(rot(~id, h(z)))> ), TagState( ~k, r1, ~r2, h(z) ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.7
+       ~r2   = ~r2.8
+       r1    = r1.9
+       z     = (~k.7⊕~r2.8⊕r1.9)
+    
+    2. ~k    = ~k.7
+       ~r2   = ~r2.8
+       r1    = zero
+       z     = (~k.7⊕~r2.8)
+    
+    3. ~k    = ~k.8
+       ~r2   = ~k.8
+       r1    = r1.10
+       z     = r1.10
+    
+    4. ~k    = ~k.8
+       ~r2   = ~r2.9
+       r1    = ~k.8
+       z     = ~r2.9
+    
+    5. ~k    = ~k.8
+       ~r2   = ~r2.9
+       r1    = ~r2.9
+       z     = ~k.8
+    
+    6. ~k    = ~k.8
+       ~r2   = ~r2.9
+       r1    = (~k.8⊕~r2.9)
+       z     = zero
+    
+    7. ~k    = ~k.9
+       ~r2   = ~r2.10
+       r1    = (~k.9⊕~r2.10⊕z.12)
+       z     = z.12
+    
+    8. ~k    = ~k.9
+       ~r2   = ~r2.10
+       r1    = (~k.9⊕x.14)
+       z     = (~r2.10⊕x.14)
+    
+    9. ~k    = ~k.9
+       ~r2   = ~r2.10
+       r1    = (~r2.10⊕x.14)
+       z     = (~k.9⊕x.14)
+  */
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <r2, lh(rot(~id, hash))> ) ]
+  --[
+  Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ), Eq( h((~k⊕~r1⊕r2)), hash )
+  ]->
+   [ Out( rh(rot(~id, hash)) ) ]
+
+  /*
+  rule (modulo AC) reader2:
+     [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <r2, lh(rot(~id, hash))> ) ]
+    --[ Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ), Eq( h(z), hash ) ]->
+     [ Out( rh(rot(~id, hash)) ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.11
+       ~r1   = ~r1.12
+       r2    = ~k.11
+       z     = ~r1.12
+    
+    2. ~k    = ~k.11
+       ~r1   = ~r1.12
+       r2    = ~r1.12
+       z     = ~k.11
+    
+    3. ~k    = ~k.11
+       ~r1   = ~r1.12
+       r2    = zero
+       z     = (~k.11⊕~r1.12)
+    
+    4. ~k    = ~k.11
+       ~r1   = ~r1.12
+       r2    = (~k.11⊕~r1.12)
+       z     = zero
+    
+    5. ~k    = ~k.13
+       ~r1   = ~k.13
+       r2    = r2.16
+       z     = r2.16
+    
+    6. ~k    = ~k.13
+       ~r1   = ~r1.14
+       r2    = r2.16
+       z     = (~k.13⊕~r1.14⊕r2.16)
+    
+    7. ~k    = ~k.16
+       ~r1   = ~r1.17
+       r2    = (~k.16⊕~r1.17⊕z.22)
+       z     = z.22
+    
+    8. ~k    = ~k.18
+       ~r1   = ~r1.19
+       r2    = (~k.18⊕x.33)
+       z     = (~r1.19⊕x.33)
+    
+    9. ~k    = ~k.18
+       ~r1   = ~r1.19
+       r2    = (~r1.19⊕x.33)
+       z     = (~k.18⊕x.33)
+  */
+
+rule (modulo E) tag2:
+   [
+   In( rh(rot(~id, hash)) ), !Tag( ~k, ~id ), TagState( ~k, r1, ~r2, hash )
+   ]
+  --[ Alive( ~k, 'Reader' ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+lemma recentalive_tag:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( Alive( x, 'Tag' ) @ #i )
+  case reader2
+  solve( Initiated( ~r1 ) ▶₀ #i )
+    case reader1
+    solve( !Reader( ~k, ~id ) ▶₁ #i )
+      case Setup
+      solve( !KU( lh(rot(~id, h(z))) ) @ #vk.2 )
+        case tag1
+        solve( splitEqs(0) )
+          case split_case_15
+          solve( splitEqs(1) )
+            case split_case_1
+            solve( !KU( ~r1 ) @ #vk.5 )
+              case reader1
+              solve( !KU( ~r2 ) @ #vk.5 )
+                case tag1
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma recentalive_reader:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( Alive( x, 'Reader' ) @ #i )
+  case tag2
+  solve( !Tag( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( TagState( ~k, r1, ~r2, hash ) ▶₂ #i )
+      case tag1
+      solve( !KU( rh(rot(~id, h(z))) ) @ #vk )
+        case c_rh
+        solve( !KU( rot(~id, h(z)) ) @ #vk.2 )
+          case c_rot
+          by solve( !KU( ~id ) @ #vk.3 )
+        qed
+      next
+        case reader2
+        solve( !KU( lh(rot(~id, h(z))) ) @ #vk.4 )
+          case c_lh
+          solve( !KU( rot(~id, h(z)) ) @ #vk.5 )
+            case c_rot
+            by solve( !KU( ~id ) @ #vk.6 )
+          qed
+        next
+          case tag1
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executable:
+  exists-trace
+  "∃ x #i #j.
+    ((Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+    (¬(∃ #k. (Response( x, 'Tag' ) @ #k) ∧ (¬(#j = #k))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  ∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k"
+*/
+simplify
+solve( Alive( x, 'Reader' ) @ #i )
+  case tag2
+  solve( !Tag( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( TagState( ~k, r1, ~r2, hash ) ▶₂ #i )
+      case tag1
+      solve( Response( ~k, 'Tag' ) @ #j )
+        case tag1
+        solve( !KU( rh(rot(~id, h(z))) ) @ #vk )
+          case reader2
+          solve( splitEqs(1) )
+            case split_case_03
+            solve( splitEqs(2) )
+              case split_case_01
+              solve( !KU( ~r1 ) @ #vk.1 )
+                case reader1
+                solve( !KU( ~r2 ) @ #vk.3 )
+                  case tag1
+                  solve( !KU( lh(rot(~id, h((~k⊕~r1⊕~r2)))) ) @ #vk.4 )
+                    case tag1
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/features/xor/CH07.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/xor/CH07.spthy
+
+  output:          examples/features/xor/CH07.spthy.tmp
+  processing time: 1.187909s
+  recentalive_tag (all-traces): falsified - found trace (10 steps)
+  recentalive_reader (all-traces): verified (11 steps)
+  executable (exists-trace): verified (12 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/xor/CH07.spthy
+
+  output:          examples/features/xor/CH07.spthy.tmp
+  processing time: 1.187909s
+  recentalive_tag (all-traces): falsified - found trace (10 steps)
+  recentalive_reader (all-traces): verified (11 steps)
+  executable (exists-trace): verified (12 steps)
+
+==============================================================================
+*/

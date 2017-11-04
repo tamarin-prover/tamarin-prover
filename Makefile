@@ -129,7 +129,8 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/regression/diff
 	mkdir -p case-studies/features/xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# For execution on server using -N14 for faster completion!
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N14 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
