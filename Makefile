@@ -107,6 +107,7 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/post17
 	mkdir -p case-studies/regression/trace
 	mkdir -p case-studies/features/xor
+	mkdir -p case-studies/features/xor/basicfunctionality
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
