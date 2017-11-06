@@ -1,4 +1,4 @@
-theory LAK06
+theory LAK06_state
 begin
 
 // This theory models LAK06 as taken from "Attacks on RFID protocols" v1.1
@@ -25,16 +25,19 @@ builtins: xor, hashing
 
 */
 
-rule setup:
-  let k0 = ~k
+rule setup: // one pair Tag-Reader, unbounded nb. of sessions
+  let k0 = h(~k)
       k = h(k0)
   in
   [ Fr(~k), Fr(~id) ]
---[ OnlyOnce('setup'), Key(k0), Key(k) ]->
-  [ Reader(~id)
-  , Tag(~id)
-  , Reader(~id)
-  , Tag(~id)
+--[ OnlyOnce('2Users')
+  , Update(k, 'T')
+  , Update(k0, 'R')
+  , Update(k, 'R')
+  , Setup()
+  ]->
+  [ ! Reader(~id)
+  , ! Tag(~id)
   , ReaderK(~id, k0, k)
   , TagK(~id, k)
   ]
@@ -53,7 +56,8 @@ rule tag1:
   , Fr(~r1)
   , In(r0) ]
 --[ Running(<'R','T',<k,r0,~r1>>)
-  , Key(k)
+  , Key(k, 'T')
+  , OutH(r0 XOR ~r1 XOR k)	//for Out != h(SomeKey)
   ]->
   [ TagState1(~id, k, ~r1, r0)
   , Out(<~r1, h(r0 XOR ~r1 XOR k)>)
@@ -67,21 +71,29 @@ rule acceptreaderOld:		// the key k matches
   ]
 --[ Commit(<'R','T',<k,~r0,r1>>)
   , Running(<'T','R',<k,~r0,r1>>)
-  , Key(k0), Key(k) ]->
+  , Key(k0, 'R'), Key(k, 'R')
+  , Update(h(k), 'R')
+  , Update(k, 'R')
+  , OutH(h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0))	//for Out != h(SomeKey)
+  ]->
   [ Out(h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0))
   , ReaderK(~id, k, h(k))	// k0 and k are updated in such a case
   ]
 
-rule acceptreaderNew:		//the key k0 matches
+rule acceptreaderNew:		// the key k0 matches
   [ ReaderState1(~id, ~r0)
   , In(<r1, h(~r0 XOR r1 XOR k0)>)
   , ReaderK(~id, k0, k)
   ]
 --[ Commit(<'R','T',<k0,~r0,r1>>)
   , Running(<'T','R',<k0,~r0,r1>>)
-  , Key(k0), Key(k) ]->
+  , Key(k0, 'R'), Key(k, 'R')
+  , Update(k0, 'R')
+  , Update(k, 'R')
+  , OutH(h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0))	//for Out != h(SomeKey)
+  ]->
   [ Out(h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0))
-  , ReaderK(~id, k0, k)		//k0 and k do not change in that case (last message from last session got lost)
+  , ReaderK(~id, k0, k)		// k0 and k do not change in that case (last message from last session got lost)
   ]
 
 rule accepttag:
@@ -91,7 +103,8 @@ rule accepttag:
   ]
 --[ Commit(<'T','R',<k,r0,~r1>>)
   , FinTag()
-  , Key(k) ]->
+  , Key(k, 'T')
+  , Update(h(k), 'T') ]->
   [ TagK(~id, h(k)) ]		// Tag always updates its key k (he knows Reader did the same)
 
 
@@ -99,11 +112,41 @@ rule accepttag:
 restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
+// PROVEN, quick manual proof that could be automatized very easily.
+// --> only prioritize ReaderK() and TagK() goals and then full auto mode, autoprove with associated oracle (LAK_state-oracle)
+// Git revision: 8265b38c9c418d1c0940fece192d673ce45bc9e4, branch: develop
+// Compiled at: 2017-11-02 14:54:16.198059 UTC
+lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
+  "All k r #i. 
+     Key(k, r)@i ==>
+       ( (Ex #j. Update(k, r)@j & #j < #i))"
+        // | (Ex #j. Create(k, r)@j & #j < #i))"
+
+// PROVEN, instant autoproof
+// Git revision: 8265b38c9c418d1c0940fece192d673ce45bc9e4, branch: develop
+// Compiled at: 2017-11-02 14:54:16.198059 UTC
+lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
+  "(All k r #i. ((Key(k, r)@i ==> Ex k0. k = h(k0))))
+ & (All k r #i. ((Update(k, r)@i ==> Ex k0. k = h(k0))))"
+
+lemma 2helpingStackHash[use_induction, reuse]: // no Out(h(key))
+  "(All k r #i. Key(k, r)@i    ==> (Ex k0. k = h(k0) & not (Ex #j. K(k) @j) & not (Ex #j. K(k0) @j)) )
+ & (All k r #i. Update(k, r)@i ==> (Ex k0. k = h(k0) & not (Ex #j. K(k) @j) & not (Ex #j. K(k0) @j)) )"
+
+
+lemma helpingOutNotKey[use_induction, reuse]: // no Out(h(key))
+  "All k r #i. Key(k, r)@i ==> not(Ex #j. OutH(h(k))@j )"
+
+// lemma 2helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
+//   "All k r #i. 
+//      Update(k, r)@i ==>
+//         ( (Ex #j. Update(k, r)@j & #j < #i)
+//         | (Ex #j. Create(k, r)@j & #j < #i))"
+
 // PROVEN, quick autoproof
 // (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
-lemma helpingSecrecy[use_induction, reuse]:
-  "All k #i. 
-     Key(k)@i ==> not(Ex #j. K(k)@j)"
+lemma helpingSecrecy[use_induction, reuse]:	              // I thought this lemma would be easy to prove. It is not.
+  "All k r #i. Key(k, r)@i ==> not(Ex #j. K(k)@j)"
 
 // PROVEN, quick autoproof
 // (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)

@@ -50,23 +50,27 @@ rule accepttag:
 
 
 // PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
 // PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
 // PROVEN, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
 // FALSIFIED, quick autoproof
+// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
