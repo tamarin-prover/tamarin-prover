@@ -136,7 +136,7 @@ solveAllSafeGoals ths' =
                             then True 
                             else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
-        PremiseG _ fa -> not (isKUFact fa)
+        PremiseG _ fa -> not (isKUFact fa) && not (isKDXorFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
         SplitG _      -> doSplit --extensiveSplitting &&
@@ -145,7 +145,7 @@ solveAllSafeGoals ths' =
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
 
-    isKDPrem (PremiseG _ fa,_) = isKDFact fa
+    isKDPrem (PremiseG _ fa,_) = (isKDFact fa) && (not (isKDXorFact fa))
     isKDPrem _                 = False
     isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
     isChainPrem1 _                          = False

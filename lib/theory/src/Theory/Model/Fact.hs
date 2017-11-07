@@ -50,6 +50,7 @@ module Theory.Model.Fact (
   , isKFact
   , isKUFact
   , isKDFact
+  , isKDXorFact
   
   , convertKUtoKD
   , convertKDtoKU
@@ -193,6 +194,11 @@ isKUFact _               = False
 isKDFact :: LNFact -> Bool
 isKDFact (Fact KDFact _) = True
 isKDFact _               = False
+
+-- | True if the fact is a KD-fact concerning an Xor Term.
+isKDXorFact :: LNFact -> Bool
+isKDXorFact (Fact KDFact [m]) = isXor m
+isKDXorFact _                 = False
 
 -- | converts a KU-Fact into a KD-Fact with the same terms
 convertKUtoKD :: LNFact -> LNFact
