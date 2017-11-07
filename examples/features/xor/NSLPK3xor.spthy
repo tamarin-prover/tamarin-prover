@@ -141,7 +141,7 @@ restriction onekeypername:
           Register(A) @i & Register(A) @j & (not ( #i = #j))
         )"
 
-// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
+// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // Nonce secrecy from the perspective of both the initiator and the responder.
 lemma nonce_secrecy:
   " /* It cannot be that */
@@ -156,7 +156,7 @@ lemma nonce_secrecy:
         & not (Ex #r. RevLtk(B) @ r)
        )"
 
-// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
+// FINDS EXPECTED ATTACK AUTOMATICALLY (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // Injective agreement from the perspective of both the initiator and the responder.
 lemma injective_agree:
   " /* Whenever somebody commits to running a session, then*/
@@ -175,7 +175,7 @@ lemma injective_agree:
         | (Ex #r. RevLtk(peer)  @ r)
   "
 
-// SHOWS CORRECT EXECUTION (2017-11-03, e17bd87c47ebfdef2aef8c8ab36b5ce8ad6ebc5d)
+// SHOWS CORRECT EXECUTION (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // Consistency check: ensure that secrets can be shared between honest agents.
 lemma session_key_setup_possible:
   exists-trace
