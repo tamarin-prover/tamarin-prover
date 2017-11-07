@@ -33,8 +33,8 @@ rule setup: // one pair Tag-Reader, unbounded nb. of sessions
   [ Fr(~k), Fr(~id) ]
 --[ OnlyOnce('2Users')
   , Update(k, 'T')
-  , Update(k0, 'R')
-  , Update(k, 'R')
+  , Update(k0, 'R1')
+  , Update(k, 'R2')
   , Setup()
   ]->
   [ ! Reader(~id)
@@ -75,9 +75,9 @@ rule acceptreaderNew:		// the key k matches
 --[ Commit(<'R','T',<k,~r0,r1>>)
   , Running(<'T','R',<k,~r0,r1>>)
   // , Accept(<'R','T',<r1, h(~r0 XOR r1 XOR k)>>)
-  , Key(k0, 'R'), Key(k, 'R')
-  , Update(h(k), 'R')
-  , Update(k, 'R')
+  , Key(k0, 'R1'), Key(k, 'R2')
+  , Update(k, 'R1')
+  , Update(h(k), 'R2')
   , OutH(h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0))	//for Out != h(SomeKey)
   // , OutF(<'R','T',h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0)>)
   ]->
@@ -94,9 +94,9 @@ rule acceptreaderOld:		// the key k0 matches
 --[ Commit(<'R','T',<k0,~r0,r1>>)
   , Running(<'T','R',<k0,~r0,r1>>)
   // , Accept(<'R','T',<r1,h(~r0 XOR r1 XOR k0)>>)
-  , Key(k0, 'R'), Key(k, 'R')
-  // , Update(k0, 'R')
-  // , Update(k, 'R')
+  , Key(k0, 'R1'), Key(k, 'R2')
+  // , Update(k0, 'R1')
+  // , Update(k, 'R2')
   , OutH(h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0))	//for Out != h(SomeKey)
   // , OutF(<'R','T',h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0)>)
   ]->
@@ -122,9 +122,10 @@ restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
 // PROVEN, quick manual proof that could be automatized very easily.
-// --> only prioritize ReaderK() and TagK() goals and then full auto mode, autoprove with associated oracle (LAK_state-oracle)
-// Git revision: 8265b38c9c418d1c0940fece192d673ce45bc9e4, branch: develop
-// Compiled at: 2017-11-02 14:54:16.198059 UTC
+// AUTOPROOF with associated oracle (LAK_state-oracle)
+// --> only prioritize ReaderK() and TagK() goals and then full auto mode,
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
   "All k r #i. 
      Key(k, r)@i ==>
@@ -132,8 +133,8 @@ lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has bee
         // | (Ex #j. Create(k, r)@j & #j < #i))"
 
 // PROVEN, instant autoproof
-// Git revision: 8265b38c9c418d1c0940fece192d673ce45bc9e4, branch: develop
-// Compiled at: 2017-11-02 14:54:16.198059 UTC
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
   "(All k r #i. ((Key(k, r)@i ==> Ex k0. k = h(k0))))
  & (All k r #i. ((Update(k, r)@i ==> Ex k0. k = h(k0))))"
@@ -159,20 +160,35 @@ lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
 //         ( (Ex #j. Update(k, r)@j & #j < #i)
 //         | (Ex #j. Create(k, r)@j & #j < #i))"
 
-
+// WIP on a manual proof: extremely long and hard to automate (see associated oracle)
+// Confident that it is possible (it seems that I went through all possible cases, but there are so many redundant sub-proofs....)
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma helpingSecrecy[use_induction, reuse]:	              // I thought this lemma would be easy to prove. It is not.
   "All k r #i. Key(k, r)@i ==> not(Ex #j. KU(k)@j)"
 
+// PROVEN, manual proof (straightforward), see associated file
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
+// Note: Strangely complicated by helping lemmas. More goals are available (that's expected) but more goals HAVE to be proved
+// before Tamarin considers having found a valid trace.
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
+// (proof almost done), quite long pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu()) See associated file.
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
+// FALSIFIED, pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically, see asociated file
+// Idea to automate: deal with Update (always go to setup)
+// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
+// Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
