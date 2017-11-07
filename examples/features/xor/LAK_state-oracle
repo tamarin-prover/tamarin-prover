@@ -36,7 +36,6 @@ if lemma == "helpingUpdateKey":
 
 elif lemma == "helpingOutNotKey":
   # !Tag and !Reader facts
-  
   for line in lines:
     num = line.split(':')[0]
     if debug: sys.stderr.write(line)
@@ -45,8 +44,49 @@ elif lemma == "helpingOutNotKey":
         re.match('.*!Reader\(.*', line) or
         re.match('.*ReaderState1\(.*', line)):
       rank[9].append(num)
-    if re.match('.*TagK\(.*', line):
+    elif re.match('.*TagK\(.*', line):
       rank[4].append(num)
+    else:
+      rank[5].append(num)
+
+
+elif lemma == "helpingSecrecy":
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*~~>.*', line):
+      rank[48].append(num)
+    if (re.match('.*!KU\( ~k.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*!KU\( h\(~k.*', line)):
+      rank[44].append(num)
+    elif (re.match('.*!KU\( h\(k0\).*', line)):
+      rank[42].append(num)
+    elif (re.match('.*!K.\(.*r1\.1.*', line) or
+          re.match('.*!K.\(.*r1.*', line) or
+          re.match('.*!K.\(\(.*z1\.1.*', line) or
+          re.match('.*!K.\(\(.*z1.*', line) or
+          re.match('.*!K.\(\(.*~r0\.1.*', line) or
+          re.match('.*!K.\(\(.*~r0.*', line) or
+          re.match('.*!K.\( \(.*~r0\.1.*', line) or
+          re.match('.*!K.\( \(.*~r0.*', line)):
+      rank[40].append(num)
+    elif (re.match('.*!KU\(.*r1\.1.*', line) or
+          re.match('.*!KU\(.*r1.*', line)):
+      rank[35].append(num)
+    elif (re.match('.*!Tag\(.*', line) or
+          re.match('.*!Reader\(.*', line) or
+          re.match('.*ReaderState1\(.*', line) or
+          re.match('.*TagState1\(.*', line)):
+      rank[30].append(num)
+    elif (re.match('.*ReaderState1\(.*', line) or
+          re.match('.*TagState1\(.*', line)):
+      rank[27].append(num)
+    elif (re.match('.*splitEqs\(2\.*', line)):
+      rank[25].append(num)
+
+           
     else:
       rank[5].append(num)
 
