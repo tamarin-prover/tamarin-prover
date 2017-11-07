@@ -84,8 +84,10 @@ lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
-// Observational Equivalence: PROVEN, autoproof (takes a very long time and I had to prove one sub-case at a time)
-// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
-// NOT YET IN CURRENT VERSION! LACKING CASES: Accept_Tag and Rule_Equality
+// PROVEN, autoproof, in small parts, sub-case by sub-case (memory issue otherwise?!?)
+// Using (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf) below, with 14 threads:
+// All cases verify quickly except for: Rule_accepttag and Rule_Equality
+// Rule_equality takes about 5 minutes real time (~ 1 hour CPU).
+// Rule_accepttag takes 1800 min CPU, about 4 hours real time! (stored locally as LAK06_UK_weak-proof-Rule_accepttag.spthy)
 
 end
