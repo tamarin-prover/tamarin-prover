@@ -333,7 +333,7 @@ solve( (¬(role = 'I'))  ∥
                         case Register_key_honest
                         by solve( !KU( ~ex ) @ #vk.9 )
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~eb ) @ #vk.11 )
                           case Corrupt_Ltk
                           by contradiction /* from formulas */
@@ -427,7 +427,7 @@ solve( (¬(role = 'I'))  ∥
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~eb ) @ #vk.11 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
@@ -476,7 +476,7 @@ next
                       case Register_key_honest
                       by solve( !KU( ~ex ) @ #vk.7 )
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea ) @ #vk.9 )
                         case Corrupt_Ltk
                         by contradiction /* from formulas */
@@ -526,7 +526,7 @@ next
                   case Register_key_honest
                   by solve( !KU( ~ex ) @ #vk.8 )
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~eb ) @ #vk.10 )
                     case Corrupt_Ltk
                     by contradiction /* from formulas */
@@ -576,7 +576,7 @@ next
                       case Register_key_honest
                       by solve( !KU( ~ex ) @ #vk.7 )
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea ) @ #vk.9 )
                         case Corrupt_Ltk
                         by contradiction /* from formulas */
@@ -626,7 +626,7 @@ next
                         case Register_key_honest
                         by solve( !KU( ~ex ) @ #vk.9 )
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~eb ) @ #vk.11 )
                           case Corrupt_Ltk
                           by contradiction /* from formulas */
@@ -674,7 +674,7 @@ next
                   case Register_key_honest
                   by solve( !KU( ~ex ) @ #vk.8 )
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~eb ) @ #vk.10 )
                     case Corrupt_Ltk
                     by contradiction /* from formulas */
@@ -759,7 +759,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~eb ) @ #vk.11 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
@@ -789,8 +789,8 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 2.547105s
+  output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
+  processing time: 2.104321s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -801,8 +801,8 @@ summary of summaries:
 
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 2.547105s
+  output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
+  processing time: 2.104321s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

@@ -282,7 +282,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.17 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -321,7 +321,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* cyclic */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ltkI ) @ #vk.18 )
                               case Ltk_reveal
                               by contradiction /* from formulas */
@@ -329,7 +329,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~m1 ) @ #vk.15 )
                           case Ephk_reveal
                           solve( !KU( 'g'^~m2 ) @ #vk.12 )
@@ -339,7 +339,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.16 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -373,7 +373,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.22 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -384,7 +384,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           case Init_2
                           by contradiction /* cyclic */
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m1 ) @ #vk.20 )
                             case Ephk_reveal
                             solve( !KU( 'g'^~m2 ) @ #vk.19 )
@@ -394,7 +394,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.21 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -439,7 +439,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.27 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -466,7 +466,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.26 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -493,7 +493,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.30 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -520,7 +520,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.29 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -545,7 +545,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.24 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -567,7 +567,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               case Init_2
                               by contradiction /* cyclic */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m1 ) @ #vk.22 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -592,7 +592,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.28 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -617,7 +617,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.26 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -643,7 +643,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.27 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -668,7 +668,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.25 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -677,7 +677,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.21 )
                             case Ephk_reveal
                             solve( !KU( ~x ) @ #vk.22 )
@@ -694,7 +694,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.25 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -738,7 +738,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.27 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -765,7 +765,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.26 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -792,7 +792,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.30 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -819,7 +819,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.29 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -844,7 +844,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.24 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -866,7 +866,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               case Init_2
                               by contradiction /* cyclic */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m1 ) @ #vk.22 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -891,7 +891,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.28 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -916,7 +916,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.26 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -942,7 +942,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.27 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -967,7 +967,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 case Init_2
                                 by contradiction /* cyclic */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~m1 ) @ #vk.25 )
                                   case Ephk_reveal
                                   by contradiction /* from formulas */
@@ -976,7 +976,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.21 )
                             case Ephk_reveal
                             solve( !KU( ~x ) @ #vk.22 )
@@ -993,7 +993,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                   case Init_2
                                   by contradiction /* cyclic */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~m1 ) @ #vk.25 )
                                     case Ephk_reveal
                                     by contradiction /* from formulas */
@@ -1053,7 +1053,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.20 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1092,7 +1092,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* cyclic */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ltkI ) @ #vk.21 )
                             case Ltk_reveal
                             by contradiction /* from formulas */
@@ -1100,7 +1100,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~m1 ) @ #vk.18 )
                         case Ephk_reveal
                         solve( !KU( 'g'^~m2 ) @ #vk.14 )
@@ -1110,7 +1110,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.19 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1131,7 +1131,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.20 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1149,7 +1149,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.23 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1157,7 +1157,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~m1 ) @ #vk.18 )
                         case Ephk_reveal
                         solve( !KU( 'g'^~m2 ) @ #vk.14 )
@@ -1167,7 +1167,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.19 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1202,7 +1202,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.20 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1228,7 +1228,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.24 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -1257,7 +1257,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.25 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1285,7 +1285,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.23 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -1314,7 +1314,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.24 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1340,7 +1340,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~m2 ) @ #vk.23 )
                             case Ephk_reveal
                             by contradiction /* from formulas */
@@ -1368,7 +1368,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.28 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1396,7 +1396,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.27 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -1425,7 +1425,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.27 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1453,7 +1453,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.26 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -1480,7 +1480,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~m2 ) @ #vk.22 )
                               case Ephk_reveal
                               by contradiction /* from formulas */
@@ -1509,7 +1509,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.26 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1539,7 +1539,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.25 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1550,7 +1550,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( ~ltkR ) @ #vk.17 )
                       case Ltk_reveal
                       solve( !KU( ~m1 ) @ #vk.18 )
@@ -1569,7 +1569,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~m2 ) @ #vk.23 )
                                 case Ephk_reveal
                                 by contradiction /* from formulas */
@@ -1609,7 +1609,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                   case Resp_1
                   solve( !KU( <'g'^(~ltkR*~m1), 'g'^(~ltkI*~m2.1)>^inv(~ltkR.1)
                          ) @ #vk.14 )
-                    case cexp
+                    case c_exp
                     solve( !KU( ~ltkR.1 ) @ #vk.22 )
                       case Ltk_reveal
                       solve( !KU( 'g'^~m2 ) @ #vk.18 )
@@ -1619,7 +1619,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           by contradiction /* from formulas */
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~m2 ) @ #vk.24 )
                           case Ephk_reveal
                           by contradiction /* from formulas */
@@ -1630,7 +1630,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                 next
                   case c_MAC
                   solve( !KU( <'g'^(~ltkR*~m1), YA>^inv(~ltkR.1) ) @ #vk.15 )
-                    case cexp
+                    case c_exp
                     solve( !KU( ~ltkR.1 ) @ #vk.28 )
                       case Ltk_reveal
                       solve( !KU( 'g'^~m2 ) @ #vk.21 )
@@ -1640,7 +1640,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           by contradiction /* from formulas */
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~m2 ) @ #vk.30 )
                           case Ephk_reveal
                           by contradiction /* from formulas */
@@ -1699,7 +1699,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~m2 ) @ #vk.17 )
                   case Ephk_reveal
                   by contradiction /* from formulas */
@@ -1710,7 +1710,7 @@ next
             case Init_2
             by contradiction /* cyclic */
           next
-            case cexp
+            case c_exp
             solve( !KU( ~m1 ) @ #vk.15 )
               case Ephk_reveal
               by contradiction /* from formulas */
@@ -1737,7 +1737,7 @@ next
             case Init_2
             by contradiction /* cyclic */
           next
-            case cexp
+            case c_exp
             solve( !KU( ~m1 ) @ #vk.20 )
               case Ephk_reveal
               by contradiction /* from formulas */
@@ -1776,7 +1776,7 @@ next
                 case Init_2
                 by contradiction /* cyclic */
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~m1 ) @ #vk.20 )
                   case Ephk_reveal
                   by contradiction /* from formulas */
@@ -1784,7 +1784,7 @@ next
               qed
             qed
           next
-            case cexp
+            case c_exp
             solve( !KU( ~m2 ) @ #vk.18 )
               case Ephk_reveal
               by contradiction /* from formulas */
@@ -1799,7 +1799,7 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case cexp
+            case c_exp
             solve( !KU( ~m2 ) @ #vk.18 )
               case Ephk_reveal
               by contradiction /* from formulas */
@@ -1827,8 +1827,8 @@ analyzing: examples/csf12/DH2_original.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/DH2_original.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 28.367522s
+  output:          examples/csf12/DH2_original.spthy.tmp
+  processing time: 20.319474s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1838,8 +1838,8 @@ summary of summaries:
 
 analyzed: examples/csf12/DH2_original.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 28.367522s
+  output:          examples/csf12/DH2_original.spthy.tmp
+  processing time: 20.319474s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

@@ -784,7 +784,18 @@ solve( State_1( prog ) ▶₀ #t2 )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+restriction actions:
+  restriction `predicate1' references action 
+    (ProtoFact Linear "Pred_not_pred_rep" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate0' references action 
+    (ProtoFact Linear "Pred_pred_rep" 2,2,Linear)
+  but no rule has such an action.
+*/
 
 end
 /* Output
@@ -800,8 +811,11 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 6.799443s
+  output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
+  processing time: 5.210468s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)
@@ -813,8 +827,11 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 6.799443s
+  output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
+  processing time: 5.210468s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (88 steps)
   final (all-traces): verified (5 steps)

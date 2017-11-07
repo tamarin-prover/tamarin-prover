@@ -78,7 +78,7 @@ solve( Step1( tid, A, B, ~x ) ▶₀ #i )
       case Step1_case_2
       by solve( !KU( ~x.1 ) @ #vk.4 )
     next
-      case cexp
+      case c_exp
       by solve( !KU( ~x ) @ #vk.6 )
     qed
   next
@@ -131,8 +131,8 @@ analyzing: examples/cav13/DH_example.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/cav13/DH_example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.209813s
+  output:          examples/cav13/DH_example.spthy.tmp
+  processing time: 0.173563s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -143,8 +143,8 @@ summary of summaries:
 
 analyzed: examples/cav13/DH_example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.209813s
+  output:          examples/cav13/DH_example.spthy.tmp
+  processing time: 0.173563s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

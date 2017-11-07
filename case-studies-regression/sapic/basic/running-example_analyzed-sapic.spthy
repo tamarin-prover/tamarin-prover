@@ -721,6 +721,23 @@ unbound:
   
   rule `lookup_key_h2_as_k2_0_121111' has unbound variables: 
     k2
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate1' references action 
+    (ProtoFact Linear "Pred_not_sencSucc" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate0' references action 
+    (ProtoFact Linear "Pred_sencSucc" 2,2,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -737,9 +754,9 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 2.654889s
-  WARNING: 5 wellformedness check failed!
+  output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
+  processing time: 2.131695s
+  WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
@@ -755,9 +772,9 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 2.654889s
-  WARNING: 5 wellformedness check failed!
+  output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
+  processing time: 2.131695s
+  WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)

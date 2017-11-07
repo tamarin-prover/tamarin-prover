@@ -27,7 +27,9 @@ Before a release, the following things should be checked:
    commit version bump, add tag 'tamarin-prover-XXXX' to repository,
    and merge into 'main' branch.
 
-8. Update homebrew: fork homebrew-science. Once forked open tamarin-prover.rb 
+8. Update homebrew: fork homebrew-science
+   (https://github.com/Homebrew/homebrew-science).
+   Once forked open tamarin-prover.rb
    and edit lines 4, 5 and 6. See 
    http://docs.brew.sh/Formula-Cookbook.html#updating-formulae
    for why those lines must be updated.

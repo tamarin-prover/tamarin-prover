@@ -259,7 +259,18 @@ solve( State_121111111( init, k, signed, skV ) ▶₀ #t1 )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+restriction actions:
+  restriction `predicate1' references action 
+    (ProtoFact Linear "Pred_not_pred_rep" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate0' references action 
+    (ProtoFact Linear "Pred_pred_rep" 2,2,Linear)
+  but no rule has such an action.
+*/
 
 end
 /* Output
@@ -275,8 +286,11 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.645196s
+  output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
+  processing time: 0.60973s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -287,8 +301,11 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.645196s
+  output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
+  processing time: 0.60973s
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

@@ -116,7 +116,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
     next
       case c_h
       solve( !KU( 'g'^(~lkI*~lkR) ) @ #vk.9 )
-        case cexp
+        case c_exp
         solve( !KU( ~lkI ) @ #vk.12 )
           case Ltk_reveal
           by contradiction /* from formulas */
@@ -183,7 +183,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
     next
       case c_h
       solve( !KU( 'g'^(~lkI*~lkR) ) @ #vk.9 )
-        case cexp
+        case c_exp
         solve( !KU( ~lkI ) @ #vk.12 )
           case Ltk_reveal
           by contradiction /* from formulas */
@@ -221,8 +221,8 @@ analyzing: examples/csf12/JKL_TS1_2008_KI.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.258105s
+  output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
+  processing time: 0.24791s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -233,8 +233,8 @@ summary of summaries:
 
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.258105s
+  output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
+  processing time: 0.24791s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

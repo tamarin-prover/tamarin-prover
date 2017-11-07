@@ -83,8 +83,8 @@ analyzing: case-studies-sapic-regression/basic/channels2.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.068892s
+  output:          case-studies-sapic-regression/basic/channels2.spthy.tmp
+  processing time: 0.07947s
   received (all-traces): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -94,8 +94,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.068892s
+  output:          case-studies-sapic-regression/basic/channels2.spthy.tmp
+  processing time: 0.07947s
   received (all-traces): verified (3 steps)
 
 ==============================================================================

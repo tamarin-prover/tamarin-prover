@@ -566,7 +566,7 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Reveal_ltk_case_2
                                   by contradiction /* from formulas */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -580,7 +580,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 solve( !KU( ~x ) @ #vk.17 )
@@ -643,7 +643,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_ltk_case_2
                             by contradiction /* from formulas */
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -732,7 +732,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -812,14 +812,14 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -913,7 +913,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -983,7 +983,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_2
                                 by contradiction /* from formulas */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
@@ -997,7 +997,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_ltk_case_2
                             by contradiction /* from formulas */
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               solve( !KU( ~x ) @ #vk.17 )
@@ -1089,7 +1089,7 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -1159,7 +1159,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_2
                                 by contradiction /* from formulas */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
@@ -1189,7 +1189,7 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_2
                                 by contradiction /* from formulas */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
@@ -1217,14 +1217,14 @@ solve( (∃ matching #i3 #i4 sid.
                               case Reveal_ltk_case_2
                               by contradiction /* from formulas */
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               solve( !KU( ~x ) @ #vk.17 )
@@ -1335,7 +1335,7 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Reveal_ltk_case_2
                                   by contradiction /* from formulas */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -1365,7 +1365,7 @@ solve( (∃ matching #i3 #i4 sid.
                                   case Reveal_ltk_case_2
                                   by contradiction /* from formulas */
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -1393,14 +1393,14 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_2
                                 by contradiction /* from formulas */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 solve( !KU( ~x ) @ #vk.17 )
@@ -1463,7 +1463,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_ltk_case_2
                             by contradiction /* from formulas */
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -1558,7 +1558,7 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.19 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
@@ -1585,14 +1585,14 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -1636,7 +1636,7 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
@@ -1664,21 +1664,21 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -1744,7 +1744,7 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.19 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -1771,14 +1771,14 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
@@ -1822,7 +1822,7 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -1850,21 +1850,21 @@ solve( (∃ matching #i3 #i4 sid.
                                   by contradiction /* from formulas */
                                 qed
                               next
-                                case cpmult
+                                case c_pmult
                                 solve( !KU( ~ex ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -1978,14 +1978,14 @@ solve( (∃ matching #i3 #i4 sid.
                                 case Reveal_ltk_case_2
                                 by contradiction /* from formulas */
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -2045,7 +2045,7 @@ solve( (∃ matching #i3 #i4 sid.
                             case Reveal_ltk_case_2
                             by contradiction /* from formulas */
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -2140,7 +2140,7 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.19 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
@@ -2167,14 +2167,14 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ey ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -2218,7 +2218,7 @@ solve( (∃ matching #i3 #i4 sid.
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case cpmult
+                                    case c_pmult
                                     solve( !KU( ~ex ) @ #vk.18 )
                                       case Reveal_ephemeral_key
                                       by contradiction /* from formulas */
@@ -2246,21 +2246,21 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.16 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ex ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
@@ -2326,7 +2326,7 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.19 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -2353,14 +2353,14 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( ~ey ) @ #vk.18 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
@@ -2404,7 +2404,7 @@ solve( (∃ matching #i3 #i4 sid.
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case cpmult
+                                  case c_pmult
                                   solve( !KU( ~ex ) @ #vk.18 )
                                     case Reveal_ephemeral_key
                                     by contradiction /* from formulas */
@@ -2432,21 +2432,21 @@ solve( (∃ matching #i3 #i4 sid.
                                   by contradiction /* from formulas */
                                 qed
                               next
-                                case cpmult
+                                case c_pmult
                                 solve( !KU( ~ex ) @ #vk.16 )
                                   case Reveal_ephemeral_key
                                   by contradiction /* from formulas */
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ey ) @ #vk.16 )
                                 case Reveal_ephemeral_key
                                 by contradiction /* from formulas */
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ex ) @ #vk.16 )
                               case Reveal_ephemeral_key
                               by contradiction /* from formulas */
@@ -2515,7 +2515,7 @@ next
               case Reveal_ltk_case_2
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~ex ) @ #vk.16 )
                 case Reveal_ephemeral_key
                 by contradiction /* from formulas */
@@ -2560,7 +2560,7 @@ next
             case Reveal_ltk_case_2
             by contradiction /* from formulas */
           next
-            case cexp
+            case c_exp
             solve( !KU( ~ey ) @ #vk.16 )
               case Reveal_ephemeral_key
               by contradiction /* from formulas */
@@ -2588,8 +2588,8 @@ analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 70.459248s
+  output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
+  processing time: 58.416911s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2600,8 +2600,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 70.459248s
+  output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
+  processing time: 58.416911s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 

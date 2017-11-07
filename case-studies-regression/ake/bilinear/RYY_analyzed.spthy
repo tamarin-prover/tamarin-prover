@@ -390,7 +390,7 @@ solve( (∃ matching #i3 role2.
                     case Resp_1
                     by solve( !KU( ~ex ) @ #vk.12 )
                   next
-                    case cexp
+                    case c_exp
                     by solve( !KU( ~ex ) @ #vk.14 )
                   qed
                 qed
@@ -428,7 +428,7 @@ solve( (∃ matching #i3 role2.
                     case Resp_1
                     by solve( !KU( ~ex ) @ #vk.12 )
                   next
-                    case cexp
+                    case c_exp
                     by solve( !KU( ~ex ) @ #vk.14 )
                   qed
                 qed
@@ -467,7 +467,7 @@ next
               case Reveal_ltk_case_2
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~n ) @ #vk.13 )
                 case Reveal_master_key
                 by contradiction /* from formulas */
@@ -498,7 +498,7 @@ next
             case Reveal_ltk_case_2
             by contradiction /* from formulas */
           next
-            case cexp
+            case c_exp
             solve( !KU( ~n ) @ #vk.13 )
               case Reveal_master_key
               by contradiction /* from formulas */
@@ -526,8 +526,8 @@ analyzing: examples/ake/bilinear/RYY.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/RYY.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.974794s
+  output:          examples/ake/bilinear/RYY.spthy.tmp
+  processing time: 7.447217s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -538,8 +538,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/RYY.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 8.974794s
+  output:          examples/ake/bilinear/RYY.spthy.tmp
+  processing time: 7.447217s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

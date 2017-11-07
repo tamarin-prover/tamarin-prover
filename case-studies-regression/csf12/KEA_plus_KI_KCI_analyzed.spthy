@@ -176,7 +176,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
           by contradiction /* from formulas */
         qed
       next
-        case cexp
+        case c_exp
         solve( !KU( ~ekI ) @ #vk.11 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -255,7 +255,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
           by contradiction /* from formulas */
         qed
       next
-        case cexp
+        case c_exp
         solve( !KU( ~ekR ) @ #vk.11 )
           case Ephk_reveal
           by contradiction /* from formulas */
@@ -287,8 +287,8 @@ analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.589454s
+  output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
+  processing time: 0.518166s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -299,8 +299,8 @@ summary of summaries:
 
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.589454s
+  output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
+  processing time: 0.518166s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 

@@ -968,7 +968,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ea ) @ #vk.23 )
                               case Reveal_ltk
                               by contradiction /* from formulas */
@@ -1037,7 +1037,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ea ) @ #vk.23 )
                               case Reveal_ltk
                               by contradiction /* from formulas */
@@ -1106,7 +1106,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                               by contradiction /* from formulas */
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~ea ) @ #vk.23 )
                               case Reveal_ltk
                               by contradiction /* from formulas */
@@ -1173,7 +1173,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1239,7 +1239,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1305,7 +1305,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1371,7 +1371,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1437,7 +1437,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1503,7 +1503,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                             by contradiction /* from formulas */
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.20 )
                             case Reveal_ltk
                             by contradiction /* from formulas */
@@ -1511,7 +1511,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ex ) @ #vk.19 )
                         case Reveal_ephk
                         solve( !KU( ~ex.1 ) @ #vk.20 )
@@ -1573,7 +1573,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                                 by contradiction /* from formulas */
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ea ) @ #vk.23 )
                                 case Reveal_ltk
                                 by contradiction /* from formulas */
@@ -2101,7 +2101,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                         by contradiction /* from formulas */
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ex ) @ #vk.19 )
                         case Reveal_ephk
                         by contradiction /* from formulas */
@@ -2619,7 +2619,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~ea ) @ #vk.19 )
                   case Reveal_ltk
                   by contradiction /* from formulas */
@@ -2649,8 +2649,8 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/TAK1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 76.677435s
+  output:          examples/ake/bilinear/TAK1.spthy.tmp
+  processing time: 47.57863s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2661,8 +2661,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/TAK1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 76.677435s
+  output:          examples/ake/bilinear/TAK1.spthy.tmp
+  processing time: 47.57863s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

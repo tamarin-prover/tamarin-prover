@@ -276,7 +276,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           case Resp_1
           by solve( !KU( ~ekI ) @ #vk.14 )
         next
-          case cexp
+          case c_exp
           by solve( !KU( ~ekI ) @ #vk.16 )
         qed
       qed
@@ -383,7 +383,7 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
             case Resp_1
             by solve( !KU( ~ekI ) @ #vk.19 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ekI ) @ #vk.21 )
           qed
         qed
@@ -420,8 +420,8 @@ analyzing: examples/csf12/STS_MAC_fix2.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.512141s
+  output:          examples/csf12/STS_MAC_fix2.spthy.tmp
+  processing time: 1.187559s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 
@@ -432,8 +432,8 @@ summary of summaries:
 
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 1.512141s
+  output:          examples/csf12/STS_MAC_fix2.spthy.tmp
+  processing time: 1.187559s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 

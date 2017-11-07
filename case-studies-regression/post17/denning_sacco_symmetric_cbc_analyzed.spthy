@@ -128,8 +128,8 @@ analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.27455s
+  output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
+  processing time: 0.265573s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
@@ -140,8 +140,8 @@ summary of summaries:
 
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.27455s
+  output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
+  processing time: 0.265573s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 

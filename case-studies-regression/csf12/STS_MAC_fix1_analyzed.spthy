@@ -269,7 +269,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Init_1_case_2
                 by solve( !KU( ~tid ) @ #vk.21 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.23 )
               qed
             qed
@@ -285,7 +285,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Init_1_case_2
                 by solve( !KU( ~ekI.1 ) @ #vk.33 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.34 )
               qed
             qed
@@ -304,7 +304,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Init_1_case_2
                 by solve( !KU( ~ekI.1 ) @ #vk.34 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.35 )
               qed
             qed
@@ -343,7 +343,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Init_1_case_2
                 by solve( !KU( ~ekI.1 ) @ #vk.34 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.35 )
               qed
             qed
@@ -362,7 +362,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Init_1_case_2
                 by solve( !KU( ~ekI.1 ) @ #vk.35 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.36 )
               qed
             qed
@@ -376,7 +376,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
             case Init_1_case_2
             by solve( !KU( ~ekI.1 ) @ #vk.21 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ekI ) @ #vk.23 )
           qed
         qed
@@ -420,7 +420,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case Resp_1
               by solve( !KU( ~ekI ) @ #vk.27 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekI ) @ #vk.28 )
             qed
           qed
@@ -439,7 +439,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case Resp_1
               by solve( !KU( ~ekI ) @ #vk.28 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekI ) @ #vk.29 )
             qed
           qed
@@ -489,7 +489,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.22 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.24 )
               qed
             qed
@@ -506,7 +506,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case Resp_1
               by solve( !KU( ~ekI ) @ #vk.28 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekI ) @ #vk.29 )
             qed
           qed
@@ -525,7 +525,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case Resp_1
               by solve( !KU( ~ekI ) @ #vk.29 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekI ) @ #vk.30 )
             qed
           qed
@@ -539,7 +539,7 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           case Resp_1
           by solve( !KU( ~ekI ) @ #vk.15 )
         next
-          case cexp
+          case c_exp
           by solve( !KU( ~ekI ) @ #vk.17 )
         qed
       qed
@@ -627,7 +627,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.31 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.32 )
               qed
             qed
@@ -646,7 +646,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.32 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.33 )
               qed
             qed
@@ -688,7 +688,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.32 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.33 )
               qed
             qed
@@ -707,7 +707,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.33 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.34 )
               qed
             qed
@@ -721,7 +721,7 @@ next
             case Resp_1
             by solve( !KU( ~ekI ) @ #vk.19 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ekI ) @ #vk.21 )
           qed
         qed
@@ -767,7 +767,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.22 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.24 )
               qed
             qed
@@ -783,7 +783,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.34 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.35 )
               qed
             qed
@@ -802,7 +802,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.35 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.36 )
               qed
             qed
@@ -844,7 +844,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.35 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.36 )
               qed
             qed
@@ -863,7 +863,7 @@ next
                 case Resp_1
                 by solve( !KU( ~ekI ) @ #vk.36 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekI ) @ #vk.37 )
               qed
             qed
@@ -877,7 +877,7 @@ next
             case Resp_1
             by solve( !KU( ~ekI ) @ #vk.22 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ekI ) @ #vk.24 )
           qed
         qed
@@ -918,7 +918,7 @@ next
               case Resp_1_case_2
               by solve( !KU( ~ekR.1 ) @ #vk.28 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekR ) @ #vk.29 )
             qed
           qed
@@ -937,7 +937,7 @@ next
               case Resp_1_case_2
               by solve( !KU( ~ekR.1 ) @ #vk.29 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekR ) @ #vk.30 )
             qed
           qed
@@ -960,11 +960,11 @@ next
                   case Resp_1
                   by contradiction /* cyclic */
                 next
-                  case cexp
+                  case c_exp
                   by solve( !KU( ~tid ) @ #vk.20 )
                 qed
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekR ) @ #vk.20 )
               qed
             next
@@ -976,7 +976,7 @@ next
                 case Resp_1_case_2
                 by solve( !KU( ~tid ) @ #vk.20 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekR ) @ #vk.22 )
               qed
             qed
@@ -1018,7 +1018,7 @@ next
                 case Resp_1_case_2
                 by solve( !KU( ~tid ) @ #vk.23 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ekR ) @ #vk.25 )
               qed
             qed
@@ -1035,7 +1035,7 @@ next
               case Resp_1_case_2
               by solve( !KU( ~ekR.1 ) @ #vk.29 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekR ) @ #vk.30 )
             qed
           qed
@@ -1054,7 +1054,7 @@ next
               case Resp_1_case_2
               by solve( !KU( ~ekR.1 ) @ #vk.30 )
             next
-              case cexp
+              case c_exp
               by solve( !KU( ~ekR ) @ #vk.31 )
             qed
           qed
@@ -1068,7 +1068,7 @@ next
           case Resp_1_case_2
           by solve( !KU( ~ekR.1 ) @ #vk.16 )
         next
-          case cexp
+          case c_exp
           by solve( !KU( ~ekR ) @ #vk.18 )
         qed
       qed
@@ -1098,8 +1098,8 @@ analyzing: examples/csf12/STS_MAC_fix1.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 7.65816s
+  output:          examples/csf12/STS_MAC_fix1.spthy.tmp
+  processing time: 6.079998s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (109 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (160 steps)
 
@@ -1110,8 +1110,8 @@ summary of summaries:
 
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 7.65816s
+  output:          examples/csf12/STS_MAC_fix1.spthy.tmp
+  processing time: 6.079998s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (109 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (160 steps)
 

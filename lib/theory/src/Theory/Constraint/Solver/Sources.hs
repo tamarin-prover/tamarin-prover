@@ -125,7 +125,7 @@ refineSource ctxt proofStep th =
 -- Returns the names of the steps applied.
 solveAllSafeGoals :: [Source] -> Reduction [String]
 solveAllSafeGoals ths' =
-    solve ths' [] 10
+    solve ths' [] Nothing 10
   where
 --    extensiveSplitting = unsafePerformIO $
 --      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
@@ -150,13 +150,19 @@ solveAllSafeGoals ths' =
     isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
     isChainPrem1 _                          = False
 
-    solve :: [Source] -> [String] -> Integer -> Reduction [String]
-    solve ths caseNames chainsLeft = do
+    solve :: [Source] -> [String] -> Maybe LNTerm -> Integer -> Reduction [String]
+    solve ths caseNames lastChainTerm chainsLeft = do
         simplifySystem
         ctxt <- ask
         contradictoryIf =<< (gets (contradictorySystem ctxt))
         goals  <- gets openGoals
         chains <- gets unsolvedChains
+        -- Filter out chain goals where the term in the conclusion is identical to one we just solved,
+        -- as this indicates our chain can loop
+        filteredGoals <- filterM  (\(g,_) -> case g of
+            (ChainG c _) -> (\x -> return $ Just True /= liftM2 eqModuloFreshnessNoAC lastChainTerm x) =<< kConcTerm c
+            _            -> return True) goals
+
         -- try to either solve a safe goal or use one of the precomputed case
         -- distinctions
         let noChainGoals = null [ () | (ChainG _ _, _) <- goals ]
@@ -164,7 +170,7 @@ solveAllSafeGoals ths' =
             -- from a message variable; i.e., a chain constraint that is no
             -- open goal.
             splitAllowed    = noChainGoals && not (null chains)
-            safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) goals
+            safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) filteredGoals
             remainingChains ((ChainG _ _):_) = chainsLeft-1
             remainingChains _                = chainsLeft
             kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
@@ -174,13 +180,26 @@ solveAllSafeGoals ths' =
                 ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (kdPremGoals)) <|>
                 ((\x -> (fmap return (solveGoal x), Nothing)) <$> headMay (safeGoals)) <|>
                 (asum $ map (solveWithSourceAndReturn ctxt ths) usefulGoals)
+
+        -- Update the last chain conclusion term if next step is a 'safe' chain goal (kdPremGoals is empty)
+        lastChainTerm' <- case (kdPremGoals, safeGoals) of
+            ([], ((ChainG c _):_)) -> (\t -> return $ t <|> lastChainTerm) =<< kConcTerm c
+            _                      -> return lastChainTerm
+
         case nextStep of
           Nothing   -> return caseNames
-          Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x) (remainingChains safeGoals)) =<< step
-          Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x) (remainingChains safeGoals)) =<< step
+          Just (step, Nothing) -> (\x -> solve ths (caseNames ++ x) lastChainTerm' (remainingChains safeGoals)) =<< step
+          Just (step, Just usedCase) -> (\x -> solve (filterCases usedCase ths) (caseNames ++ x) lastChainTerm' (remainingChains safeGoals)) =<< step
 
     filterCases :: Source -> [Source] -> [Source]
     filterCases usedCase cds = filter (\x -> usedCase /= x) cds
+
+    kConcTerm :: NodeConc -> Reduction (Maybe LNTerm)
+    kConcTerm c = do
+        faConc <- gets $ nodeConcFact c
+        case kFactView faConc of
+            Just (_,t) -> return $ Just t
+            _          -> return Nothing
 
 
 ------------------------------------------------------------------------------
@@ -322,10 +341,10 @@ saturateSources ctxt thsInit =
   where
     go :: [Source] -> Integer -> [Source]
     go ths n =
-        if (any or (changes `using` parList rdeepseq)) && (n <= 3)
+        if (any or (changes `using` parList rdeepseq)) && (n <= 5)
           then go ths' (n + 1)
-          else if (n > 3) 
-            then trace "saturateSources: Saturation aborted, more than 3 iterations." ths'
+          else if (n > 5)
+            then trace "saturateSources: Saturation aborted, more than 5 iterations." ths'
             else ths'
       where
         (changes, ths') = unzip $ map (refineSource ctxt solver) ths

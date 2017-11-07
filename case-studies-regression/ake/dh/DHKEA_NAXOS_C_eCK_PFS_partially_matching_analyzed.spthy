@@ -2092,7 +2092,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( h1(<~ex, ~ea>) ) @ #vk.18 )
                             case c_h1
                             solve( !KU( ~ex ) @ #vk.21 )
@@ -2251,7 +2251,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( h1(<~ex, ~ea>) ) @ #vk.24 )
                                     case c_h1
                                     solve( !KU( ~ex ) @ #vk.27 )
@@ -2262,7 +2262,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~eb ) @ #vk.23 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.24 )
@@ -2285,7 +2285,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.22 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ey, ~eb>) ) @ #vk.23 )
@@ -2414,7 +2414,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( h1(<~ex, ~ea.1>) ) @ #vk.17 )
                         case c_h1
                         solve( !KU( ~ex ) @ #vk.20 )
@@ -2539,7 +2539,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( h1(<~ex, ~ea.1>) ) @ #vk.23 )
                                 case c_h1
                                 solve( !KU( ~ex ) @ #vk.26 )
@@ -2550,7 +2550,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.22 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ex, ~ea.1>) ) @ #vk.23 )
@@ -2573,7 +2573,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea.1 ) @ #vk.21 )
                         case Ltk_reveal
                         solve( !KU( h1(<~ey, ~ea>) ) @ #vk.22 )
@@ -2721,7 +2721,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.20 )
                                 case c_h1
                                 solve( !KU( ~ex ) @ #vk.23 )
@@ -2799,7 +2799,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( h1(<~ex, ~ea>) ) @ #vk.20 )
                             case c_h1
                             solve( !KU( ~ex ) @ #vk.23 )
@@ -2919,7 +2919,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                         qed
                                       qed
                                     next
-                                      case cexp
+                                      case c_exp
                                       solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                         case c_h1
                                         solve( !KU( ~ex ) @ #vk.29 )
@@ -2930,7 +2930,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~ea.1 ) @ #vk.25 )
                                     case Ltk_reveal
                                     solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -2953,7 +2953,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ea ) @ #vk.24 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ey, ~ea.1>) ) @ #vk.25 )
@@ -3050,7 +3050,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                     case c_h1
                                     solve( !KU( ~ex ) @ #vk.29 )
@@ -3061,7 +3061,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ea.1 ) @ #vk.25 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -3084,7 +3084,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.24 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ey, ~ea.1>) ) @ #vk.25 )
@@ -3204,7 +3204,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( h1(<~ex, ~ea.1>) ) @ #vk.20 )
                                 case c_h1
                                 solve( !KU( ~ex ) @ #vk.23 )
@@ -3288,7 +3288,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( h1(<~ex, ~ea.1>) ) @ #vk.20 )
                             case c_h1
                             solve( !KU( ~ex ) @ #vk.23 )
@@ -3401,7 +3401,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                         qed
                                       qed
                                     next
-                                      case cexp
+                                      case c_exp
                                       solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                         case c_h1
                                         solve( !KU( ~ex ) @ #vk.29 )
@@ -3412,7 +3412,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( ~eb ) @ #vk.25 )
                                     case Ltk_reveal
                                     solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -3435,7 +3435,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ea ) @ #vk.24 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ey, ~eb>) ) @ #vk.25 )
@@ -3538,7 +3538,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                     case c_h1
                                     solve( !KU( ~ex ) @ #vk.29 )
@@ -3549,7 +3549,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~eb ) @ #vk.25 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -3572,7 +3572,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.24 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ey, ~eb>) ) @ #vk.25 )
@@ -3724,7 +3724,7 @@ next
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( h1(<~ex, ~x>) ) @ #vk.20 )
                             case c_h1
                             solve( !KU( ~ex ) @ #vk.23 )
@@ -3785,7 +3785,7 @@ next
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( h1(<~ex, ~x>) ) @ #vk.18 )
                       case c_h1
                       solve( !KU( ~ex ) @ #vk.21 )
@@ -3814,7 +3814,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~x ) @ #vk.28 )
                     case Ltk_reveal
                     by contradiction /* from formulas */
@@ -3956,7 +3956,7 @@ next
                                     qed
                                   qed
                                 next
-                                  case cexp
+                                  case c_exp
                                   solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                     case c_h1
                                     solve( !KU( ~ex ) @ #vk.29 )
@@ -3967,7 +3967,7 @@ next
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( ~ea.1 ) @ #vk.25 )
                                 case Ltk_reveal
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -3990,7 +3990,7 @@ next
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~ea ) @ #vk.24 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ey, ~ea.1>) ) @ #vk.25 )
@@ -4067,7 +4067,7 @@ next
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( h1(<~ex, ~ea>) ) @ #vk.24 )
                               case c_h1
                               solve( !KU( ~ex ) @ #vk.27 )
@@ -4078,7 +4078,7 @@ next
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~ea.1 ) @ #vk.23 )
                           case Ltk_reveal
                           solve( !KU( h1(<~ex, ~ea>) ) @ #vk.24 )
@@ -4101,7 +4101,7 @@ next
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( ~ea ) @ #vk.22 )
                       case Ltk_reveal
                       solve( !KU( h1(<~ey, ~ea.1>) ) @ #vk.23 )
@@ -4148,7 +4148,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~ea.1 ) @ #vk.30 )
                     case Ltk_reveal
                     by contradiction /* from formulas */
@@ -4356,7 +4356,7 @@ next
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( h1(<~ex, ~ea>) ) @ #vk.20 )
                           case c_h1
                           solve( !KU( ~ex ) @ #vk.23 )
@@ -4432,7 +4432,7 @@ next
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( h1(<~ex, ~x.1>) ) @ #vk.20 )
                       case c_h1
                       solve( !KU( ~ex ) @ #vk.23 )
@@ -4458,7 +4458,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~x ) @ #vk.23 )
                     case Ltk_reveal
                     by contradiction /* from formulas */
@@ -4676,7 +4676,7 @@ next
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                                   case c_h1
                                   solve( !KU( ~ex ) @ #vk.29 )
@@ -4687,7 +4687,7 @@ next
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~eb ) @ #vk.25 )
                               case Ltk_reveal
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -4767,7 +4767,7 @@ next
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
                               case c_h1
                               solve( !KU( ~ex ) @ #vk.29 )
@@ -4778,7 +4778,7 @@ next
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~eb ) @ #vk.25 )
                           case Ltk_reveal
                           solve( !KU( h1(<~ex, ~ea>) ) @ #vk.26 )
@@ -4812,7 +4812,7 @@ next
                 qed
               qed
             next
-              case cexp
+              case c_exp
               solve( !KU( ~ea ) @ #vk.21 )
                 case Ltk_reveal
                 solve( !KU( h1(<~ey, ~eb>) ) @ #vk.22 )
@@ -4862,8 +4862,8 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 90.209764s
+  output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
+  processing time: 74.662714s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 
@@ -4874,8 +4874,8 @@ summary of summaries:
 
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 90.209764s
+  output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
+  processing time: 74.662714s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 

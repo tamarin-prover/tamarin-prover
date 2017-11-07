@@ -261,6 +261,23 @@ WARNING: the following wellformedness checks failed!
 unbound:
   rule `lookup_s_as_x_0_12' has unbound variables: 
     x
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `resilient' references action 
+    (ProtoFact Linear "Receive" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `resilient' references action 
+    (ProtoFact Linear "Send" 2,2,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -277,9 +294,9 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.519611s
-  WARNING: 1 wellformedness check failed!
+  output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
+  processing time: 0.443059s
+  WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)
@@ -293,9 +310,9 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.519611s
-  WARNING: 1 wellformedness check failed!
+  output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
+  processing time: 0.443059s
+  WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)

@@ -70,8 +70,8 @@ analyzing: case-studies-sapic-regression/basic/no-replication.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/basic/no-replication.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.073001s
+  output:          case-studies-sapic-regression/basic/no-replication.spthy.tmp
+  processing time: 0.071051s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -81,8 +81,8 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/basic/no-replication.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.073001s
+  output:          case-studies-sapic-regression/basic/no-replication.spthy.tmp
+  processing time: 0.071051s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ==============================================================================

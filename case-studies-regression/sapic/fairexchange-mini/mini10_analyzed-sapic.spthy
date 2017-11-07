@@ -96,7 +96,14 @@ solve( State_( ~prog_ ) ▶₀ #t0 )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+restriction actions:
+  restriction `resilient' references action 
+    (ProtoFact Linear "Send" 2,2,Linear)
+  but no rule has such an action.
+*/
 
 end
 /* Output
@@ -112,8 +119,11 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.06958s
+  output:          case-studies-sapic-regression/fairexchange-mini/mini10.spthy.tmp
+  processing time: 0.079056s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 
@@ -124,8 +134,11 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 0.06958s
+  output:          case-studies-sapic-regression/fairexchange-mini/mini10.spthy.tmp
+  processing time: 0.079056s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 

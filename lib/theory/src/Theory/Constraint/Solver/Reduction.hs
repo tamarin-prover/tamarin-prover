@@ -195,7 +195,7 @@ insertFreshNodeConc rules = do
     return (ru, (i, v), fa)
 
 -- | Insert a fresh rule node labelled with a fresh instance of one of the rules
--- and solve it's 'Fr', 'In', and 'KU' premises immediatly.
+-- and solve it's 'Fr', 'In', and 'KU' premises immediately.
 -- If a parent node is given, updates the remaining rule applications.
 insertFreshNode :: [RuleAC] -> Maybe RuleACInst -> Reduction (NodeId, RuleACInst)
 insertFreshNode rules parent = do
@@ -203,7 +203,7 @@ insertFreshNode rules parent = do
     (,) i <$> labelNodeId i rules parent
 
 -- | Label a node-id with a fresh instance of one of the rules and
--- solve it's 'Fr', 'In', and 'KU' premises immediatly.
+-- solve it's 'Fr', 'In', and 'KU' premises immediately.
 -- If a parent node is given, updates the remaining rule applications.
 --
 -- PRE: Node must not yet be labelled with a rule.
@@ -226,7 +226,7 @@ labelNodeId = \i rules parent -> do
                                     [kuFact m] [inFact m] [kLogFact m]
 
 
-    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule []))
+    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule [] []))
                            [] [freshFact m] []
 
     exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)

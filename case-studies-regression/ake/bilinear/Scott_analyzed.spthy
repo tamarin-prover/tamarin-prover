@@ -316,7 +316,7 @@ solve( (∃ matching #i3 #i4 sid.
                   case Reveal_ltk_case_2
                   by solve( !KU( ~ex ) @ #vk.12 )
                 next
-                  case cexp
+                  case c_exp
                   by solve( !KU( ~ex ) @ #vk.12 )
                 qed
               qed
@@ -402,7 +402,7 @@ solve( (∃ matching #i3 #i4 sid.
                 case Reveal_ltk_case_2
                 by solve( !KU( ~ex ) @ #vk.12 )
               next
-                case cexp
+                case c_exp
                 by solve( !KU( ~ex ) @ #vk.12 )
               qed
             qed
@@ -445,13 +445,13 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.10 )
           qed
         next
           case split_case_2
           solve( !KU( z^inv(~ex) ) @ #vk.1 )
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.11 )
           qed
         next
@@ -477,7 +477,7 @@ next
               case Reveal_ltk_case_2
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~s ) @ #vk.10 )
                 case Reveal_master_key
                 by contradiction /* from formulas */
@@ -789,7 +789,7 @@ next
               case Reveal_ltk_case_16
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~s ) @ #vk.13 )
                 case Reveal_master_key
                 by contradiction /* from formulas */
@@ -895,13 +895,13 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ex ) @ #vk.11 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.12 )
           qed
         next
           case split_case_4
           solve( !KU( x^inv((~ex*x.1)) ) @ #vk.1 )
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.13 )
           qed
         next
@@ -997,7 +997,7 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ex ) @ #vk.13 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.14 )
           qed
         next
@@ -1099,7 +1099,7 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ex ) @ #vk.14 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ex ) @ #vk.15 )
           qed
         qed
@@ -1126,13 +1126,13 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.10 )
           qed
         next
           case split_case_2
           solve( !KU( z^inv(~ey) ) @ #vk.1 )
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.11 )
           qed
         next
@@ -1194,7 +1194,7 @@ next
               case Reveal_ltk_case_2
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~x ) @ #vk.10 )
                 case Reveal_master_key
                 by contradiction /* from formulas */
@@ -1506,7 +1506,7 @@ next
               case Reveal_ltk_case_16
               by contradiction /* from formulas */
             next
-              case cexp
+              case c_exp
               solve( !KU( ~x ) @ #vk.13 )
                 case Reveal_master_key
                 by contradiction /* from formulas */
@@ -1576,13 +1576,13 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ey ) @ #vk.11 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.12 )
           qed
         next
           case split_case_4
           solve( !KU( x.1^inv((~ey*x.2)) ) @ #vk.1 )
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.13 )
           qed
         next
@@ -1678,7 +1678,7 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ey ) @ #vk.13 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.14 )
           qed
         next
@@ -1780,7 +1780,7 @@ next
             case Reveal_ltk_case_4
             by solve( !KU( ~ey ) @ #vk.14 )
           next
-            case cexp
+            case c_exp
             by solve( !KU( ~ey ) @ #vk.15 )
           qed
         qed
@@ -1805,8 +1805,8 @@ analyzing: examples/ake/bilinear/Scott.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/bilinear/Scott.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 20.481474s
+  output:          examples/ake/bilinear/Scott.spthy.tmp
+  processing time: 16.245296s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1817,8 +1817,8 @@ summary of summaries:
 
 analyzed: examples/ake/bilinear/Scott.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 20.481474s
+  output:          examples/ake/bilinear/Scott.spthy.tmp
+  processing time: 16.245296s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 

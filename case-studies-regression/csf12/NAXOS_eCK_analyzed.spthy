@@ -376,7 +376,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
                                 case c_h1
                                 solve( !KU( ~eskI ) @ #vk.19 )
@@ -387,7 +387,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~x ) @ #vk.15 )
                             case Ltk_reveal
                             solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
@@ -410,7 +410,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~lkI ) @ #vk.14 )
                         case Ltk_reveal
                         solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.15 )
@@ -498,7 +498,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
                               case c_h1
                               solve( !KU( ~eskI ) @ #vk.19 )
@@ -509,7 +509,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~lkR ) @ #vk.15 )
                           case Ltk_reveal
                           solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
@@ -532,7 +532,7 @@ solve( (∃ MatchingSession #i3 #i4 ms.
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( ~x ) @ #vk.14 )
                       case Ltk_reveal
                       solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.15 )
@@ -605,7 +605,7 @@ next
                 by contradiction /* from formulas */
               qed
             next
-              case cexp
+              case c_exp
               solve( !KU( ~x ) @ #vk.5 )
                 case Ltk_reveal
                 by contradiction /* from formulas */
@@ -627,7 +627,7 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case cexp
+            case c_exp
             solve( !KU( ~x ) @ #vk.13 )
               case Ltk_reveal
               by contradiction /* from formulas */
@@ -668,7 +668,7 @@ next
                 by contradiction /* from formulas */
               qed
             next
-              case cexp
+              case c_exp
               solve( !KU( ~x ) @ #vk.5 )
                 case Ltk_reveal
                 by contradiction /* from formulas */
@@ -693,7 +693,7 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case cexp
+            case c_exp
             solve( !KU( ~x ) @ #vk.13 )
               case Ltk_reveal
               by contradiction /* from formulas */
@@ -733,8 +733,8 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.285299s
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 3.375211s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -744,8 +744,8 @@ summary of summaries:
 
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 4.285299s
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 3.375211s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

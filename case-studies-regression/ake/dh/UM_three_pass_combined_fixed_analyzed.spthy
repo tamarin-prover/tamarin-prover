@@ -924,7 +924,7 @@ solve( (∃ #l matchingComm.
                           case R_Activate
                           by solve( !KU( ~ex ) @ #vk.17 )
                         next
-                          case cexp
+                          case c_exp
                           by solve( !KU( ~ex ) @ #vk.19 )
                         qed
                       qed
@@ -1371,7 +1371,7 @@ solve( (∃ #l matchingComm.
                                   case R_Activate
                                   by solve( !KU( ~ex ) @ #vk.18 )
                                 next
-                                  case cexp
+                                  case c_exp
                                   by solve( !KU( ~ex ) @ #vk.20 )
                                 qed
                               qed
@@ -1425,7 +1425,7 @@ solve( (∃ #l matchingComm.
                               case R_Activate
                               by solve( !KU( ~ex ) @ #vk.18 )
                             next
-                              case cexp
+                              case c_exp
                               by solve( !KU( ~ex ) @ #vk.20 )
                             qed
                           qed
@@ -1581,7 +1581,7 @@ solve( (∃ #l matchingComm.
                               case R_Activate
                               by solve( !KU( ~ex ) @ #vk.18 )
                             next
-                              case cexp
+                              case c_exp
                               by solve( !KU( ~ex ) @ #vk.20 )
                             qed
                           qed
@@ -1642,7 +1642,7 @@ solve( (∃ #l matchingComm.
                               case R_Activate
                               by solve( !KU( ~ex ) @ #vk.18 )
                             next
-                              case cexp
+                              case c_exp
                               by solve( !KU( ~ex ) @ #vk.20 )
                             qed
                           qed
@@ -2006,7 +2006,7 @@ next
                               case R_Activate
                               by solve( !KU( ~ex ) @ #vk.18 )
                             next
-                              case cexp
+                              case c_exp
                               by solve( !KU( ~ex ) @ #vk.20 )
                             qed
                           qed
@@ -2317,7 +2317,7 @@ next
                     case R_Activate
                     by solve( !KU( ~ex ) @ #vk.17 )
                   next
-                    case cexp
+                    case c_exp
                     by solve( !KU( ~ex ) @ #vk.19 )
                   qed
                 qed
@@ -3181,7 +3181,7 @@ next
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( ~ea ) @ #vk.25 )
                       case Corrupt_Ltk
                       solve( Expire( <'UM3', $A, $B, 
@@ -3417,7 +3417,7 @@ next
                       case R_Activate
                       by solve( !KU( ~ex ) @ #vk.18 )
                     next
-                      case cexp
+                      case c_exp
                       by solve( !KU( ~ex ) @ #vk.20 )
                     qed
                   qed
@@ -3636,7 +3636,7 @@ next
                       case R_Activate
                       by solve( !KU( ~ex ) @ #vk.18 )
                     next
-                      case cexp
+                      case c_exp
                       by solve( !KU( ~ex ) @ #vk.20 )
                     qed
                   qed
@@ -4547,7 +4547,7 @@ next
                       qed
                     qed
                   next
-                    case cexp
+                    case c_exp
                     solve( !KU( ~eb ) @ #vk.24 )
                       case Corrupt_Ltk
                       solve( Expire( <'UM3', $B, $A, 
@@ -4751,7 +4751,7 @@ solve( (¬(role = 'I'))  ∥
                           by contradiction /* from formulas */
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~eb ) @ #vk.16 )
                           case Corrupt_Ltk
                           by contradiction /* from formulas */
@@ -4803,7 +4803,7 @@ solve( (¬(role = 'I'))  ∥
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~eb ) @ #vk.16 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
@@ -4854,7 +4854,7 @@ next
                         by contradiction /* from formulas */
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea ) @ #vk.15 )
                         case Corrupt_Ltk
                         by contradiction /* from formulas */
@@ -4906,7 +4906,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~eb ) @ #vk.16 )
                     case Corrupt_Ltk
                     by contradiction /* from formulas */
@@ -4958,7 +4958,7 @@ next
                         by contradiction /* from formulas */
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea ) @ #vk.15 )
                         case Corrupt_Ltk
                         by contradiction /* from formulas */
@@ -5010,7 +5010,7 @@ next
                           by contradiction /* from formulas */
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~eb ) @ #vk.16 )
                           case Corrupt_Ltk
                           by contradiction /* from formulas */
@@ -5060,7 +5060,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~eb ) @ #vk.16 )
                     case Corrupt_Ltk
                     by contradiction /* from formulas */
@@ -5103,7 +5103,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~eb ) @ #vk.16 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
@@ -5133,8 +5133,8 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 ------------------------------------------------------------------------------
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 45.729119s
+  output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
+  processing time: 36.995186s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5146,8 +5146,8 @@ summary of summaries:
 
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 45.729119s
+  output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
+  processing time: 36.995186s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

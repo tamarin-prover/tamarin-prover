@@ -953,6 +953,23 @@ unbound:
   
   rule `lookup_state_as_lio_0_12111111' has unbound variables: 
     lio
+
+restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Delete" 1,1,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate1' references action 
+    (ProtoFact Linear "Pred_not_pred_rep" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `predicate0' references action 
+    (ProtoFact Linear "Pred_pred_rep" 2,2,Linear)
+  but no rule has such an action.
 */
 
 end
@@ -969,9 +986,9 @@ analyzing: case-studies-sapic-regression/locations/AC.spthy
 ------------------------------------------------------------------------------
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 5.973989s
-  WARNING: 2 wellformedness check failed!
+  output:          case-studies-sapic-regression/locations/AC.spthy.tmp
+  processing time: 5.21833s
+  WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   
   attested_comput (all-traces): verified (184 steps)
@@ -983,9 +1000,9 @@ summary of summaries:
 
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
-  output:          case-studies/temp-analysis.spthy
-  processing time: 5.973989s
-  WARNING: 2 wellformedness check failed!
+  output:          case-studies-sapic-regression/locations/AC.spthy.tmp
+  processing time: 5.21833s
+  WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   
   attested_comput (all-traces): verified (184 steps)

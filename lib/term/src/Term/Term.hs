@@ -56,11 +56,14 @@ module Term.Term (
     , pmultSymString
     , emapSymString
     , unionSymString
+    , oneSymString
+    , multSymString
     
     -- ** Function symbols
     , diffSym
     , expSym
     , pmultSym
+    , oneSym
 
     -- ** concrete signatures
     , dhFunSig
