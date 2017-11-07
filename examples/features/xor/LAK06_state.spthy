@@ -177,14 +177,16 @@ lemma executable:
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN, quite long pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu()) See associated file.
+// (proof almost done), quite long pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu()) See associated file.
 // Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
 // Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
-// PROVEN, pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu())
+
+// FALSIFIED, pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically, see asociated file
+// Idea to automate: deal with Update (always go to setup)
 // Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
 // Compiled at: 2017-11-07 13:11:28.528887 UTC
 lemma noninjectiveagreementREADER[use_induction]:
