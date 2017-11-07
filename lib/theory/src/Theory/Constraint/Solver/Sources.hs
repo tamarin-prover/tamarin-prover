@@ -136,6 +136,8 @@ solveAllSafeGoals ths' =
                             then True 
                             else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
+        -- we do not solve KD goals for Xor facts as insertAction inserts
+        -- these goals directly. This prevents loops in the precomputations
         PremiseG _ fa -> not (isKUFact fa) && not (isKDXorFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
@@ -173,6 +175,8 @@ solveAllSafeGoals ths' =
             safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) filteredGoals
             remainingChains ((ChainG _ _):_) = chainsLeft-1
             remainingChains _                = chainsLeft
+            -- we do not solve KD goals for Xor facts as insertAction inserts
+            -- these goals directly. This prevents loops in the precomputations
             kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
             usefulGoals     = fst <$> filter usefulGoal goals
             nextStep :: Maybe (Reduction [String], Maybe Source)
