@@ -105,9 +105,9 @@ rule-equivalence
                     step( solve( !KU( ~r0.1 ) @ #vk.9 ) )
                       case initiatereader
                       step( solve( splitEqs(1) ) )
-                        case split_case_02
+                        case split_case_04
                         step( solve( splitEqs(2) ) )
-                          case split_case_01
+                          case split_case_02
                           step( solve( !KU( ~r1 ) @ #vk.8 ) )
                             case tag1
                             by ATTACK // trace found

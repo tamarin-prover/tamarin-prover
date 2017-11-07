@@ -77,7 +77,8 @@ lemma executable:
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// Observational Equivalence: FALSIFIED, autoproof, takes ~1 hour though
-// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
+// Observational Equivalence: FALSIFIED, autoproof, takes 10 minutes (see associated file)
+// Git revision: 3c0266dd32040515b3bc0095efcca47126165f5c, branch: develop
+// Compiled at: 2017-11-07 15:29:00.24165 UTC
 
 end
