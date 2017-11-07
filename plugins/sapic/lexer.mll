@@ -10,8 +10,8 @@ rule token = parse
      | [' ' '\t' ]    { token lexbuf }   (* ignore whitespace, line breaks, ... *)
      | ['\n']    { Lexing.new_line lexbuf; token lexbuf }   (* increase line_counter *)
      | "//" [^'\n']* '\n' { Lexing.new_line lexbuf; token lexbuf }   (* ignore one-line comments *)
-     | "/*"        { comment lexbuf }        (* begin of multi-line comment; switch to "comment" rule *)
-     | "(*"        { comment lexbuf }        (* begin of multi-line comment; switch to "comment" rule *)
+     | "/*"        { commentslash lexbuf }        (* begin of multi-line comment; switch to "comment" rule *)
+     | "(*"        { commentparent lexbuf }        (* begin of multi-line comment; switch to "comment" rule *)
      (* | '\n'        { NEWLINE } *)
      | '.'         { POINT }
      | "theory"    { THEORY }
@@ -101,11 +101,17 @@ rule token = parse
      | "||"	   { PARALLEL }
      | eof	   { raise End_of_file }
      
-and comment = parse
+and commentslash = parse
     | "*/" { token lexbuf }   (* end of comment; switch back to "token" rule *)
-    | "*)" { token lexbuf }   (* end of comment; switch back to "token" rule *)
-    | _    { comment lexbuf } (* skip comments *)
+    | '\n' { Lexing.new_line lexbuf ; commentslash lexbuf }
+    | _    { commentslash lexbuf } (* skip comments *)
 
+and commentparent = parse
+    | "*)" { token lexbuf }   (* end of comment; switch back to "token" rule *)
+    | '\n' { Lexing.new_line lexbuf ; commentparent lexbuf }
+    | _    { commentparent lexbuf } (* skip comments *)
+
+	
 and formalcomment = parse
     | "*}"     { }
     | '\n'     {fc:=(!fc)^"\n"; Lexing.new_line lexbuf; formalcomment lexbuf }
