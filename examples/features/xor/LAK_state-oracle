@@ -50,10 +50,29 @@ elif lemma == "helpingOutNotKey":
       rank[5].append(num)
 
 
-elif lemma == "helpingSecrecy":
+elif lemma == "helpingSecrecy" or lemma == "noninjectiveagreementTAG":
+  # Difficulty here: one has to find the appropriate splitEqu() goal.
+  # Choosing the wrong one results in a very large number of uncessary subgoals.
+  # The criterion: the one that instantiates the inputs of the rule R whose the output
+  # is coerced into the term t that is considered known by the attacker (starting with K(t)).
+  # Criterion is easily applicable in practice but impossible to implement in an oracle (no access to the equation).
+
+  # TODO implement:
+  # 1. Impossible to have Key or Update of some term of the form h(term) when term is not some hash
+     # solve( Update( h((~r0.1 xor h(k0) xor h((~r0.1XORr1.1XORh(k0))))), 'R1') @ #j.1 )
+     # --> solve( Update( h((~r0.1XORh(k0)XORh((~r0.1XORr1.1XORh(k0))))),'R2' @ #j.7 )
+  # 2. When nothing is known about k0 and K(k0), use appropriate Update(k0) twice --> inductive hypothesis
+  # 3. Too many different cases of K(t) to treat. Have a criterion like t= h() XOR t' or t=h(t' XOR h())
+  # 4. For nonInjectiveagreementTAG: add Running() as a top-priority goal. Also add !KD( (x.1 XOR x.2) .
   for line in lines:
     num = line.split(':')[0]
     if debug: sys.stderr.write(line)
+
+    if lemma == "noninjectiveagreementTAG":
+      if re.match('.Running\(.*', line):
+        rank[49].append(num)
+      elif (re.match('.*!K.\(.*x\.1.*', line)):
+        rank[48].append(num)
 
     if re.match('.*~~>.*', line):
       rank[48].append(num)
@@ -61,7 +80,8 @@ elif lemma == "helpingSecrecy":
       rank[46].append(num)
     elif (re.match('.*!KU\( h\(~k.*', line)):
       rank[44].append(num)
-    elif (re.match('.*!KU\( h\(k0\).*', line)):
+    elif (re.match('.*!KU\( h\(k0\).*', line) or
+          re.match('.*!KU\( h\(h\(k0', line)):
       rank[42].append(num)
     elif (re.match('.*!K.\(.*r1\.1.*', line) or
           re.match('.*!K.\(.*r1.*', line) or
@@ -70,7 +90,11 @@ elif lemma == "helpingSecrecy":
           re.match('.*!K.\(\(.*~r0\.1.*', line) or
           re.match('.*!K.\(\(.*~r0.*', line) or
           re.match('.*!K.\( \(.*~r0\.1.*', line) or
-          re.match('.*!K.\( \(.*~r0.*', line)):
+          re.match('.*!K.\( \(.*~r0.*', line) or
+          re.match('.*!K.\( ~r.*', line) or
+          re.match('.*!K.\( \(z.1', line) or
+          re.match('.*!K.\( \(h\(k0.*h\(.*', line) or
+          re.match('.*!K.\(.*x.*h.*', line)):          
       rank[40].append(num)
     elif (re.match('.*!KU\(.*r1\.1.*', line) or
           re.match('.*!KU\(.*r1.*', line)):
@@ -83,10 +107,25 @@ elif lemma == "helpingSecrecy":
     elif (re.match('.*ReaderState1\(.*', line) or
           re.match('.*TagState1\(.*', line)):
       rank[27].append(num)
+    elif (re.match('.*!K.\( \(x.*h\(k0', line)):
+      rank[22].append(num)
     elif (re.match('.*splitEqs\(2\.*', line)):
-      rank[25].append(num)
+      rank[17].append(num)
+    elif (re.match('.*splitEqs\(3\.*', line)):
+      rank[15].append(num)
+    elif (re.match('.*!KU\( ~k.*', line)):
+      rank[46].append(num)
+    else:
+      rank[5].append(num)
 
-           
+elif lemma == "executable":
+  # only prioritize ReaderK() and TagK() goals and then full auto mode
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+      
+    if re.match('.*Update\(.*', line):
+      rank[0].append(num)
     else:
       rank[5].append(num)
 
