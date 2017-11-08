@@ -10,6 +10,7 @@ module Utils.Misc (
   , equivClasses
   , partitions
   , nonTrivialPartitions
+  , twoPartitions
  
   -- * Control
   , whileTrue
@@ -112,3 +113,13 @@ bloat x (xs:xss) = ((x:xs):xss) : map (xs:) (bloat x xss)
 -- | Generate all possible partitions of a list, excluding the trivial partition
 nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
 nonTrivialPartitions l = delete [l] $ partitions l
+
+-- | Generate all possible ways of partitioning a list into two partitions
+twoPartitions :: [a] -> [([a], [a])]
+twoPartitions  []    = []
+twoPartitions (x:[]) = [ ([x],[]) ]
+twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
+    where
+        addToFirst  (a, b) = (x:a, b)
+        addToSecond (a, b) = (a, x:b)
+        ps = twoPartitions xs
