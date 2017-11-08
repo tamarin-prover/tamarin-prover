@@ -94,7 +94,7 @@ lemma recentalive_reader:
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
-// FINDS ATTACK STARTING FROM Rule_Equality (14 threads, 11 minutes compute time) (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// FINDS ATTACK STARTING FROM Rule_Equality (14 threads, 11 minutes compute time [previous attempt took 50 minutes, unsure if caching effect!]; should maybe be possible to find attack using BFS search from toplevel Observational_equivalence?) (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // This attack violates untraceability of a READER, which is not what we actually want to check.
 // Attack stored as CH07-untrac-attack-on-reader.spthy can be loaded (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // Observational_equivalence lemma
