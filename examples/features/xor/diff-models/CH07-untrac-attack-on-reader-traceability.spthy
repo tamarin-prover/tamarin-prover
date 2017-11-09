@@ -107,7 +107,7 @@ guarded formula characterizing all counter-examples:
   ⇒
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
-by sorry /* removed */
+by sorry
 
 lemma recentalive_tag [left]:
   all-traces
@@ -127,7 +127,7 @@ guarded formula characterizing all counter-examples:
   ⇒
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
-by sorry /* removed */
+by sorry
 
 lemma recentalive_reader [right]:
   all-traces
@@ -147,7 +147,7 @@ guarded formula characterizing all counter-examples:
   ⇒
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
-by sorry /* removed */
+by sorry
 
 lemma recentalive_reader [left]:
   all-traces
@@ -167,7 +167,7 @@ guarded formula characterizing all counter-examples:
   ⇒
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
-by sorry /* removed */
+by sorry
 
 lemma executable [right]:
   exists-trace
@@ -178,7 +178,7 @@ guarded formula characterizing all satisfying traces:
 "∃ x #i #j.
   (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 */
-by sorry /* removed */
+by sorry
 
 lemma executable [left]:
   exists-trace
@@ -189,7 +189,7 @@ guarded formula characterizing all satisfying traces:
 "∃ x #i #j.
   (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 */
-by sorry /* removed */
+by sorry
 
 /* All well-formedness checks were successful. */
 
@@ -221,18 +221,24 @@ rule-equivalence
                                    ) ▶₀ #vr.10 ) )
                         case Setup
                         step( solve( splitEqs(0) ) )
-                          case split_case_03
+                          case split_case_3
                           step( solve( splitEqs(1) ) )
-                            case split_case_01
+                            case split_case_1
                             step( solve( !KU( ~r2 ) @ #vk.4 ) )
                               case tag1
                               step( solve( !KU( ~r1 ) @ #vk.5 ) )
                                 case reader1
                                 step( solve( splitEqs(2) ) )
-                                  case split_case_5
-                                  step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
-                                    case reader1
-                                    by ATTACK // trace found
+                                  case split
+                                  step( solve( !KU( (~r1⊕~r2⊕~r1.1) ) @ #vk.6 ) )
+                                    case c_xor_case_1
+                                    step( solve( !KU( (~r1⊕~r1.1) ) @ #vk.7 ) )
+                                      case c_xor
+                                      step( solve( !KU( ~r1.1 ) @ #vk.8 ) )
+                                        case reader1
+                                        by ATTACK // trace found
+                                      qed
+                                    qed
                                   qed
                                 qed
                               qed
