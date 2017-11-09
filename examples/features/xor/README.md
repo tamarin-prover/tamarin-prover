@@ -44,7 +44,7 @@ Property (reachability):
  - helping lemma: keys stored are of the form h(k') -> autoproof with oracle
  - helping lemma: secrecy of stored keys -> manual proof but we get huge help from the oracle
  - executability -> manual proof (see comments on weird, additional proofs discharge)
- - injective agreement of Tag -> ?
+ - injective agreement of Tag -> manual proof but we get huge help from the oracle, oracle could be improved
  - injective agreement of Reader (falsified) -> ?
 
 Note:
