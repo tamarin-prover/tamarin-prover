@@ -75,13 +75,11 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 
-// AUTOMATIC PROOF NOT WORKING ON LEFT
-// MANUAL EXPLORATION [LEFT] (2017-03-23) indicates that there is non-termination (looping), so no proof possible (could there be an attack?)
+// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so this lemma is trivially satisfied. 
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// AUTOMATIC PROOF NOT WORKING ON BOTH
-// MANUAL SEARCH FINDS TRACE (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e) ON BOTH, see KCL07-untrac-manualexecution.spthy
+// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so executability cannot work. 
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
                    // only one of each wanted for executability
