@@ -202,34 +202,22 @@ simplify
 solve( Secret( A, B, s ) ▶₀ #i )
   case R_2_case_1
   solve( !KU( ~nr ) @ #vk )
-    case I_2_case_2
-    solve( !KU( ~ltkA.2 ) @ #vk.5 )
+    case I_2_case_1
+    solve( !KU( ~ltkA.2 ) @ #vk.4 )
       case Reveal_ltk
-      solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk.3 )
-        case I_2
+      solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk.2 )
+        case c_aenc
         solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA)) ) @ #vk.4 )
           case c_aenc
-          solve( !KU( ~ni ) @ #vk.13 )
+          solve( !KU( ~ni ) @ #vk.12 )
             case I_1
-            solve( !KU( aenc(<'2', ~ni.1, ($R⊕~nr)>, pk(~ltkA.3)) ) @ #vk.9 )
-              case c_aenc_case_2
-              solve( !KU( ~ni.1 ) @ #vk.20 )
-                case R_1
-                solve( !KU( ~ltkA.3 ) @ #vk.22 )
-                  case Reveal_ltk
-                  solve( !KU( aenc(<'2', ~ni, ($R⊕~nr)>, pk(~ltkA.2)) ) @ #vk.14 )
-                    case R_1
-                    solve( !KU( pk(~ltkA) ) @ #vk.17 )
-                      case Register_pk
-                      solve( !KU( pk(~ltkA.3) ) @ #vk.20 )
-                        case Register_pk
-                        solve( !KU( aenc(<'1', ~ni.1, $I>, pk(~ltkA)) ) @ #vk.22 )
-                          case I_1
-                          SOLVED // trace found
-                        qed
-                      qed
-                    qed
-                  qed
+            solve( !KU( aenc(<'2', ~ni, ($R⊕~nr)>, pk(~ltkA.2)) ) @ #vk.6 )
+              case R_1
+              solve( !KU( ($R⊕$R.1) ) @ #vk.8 )
+                case c_xor
+                solve( !KU( pk(~ltkA) ) @ #vk.10 )
+                  case Register_pk
+                  SOLVED // trace found
                 qed
               qed
             qed
@@ -274,18 +262,21 @@ solve( Commit( actor, peer, params ) @ #i )
       solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk )
         case c_aenc
         solve( !KU( ~nr ) @ #vk.5 )
-          case I_2_case_2
-          solve( !KU( ~ltkA.2 ) @ #vk.8 )
+          case I_2_case_1
+          solve( !KU( ~ltkA.2 ) @ #vk.7 )
             case Reveal_ltk
-            solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA)) ) @ #vk.5 )
+            solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA)) ) @ #vk.4 )
               case c_aenc
-              solve( !KU( ~ni ) @ #vk.14 )
+              solve( !KU( ~ni ) @ #vk.12 )
                 case I_1
-                solve( !KU( pk(~ltkA) ) @ #vk.7 )
+                solve( !KU( pk(~ltkA) ) @ #vk.6 )
                   case Register_pk
-                  solve( !KU( aenc(<'2', ~ni, ($R⊕~nr)>, pk(~ltkA.2)) ) @ #vk.10 )
+                  solve( !KU( aenc(<'2', ~ni, ($R⊕~nr)>, pk(~ltkA.2)) ) @ #vk.9 )
                     case R_1
-                    SOLVED // trace found
+                    solve( !KU( ($R⊕$R.1) ) @ #vk.11 )
+                      case c_xor
+                      SOLVED // trace found
+                    qed
                   qed
                 qed
               qed
@@ -341,10 +332,10 @@ analyzing: examples/features/xor/NSLPK3xor.spthy
 analyzed: examples/features/xor/NSLPK3xor.spthy
 
   output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 8.914823s
+  processing time: 4.154489s
   types (all-traces): falsified - found trace (13 steps)
-  nonce_secrecy (all-traces): falsified - found trace (15 steps)
-  injective_agree (all-traces): falsified - found trace (12 steps)
+  nonce_secrecy (all-traces): falsified - found trace (11 steps)
+  injective_agree (all-traces): falsified - found trace (13 steps)
   session_key_setup_possible (exists-trace): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -355,10 +346,10 @@ summary of summaries:
 analyzed: examples/features/xor/NSLPK3xor.spthy
 
   output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 8.914823s
+  processing time: 4.154489s
   types (all-traces): falsified - found trace (13 steps)
-  nonce_secrecy (all-traces): falsified - found trace (15 steps)
-  injective_agree (all-traces): falsified - found trace (12 steps)
+  nonce_secrecy (all-traces): falsified - found trace (11 steps)
+  injective_agree (all-traces): falsified - found trace (13 steps)
   session_key_setup_possible (exists-trace): verified (6 steps)
 
 ==============================================================================

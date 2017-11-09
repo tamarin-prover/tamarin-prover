@@ -82,21 +82,20 @@ restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
 // There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily]
+// FINDS ATTACK AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily]
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf) [left+right]
+// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right]
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf) [left+right]
+// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right]
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
-// FINDS ATTACK STARTING FROM Rule_Equality (14 threads, 11 minutes compute time [previous attempt took 50 minutes, unsure if caching effect!]; should maybe be possible to find attack using BFS search from toplevel Observational_equivalence?) (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// FINDS ATTACK AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 // This attack violates untraceability of a READER, which is not what we actually want to check.
-// Attack stored as CH07-untrac-attack-on-reader.spthy can be loaded (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
 // Observational_equivalence lemma
 
 end

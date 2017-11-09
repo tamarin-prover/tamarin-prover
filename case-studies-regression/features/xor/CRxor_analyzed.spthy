@@ -154,10 +154,10 @@ solve( Initiated( ~na ) ▶₀ #i )
   solve( !InitLTK( ~k ) ▶₁ #i )
     case Setup
     solve( splitEqs(0) )
-      case split_case_01
+      case split_case_1
       by solve( !KU( ~k ) @ #vk.2 )
     next
-      case split_case_02
+      case split_case_2
       solve( !KU( h(~k) ) @ #vk.1 )
         case c_h
         by solve( !KU( ~k ) @ #vk.3 )
@@ -166,10 +166,55 @@ solve( Initiated( ~na ) ▶₀ #i )
         by contradiction /* from formulas */
       qed
     next
-      case split_case_03
+      case split_case_3
       solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
-        case c_h_case_1
+        case c_h
         solve( !KU( (~k⊕~na⊕nb) ) @ #vk.3 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕nb) ) @ #vk.4 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕nb) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕~na) ) @ #vk.4 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕~na) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
           case coerce
           solve( !KD( (~k⊕~na⊕nb) ) ▶₀ #vk.1 )
             case initiator
@@ -186,56 +231,17 @@ solve( Initiated( ~na ) ▶₀ #i )
           qed
         qed
       next
-        case c_h_case_2
-        by solve( !KU( ~k ) @ #vk.5 )
-      next
-        case c_h_case_3
-        solve( !KU( (~k⊕nb) ) @ #vk.4 )
-          case coerce
-          solve( !KD( (~k⊕nb) ) ▶₀ #vk.2 )
-            case initiator
-            by contradiction /* impossible chain */
-          next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.2, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
-      next
-        case c_h_case_4
-        solve( !KU( (~k⊕~na) ) @ #vk.4 )
-          case coerce
-          solve( !KD( (~k⊕~na) ) ▶₀ #vk.2 )
-            case initiator
-            by contradiction /* impossible chain */
-          next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.2, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
-      next
-        case c_h_case_5
-        by solve( !KU( ~k ) @ #vk.5 )
-      next
         case responder
         by contradiction /* from formulas */
       qed
     next
-      case split_case_04
+      case split_case_4
       solve( !KU( h((~k⊕~na)) ) @ #vk.1 )
-        case c_h_case_1
+        case c_h
         solve( !KU( (~k⊕~na) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
           case coerce
           solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
             case initiator
@@ -252,15 +258,15 @@ solve( Initiated( ~na ) ▶₀ #i )
           qed
         qed
       next
-        case c_h_case_2
-        by solve( !KU( ~k ) @ #vk.5 )
-      next
         case responder
         by contradiction /* from formulas */
       qed
     next
-      case split_case_05
+      case split_case_5
       solve( !KU( (~k⊕~na) ) @ #vk.2 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
         case coerce
         solve( !KD( (~k⊕~na) ) ▶₀ #vk )
           case initiator
@@ -277,11 +283,53 @@ solve( Initiated( ~na ) ▶₀ #i )
         qed
       qed
     next
-      case split_case_06
-      by solve( !KU( ~k ) @ #vk.4 )
-    next
-      case split_case_07
+      case split_case_6
       solve( !KU( (~k⊕~na⊕z) ) @ #vk.2 )
+        case c_xor_case_1
+        solve( !KU( (~k⊕z) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case c_xor_case_2
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
+        case c_xor_case_3
+        solve( !KU( (~k⊕~na) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
         case coerce
         solve( !KD( (~k⊕~na⊕z) ) ▶₀ #vk )
           case initiator
@@ -298,52 +346,13 @@ solve( Initiated( ~na ) ▶₀ #i )
         qed
       qed
     next
-      case split_case_08
-      by solve( !KU( ~k ) @ #vk.4 )
-    next
-      case split_case_09
-      solve( !KU( (~k⊕z) ) @ #vk.3 )
-        case coerce
-        solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
-          case initiator
-          by contradiction /* impossible chain */
-        next
-          case responder
-          solve( (#vl, 0) ~~> (#vk.1, 0) )
-            case d_0_fst
-            by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        qed
-      qed
-    next
-      case split_case_10
-      solve( !KU( (~k⊕~na) ) @ #vk.4 )
-        case coerce
-        solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
-          case initiator
-          by contradiction /* impossible chain */
-        next
-          case responder
-          solve( (#vl, 0) ~~> (#vk.1, 0) )
-            case d_0_fst
-            by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        qed
-      qed
-    next
-      case split_case_11
-      by solve( !KU( ~k ) @ #vk.5 )
-    next
-      case split_case_12
+      case split_case_7
       solve( !KU( h((~na⊕x)) ) @ #vk.1 )
-        case c_h_case_1
+        case c_h
         solve( !KU( (~k⊕x) ) @ #vk.2 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
           case coerce
           solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
             case initiator
@@ -360,35 +369,35 @@ solve( Initiated( ~na ) ▶₀ #i )
           qed
         qed
       next
-        case c_h_case_2
-        solve( !KU( (~k⊕x) ) @ #vk.3 )
-          case coerce
-          solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
-            case initiator
-            by contradiction /* impossible chain */
-          next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.2, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
-      next
         case responder
         by contradiction /* from formulas */
       qed
     next
-      case split_case_13
-      by solve( !KU( ~k ) @ #vk.4 )
-    next
-      case split_case_14
+      case split_case_8
       solve( !KU( h((~k⊕x)) ) @ #vk.1 )
-        case c_h_case_1
+        case c_h
         solve( !KU( (~na⊕x) ) @ #vk.2 )
+          case c_xor
+          solve( !KU( (~k⊕x) ) @ #vk.3 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
           case coerce
           solve( !KD( (~na⊕x) ) ▶₀ #vk.1 )
             case initiator
@@ -404,36 +413,6 @@ solve( Initiated( ~na ) ▶₀ #i )
             qed
           qed
         qed
-      next
-        case c_h_case_2
-        by solve( !KU( ~k ) @ #vk.5 )
-      next
-        case responder
-        by contradiction /* from formulas */
-      qed
-    next
-      case split_case_15
-      solve( !KU( h((~k⊕x)) ) @ #vk.2 )
-        case c_h_case_1
-        solve( !KU( (~k⊕x) ) @ #vk.5 )
-          case coerce
-          solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
-            case initiator
-            by contradiction /* impossible chain */
-          next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.2, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
-      next
-        case c_h_case_2
-        by solve( !KU( ~k ) @ #vk.6 )
       next
         case responder
         by contradiction /* from formulas */
@@ -465,16 +444,22 @@ solve( Initiated( ~na ) ▶₀ #i )
   solve( !InitLTK( ~k ) ▶₁ #i )
     case Setup
     solve( splitEqs(0) )
-      case split_case_15
-      solve( !KU( h((~k⊕x)) ) @ #vk.2 )
+      case split_case_8
+      solve( !KU( h((~k⊕x)) ) @ #vk.1 )
         case responder
-        solve( splitEqs(2) )
-          case split_case_3
-          solve( !KU( ~na ) @ #vk.4 )
-            case initiator
-            solve( !KU( ~nb ) @ #vk.6 )
-              case responder
-              SOLVED // trace found
+        solve( !KU( (~na⊕x) ) @ #vk.2 )
+          case c_xor
+          solve( splitEqs(2) )
+            case split_case_2
+            solve( !KU( (~nb⊕na.1) ) @ #vk.4 )
+              case c_xor
+              solve( !KU( ~na ) @ #vk.5 )
+                case initiator
+                solve( !KU( ~nb ) @ #vk.6 )
+                  case responder
+                  SOLVED // trace found
+                qed
+              qed
             qed
           qed
         qed
@@ -505,11 +490,11 @@ solve( Initiated( ~na ) ▶₀ #i )
     solve( !RespLTK( ~k ) ▶₂ #j )
       case Setup
       solve( splitEqs(0) )
-        case split_case_03
+        case split_case_3
         solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
           case responder
           solve( splitEqs(1) )
-            case split_case_06
+            case split_case_2
             solve( !KU( ~nb ) @ #vk.2 )
               case responder
               solve( !KU( ~na ) @ #vk.3 )
@@ -541,9 +526,9 @@ analyzing: examples/features/xor/CRxor.spthy
 analyzed: examples/features/xor/CRxor.spthy
 
   output:          examples/features/xor/CRxor.spthy.tmp
-  processing time: 1.697037s
-  alive (all-traces): verified (99 steps)
-  recentalive_tag (all-traces): falsified - found trace (9 steps)
+  processing time: 1.328638s
+  alive (all-traces): verified (92 steps)
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
 
 ------------------------------------------------------------------------------
@@ -554,9 +539,9 @@ summary of summaries:
 analyzed: examples/features/xor/CRxor.spthy
 
   output:          examples/features/xor/CRxor.spthy.tmp
-  processing time: 1.697037s
-  alive (all-traces): verified (99 steps)
-  recentalive_tag (all-traces): falsified - found trace (9 steps)
+  processing time: 1.328638s
+  alive (all-traces): verified (92 steps)
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
 
 ==============================================================================
