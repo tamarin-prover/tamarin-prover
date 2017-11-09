@@ -64,6 +64,12 @@ elif lemma == "helpingSecrecy" or lemma == "noninjectiveagreementTAG":
   # 2. When nothing is known about k0 and K(k0), use appropriate Update(k0) twice --> inductive hypothesis
   # 3. Too many different cases of K(t) to treat. Have a criterion like t= h() XOR t' or t=h(t' XOR h())
   # 4. For nonInjectiveagreementTAG: add Running() as a top-priority goal. Also add !KD( (x.1 XOR x.2) .
+
+  # NEW BUILD: almost get autoproof for secrecy, ideas:
+  # a lot of cases are resolved by focusing on goals like 9. solve( Update( h((~r0 XOR h(k0) XOR h(h(k0)))), 'R2'
+  # because we have a reuse lemma stating that if one has Update(t) then t = h(t') so going through Update() twice gives a contradiction
+  # solve( Update( h((~r0 XOR h(k0) XOR h((~r0 XOR r1 XOR h(k0))))), 'R2'
+
   for line in lines:
     num = line.split(':')[0]
     if debug: sys.stderr.write(line)
@@ -71,9 +77,9 @@ elif lemma == "helpingSecrecy" or lemma == "noninjectiveagreementTAG":
     if lemma == "noninjectiveagreementTAG":
       if (re.match('.*Running\(.*', line) or
           re.match('.*splitEqs\(7.*', line)):
-        rank[49].append(num)
+        rank[47].append(num)
       elif (re.match('.*!K.\(.*x\.1.*', line)):
-        rank[48].append(num)
+        rank[46].append(num)
 
     if re.match('.*~~>.*', line):
       rank[48].append(num)
