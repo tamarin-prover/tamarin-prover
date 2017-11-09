@@ -91,15 +91,18 @@ lemma coins [sources]:
 
 // Executability
 
+// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 lemma exec:
   exists-trace
   " Ex x y r #i. Spend(x,y,r)@i"
 
+// PROVEN AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 // TestSubject is anonymous (subject's name is secret) as long as 
 // the subject does not double spend
 lemma anonymity:
   "All C #i. TestSubject(C)@i ==> ((not Ex #j. !KU(C)@j) | (Ex x r #i #j. Spend(C,x,r)@i & Spend(C,x,r)@j & not #i = #j))"
 
+// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 // TestSubject is NOT anonymous (subject's name not secret) if the subject double spends:
 lemma caught:
   exists-trace
