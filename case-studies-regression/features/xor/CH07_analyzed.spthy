@@ -178,14 +178,17 @@ solve( Alive( x, 'Tag' ) @ #i )
       solve( !KU( lh(rot(~id, h(z))) ) @ #vk.2 )
         case tag1
         solve( splitEqs(0) )
-          case split_case_15
-          solve( splitEqs(1) )
-            case split_case_1
-            solve( !KU( ~r1 ) @ #vk.5 )
-              case reader1
-              solve( !KU( ~r2 ) @ #vk.5 )
-                case tag1
-                SOLVED // trace found
+          case split_case_8
+          solve( !KU( (~r1⊕x) ) @ #vk.2 )
+            case c_xor
+            solve( splitEqs(1) )
+              case split_case_1
+              solve( !KU( ~r1 ) @ #vk.5 )
+                case reader1
+                solve( !KU( ~r2 ) @ #vk.5 )
+                  case tag1
+                  SOLVED // trace found
+                qed
               qed
             qed
           qed
@@ -267,9 +270,9 @@ solve( Alive( x, 'Reader' ) @ #i )
         solve( !KU( rh(rot(~id, h(z))) ) @ #vk )
           case reader2
           solve( splitEqs(1) )
-            case split_case_03
+            case split_case_3
             solve( splitEqs(2) )
-              case split_case_01
+              case split_case_1
               solve( !KU( ~r1 ) @ #vk.1 )
                 case reader1
                 solve( !KU( ~r2 ) @ #vk.3 )
@@ -305,8 +308,8 @@ analyzing: examples/features/xor/CH07.spthy
 analyzed: examples/features/xor/CH07.spthy
 
   output:          examples/features/xor/CH07.spthy.tmp
-  processing time: 1.187909s
-  recentalive_tag (all-traces): falsified - found trace (10 steps)
+  processing time: 0.835848s
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (11 steps)
   executable (exists-trace): verified (12 steps)
 
@@ -318,8 +321,8 @@ summary of summaries:
 analyzed: examples/features/xor/CH07.spthy
 
   output:          examples/features/xor/CH07.spthy.tmp
-  processing time: 1.187909s
-  recentalive_tag (all-traces): falsified - found trace (10 steps)
+  processing time: 0.835848s
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (11 steps)
   executable (exists-trace): verified (12 steps)
 

@@ -203,7 +203,7 @@ post17-case-studies:	$(POST17_TARGETS)
 ## XOR-using case studies
 #########################
 
-XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy
+XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy LAK06.spthy
 XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/,$(XOR_TRACE_CASE_STUDIES)))
 
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
