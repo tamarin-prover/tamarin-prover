@@ -67,21 +67,20 @@ restriction equality:
 restriction unique:
   "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
 
-/* Note that Tamarin finds an attack without the following restriction. Contrary to the modeling of LAK, we really
-   need it to faithfully model weak UK. Note that this is mainly caused because we consider reader sessions as well
-   while LAK06_UK-weak does not.
+/* Note that Tamarin finds a "false" attack without the following restriction when one considers readers as well as tags.
+   However, one can get rid of this restriction for the present model (without readers), as done for LAK06 (see LAK06_untrac-weak.spthy).
 */
-restriction complyWithPhase:
-  "All #i1 #i2. (Phase('learning')@i1 & Phase('guessing')@i2) ==> #i1 < #i2"
-  // This restriction causes non-termination issue when there was no such issue before ...
+// restriction complyWithPhase:
+//   "All #i1 #i2. (Phase('learning')@i1 & Phase('guessing')@i2) ==> #i1 < #i2"
+// This restriction causes non-termination issue when there was no such issue before ...
 
 
 // ??? No execution exists. Automatically proven that there is none! (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right]
 // FINDS PROOF AUTOMATICALLY (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e) [left+right]
 lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+  exists-trace "∃ x #j. ((Response( x, 'Tag' ) @ #j))"
 
-// ??? On current version after pressing 1 just 10 times, I am in a case where KU(r1) is solved, which likely will lead to non-termination!
+// TODO ??? On current version after pressing 1 just 10 times, I am in a case where KU(r1) is solved, which likely will lead to non-termination!
 // Observational Equivalence: PROVEN, autoproof (takes a very long time and I had to prove one sub-case at a time)
 // (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
 
