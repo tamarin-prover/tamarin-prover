@@ -12,7 +12,7 @@ rule (modulo E) setup:
    [ Fr( ~k ), Fr( ~id ) ]
   --[
   OnlyOnce( '2Users' ), Update( h(h(~k)), 'T' ),
-  Update( h(~k), 'R' ), Update( h(h(~k)), 'R' ), Setup( )
+  Update( h(~k), 'R1' ), Update( h(h(~k)), 'R2' ), Setup( )
   ]->
    [
    !Reader( ~id ), !Tag( ~id ), ReaderK( ~id, h(~k), h(h(~k)) ),
@@ -163,8 +163,8 @@ rule (modulo E) acceptreaderNew:
    ]
   --[
   Commit( <'R', 'T', k, ~r0, r1> ),
-  Running( <'T', 'R', k, ~r0, r1> ), Key( k0, 'R' ), Key( k, 'R' ),
-  Update( h(k), 'R' ), Update( k, 'R' ),
+  Running( <'T', 'R', k, ~r0, r1> ), Key( k0, 'R1' ), Key( k, 'R2' ),
+  Update( k, 'R1' ), Update( h(k), 'R2' ),
   OutH( h((~r0⊕k⊕h((~r0⊕k⊕r1)))) )
   ]->
    [ Out( h((~r0⊕k⊕h((~r0⊕k⊕r1)))) ), ReaderK( ~id, k, h(k) ) ]
@@ -176,8 +176,8 @@ rule (modulo E) acceptreaderNew:
      ]
     --[
     Commit( <'R', 'T', k, ~r0, r1> ),
-    Running( <'T', 'R', k, ~r0, r1> ), Key( k0, 'R' ), Key( k, 'R' ),
-    Update( h(k), 'R' ), Update( k, 'R' ), OutH( h(z.1) )
+    Running( <'T', 'R', k, ~r0, r1> ), Key( k0, 'R1' ), Key( k, 'R2' ),
+    Update( k, 'R1' ), Update( h(k), 'R2' ), OutH( h(z.1) )
     ]->
      [ Out( h(z.1) ), ReaderK( ~id, k, h(k) ) ]
     variants (modulo AC)
@@ -319,149 +319,149 @@ rule (modulo E) acceptreaderNew:
         z     = zero
         z.1   = z.19
     
-    24. ~r0   = ~r0.18
-        k     = k.19
-        r1    = (~r0.18⊕x.33)
-        z     = (k.19⊕x.33)
-        z.1   = (~r0.18⊕k.19⊕h((k.19⊕x.33)))
+    24. ~r0   = ~r0.40
+        k     = k.41
+        r1    = (~r0.40⊕x.77)
+        z     = (k.41⊕x.77)
+        z.1   = (~r0.40⊕k.41⊕h((k.41⊕x.77)))
     
-    25. ~r0   = ~r0.18
-        k     = k.19
-        r1    = (k.19⊕x.33)
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕k.19⊕h((~r0.18⊕x.33)))
+    25. ~r0   = ~r0.40
+        k     = k.41
+        r1    = (k.41⊕x.77)
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕k.41⊕h((~r0.40⊕x.77)))
     
-    26. ~r0   = ~r0.18
-        k     = h((~r0.18⊕x.33))
-        r1    = (x.33⊕h((~r0.18⊕x.33)))
-        z     = (~r0.18⊕x.33)
-        z.1   = ~r0.18
+    26. ~r0   = ~r0.40
+        k     = h((~r0.40⊕x.77))
+        r1    = (x.77⊕h((~r0.40⊕x.77)))
+        z     = (~r0.40⊕x.77)
+        z.1   = ~r0.40
     
-    27. ~r0   = ~r0.18
-        k     = (~r0.18⊕x.33)
-        r1    = r1.21
-        z     = (r1.21⊕x.33)
-        z.1   = (x.33⊕h((r1.21⊕x.33)))
+    27. ~r0   = ~r0.40
+        k     = (~r0.40⊕x.77)
+        r1    = r1.43
+        z     = (r1.43⊕x.77)
+        z.1   = (x.77⊕h((r1.43⊕x.77)))
     
-    28. ~r0   = ~r0.18
-        k     = (~r0.18⊕x.33)
-        r1    = (z.22⊕x.33)
-        z     = z.22
-        z.1   = (x.33⊕h(z.22))
+    28. ~r0   = ~r0.40
+        k     = (~r0.40⊕x.77)
+        r1    = (z.44⊕x.77)
+        z     = z.44
+        z.1   = (x.77⊕h(z.44))
     
-    29. ~r0   = ~r0.18
-        k     = (r1.21⊕x.33)
-        r1    = r1.21
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕r1.21⊕x.33⊕h((~r0.18⊕x.33)))
+    29. ~r0   = ~r0.40
+        k     = (r1.43⊕x.77)
+        r1    = r1.43
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕r1.43⊕x.77⊕h((~r0.40⊕x.77)))
     
-    30. ~r0   = ~r0.18
-        k     = (x.33⊕h(~r0.18))
-        r1    = (x.33⊕h(~r0.18))
-        z     = ~r0.18
-        z.1   = (~r0.18⊕x.33)
+    30. ~r0   = ~r0.40
+        k     = (x.77⊕h(~r0.40))
+        r1    = (x.77⊕h(~r0.40))
+        z     = ~r0.40
+        z.1   = (~r0.40⊕x.77)
     
-    31. ~r0   = ~r0.18
-        k     = (x.33⊕h(zero))
-        r1    = (~r0.18⊕x.33⊕h(zero))
+    31. ~r0   = ~r0.40
+        k     = (x.77⊕h(zero))
+        r1    = (~r0.40⊕x.77⊕h(zero))
         z     = zero
-        z.1   = (~r0.18⊕x.33)
+        z.1   = (~r0.40⊕x.77)
     
-    32. ~r0   = ~r0.18
-        k     = (x.33⊕h((~r0.18⊕x.33)))
-        r1    = h((~r0.18⊕x.33))
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕x.33)
+    32. ~r0   = ~r0.40
+        k     = (x.77⊕h((~r0.40⊕x.77)))
+        r1    = h((~r0.40⊕x.77))
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕x.77)
     
-    33. ~r0   = ~r0.19
-        k     = (~r0.19⊕z.23⊕x.35⊕h(z.23))
-        r1    = (x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (z.23⊕x.35)
+    33. ~r0   = ~r0.41
+        k     = (~r0.41⊕z.45⊕x.79⊕h(z.45))
+        r1    = (x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (z.45⊕x.79)
     
-    34. ~r0   = ~r0.19
-        k     = (~r0.19⊕z.24⊕h((z.24⊕x.35)))
-        r1    = (x.35⊕h((z.24⊕x.35)))
-        z     = (z.24⊕x.35)
-        z.1   = z.24
+    34. ~r0   = ~r0.41
+        k     = (~r0.41⊕z.46⊕h((z.46⊕x.79)))
+        r1    = (x.79⊕h((z.46⊕x.79)))
+        z     = (z.46⊕x.79)
+        z.1   = z.46
     
-    35. ~r0   = ~r0.19
-        k     = (z.23⊕x.35)
-        r1    = (~r0.19⊕x.35)
-        z     = z.23
-        z.1   = (~r0.19⊕z.23⊕x.35⊕h(z.23))
+    35. ~r0   = ~r0.41
+        k     = (z.45⊕x.79)
+        r1    = (~r0.41⊕x.79)
+        z     = z.45
+        z.1   = (~r0.41⊕z.45⊕x.79⊕h(z.45))
     
-    36. ~r0   = ~r0.19
-        k     = (z.23⊕x.35⊕h(z.23))
-        r1    = (~r0.19⊕x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (~r0.19⊕z.23⊕x.35)
+    36. ~r0   = ~r0.41
+        k     = (z.45⊕x.79⊕h(z.45))
+        r1    = (~r0.41⊕x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (~r0.41⊕z.45⊕x.79)
     
-    37. ~r0   = ~r0.19
-        k     = (x.33⊕x.34)
-        r1    = (x.34⊕x.35)
-        z     = (~r0.19⊕x.33⊕x.35)
-        z.1   = (~r0.19⊕x.33⊕x.34⊕h((~r0.19⊕x.33⊕x.35)))
+    37. ~r0   = ~r0.41
+        k     = (x.77⊕x.78)
+        r1    = (x.78⊕x.79)
+        z     = (~r0.41⊕x.77⊕x.79)
+        z.1   = (~r0.41⊕x.77⊕x.78⊕h((~r0.41⊕x.77⊕x.79)))
     
-    38. ~r0   = ~r0.19
-        k     = (x.34⊕x.35⊕h((~r0.19⊕x.34)))
-        r1    = (x.35⊕h((~r0.19⊕x.34)))
-        z     = (~r0.19⊕x.34)
-        z.1   = (~r0.19⊕x.34⊕x.35)
+    38. ~r0   = ~r0.41
+        k     = (x.78⊕x.79⊕h((~r0.41⊕x.78)))
+        r1    = (x.79⊕h((~r0.41⊕x.78)))
+        z     = (~r0.41⊕x.78)
+        z.1   = (~r0.41⊕x.78⊕x.79)
     
-    39. ~r0   = ~r0.19
-        k     = (x.34⊕h((~r0.19⊕x.34⊕x.35)))
-        r1    = (x.35⊕h((~r0.19⊕x.34⊕x.35)))
-        z     = (~r0.19⊕x.34⊕x.35)
-        z.1   = (~r0.19⊕x.34)
+    39. ~r0   = ~r0.41
+        k     = (x.78⊕h((~r0.41⊕x.78⊕x.79)))
+        r1    = (x.79⊕h((~r0.41⊕x.78⊕x.79)))
+        z     = (~r0.41⊕x.78⊕x.79)
+        z.1   = (~r0.41⊕x.78)
     
-    40. ~r0   = ~r0.19
-        k     = (x.34⊕h((x.34⊕x.35)))
-        r1    = (~r0.19⊕x.35⊕h((x.34⊕x.35)))
-        z     = (x.34⊕x.35)
-        z.1   = (~r0.19⊕x.34)
+    40. ~r0   = ~r0.41
+        k     = (x.78⊕h((x.78⊕x.79)))
+        r1    = (~r0.41⊕x.79⊕h((x.78⊕x.79)))
+        z     = (x.78⊕x.79)
+        z.1   = (~r0.41⊕x.78)
     
-    41. ~r0   = ~r0.19
-        k     = (x.35⊕h(z.23))
-        r1    = (~r0.19⊕z.23⊕x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (~r0.19⊕x.35)
+    41. ~r0   = ~r0.41
+        k     = (x.79⊕h(z.45))
+        r1    = (~r0.41⊕z.45⊕x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (~r0.41⊕x.79)
     
-    42. ~r0   = ~r0.19
-        k     = (x.35⊕h((~r0.19⊕x.34)))
-        r1    = (x.34⊕x.35⊕h((~r0.19⊕x.34)))
-        z     = (~r0.19⊕x.34)
-        z.1   = (~r0.19⊕x.35)
+    42. ~r0   = ~r0.41
+        k     = (x.79⊕h((~r0.41⊕x.78)))
+        r1    = (x.78⊕x.79⊕h((~r0.41⊕x.78)))
+        z     = (~r0.41⊕x.78)
+        z.1   = (~r0.41⊕x.79)
     
-    43. ~r0   = ~r0.20
-        k     = (~r0.20⊕x.35⊕x.36)
-        r1    = (x.36⊕x.37)
-        z     = (x.35⊕x.37)
-        z.1   = (x.35⊕x.36⊕h((x.35⊕x.37)))
+    43. ~r0   = ~r0.42
+        k     = (~r0.42⊕x.79⊕x.80)
+        r1    = (x.80⊕x.81)
+        z     = (x.79⊕x.81)
+        z.1   = (x.79⊕x.80⊕h((x.79⊕x.81)))
     
-    44. ~r0   = ~r0.20
-        k     = (~r0.20⊕x.35⊕x.37⊕h((x.35⊕x.36)))
-        r1    = (x.36⊕x.37⊕h((x.35⊕x.36)))
-        z     = (x.35⊕x.36)
-        z.1   = (x.35⊕x.37)
+    44. ~r0   = ~r0.42
+        k     = (~r0.42⊕x.79⊕x.81⊕h((x.79⊕x.80)))
+        r1    = (x.80⊕x.81⊕h((x.79⊕x.80)))
+        z     = (x.79⊕x.80)
+        z.1   = (x.79⊕x.81)
     
-    45. ~r0   = ~r0.20
-        k     = (x.35⊕x.36)
-        r1    = (~r0.20⊕x.36⊕x.37)
-        z     = (x.35⊕x.37)
-        z.1   = (~r0.20⊕x.35⊕x.36⊕h((x.35⊕x.37)))
+    45. ~r0   = ~r0.42
+        k     = (x.79⊕x.80)
+        r1    = (~r0.42⊕x.80⊕x.81)
+        z     = (x.79⊕x.81)
+        z.1   = (~r0.42⊕x.79⊕x.80⊕h((x.79⊕x.81)))
     
-    46. ~r0   = ~r0.20
-        k     = (x.35⊕x.37⊕h((~r0.20⊕x.35⊕x.36)))
-        r1    = (x.36⊕x.37⊕h((~r0.20⊕x.35⊕x.36)))
-        z     = (~r0.20⊕x.35⊕x.36)
-        z.1   = (~r0.20⊕x.35⊕x.37)
+    46. ~r0   = ~r0.42
+        k     = (x.79⊕x.81⊕h((~r0.42⊕x.79⊕x.80)))
+        r1    = (x.80⊕x.81⊕h((~r0.42⊕x.79⊕x.80)))
+        z     = (~r0.42⊕x.79⊕x.80)
+        z.1   = (~r0.42⊕x.79⊕x.81)
     
-    47. ~r0   = ~r0.20
-        k     = (x.35⊕x.37⊕h((x.35⊕x.36)))
-        r1    = (~r0.20⊕x.36⊕x.37⊕h((x.35⊕x.36)))
-        z     = (x.35⊕x.36)
-        z.1   = (~r0.20⊕x.35⊕x.37)
+    47. ~r0   = ~r0.42
+        k     = (x.79⊕x.81⊕h((x.79⊕x.80)))
+        r1    = (~r0.42⊕x.80⊕x.81⊕h((x.79⊕x.80)))
+        z     = (x.79⊕x.80)
+        z.1   = (~r0.42⊕x.79⊕x.81)
     // loop breaker: [2]
   */
 
@@ -472,8 +472,8 @@ rule (modulo E) acceptreaderOld:
    ]
   --[
   Commit( <'R', 'T', k0, ~r0, r1> ),
-  Running( <'T', 'R', k0, ~r0, r1> ), Key( k0, 'R' ), Key( k, 'R' ),
-  OutH( h((~r0⊕k0⊕h((~r0⊕k0⊕r1)))) )
+  Running( <'T', 'R', k0, ~r0, r1> ), Key( k0, 'R1' ),
+  Key( k, 'R2' ), OutH( h((~r0⊕k0⊕h((~r0⊕k0⊕r1)))) )
   ]->
    [ Out( h((~r0⊕k0⊕h((~r0⊕k0⊕r1)))) ), ReaderK( ~id, k0, k ) ]
 
@@ -484,8 +484,8 @@ rule (modulo E) acceptreaderOld:
      ]
     --[
     Commit( <'R', 'T', k0, ~r0, r1> ),
-    Running( <'T', 'R', k0, ~r0, r1> ), Key( k0, 'R' ), Key( k, 'R' ),
-    OutH( h(z.1) )
+    Running( <'T', 'R', k0, ~r0, r1> ), Key( k0, 'R1' ),
+    Key( k, 'R2' ), OutH( h(z.1) )
     ]->
      [ Out( h(z.1) ), ReaderK( ~id, k0, k ) ]
     variants (modulo AC)
@@ -627,149 +627,149 @@ rule (modulo E) acceptreaderOld:
         z     = zero
         z.1   = z.19
     
-    24. ~r0   = ~r0.18
-        k0    = k0.20
-        r1    = (~r0.18⊕x.33)
-        z     = (k0.20⊕x.33)
-        z.1   = (~r0.18⊕k0.20⊕h((k0.20⊕x.33)))
+    24. ~r0   = ~r0.40
+        k0    = k0.42
+        r1    = (~r0.40⊕x.77)
+        z     = (k0.42⊕x.77)
+        z.1   = (~r0.40⊕k0.42⊕h((k0.42⊕x.77)))
     
-    25. ~r0   = ~r0.18
-        k0    = k0.20
-        r1    = (k0.20⊕x.33)
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕k0.20⊕h((~r0.18⊕x.33)))
+    25. ~r0   = ~r0.40
+        k0    = k0.42
+        r1    = (k0.42⊕x.77)
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕k0.42⊕h((~r0.40⊕x.77)))
     
-    26. ~r0   = ~r0.18
-        k0    = h((~r0.18⊕x.33))
-        r1    = (x.33⊕h((~r0.18⊕x.33)))
-        z     = (~r0.18⊕x.33)
-        z.1   = ~r0.18
+    26. ~r0   = ~r0.40
+        k0    = h((~r0.40⊕x.77))
+        r1    = (x.77⊕h((~r0.40⊕x.77)))
+        z     = (~r0.40⊕x.77)
+        z.1   = ~r0.40
     
-    27. ~r0   = ~r0.18
-        k0    = (~r0.18⊕x.33)
-        r1    = r1.21
-        z     = (r1.21⊕x.33)
-        z.1   = (x.33⊕h((r1.21⊕x.33)))
+    27. ~r0   = ~r0.40
+        k0    = (~r0.40⊕x.77)
+        r1    = r1.43
+        z     = (r1.43⊕x.77)
+        z.1   = (x.77⊕h((r1.43⊕x.77)))
     
-    28. ~r0   = ~r0.18
-        k0    = (~r0.18⊕x.33)
-        r1    = (z.22⊕x.33)
-        z     = z.22
-        z.1   = (x.33⊕h(z.22))
+    28. ~r0   = ~r0.40
+        k0    = (~r0.40⊕x.77)
+        r1    = (z.44⊕x.77)
+        z     = z.44
+        z.1   = (x.77⊕h(z.44))
     
-    29. ~r0   = ~r0.18
-        k0    = (r1.21⊕x.33)
-        r1    = r1.21
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕r1.21⊕x.33⊕h((~r0.18⊕x.33)))
+    29. ~r0   = ~r0.40
+        k0    = (r1.43⊕x.77)
+        r1    = r1.43
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕r1.43⊕x.77⊕h((~r0.40⊕x.77)))
     
-    30. ~r0   = ~r0.18
-        k0    = (x.33⊕h(~r0.18))
-        r1    = (x.33⊕h(~r0.18))
-        z     = ~r0.18
-        z.1   = (~r0.18⊕x.33)
+    30. ~r0   = ~r0.40
+        k0    = (x.77⊕h(~r0.40))
+        r1    = (x.77⊕h(~r0.40))
+        z     = ~r0.40
+        z.1   = (~r0.40⊕x.77)
     
-    31. ~r0   = ~r0.18
-        k0    = (x.33⊕h(zero))
-        r1    = (~r0.18⊕x.33⊕h(zero))
+    31. ~r0   = ~r0.40
+        k0    = (x.77⊕h(zero))
+        r1    = (~r0.40⊕x.77⊕h(zero))
         z     = zero
-        z.1   = (~r0.18⊕x.33)
+        z.1   = (~r0.40⊕x.77)
     
-    32. ~r0   = ~r0.18
-        k0    = (x.33⊕h((~r0.18⊕x.33)))
-        r1    = h((~r0.18⊕x.33))
-        z     = (~r0.18⊕x.33)
-        z.1   = (~r0.18⊕x.33)
+    32. ~r0   = ~r0.40
+        k0    = (x.77⊕h((~r0.40⊕x.77)))
+        r1    = h((~r0.40⊕x.77))
+        z     = (~r0.40⊕x.77)
+        z.1   = (~r0.40⊕x.77)
     
-    33. ~r0   = ~r0.19
-        k0    = (~r0.19⊕z.23⊕x.35⊕h(z.23))
-        r1    = (x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (z.23⊕x.35)
+    33. ~r0   = ~r0.41
+        k0    = (~r0.41⊕z.45⊕x.79⊕h(z.45))
+        r1    = (x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (z.45⊕x.79)
     
-    34. ~r0   = ~r0.19
-        k0    = (~r0.19⊕z.24⊕h((z.24⊕x.35)))
-        r1    = (x.35⊕h((z.24⊕x.35)))
-        z     = (z.24⊕x.35)
-        z.1   = z.24
+    34. ~r0   = ~r0.41
+        k0    = (~r0.41⊕z.46⊕h((z.46⊕x.79)))
+        r1    = (x.79⊕h((z.46⊕x.79)))
+        z     = (z.46⊕x.79)
+        z.1   = z.46
     
-    35. ~r0   = ~r0.19
-        k0    = (z.23⊕x.35)
-        r1    = (~r0.19⊕x.35)
-        z     = z.23
-        z.1   = (~r0.19⊕z.23⊕x.35⊕h(z.23))
+    35. ~r0   = ~r0.41
+        k0    = (z.45⊕x.79)
+        r1    = (~r0.41⊕x.79)
+        z     = z.45
+        z.1   = (~r0.41⊕z.45⊕x.79⊕h(z.45))
     
-    36. ~r0   = ~r0.19
-        k0    = (z.23⊕x.35⊕h(z.23))
-        r1    = (~r0.19⊕x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (~r0.19⊕z.23⊕x.35)
+    36. ~r0   = ~r0.41
+        k0    = (z.45⊕x.79⊕h(z.45))
+        r1    = (~r0.41⊕x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (~r0.41⊕z.45⊕x.79)
     
-    37. ~r0   = ~r0.19
-        k0    = (x.33⊕x.34)
-        r1    = (x.34⊕x.35)
-        z     = (~r0.19⊕x.33⊕x.35)
-        z.1   = (~r0.19⊕x.33⊕x.34⊕h((~r0.19⊕x.33⊕x.35)))
+    37. ~r0   = ~r0.41
+        k0    = (x.77⊕x.78)
+        r1    = (x.78⊕x.79)
+        z     = (~r0.41⊕x.77⊕x.79)
+        z.1   = (~r0.41⊕x.77⊕x.78⊕h((~r0.41⊕x.77⊕x.79)))
     
-    38. ~r0   = ~r0.19
-        k0    = (x.34⊕x.35⊕h((~r0.19⊕x.34)))
-        r1    = (x.35⊕h((~r0.19⊕x.34)))
-        z     = (~r0.19⊕x.34)
-        z.1   = (~r0.19⊕x.34⊕x.35)
+    38. ~r0   = ~r0.41
+        k0    = (x.78⊕x.79⊕h((~r0.41⊕x.78)))
+        r1    = (x.79⊕h((~r0.41⊕x.78)))
+        z     = (~r0.41⊕x.78)
+        z.1   = (~r0.41⊕x.78⊕x.79)
     
-    39. ~r0   = ~r0.19
-        k0    = (x.34⊕h((~r0.19⊕x.34⊕x.35)))
-        r1    = (x.35⊕h((~r0.19⊕x.34⊕x.35)))
-        z     = (~r0.19⊕x.34⊕x.35)
-        z.1   = (~r0.19⊕x.34)
+    39. ~r0   = ~r0.41
+        k0    = (x.78⊕h((~r0.41⊕x.78⊕x.79)))
+        r1    = (x.79⊕h((~r0.41⊕x.78⊕x.79)))
+        z     = (~r0.41⊕x.78⊕x.79)
+        z.1   = (~r0.41⊕x.78)
     
-    40. ~r0   = ~r0.19
-        k0    = (x.34⊕h((x.34⊕x.35)))
-        r1    = (~r0.19⊕x.35⊕h((x.34⊕x.35)))
-        z     = (x.34⊕x.35)
-        z.1   = (~r0.19⊕x.34)
+    40. ~r0   = ~r0.41
+        k0    = (x.78⊕h((x.78⊕x.79)))
+        r1    = (~r0.41⊕x.79⊕h((x.78⊕x.79)))
+        z     = (x.78⊕x.79)
+        z.1   = (~r0.41⊕x.78)
     
-    41. ~r0   = ~r0.19
-        k0    = (x.35⊕h(z.23))
-        r1    = (~r0.19⊕z.23⊕x.35⊕h(z.23))
-        z     = z.23
-        z.1   = (~r0.19⊕x.35)
+    41. ~r0   = ~r0.41
+        k0    = (x.79⊕h(z.45))
+        r1    = (~r0.41⊕z.45⊕x.79⊕h(z.45))
+        z     = z.45
+        z.1   = (~r0.41⊕x.79)
     
-    42. ~r0   = ~r0.19
-        k0    = (x.35⊕h((~r0.19⊕x.34)))
-        r1    = (x.34⊕x.35⊕h((~r0.19⊕x.34)))
-        z     = (~r0.19⊕x.34)
-        z.1   = (~r0.19⊕x.35)
+    42. ~r0   = ~r0.41
+        k0    = (x.79⊕h((~r0.41⊕x.78)))
+        r1    = (x.78⊕x.79⊕h((~r0.41⊕x.78)))
+        z     = (~r0.41⊕x.78)
+        z.1   = (~r0.41⊕x.79)
     
-    43. ~r0   = ~r0.20
-        k0    = (~r0.20⊕x.35⊕x.36)
-        r1    = (x.36⊕x.37)
-        z     = (x.35⊕x.37)
-        z.1   = (x.35⊕x.36⊕h((x.35⊕x.37)))
+    43. ~r0   = ~r0.42
+        k0    = (~r0.42⊕x.79⊕x.80)
+        r1    = (x.80⊕x.81)
+        z     = (x.79⊕x.81)
+        z.1   = (x.79⊕x.80⊕h((x.79⊕x.81)))
     
-    44. ~r0   = ~r0.20
-        k0    = (~r0.20⊕x.35⊕x.37⊕h((x.35⊕x.36)))
-        r1    = (x.36⊕x.37⊕h((x.35⊕x.36)))
-        z     = (x.35⊕x.36)
-        z.1   = (x.35⊕x.37)
+    44. ~r0   = ~r0.42
+        k0    = (~r0.42⊕x.79⊕x.81⊕h((x.79⊕x.80)))
+        r1    = (x.80⊕x.81⊕h((x.79⊕x.80)))
+        z     = (x.79⊕x.80)
+        z.1   = (x.79⊕x.81)
     
-    45. ~r0   = ~r0.20
-        k0    = (x.35⊕x.36)
-        r1    = (~r0.20⊕x.36⊕x.37)
-        z     = (x.35⊕x.37)
-        z.1   = (~r0.20⊕x.35⊕x.36⊕h((x.35⊕x.37)))
+    45. ~r0   = ~r0.42
+        k0    = (x.79⊕x.80)
+        r1    = (~r0.42⊕x.80⊕x.81)
+        z     = (x.79⊕x.81)
+        z.1   = (~r0.42⊕x.79⊕x.80⊕h((x.79⊕x.81)))
     
-    46. ~r0   = ~r0.20
-        k0    = (x.35⊕x.37⊕h((~r0.20⊕x.35⊕x.36)))
-        r1    = (x.36⊕x.37⊕h((~r0.20⊕x.35⊕x.36)))
-        z     = (~r0.20⊕x.35⊕x.36)
-        z.1   = (~r0.20⊕x.35⊕x.37)
+    46. ~r0   = ~r0.42
+        k0    = (x.79⊕x.81⊕h((~r0.42⊕x.79⊕x.80)))
+        r1    = (x.80⊕x.81⊕h((~r0.42⊕x.79⊕x.80)))
+        z     = (~r0.42⊕x.79⊕x.80)
+        z.1   = (~r0.42⊕x.79⊕x.81)
     
-    47. ~r0   = ~r0.20
-        k0    = (x.35⊕x.37⊕h((x.35⊕x.36)))
-        r1    = (~r0.20⊕x.36⊕x.37⊕h((x.35⊕x.36)))
-        z     = (x.35⊕x.36)
-        z.1   = (~r0.20⊕x.35⊕x.37)
+    47. ~r0   = ~r0.42
+        k0    = (x.79⊕x.81⊕h((x.79⊕x.80)))
+        r1    = (~r0.42⊕x.80⊕x.81⊕h((x.79⊕x.80)))
+        z     = (x.79⊕x.80)
+        z.1   = (~r0.42⊕x.79⊕x.81)
     // loop breaker: [2]
   */
 
@@ -1094,93 +1094,7 @@ guarded formula characterizing all counter-examples:
 "∃ k r #i.
   (Key( k, r ) @ #i) ∧ ∀ #j. (Update( k, r ) @ #j) ⇒ ¬(#j < #i)"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (last(#i))  ∥
-         (∃ #j. (Update( k, r ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
-    case case_1
-    solve( Key( k, r ) @ #i )
-      case acceptreaderNew_case_1
-      solve( ReaderK( ~id, k, k.1 ) ▶₂ #i )
-        case acceptreaderNew
-        by contradiction /* from formulas */
-      next
-        case acceptreaderOld
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      qed
-    next
-      case acceptreaderNew_case_2
-      solve( ReaderK( ~id, k0, k ) ▶₂ #i )
-        case acceptreaderNew
-        by contradiction /* from formulas */
-      next
-        case acceptreaderOld
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      qed
-    next
-      case acceptreaderOld_case_1
-      solve( ReaderK( ~id, k, k.1 ) ▶₂ #i )
-        case acceptreaderNew
-        by contradiction /* from formulas */
-      next
-        case acceptreaderOld
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      qed
-    next
-      case acceptreaderOld_case_2
-      solve( ReaderK( ~id, k0, k ) ▶₂ #i )
-        case acceptreaderNew
-        by contradiction /* from formulas */
-      next
-        case acceptreaderOld
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      qed
-    next
-      case accepttag
-      solve( TagK( ~id, k ) ▶₂ #i )
-        case accepttag
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      next
-        case tag1
-        by contradiction /* from formulas */
-      qed
-    next
-      case tag1
-      solve( TagK( ~id, k ) ▶₁ #i )
-        case accepttag
-        by contradiction /* from formulas */
-      next
-        case setup
-        by contradiction /* from formulas */
-      next
-        case tag1
-        by contradiction /* from formulas */
-      qed
-    qed
-  next
-    case case_2
-    by contradiction /* from formulas */
-  qed
-qed
+by sorry
 
 lemma helpingStackHash [use_induction, reuse]:
   all-traces
@@ -1191,45 +1105,7 @@ guarded formula characterizing all counter-examples:
 "((∃ k r #i. (Key( k, r ) @ #i) ∧ ∀ k0. (k = h(k0)) ⇒ ⊥) ∨
   (∃ k r #i. (Update( k, r ) @ #i) ∧ ∀ k0. (k = h(k0)) ⇒ ⊥))"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (∃ k r #i. (Key( k, r ) @ #i) ∧ ∀ k0. (k = h(k0)) ⇒ ⊥)  ∥
-         (∃ k r #i. (Update( k, r ) @ #i) ∧ ∀ k0. (k = h(k0)) ⇒ ⊥) )
-    case case_1
-    by contradiction /* from formulas */
-  next
-    case case_2
-    solve( (last(#i))  ∥ (∃ k0. (k = h(k0))) )
-      case case_1
-      solve( Update( k, r ) @ #i )
-        case acceptreaderNew_case_1
-        by contradiction /* from formulas */
-      next
-        case acceptreaderNew_case_2
-        by contradiction /* from formulas */
-      next
-        case accepttag
-        by contradiction /* from formulas */
-      next
-        case setup_case_1
-        by contradiction /* from formulas */
-      next
-        case setup_case_2
-        by contradiction /* from formulas */
-      next
-        case setup_case_3
-        by contradiction /* from formulas */
-      qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    qed
-  qed
-qed
+by sorry
 
 lemma helpingSecrecy [use_induction, reuse]:
   all-traces
@@ -1238,20 +1114,7 @@ lemma helpingSecrecy [use_induction, reuse]:
 guarded formula characterizing all counter-examples:
 "∃ k r #i. (Key( k, r ) @ #i) ∧ ∃ #j. (!KU( k ) @ #j)"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (last(#i))  ∥ (∀ #j. (!KU( h(k0) ) @ #j) ⇒ last(#j)) )
-    case case_1
-    by sorry
-  next
-    case case_2
-    by sorry
-  qed
-qed
+by sorry
 
 lemma executable:
   exists-trace
@@ -1267,95 +1130,176 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( TagState1( ~id, h(k0), ~r1, r0, m ) ▶₀ #i )
   case tag1
-  solve( !KU( h(z.1) ) @ #vk )
-    case acceptreaderNew
-    solve( ReaderK( ~id, h(k0.1), h(k0.2) ) ▶₂ #vr.2 )
+  solve( splitEqs(1) )
+    case split_case_1
+    solve( !KU( ~r1 ) @ #vk.1 )
+      case tag1
+      by contradiction /* cyclic */
+    qed
+  next
+    case split_case_2
+    solve( !KU( h((r0⊕h(k0)⊕h((~r1⊕r0⊕h(k0))))) ) @ #vk )
       case acceptreaderNew
-      by sorry
-    next
-      case acceptreaderOld
-      by sorry
-    next
-      case setup
-      solve( TagK( ~id, h(k0) ) ▶₁ #vr )
-        case accepttag
-        by sorry
+      solve( splitEqs(3) )
+        case split_case_1
+        by contradiction /* from formulas */
       next
-        case setup
-        solve( TagK( ~id, h(h(~k)) ) ▶₂ #i )
-          case accepttag
-          by sorry
+        case split_case_2
+        solve( !KU( h((~r0⊕~r1⊕h(k0))) ) @ #vk.4 )
+          case c_h
+          solve( !KU( ~r0 ) @ #vk.2 )
+            case initiatereader
+            solve( !KU( ~r1 ) @ #vk.4 )
+              case tag1
+              solve( !KU( (~r0⊕~r1⊕h(k0)) ) @ #vk.5 )
+                case c_xor_case_1
+                solve( !KU( (~r0⊕h(k0)) ) @ #vk.6 )
+                  case c_xor
+                  by contradiction /* from formulas */
+                next
+                  case coerce
+                  solve( !KD( (~r0⊕h(k0)) ) ▶₀ #vk.5 )
+                    case acceptreaderNew
+                    by solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                  next
+                    case acceptreaderOld
+                    by solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                  next
+                    case initiatereader
+                    by contradiction /* impossible chain */
+                  next
+                    case tag1
+                    solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                      case d_0_fst
+                      by contradiction /* impossible chain */
+                    next
+                      case d_0_snd
+                      by solve( (#vr.6, 0) ~~> (#vk.5, 0) )
+                    qed
+                  qed
+                qed
+              next
+                case c_xor_case_2
+                solve( !KU( (~r1⊕h(k0)) ) @ #vk.6 )
+                  case c_xor
+                  by contradiction /* from formulas */
+                next
+                  case coerce
+                  solve( !KD( (~r1⊕h(k0)) ) ▶₀ #vk.5 )
+                    case acceptreaderNew
+                    by solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                  next
+                    case acceptreaderOld
+                    by solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                  next
+                    case initiatereader
+                    by contradiction /* impossible chain */
+                  next
+                    case tag1
+                    solve( (#vl.3, 0) ~~> (#vk.5, 0) )
+                      case d_0_fst
+                      by contradiction /* impossible chain */
+                    next
+                      case d_0_snd
+                      by solve( (#vr.6, 0) ~~> (#vk.5, 0) )
+                    qed
+                  qed
+                qed
+              next
+                case c_xor_case_3
+                by contradiction /* from formulas */
+              next
+                case coerce
+                solve( !KD( (~r0⊕~r1⊕h(k0)) ) ▶₀ #vk.4 )
+                  case acceptreaderNew
+                  by solve( (#vl.3, 0) ~~> (#vk.4, 0) )
+                next
+                  case acceptreaderOld
+                  by solve( (#vl.3, 0) ~~> (#vk.4, 0) )
+                next
+                  case initiatereader
+                  by contradiction /* impossible chain */
+                next
+                  case tag1
+                  solve( (#vl.3, 0) ~~> (#vk.4, 0) )
+                    case d_0_fst
+                    by contradiction /* impossible chain */
+                  next
+                    case d_0_snd
+                    by solve( (#vr.6, 0) ~~> (#vk.4, 0) )
+                  qed
+                qed
+              qed
+            qed
+          qed
         next
           case tag1
-          solve( !KU( h(z.2) ) @ #vk.4 )
-            case acceptreaderNew
-            by contradiction /* non-injective facts (#vr.1,#vr.5,#vr.2) */
-          next
-            case acceptreaderOld
-            by contradiction /* non-injective facts (#vr.1,#vr.5,#vr.2) */
-          next
-            case c_h
-            by sorry
-          next
-            case tag1
-            solve( TagK( ~id, h(h(~k)) ) ▶₁ #vr.4 )
-              case accepttag
-              by sorry
-            next
-              case setup
-              solve( TagK( ~id, h(k0) ) ▶₁ #vr.4 )
-                case accepttag
-                by sorry
-              next
-                case setup
-                solve( splitEqs(0) )
-                  case split
-                  solve( !KU( ~r0 ) @ #vk.3 )
-                    case initiatereader
-                    solve( splitEqs(1) )
-                      case split
-                      solve( !KU( ~r1 ) @ #vk.4 )
-                        case tag1
-                        solve( Update( h(h(~k)), 'T' ) @ #j )
-                          case accepttag
+          solve( splitEqs(5) )
+            case split_case_1
+            solve( !KU( ~r0 ) @ #vk.3 )
+              case initiatereader
+              solve( !KU( ~r1 ) @ #vk.4 )
+                case tag1
+                solve( TagK( ~id, h(k0) ) ▶₁ #vr )
+                  case accepttag
+                  by sorry
+                next
+                  case setup
+                  solve( ReaderK( ~id, h(k0), h(h(~k)) ) ▶₂ #vr.2 )
+                    case acceptreaderNew
+                    by sorry
+                  next
+                    case acceptreaderOld
+                    by sorry
+                  next
+                    case setup
+                    solve( Update( h(h(~k)), 'T' ) @ #j )
+                      case accepttag
+                      by sorry
+                    next
+                      case setup
+                      solve( Update( h(h(~k)), 'T' ) @ #j.1 )
+                        case accepttag
+                        by sorry
+                      next
+                        case setup
+                        solve( Update( h(~k), 'R1' ) @ #j.1 )
+                          case acceptreaderNew
                           by sorry
                         next
                           case setup
-                          solve( Update( h(h(~k)), 'T' ) @ #j.1 )
-                            case accepttag
+                          solve( Update( h(h(~k)), 'R2' ) @ #j.1 )
+                            case acceptreaderNew
                             by sorry
                           next
                             case setup
-                            solve( Update( h(~k), 'R' ) @ #j.1 )
-                              case acceptreaderNew
+                            solve( Update( h(h(~k)), 'T' ) @ #j.1 )
+                              case accepttag
                               by sorry
                             next
                               case setup
-                              solve( Update( h(h(~k)), 'R' ) @ #j.1 )
-                                case acceptreaderNew_case_1
-                                by sorry
-                              next
-                                case acceptreaderNew_case_2
+                              solve( Update( h(h(~k)), 'T' ) @ #j.1 )
+                                case accepttag
                                 by sorry
                               next
                                 case setup
-                                solve( Update( h(h(~k)), 'T' ) @ #j.1 )
+                                solve( TagK( ~id, h(h(~k)) ) ▶₂ #i )
                                   case accepttag
                                   by sorry
                                 next
-                                  case setup
-                                  solve( Update( h(h(~k)), 'T' ) @ #j.1 )
+                                  case tag1
+                                  solve( TagK( ~id, h(h(~k)) ) ▶₁ #vr.5 )
                                     case accepttag
                                     by sorry
                                   next
                                     case setup
                                     solve( Update( h(h(~k)), 'T' ) @ #j.1 )
-                                      case accepttag
-                                      by sorry
-                                    next
                                       case setup
                                       SOLVED // trace found
                                     qed
+                                  next
+                                    case tag1
+                                    by sorry
                                   qed
                                 qed
                               qed
@@ -1365,30 +1309,339 @@ solve( TagState1( ~id, h(k0), ~r1, r0, m ) ▶₀ #i )
                       qed
                     qed
                   qed
+                next
+                  case tag1
+                  by sorry
                 qed
-              next
-                case tag1
-                by sorry
               qed
+            qed
+          next
+            case split_case_2
+            by sorry
+          next
+            case split_case_3
+            by sorry
+          qed
+        qed
+      next
+        case split_case_3
+        by contradiction /* from formulas */
+      next
+        case split_case_4
+        by contradiction /* from formulas */
+      next
+        case split_case_5
+        by contradiction /* from formulas */
+      qed
+    next
+      case acceptreaderOld
+      by sorry
+    next
+      case c_h
+      by sorry
+    next
+      case tag1
+      by sorry
+    qed
+  next
+    case split_case_3
+    by contradiction /* from formulas */
+  next
+    case split_case_4
+    solve( !KU( h((h(k0)⊕h((~r1⊕h(k0))))) ) @ #vk )
+      case c_h
+      solve( !KU( (h(k0)⊕h((~r1⊕h(k0)))) ) @ #vk.2 )
+        case c_xor
+        by contradiction /* from formulas */
+      next
+        case coerce
+        solve( !KD( (h(k0)⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.1 )
+          case acceptreaderNew
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        next
+          case acceptreaderOld
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
+        next
+          case initiatereader
+          by contradiction /* impossible chain */
+        next
+          case tag1
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by contradiction /* impossible chain */
+          next
+            case d_0_snd
+            by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+          qed
+        qed
+      qed
+    next
+      case tag1
+      solve( splitEqs(3) )
+        case split_case_1
+        solve( !KU( (~r1.1⊕h(k0)) ) @ #vk.2 )
+          case c_xor
+          by contradiction /* from formulas */
+        next
+          case coerce
+          solve( !KD( (~r1.1⊕h(k0)) ) ▶₀ #vk.1 )
+            case acceptreaderNew
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case acceptreaderOld
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
             next
-              case tag1
-              by sorry
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
             qed
           qed
         qed
       next
-        case tag1
-        by sorry
+        case split_case_2
+        solve( !KU( (~r1.1⊕h((~r1⊕h(k0)))) ) @ #vk.2 )
+          case c_xor
+          solve( !KU( ~r1.1 ) @ #vk.4 )
+            case tag1
+            by contradiction /* cyclic */
+          qed
+        next
+          case coerce
+          solve( !KD( (~r1.1⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.1 )
+            case acceptreaderNew
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case acceptreaderOld
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_3
+        solve( !KU( (~r1.1⊕h(k0)⊕h(k0.1)⊕h((~r1⊕h(k0)))) ) @ #vk.2 )
+          case c_xor_case_1
+          by contradiction /* from formulas */
+        next
+          case c_xor_case_2
+          by contradiction /* from formulas */
+        next
+          case c_xor_case_3
+          solve( !KU( (~r1.1⊕h((~r1⊕h(k0)))) ) @ #vk.3 )
+            case c_xor
+            solve( !KU( ~r1.1 ) @ #vk.6 )
+              case tag1
+              by contradiction /* cyclic */
+            qed
+          next
+            case coerce
+            solve( !KD( (~r1.1⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.2 )
+              case acceptreaderNew
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case acceptreaderOld
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_4
+          solve( !KU( ~r1.1 ) @ #vk.4 )
+            case tag1
+            by contradiction /* cyclic */
+          qed
+        next
+          case c_xor_case_5
+          solve( !KU( (h(k0)⊕h((~r1⊕h(k0)))) ) @ #vk.3 )
+            case c_xor
+            by contradiction /* from formulas */
+          next
+            case coerce
+            solve( !KD( (h(k0)⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.2 )
+              case acceptreaderNew
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case acceptreaderOld
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_6
+          solve( !KU( (h(k0.1)⊕h((~r1⊕h(k0)))) ) @ #vk.3 )
+            case c_xor
+            by contradiction /* from formulas */
+          next
+            case coerce
+            solve( !KD( (h(k0.1)⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.2 )
+              case acceptreaderNew
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case acceptreaderOld
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_7
+          solve( !KU( h((~r1⊕h(k0))) ) @ #vk.3 )
+            case c_h
+            solve( !KU( (~r1.1⊕h(k0)⊕h(k0.1)) ) @ #vk.4 )
+              case c_xor_case_1
+              by contradiction /* from formulas */
+            next
+              case c_xor_case_2
+              solve( !KU( ~r1.1 ) @ #vk.7 )
+                case tag1
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_xor_case_3
+              by contradiction /* from formulas */
+            next
+              case coerce
+              solve( !KD( (~r1.1⊕h(k0)⊕h(k0.1)) ) ▶₀ #vk.3 )
+                case acceptreaderNew
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case acceptreaderOld
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case tag1
+            solve( !KU( (~r1.1⊕h(k0)⊕h(k0.1)) ) @ #vk.4 )
+              case c_xor_case_1
+              by contradiction /* from formulas */
+            next
+              case c_xor_case_2
+              solve( !KU( ~r1.1 ) @ #vk.7 )
+                case tag1
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_xor_case_3
+              by contradiction /* from formulas */
+            next
+              case coerce
+              solve( !KD( (~r1.1⊕h(k0)⊕h(k0.1)) ) ▶₀ #vk.3 )
+                case acceptreaderNew
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case acceptreaderOld
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.7, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~r1.1⊕h(k0)⊕h(k0.1)⊕h((~r1⊕h(k0)))) ) ▶₀ #vk.1 )
+            case acceptreaderNew
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case acceptreaderOld
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
       qed
     qed
   next
-    case acceptreaderOld
+    case split_case_5
     by sorry
   next
-    case c_h
+    case split_case_6
     by sorry
   next
-    case tag1
+    case split_case_7
+    by sorry
+  next
+    case split_case_8
     by sorry
   qed
 qed

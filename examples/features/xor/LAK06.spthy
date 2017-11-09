@@ -64,7 +64,7 @@ lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
-// PROVEN, autoproof (~3 minute CPU)
+// PROVEN, autoproof (~49 minutes CPU)
 // Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
 // Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma noninjectiveagreementTAG[use_induction]:

@@ -124,8 +124,8 @@ restriction onylOnce:
 // PROVEN, quick manual proof that could be automatized very easily.
 // AUTOPROOF with associated oracle (LAK_state-oracle)
 // --> only prioritize ReaderK() and TagK() goals and then full auto mode,
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
   "All k r #i. 
      Key(k, r)@i ==>
@@ -133,8 +133,8 @@ lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has bee
         // | (Ex #j. Create(k, r)@j & #j < #i))"
 
 // PROVEN, instant autoproof
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
   "(All k r #i. ((Key(k, r)@i ==> Ex k0. k = h(k0))))
  & (All k r #i. ((Update(k, r)@i ==> Ex k0. k = h(k0))))"
@@ -160,35 +160,36 @@ lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
 //         ( (Ex #j. Update(k, r)@j & #j < #i)
 //         | (Ex #j. Create(k, r)@j & #j < #i))"
 
-// WIP on a manual proof: extremely long and hard to automate (see associated oracle)
-// Confident that it is possible (it seems that I went through all possible cases, but there are so many redundant sub-proofs....)
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
-lemma helpingSecrecy[use_induction, reuse]:	              // I thought this lemma would be easy to prove. It is not.
+// PROVEN, semi-manual proof: quite long but a lot of sub-cases can be proved auto. using the associated oracle
+// It seems that the oracle could be improved a lot, but I don't have much hope to get a fully automatic proof (see comments in the oracle file)
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma helpingSecrecy[use_induction, reuse]:
   "All k r #i. Key(k, r)@i ==> not(Ex #j. KU(k)@j)"
 
 // PROVEN, manual proof (straightforward), see associated file
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
-// Note: Strangely complicated by helping lemmas. More goals are available (that's expected) but more goals HAVE to be proved
-// before Tamarin considers having found a valid trace.
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// Note: The proof gets strangely more complex because of helping lemmas.
+// More goals are available (that's expected) but more goals HAVE to be proved
+// before Tamarin considers having found a valid trace. Weird for an executability lemma.
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// (proof almost done), quite long pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu()) See associated file.
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
+// WIP (proof almost done), quite long pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically (trick: use 'b' before big case distinctions caused by splitEqu()) See associated file.
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
-// FALSIFIED, pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically, see asociated file
+// WIP FALSIFIED, pseudo-manual proof with the oracle: a lot of sub-sub-cases are dealt with automatically, see asociated file
 // Idea to automate: deal with Update (always go to setup)
-// Git revision: 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, branch: develop
-// Compiled at: 2017-11-07 13:11:28.528887 UTC
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
