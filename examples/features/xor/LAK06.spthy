@@ -49,32 +49,51 @@ rule accepttag:
   [ ]
 
 
-// PROVEN, quick autoproof
-// (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// PROVEN, instant autoproof
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN, quick autoproof
-// (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// PROVEN, instant autoproof
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
-// PROVEN, quick autoproof
-// (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e)
-// ??? in current
+// PROVEN, autoproof (~3 minute CPU)
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
 // FALSIFIED, quick autoproof
-// (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 lemma noninjectiveagreementREADER[use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
     ==> (Ex #j. Running(<'R','T',t>) @j)"
+
+// Total time (--prove) for
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// ==============================================================================
+// summary of summaries:
+
+// analyzed: build09_LAK06_3600.spthy
+
+//   executable (exists-trace): verified (9 steps)
+//   helpingSecrecy (all-traces): verified (2 steps)
+//   noninjectiveagreementTAG (all-traces): verified (2148 steps)
+//   noninjectiveagreementREADER (all-traces): falsified - found trace (13 steps)
+
+// ==============================================================================
+// tamarin-prover --prove build09_LAK06_3600.spthy  3094.16s user 411.29s system 2617% cpu 2:13.90 total
 
 end
