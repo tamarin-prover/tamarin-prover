@@ -1,4 +1,4 @@
-theory KCL07_untrac begin
+theory KCL07_untrac_weak begin
 
 builtins: xor, hashing, multiset
 
@@ -92,6 +92,7 @@ lemma executable:
 // 8265b38c9c418d1c0940fece192d673ce45bc9e4, branch: develop
 // Compiled at: 2017-11-02
 // FALSIFIED, attack found MANUALLY on (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf), stored as KCL07-untrac-weak-attack.spthy
+// FALSIFIED, attack found AUTOMATICALLY (from partially pre-solved path to restrict to interesting part) on (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488), stored as KCL07-untrac-weak-attack.spthy
 // Observational_equivalence lemma
 
 end
