@@ -116,6 +116,8 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
+/* All well-formedness checks were successful. */
+
 diffLemma Observational_equivalence:
 rule-equivalence
   case Rule_Destrd_0_fst
@@ -135,9 +137,6 @@ next
     case LHS
     step( simplify )
     step( solve( !KD( x ) ▶₁ #i ) )
-      case reader1
-      by sorry
-    next
       case tag1
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case d_0_fst
@@ -166,60 +165,40 @@ next
                               step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.1 ) )
                                 case tag1
                                 step( solve( (#vl.2, 0) ~~> (#vk.1, 0) ) )
-                                  case d_0_fst
-                                  step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
-                                    case setup_case_1
-                                    step( solve( (#vr.6, 0) ~~> (#vk.1, 0) ) )
-                                      case d_xor_case_2
-                                      step( solve( (#vr.7, 0) ~~> (#vk.1, 0) ) )
-                                        case Xor
-                                        step( solve( !KU( (~id⊕~z) ) @ #vk.4 ) )
-                                          case coerce
-                                          step( solve( !KD( (~id⊕~z) ) ▶₀ #vk.2 ) )
-                                            case tag1
-                                            step( solve( (#vl.2, 0) ~~> (#vk.2, 0) ) )
-                                              case d_0_snd
-                                              step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
-                                                case d_xor_case_1
-                                                step( solve( (#vr.10, 0) ~~> (#vk.2, 0) ) )
-                                                  case Xor
-                                                  step( solve( !KU( (~id⊕h(<r1.1, ~k>))
-                                                               ) @ #vk.5 ) )
-                                                    case coerce
-                                                    step( solve( !KD( (~id⊕h(<r1.1, ~k>))
-                                                                 ) ▶₀ #vk.3 ) )
-                                                      case tag1
-                                                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                                                        case d_0_fst
-                                                        step( solve( TagRun( ~k.1, ~id.1
-                                                                     ) ▶₂ #vr.10 ) )
-                                                          case setup_case_1
-                                                          step( solve( (#vr.10, 0) ~~> (#vk.3, 0) ) )
-                                                            case d_xor_case_1
-                                                            step( solve( (#vr.11, 0) ~~> (#vk.3, 0) ) )
-                                                              case Xor
-                                                              step( solve( !KU( (~r2⊕h(<r1.1, ~k>))
-                                                                           ) @ #vk.6 ) )
-                                                                case coerce
-                                                                step( solve( !KD( (~r2⊕h(<r1.1, ~k>)
-                                                                                  )
-                                                                             ) ▶₀ #vk.4 ) )
-                                                                  case tag1
-                                                                  step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                                                                    case d_0_snd
-                                                                    step( solve( (#vr.13, 0) ~~> (#vk.4, 0) ) )
-                                                                      case Xor
-                                                                      step( solve( !KU( r1
-                                                                                   ) @ #vk.5 ) )
-                                                                        case c_zero
-                                                                        step( solve( !KU( zero
-                                                                                     ) @ #vk.5 ) )
-                                                                          case c_zero
-                                                                          by ATTACK // trace found
-                                                                        qed
-                                                                      qed
-                                                                    qed
-                                                                  qed
+                                  case d_0_snd
+                                  step( solve( (#vr.7, 0) ~~> (#vk.1, 0) ) )
+                                    case d_xor_case_1
+                                    step( solve( (#vr.8, 0) ~~> (#vk.1, 0) ) )
+                                      case Xor_case_1
+                                      step( solve( !KU( (~r2⊕h(<r1.1, ~k>)) ) @ #vk.4 ) )
+                                        case coerce
+                                        step( solve( !KD( (~r2⊕h(<r1.1, ~k>)) ) ▶₀ #vk.2 ) )
+                                          case tag1
+                                          step( solve( (#vl.2, 0) ~~> (#vk.2, 0) ) )
+                                            case d_0_snd
+                                            step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
+                                              case Xor
+                                              step( solve( !KU( r1 ) @ #vk.3 ) )
+                                                case c_fst
+                                                step( solve( !KU( fst(x) ) @ #vk.3 ) )
+                                                  case c_fst
+                                                  step( solve( !KU( x ) @ #vk.4 ) )
+                                                    case c_fst
+                                                    step( solve( !KU( fst(x) ) @ #vk.4 ) )
+                                                      case c_fst
+                                                      step( solve( !KU( x ) @ #vk.5 ) )
+                                                        case c_fst
+                                                        step( solve( !KU( fst(x) ) @ #vk.5 ) )
+                                                          case c_fst
+                                                          step( solve( !KU( x ) @ #vk.6 ) )
+                                                            case c_fst
+                                                            step( solve( !KU( fst(x) ) @ #vk.6 ) )
+                                                              case c_fst
+                                                              step( solve( !KU( x ) @ #vk.7 ) )
+                                                                case c_zero
+                                                                step( solve( !KU( zero ) @ #vk.7 ) )
+                                                                  case c_zero
+                                                                  by ATTACK // trace found
                                                                 qed
                                                               qed
                                                             qed
@@ -248,22 +227,7 @@ next
               qed
             qed
           qed
-        next
-          case setup_case_2
-          by sorry
         qed
-      next
-        case d_0_snd
-        by sorry
-      next
-        case pair
-        by sorry
-      next
-        case pair_case_1
-        by sorry /* unannotated */
-      next
-        case pair_case_2
-        by sorry /* unannotated */
       qed
     qed
   next
@@ -287,7 +251,5 @@ next
   case Rule_tag1
   by sorry
 qed
-
-/* All well-formedness checks were successful. */
 
 end
