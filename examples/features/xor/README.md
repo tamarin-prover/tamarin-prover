@@ -74,4 +74,3 @@ Property: weak UK of tag:
 	   
  ==============================================================================
  ~/.local/bin/tamarin-prover --prove=Observ  --diff +RTS -N14 -RTS  675.47s user 109.34s system 906% cpu 1:26.59 total
-	   
