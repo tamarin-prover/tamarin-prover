@@ -332,7 +332,7 @@ analyzing: examples/features/xor/NSLPK3xor.spthy
 analyzed: examples/features/xor/NSLPK3xor.spthy
 
   output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 4.154489s
+  processing time: 2.928896s
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
   injective_agree (all-traces): falsified - found trace (13 steps)
@@ -346,7 +346,7 @@ summary of summaries:
 analyzed: examples/features/xor/NSLPK3xor.spthy
 
   output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 4.154489s
+  processing time: 2.928896s
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
   injective_agree (all-traces): falsified - found trace (13 steps)

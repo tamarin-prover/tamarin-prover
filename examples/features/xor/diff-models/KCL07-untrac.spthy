@@ -102,9 +102,7 @@ lemma executable:
                    ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
                    ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
 
-// ??? CURRENT VERSION?
-// MANUAL EXPLORATION (2017-03-23) shows loop (increasing DG) on Rule_Equality
-// (2017-11-01) It seems that I cannot instantiate the value to be compared in rule-equality as a xor-term?!?
+// ATTACK FOUND MANUALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 // Observational_equivalence lemma
 
 end

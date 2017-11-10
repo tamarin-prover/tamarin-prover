@@ -147,6 +147,8 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
+/* All well-formedness checks were successful. */
+
 diffLemma Observational_equivalence:
 rule-equivalence
   case Rule_Destrd_0_fst
@@ -178,576 +180,255 @@ next
         case select_tag
         step( solve( Tag( (z.1+<~k, ~id>) ) ▶₀ #vr.1 ) )
           case Setup
-          by sorry
-        next
-          case select_tag
-          step( solve( Tag( (z.1+<~k, ~id>+<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
-            case Setup
-            step( solve( !KU( r1 ) @ #vk.1 ) )
-              case c_fst
-              by sorry
-            next
-              case c_h
-              by sorry
-            next
-              case c_pair
-              by sorry
-            next
-              case c_snd
-              by sorry
-            next
-              case c_union
-              by sorry
-            next
-              case c_xor_case_1
-              by sorry
-            next
-              case c_xor_case_2
-              by sorry
-            next
-              case c_zero
-              by sorry
-            next
-              case coerce
-              by sorry
-            next
+          step( solve( !KU( r1 ) @ #vk.1 ) )
+            case c_fst
+            by sorry
+          next
+            case c_h
+            by sorry
+          next
+            case c_pair
+            by sorry
+          next
+            case c_snd
+            by sorry
+          next
+            case c_union
+            by sorry
+          next
+            case c_xor
+            by sorry
+          next
+            case c_zero
+            by sorry
+          next
+            case coerce
+            by sorry
+          next
+            case fresh
+            step( solve( !KU( ~x.1 ) @ #vk ) )
               case fresh
-              step( solve( !KU( ~x.1 ) @ #vk ) )
-                case fresh
-                step( solve( splitEqs(0) ) )
-                  case split
-                  step( solve( !KU( x ) @ #vk.1 ) )
-                    case c_fst
-                    by step( contradiction )
-                  next
-                    case c_h
+              step( solve( splitEqs(0) ) )
+                case split
+                step( solve( (#vl, 0) ~~> (#i, 1) ) )
+                  case d_0_fst
+                  by sorry
+                next
+                  case d_0_snd
+                  step( solve( (#vr.3, 0) ~~> (#i, 1) ) )
+                    case Xor
                     by sorry
                   next
-                    case c_pair
+                    case d_xor_case_1
                     by sorry
                   next
-                    case c_snd
-                    by step( contradiction )
-                  next
-                    case c_union
-                    by step( contradiction )
-                  next
-                    case c_xor_case_1
-                    by sorry
-                  next
-                    case c_xor_case_2
-                    by sorry
-                  next
-                    case c_zero
-                    by step( contradiction )
-                  next
-                    case coerce
-                    step( solve( !KD( x ) ▶₀ #vk.1 ) )
-                      case reader1
+                    case d_xor_case_2
+                    step( solve( !KU( (~r2⊕z) ) @ #vk.2 ) )
+                      case c_xor
                       by sorry
                     next
-                      case tag1
-                      step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.4 ) )
-                        case select_tag
-                        step( solve( Tag( (z.1+<~k.1, ~id.1>) ) ▶₀ #vr.5 ) )
-                          case Setup
-                          step( solve( !KU( r1 ) @ #vk.2 ) )
-                            case c_fst
-                            by sorry
-                          next
-                            case c_h
-                            by sorry
-                          next
-                            case c_pair
-                            by sorry
-                          next
-                            case c_snd
-                            by sorry
-                          next
-                            case c_union
-                            by sorry
-                          next
-                            case c_xor_case_1
-                            by sorry
-                          next
-                            case c_xor_case_2
-                            by sorry
-                          next
-                            case c_zero
-                            by sorry
-                          next
-                            case coerce
-                            by sorry
-                          next
-                            case fresh
-                            step( solve( !KU( ~x.2 ) @ #vk.2 ) )
-                              case fresh
-                              step( solve( splitEqs(2) ) )
-                                case split
-                                step( solve( (#vl, 0) ~~> (#i, 1) ) )
-                                  case d_0_fst
-                                  step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
-                                    case Xor_case_1
+                      case coerce
+                      step( solve( !KD( (~r2⊕z) ) ▶₀ #vk.1 ) )
+                        case reader1
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case tag1
+                        step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.5 ) )
+                          case select_tag
+                          step( solve( Tag( (z.2+<~k.1, ~id.1>) ) ▶₀ #vr.6 ) )
+                            case Setup
+                            step( solve( (#vl, 0) ~~> (#vk.1, 0) ) )
+                              case d_0_fst
+                              step( solve( (#vr.5, 0) ~~> (#vk.1, 0) ) )
+                                case Xor
+                                step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                                  case Xor
+                                  step( solve( !KU( (~id⊕h(<~x, ~k>)) ) @ #vk.2 ) )
+                                    case c_xor
                                     by sorry
                                   next
-                                    case Xor_case_2
-                                    by sorry
-                                  next
-                                    case d_xor_case_01
-                                    step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
-                                      case Xor_case_1
-                                      step( solve( !KU( (~r2⊕z) ) @ #vk.3 ) )
-                                        case c_xor_case_01
-                                        by sorry
-                                      next
-                                        case c_xor_case_02
-                                        by sorry
-                                      next
-                                        case c_xor_case_03
-                                        by sorry
-                                      next
-                                        case c_xor_case_04
-                                        by sorry
-                                      next
-                                        case c_xor_case_05
-                                        by sorry
-                                      next
-                                        case c_xor_case_06
-                                        by sorry
-                                      next
-                                        case c_xor_case_07
-                                        by sorry
-                                      next
-                                        case c_xor_case_08
-                                        by sorry
-                                      next
-                                        case c_xor_case_09
-                                        by sorry
-                                      next
-                                        case c_xor_case_10
-                                        by sorry
-                                      next
-                                        case c_xor_case_11
-                                        by sorry
-                                      next
-                                        case c_xor_case_12
-                                        by sorry
-                                      next
-                                        case c_xor_case_13
-                                        by sorry
-                                      next
-                                        case c_xor_case_14
-                                        by sorry
-                                      next
-                                        case c_xor_case_15
-                                        by sorry
-                                      next
-                                        case c_xor_case_16
-                                        by sorry
-                                      next
-                                        case c_xor_case_17
-                                        by sorry
-                                      next
-                                        case c_xor_case_18
-                                        by sorry
-                                      next
-                                        case c_xor_case_19
-                                        by sorry
-                                      next
-                                        case c_xor_case_20
-                                        by sorry
-                                      next
-                                        case c_xor_case_21
-                                        by sorry
-                                      next
-                                        case c_xor_case_22
-                                        by sorry
-                                      next
-                                        case c_xor_case_23
-                                        by sorry
-                                      next
-                                        case c_xor_case_24
-                                        by sorry
-                                      next
-                                        case coerce
-                                        step( solve( !KD( (~r2⊕z) ) ▶₀ #vk.3 ) )
-                                          case reader1
-                                          by step( contradiction /* impossible chain */ )
+                                    case coerce
+                                    step( solve( !KD( (~id⊕h(<~x, ~k>)) ) ▶₀ #vk.2 ) )
+                                      case reader1
+                                      by step( contradiction /* impossible chain */ )
+                                    next
+                                      case tag1
+                                      step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
+                                        case select_tag
+                                        step( solve( Tag( (z.1+<~k.1, ~id.1>) ) ▶₀ #vr.7 ) )
+                                          case Setup
+                                          by sorry
                                         next
-                                          case tag1
-                                          step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
-                                            case d_0_fst
-                                            by sorry
-                                          next
-                                            case d_0_snd
-                                            step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                                              case d_0_fst
+                                          case select_tag
+                                          step( solve( Tag( (z.1+<~k.1, ~id.1>+<~k.2, ~id.2>)
+                                                       ) ▶₀ #vr.8 ) )
+                                            case Setup
+                                            step( solve( !KU( r1 ) @ #vk.3 ) )
+                                              case c_fst
                                               by sorry
                                             next
-                                              case d_0_snd
-                                              step( solve( (#vr.9, 0) ~~> (#vk.3, 0) ) )
-                                                case Xor_case_1
-                                                step( solve( (#vr.7, 0) ~~> (#vk.1, 0) ) )
-                                                  case d_xor_case_01
+                                              case c_h
+                                              by sorry
+                                            next
+                                              case c_pair
+                                              by sorry
+                                            next
+                                              case c_snd
+                                              by sorry
+                                            next
+                                              case c_union
+                                              by sorry
+                                            next
+                                              case c_xor
+                                              by sorry
+                                            next
+                                              case c_zero
+                                              by sorry
+                                            next
+                                              case coerce
+                                              by sorry
+                                            next
+                                              case fresh
+                                              step( solve( !KU( ~x.1 ) @ #vk.3 ) )
+                                                case fresh
+                                                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                                                  case d_0_fst
                                                   by sorry
                                                 next
-                                                  case d_xor_case_02
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_03
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_04
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_05
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_06
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_07
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_08
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_09
-                                                  step( solve( (#vr.9, 0) ~~> (#vk.1, 0) ) )
-                                                    case Xor_case_1
-                                                    step( solve( !KU( (~id⊕~r2.1) ) @ #vk.3 ) )
-                                                      case c_xor_case_1
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_2
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_3
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_4
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_5
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_6
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_7
-                                                      by sorry
-                                                    next
-                                                      case c_xor_case_8
+                                                  case d_0_snd
+                                                  step( solve( (#vr.8, 0) ~~> (#vk.2, 0) ) )
+                                                    case d_xor_case_1
+                                                    by sorry
+                                                  next
+                                                    case d_xor_case_2
+                                                    step( solve( !KU( (~r2.1⊕z.1) ) @ #vk.4 ) )
+                                                      case c_xor
                                                       by sorry
                                                     next
                                                       case coerce
-                                                      step( solve( !KD( (~id⊕~r2.1) ) ▶₀ #vk.3 ) )
+                                                      step( solve( !KD( (~r2.1⊕z.1) ) ▶₀ #vk.4 ) )
                                                         case reader1
                                                         by step( contradiction
                                                                  /* impossible chain */ )
                                                       next
                                                         case tag1
-                                                        step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                                                          case d_0_fst
-                                                          step( solve( splitEqs(13) ) )
-                                                            case split_case_1
-                                                            by step( contradiction
-                                                                     /* impossible chain */ )
+                                                        step( solve( TagRun( ~k.1, ~id.1
+                                                                     ) ▶₂ #vr.10 ) )
+                                                          case select_tag
+                                                          step( solve( Tag( (z.3+<~k.1, ~id.1>)
+                                                                       ) ▶₀ #vr.11 ) )
+                                                            case Setup
+                                                            by sorry
                                                           next
-                                                            case split_case_2
-                                                            step( solve( (#vr.11, 0) ~~> (#vk.3, 0) ) )
-                                                              case Xor_case_1
-                                                              step( solve( !KU( (~id⊕~r2.1)
-                                                                           ) @ #vk.3 ) )
-                                                                case coerce
-                                                                step( solve( !KU( (~r2⊕h(<~x, ~k>))
-                                                                             ) @ #vk.2 ) )
-                                                                  case coerce
-                                                                  step( solve( !KU( (~id⊕h(<~x, ~k>)
-                                                                                    )
-                                                                               ) @ #vk.1 ) )
-                                                                    case coerce
+                                                            case select_tag
+                                                            step( solve( Tag( (z.3+<~k.1, ~id.1>+
+                                                                               <~k.2, ~id.2>)
+                                                                         ) ▶₀ #vr.12 ) )
+                                                              case Setup
+                                                              step( solve( (#vl.1, 0) ~~> (#vk.4, 0) ) )
+                                                                case d_0_fst
+                                                                step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
+                                                                  case Xor
+                                                                  step( solve( (#vr.10, 0) ~~> (#vk.3, 0) ) )
+                                                                    case Xor
                                                                     by ATTACK // trace found
+                                                                  next
+                                                                    case d_xor_case_1
+                                                                    by sorry
+                                                                  next
+                                                                    case d_xor_case_2
+                                                                    by sorry
+                                                                  next
+                                                                    case d_xor_case_3
+                                                                    by step( contradiction
+                                                                             /* impossible chain
+                                                                             */ )
+                                                                  next
+                                                                    case d_xor_case_4
+                                                                    by step( contradiction
+                                                                             /* impossible chain
+                                                                             */ )
                                                                   qed
                                                                 qed
+                                                              next
+                                                                case d_0_snd
+                                                                by sorry
                                                               qed
                                                             next
-                                                              case Xor_case_2
-                                                              by sorry
-                                                            next
-                                                              case Xor_case_3
-                                                              by sorry
-                                                            next
-                                                              case Xor_case_4
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_01
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_02
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_03
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_04
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_05
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_06
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_07
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_08
-                                                              by sorry
-                                                            next
-                                                              case d_xor_case_09
+                                                              case select_tag
                                                               by step( contradiction
-                                                                       /* impossible chain */ )
-                                                            next
-                                                              case d_xor_case_10
-                                                              by step( contradiction
-                                                                       /* impossible chain */ )
+                                                                       /* from formulas */ )
                                                             qed
                                                           qed
-                                                        next
-                                                          case d_0_snd
-                                                          by sorry
                                                         qed
                                                       qed
                                                     qed
                                                   next
-                                                    case Xor_case_2
-                                                    by sorry
+                                                    case d_xor_case_3
+                                                    by step( contradiction /* impossible chain */ )
                                                   next
-                                                    case Xor_case_3
-                                                    by sorry
-                                                  next
-                                                    case Xor_case_4
-                                                    by sorry
-                                                  next
-                                                    case Xor_case_5
-                                                    by sorry
-                                                  next
-                                                    case Xor_case_6
-                                                    by sorry
-                                                  next
-                                                    case Xor_case_7
-                                                    by sorry
-                                                  next
-                                                    case Xor_case_8
-                                                    by sorry
+                                                    case d_xor_case_4
+                                                    by step( contradiction /* impossible chain */ )
                                                   qed
-                                                next
-                                                  case d_xor_case_10
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_11
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_12
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_13
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_14
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_15
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_16
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_17
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_18
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_19
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_20
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_21
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_22
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_23
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_24
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_25
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_26
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_27
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_28
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_29
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_30
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_31
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_32
-                                                  by sorry
-                                                next
-                                                  case d_xor_case_33
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_34
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_35
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_36
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_37
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_38
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_39
-                                                  by step( contradiction /* impossible chain */ )
-                                                next
-                                                  case d_xor_case_40
-                                                  by step( contradiction /* impossible chain */ )
                                                 qed
-                                              next
-                                                case Xor_case_2
-                                                by sorry
-                                              next
-                                                case Xor_case_3
-                                                by sorry
-                                              next
-                                                case Xor_case_4
-                                                by sorry
-                                              next
-                                                case d_xor_case_01
-                                                by sorry
-                                              next
-                                                case d_xor_case_02
-                                                by sorry
-                                              next
-                                                case d_xor_case_03
-                                                by sorry
-                                              next
-                                                case d_xor_case_04
-                                                by sorry
-                                              next
-                                                case d_xor_case_05
-                                                by sorry
-                                              next
-                                                case d_xor_case_06
-                                                by sorry
-                                              next
-                                                case d_xor_case_07
-                                                by sorry
-                                              next
-                                                case d_xor_case_08
-                                                by sorry
-                                              next
-                                                case d_xor_case_09
-                                                by step( contradiction /* impossible chain */ )
-                                              next
-                                                case d_xor_case_10
-                                                by sorry
                                               qed
+                                            next
+                                              case pub
+                                              by sorry
                                             qed
+                                          next
+                                            case select_tag
+                                            by step( contradiction /* from formulas */ )
                                           qed
                                         qed
                                       qed
-                                    next
-                                      case Xor_case_2
-                                      by sorry
                                     qed
-                                  next
-                                    case d_xor_case_02
-                                    by sorry
-                                  next
-                                    case d_xor_case_03
-                                    by sorry
-                                  next
-                                    case d_xor_case_04
-                                    by sorry
-                                  next
-                                    case d_xor_case_05
-                                    by sorry
-                                  next
-                                    case d_xor_case_06
-                                    by sorry
-                                  next
-                                    case d_xor_case_07
-                                    by sorry
-                                  next
-                                    case d_xor_case_08
-                                    by sorry
-                                  next
-                                    case d_xor_case_09
-                                    by sorry
-                                  next
-                                    case d_xor_case_10
-                                    by sorry
                                   qed
-                                next
-                                  case d_0_snd
-                                  by sorry
-                                next
-                                  case pair
-                                  by sorry
                                 qed
+                              next
+                                case d_xor_case_1
+                                by sorry
+                              next
+                                case d_xor_case_2
+                                by sorry
+                              next
+                                case d_xor_case_3
+                                by step( contradiction /* impossible chain */ )
+                              next
+                                case d_xor_case_4
+                                by step( contradiction /* impossible chain */ )
                               qed
+                            next
+                              case d_0_snd
+                              by sorry
                             qed
                           next
-                            case pub
+                            case select_tag
                             by sorry
                           qed
-                        next
-                          case select_tag
-                          by sorry
                         qed
                       qed
                     qed
                   next
-                    case fresh
+                    case d_xor_case_3
                     by sorry
                   next
-                    case pub
-                    by step( contradiction )
+                    case d_xor_case_4
+                    by sorry
                   qed
+                next
+                  case pair
+                  by sorry
                 qed
               qed
-            next
-              case pub
-              by sorry
             qed
           next
-            case select_tag
-            by step( contradiction )
+            case pub
+            by sorry
           qed
+        next
+          case select_tag
+          by sorry
         qed
       qed
     qed
@@ -774,7 +455,5 @@ next
   case Rule_tag1
   by sorry
 qed
-
-/* All well-formedness checks were successful. */
 
 end
