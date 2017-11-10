@@ -65,7 +65,7 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( splitEqs(0) )
-  case split_case_1
+  case split
   solve( !KU( (~a⊕~b) ) @ #vk )
     case coerce
     solve( !KD( (~a⊕~b) ) ▶₀ #vk )
@@ -113,7 +113,7 @@ analyzing: examples/features/xor/basicfunctionality/xor3.spthy
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.323552s
+  processing time: 0.168328s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.323552s
+  processing time: 0.168328s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ==============================================================================

@@ -42,12 +42,15 @@ guarded formula characterizing all satisfying traces:
 */
 simplify
 solve( splitEqs(0) )
-  case split_case_2
-  solve( !KU( ~b ) @ #vk.1 )
-    case challenge
-    solve( !KU( ~a ) @ #vk.2 )
+  case split
+  solve( !KU( (~a⊕~b) ) @ #vk )
+    case c_xor
+    solve( !KU( ~b ) @ #vk.1 )
       case challenge
-      SOLVED // trace found
+      solve( !KU( ~a ) @ #vk.2 )
+        case challenge
+        SOLVED // trace found
+      qed
     qed
   qed
 qed
@@ -69,8 +72,8 @@ analyzing: examples/features/xor/basicfunctionality/xor0.spthy
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.117374s
-  crworks (exists-trace): verified (5 steps)
+  processing time: 0.046275s
+  crworks (exists-trace): verified (6 steps)
 
 ------------------------------------------------------------------------------
 
@@ -80,8 +83,8 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.117374s
-  crworks (exists-trace): verified (5 steps)
+  processing time: 0.046275s
+  crworks (exists-trace): verified (6 steps)
 
 ==============================================================================
 */

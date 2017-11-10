@@ -213,14 +213,17 @@ XOR_DIFF_CASE_STUDIES= CH07-untrac-weak.spthy
 # CH07-untrac.spthy LAK06_UK-weak.spthy LAK06_UK.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
-# In separate folders, so does not work for now: XOR_TARGETS= $(XOR_TRACE_TARGETS)  $(XOR_DIFF_TARGETS)
-
 # XOR case studies
 xor-trace-case-studies:	$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
 
 xor-diff-case-studies:	$(XOR_DIFF_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/diff-models/*.spthy
+
+XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_DIFF_TARGETS)
+
+xor-full-case-studies: $(XOR_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
 
 # XOR is for now NOT YET part of the overall set of case-studies
 
