@@ -79,15 +79,7 @@ lemma executable:
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN, quick autoproof (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
-lemma helpingSecrecy[reuse]:
-  "All k #i. 
-     Create(k)@i ==> not(Ex #j. K(k)@j)"
-
-// PROVEN, autoproof, in small parts, sub-case by sub-case (memory issue otherwise?!?)
-// Using (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf) below, with 14 threads:
-// All cases verify quickly except for: Rule_accepttag and Rule_Equality
-// Rule_equality takes about 5 minutes real time (~ 1 hour CPU).
-// Rule_accepttag takes 1800 min CPU, about 4 hours real time! (stored locally as LAK06_UK_weak-proof-Rule_accepttag.spthy)
-
+// PROVEN, autoproof in (744.60s CPU time)
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
 end
