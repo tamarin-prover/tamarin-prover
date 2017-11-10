@@ -95,9 +95,7 @@ restriction max_number_of_tags_tag_reader:
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// AUTOMATIC PROOF NOT WORKING ON BOTH
-// MANUAL SEARCH FINDS TRACE (2017-11-01, aa65be43cd4965ffa1c51a991d9139e98ec1662e) ON BOTH, see KCL07-untrac-manualexecution.spthy
-// MANUAL EXPLORATION FINDS TRACE (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) on LEFT, see KCL07-untrac-manual-execution-left.spthy [should be similar for right]
+// MANUAL EXPLORATION FINDS TRACE (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) on BOTH, see KCL07-untrac-manual-execution-left.spthy and KCL07-untrac-manual-execution-left.spthy
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
                    // only one of each wanted for executability

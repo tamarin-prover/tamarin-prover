@@ -34,6 +34,19 @@ if lemma == "recentalive_tag":
     else:
       rank[5].append(num)
 
+if lemma == "Observational_equivalence":
+  # only prioritize TagRun() and Tag() goals, otherwise standard auto
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*TagRun\(.*', line):
+      rank[40].append(num)
+    elif re.match('.*Tag\(.*', line):
+      rank[20].append(num)
+    else:
+      rank[5].append(num)
+
 
 elif lemma == "executable":
   # ???
