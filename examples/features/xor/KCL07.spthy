@@ -65,7 +65,7 @@ restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
 
-// PROOF FOUND AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf, stored as KCL07-manualproof.spthy is obsolete)
+// PROOF FOUND AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
