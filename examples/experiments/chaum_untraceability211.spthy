@@ -1,0 +1,103 @@
+theory Chaum_Untraceability211
+begin
+
+
+/*
+ * Protocol: Chaum's On-line Protocol
+ * Modeler: Charles Duménil
+ * Date: July 2016	
+ * Source: Formal Analysis of E-Cash Protocols by Jannik Dreier, Ali Kassem and Pascal Lafourcade
+ * Status: working
+ */
+
+
+/*
+  Protocol Chaum {                          ( Seller and bank are considered corrupted )
+    Withdrawal phase
+     C -> B: blind(x,r)                                            " c1(x1,x3) & c2(x2,x4) "
+     B -> C: sign(blind(x,r),skB)    "Withdraw"
+    Payment and deposit phase
+     C -> S: <x, sign(x,skB)>        "Check signature"             " Out( x1, x2, diff( x3, x4 ) ) "
+     S -> B: <x, sign(x,skB)>        "Check signature" 
+     B -> S: Private(x)              "Check signature" + "Deposit"
+     S     :                         "Spend"
+  }
+*/
+
+// This version changes one party spending two coins into each of them spending one coin only. See the examples/post17 folder for the usual 2+1 for 1+2 instead.
+
+functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
+equations: checksign( sign(m,k),pk(k) ) = m,
+           unblind( blind(m,r),r ) = m,
+           unblind( sign(blind(m,r),k),r ) = sign(m,k)
+
+
+// Public key infrastructure
+
+rule Register_Bank_pk:
+  [ Fr(~ltkB) ]
+  --[ OnlyOnce() ]->
+  [ !Bank_Ltk($B, ~ltkB), !Bank_Pk($B, pk(~ltkB)), Out(<~ltkB>) ]
+
+
+// Withdrawal Phase
+
+rule C_1_1:
+    [ Fr(~x), Fr(~r) ]
+  --[  ]->
+    [ Out( blind(~x,~r) ), St_C_1('c1', ~x, ~r )]
+
+rule C_1_2:
+    [ Fr(~x), Fr(~r) ]
+  --[  ]->
+    [ Out( blind(~x,~r) ), St_C_1('c2', ~x, ~r )]
+
+
+// Payment and deposit phase
+
+rule C_2:
+  let s = unblind(sign(blind(~x, ~r), ~skB),~r)
+  in
+    [ St_C_1(C, ~x, ~r ), In( sign(blind(~x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
+  --[  ]->
+    [ St_C_2(C, ~x, s ) ]
+
+rule C_2sync:
+    [ St_C_2('c1', x1,  s1 ),St_C_2('c2', x2, s2 ),St_C_2('c1', x3, s3 ),St_C_2('c2', x4, s4 ) ]
+  --[ Finish() ]->
+    [ Out(< x1, s1 >), Out(diff(< x3, s3 >,< x4, s4 >)) ]
+
+
+// Axioms
+
+restriction OnlyOnce:
+  " All #i #j. OnlyOnce()@i & OnlyOnce()@j ==> #i = #j " 
+
+
+// Executability
+
+lemma exec:
+  exists-trace
+  " Ex #i. Finish()@i "
+
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: chaum_untraceability211.spthy
+
+  RHS :  exec (exists-trace): verified (15 steps)
+  LHS :  exec (exists-trace): verified (15 steps)
+  DiffLemma:  Observational_equivalence : verified (1907 steps)
+
+==============================================================================
+
+real	0m48.751s
+user	1m53.764s
+sys	0m40.136s
+
+*/
+
+end
+
