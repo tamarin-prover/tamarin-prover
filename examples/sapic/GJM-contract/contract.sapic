@@ -6,7 +6,7 @@ section{* GM Protocol for Contract signing *}
 /*
  * Protocol:    GM contract signing 
  * Modeler:     Robert Kunnemann 
- * Date:    	March 2013
+ * Date:	March 2013
  *
  * Status:  working 
  */
@@ -22,6 +22,21 @@ section{* GM Protocol for Contract signing *}
  * We furthermore added an equation to the signature that
  * allows the communication partner to fake a pcs (but the
  * trusted party can make out that difference).
+ */
+
+/* Modifications, Date: Oct 17th, 2017.
+ *
+ * Bug correction : in WitnessAbort, replaced  
+ *   in (sign(pcs(sign(ct,sk1), pk(ysk), pk(skT)),skT) );
+ * by
+ *   in (sign(<<ct,pk(sk1),pk2>,sign(<ct,pk(sk1),pk2>,sk1)>,skT));
+ * Otherwise, the security property aborted_and_resolved_exclusive
+ * was trivially true, because the event AbortCert(ct)
+ * was not accessible. Also added a sanity check for
+ * AbortCert(ct), named aborted1_contract_reachable
+ * Without correction, tamarin reports 'falsified' for this check.
+ * 
+ * Note: The tamarin spec outputs pcs in Abort1 instead of sign.
  */
 
 builtins: signing
@@ -60,18 +75,19 @@ checkpcs(xc, xpk, pk(ysk), zpk, fakepcs(xpk, ysk, zpk, xc)) = true()
 
 
 let Abort1 =
-  in(<'abort',<ct,pk1,pk2,ysig>>);
-	if check_getmsg(ysig, pk1) = <ct,pk1,pk2> then
-	  (lock  ct;
-	   lookup ct as state in unlock ct
-	   else
-		(
-			  insert ct, 'aborted';
-			  event Abort1(ct);
-			  unlock ct;
-			  out(sign(<<ct,pk1,pk2>,ysig>,skT))
-		)
-	  )
+in(<'abort',<ct,pk1,pk2,ysig>>);
+if check_getmsg(ysig, pk1) = <ct,pk1,pk2> then
+(
+	lock ct;
+	lookup ct as state in unlock ct
+	else
+	(
+		insert ct, 'aborted';
+		event Abort1(ct);
+		unlock ct;
+		out(sign(<<ct,pk1,pk2>,ysig>,skT))
+	)
+)
 
 let Resolve2 =
 in(<'resolve2',<ct,pk1,pk2,ypcs1,ysig2>>);
@@ -117,12 +133,18 @@ if check_getmsg(ysig1,pk1)=ct then
 )
 		
 let WitnessAbort = 
- in (sign(pcs(sign(ct,sk1), pk(ysk), pk(skT)),skT) );
-	event AbortCert(ct)
-let WitnessResolved =
- in (sign(<sign(ct,sk1), sign(ct,sk2)>,skT));
-  event ResolveCert(ct)
+in (sign(<<ct,pk(sk1),pk2>,sign(<ct,pk(sk1),pk2>,sk1)>,skT));
+/**** Previous version follows
+ * in (sign(pcs(sign(ct,sk1), pk(ysk), pk(skT)),skT) );
+ */
+event AbortCert(ct)
 
+let WitnessResolved =
+in (sign(<sign(ct,sk1), sign(ct,sk2)>,skT));
+event ResolveCert(ct)
+
+/* Honest client specification, useless here because all clients are dishonest
+ * and play against the Trusted Third Party. Kept for reference.
 let HonestClient = 
 	new skA;
 	out(pk(skA));
@@ -140,26 +162,34 @@ let HonestClient =
 	)
 	|| //Or we decide not to sign it
 	0
+*/
 
-
-
-!(
-new skT;
-event TrustedParty(skT);
-out(pk(skT));
-      (
-! Abort1 || ! Resolve2 || ! Resolve1  ||
-!WitnessAbort || !WitnessResolved ||
-!HonestClient
-)
-)
+!( new skT;
+   out(pk(skT));
+   (  !Abort1 || !Resolve2 || !Resolve1
+   || !WitnessAbort || !WitnessResolved
+/* || !HonestClient */
+   )
+ )
 
 /* Lemmas taken from tamarin files */
 
 lemma aborted_and_resolved_exclusive:
   "not (Ex ct #i #j. AbortCert(ct) @ i & ResolveCert(ct) @ j)"
 
-/* Sanity checks */
+/* Sanity checks. */
+
+lemma aborted_contract_reachable:
+  exists-trace
+  " (Ex ct #i. AbortCert(ct) @ i )
+    // Ensure that this is possible with at most one Abort step.
+  & (All ct1 ct2 #i1 #i2 .
+       Abort1(ct1) @ i1 & Abort1(ct2) @ i2 ==> #i1 = #i2)
+  & (All ct #i. Resolve1(ct) @ i ==> F)
+  & (All ct #i. Resolve2(ct) @ i ==> F)
+  "
+
+
 lemma resolved1_contract_reachable:
   exists-trace
   " (Ex ct #i. ResolveCert(ct) @ i)
@@ -179,4 +209,5 @@ lemma resolved2_contract_reachable:
   & (All ct1 ct2 #i1 #i2 .
        Resolve2(ct1) @ i1 & Resolve2(ct2) @ i2 ==> #i1 = #i2)
   "
+
 end	

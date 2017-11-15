@@ -324,7 +324,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                   solve( splitEqs(0) )
                     case split_case_01
                     solve( !KU( Y^~ea ) @ #vk.6 )
-                      case cexp
+                      case c_exp
                       solve( !KU( ~ea ) @ #vk.12 )
                         case Ltk_reveal
                         solve( !KU( Y^h1(<~ex, ~ea>) ) @ #vk.9 )
@@ -361,7 +361,7 @@ analyzing: examples/ake/dh/NAXOS_eCK_PFS.spthy
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 3.753625s
+  processing time: 3.215758s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -372,7 +372,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 3.753625s
+  processing time: 3.215758s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 
 ==============================================================================

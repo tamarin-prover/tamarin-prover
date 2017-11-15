@@ -371,7 +371,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                                   qed
                                 qed
                               next
-                                case cexp
+                                case c_exp
                                 solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
                                   case c_h1
                                   solve( !KU( ~ex ) @ #vk.19 )
@@ -382,7 +382,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                               qed
                             qed
                           next
-                            case cexp
+                            case c_exp
                             solve( !KU( ~x ) @ #vk.15 )
                               case Ltk_reveal
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
@@ -405,7 +405,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                           qed
                         qed
                       next
-                        case cexp
+                        case c_exp
                         solve( !KU( ~ea ) @ #vk.14 )
                           case Ltk_reveal
                           solve( !KU( h1(<~ey, ~eb>) ) @ #vk.15 )
@@ -496,7 +496,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                                 qed
                               qed
                             next
-                              case cexp
+                              case c_exp
                               solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
                                 case c_h1
                                 solve( !KU( ~ex ) @ #vk.19 )
@@ -507,7 +507,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                             qed
                           qed
                         next
-                          case cexp
+                          case c_exp
                           solve( !KU( ~eb ) @ #vk.15 )
                             case Ltk_reveal
                             solve( !KU( h1(<~ex, ~ea>) ) @ #vk.16 )
@@ -530,7 +530,7 @@ solve( (∃ matchingSession #i3 matchingRole.
                         qed
                       qed
                     next
-                      case cexp
+                      case c_exp
                       solve( !KU( ~x ) @ #vk.14 )
                         case Ltk_reveal
                         solve( !KU( h1(<~ey, ~eb>) ) @ #vk.15 )
@@ -598,7 +598,7 @@ next
                     by contradiction /* from formulas */
                   qed
                 next
-                  case cexp
+                  case c_exp
                   solve( !KU( ~x ) @ #vk.5 )
                     case Ltk_reveal
                     by contradiction /* from formulas */
@@ -620,7 +620,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~x ) @ #vk.13 )
                   case Ltk_reveal
                   by contradiction /* from formulas */
@@ -668,7 +668,7 @@ next
                   by contradiction /* from formulas */
                 qed
               next
-                case cexp
+                case c_exp
                 solve( !KU( ~x ) @ #vk.5 )
                   case Ltk_reveal
                   by contradiction /* from formulas */
@@ -693,7 +693,7 @@ next
                 by contradiction /* from formulas */
               qed
             next
-              case cexp
+              case c_exp
               solve( !KU( ~x ) @ #vk.13 )
                 case Ltk_reveal
                 by contradiction /* from formulas */
@@ -735,7 +735,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 4.302532s
+  processing time: 3.687512s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 4.302532s
+  processing time: 3.687512s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

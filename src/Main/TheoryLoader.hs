@@ -19,6 +19,7 @@ module Main.TheoryLoader (
   , loadClosedThy
   , loadClosedThyWfReport
   , loadClosedThyString
+  , reportOnClosedThyStringWellformedness
 
   -- ** Loading open diff theories
   , loadOpenDiffThy
@@ -27,6 +28,7 @@ module Main.TheoryLoader (
   , loadClosedDiffThy
   , loadClosedDiffThyWfReport
   , loadClosedDiffThyString
+  , reportOnClosedDiffThyStringWellformedness
 
   
   -- ** Constructing automatic provers
@@ -67,6 +69,8 @@ import           Theory.Tools.Wellformedness
 import           Main.Console
 import           Main.Environment
 
+import           Text.Parsec                hiding ((<|>))
+
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -85,7 +89,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|p|P|l|c|C|i|I)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|O|p|P|l|c|C|i|I)+"
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -192,7 +196,41 @@ loadClosedDiffThyString as input =
         Right thy -> fmap Right $ do
           thy1 <- addMessageDeductionRuleVariantsDiff thy
           closeDiffThy as thy1
-             
+
+-- | Load an open theory from a string.
+loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
+loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as)
+
+-- | Load an open theory from a string.
+loadOpenDiffThyString :: Arguments -> String -> Either ParseError OpenDiffTheory
+loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ quitOnWarning as)
+
+-- | Load a close theory and only report on well-formedness errors.
+reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
+reportOnClosedThyStringWellformedness as input = do
+    case loadOpenThyString as input of
+      Left  err -> return $ "parse error: " ++ show err
+      Right thy ->
+        case checkWellformedness thy of
+          []     -> return ""
+          report -> do
+            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+
+-- | Load a closed diff theory and report on well-formedness errors.
+reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String
+reportOnClosedDiffThyStringWellformedness as input = do
+    case loadOpenDiffThyString as input of
+      Left  err   -> return $ "parse error: " ++ show err
+      Right thy0 -> do
+        thy1 <- addMessageDeductionRuleVariantsDiff thy0
+        -- report
+        case checkWellformednessDiff thy1 of
+          []     -> return ""
+          report -> do
+            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
 closeThy as thy0 = do
@@ -301,6 +339,7 @@ constructAutoProver as =
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
     ranking 'o' = OracleRanking
+    ranking 'O' = OracleSmartRanking
     ranking 'p' = SapicRanking
     ranking 'l' = SapicLivenessRanking
     ranking 'P' = SapicPKCS11Ranking
@@ -313,6 +352,7 @@ constructAutoProver as =
       \ 's' for the smart ranking without loop breakers,\
       \ 'S' for the smart ranking with loop breakers,\
       \ 'o' for oracle ranking,\
+      \ 'O' for oracle ranking with smart ranking without loop breakers as underlying baseline,\
       \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
       \ 'l' for the smart ranking optimized for translations coming from SAPIC proving liveness properties,\
       \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC,\
@@ -349,6 +389,7 @@ constructAutoDiffProver as =
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
     ranking 'o' = OracleRanking
+    ranking 'O' = OracleSmartRanking
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $

@@ -137,7 +137,7 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
     solve( !KU( h(<z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
       case c_h
       solve( !KU( 'g'^(~lkI*~x) ) @ #vk.4 )
-        case cexp
+        case c_exp
         solve( !KU( ~lkI ) @ #vk.7 )
           case Ltk_reveal
           solve( !KU( ~x ) @ #vk.8 )
@@ -182,7 +182,7 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
     solve( !KU( h(<z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
       case c_h
       solve( !KU( 'g'^(~lkR*~x) ) @ #vk.4 )
-        case cexp
+        case c_exp
         solve( !KU( ~lkR ) @ #vk.7 )
           case Ltk_reveal
           solve( !KU( ~x ) @ #vk.8 )
@@ -218,7 +218,7 @@ analyzing: examples/csf12/UM_PFS.spthy
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.920552s
+  processing time: 0.843959s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -230,7 +230,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.920552s
+  processing time: 0.843959s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

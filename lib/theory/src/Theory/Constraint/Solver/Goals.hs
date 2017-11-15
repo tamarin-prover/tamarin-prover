@@ -211,7 +211,7 @@ solveGoal goal = do
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
 
--- The follwoing functions are internal to 'solveGoal'. Use them with great
+-- The following functions are internal to 'solveGoal'. Use them with great
 -- care.
 
 -- | CR-rule *S_at*: solve an action goal.
