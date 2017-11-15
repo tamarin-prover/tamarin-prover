@@ -63,7 +63,7 @@ let I =
 let Proto = ! (A || B || I) || C
 
 // general form for accountabilty processes
-( new id; (event Start(id); Proto || event Stop(id)) )
+! ( new id; (event Start(id); Proto || event Stop(id)) )
 || !( in('c',<'corrupt',$x>); 
       event Corrupted($x);
       out('c',sk($x))
@@ -109,11 +109,13 @@ lemma acc_rel_1_1:
     &
     ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & LogAB(id1,a)@k ==> #i < #k & #k < #j)
     ==>
-    (All #i1 #j1 id1 a1 #i2 #j2 id2 a2 . // How is the transformation from Ex to All justified?
-    (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct()))) // rename first case with variable plus 1
-    &
-    (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct()))) // rename second case with variable plus 2
-      ==> All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2
+    (All #i1 #j1 id1 a1.  // How is the transformation from Ex to All justified?
+     (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct()))) // rename first case with variable plus 1
+     ==> 
+     All #i2 #j2 id2 a2 .
+     (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct()))) // rename second case with variable plus 2
+      ==> 
+      All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2
     )"
 
 // acc_rel_2_2 left out
@@ -124,12 +126,18 @@ lemma acc_rel_1_2: // Example for negation.
     ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & Execute(id1,a)@k ==> #i < #k & #k < #j)
     &
     ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & LogAB(id1,a)@k ==> #i < #k & #k < #j)
-    ==>
-    (All #i1 #j1 id1 a1 #i2 #j2 id2 a2 .
-    (Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())))
     &
-    not(((Ex #i2 #j2 a2 id2 . ((Execute(id2, a2)@#i2 & (LogAB(id2, a2)@#j2 & not(a2 = SpecialAct()))))) | (Ex #i2 #j2 a2 id2 . ((Execute(id2, a2)@#i2 & (LogA(id2, a2)@#j2 & not(a2 = NormalAct())))))))
-      ==> All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2)
+    // Problem: Stop just might not exist!
+    ==>
+    (All #i1 #j1 id1 a1 id2 #s .
+     (Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())))
+     &
+     Start(id2)@s // <- for guardedness
+      ==> 
+      ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2))
+     | 
+      ((Ex #i2 #j2 a2 . ((Execute(id2, a2)@#i2 & (LogAB(id2, a2)@#j2 & not(a2 = SpecialAct()))))) | (Ex #i2 #j2 a2 id2 . ((Execute(id2, a2)@#i2 & (LogA(id2, a2)@#j2 & not(a2 = NormalAct()))))))
+      // ^^ do not rebind id2
     )"
 
 end
