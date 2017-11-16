@@ -89,6 +89,8 @@ lemma sanity_logAB:
 verdictfunction v1:
     "Ex id a #i #j. Execute(id,a)@i & LogA(id,a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
     "Ex id a #i #j. Execute(id,a)@i & LogAB(id,a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    "Ex id a #i #j. Execute(id,a)@i & LogA(id,a)@j & a=NormalAct()"   -> empty,
+    "Ex id a #i #j. Execute(id,a)@i & LogAB(id,a)@j & a=SpecialAct()" -> empty,
     otherwise -> empty 
 
 lemma acc:
@@ -123,20 +125,24 @@ lemma acc_rel_1_1:
 lemma acc_rel_1_2: // Example for negation.
     "
     // Axiom:
-    ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & Execute(id1,a)@k ==> #i < #k & #k < #j)
+    ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j )
     &
-    ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & LogAB(id1,a)@k ==> #i < #k & #k < #j)
+    ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j )
     &
-    // Problem: Stop just might not exist!
+    ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j )
+    &
+    ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l))
+    &
+    ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k )
     ==>
     (All #i1 #j1 id1 a1 id2 #s .
-     (Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())))
+     ( Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())) )
      &
      Start(id2)@s // <- for guardedness
       ==> 
-      ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2))
+      ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2) | #p1=#p2)
      | 
-      ((Ex #i2 #j2 a2 . ((Execute(id2, a2)@#i2 & (LogAB(id2, a2)@#j2 & not(a2 = SpecialAct()))))) | (Ex #i2 #j2 a2 id2 . ((Execute(id2, a2)@#i2 & (LogA(id2, a2)@#j2 & not(a2 = NormalAct()))))))
+    ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & a = SpecialAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & a = NormalAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & not(a = SpecialAct()))))) | (Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & not(a = NormalAct()))))))))
       // ^^ do not rebind id2
     )"
 
