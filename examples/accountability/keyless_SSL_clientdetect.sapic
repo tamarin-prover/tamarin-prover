@@ -250,7 +250,7 @@ verdictfunction v1:
 // suf-0 is automated, but probably just a matter of time...
 lemma acc2:
     v1 accounts 
-    for /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
+    for 
         "All ni nr c #r #i niprev nrprev cprev #iprev.
             //Given a matching session
             CSession('A','B',ni,nr,c) @ i & WSession('A','B',ni,nr,c) @ r & #r < #i
@@ -263,6 +263,7 @@ lemma acc2:
             // or faked
           | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j & #j < #i) // added 
           | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j & #j < #iprev)
+            /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
          "
     for parties <'A','B'>
 
