@@ -1,9 +1,3 @@
-maude tool: 'maude'
- checking version: 2.7.1. OK.
- checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
-
 theory LAK06_UK_weak begin
 
 // Function signature and definition of the equational theory E

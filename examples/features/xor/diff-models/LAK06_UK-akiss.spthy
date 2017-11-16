@@ -25,7 +25,7 @@ rule setup:
    let id1 = ~k1
        id2 = ~k2
        idb = diff(~k1, ~k2)
-       idReader = ~k1 + ~k2
+       idReader = id1 + id2
    in
    [ Fr( ~k1 )
    , Fr( ~k2 )
@@ -92,7 +92,7 @@ lemma executable:
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN, autoproof in (744.60s CPU time)
+// PROVEN, autoproof in (3457.42s CPU time)
 // Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
 // Compiled at: 2017-11-09 08:34:57.786964 UTC
 end
