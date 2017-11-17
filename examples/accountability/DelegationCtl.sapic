@@ -49,7 +49,7 @@ let C =
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
        event Control('1'); event LogA(a); event Execute(a); event Control('1'))
- /* + */ // Uncomment for testing, should find trace in rel_1_1
+ /* + // Uncomment for testing, should find trace in rel_1_1 */
  /*  ( in(<m1,m1sign>); */ 
  /*     if verify(m1sign, m1, pk(sk('A'))) = true() then */
  /*       event LogA(a); event Execute(a); event Control('3')) */
@@ -59,12 +59,8 @@ let C =
         if verify(m2sign, m2, pk(sk('A'))) = true() then
             event Control('2'); event LogAB(a); event Execute(a); event Control('2'))
 
-let I = 
-  ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
-  )
-
 // The trusted party can only run once during each run of the protocol
-let Proto = ! (A || B || I) || C
+let Proto = out(<pk(sk('A')), pk(sk('B'))>); ! (A || B ) || C
 
 // general form for accountabilty processes
 Proto
@@ -102,9 +98,6 @@ lemma acc:
     for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
     for parties <'A','B'>
 
-// need to add for accountability lemmas assumption:
-//  All #i #j id1 id2. Start(id1)@i & Start(id2)@j ==> #i = #j 
-//
 // if ctl is used, give well-formedness error if 
 // - check also if process is of right form and output template if not
 
