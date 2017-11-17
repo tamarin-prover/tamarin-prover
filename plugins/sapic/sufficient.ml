@@ -108,14 +108,25 @@ let sufficiencyComposite id rel vf =
         ) vf
             
 
-let completeness id op vf phi = 
+let completeness_empty id op vf phi = 
 (* for the each mapping φ_i → V_i  and V_i empty *) 
 (* For all traces $t$: $φ_i(t) ⇒ φ(t)$. *)
     let complete i (f,v) = 
-        let label = Printf.sprintf "%s_compl_%n" id i in
+        let label = Printf.sprintf "%s_compl_empty_%n" id i in
         match v with
           [] -> Some (ForallLemma ((label,op),Imp(f,phi)))
         | (x::cs)  ->  None 
+        in
+    mapi_opt complete vf 
+
+let completeness_nonempty id op vf phi = 
+(* for the each mapping φ_i → V_i  and V_i non-empty *) 
+(* For all traces $t$: $φ_i(t) ⇒ ¬φ(t)$. *)
+    let complete i (f,v) = 
+        let label = Printf.sprintf "%s_compl_nonempty_%n" id i in
+        match v with
+          [] -> None 
+        | (x::cs)  ->  Some (ForallLemma ((label,op),Imp(f,Not(phi))))
         in
     mapi_opt complete vf 
 
@@ -186,9 +197,9 @@ let uniqueness id op vf =
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
-let rec make_list n l = if n = 0 then l else make_list (n - 1) (n :: l);;
+let rec make_list n l = if n = 0 then l else make_list (n - 1) (n-1 :: l);;
 let rec listn n = make_list n []
-let rec singletons n = map (fun i -> (i,i)) (listn n)
+let rec reflexive n = map (fun i -> (i,i)) (listn n)
 
 
 type lifting = Relate | Unrelate
@@ -277,6 +288,9 @@ let controlf task id op i j phi_i phi_j =
     match task with
         Relate -> 
             let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+            let labelsym = Printf.sprintf "%s_rel_%n_%n" id j i in
+            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
+            else
             ForallLemma((label,op),
             Imp(And(And(axiom_event,axiom_cluster),axiom_force),
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
@@ -290,6 +304,9 @@ let controlf task id op i j phi_i phi_j =
                 )))))
        | Unrelate ->
             let label = Printf.sprintf "%s_unrel_%n_%n" id i j in
+            let labelsym = Printf.sprintf "%s_unrel_%n_%n" id j i in
+            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
+            else
             ForallLemma((label,op),
             Imp(And(And(axiom_event,axiom_cluster),axiom_force),
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
@@ -303,18 +320,24 @@ let controlf task id op i j phi_i phi_j =
                 )))))
 
 let relationLifting f id op (vf:verdictf) rel =
-    let phi k = match List.nth vf k with (f,_)-> f in
-    let n  = List.length vf - 1 in
-    let full_rel = rel @ (singletons n) in
+    let phi k     = match List.nth vf k with (f,_)-> f in
+    let verdict k = match List.nth vf k with (_,v)-> v in
+    let n  = List.length vf in
+    let full_rel = rel @ (reflexive n) in
     let f' task (i,j) = f task id op i j (phi i) (phi j) in
+    let remove_empty (i,j) = match (verdict i, verdict j) with
+         ([],_)
+        |(_,[])  -> false
+        | _ -> true
+    in
     let complement = 
         List.filter
         (fun x -> not (List.mem x full_rel))
         (cartesian (listn n) (listn n))
     in 
-        (map (f' Relate) full_rel)
+        (map (f' Relate) (List.filter remove_empty full_rel))
         @
-        (map (f' Unrelate) complement)
+        (map (f' Unrelate) (List.filter remove_empty complement))
 
 
 let sufficient_conditions kind (id,op) parties vf' phi =
@@ -330,7 +353,9 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (sufficiencyComposite id rel vf)
         @
-        (completeness id op vf phi)
+        (completeness_empty id op vf phi)
+        @
+        (completeness_nonempty id op vf phi)
         @
         (minimalitySingleton id op rel parties vf phi)
     in
@@ -343,7 +368,9 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (sufficiency id op parties vf phi)
         @
-        (completeness id op vf phi)
+        (completeness_empty id op vf phi)
+        @
+        (completeness_nonempty id op vf phi)
         @
         (minimality id op parties vf phi)
         @
@@ -352,8 +379,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         cases_axioms
         @
         (relationLifting manualf id op vf rel)
-        @
-        [ManualLemma (id, "r is transitive") ]
+        (* @ Not sure if needed. TODO check in the end. *)
+        (* [ManualLemma (id, "r is transitive") ] *)
    | Control ->
         (map (add_antecedent Restrictions.single_session_id) cases_axioms)
         @

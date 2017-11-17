@@ -48,7 +48,7 @@ let C =
     in
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
-       event LogA(a); event Execute(a); event Control('1'))
+       event Control('1'); event LogA(a); event Execute(a); event Control('1'))
  /* + */ // Uncomment for testing, should find trace in rel_1_1
  /*  ( in(<m1,m1sign>); */ 
  /*     if verify(m1sign, m1, pk(sk('A'))) = true() then */
@@ -57,7 +57,7 @@ let C =
   ( in(<m3,m3sign>); 
     if verify(m3sign, m3, pk(sk('B'))) = true() then
         if verify(m2sign, m2, pk(sk('A'))) = true() then
-            event LogAB(a); event Execute(a); event Control('2'))
+            event Control('2'); event LogAB(a); event Execute(a); event Control('2'))
 
 let I = 
   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
@@ -91,10 +91,10 @@ lemma sanity_logAB:
     "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
-    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
-    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
-    "Ex a #i #j. Execute(a)@i & LogA(a)@j & a=NormalAct()"   -> empty,
-    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & a=SpecialAct()" -> empty,
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j &  not(a=NormalAct() | a=SpecialAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() |a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    /* "Ex a #i #j. Execute(a)@i & LogA(a)@j & a=NormalAct()"   -> empty, */
+    /* "Ex a #i #j. Execute(a)@i & LogAB(a)@j & a=SpecialAct()" -> empty, */
     otherwise -> empty 
 
 lemma acc:
