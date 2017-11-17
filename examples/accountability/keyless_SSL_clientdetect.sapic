@@ -247,7 +247,7 @@ verdictfunction v1:
 /*          " */
 /*     for parties <'A','B'> */
 
-// suf-0 is automated, but probably just a matter of time...
+// suf-0 runs out of time on colossus04...
 lemma acc2:
     v1 accounts 
     for 
@@ -263,7 +263,7 @@ lemma acc2:
             // or faked
           | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j & #j < #i) // added 
           | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j & #j < #iprev)
-            /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. */
+            /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown.  <- Not sure, this used to hold ... */
          "
     for parties <'A','B'>
 
