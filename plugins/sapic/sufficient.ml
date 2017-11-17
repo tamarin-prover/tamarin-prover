@@ -226,7 +226,6 @@ let rec bind_to_session (id:var) phi = match phi with
   |Ex(vs,f)   -> Ex(vs,bind_to_session id f)
 
 let controlf task id op i j phi_i phi_j = 
-    let label = Printf.sprintf "%s_rel_%n_%n" id i j in
     let axiom_event =  
     (* ( All #i #j #k id pos . Init(id)@i & Stop(id)@j & Event(id)@k ==> #i < #k & #k < #j ) *)
         All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Msg "id"],
@@ -239,7 +238,7 @@ let controlf task id op i j phi_i phi_j =
              Atom (TLeq (Temp "k", Temp "j")))
         ))
     and axiom_cluster = 
-    (* ( All #i #j #k #l id1 id2 . Init(id1)@i & Stop(id1)@j & Init(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) *)
+    (* ( All #i #j #k #l id1 id2 . Init(id1)@i & Stop(id1)@j & Init(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l & )) *)
         All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Temp "l"; Msg "id1"; Msg "id2"],
         Imp(
             And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
@@ -248,11 +247,15 @@ let controlf task id op i j phi_i phi_j =
                     Atom ( At (Action("Stop",[Var (Msg "id2")]),Temp "l"))))),
             Or ( 
              And (
-              Atom (TLeq (Temp "i", Temp "k")),
+              Atom (TLeq (Temp "j", Temp "k")),
               Atom (TLeq (Temp "j", Temp "l"))),
-             And (
-              Atom (TLeq (Temp "l", Temp "i")),
-              Atom (TLeq (Temp "l", Temp "j"))))))
+             Or ( 
+              And (
+               Atom (TLeq (Temp "l", Temp "i")),
+                Atom (TLeq (Temp "l", Temp "j"))),
+              And (
+               Atom (TEq (Temp "i", Temp "k")),
+                Atom (TEq (Temp "j", Temp "l")))))))
     and axiom_force =
     (* ( All #i id . Init(id)@i ==> Ex #k . Stop(id)@k & i<k ) *)
         All(VarSet.of_list [Temp "i"; Msg "id"],
@@ -269,11 +272,13 @@ let controlf task id op i j phi_i phi_j =
              And(Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1")),
               And(Atom ( At (Action("Control",[Var (Msg "pos2")]),Temp "p2")),
                Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
-            Atom (Eq (Var (Msg "id1") , Var(Msg "id2")))))
+            Atom (Eq (Var (Msg "pos1") , Var(Msg "pos2")))))
     in
-    let lemma= match task with
-        Relate | Unrelate (* TODO unrelate is different of course *)
-        -> Imp(And(And(axiom_event,axiom_cluster),axiom_force),
+    match task with
+        Relate -> 
+            let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+            ForallLemma((label,op),
+            Imp(And(And(axiom_event,axiom_cluster),axiom_force),
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
             Imp(
                 And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
@@ -282,11 +287,20 @@ let controlf task id op i j phi_i phi_j =
                       Not (bind_to_session (Msg "id1") phi_i),
                       Or (Not (bind_to_session (Msg "id2") phi_j),
                           control_condition)
-                ))))
-      (* | Unrelate -> Printf.sprintf "TODO" *)
-    in 
-    ForallLemma((label,op),lemma)
-
+                )))))
+       | Unrelate ->
+            let label = Printf.sprintf "%s_unrel_%n_%n" id i j in
+            ForallLemma((label,op),
+            Imp(And(And(axiom_event,axiom_cluster),axiom_force),
+            All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
+            Imp(
+                And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
+                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                Or (  
+                      Not (bind_to_session (Msg "id1") phi_i),
+                      Or (Not (bind_to_session (Msg "id2") phi_j),
+                          Not (control_condition))
+                )))))
 
 let relationLifting f id op (vf:verdictf) rel =
     let phi k = match List.nth vf k with (f,_)-> f in
