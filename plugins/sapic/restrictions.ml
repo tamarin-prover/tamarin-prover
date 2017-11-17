@@ -4,6 +4,10 @@ open List
 open Annotatedsapictree
 open Position
 open Printf
+open Var
+open Atomformulaaction
+open Lemma
+open Formula
 
 let res_set_in = "restriction set_in:
 \"All x y #t3 . IsIn(x,y)@t3 ==>
@@ -74,11 +78,37 @@ restriction locking:
 
 "
 
-let res_single_session = "
-restriction single_session: // for a single session
-    \"All #i #j. Init()@i & Init()@j ==> #i=#j\"
+let single_session = 
+    let i = Temp "i"
+    and j = Temp "j"
+    in
+    All(VarSet.of_list [i;j],
+        Imp(
+         And(
+          Atom(At(InitEmpty,i)),
+          Atom(At(InitEmpty,j))),
+         Atom(TEq(i,j))))
 
-"
+let single_session_id = 
+    let i = Temp "i"
+    and j = Temp "j"
+    and id s = Msg (Action.id_ExecId ^ s)
+    in
+    let init s = Action("Init",[Term.Var (id s)])
+    in
+    All(VarSet.of_list [i;j; id "1"; id "2"],
+        Imp(
+         And(
+          Atom(At(init "1",i)),
+          Atom(At(init "2",j))),
+         Atom(TEq(i,j))))
+
+(* let res_single_session = " *)
+(* restriction single_session: // for a single session *)
+(*     \"All #i #j. Init()@i & Init()@j ==> #i=#j\" *)
+
+(* " *)
+let res_single_session = "\n" ^ lemma2string_noacc (Restriction("single_session",single_session)) ^ "\n" 
 
 let res_resilient = "
 restriction resilient: 

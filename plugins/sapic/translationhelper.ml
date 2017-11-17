@@ -12,14 +12,8 @@ open Term
 open Var
 open Verdict
 
-let rec lemma2string = function
-    ForallLemma((id,op),formula) -> "lemma "^id^" "^op^":\n all-traces\n\""^(formula2string formula)^"\"\n"
-    | ExistsLemma((id,op),formula) -> "lemma "^id^" "^op^":\n exists-trace\n\""^(formula2string formula)^"\"\n"
-    | Restriction(id,formula) -> "restriction "^id^":\n \""^(formula2string formula)^"\"\n"
-    | AccLemma(kind, header, verdictf,formula,parties) -> print_lemmas (Sufficient.sufficient_conditions kind header parties verdictf formula )
-    | ManualLemma(id,s) -> "/* lemma: "^id^". The following needs to be shown manually:\n"^s^" */ \n"
-and print_lemmas lemlist =
-    (String.concat "\n") (List.map lemma2string lemlist)
+let lemma2string = lemma2string_base Sufficient.sufficient_conditions
+let print_lemmas = print_lemmas_base Sufficient.sufficient_conditions
 
 let rec contains_lookup t = 
     match t with
@@ -52,11 +46,4 @@ let rec contains_resilient_io t =
     |   Node(Ch_In(Var(PubFixed("r")),_), _, _) 
     |   Node(Ch_Out(Var(PubFixed("r")),_), _, _)  -> true
     |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)
-
-
-
-
-
-
-
 

@@ -16,8 +16,8 @@ open Lemma
 
 module TermSet = Set.Make( Term );;
 
-let reswords= ["Init"; "Insert"; "Delete"; "IsIn"; "IsNotSet"; "Lock"; "Unlock"; "Out"; "Fr"; "In"; "Msg"; "ProtoNonce"; "Event"; "InEvent"] 
-let reswords_pref = ["State_"; "Pred_"; "Pred_not_"; "n_"; "lock_"]
+let reswords= ["Init"; "Insert"; "Delete"; "IsIn"; "IsNotSet"; "Lock"; "Unlock"; "Out"; "Fr"; "In"; "Msg"; "ProtoNonce"; "Event"; "InEvent"; "ExecId"] 
+let reswords_pref = ["State_"; "Pred_"; "Pred_not_"; "n_"; "lock_"; "prog_" ]
 
 let reserved symbol =
   (List.mem symbol reswords) ||
@@ -36,9 +36,12 @@ let reserved symbol =
 module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
 
-type options = { progress: bool}
-let defaultop= {progress=false}
-let mergeopt a b = {progress=(a.progress || b.progress)}
+type options = { progress: bool; accountability:bool}
+let defaultop= {progress=false; accountability=false}
+let mergeopt a b = { 
+    progress=(a.progress || b.progress);
+    accountability=(a.accountability || b.accountability)
+}
 
 type inp = {sign : string;
             pred : string list;
@@ -108,7 +111,7 @@ let location_rule=
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
 %token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT 
 %token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE EMPTY ACCOUNTS FOR PARTIES
-%token COARSE CASES
+%token COARSE CASES CONTROL
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
 
@@ -182,7 +185,9 @@ body:
     | predicates body   {{sign=$2.sign; pred=($2.pred @ $1); op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
     | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem}}
     | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem}}
-    | lemma body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=($1::$2.lem)}}
+    | lemma body 	      {{sign=$2.sign; pred=$2.pred; 
+                                op=(mergeopt {progress=false; accountability=isAccLemma_with_control $1} $2.op);
+                                rules=$2.rules; proc=$2.proc; lem=($1::$2.lem)}}
     | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem}}
     | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
 ;
@@ -255,7 +260,7 @@ fct_decl :
 ;
 
 opt:
-         |    PROGRESS	{ {progress=true} }
+  |    PROGRESS	{ {progress=true; accountability = false} }
 ;
 
 eq :
@@ -487,6 +492,7 @@ account_attr_col:
 account_attr:
 	|     COARSE			{Coarse}
 	|     CASES			{Cases}
+	|     CONTROL			{Control}
 ;
 
 

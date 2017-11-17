@@ -48,12 +48,12 @@ let C =
     in
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
-       event LogA(id,a); event Execute(id,a); event Ctl(id,'1'))
+       event LogA(a); event Execute(a); event Control('1'))
  + 
   ( in(<m3,m3sign>); 
     if verify(m3sign, m3, pk(sk('B'))) = true() then
         if verify(m2sign, m2, pk(sk('A'))) = true() then
-            event LogAB(id,a); event Execute(id,a); event Ctl(id,'2'))
+            event LogAB(a); event Execute(a); event Control('2'))
 
 let I = 
   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
@@ -63,7 +63,7 @@ let I =
 let Proto = ! (A || B || I) || C
 
 // general form for accountabilty processes
-! ( new id; (event Start(id); Proto || event Stop(id)) )
+Proto
 || !( in('c',<'corrupt',$x>); 
       event Corrupted($x);
       out('c',sk($x))
@@ -72,78 +72,107 @@ let Proto = ! (A || B || I) || C
 
 lemma sanity_logA_not_misbehaving:
     exists-trace
-    "Ex id a #i #j. (a = NormalAct()) & LogA(id,a)@i & Execute(id,a)@j"
+    "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j"
 
 lemma sanity_logAB_not_misbehaving:
     exists-trace
-    "Ex id a #i #j. (a = SpecialAct()) & LogAB(id,a)@i & Execute(id,a)@j"
+    "Ex a #i #j. (a = SpecialAct()) & LogAB(a)@i & Execute(a)@j"
 
 lemma sanity_logA:
     exists-trace
-    "Ex id a #i #j. LogA(id,a)@i & Execute(id,a)@j" 
+    "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
 
 lemma sanity_logAB:
     exists-trace
-    "Ex id a #i #j. LogAB(id,a)@i & Execute(id,a)@j" 
+    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
-    "Ex id a #i #j. Execute(id,a)@i & LogA(id,a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
-    "Ex id a #i #j. Execute(id,a)@i & LogAB(id,a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
-    "Ex id a #i #j. Execute(id,a)@i & LogA(id,a)@j & a=NormalAct()"   -> empty,
-    "Ex id a #i #j. Execute(id,a)@i & LogAB(id,a)@j & a=SpecialAct()" -> empty,
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & a=NormalAct()"   -> empty,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & a=SpecialAct()" -> empty,
     otherwise -> empty 
 
 lemma acc:
-    v1 accounts [cases] 
-    for "All id a #i.  Execute(id,a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
+    v1 accounts [control] 
+    for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
     for parties <'A','B'>
 
 // need to add for accountability lemmas assumption:
 //  All #i #j id1 id2. Start(id1)@i & Start(id2)@j ==> #i = #j 
 //
-// if ctl is used, give well-formedness error if event does not have id as first argument
-// check also if process is of right form and output template if not
+// if ctl is used, give well-formedness error if 
+// - check also if process is of right form and output template if not
 
-lemma acc_rel_1_1:
-    "
-    // Axiom:
-    ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & Execute(id1,a)@k ==> #i < #k & #k < #j)
-    &
-    ( All #i #j #k id1 a . Start(id1)@i & Stop(id1)@j & LogAB(id1,a)@k ==> #i < #k & #k < #j)
-    ==>
-    (All #i1 #j1 id1 a1.  // How is the transformation from Ex to All justified?
-     (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct()))) // rename first case with variable plus 1
-     ==> 
-     All #i2 #j2 id2 a2 .
-     (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct()))) // rename second case with variable plus 2
-      ==> 
-      All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2
-    )"
+/* lemma acc_rel_1_1: */
+/*     " */
+/*     // Axiom: */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
+/*     & */
+/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
+/*     ==> */
+/*     ( */
+/*       All id1 #i1 #j1 a1 .  (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct()))) // rename first case with variable plus 1 */
+/*       ==> */
+/*       All id2 #i2 #j2 a2 .  (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct()))) // rename second case with variable plus 2 */
+/*       ==> */ 
+/*       All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2 */
+/*     )" */
 
-// acc_rel_2_2 left out
+/* lemma acc_rel_1_1_rewrite: */
+/*     " */
+/*     // Axiom: */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
+/*     & */
+/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
+/*     ==> */
+/*     ( */
+/*       All id1 id2 #i #j . Start(id1)@i & Start(id2)@j */ 
+/*       ==> */
+/*       not (Ex #i1 #j1 a1 .  (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct())))) // rename first case with variable plus 1 */
+/*       | */
+/*       not (Ex #i2 #j2 a2 .  (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct())))) // rename second case with variable plus 2 */
+/*       | */
+/*       All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2 */
+/*     )" */
 
-lemma acc_rel_1_2: // Example for negation.
-    "
-    // Axiom:
-    ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j )
-    &
-    ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j )
-    &
-    ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j )
-    &
-    ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l))
-    &
-    ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k )
-    ==>
-    (All #i1 #j1 id1 a1 id2 #s .
-     ( Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())) )
-     &
-     Start(id2)@s // <- for guardedness
-      ==> 
-      ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2) | #p1=#p2)
-     | 
-    ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & a = SpecialAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & a = NormalAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & not(a = SpecialAct()))))) | (Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & not(a = NormalAct()))))))))
-      // ^^ do not rebind id2
-    )"
+
+/* // acc_rel_2_2 left out */
+
+/* lemma acc_rel_1_2: // Example for negation. */
+/*     " */
+/*     // Axiom: */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
+/*     & */
+/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
+/*     & */
+/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
+/*     ==> */
+/*     (All #i1 #j1 id1 a1 id2 #s . */
+/*      ( Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())) ) */
+/*      & */
+/*      Start(id2)@s // <- for guardedness */
+/*       ==> */ 
+/*       ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2) | #p1=#p2) */
+/*      | */ 
+/*     ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & a = SpecialAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & a = NormalAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & not(a = SpecialAct()))))) | (Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & not(a = NormalAct())))))))) */
+/*       // ^^ do not rebind id2 */
+/*     )" */
 
 end

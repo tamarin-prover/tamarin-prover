@@ -191,48 +191,137 @@ let rec listn n = make_list n []
 let rec singletons n = map (fun i -> (i,i)) (listn n)
 
 
-let relationLifting id (vf:verdictf) rel =
-    let phi k = match List.nth vf k with (f,_)-> formula2string f in
-    let relate (i,j) = 
-        let label = Printf.sprintf "%s_rel_%n_%n" id i j in
-        let lemma= Printf.sprintf "
+type lifting = Relate | Unrelate
+
+let manualf task id _ i j phi_i phi_j = 
+    let label = Printf.sprintf "%s_rel_%n_%n" id i j
+    and phi_i' = formula2string phi_i
+    and phi_j' = formula2string phi_j
+    in
+    let lemma= match task with
+        Relate -> Printf.sprintf "
 For all contexts u such that traces(P,u) in 
     %s 
 and u' such that traces(P,u') in 
     %s
-it holds that r(u,u')."
-        (phi i) (phi j) in
-        ManualLemma (label,lemma)
-    in
-    let unrelate (i,j) = 
-        let label = Printf.sprintf "%s_rel_%n_%n" id i j in
-        let lemma= Printf.sprintf "
+it holds that r(u,u')." phi_i' phi_j'
+      | Unrelate -> Printf.sprintf "
 For all contexts u such that traces(P,u) in 
     %s 
 and u' such that traces(P,u') in 
     %s
-it holds that NOT r(u,u')."
-        (phi i) (phi j) in
-        ManualLemma (label,lemma)
+it holds that NOT r(u,u')." phi_i' phi_j'
+    in 
+    ManualLemma (label,lemma)
+
+let rec bind_to_session (id:var) phi = match phi with 
+    Atom(At(s,v))    ->  And (Atom(At(s,v)),Atom(At(Action("Event",[Var id]),v)))
+  | Atom (_) -> phi
+  |Not(f)     -> Not (bind_to_session id f)
+  |Or(f1,f2)  -> Or(bind_to_session id f1,bind_to_session id f2)
+  |And(f1,f2) -> And(bind_to_session id f1,bind_to_session id f2)
+  |Imp(f1,f2) -> Imp(bind_to_session id f1,bind_to_session id f2)
+  |Iff(f1,f2) -> Iff(bind_to_session id f1,bind_to_session id f2)
+  |All(vs,f)  -> All(vs,bind_to_session id f)
+  |Ex(vs,f)   -> Ex(vs,bind_to_session id f)
+
+let controlf task id op i j phi_i phi_j = 
+    let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+    let axiom_event =  
+    (* ( All #i #j #k id pos . Init(id)@i & Stop(id)@j & Event(id)@k ==> #i < #k & #k < #j ) *)
+        All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Msg "id"],
+        Imp(
+         And( Atom ( At (Action("Init",[Var (Msg "id")]),Temp "i")),
+          And (Atom ( At (Action("Stop",[Var (Msg "id")]),Temp "j")),
+           (Atom ( At (Action("Event",[Var (Msg "id")]),Temp "k"))))),
+         And ( 
+             Atom (TLeq (Temp "i", Temp "k")),
+             Atom (TLeq (Temp "k", Temp "j")))
+        ))
+    and axiom_cluster = 
+    (* ( All #i #j #k #l id1 id2 . Init(id1)@i & Stop(id1)@j & Init(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) *)
+        All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Temp "l"; Msg "id1"; Msg "id2"],
+        Imp(
+            And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
+             And ( Atom ( At (Action("Stop",[Var (Msg "id1")]),Temp "j")),
+              And ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "k")),
+                    Atom ( At (Action("Stop",[Var (Msg "id2")]),Temp "l"))))),
+            Or ( 
+             And (
+              Atom (TLeq (Temp "i", Temp "k")),
+              Atom (TLeq (Temp "j", Temp "l"))),
+             And (
+              Atom (TLeq (Temp "l", Temp "i")),
+              Atom (TLeq (Temp "l", Temp "j"))))))
+    and axiom_force =
+    (* ( All #i id . Init(id)@i ==> Ex #k . Stop(id)@k & i<k ) *)
+        All(VarSet.of_list [Temp "i"; Msg "id"],
+        Imp(
+            Atom ( At (Action("Init",[Var (Msg "id")]),Temp "i")),
+            Ex( VarSet.singleton (Temp "k"),
+                And( Atom( At (Action("Stop",[Var (Msg "id")]),Temp "k")),
+                     Atom(TLeq (Temp "i", Temp "k"))))))
+    and control_condition = 
+      (* All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+        All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"],
+        Imp(
+            And(Atom ( At (Action("Control",[Var (Msg "pos1")]),Temp "p1")),
+             And(Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1")),
+              And(Atom ( At (Action("Control",[Var (Msg "pos2")]),Temp "p2")),
+               Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
+            Atom (Eq (Var (Msg "id1") , Var(Msg "id2")))))
     in
+    let lemma= match task with
+        Relate | Unrelate (* TODO unrelate is different of course *)
+        -> Imp(And(And(axiom_event,axiom_cluster),axiom_force),
+            All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
+            Imp(
+                And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
+                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                Or (  
+                      Not (bind_to_session (Msg "id1") phi_i),
+                      Or (Not (bind_to_session (Msg "id2") phi_j),
+                          control_condition)
+                ))))
+      (* | Unrelate -> Printf.sprintf "TODO" *)
+    in 
+    ForallLemma((label,op),lemma)
+
+
+let relationLifting f id op (vf:verdictf) rel =
+    let phi k = match List.nth vf k with (f,_)-> f in
     let n  = List.length vf - 1 in
     let full_rel = rel @ (singletons n) in
+    let f' task (i,j) = f task id op i j (phi i) (phi j) in
     let complement = 
         List.filter
         (fun x -> not (List.mem x full_rel))
         (cartesian (listn n) (listn n))
     in 
-        (map relate full_rel)
+        (map (f' Relate) full_rel)
         @
-        (map unrelate complement)
+        (map (f' Unrelate) complement)
 
 
 let sufficient_conditions kind (id,op) parties vf' phi =
     let vf = wellformed vf'
     and rel = compute_R vf'
     in
+    let cases_axioms =
+        (exclusiveness id op vf )
+        @
+        [exhaustiveness id op vf]
+        @
+        (sufficiencySingleton id op parties vf phi)
+        @
+        (sufficiencyComposite id rel vf)
+        @
+        (completeness id op vf phi)
+        @
+        (minimalitySingleton id op rel parties vf phi)
+    in
     match kind with
-    (* (id,op) -> (1* ignore options for now *1) *)
+    (* (id,op) -> (1* TODO ignore options for now *1) *)
     Coarse -> 
         (exclusiveness id op vf )
         @
@@ -246,19 +335,13 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (uniqueness id op vf)
    | Cases ->
-        (exclusiveness id op vf )
+        cases_axioms
         @
-        [exhaustiveness id op vf]
-        @
-        (sufficiencySingleton id op parties vf phi)
-        @
-        (sufficiencyComposite id rel vf)
-        @
-        (completeness id op vf phi)
-        @
-        (minimalitySingleton id op rel parties vf phi)
-        @
-        (relationLifting id vf rel)
+        (relationLifting manualf id op vf rel)
         @
         [ManualLemma (id, "r is transitive") ]
+   | Control ->
+        (map (add_antecedent Restrictions.single_session_id) cases_axioms)
+        @
+        (relationLifting controlf id op vf rel)
 

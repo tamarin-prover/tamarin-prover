@@ -53,3 +53,13 @@ let msrs2annotated_rules sapic_terms position msrs  =
         }]
     | [] -> []
     | x::xs -> match disambiguate (x::xs) with (rules,_) -> List.rev rules
+
+let msrs_subst f msr =  
+    let (l,a,r) = f (msr.left,msr.actions,msr.right) in
+    { 
+      sapic_terms = msr.sapic_terms;
+      position= msr.position;
+      left  = l;
+      right= r;
+      actions= a;
+    }

@@ -59,6 +59,7 @@ rule token = parse
      | "accounts" { ACCOUNTS }
      | "coarse" { COARSE }
      | "cases" { CASES }
+     | "control" { CONTROL }
      | "for" { FOR }
      | "parties" { PARTIES }
      | "->"	   { RIGHTARROW }
