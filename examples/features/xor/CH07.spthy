@@ -54,7 +54,7 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 // There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY - (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488: attack automatically, but with 'zero', short manual exploration on second "splitEqs" in attack fixes this, pick split_case_3)
+// FINDS ATTACK AUTOMATICALLY - (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488: attack automatically
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
