@@ -37,23 +37,25 @@ rule (modulo E) tag1:
    [ In( r1 ), Fr( ~r2 ), TagRun( ~k, ~id ) ]
   --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
    [
-   Out( <~r2, lh(rot(~id, h((~k⊕~r2⊕r1))))> ),
+   Out( <~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))> ),
    TagState( ~k, ~id, r1, ~r2, h((~k⊕~r2⊕r1)) )
    ]
 
 rule (modulo E) reader2:
    [
    Initiated( ~r1 ), ReaderRun( ~k, ~id ),
-   In( <r2, lh(rot(~id, hash))> )
+   In( <r2, lh((hash⊕rot(~id, hash)))> )
    ]
   --[
   Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ),
   Eq( h((~k⊕~r1⊕r2)), hash )
   ]->
-   [ Out( rh(rot(~id, hash)) ) ]
+   [ Out( rh((hash⊕rot(~id, hash))) ) ]
 
 rule (modulo E) tag2:
-   [ In( rh(rot(~id, hash)) ), TagState( ~k, ~id, r1, ~r2, hash ) ]
+   [
+   In( rh((hash⊕rot(~id, hash))) ), TagState( ~k, ~id, r1, ~r2, hash )
+   ]
   --[ Alive( ~k, 'Reader' ) ]->
    [ ]
 
@@ -207,13 +209,13 @@ rule-equivalence
           case reader1
           step( solve( ReaderRun( ~k, ~id ) ▶₁ #vr ) )
             case select_reader
-            step( solve( !KU( lh(rot(~id, h(z))) ) @ #vk.3 ) )
+            step( solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.3 ) )
               case tag1
               step( solve( Reader( (z.1+<~k, ~id>) ) ▶₀ #vr.2 ) )
                 case Setup
                 step( solve( Tag( (z.1+<~k.1, ~id>) ) ▶₀ #vr.5 ) )
                   case Setup
-                  step( solve( !KU( rh(rot(~id, h(z))) ) @ #vk.2 ) )
+                  step( solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 ) )
                     case reader2
                     step( solve( Reader( (z.1+<~k.1, ~id>) ) ▶₀ #vr.9 ) )
                       case select_reader
