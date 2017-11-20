@@ -20,7 +20,7 @@ rule setup:
 
 rule transcript:
    let hash = h((~r1⊕~r2⊕~k))
-         m1 = <~r2,lh(rot(~id,hash))>
+         m1 = <~r2,lh(rot(~id,hash) XOR hash)>
          m2 = rh(rot(~id,hash))
   in
   [ Transcript(<~k,~id>,phase)
@@ -55,7 +55,7 @@ rule tag1:
    , Challenge(~r2, 'Tag') 
    , Phase(phase)
    ]->
-   [ Out( <~r2,lh(rot(~id,hash))>)
+   [ Out( <~r2,lh(rot(~id,hash) XOR hash)>)
    , TagState(~k, ~id, r1, ~r2, hash, phase)
    ]
 
@@ -69,10 +69,10 @@ rule reader2:
    , Eq( h((~r1⊕r2⊕~k)), hash )
    , Phase(phase)
    ]->
-   [ Out( rh(rot(~id,hash)) ) ]
+   [ Out( rh(rot(~id,hash) XOR hash) ) ]
 
 rule tag2:
-   [ In( rh(rot(~id,hash)) )
+   [ In( rh(rot(~id,hash) XOR hash) )
    , TagState(~k, ~id, r1, ~r2, hash, phase)
    ]
  --[ Alive( ~k, 'Reader' ), Phase(phase) ]->

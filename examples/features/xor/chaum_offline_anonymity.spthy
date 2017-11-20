@@ -3,7 +3,7 @@ begin
 
 
 /*
- * Protocol: Chaum's Offline Protocol
+ * Protocol: Chaum's Offline eCash Protocol
  * Based on: Charles Duménil's model of Chaum's Online Protocol
  *   equational theory has been simplified
  *   anonymity is defined as secrecy of customer's name
@@ -12,7 +12,7 @@ begin
 
 
 /*
-  Protocol Chaum {                          ( Seller and bank are considered corrupted )
+  Protocol ChaumOfflineECash {                          ( Seller and bank are considered corrupted )
     Withdrawal phase
      C -> B: blind(x XOR C,r), blind(x,r)
      B -> C: sign(blind(x XOR C,r),skB), sign(blind(x,r),skB)    "Withdraw"
