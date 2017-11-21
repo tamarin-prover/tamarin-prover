@@ -1,0 +1,197 @@
+theory LAK06_state
+begin
+
+// This theory models LAK06 as taken from "Attacks on RFID protocols" v1.1
+// from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
+//
+// This model considers two pairs of Reader/Tag that can play
+// an unbounded number of sessions and fully models
+// the key chaining mechanism.
+// Still, it shows that noninjective agreement
+// for the Reader is indeed violated (valid attack found!). The proof for
+// noninjective agreement for the Tag only holds in this very restricted model.
+
+builtins: xor, hashing
+
+/*
+  T: k
+  R: k, k0
+  R -> T: r0
+  T -> R: r1, h(r0 XOR r1 XOR k)               (accept if a matches for k or k0)
+  R -> T: h(h(r0 XOR r1 XOR k) XOR k XOR r0)
+  T: k'  := h(k) 
+ ---- if R finds k (and not k0) that matches then -----
+  R: k0' := k
+     kk' := h(k)
+
+*/
+
+rule setup: // one pair Tag-Reader, unbounded nb. of sessions
+  let k0 = h(~k)
+      k = h(k0)
+  in
+  [ Fr(~k), Fr(~id) ]
+--[ OnlyOnce('2Users')
+  , Update(k, 'T')
+  , Update(k0, 'R1')
+  , Update(k, 'R2')
+  , Setup()
+  ]->
+  [ ! Reader(~id)
+  , ! Tag(~id)
+  , ReaderK(~id, k0, k)
+  , TagK(~id, k)
+  ]
+
+rule initiatereader:
+  [ !Reader(~id)
+  , Fr(~r0)
+  ]
+--[ ]->
+  [ ReaderState1(~id, ~r0)
+  , Out(~r0) ]
+
+rule tag1:
+  [ !Tag(~id)
+  , TagK(~id, k)
+  , Fr(~r1)
+  , In(r0) ]
+--[ Running(<'R','T',<k,r0,~r1>>)
+  , Key(k, 'T')
+  , OutH(r0 XOR ~r1 XOR k)	//for Out != h(SomeKey)
+  // , OutF(<'T','R',<~r1, h(r0 XOR ~r1 XOR k)>>)
+  ]->
+  [ TagState1(~id, k, ~r1, r0, h(r0 XOR ~r1 XOR k))
+  , Out(<~r1, h(r0 XOR ~r1 XOR k)>)
+  , TagK(~id, k)
+  ]
+
+rule acceptreaderNew:		// the key k matches
+ let x =  h(~r0 XOR r1 XOR k) in
+ [ ReaderState1(~id, ~r0)
+  , In(<r1, x>)			// x = h(~r0 XOR r1 XOR k)
+  , ReaderK(~id, k0, k)
+  ]
+--[ Commit(<'R','T',<k,~r0,r1>>)
+  , Running(<'T','R',<k,~r0,r1>>)
+  // , Accept(<'R','T',<r1, h(~r0 XOR r1 XOR k)>>)
+  , Key(k0, 'R1'), Key(k, 'R2')
+  , Update(k, 'R1')
+  , Update(h(k), 'R2')
+  , OutH(h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0))	//for Out != h(SomeKey)
+  // , OutF(<'R','T',h(h(~r0 XOR r1 XOR k) XOR k XOR ~r0)>)
+  ]->
+  [ Out(h(x XOR k XOR ~r0))
+  , ReaderK(~id, k, h(k))	// k0 and k are updated in such a case
+  ]
+
+rule acceptreaderOld:		// the key k0 matches
+  let x = h(~r0 XOR r1 XOR k0) in
+  [ ReaderState1(~id, ~r0)
+  , In(<r1, x>)			// x = h(~r0 XOR r1 XOR k0)
+  , ReaderK(~id, k0, k)
+  ]
+--[ Commit(<'R','T',<k0,~r0,r1>>)
+  , Running(<'T','R',<k0,~r0,r1>>)
+  // , Accept(<'R','T',<r1,h(~r0 XOR r1 XOR k0)>>)
+  , Key(k0, 'R1'), Key(k, 'R2')
+  // , Update(k0, 'R1')
+  // , Update(k, 'R2')
+  , OutH(h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0))	//for Out != h(SomeKey)
+  // , OutF(<'R','T',h(h(~r0 XOR r1 XOR k0) XOR k0 XOR ~r0)>)
+  ]->
+  [ Out(h(x XOR k0 XOR ~r0))
+  , ReaderK(~id, k0, k)		// k0 and k do not change in that case (last message from last session got lost)
+  ]
+
+rule accepttag:
+ let x = h(m XOR k XOR r0) in
+ [ TagState1(~id, k, ~r1, r0, m)
+  , In(x)   // expected: h(h(r0 XOR ~r1 XOR k) XOR k XOR r0)
+  , TagK(~id, k)
+  ]
+--[ Commit(<'T','R',<k,r0,~r1>>)
+  , FinTag()
+  , Key(k, 'T')
+  , Update(h(k), 'T')
+  // , Accept(<'T','R',h(h(r0 XOR ~r1 XOR k) XOR k XOR r0)>)
+  ]->
+  [ TagK(~id, h(k)) ]		// Tag always updates its key k (he knows Reader did the same)
+
+restriction onylOnce:
+  "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
+
+// PROVEN, quick manual proof that could be automatized very easily.
+// AUTOPROOF with associated oracle (LAK_state-oracle)
+// --> only prioritize ReaderK() and TagK() goals and then full auto mode,
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
+  "All k r #i. 
+     Key(k, r)@i ==>
+       ( (Ex #j. Update(k, r)@j & #j < #i))"
+        // | (Ex #j. Create(k, r)@j & #j < #i))"
+
+// PROVEN, instant autoproof
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
+  "(All k r #i. ((Key(k, r)@i ==> Ex k0. k = h(k0))))
+ & (All k r #i. ((Update(k, r)@i ==> Ex k0. k = h(k0))))"
+
+// lemma 2helpingStackHash[use_induction, reuse]: // no Out(h(key))
+//   "// (All k r #i. Key(k, r)@i    ==>
+//  //       (Ex #j. K(k) @j) )
+//  // 
+//  // & (All k r #i. Update(k, r)@i ==>
+//  //       (Ex #j. K(k) @j) )
+//   (All t #i. Commit(<'T','R',t>) @i  ==>
+//        (Ex #j. Running(<'T','R',t>) @j))
+//  & (All k r0 r1 #i. Commit(<'R','T',<k,r0,r1>>) @i  ==>
+//        (Ex r11 #j. Running(<'R','T',<k,r0,r11>>) @j))
+// "  //no agreement here on r1 or r0!!
+
+// lemma helpingOutNotKey[use_induction, reuse]: // no Out(h(key))
+//   "All k r #i. Key(k, r)@i ==> not(Ex #j. OutH(h(k))@j )"
+
+// lemma 2helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
+//   "All k r #i. 
+//      Update(k, r)@i ==>
+//         ( (Ex #j. Update(k, r)@j & #j < #i)
+//         | (Ex #j. Create(k, r)@j & #j < #i))"
+
+// PROVEN, semi-manual proof: quite long but a lot of sub-cases can be proved auto. using the associated oracle
+// It seems that the oracle could be improved a lot, but I don't have much hope to get a fully automatic proof (see comments in the oracle file)
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma helpingSecrecy[use_induction, reuse]:
+  "All k r #i. Key(k, r)@i ==> not(Ex #j. KU(k)@j)"
+
+// PROVEN, manual proof (straightforward), see associated file
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// Note: The proof gets strangely more complex because of helping lemmas.
+// More goals are available (that's expected) but more goals HAVE to be proved
+// before Tamarin considers having found a valid trace. Weird for an executability lemma.
+lemma executable:
+  exists-trace
+  " (Ex #i. FinTag()@i)
+  & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
+
+// PROVEN, semi-manual proof: quite long but a lot of sub-cases can be proved auto. using the associated oracle
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma noninjectiveagreementTAG[use_induction]:
+  "All t #i. 
+    Commit(<'T','R',t>) @i
+    ==> (Ex #j. Running(<'T','R',t>) @j)"
+
+// FALSIFIED, attack found automatically !!!!
+// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
+// Compiled at: 2017-11-09 08:34:57.786964 UTC
+lemma noninjectiveagreementREADER[use_induction]:
+  "All t #i. 
+    Commit(<'R','T',t>) @i
+    ==> (Ex #j. Running(<'R','T',t>) @j)"
+
+end
