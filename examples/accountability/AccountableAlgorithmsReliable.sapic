@@ -181,11 +181,8 @@ verdictfunction v2:
 
   otherwise -> <>
 
-  // Note: need more fine-grained relation here
-  // to avoid 'A' case masking the 'A','S' case
-
 lemma acc: 
-  v2 accounts  
+  v2 accounts  [cases]
   for "
       ( All x z r #i. Accept(<x,z,r>)@#i
         ==> 
@@ -196,18 +193,5 @@ lemma acc:
       ) 
       "
   for parties <'A','S'> 
-
-
-verdictfunction v2: 
-  "Ex #i #j. NotHonestS(m,s)@#i & NotHonestA(m,s)@#j"
-  -> <'A','S'>,
-
-  "Ex #i #j. NotHonestA()@#i & HonestS()@#j"
-  -> <'A'>,
-
-  "Ex #i #j . HonestA()@#i & NotHonestS()@#j "
-  -> <'S'>,
-
-  otherwise -> <>
 
 end
