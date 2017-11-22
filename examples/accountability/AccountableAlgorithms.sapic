@@ -16,33 +16,7 @@ equations:
   open(commit(m,r),r)=m,
   extract(sign(x,y)) = x
 
-let A =
-(
-  let z   = f(x,y) in
-  let Cx  = commit(x,rx) in
-  let Cy  = commit(y,ry) in
-  let Cz  = commit(z,rz) in
 
-  let zkp   = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
-  let log = <Cx,Cz,zkp> in
-
-  let res = <z,rz,rx> in
-  let sig_res = sign(res,sk('A')) in
-
-  new y; new ry; 
-  out (c_AL,<'A','J','Initialize',Cy>); 
-  event Initialize(Cy);
-  
-  in (c_AS,<'S','A','Val',x,sig_x>);
-  if verify(sig_x,x,pk(sk('S'))) = true() then
-    (
-      new rx; new rz;
-      out (c_AS,<'A','S','Res',res,sig_res>);  // send result to S
-      out (c_AL,<'A','J','Res',res,sig_res>);  // send result to J
-      out (c_AL,<'A','J','Log',sig_x,log>);    // send log to J
-      event Final()             
-    )
-)
 
 let S =
 (
@@ -66,6 +40,34 @@ let S =
         if <Cx,Cy,Cz> = Pub(zkp) then 
           //out (<'S','J','Accept',x,z,sig_res>);
           event Accept(<x,z,sig_res>)
+)
+
+let A =
+(
+  let z   = f(x,y) in
+  let Cx  = commit(x,rx) in
+  let Cy  = commit(y,ry) in
+  let Cz  = commit(z,rz) in
+
+  let zkp   = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
+  let log = <Cx,Cz,zkp> in
+
+  let res = <z,rz,rx> in
+  let sig_res = sign(res,sk('A')) in
+
+  new y; new ry; 
+  out (c_AL,<'A','J','Initialize',Cy>); 
+  event Initialize(Cy);
+  
+  in (c_AS,<'S','A','Val', x, sig_x>);
+  if verify(sig_x,x,pk(sk('S'))) = true() then
+    (
+      new rx; new rz;
+      out (c_AS,<'A','S','Res',res, sig_res>);  // send result to S
+      out (c_AL,<'A','J','Res',<zkp, rz, rx>, sig_res>);  // send result to J
+      out (c_AL,<'A','J','Log',sig_x,log>);    // send log to J
+      event Final()             
+    )
 )
 
 let J =
