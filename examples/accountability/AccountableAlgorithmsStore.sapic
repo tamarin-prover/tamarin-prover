@@ -61,10 +61,6 @@ let A =
 )
 
 let J =
-( lookup <'A','Final'> as y in event Final() )
-||
-( lookup <'A','Initialize'> as Cy in event Initialize(Cy))
-||
 ( let res = <z,rz,rx> 
       claim = <x,z,res,sig_res>
       sig_x = fst(log)
@@ -74,19 +70,21 @@ let J =
   in
   in (claim,sig_claim);
   if verify(sig_claim,claim,pk(sk('S'))) = true() then
-    lookup <'A','Initialize'> as Cy in 
-        event Initialize(Cy);
-        lookup <'A','Log','S'> as log in
-        if and3(verZK(zkp),eq(<Cx,Cy,Cz>,Pub(zkp)),verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
-            event HonestA();
-              ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
-               then event HonestS(); event Verified(claim)
-               else event NotHonestS(); event Verified(claim))
-            else
-              event NotHonestA();
-              ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
-               then event HonestS(); event Verified(claim)
-               else event NotHonestS(); event Verified(claim))
+    lookup <'A','Final'> as y in 
+        event Final();
+        lookup <'A','Initialize'> as Cy in 
+            event Initialize(Cy);
+            lookup <'A','Log','S'> as log in
+            if and3(verZK(zkp),eq(<Cx,Cy,Cz>,Pub(zkp)),verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
+                event HonestA();
+                  ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
+                   then event HonestS(); event Verified(claim)
+                   else event NotHonestS(); event Verified(claim))
+                else
+                  event NotHonestA();
+                  ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
+                   then event HonestS(); event Verified(claim)
+                   else event NotHonestS(); event Verified(claim))
 )
 
 ( 
@@ -98,10 +96,18 @@ A
      (if $x='A' then in(y); event Initialize(y))
      ))
 
+restriction no_overwrite:
+    "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
+
+lemma no_overwrite_lookup [reuse]:
+    "All #i #j x y x yp. IsIn(x,y)@i & IsIn(x,yp)@j ==> y = yp"
+
+// auto
 lemma sanity_exists_accepted:
   exists-trace
     "Ex #i a. Verified(a)@i"
 
+// auto
 lemma sanity_exists_final:
   exists-trace
     "Ex #j. Final()@j"
@@ -117,17 +123,20 @@ lemma sanity:
   "
 
 verdictfunction v: 
-  "Ex #i #j. NotHonestS()@#i & NotHonestA()@#j"
+  "Ex #i #j #k c . NotHonestS()@#i & NotHonestA()@#j & Verified(c)@k"
   -> <'A','S'>,
 
-  "Ex #i #j. NotHonestA()@#i & HonestS()@#j"
+  "Ex #i #j #k c . NotHonestA()@#i & HonestS()@#j & Verified(c)@k"
   -> <'A'>,
 
-  "Ex #i #j . HonestA()@#i & NotHonestS()@#j "
+  "Ex #i #j  #k c . HonestA()@#i & NotHonestS()@#j  & Verified(c)@k"
   -> <'S'>,
 
-  otherwise -> <>
+  otherwise -> empty
 
+// excl auto
+// exh auto
+// suf_0  ~5min colossus04
 lemma acc: 
   v accounts  [cases]
   for "
