@@ -2,38 +2,32 @@ theory AccountableAlgorithms
 begin
 
 builtins: signing
+
 functions: 
+  extract/1, sk/1[private],
   ZK/7, verZK/1, Pub/1, f/2,
   commit/2, open/2,
-  extract/1, sk/1[private]  
+  eq/2
 
 equations: 
-  /*
-  verify(sign(m,sk),m,pk(sk)) = true
-  */
   Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
   verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true,
   open(commit(m,r),r)=m,
-  extract(sign(x,y)) = x
+  extract(sign(x,y)) = x,
+  eq(x,x)=true
 
-
+predicates:
+  and3(x,y,z) <=> (x=true() & y=true() & z=true())
 
 let S =
 (
-  let z   = fst(res) in
-  let rz  = fst(snd(res)) in
-  let rx  = snd(snd(res)) in
-  
-  let Cx  = fst(log) in
-  let Cz  = fst(snd(log)) in
-  let zkp   = snd(snd(log)) in
-
+  let res = <z,rz,rx> 
+  in 
   in (c_SL,<'J','S','Initialize',Cy>); 
-  
-  new x; out (c_AS,<'S','A','Val',x,sign(x,sk('S'))>);
-
-  in (c_AS,<'A','S','Res',res,sig_res>); 
-  in (c_SL,<'J','S','Log',sig_x,log>);
+  new x; 
+  out (c_AS,<'S','A','Val',x,sign(x,sk('S'))>);
+  in (c_AS,<'A','S','Res',<z,rz,rx>,sig_res>); 
+  in (c_SL,<'J','S','Log',sig_x,<Cx,Cz,zkp>>);
   if verify(sig_res,res,pk(sk('A'))) = true() then
     if Cx = commit(x,rx) then
       if Cz = commit(z,rz) then
@@ -48,17 +42,16 @@ let A =
   let Cx  = commit(x,rx) in
   let Cy  = commit(y,ry) in
   let Cz  = commit(z,rz) in
-
   let zkp   = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
   let log = <Cx,Cz,zkp> in
-
   let res = <z,rz,rx> in
   let sig_res = sign(res,sk('A')) in
 
   new y; new ry; 
+
   out (c_AL,<'A','J','Initialize',Cy>); 
   event Initialize(Cy);
-  
+
   in (c_AS,<'S','A','Val', x, sig_x>);
   if verify(sig_x,x,pk(sk('S'))) = true() then
     (
@@ -78,46 +71,18 @@ let J =
   in (c_AL,<'A','J','Log',sig_x,<Cx,Cz,zkp>>);
   out (c_SL,<'J','S','Log',sig_x,<Cx,Cz,zkp>>);
 
-  if verZK(zkp) = true() then 
-    (
-      if <Cx,Cy,Cz> = Pub(zkp) then 
-        (
-          if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
-            (
-              event HonestA();
-              if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true() 
-                then event HonestS()
-                else event NotHonestS(); event Claim()
-            )
-          else 
-            (
-              event NotHonestA(); event NotHonestS(); event Claim()
-            )
-        )
-      else
-        (
-          event NotHonestA();
-          if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
-            (
-              if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-                then event HonestS(); event Claim()
-                else event NotHonestS(); event Claim()
-            )
-          else event NotHonestS(); event Claim()
-        )
-    )
-  else 
-    (
+  if and3(verZK(zkp),eq(<Cx,Cy,Cz>,Pub(zkp)),verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
+      event HonestA();
+      ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
+       then event HonestS()
+       else event NotHonestS())
+  else
       event NotHonestA();
-      if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
-        (
-          if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
-            then event HonestS(); event Claim()
-            else event NotHonestS(); event Claim()
-        )
-      else event NotHonestS(); event Claim()
-    )
+      ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
+       then event HonestS()
+       else event NotHonestS())
 )
+
 
 new c_AL; new c_SL; new c_AS;
 ( 
