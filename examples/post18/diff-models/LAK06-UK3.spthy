@@ -1,5 +1,4 @@
-theory LAK06_UK
-begin
+theory LAK06_UK3 begin
 
 // This theory models LAK06 as taken from [1].
 //
@@ -71,13 +70,12 @@ rule accepttag:
 restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
-// PROVEN, quick autoproof
+// AUTOMATICALLY PROVEN
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// Observational Equivalence: FALSIFIED, autoproof, takes ?? CPU time (see associated file)
-// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
-// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// Observational Equivalence: ATTACK FOUND AUTOMATICALLY 
+
 end

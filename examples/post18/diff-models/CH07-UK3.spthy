@@ -1,4 +1,4 @@
-theory CH07_untrac begin
+theory CH07_UK3 begin
 
 builtins: xor, hashing, multiset
 functions: rot/2, lh/1, rh/1
@@ -81,21 +81,19 @@ restriction max_number_of_tags_tag_reader:
 restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
 
-// There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right, using a 'zero', but with some clicking can get a "more realistic" attack easily]
+// FINDS ATTACK AUTOMATICALLY 
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right]
+// FINDS PROOF AUTOMATICALLY 
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) [left+right]
+// FINDS PROOF AUTOMATICALLY 
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
 
-// FINDS ATTACK AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) <=10 minutes
-// This attack violates untraceability of a READER, which is not what we actually want to check.
+// FINDS ATTACK AUTOMATICALLY 
 // Observational_equivalence lemma
 
 end

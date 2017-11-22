@@ -1,4 +1,4 @@
-theory KCL07_untrac_weak begin
+theory KCL07_UK1 begin
 
 builtins: xor, hashing, multiset
 
@@ -32,11 +32,8 @@ rule setup:
    , Fr( ~id1 )
    , Fr( ~id2 )   
    ]
---[ OnlyOnce('setup'), Create(~k1), Create(~k2) ]->
+ --[ OnlyOnce('setup'), Create(~k1), Create(~k2) ]->
    [ TagRun(~k1, ~id1)
-    // , ReaderRun(id1, 'learning')
-    // , TagRun(~k2, ~id2)
-    // , ReaderRun(id2, 'learning')
     , TagRun(idb, diff(~id1, ~id2))
    ]
 rule reader1:
@@ -59,12 +56,10 @@ rule tag1:
 rule reader2:
    [ Initiated( ~r1 )
    , ReaderRun( ~k, ~id )
-//   , In( <idr2, hashr2> ) // This is how it should be
-   , In( xoredhash )        // This is the only way I can make it work
+   , In( xoredhash ) 
    ]
  --[ Alive( ~k, 'Tag' )
-//   , Eq( idr2 XOR hashr2, ~id XOR h(<~r1,~k>) ) // How it should be
-   , Eq( xoredhash, ~id XOR h(<~r1,~k>) )  // how it works
+   , Eq( xoredhash, ~id XOR h(<~r1,~k>) ) 
    ]->
    []
 
@@ -75,18 +70,7 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 
-// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so this lemma is trivially satisfied. 
-lemma recentalive_tag:
-  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
-
-// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so executability cannot work. 
-lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
-                   // only one of each wanted for executability
-                   ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
-                   ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
-
-// FALSIFIED, attack found AUTOMATICALLY (from Rule_equality, LHS) on (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488), stored as KCL07-untrac-weak-attack.spthy
+// FALSIFIED, attack found AUTOMATICALLY 
 // Observational_equivalence lemma
 
 end

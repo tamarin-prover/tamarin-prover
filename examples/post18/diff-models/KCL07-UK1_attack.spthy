@@ -1,4 +1,4 @@
-theory KCL07_untrac_weak begin
+theory KCL07_UK1_attack begin
 
 // Function signature and definition of the equational theory E
 

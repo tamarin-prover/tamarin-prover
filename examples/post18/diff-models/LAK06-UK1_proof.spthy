@@ -1,4 +1,4 @@
-theory LAK06_UK_weak begin
+theory LAK06_UK1_proof begin
 
 // Function signature and definition of the equational theory E
 

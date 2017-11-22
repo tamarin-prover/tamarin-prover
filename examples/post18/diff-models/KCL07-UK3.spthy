@@ -1,4 +1,4 @@
-theory KCL07_untrac begin
+theory KCL07_UK3 begin
 
 builtins: xor, hashing, multiset
 
@@ -91,18 +91,20 @@ restriction max_number_of_tags_tag:
 restriction max_number_of_tags_tag_reader:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
-// AUTOMATICALLY PROVEN WITH ORACLE KCL07-untrac-oracle [left+right]
+// AUTOMATICALLY PROVEN WITH ORACLE KCL07-UK3.oracle [left+right]
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// MANUAL EXPLORATION FINDS TRACE (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) on BOTH, see KCL07-untrac-manual-execution-left.spthy and KCL07-untrac-manual-execution-left.spthy
+// MANUAL EXPLORATION FINDS TRACE, see
+// KCL07-UK3_proof-manual-execution-left.spthy and
+// KCL07-UK3_proof-manual-execution-right.spthy
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
                    // only one of each wanted for executability
                    ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
                    ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
 
-// ATTACK FOUND MANUALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// ATTACK FOUND MANUALLY 
 // Observational_equivalence lemma
 
 end

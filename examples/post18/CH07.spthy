@@ -1,5 +1,23 @@
 theory CH07 begin
 
+/* 
+  CH07 RFID protocol model based on 
+  "Attacks on RFID protocols" v1.1 from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
+  This model focuses on authentication properties (recent aliveness and 
+  agreement.)
+
+  Reader R, Tag T, shared knowledge k, ID.
+
+  R: knows(k,ID) 
+  T: knows(k,ID) 
+  R: fresh(r1)
+  R -> T: r1
+  T: fresh(r2)
+  T -> R: r2,lh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k)) 
+  R -> T: rh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k))
+
+*/
+
 builtins: xor, hashing
 functions: rot/2, lh/1, rh/1
 
@@ -62,16 +80,17 @@ rule tag2:
 restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
-// There should be an attack on this
-// FINDS ATTACK AUTOMATICALLY - (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488: attack automatically
+// FINDS ATTACK AUTOMATICALLY 
 lemma recentalive_tag:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
-// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// FINDS PROOF AUTOMATICALLY 
 lemma recentalive_reader:
   all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
 
-// Depends on what data t is specified. FINDS PROOF/ATTACK AUTOMATICALLY. 
+// Depends on what data t is specified. Use the commented out Running/Commit
+// claims above for attack. 
+// FINDS PROOF/ATTACK AUTOMATICALLY. 
 lemma noninjectiveagreement_tag:
   "All t #i. 
     Commit(<'T','R',t>) @i
@@ -84,7 +103,7 @@ lemma noninjectiveagreement_reader:
     Commit(<'R','T',t>) @i
     ==> (Ex #j. Running(<'R','T',t>) @j)"
 
-// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// SHOWS CORRECT EXECUTION 
 lemma executable:
   exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
            // further restriction to automatically get the desired execution

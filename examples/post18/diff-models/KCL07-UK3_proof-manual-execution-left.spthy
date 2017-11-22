@@ -1,4 +1,4 @@
-theory KCL07_untrac begin
+theory KCL07_UK3_proof_manual_execution_left begin
 
 // Function signature and definition of the equational theory E
 

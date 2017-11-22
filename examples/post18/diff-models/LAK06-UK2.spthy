@@ -1,5 +1,4 @@
-theory LAK06_UK_weak
-begin
+theory LAK06_UK2 begin
 
 // This theory models LAK06 as taken from [1].
 //
@@ -30,10 +29,10 @@ rule setup:
    [ Fr( ~k1 )
    , Fr( ~k2 )
    ]
---[ OnlyOnce('setup'), Create(~k1), Create(~k2) ]->
+ --[ OnlyOnce('setup'), Create(~k1), Create(~k2) ]->
    [  Transcript(id1, 'learning')    
-    , Reader(idReader, 'guessing')
-    , TagRun(idb, 'guessing')
+   , Reader(idReader, 'guessing')
+   , TagRun(idb, 'guessing')
    ]
 
 rule initiatereader:
@@ -75,24 +74,13 @@ rule transcript:
 restriction onylOnce:
   "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
 
-/* The following would implement a restriction to executions that comply with phase constraints (guessing after learning only).
-   However, due to the treatment of restrictions in diff-mode, it creates non-termination issue (it tries to explore all possible ways
-   to comply with the restriction).
-   Fortunately, Tamarin establishes diff-equivalence without, implying diff-equivalence with the restriction
-   (note that this reasoning would be wrong for observational equivalence or in presence of function symbols treated modulo AC such as multisets).
-*/
-// restriction complyWithPhase:
-//   "All #i1 #i2. (Phase('learning')@i1 & Phase('guessing')@i2) ==> #i1 < #i2"
-//   // This restriction causes non-termination issue when there was no such issue before ...
-
-// PROVEN, quick autoproof -- when? check old version, store execution and try loading in current 
-// Killed after 5 minutes in: (2017-11-07, 7dafa2d881cffac9cd1e00dd8317f27038c95cdf)
+// AUTOMATICALLY PROVEN
 lemma executable:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
-// PROVEN, autoproof in (3457.42s CPU time)
-// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
-// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// AUTOMATICALLY PROVEN, (3457.42s CPU time)
+// Observational Equivalence
+
 end

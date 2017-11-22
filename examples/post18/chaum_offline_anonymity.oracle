@@ -46,7 +46,6 @@ for line in lines:
 
   num = line.split(':')[0]
 
-#  if lemma == "secret":
   prioritize(num,line)
 #    if debug: print >> sys.stderr, "Current list: ",plist
 #  else:

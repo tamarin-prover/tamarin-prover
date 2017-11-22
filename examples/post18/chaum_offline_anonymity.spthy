@@ -5,24 +5,31 @@ begin
 /*
  * Protocol: Chaum's Offline eCash Protocol
  * Based on: Charles Duménil's model of Chaum's Online Protocol
- *   anonymity is defined as secrecy of customer's name
- * Status: works automatically if equational theory is simplified
- *         needs oracle/manual proof for sources lemma if equational theory
- *         is not simplified, see chaum_offline_anonymity_proof.spthy
+ * Focus on anonymity, defined as secrecy of customer's name
+ * 
+ *  Automatic proof requires oracle, see associated oracle file. 
  */
 
 
 /*
-  Protocol ChaumOfflineECash {                          ( Seller and bank are considered corrupted )
+  Protocol ChaumOfflineECash { 
     Withdrawal phase
      C -> B: blind(x XOR C,r), blind(x,r)
      B -> C: sign(blind(x XOR C,r),skB), sign(blind(x,r),skB)    "Withdraw"
     Payment and deposit phase
      C -> S: <x, sign(x,skB)>        "Check signature" 
      S -> B: <x, sign(x,skB)>        "Check signature" 
-     B -> S: Private(x)              "Check signature" + "Deposit"
-     S     :                         "Spend"
   }
+
+  Tamarin model below is on the following:
+  Protocol ChaumOfflineECash { ( Seller and bank are considered corrupted )
+    Withdrawal phase
+     C -> E: blind(x XOR C,r), blind(x,r)
+     E -> C: sign(blind(x XOR C,r),skB), sign(blind(x,r),skB)    "Withdraw"
+    Payment and deposit phase
+     C -> E: <x, sign(x,skB)>        "Check signature" 
+  }
+
 */
 
 
@@ -85,24 +92,25 @@ restriction OnlyOnce:
 
 // Sources 
 
+// PROOF Requires oracle, see associated oracle file.
 lemma coins [sources]:
   " All x y r #i. Coin(x,y,r)@i ==> Ex #j. Mint(x,y,r)@j"
 
 
 // Executability
 
-// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// SHOWS CORRECT EXECUTION 
 lemma exec:
   exists-trace
   " Ex x y r #i. Spend(x,y,r)@i"
 
-// PROVEN AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// PROVEN AUTOMATICALLY 
 // TestSubject is anonymous (subject's name is secret) as long as 
 // the subject does not double spend
 lemma anonymity:
   "All C #i. TestSubject(C)@i ==> ((not Ex #j. !KU(C)@j) | (Ex x r #i #j. Spend(C,x,r)@i & Spend(C,x,r)@j & not #i = #j))"
 
-// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// SHOWS CORRECT EXECUTION. 
 // TestSubject is NOT anonymous (subject's name not secret) if the subject double spends:
 lemma caught:
   exists-trace

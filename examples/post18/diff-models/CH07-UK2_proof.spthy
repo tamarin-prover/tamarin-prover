@@ -1,4 +1,4 @@
-theory CH07_untrac_weak begin
+theory CH07_UK2_proof begin
 
 // Function signature and definition of the equational theory E
 

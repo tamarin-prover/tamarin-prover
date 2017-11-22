@@ -1,4 +1,4 @@
-theory CH07_untrac_weak begin
+theory CH07_UK2 begin
 
 builtins: xor, hashing, multiset
 functions: rot/2, lh/1, rh/1
@@ -12,10 +12,10 @@ rule setup:
    [ Fr( ~k1 ), Fr( ~id1 )
    , Fr( ~k2 ), Fr( ~id2 )
    ]
---[ OnlyOnce('setup') ]->
+ --[ OnlyOnce('setup') ]->
    [  Transcript(data1, 'learning')    
-    , Reader(dataReader, 'guessing')
-    , TagRun(datab, 'guessing')
+   , Reader(dataReader, 'guessing')
+   , TagRun(datab, 'guessing')
    ]
 
 rule transcript:
@@ -84,21 +84,10 @@ restriction equality:
 restriction unique:
   "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
 
-/* Note that Tamarin finds a "false" attack without the following restriction when one considers readers as well as tags.
-   However, one can get rid of this restriction for the present model (without readers), as done for LAK06 (see LAK06_untrac-weak.spthy).
-*/
-// restriction complyWithPhase:
-//   "All #i1 #i2. (Phase('learning')@i1 & Phase('guessing')@i2) ==> #i1 < #i2"
-// This restriction causes non-termination issue when there was no such issue before ...
-
 // FINDS PROOF AUTOMATICALLY [left+right]
 lemma executable:
   exists-trace "∃ x #j. ((Response( x, 'Tag' ) @ #j))"
-// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
-// Compiled at: 2017-11-09 08:34:57.786964 UTC
 
 // Observational Equivalence: PROVEN automatically, <=10 minutes
-// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
-// Compiled at: 2017-11-09 08:34:57.786964 UTC
 
 end

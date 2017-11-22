@@ -1,4 +1,4 @@
-theory KCL07_untrac_weak begin
+theory KCL07_UK2 begin
 
 builtins: xor, hashing, multiset
 
@@ -91,20 +91,7 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
 
 
-// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so this lemma is trivially satisfied. 
-lemma recentalive_tag:
-  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
-
-// OK. As there is no ReaderRun fact created in the setup rule, the reader2 rule cannot ever be executed, so executability cannot work. 
-lemma executable:
-  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
-                   // only one of each wanted for executability
-                   ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
-                   ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
-
-// FALSIFIED, attack found AUTOMATICALLY in 231.04s CPU time stored as KCL07-untrac-akiss_attack.spthy
-// Git revision: 73593dd9747f3320384227ff086f7fca0f75c488, branch: develop
-// Compiled at: 2017-11-09 08:34:57.786964 UTC
+// FALSIFIED, attack found AUTOMATICALLY
 // Observational_equivalence lemma
 
 end

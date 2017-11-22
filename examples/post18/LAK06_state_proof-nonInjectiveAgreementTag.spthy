@@ -1,4 +1,4 @@
-theory LAK06_state begin
+theory LAK06_state_proof_niagreeTag begin
 
 // Function signature and definition of the equational theory E
 

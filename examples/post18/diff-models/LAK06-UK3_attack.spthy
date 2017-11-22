@@ -1,4 +1,4 @@
-theory LAK06_UK begin
+theory LAK06_UK3_attack begin
 
 // Function signature and definition of the equational theory E
 
