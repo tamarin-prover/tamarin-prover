@@ -485,21 +485,19 @@ attached (dis)proofs:
 
 ### Quit on Warning
 
-As referred to in ["Graphical User Interface"](#sec:gui), in larger models, it's
-very easy to miss wellformedness errors (when writing the Tamarin file, and when
-running the `tamarin-prover`), especially as a long list of pre-computation
-output-text flies past on the terminal: in many cases, the web-server starts up
-correctly, making it harder to notice that something's not right either in a
-rule or lemma.
+As referred to in ["Graphical User Interface"](#sec:gui), in larger models, one
+can miss wellformedness errors (when writing the Tamarin file, and when running
+the `tamarin-prover`): in many cases, the web-server starts up correctly, making
+it harder to notice that something's not right either in a rule or lemma.
 
 To ensure that your provided `.spthy` file is free of any errors or warnings
 (and to halt pre-processing and other computation in the case of errors), it can
-be a good idea to use the `--quit-on-warning` flag at the command line. E.g.
+be a good idea to use the `--quit-on-warning` flag at the command line. E.g.,
 
     tamarin-prover interactive FirstExample.spthy --quit-on-warning
 
-This will stop Tamarin's computations any further, and leave the error or
-warning causing Tamarin to stop on the terminal.
+This will stop Tamarin's computations from progressing any further, and leave
+the error or warning causing Tamarin to stop on the terminal.
 
 
 Complete Example
