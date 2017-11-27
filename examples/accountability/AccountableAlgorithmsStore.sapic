@@ -17,24 +17,25 @@ equations:
   eq(x,x)=true
 
 predicates:
-  and3(x,y,z) <=> (x=true() & y=true() & z=true())
+  and3(x,y,z) <=> (x=true() & y=true() & z=true() )
 
 let S =
 (
   let res = <z,rz,rx> 
       claim = <x,z,res,sig_res>
-      /* sig_x = fst(log) */
-      /* zkp = fst(snd(log)) */
-      /* Cx = fst(snd(snd(log))) */
-      /* Cz = snd(snd(snd(log))) */
+      sig_cx = fst(log)
+      zkp = fst(snd(log))
+      Cx = fst(snd(snd(log)))
+      Cz = snd(snd(snd(log))) 
   in 
-  lookup <'A','Initialize'> as Cy in
+  lookup <'A','Initialize'> as Cy in // TODO:: Give adversary access to Cell
   new x; 
-  out (<x,sign(x,sk('S'))>);
+  out (<x, sign(x, sk('S'))>);
   lookup <'A','Log','S'> as log in
-  in (<res,sig_res>); 
-  if verify(sig_res,res,pk(sk('A'))) then
-          out (<claim,sign(claim,sk('S'))>)
+  if and3( verZK(zkp), eq(<Cx,Cy,Cz>, Pub(zkp)), verify(sig_cx, Cx, pk(sk('A'))) ) then 
+	in (<res, sig_res>); 
+  	if verify(sig_res, res, pk(sk('A')))  then
+        out (<claim, sign(claim, sk('S'))>)
 )
 
 let A =
@@ -43,9 +44,9 @@ let A =
   let Cx  = commit(x,rx) in
   let Cy  = commit(y,ry) in
   let Cz  = commit(z,rz) in
-  let zkp   = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
+  let zkp = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
   let res = <z,rz,rx> in
-  let sig_res = sign(res,sk('A')) in
+  let sig_res = sign(res,sk('A')) in 
 
   new y; new ry; 
   insert <'A','Initialize'>,Cy;
@@ -55,7 +56,7 @@ let A =
     (
       new rx; new rz;
       out (<res, sig_res>);  // send result to S
-      insert <'A','Log','S'>, <sig_x,zkp, Cx, Cz>;
+      insert <'A','Log','S'>, <sign(Cx,sk('A')), zkp, Cx, Cz>;
       insert <'A','Final'>, true()
     )
 )
@@ -68,23 +69,37 @@ let J =
       Cx = fst(snd(snd(log)))
       Cz = snd(snd(snd(log)))
   in
-  in (claim,sig_claim);
-  if verify(sig_claim,claim,pk(sk('S'))) = true() then
+  in (claim, sig_claim);//what if the claim has been sent by the adversary?
+  if verify(sig_claim, claim, pk(sk('S'))) = true() then
     lookup <'A','Final'> as y in 
+
         event Final();
         lookup <'A','Initialize'> as Cy in 
             event Initialize(Cy);
             lookup <'A','Log','S'> as log in
-            if and3(verZK(zkp),eq(<Cx,Cy,Cz>,Pub(zkp)),verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
-                event HonestA();
-                  ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
-                   then event HonestS(); event Verified(claim)
-                   else event NotHonestS(); event Verified(claim))
-                else
-                  event NotHonestA();
-                  ( if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A')))=true() 
-                   then event HonestS(); event Verified(claim)
-                   else event NotHonestS(); event Verified(claim))
+
+            if verify(sig_res, res, pk(sk('A'))) = true() then
+				(
+					if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_x,Cx,pk(sk('A'))) ) then 
+	                event HonestA();
+	                  ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), true())  
+	                   then event HonestS()//; //event Verified(claim)	//if both are honest then there should be no Verified event.
+	                   else event DisHonestS(); event Verified(claim))
+	                else
+	                  event DisHonestA();
+	                  ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), true()) 
+	                   then event HonestS(); event Verified(claim)
+	                   else event DisHonestS(); event Verified(claim))
+                )
+                //this part looks like unnecessary, happy to discuss*
+            // else
+            // 	(
+            // 		event DisHonestS();
+	           //  	if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
+	           //  		event HonestA(); event Verified(claim)
+	           //  	else
+	           //  		event DisHonestA(); event Verified(claim)
+	           //  )
 )
 
 ( 
@@ -116,20 +131,20 @@ lemma sanity_exists_final:
 lemma sanity:
   exists-trace
   "
-    ( Ex x z r sig_r #i #j #k y ry. Verified(<x,z,r,sig_r>)@#i 
+    ( Ex x z r sig_r #i #j #k y ry. Verified(<x,z,r,sig_r>)@#i //claim = <x,z,<z,rz,rx>,sig_res>
       & Initialize(commit(y,ry))@#j & Final()@#k 
-      & z = f(x,y)
+      & z = f(x,y) 
     )
   "
 
 verdictfunction v: 
-  "Ex #i #j #k c . NotHonestS()@#i & NotHonestA()@#j & Verified(c)@k"
+  "Ex #i #j #k c . DisHonestS()@#i & DisHonestA()@#j & Verified(c)@k"
   -> <'A','S'>,
 
-  "Ex #i #j #k c . NotHonestA()@#i & HonestS()@#j & Verified(c)@k"
+  "Ex #i #j #k c . DisHonestA()@#i & HonestS()@#j & Verified(c)@k"
   -> <'A'>,
 
-  "Ex #i #j  #k c . HonestA()@#i & NotHonestS()@#j  & Verified(c)@k"
+  "Ex #i #j  #k c . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k"
   -> <'S'>,
 
   otherwise -> empty
@@ -137,6 +152,8 @@ verdictfunction v:
 // excl auto
 // exh auto
 // suf_0  ~5min colossus04
+// suf_0, suf_1 failed!
+
 lemma acc: 
   v accounts  [cases]
   for "
@@ -149,5 +166,6 @@ lemma acc:
     )
       "
   for parties <'A','S'> 
-
+ 
+      
 end
