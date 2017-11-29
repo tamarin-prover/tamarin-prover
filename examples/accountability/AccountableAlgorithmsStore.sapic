@@ -22,8 +22,8 @@ predicates:
 
 let S =
 (
-  let res = <z,rz,rx> 
-      claim = <x,z,res,sig_res,rxp>
+  let res = <'2',z,rz,rx> 
+      claim = <'3',x,z,res,sig_res,rxp>
       Cxp = commit(x, rxp)
       m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
       sig_cxp = fst(log)
@@ -35,7 +35,7 @@ let S =
   lookup <'A','Initialize'> as Cy in // TODO:: Give adversary access to Cell
   new x; 
   new rxp;
-  out (m1,sign(m1,sk('S'))); //TODO change other messages to same style and adapt recipient
+  out (<m1,sign(m1,sk('S'))>); //TODO change other messages to same style and adapt recipient
   lookup <'A','Log','S'> as log in
   if and4( verZK(zkp),
            eq(<Cx,Cy,Cz>, Pub(zkp)),
@@ -52,19 +52,20 @@ let S =
 let A =
 (
   let z   = f(x,y) 
-  Cx      = commit(x,rx)
-  Cy      = commit(y,ry)
-  Cz      = commit(z,rz)
-  zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)
-  res     = <z,rz,rx>
-  sig_res = sign(res,sk('A'))
+      Cx      = commit(x,rx)
+      Cy      = commit(y,ry)
+      Cz      = commit(z,rz)
+      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)
+      res     = <'2',z,rz,rx>
+      sig_res = sign(res,sk('A'))
       Cxp = commit(x, rxp)
+      m1 = <'1', x, rxp, sig_cxp>
   in
   new y; new ry; 
   insert <'A','Initialize'>,Cy;
 
-  in (<x, rxp, sig_x, sig_cxp>);
-  if and3(verify(sig_x,x,pk(sk('S'))), verify(sig_cxp,Cxp,pk(sk('S'))), true()) then
+  in (<m1, sig_m1>);
+  if and3( verify(sig_m1,m1,pk(sk('S'))), true(), verify(sig_cxp,Cxp,pk(sk('S')))) then  //verify(sig_x,x,pk(sk('S')))
     (
       new rx; new rz;
       out (<res, sig_res>);  // send result to S
@@ -75,7 +76,7 @@ let A =
 
 let J =
 ( let res = <z,rz,rx> 
-      claim = <x,z,res,sig_res,rxp>
+      claim = <'3',x,z,res,sig_res,rxp>
       sig_cxp = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
