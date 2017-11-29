@@ -23,62 +23,66 @@ predicates:
 let S =
 (
   let res = <z,rz,rx> 
-      claim = <x,z,res,sig_res>
-      sig_cxz = fst(log)
+      claim = <x,z,res,sig_res,rxp>
+      Cxp = commit(x, rxp)
+      sig_cxp = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
       Cz = fst(snd(snd(snd(log))))
       CxpL = snd(snd(snd(snd(log))))
-      //Cxp = commit(x, rxp)
-      //sig_cxp = 
   in 
   lookup <'A','Initialize'> as Cy in // TODO:: Give adversary access to Cell
   new x; 
   new rxp;
-  out (<x, sign(x, sk('S')), commit(x, rxp), sign(commit(x, rxp), sk('S')) >);
+  out (<x, rxp, sign(x, sk('S')), sign(Cxp, sk('S')) >); // potential message confusion, network can switch signatures .. 
   lookup <'A','Log','S'> as log in
-  if and3( verZK(zkp), eq(<Cx,Cy,Cz>, Pub(zkp)), verify(sig_cxz, <Cx,Cz>, pk(sk('A'))) ) then 
+  if and4( verZK(zkp),
+           eq(<Cx,Cy,Cz>, Pub(zkp)),
+           eq(sig_cxp,sign(Cxp, sk('S'))),
+           eq(CxpL,Cxp)
+           ) then 
 	    (
-        in (<res, sig_res, Cxp, sig_cxp>); 
-        if and4(verify(sig_res, res, pk(sk('A'))), verify(sig_cxp, Cxp, pk(sk('A'))), eq(Cxp, CxpL), eq(x, open(Cxp, rxp)) ) then
-          out (<claim, sign(<claim,Cxp>, sk('S')), Cxp>)
+                in (<res, sig_res>); 
+                if verify(sig_res, res, pk(sk('A')))=true() then
+                  out (<claim, sign(claim, sk('S'))>)
       )
 )
 
 let A =
 (
-  let z   = f(x,y) in
-  let Cx  = commit(x,rx) in
-  let Cy  = commit(y,ry) in
-  let Cz  = commit(z,rz) in
-  let zkp = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
-  let res = <z,rz,rx> in
-  let sig_res = sign(res,sk('A')) in 
-
+  let z   = f(x,y) 
+  Cx      = commit(x,rx)
+  Cy      = commit(y,ry)
+  Cz      = commit(z,rz)
+  zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)
+  res     = <z,rz,rx>
+  sig_res = sign(res,sk('A'))
+      Cxp = commit(x, rxp)
+  in
   new y; new ry; 
   insert <'A','Initialize'>,Cy;
 
-  in (<x, sig_x, Cxp, sig_cxp>);
+  in (<x, rxp, sig_x, sig_cxp>);
   if and3(verify(sig_x,x,pk(sk('S'))), verify(sig_cxp,Cxp,pk(sk('S'))), true()) then
     (
       new rx; new rz;
-      out (<res, sig_res, Cxp, sign(Cxp,sk('A'))>);  // send result to S
-      insert <'A','Log','S'>, <sign(<Cx,Cz>,sk('A')), zkp, Cx, Cz, Cxp>;
+      out (<res, sig_res>);  // send result to S
+      insert <'A','Log','S'>, <sig_cxp, zkp, Cx, Cz, Cxp>;
       insert <'A','Final'>, true()
     )
 )
 
 let J =
 ( let res = <z,rz,rx> 
-      claim = <x,z,res,sig_res>
-      sig_cxz = fst(log)
+      claim = <x,z,res,sig_res,rxp>
+      sig_cxp = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
       Cz = fst(snd(snd(snd(log))))
       CxpL = snd(snd(snd(snd(log))))
   in
-  in (<claim, sig_claim, Cxp>);//what if the claim has been sent by the adversary?
-  if verify(sig_claim, <claim, Cxp>, pk(sk('S'))) = true() then
+  in (<claim, sig_claim>);//what if the claim has been sent by the adversary?
+  if verify(sig_claim, claim, pk(sk('S'))) = true() then
     (
         lookup <'A','Final'> as y in 
         event Final();
@@ -88,35 +92,43 @@ let J =
         
         lookup <'A','Log','S'> as log in
 
-        if and3(verify(sig_res, res, pk(sk('A'))), eq(Cxp, CxpL) , true()) then
-				  ( 
-			        if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_cxz,<Cx,Cz>,pk(sk('A'))) ) then 
-              event HonestA();
-                ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), eq(z, open(Cz, rz)))  
-                 then event HonestS()//; //event Verified(claim)	//if both are honest then there should be no Verified event.
-                 else event DisHonestS(); event Verified(claim))
-              else
-                event DisHonestA();
-                ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), eq(z, open(Cz, rz))) 
-                 then event HonestS(); event Verified(claim)
-                 else event DisHonestS(); event Verified(claim))
-          )
-                //this part looks like unnecessary, happy to discuss*
-        else
-        	(
-        		event DisHonestS();
-          	if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_cxz,<Cx,Cz>,pk(sk('A')))) then 
-          		event HonestA(); event Verified(claim)
-          	else
-          		event DisHonestA(); event Verified(claim)
-          )
+        // first check validity of the log by itself --> else branch means A dishonest
+        if and3( verZK(zkp), //produced by A
+                 eq(<Cx,Cy,Cz>,Pub(zkp)), // produced by A
+                 verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
+                 )
+        then 
+            ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+                       eq(x, open(CxpL,rxp)), // honest S signed both messages, so this should hold
+                       true())
+              then ( // We now believe S is honest and its claim is valid
+                  event HonestS(); 
+                  if and3(
+                       eq(x, open(Cx,rx)),  // honest A comits to x send by S, we've used CxpL to verify its the same that is claimed
+                       eq(z, open(Cz,rz)),  // z from signed res should match zkp
+                       true()) 
+                  then 
+                            event HonestA(); 
+                            event Verified(claim)
+                  else 
+                       event DisHonestA(); event Verified(claim)
+                  )
+              else 
+                  event DisHonestS();  // A's log is alright, but S is definitely cheating
+                  event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
+                  event Verified(claim)
+            )
+        else // A is dishonest and produced bad log
+            event DisHonestA();
+            event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
+            event Verified(claim)
     )
 )
 
 ( 
 A 
-// || S 
-// || J 
+|| S 
+|| J 
 || !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      out ('c',sk($x));
      (if $x='A' then in(y); event Initialize(y))
