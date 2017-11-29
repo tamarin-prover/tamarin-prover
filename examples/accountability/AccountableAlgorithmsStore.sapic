@@ -17,25 +17,32 @@ equations:
   eq(x,x)=true
 
 predicates:
-  and3(x,y,z) <=> (x=true() & y=true() & z=true() )
+  and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
+  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
 
 let S =
 (
   let res = <z,rz,rx> 
       claim = <x,z,res,sig_res>
-      sig_cx = fst(log)
+      sig_cxz = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
-      Cz = snd(snd(snd(log))) 
+      Cz = fst(snd(snd(snd(log))))
+      CxpL = snd(snd(snd(snd(log))))
+      //Cxp = commit(x, rxp)
+      //sig_cxp = 
   in 
   lookup <'A','Initialize'> as Cy in // TODO:: Give adversary access to Cell
   new x; 
-  out (<x, sign(x, sk('S'))>);
+  new rxp;
+  out (<x, sign(x, sk('S')), commit(x, rxp), sign(commit(x, rxp), sk('S')) >);
   lookup <'A','Log','S'> as log in
-  if and3( verZK(zkp), eq(<Cx,Cy,Cz>, Pub(zkp)), verify(sig_cx, Cx, pk(sk('A'))) ) then 
-	in (<res, sig_res>); 
-  	if verify(sig_res, res, pk(sk('A')))  then
-        out (<claim, sign(claim, sk('S'))>)
+  if and3( verZK(zkp), eq(<Cx,Cy,Cz>, Pub(zkp)), verify(sig_cxz, <Cx,Cz>, pk(sk('A'))) ) then 
+	    (
+        in (<res, sig_res, Cxp, sig_cxp>); 
+        if and4(verify(sig_res, res, pk(sk('A'))), verify(sig_cxp, Cxp, pk(sk('A'))), eq(Cxp, CxpL), eq(x, open(Cxp, rxp)) ) then
+          out (<claim, sign(<claim,Cxp>, sk('S')), Cxp>)
+      )
 )
 
 let A =
@@ -51,12 +58,12 @@ let A =
   new y; new ry; 
   insert <'A','Initialize'>,Cy;
 
-  in (<x, sig_x>);
-  if verify(sig_x,x,pk(sk('S'))) = true() then
+  in (<x, sig_x, Cxp, sig_cxp>);
+  if and3(verify(sig_x,x,pk(sk('S'))), verify(sig_cxp,Cxp,pk(sk('S'))), true()) then
     (
       new rx; new rz;
-      out (<res, sig_res>);  // send result to S
-      insert <'A','Log','S'>, <sign(Cx,sk('A')), zkp, Cx, Cz>;
+      out (<res, sig_res, Cxp, sign(Cxp,sk('A'))>);  // send result to S
+      insert <'A','Log','S'>, <sign(<Cx,Cz>,sk('A')), zkp, Cx, Cz, Cxp>;
       insert <'A','Final'>, true()
     )
 )
@@ -64,48 +71,52 @@ let A =
 let J =
 ( let res = <z,rz,rx> 
       claim = <x,z,res,sig_res>
-      sig_x = fst(log)
+      sig_cxz = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
-      Cz = snd(snd(snd(log)))
+      Cz = fst(snd(snd(snd(log))))
+      CxpL = snd(snd(snd(snd(log))))
   in
-  in (claim, sig_claim);//what if the claim has been sent by the adversary?
-  if verify(sig_claim, claim, pk(sk('S'))) = true() then
-    lookup <'A','Final'> as y in 
-
+  in (<claim, sig_claim, Cxp>);//what if the claim has been sent by the adversary?
+  if verify(sig_claim, <claim, Cxp>, pk(sk('S'))) = true() then
+    (
+        lookup <'A','Final'> as y in 
         event Final();
-        lookup <'A','Initialize'> as Cy in 
-            event Initialize(Cy);
-            lookup <'A','Log','S'> as log in
 
-            if verify(sig_res, res, pk(sk('A'))) = true() then
-				(
-					if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_x,Cx,pk(sk('A'))) ) then 
-	                event HonestA();
-	                  ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), true())  
-	                   then event HonestS()//; //event Verified(claim)	//if both are honest then there should be no Verified event.
-	                   else event DisHonestS(); event Verified(claim))
-	                else
-	                  event DisHonestA();
-	                  ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), true()) 
-	                   then event HonestS(); event Verified(claim)
-	                   else event DisHonestS(); event Verified(claim))
-                )
+        lookup <'A','Initialize'> as Cy in 
+        event Initialize(Cy);
+        
+        lookup <'A','Log','S'> as log in
+
+        if and3(verify(sig_res, res, pk(sk('A'))), eq(Cxp, CxpL) , true()) then
+				  ( 
+			        if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_cxz,<Cx,Cz>,pk(sk('A'))) ) then 
+              event HonestA();
+                ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), eq(z, open(Cz, rz)))  
+                 then event HonestS()//; //event Verified(claim)	//if both are honest then there should be no Verified event.
+                 else event DisHonestS(); event Verified(claim))
+              else
+                event DisHonestA();
+                ( if and3(verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))), eq(x, open(Cx, rx)), eq(z, open(Cz, rz))) 
+                 then event HonestS(); event Verified(claim)
+                 else event DisHonestS(); event Verified(claim))
+          )
                 //this part looks like unnecessary, happy to discuss*
-            // else
-            // 	(
-            // 		event DisHonestS();
-	           //  	if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_x,open(Cx,rx),pk(sk('S')))) then 
-	           //  		event HonestA(); event Verified(claim)
-	           //  	else
-	           //  		event DisHonestA(); event Verified(claim)
-	           //  )
+        else
+        	(
+        		event DisHonestS();
+          	if and3(verZK(zkp), eq(<Cx,Cy,Cz>,Pub(zkp)), verify(sig_cxz,<Cx,Cz>,pk(sk('A')))) then 
+          		event HonestA(); event Verified(claim)
+          	else
+          		event DisHonestA(); event Verified(claim)
+          )
+    )
 )
 
 ( 
 A 
-|| S 
-|| J 
+// || S 
+// || J 
 || !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      out ('c',sk($x));
      (if $x='A' then in(y); event Initialize(y))
