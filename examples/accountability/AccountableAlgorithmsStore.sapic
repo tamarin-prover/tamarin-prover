@@ -25,6 +25,7 @@ let S =
   let res = <z,rz,rx> 
       claim = <x,z,res,sig_res,rxp>
       Cxp = commit(x, rxp)
+      m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
       sig_cxp = fst(log)
       zkp = fst(snd(log))
       Cx = fst(snd(snd(log)))
@@ -34,7 +35,7 @@ let S =
   lookup <'A','Initialize'> as Cy in // TODO:: Give adversary access to Cell
   new x; 
   new rxp;
-  out (<x, rxp, sign(x, sk('S')), sign(Cxp, sk('S')) >); // potential message confusion, network can switch signatures .. 
+  out (m1,sign(m1,sk('S'))); //TODO change other messages to same style and adapt recipient
   lookup <'A','Log','S'> as log in
   if and4( verZK(zkp),
            eq(<Cx,Cy,Cz>, Pub(zkp)),
@@ -131,8 +132,14 @@ A
 || J 
 || !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      out ('c',sk($x));
-     (if $x='A' then in(y); event Initialize(y))
+     !(
+       (if $x='A' then in(y); insert <'A','Initialize'>,y)
+     ||
+       (if $x='A' then in(y); insert <'A','Log','S'>, y)
+     ||
+       (if $x='A' then in(y); insert <'A','Final'>, y)
      ))
+)
 
 restriction no_overwrite:
     "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
