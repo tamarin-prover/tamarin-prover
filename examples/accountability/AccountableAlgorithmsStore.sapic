@@ -162,7 +162,7 @@ lemma sanity_exists_final:
 lemma sanity:
   exists-trace
   "
-    ( Ex x z r sig_r #i #j #k y ry. Verified(<x,z,r,sig_r>)@#i //claim = <x,z,<z,rz,rx>,sig_res>
+    ( Ex three rxp x z r sig_r #i #j #k y ry. Verified(<three,x,z,r,sig_r,rxp>)@#i // claim = <'3',x,z,res,sig_res,rxp>
       & Initialize(commit(y,ry))@#j & Final()@#k 
       & z = f(x,y) 
     )
@@ -188,7 +188,7 @@ verdictfunction v:
 lemma acc: 
   v accounts  [cases]
   for "
-    ( All x z r sig_r #i. Verified(<x,z,r,sig_r>)@#i
+    ( All three rxp x z r sig_r #i. Verified(<three,x,z,r,sig_r,rxp>)@#i
       ==>
       ( Ex #j #k y ry. Initialize(commit(y,ry))@#j & Final()@#k 
         & #j < #i & #i < #k
