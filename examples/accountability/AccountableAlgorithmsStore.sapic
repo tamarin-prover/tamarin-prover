@@ -149,21 +149,24 @@ lemma no_overwrite_lookup [reuse]:
     "All #i #j x y x yp. IsIn(x,y)@i & IsIn(x,yp)@j ==> y = yp"
 
 // auto
-lemma sanity_exists_accepted:
-  exists-trace
-    "Ex #i a. Verified(a)@i"
+/* lemma sanity_exists_accepted: */
+/*   exists-trace */
+/*     "Ex #i a. Verified(a)@i" */
 
-// auto
-lemma sanity_exists_final:
-  exists-trace
-    "Ex #j. Final()@j"
+/* // auto */
+/* lemma sanity_exists_final: */
+/*   exists-trace */
+/*     "Ex #j. Final()@j" */
 
 
 lemma sanity:
   exists-trace
   "
-    ( Ex three rxp x z r sig_r #i #j #k y ry. Verified(<three,x,z,r,sig_r,rxp>)@#i // claim = <'3',x,z,res,sig_res,rxp>
-      & Initialize(commit(y,ry))@#j & Final()@#k 
+    ( Ex three rxp x z r sig_r #i #j #k y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j 
+      & Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      & #i < #j & #j < #k
       & z = f(x,y) 
     )
   "
@@ -188,13 +191,15 @@ verdictfunction v:
 lemma acc: 
   v accounts  [cases]
   for "
-    ( All three rxp x z r sig_r #i. Verified(<three,x,z,r,sig_r,rxp>)@#i
+      All three rxp x z r sig_r #k.
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       ==>
-      ( Ex #j #k y ry. Initialize(commit(y,ry))@#j & Final()@#k 
-        & #j < #i & #i < #k
-        & z = f(x,y)
+      ( Ex #j #i y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j 
+      & #i < #j & #j < #k
+      & z = f(x,y) 
       )
-    )
       "
   for parties <'A','S'> 
  
