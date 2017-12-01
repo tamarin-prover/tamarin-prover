@@ -179,6 +179,7 @@ lemma detect_sound [reuse]:
     ==> (Ex #j. #j < #i & Corrupted(b) @ j)
         |(Ex #j. #j < #i & Corrupted(a) @ j)"
 
+
 // verifies quickly 
 lemma no_detect_implies_rsession[reuse]:
     "All a b ni nr nrp c #i.
@@ -210,23 +211,21 @@ lemma aposteriori_boundary_case[reuse]:
         | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #i)
         "
 
-//automated 912step / 1:30 colossus04
 lemma unmatching_implies_detect_with_one_uncompromised[use_induction,reuse]:
-    "All a b ni nr c #r #i niprev nrprev cprev #iprev.
-        //Given an matching session
-        CSession(a,b,ni,nr,c) @ i & WSession(a,b,ni,nr,c) @ r & #r < #i
+    "All a b ni nr c niprev nrprev cprev #t1 #t2 #t3.
+        //Given an matching m3
+          CSession(a,b,ni,nr,c) @ t2
+        & WSession(a,b,ni,nr,c) @ t3
         //Then for all sessions before that
-        & CSession(a,b,niprev,nrprev,cprev) @ iprev & #iprev < #i
+        & WSession(a,b,niprev,nrprev,cprev) @ t1
     ==> //Either that session was also matching
-        (Ex #rprev.
-            WSession(a,b,niprev,nrprev,cprev) @ rprev
-                & #rprev < #iprev & #rprev < #r)
-        //Or we detected
-        | (Ex #j.  Detect(a,b) @ j)
+        (Ex #t0.  CSession(a,b,niprev,nrprev,cprev) @ t0)
+        //Or we did detect key misuse
+        | (Ex #t4.  Detect(a,b) @ t4 )
         //Or B was compromised
         | (Ex #k. Corrupted(b) @ k)
-        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j & #j < #i)
-        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #iprev)
+        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j )
+        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j )
         "
         /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
 
