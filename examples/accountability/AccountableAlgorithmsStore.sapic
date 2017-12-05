@@ -7,13 +7,14 @@ functions:
   extract/1, 
   sk/1[private],
   ZK/7, verZK/1, Pub/1, f/2,
-  commit/2, open/2,
+  commit/2, open/2, verCom/2,
   eq/2
 
 equations: 
   Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
   verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true(),
   open(commit(m,r),r)=m,
+  verCom(commit(m,r),r)=true,
   extract(sign(x,y)) = x,
   eq(x,x)=true()
 
@@ -80,7 +81,7 @@ let A =
 let J =
 ( let res     = <'2', z, rz, rx>
       claim   = <'3', x, z, res, sig_res, rxp>
-      sig_cxp = fst(log)
+      sig_cxp = fst(log)  // log is <sig_cxp, zkp, Cxp>;
       zkp     = fst(snd(log))
       CxpL    = snd(snd(log))
       Cx      = fst(Pub(zkp))
@@ -105,15 +106,18 @@ let J =
                  ,true()
                  )
         then 
-            ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+            ( if and4( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+                       verCom(CxpL,rxp),
                        eq(x, open(CxpL,rxp)), // honest S signed both messages, so this should hold
                        true())
               then ( // We now believe S is honest and its claim is valid
                   event HonestS();
-                  if and3(
+                  if and4(
+                       verCom(Cx,rx),
+                       verCom(Cz,rz),
                        eq(x, open(Cx, rx)),  // honest A comits to x send by S, we've used CxpL to verify its the same that is claimed
-                       eq(z, open(Cz, rz)),  // z from signed res should match zkp
-                       true()) 
+                       eq(z, open(Cz, rz))  // z from signed res should match zkp
+                       ) 
                   then 
                             event HonestA(); 
                             event Verified(claim)
@@ -187,6 +191,8 @@ verdictfunction v:
 
   "Ex #i #j  #k c . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k"
   -> <'S'>,
+
+  /* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" */
 
   otherwise -> empty
 
