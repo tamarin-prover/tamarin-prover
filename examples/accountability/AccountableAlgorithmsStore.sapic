@@ -4,80 +4,67 @@ begin
 builtins: signing
 
 functions: 
-  //extract/1, 
+  extract/1, 
   sk/1[private],
   ZK/7, verZK/1, Pub/1, f/2,
   commit/2, open/2,
   eq/2
 
 equations: 
-  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz),rx,rz>,
+  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
   verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true(),
   open(commit(m,r),r)=m,
-  //extract(sign(x,y)) = x,
+  extract(sign(x,y)) = x,
   eq(x,x)=true()
 
 predicates:
   and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
-  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() ),
-  and5(x,y,z,k,l) <=> (x=true() & y=true() & z=true() & k=true() & l=true())
+  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
 
 let S =
 (
-  let Cxp   = commit(x, rxp)
-  	  m1    = <'1', x, rxp, sign(Cxp, sk('S'))>
-  	  res   = <'2', z, rz, rx> 
-      claim = <'3', x, z, res, sig_res, rxp>
-      pub_zkp = <Cx, Cy, Cz, rxL, rzL>
-      
-      log   = <sig_cxp, zkp, pub_zkp, CxpL>
-      //rxL = fst(snd(snd(snd(log))))
-      //rzL = snd(snd(snd(snd(log))))
-      
+  let res = <'2',z,rz,rx> 
+      claim = <'3',x,z,res,sig_res,rxp>
+      Cxp = commit(x, rxp)
+      m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
+      sig_cxp = fst(log)
+      zkp = fst(snd(log))
+      CxpL = snd(snd(log))
   in 
   lookup <'A', 'Initialize'> as Cy in 
   new x; 
   new rxp;
   out (<m1, sign(m1,sk('S'))>); 
   lookup <'A','Log','S'> as log in
-  if and4( verZK(zkp),
-           eq(pub_zkp, Pub(zkp)),
-           eq(sig_cxp, sign(Cxp, sk('S'))),
-           eq(CxpL, Cxp)
+  if and3( verZK(zkp),
+           eq(sig_cxp,sign(Cxp, sk('S'))),
+           eq(CxpL,Cxp)
            ) then 
 	    (
-	    	in (<res, sig_res>);
-	    	if and5(
-	    		eq(rx, rxL), 
-	    		eq(rz, rzL), 
-	    		verify(sig_res, res, pk(sk('A'))), 
-	    		eq(x, open(Cx, rx)),
-	    		eq(z, open(Cz, rz))) then
-	    	(
+                in (<res, sig_res>); 
+                if verify(sig_res, res, pk(sk('A')))=true() then
                   out (<claim, sign(claim, sk('S'))>)
             )
-      )
 )
 
 let A =
 (
   let m1      = <'1', x, rxp, sig_cxp>
-   	  z       = f(x, y) 
-  	  res     = <'2', z, rz, rx>
-
+   	  z   = f(x, y)
+  	  res = <'2', z, rz, rx>
       Cx      = commit(x, rx)
       Cy      = commit(y, ry)
       Cz      = commit(z, rz)
       Cxp     = commit(x, rxp)
-      pub_zkp = <Cx,Cy,Cz,rx,rz>
-      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)//it's not sending the same rx, rz?
+      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)// TODO it's not sending the same rx, rz?
       sig_res = sign(res, sk('A'))
       
   in
-  new y; new ry; new rx; new rz;
+  new y; new ry;
   insert <'A', 'Initialize'>, Cy;
 
   in (<m1, sig_m1>);
+  new rx; new rz;
   if and3( 
   		verify(sig_m1,m1,pk(sk('S'))), 
   		eq(x, open(Cxp,rxp)), 
@@ -85,16 +72,20 @@ let A =
     (
       
       out (<res, sig_res>);  // send result to S
-      insert <'A','Log','S'>, <sig_cxp, zkp, pub_zkp, Cxp>;
+      insert <'A','Log','S'>, <sig_cxp, zkp, Cxp>;
       insert <'A','Final'>, true()
     )
 )
 
 let J =
-( let res   = <'2', z, rz, rx> 
-      claim = <'3', x, z, res, sig_res, rxp>
-      pub_zkp = <Cx,Cy,Cz,rxL,rzL>
-      log  = <sig_cxp, zkp, pub_zkp, CxpL>
+( let res     = <'2', z, rz, rx>
+      claim   = <'3', x, z, res, sig_res, rxp>
+      sig_cxp = fst(log)
+      zkp     = fst(snd(log))
+      CxpL    = snd(snd(log))
+      Cx      = fst(Pub(zkp))
+      Cy      = fst(snd(Pub(zkp)))
+      Cz      = snd(snd(Pub(zkp)))
   in
   in (<claim, sig_claim>);//what if the claim has been sent by the adversary?
   if verify(sig_claim, claim, pk(sk('S'))) = true() then
@@ -102,27 +93,26 @@ let J =
         lookup <'A','Final'> as y in //y is unbound
         event Final();
 
-        lookup <'A','Initialize'> as Cy in //problem is with Cy?==============
-        event Initialize(Cy);
+        lookup <'A','Initialize'> as CyL in //problem is with CyL?==============
+        event Initialize(CyL);
         
         lookup <'A','Log','S'> as log in
 
         // first check validity of the log by itself --> else branch means A dishonest
         if and4( verZK(zkp), //produced by A
-                 eq(pub_zkp, Pub(zkp)), // produced by A
+                 eq(CyL, Cy), // produced by A
                  verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
                  ,true()
                  )
         then 
-            ( if and4( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+            ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
                        eq(x, open(CxpL,rxp)), // honest S signed both messages, so this should hold
-                       eq(rx, rxL),
-                       eq(rz, rzL))
+                       true())
               then ( // We now believe S is honest and its claim is valid
                   event HonestS();
                   if and3(
-                       eq(x, open(Cx, rxL)),  // honest A comits to x send by S, we've used CxpL to verify its the same that is claimed
-                       eq(z, open(Cz, rzL)),  // z from signed res should match zkp
+                       eq(x, open(Cx, rx)),  // honest A comits to x send by S, we've used CxpL to verify its the same that is claimed
+                       eq(z, open(Cz, rz)),  // z from signed res should match zkp
                        true()) 
                   then 
                             event HonestA(); 
@@ -156,6 +146,8 @@ A || S || J ||
 
      )
 )
+
+// TODO Give adversary read access to log.
 
 restriction no_overwrite:
     "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
