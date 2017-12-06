@@ -106,6 +106,7 @@ module Theory.Constraint.System (
   , nodeConcFact
   , resolveNodePremFact
   , resolveNodeConcFact
+  , goalRule
 
   -- ** Actions
   , allActions
@@ -552,6 +553,18 @@ nodeRuleMap v nodes =
   where
     errMsg = error $
         "nodeRuleMap: node '" ++ show v ++ "' does not exist in sequent\n"
+
+-- | Given a system and a goal, find the source rule for the goal, if one
+-- exists. Only works for premise and action goals.
+goalRule :: System -> Goal -> Maybe RuleACInst
+goalRule sys goal = case goalNodeId goal of
+    Just i  -> nodeRuleSafe i sys
+    Nothing -> Nothing
+  where
+    goalNodeId :: Goal -> Maybe NodeId
+    goalNodeId (PremiseG (i, _) _) = Just i
+    goalNodeId (ActionG  i _)      = Just i
+    goalNodeId _                   = Nothing
 
 
 -- | 'getMaudeHandle' @ctxt@ @side@ returns the maude handle on side @side@ in diff proof context @ctxt@.
@@ -1254,6 +1267,9 @@ prettyGoals solved sys = vsep $ do
     (goal, status) <- M.toList $ L.get sGoals sys
     guard (solved == L.get gsSolved status)
     let nr  = L.get gsNr status
+        sourceRule = case goalRule sys goal of
+            Just ru -> " (from rule " ++ getRuleName ru ++ ")"
+            Nothing -> ""
         loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
                     | otherwise                  = ""
         useful = case goal of
@@ -1264,7 +1280,7 @@ prettyGoals solved sys = vsep $ do
             | currentlyDeducible i m  -> " (currently deducible)"
             | probablyConstructible m -> " (probably constructible)"
           _                           -> " (useful2)"
-    return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ loopBreaker ++ show useful)
+    return $ prettyGoal goal <-> lineComment_ ("nr: " ++ show nr ++ sourceRule ++ loopBreaker ++ show useful)
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =

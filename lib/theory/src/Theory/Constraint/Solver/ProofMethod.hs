@@ -394,9 +394,14 @@ rankProofMethods ranking ctxt sys = do
       Nothing    -> []
   where
     contradiction c                    = (Contradiction (Just c), "")
+
+    sourceRule goal = case goalRule sys goal of
+        Just ru -> " (from rule " ++ getRuleName ru ++ ")"
+        Nothing -> ""
+
     solveGoalMethod (goal, (nr, usefulness)) =
       ( SolveGoal goal
-      , "nr. " ++ show nr ++ case usefulness of
+      , "nr. " ++ show nr ++ sourceRule goal ++ case usefulness of
                                Useful                -> ""
                                LoopBreaker           -> " (loop breaker)"
                                ProbablyConstructible -> " (probably constructible)"
