@@ -19,6 +19,7 @@ equations:
   eq(x,x)=true()
 
 predicates:
+  or2(x,y) <=> (x=true() | y=true(),
   and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
   and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
 
@@ -103,13 +104,12 @@ let J =
         if and4( verZK(zkp), //produced by A
                  eq(CyL, Cy), // produced by A
                  verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
-                 ,true()
                  )
         then 
-            ( if and4( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+            ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
                        verCom(CxpL,rxp),
-                       eq(x, open(CxpL,rxp)), // honest S signed both messages, so this should hold
-                       true())
+                       eq(x, open(CxpL,rxp)) // honest S signed both messages, so this should hold
+                       )
               then ( // We now believe S is honest and its claim is valid
                   event HonestS();
                   if and4(
@@ -125,9 +125,18 @@ let J =
                        event DisHonestA(); event Verified(claim)
                   )
               else ( 
-                  event DisHonestS();  // A's log is alright, but S is definitely cheating
-                  event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
-                  event Verified(claim))
+                  // A's log is alright, but S is definitely cheating
+                  // But, need to blame only if there is indeed a violation!
+                  // violation iff Cy in log does not match x and z in claim
+                  // Cy is correct by validity of A's log, 
+                  if and2( eq(x, open(Cx,rx)), eq(z,open(Cz,rz)) then // trying this out for suf_nonempty_2 //Continue here...
+                    (event HonestS();
+                     event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
+                     event Verified(claim))
+                  else 
+                    (event DisHonestS();  
+                     event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
+                     event Verified(claim)))
             )
         else (// A is dishonest and produced bad log
             event DisHonestA();
@@ -183,13 +192,40 @@ lemma sanity:
   "
 
 verdictfunction v: 
-  "Ex #i #j #k c . DisHonestS()@#i & DisHonestA()@#j & Verified(c)@k"
+  "Ex #i #j #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      DisHonestS()@#i & DisHonestA()@#j
+      &
+      not ( Ex #j y ry. 
+       Initialize(commit(y,ry))@#j 
+      & z = f(x,y) 
+      )"
   -> <'A','S'>,
 
-  "Ex #i #j #k c . DisHonestA()@#i & HonestS()@#j & Verified(c)@k"
+  "Ex #i #j #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      DisHonestA()@#i & HonestS()@#j
+      &
+      not ( Ex #j y ry. 
+       Initialize(commit(y,ry))@#j 
+      & z = f(x,y) 
+      )"
   -> <'A'>,
 
-  "Ex #i #j  #k c . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k"
+  "Ex #i #j  #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      HonestA()@#i & DisHonestS()@#j
+      /* & */
+      /* not ( */ 
+      /* Ex #j y ry.  Initialize(commit(y,ry))@#j & z = f(x,y) */ 
+      /* ) */
+      "
   -> <'S'>,
 
   /* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" */
@@ -198,8 +234,9 @@ verdictfunction v:
 
 // excl auto
 // exh auto
-// suf_0  ~5min colossus04
-// suf_0, suf_1 failed!
+// compl_empty auto fast
+//
+
 
 lemma acc: 
   v accounts  [cases]
@@ -209,7 +246,7 @@ lemma acc:
       ==>
       ( Ex #j #i y ry. 
         Final()@#i
-      & Initialize(commit(y,ry))@#j 
+      & Initialize(commit(y,ry))@#j //we are presupposing that this is a valid commitment .. TODO later: can we lift this assumption?
       & #i < #j & #j < #k
       & z = f(x,y) 
       )
