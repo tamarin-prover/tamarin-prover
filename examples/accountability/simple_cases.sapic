@@ -4,18 +4,13 @@ begin
 /* builtins: signing */
 functions: 
     pk/1,sk/1[private],
-    /* aenc/2, adec/2, */
     sign/2, verify/3,
     true/0,
-    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
+    extract/1
 
 equations: 
-    /* adec(aenc(m,pk(i)),sk(i))=m, */
-    // only accept signatures from corresponding public keys
     verify(sign(m, sk(i)),m, pk(sk(i))) = true,
-    isAct(NormalAct) = true,
-    isAct(SpecialAct) = true,
-    isAct(UnusualAct) = true
+    extract(sign(m,sk(i)))=m
 
 
 /* TODO write simple example protocol. */
