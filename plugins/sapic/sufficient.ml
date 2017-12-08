@@ -358,6 +358,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (completeness_nonempty id op vf phi)
         @
         (minimalitySingleton id op rel parties vf phi)
+        @
+        (uniqueness id op vf)
     in
     match kind with
     (* (id,op) -> (1* TODO ignore options for now *1) *)
