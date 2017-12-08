@@ -1,3 +1,21 @@
+/*
+ * Protocol:    Accountable Algorithms protocol
+ * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
+ * Date: 	Dec 2017
+ * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
+ * Status: 	wip
+ * Notes: Protocol modified in the lines proposed in "Accountability in
+ * security protocols" paper, however, instead of x, a comittment to x is
+ * signed, to preserve condidentiality. 
+ *        1. This requires S_i to chose the randomness of the comittment.
+ *        2. In turn, as accountability implies verifiability, the (mostly
+ *           public) accountability mechanism sometimes needs to ask a notary,
+ *           modelled as a "magic" function oracle, to determine whether an
+ *           actual violation happened.
+ *        3. The public ledger is modelled using the explicit store, and
+ *           a requirement that values are never overwritten. In an actual
+ *           ledger, the public could e.g. consider to only regard the first entry.
+ * */
 theory AccountableAlgorithmsStore
 begin
 
