@@ -8,7 +8,8 @@ functions:
   sk/1[private],
   ZK/7, verZK/1, Pub/1, f/2,
   commit/2, open/2, verCom/2,
-  eq/2
+  eq/2,
+  oracle/3
 
 equations: 
   Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
@@ -16,10 +17,10 @@ equations:
   open(commit(m,r),r)=m,
   verCom(commit(m,r),r)=true,
   extract(sign(x,y)) = x,
-  eq(x,x)=true()
+  eq(x,x)=true(),
+  oracle(x,commit(y,ry),f(x,y))=true()
 
 predicates:
-  or2(x,y) <=> (x=true() | y=true(),
   and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
   and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
 
@@ -103,7 +104,8 @@ let J =
         // first check validity of the log by itself --> else branch means A dishonest
         if and4( verZK(zkp), //produced by A
                  eq(CyL, Cy), // produced by A
-                 verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
+                 verify(sig_cxp,CxpL,pk(sk('S'))), // honest A checks this
+                 true()
                  )
         then 
             ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
@@ -128,8 +130,11 @@ let J =
                   // A's log is alright, but S is definitely cheating
                   // But, need to blame only if there is indeed a violation!
                   // violation iff Cy in log does not match x and z in claim
-                  // Cy is correct by validity of A's log, 
-                  if and2( eq(x, open(Cx,rx)), eq(z,open(Cz,rz)) then // trying this out for suf_nonempty_2 //Continue here...
+                  // Cy is correct w.r.t. Cx by validity of A's log,
+                  // but Cx can be different from x claimed
+                  // how do we check whether x and z claimed have z=f(x,y)
+                  // this maybe the case even if x is different from content of Cx.
+                  if oracle(x,Cy,z)=true() then // trying this out for suf_nonempty_2 //Continue here...
                     (event HonestS();
                      event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
                      event Verified(claim))
