@@ -26,6 +26,7 @@ let C =
         out (m1);
         in  (<m2,sign{m2}sk($B)>);
         event CCount($A,$B,cc,S(cc));
+        event Nonces($A,~nc,nw);
         event CDHParams($A,$B,~nc,nw);
         insert <'cc',$A,$B>, S(cc);
         out (<m3, sign{m3}sk($A)>);
@@ -46,6 +47,7 @@ let W =
     lock $B;
     in  (m1);
     new ~nw;
+    event Nonces($B,nc,~nw);
     lookup <'cw',$B,$A> as cw in (
         event W($A,$B,cw);
         event WDHParams($A,$B,nc,~nw);
@@ -108,6 +110,12 @@ lemma counter_unique_w[reuse,use_induction]:
         WCount(a,b,oc,c) @ i & WCount(a,b,oc2, c2) @ i2
         & (c2 = c)
     ==> #i = #i2)"
+
+// verifies quickly
+lemma nonces_unique[reuse, use_induction]:
+    "All id ni nr #i #j.
+        Nonces(id,ni,nr) @ i & Nonces(id,ni,nr) @ j
+    ==> #i = #j"
 
 // SANITY lemmas: verify relatively fast  C
 lemma exists_session: exists-trace
@@ -211,13 +219,14 @@ lemma aposteriori_boundary_case[reuse]:
         | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #i)
         "
 
-lemma unmatching_implies_detect_with_one_uncompromised[use_induction,reuse]:
+lemma unmatching_implies_detect_with_W_uncompromised[use_induction,reuse]:
     "All a b ni nr c niprev nrprev cprev #t1 #t2 #t3.
         //Given an matching m3
           CSession(a,b,ni,nr,c) @ t2
         & WSession(a,b,ni,nr,c) @ t3
         //Then for all sessions before that
         & WSession(a,b,niprev,nrprev,cprev) @ t1
+        & #t1 < #t3
     ==> //Either that session was also matching
         (Ex #t0.  CSession(a,b,niprev,nrprev,cprev) @ t0)
         //Or we did detect key misuse

@@ -234,9 +234,11 @@ verdictfunction v:
 
 // excl auto
 // exh auto
-// compl_empty auto fast
-//
-
+// suf auto
+// compl_empty auto 
+// compl_nonempty auto 
+// min_0_0 auto
+// min_0_1 false
 
 lemma acc: 
   v accounts  [cases]
