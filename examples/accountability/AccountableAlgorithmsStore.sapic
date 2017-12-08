@@ -124,7 +124,10 @@ let J =
                             event HonestA(); 
                             event Verified(claim)
                   else 
-                       event DisHonestA(); event Verified(claim)
+                       if oracle(x,Cy,z)=true() then // see below.
+                       ( event HonestA(); event Verified(claim))
+                       else 
+                       ( event DisHonestA(); event Verified(claim))
                   )
               else ( 
                   // A's log is alright, but S is definitely cheating
@@ -144,9 +147,13 @@ let J =
                      event Verified(claim)))
             )
         else (// A is dishonest and produced bad log
-            event DisHonestA();
-            event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
-            event Verified(claim))
+            if oracle(x,CyL,z)=true() then // see above
+                    (event HonestS(); event HonestA(); event Verified(claim))
+            else (
+                event DisHonestA();
+                event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
+                event Verified(claim))
+        )
     )
 )
 
@@ -202,11 +209,7 @@ verdictfunction v:
       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       &
       DisHonestS()@#i & DisHonestA()@#j
-      &
-      not ( Ex #j y ry. 
-       Initialize(commit(y,ry))@#j 
-      & z = f(x,y) 
-      )"
+      "
   -> <'A','S'>,
 
   "Ex #i #j #k
@@ -214,11 +217,7 @@ verdictfunction v:
       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       &
       DisHonestA()@#i & HonestS()@#j
-      &
-      not ( Ex #j y ry. 
-       Initialize(commit(y,ry))@#j 
-      & z = f(x,y) 
-      )"
+      "
   -> <'A'>,
 
   "Ex #i #j  #k
@@ -226,10 +225,6 @@ verdictfunction v:
       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       &
       HonestA()@#i & DisHonestS()@#j
-      /* & */
-      /* not ( */ 
-      /* Ex #j y ry.  Initialize(commit(y,ry))@#j & z = f(x,y) */ 
-      /* ) */
       "
   -> <'S'>,
 
