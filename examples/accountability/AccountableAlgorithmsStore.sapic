@@ -39,27 +39,29 @@ equations:
   oracle(x,commit(y,ry),f(x,y))=true()
 
 predicates:
-  and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
-  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
+  and3(x,y,z) <=> (x=true() & y=true() & z=true()),
+  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true())
 
 let S =
 (
-  let res = <'2',z,rz,rx> 
-      claim = <'3',x,z,res,sig_res,rxp>
-      Cxp = commit(x, rxp)
-      m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
+  let res 	  = <'2', z, rz, rx> 
+      claim   = <'3', x, z, res, sig_res, rxp>
+      Cxp 	  = commit(x, rxp)
+      m1 	  = <'1', x, rxp, sign(Cxp, sk('S'))>
       sig_cxp = fst(log)
-      zkp = fst(snd(log))
-      CxpL = snd(snd(log))
+      zkp 	  = fst(snd(log))
+      CxpL 	  = snd(snd(log))
+      Cy 	  = fst(snd(Pub(zkp)))
   in 
-  lookup <'A', 'Initialize'> as Cy in 
+  lookup <'A', 'Initialize'> as CyL in 
   new x; 
   new rxp;
   out (<m1, sign(m1,sk('S'))>); 
   lookup <'A','Log','S'> as log in
-  if and3( verZK(zkp),
+  if and4( verZK(zkp),
            eq(sig_cxp,sign(Cxp, sk('S'))),
-           eq(CxpL,Cxp)
+           eq(CxpL,Cxp),
+           eq(Cy, CyL)
            ) then 
 	    (
                 in (<res, sig_res>); 
@@ -71,13 +73,13 @@ let S =
 let A =
 (
   let m1      = <'1', x, rxp, sig_cxp>
-   	  z   = f(x, y)
-  	  res = <'2', z, rz, rx>
+   	  z   	  = f(x, y)
+  	  res 	  = <'2', z, rz, rx>
       Cx      = commit(x, rx)
       Cy      = commit(y, ry)
       Cz      = commit(z, rz)
       Cxp     = commit(x, rxp)
-      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)// TODO it's not sending the same rx, rz?
+      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)
       sig_res = sign(res, sk('A'))
       
   in
@@ -89,9 +91,8 @@ let A =
   if and3( 
   		verify(sig_m1,m1,pk(sk('S'))), 
   		eq(x, open(Cxp,rxp)), 
-  		verify(sig_cxp,Cxp,pk(sk('S')))) then  //verify(sig_x,x,pk(sk('S')))
+  		verify(sig_cxp,Cxp,pk(sk('S')))) then 
     (
-      
       out (<res, sig_res>);  // send result to S
       insert <'A','Log','S'>, <sig_cxp, zkp, Cxp>;
       insert <'A','Final'>, true()
@@ -108,22 +109,21 @@ let J =
       Cy      = fst(snd(Pub(zkp)))
       Cz      = snd(snd(Pub(zkp)))
   in
-  in (<claim, sig_claim>);//what if the claim has been sent by the adversary?
+  in (<claim, sig_claim>);
   if verify(sig_claim, claim, pk(sk('S'))) = true() then
     (
         lookup <'A','Final'> as y in //y is unbound
         event Final();
 
-        lookup <'A','Initialize'> as CyL in //problem is with CyL?==============
+        lookup <'A','Initialize'> as CyL in
         event Initialize(CyL);
         
         lookup <'A','Log','S'> as log in
 
         // first check validity of the log by itself --> else branch means A dishonest
-        if and4( verZK(zkp), //produced by A
+        if and3( verZK(zkp), //produced by A
                  eq(CyL, Cy), // produced by A
-                 verify(sig_cxp,CxpL,pk(sk('S'))), // honest A checks this
-                 true()
+                 verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
                  )
         then 
             ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
@@ -180,33 +180,27 @@ A || S || J ||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      out ('c',sk($x));
      !(
-       (if $x='A' then in(y); insert <'A','Initialize'>,y)
+       (if $x='A' then in(y); insert <'A','Initialize'>,y)//Adversary write access to logs
      ||
        (if $x='A' then in(y); insert <'A','Log','S'>, y)
      ||
        (if $x='A' then in(y); insert <'A','Final'>, y)
-     ) 
+     ||
+       (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
+     ||
+       (if $x='S' then lookup <'A','Log','S'> as y in out(y))
+
+     )
 
      )
 )
 
-// TODO Give adversary read access to log.
 
 restriction no_overwrite:
     "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
 
 lemma no_overwrite_lookup [reuse]:
     "All #i #j x y x yp. IsIn(x,y)@i & IsIn(x,yp)@j ==> y = yp"
-
-// auto
-/* lemma sanity_exists_accepted: */
-/*   exists-trace */
-/*     "Ex #i a. Verified(a)@i" */
-
-/* // auto */
-/* lemma sanity_exists_final: */
-/*   exists-trace */
-/*     "Ex #j. Final()@j" */
 
 
 lemma sanity:
@@ -250,13 +244,15 @@ verdictfunction v:
 
   otherwise -> empty
 
+// sanity ~10min colossus05 
 // excl auto
 // exh auto
 // suf auto
 // compl_empty auto 
 // compl_nonempty auto 
-// min_0_0 auto
-// min_0_1 false
+// min auto
+// uniq_1 ~5min colossus05
+// uniq_2 auto
 
 lemma acc: 
   v accounts  [cases]
