@@ -60,8 +60,8 @@ let W =
             out (<m4,sign{m4}sk($B)>);
             unlock $B
         else
-            event Detect($A,$B);
             event WSession($A,$B,nc,~nw,S(cw));
+            event Detect($A,$B);
             event WCount($A,$B,cw,S(cw));
             insert <'cw',$B,$A>,S(cw);
             out (<m4,sign{m4}sk($B)>);
@@ -242,7 +242,10 @@ restriction b_not_corrupted: // assume party B is not corrupted.
     "not (Ex #k. Corrupted('B')@k)"
 
 verdictfunction v1:
-    "Ex #i. Detect('A','B')@i " -> <'A'>,
+    "Ex #i #t2 #t3 ni nr c. 
+          CSession('A','B',ni,nr,c) @ t2
+        & WSession('A','B',ni,nr,c) @ t3
+        & Detect('A','B')@i " -> <'A'>,
     otherwise -> empty
 
 // ex/exh is quick
@@ -255,24 +258,25 @@ verdictfunction v1:
 /*          " */
 /*     for parties <'A','B'> */
 
-// suf-0 runs out of time on colossus04...
+// suf_0_0     ?
+// compl_empty ?
+// compl_non-empty counter-example: detect without violation if not matching session exists..
 lemma acc2:
     v1 accounts 
     for 
-        "All ni nr c #r #i niprev nrprev cprev #iprev.
-            //Given a matching session
-            CSession('A','B',ni,nr,c) @ i & WSession('A','B',ni,nr,c) @ r & #r < #i
-            //Then for all sessions before that
-            & CSession('A','B',niprev,nrprev,cprev) @ iprev & #iprev < #i
-        ==> //the session was also matching
-            (Ex #rprev.
-                WSession('A','B',niprev,nrprev,cprev) @ rprev
-                    & #rprev < #iprev & #rprev < #r)
-            // or faked
-          | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j & #j < #i) // added 
-          | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j & #j < #iprev)
-            /* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown.  <- Not sure, this used to hold ... */
-         "
+    "All ni nr c niprev nrprev cprev #t1 #t2 #t3.
+        //Given an matching m3
+          CSession('A','B',ni,nr,c) @ t2
+        & WSession('A','B',ni,nr,c) @ t3
+        //Then for all sessions before that
+        & WSession('A','B',niprev,nrprev,cprev) @ t1
+        & #t1 < #t3
+    ==> //Either that session was also matching
+          (Ex #t0.  CSession('A','B',niprev,nrprev,cprev) @ t0)
+        //or one of the previous session was faked.
+        | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j )
+        | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j )
+        "
     for parties <'A','B'>
 
 end

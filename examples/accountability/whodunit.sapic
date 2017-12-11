@@ -43,12 +43,13 @@ verdictfunction v2:
     "Ex #i . Unequal()@i"   -> let verdict1 = <'A'>,
     otherwise -> empty 
 
-// all proofs go through, but this should not happen! need uniqueness lemma....
+// fails because of uniqueness lemma, like it should
 lemma acc1:
     v1 accounts [cases]
     for "not (Ex #i.  Unequal()@i)"
     for parties <'A','S'>
 
+// fails because of uniqueness lemma, like it should
 lemma acc2:
     v2 accounts [cases]
     for "not (Ex #i.  Unequal()@i)"
