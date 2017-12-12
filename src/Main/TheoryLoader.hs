@@ -48,7 +48,8 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf)
+import           Data.List                           (isPrefixOf,intersperse)
+import           Data.Map                            (keys)
 -- import           Data.Monoid
 import           Data.FileEmbed                      (embedFile)
 
@@ -88,7 +89,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") "(s|S|o|O|p|P|l|c|C|i|I)+"
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") ("(" ++ (intersperse '|' $ keys goalRankingIdentifiers) ++ ")+")
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
