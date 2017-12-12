@@ -66,7 +66,7 @@ import           Theory                       (
     openDiffTheory, 
     prettyClosedDiffTheory, prettyOpenDiffTheory
   )
-import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apHeuristic)
+import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apDefaultHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON 
@@ -596,7 +596,7 @@ getTheoryPathMR idx path = do
         (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
-        heuristic = apHeuristic (tiAutoProver ti)
+        heuristic = apDefaultHeuristic (tiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
@@ -624,13 +624,13 @@ getTheoryPathDiffMR idx path = do
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof s lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
-        heuristic = apHeuristic (dtiAutoProver ti)
+        heuristic = apDefaultHeuristic (dtiAutoProver ti)
     goDiff _ (DiffTheoryDiffMethod lemma proofPath i) ti = modifyDiffTheory ti
         (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath heuristic i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
       where
-        heuristic = apHeuristic (dtiAutoProver ti)
+        heuristic = apDefaultHeuristic (dtiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them

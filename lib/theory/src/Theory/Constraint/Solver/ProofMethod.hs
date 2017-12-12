@@ -10,7 +10,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- Proof methods and heuristics: the external small-step interface to the
+-- Proof methods for the heuristics: the external small-step interface to the
 -- constraint solver.
 module Theory.Constraint.Solver.ProofMethod (
   -- * Proof methods
@@ -21,12 +21,9 @@ module Theory.Constraint.Solver.ProofMethod (
   , execDiffProofMethod
 
   -- ** Heuristics
-  , GoalRanking(..)
-  , goalRankingName
   , rankProofMethods
   , rankDiffProofMethods
 
-  , Heuristic
   , roundRobinHeuristic
   , useHeuristic
 
@@ -63,7 +60,7 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Heuristics
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -327,38 +324,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 -- Heuristics
 ------------------------------------------------------------------------------
 
--- | The different available functions to rank goals with respect to their
--- order of solving in a constraint system.
-data GoalRanking =
-    GoalNrRanking
-  | OracleRanking String
-  | OracleSmartRanking String
-  | SapicRanking
-  | SapicLivenessRanking
-  | SapicPKCS11Ranking
-  | UsefulGoalNrRanking
-  | SmartRanking Bool
-  | SmartDiffRanking
-  | InjRanking Bool
-  deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
--- | The name/explanation of a 'GoalRanking'.
-goalRankingName :: GoalRanking -> String
-goalRankingName ranking =
-    "Goals sorted according to " ++ case ranking of
-        GoalNrRanking                 -> "their order of creation"
-        OracleRanking oracleName      -> "an oracle for ranking, located at: " ++ oracleName
-        OracleSmartRanking oracleName -> "an oracle for ranking based on 'smart' heuristic, located at: " ++ oracleName
-        UsefulGoalNrRanking           -> "their usefulness and order of creation"
-        SapicRanking                  -> "heuristics adapted to the output of the SAPIC tool"
-        SapicLivenessRanking          -> "heuristics adapted to the output of the SAPIC tool for liveness properties"
-        SapicPKCS11Ranking            -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
-        SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
-        SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
-        InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
-   where
-     loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
-
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
@@ -426,9 +391,6 @@ rankDiffProofMethods ranking ctxt sys = do
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
-
-newtype Heuristic = Heuristic [GoalRanking]
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Smart constructor for heuristics. Schedules the goal rankings in a
 -- round-robin fashion dependent on the proof depth.

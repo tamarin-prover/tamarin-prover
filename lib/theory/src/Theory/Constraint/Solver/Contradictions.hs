@@ -46,7 +46,6 @@ import           Control.Monad.Reader
 import qualified Extension.Data.Label           as L
 import           Extension.Prelude
 
--- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Tools.IntruderRules

@@ -60,7 +60,6 @@ import           System.Console.CmdArgs.Explicit
 
 import           Theory
 import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString)
-import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules)
@@ -334,39 +333,18 @@ constructAutoProver as =
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    rankings = case findArg "heuristic" as of
-        Just (rawRankings@(_:_)) -> map ranking rawRankings
-        Just []                  -> error "--heuristic: at least one ranking must be given"
-        _                        -> [SmartRanking False]
-
     oracleName = case findArg "oraclename" as of
       Nothing       -> "./oracle"
       Just fileName -> "./" ++ fileName
 
-    ranking 's' = SmartRanking False
-    ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking oracleName
-    ranking 'O' = OracleSmartRanking oracleName
-    ranking 'p' = SapicRanking
-    ranking 'l' = SapicLivenessRanking
-    ranking 'P' = SapicPKCS11Ranking
-    ranking 'c' = UsefulGoalNrRanking
-    ranking 'C' = GoalNrRanking
-    ranking 'i' = InjRanking False
-    ranking 'I' = InjRanking True
-    ranking r   = error $ render $ fsep $ map text $ words $
-      "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
-      \ 's' for the smart ranking without loop breakers,\
-      \ 'S' for the smart ranking with loop breakers,\
-      \ 'o' for oracle ranking,\
-      \ 'O' for oracle ranking with smart ranking without loop breakers as underlying baseline,\
-      \ 'p' for the smart ranking optimized for translations coming from SAPIC (http://sapic.gforge.inria.fr),\
-      \ 'l' for the smart ranking optimized for translations coming from SAPIC proving liveness properties,\
-      \ 'P' for the smart ranking optimized for a specific model of PKCS11, translated using SAPIC,\
-      \ 'i' for the ranking modified for the proof of stateful injective protocols without loop breakers,\
-      \ 'I' for the ranking modified for the proof of stateful injective protocols with loop breakers,\
-      \ 'c' for the creation order and useful goals first,\
-      \ and 'C' for the creation order."
+    rankings = case findArg "heuristic" as of
+        Just (rawRankings@(_:_)) -> map setOracleName $ map charToGoalRanking rawRankings
+        Just []                  -> error "--heuristic: at least one ranking must be given"
+        _                        -> [SmartRanking False]
+
+    setOracleName (OracleRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing     -> CutDFS
@@ -388,28 +366,19 @@ constructAutoDiffProver as =
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    rankings = case findArg "heuristic" as of
-        Just (rawRankings@(_:_)) -> map ranking rawRankings
-        Just []                  -> error "--heuristic: at least one ranking must be given"
-        _                        -> [SmartDiffRanking]
-
     oracleName = case findArg "oraclename" as of
       Nothing       -> "./oracle"
       Just fileName -> "./" ++ fileName
 
-    ranking 's' = SmartRanking False
-    ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking oracleName
-    ranking 'O' = OracleSmartRanking oracleName
-    ranking 'c' = UsefulGoalNrRanking
-    ranking 'C' = GoalNrRanking
-    ranking r   = error $ render $ fsep $ map text $ words $
-      "Unknown goal ranking '" ++ [r] ++ "'. Use one of the following:\
-      \ 's' for the smart ranking without loop breakers,\
-      \ 'S' for the smart ranking with loop breakers,\
-      \ 'o' for oracle ranking,\
-      \ 'c' for the creation order and useful goals first,\
-      \ and 'C' for the creation order."
+    rankings = case findArg "heuristic" as of
+        Just (rawRankings@(_:_)) -> map setOracleName $ map charToGoalRankingDiff rawRankings
+        Just []                  -> error "--heuristic: at least one ranking must be given"
+        _                        -> [SmartDiffRanking]
+
+
+    setOracleName (OracleRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing     -> CutDFS
