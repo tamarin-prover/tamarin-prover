@@ -87,8 +87,8 @@ charToGoalRankingMay c = M.lookup c goalRankingIdentifiers
 
 charToGoalRanking :: Char -> GoalRanking
 charToGoalRanking c = fromMaybe
-    (error $ render $ fsep $ map text $ words $ "Unknown goal ranking'" ++ [c]
-        ++ "'. Use one of the following:" ++ listGoalRankings)
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking'" ++ [c]
+        ++ "'. Use one of the following:\n" ++ listGoalRankings)
     $ charToGoalRankingMay c
 
 charToGoalRankingDiffMay :: Char -> Maybe GoalRanking
@@ -96,17 +96,17 @@ charToGoalRankingDiffMay c = M.lookup c goalRankingIdentifiersDiff
 
 charToGoalRankingDiff :: Char -> GoalRanking
 charToGoalRankingDiff c = fromMaybe
-    (error $ render $ fsep $ map text $ words $ "Unknown goal ranking'" ++ [c]
-        ++ "'. Use one of the following:" ++ listGoalRankingsDiff)
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking'" ++ [c]
+        ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff)
     $ charToGoalRankingDiffMay c
 
 listGoalRankings :: String
 listGoalRankings = M.foldMapWithKey
-    (\k v -> " '"++[k]++"': " ++ goalRankingName v) goalRankingIdentifiers
+    (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiers
 
 listGoalRankingsDiff :: String
 listGoalRankingsDiff = M.foldMapWithKey
-    (\k v -> " '"++[k]++"': " ++ goalRankingName v) goalRankingIdentifiersDiff
+    (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiff
 
 -- | The name/explanation of a 'GoalRanking'.
 goalRankingName :: GoalRanking -> String
