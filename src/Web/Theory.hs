@@ -78,6 +78,7 @@ import           Logic.Connectives
 import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
+import           Theory.Tools.Wellformedness
 
 import           Web.Settings
 import           Web.Types
@@ -912,6 +913,7 @@ htmlThyPath renderUrl info path =
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
           \ from #{show $ tiOrigin info})
+          \ #{preEscapedToMarkup wfErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -987,6 +989,11 @@ htmlThyPath renderUrl info path =
               <td>
                 Display this help message.
       |] renderUrl
+         where
+             wfErrors = case report of
+                             [] -> ""
+                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+             report = checkWellformedness $ openTheory thy
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1035,6 +1042,7 @@ htmlDiffThyPath renderUrl info path =
           Theory: #{get diffThyName $ dtiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ dtiTime info}
           \ from #{show $ dtiOrigin info})
+          \ #{preEscapedToMarkup wfErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1110,6 +1118,11 @@ htmlDiffThyPath renderUrl info path =
               <td>
                 Display this help message.
       |] renderUrl
+         where
+             wfErrors = case report of
+                             [] -> ""
+                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+             report = checkWellformednessDiff $ openDiffTheory thy
 
 
 

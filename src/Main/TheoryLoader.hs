@@ -276,7 +276,7 @@ closeDiffThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma (addProtoRuleLabels thy2))
+  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2)
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
