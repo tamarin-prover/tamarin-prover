@@ -751,7 +751,7 @@ equations =
           Just str ->
               modifyState (addCtxtStRule str)
           Nothing  ->
-              fail $ "Not a subterm rule: " ++ show rrule
+              fail $ "Not a correct equation: " ++ show rrule
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
