@@ -67,6 +67,12 @@ test: $(TESTFILES)
 	scp $< $(HOST):spthy/
 	ssh $(HOST) "tmux new-window 'cd spthy; $($(HOST)ULIMITS);LC_ALL=en_US.utf8 /usr/bin/time $($(HOST)PROVER) --prove$(PROOFFLAGS) $($(HOST)FLAGS) $(notdir $<) 2>$(notdir $<)-$(HOST)-$(DATETIME).errorlog | tee $(notdir $<)-$(HOST)-$(DATETIME).log '"
 
+%.remote-quietinteractive: %
+	scp $< $(HOST):spthy/
+	ssh $(HOST) "tmux new-window 'cd spthy; $($(HOST)ULIMITS); $($(HOST)PROVER) interactive --port=$($(HOST)REMOTEPORT) $($(HOST)INTERACTIVEFLAGS) $(notdir $<) 2>$(notdir $<)-$(HOST)-$(DATETIME).errorlog | tee $(notdir $<)-$(HOST)-$(DATETIME).log'"
+	sleep 1
+	ssh -f -N -t -L $($(HOST)LOCALPORT):localhost:$($(HOST)REMOTEPORT) $(HOST) 
+	open http://localhost:$($(HOST)LOCALPORT)
 
 %.benchmark-rechen: %
 	scp $< rechen:spthy/
