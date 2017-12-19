@@ -41,7 +41,7 @@ predicates:
 let S =
 (
   let res = <'2',z,rz> 
-      claim = <'3',x,z,res,sig_res,rxp>
+      claim = <'3',x,res,sig_res,rxp>
       Cxp = commit(x, rxp)
       m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
       sig_cxp = fst(log)
@@ -94,8 +94,8 @@ let A =
 
 let J =
 ( let res     = <'2', z, rz>
-      claim   = <'3', x, z, res, sig_res, rxp>
-      sig_cxp = fst(log)  // log is <sig_cxp, zkp, Cxp>;
+      claim   = <'3', x, res, sig_res, rxp>
+      sig_cxp = fst(log)  // log is <sig_cxp, zkp>;
       zkp     = snd(log)
       Cxp     = fst(Pub(zkp))
       Cy      = fst(snd(Pub(zkp)))
@@ -104,73 +104,60 @@ let J =
   lookup <'A','Final'> as y in
   event Final();
 
-  lookup <'A','Initialize'> as CyL in 
+  lookup <'A','Initialize'> as CyL in (
   event Initialize(CyL);
-
   lookup <'A','Log','S'> as log in ( // log is present .. 
+        event Log(log);
         // first check validity of the log by itself --> else branch means A dishonest
         if and4( verZK(zkp), //produced by A
                  eq(CyL, Cy), // produced by A
                  verify(sig_cxp,Cxp,pk(sk('S'))), // honest A checks this
                  true()
                  )
-        then 
-            (  // only if we have a log and it is ok, we accept claims..
+        then (  // only if we have a log and it is ok, we accept claims..
                   in (<claim, sig_claim>);
-                  if and5 (verify(sig_claim, claim, pk(sk('S'))),
+                  if and4( verify(sig_claim, claim, pk(sk('S'))),
                            eq(x,open(Cxp,rxp)),
-                           eq(z,open(Cz,rz)),
                            verCom(Cxp,rxp),
                            verCom(Cz,rz))
-                  then
-                    ( // we ignore unsigned claims, and claims that do not correspond
+                  then ( 
+                      // we ignore unsigned claims, and claims that do not correspond
                       // to the log..
-                        if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
-                                   eq(x, open(Cxp,rxp)), // honest S signed both messages, so this should hold
-                                   verCom(Cxp,rxp)
-                                   )
-                        then ( // We now believe S is honest and its claim is valid
+                      if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+                               verCom(Cz,rz),
+                               true()
+                               )
+                      then ( // We now believe S is honest and its claim is valid
+                          if and3(eq(z,open(Cz,rz)),true(),true()) then (
                               event HonestS();
                               event HonestA(); 
+                              event Verified(claim))
+                          else(
+                              event DisHonestA(); 
+                              event HonestS();
                               event Verified(claim)
-                        )
-                        else ( 
-                              // A's log is alright, but S is definitely cheating
-                              // But, need to blame only if there is indeed a violation!
-                              // violation iff Cy in log does not match x and z in claim
-                              // Cy is correct w.r.t. Cx by validity of A's log,
-                              // but Cx can be different from x claimed
-                              // how do we check whether x and z claimed have z=f(x,y)
-                              // this maybe the case even if x is different from content of Cx.
-                              //
-                              // Here is why we need oracle even if zkp is strengthened:
-                              //  - claimed x and z need not be the one in zkp
-                              //  - can still be correct w.r.t. to y
-                              //  - maybe change notion of claim?
-                              //
-                              /* if oracle(x,Cy,z)=true() then // trying this out for suf_nonempty_2 //Continue here... */
-                              /*   (event HonestS(); */
-                              /*    event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation. */
-                              /*    event Verified(claim)) */
-                              /* else */ 
-                                (event DisHonestS();  
-                                 event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
-                                 event Verified(claim)))
-                        )
-                    else (// A is dishonest and produced bad log
-                        if oracle(x,CyL,z)=true() then // see above
-                                (event HonestS(); event HonestA(); event Verified(claim))
-                        else (
-                            event DisHonestA();
-                            event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
-                            event Verified(claim))
-                    )
-    )
+                              )
+                          )
+                      else ( 
+                          event HonestA(); 
+                          event DisHonestS();
+                          event Verified(claim)
+                          )
+                      )
+                  )
+                  else (
+                  event DisHonestA()
+                  )
+            )
+         else ( // no log...
+             event DisHonestA())
+         )
   else ( // no log...
-          event DisHonestA();
-
+        event DisHonestA()
   )
-
+  else ( // no commitment
+          event DisHonestA()
+  )
 )
 
 ( 
@@ -210,35 +197,80 @@ lemma no_overwrite_lookup [reuse]:
 lemma sanity:
   exists-trace
   "
-    ( Ex three rxp x z r sig_r #i #j #k y ry. 
+    ( Ex two three rxp x z rz sig_r #i #j #k y ry. 
         Final()@#i
       & Initialize(commit(y,ry))@#j 
-      & Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      & Verified(<three,x,<two,z,rz>,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       & #i < #j & #j < #k
       & z = f(x,y) 
     )
   "
 
-verdictfunction v: 
+// TODO Now need to hold A accountable for keeping a correct log...
+//
+/* verdictfunction v1: */ 
+/*   "Ex #i #j #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       DisHonestS()@#i & DisHonestA()@#j */
+/*       " */
+/*   -> <'A','S'>, */
+
+/*   "Ex #i #j #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       DisHonestA()@#i & HonestS()@#j */
+/*       " */
+/*   -> <'A'>, */
+
+/*   "Ex #i #j  #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       HonestA()@#i & DisHonestS()@#j */
+/*       " */
+/*   -> <'S'>, */
+
+/*   /1* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" *1/ */
+
+/*   otherwise -> empty */
+
+/* lemma acc_log: */ 
+/*   v1 accounts  [cases] */
+/*   for " */
+/*       All #f. */
+/*         Final()@#f */
+/*       ==> */
+/*       ( Ex #i #l y ry. */ 
+/*         Initialize(commit(y,ry))@#i */
+/*       & Log(sign(commit(x,rxp), sk('S')),ZK(commits,x,y,f(x,y),rxp,ry,rz))@#l */
+/*       & #i < #f & #l < #f */
+/*       ) */
+/*       " */
+/*   for parties <'A','S'> */ 
+
+verdictfunction v2: 
   "Ex #i #j #k
-      three x z r sig_r rxp. 
-      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      three x r sig_r rxp. 
+      Verified(<three,x,r,sig_r,rxp>)@#k // claim = <'3',x,res,sig_res,rxp>
       &
       DisHonestS()@#i & DisHonestA()@#j
       "
   -> <'A','S'>,
 
   "Ex #i #j #k
-      three x z r sig_r rxp. 
-      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      three x r sig_r rxp. 
+      Verified(<three,x,r,sig_r,rxp>)@#k 
       &
       DisHonestA()@#i & HonestS()@#j
       "
   -> <'A'>,
 
   "Ex #i #j  #k
-      three x z r sig_r rxp. 
-      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      three x r sig_r rxp. 
+      Verified(<three,x,r,sig_r,rxp>)@#k 
       &
       HonestA()@#i & DisHonestS()@#j
       "
@@ -248,22 +280,24 @@ verdictfunction v:
 
   otherwise -> empty
 
-// current state: sanity works, but 
+// current state: sanity works, 
 // acc_compl_empty_3 auto fast
-// acc_comple_noempty_0 auto fast
-// acc_comple_noempty_1 counter-example
+// acc_comple_noempty_* auto fast
+// acc_min_* auto fast
+// acc_uniq_* auto fast
 
-lemma acc: 
-  v accounts  [cases]
+lemma acc_claim:  // altered: S has correct result and a proof for it!
+  v2 accounts  [cases]
   for "
-      All three rxp x z r sig_r #k.
-      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      All three rxp x z two rz sig_r #k.
+      Verified(<three,x,<two,z,rz>,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
       ==>
       ( Ex #j #i y ry. 
         Final()@#i
       & Initialize(commit(y,ry))@#j
       & #i < #j & #j < #k
       & z = f(x,y) 
+      & sig_r = sign(<two,z,rz>,sk('A'))
       )
       "
   for parties <'A','S'> 
