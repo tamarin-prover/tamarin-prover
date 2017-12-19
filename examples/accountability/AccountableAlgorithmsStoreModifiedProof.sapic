@@ -280,11 +280,35 @@ verdictfunction v2:
 
   otherwise -> empty
 
-// current state: sanity works, 
-// acc_compl_empty_3 auto fast
-// acc_comple_noempty_* auto fast
-// acc_min_* auto fast
-// acc_uniq_* auto fast
+  /* no_overwrite_lookup (all-traces): verified (54 steps) */
+  /* sanity (exists-trace): verified (19 steps) */
+  /* acc_claim_excl_0_1 (all-traces): verified (12 steps) */
+  /* acc_claim_excl_0_2 (all-traces): verified (13 steps) */
+  /* acc_claim_excl_0_3 (all-traces): verified (2 steps) */
+  /* acc_claim_excl_1_2 (all-traces): verified (12 steps) */
+  /* acc_claim_excl_1_3 (all-traces): verified (2 steps) */
+  /* acc_claim_excl_2_3 (all-traces): verified (2 steps) */
+  /* acc_claim_exh (all-traces): verified (5 steps) */
+  /* acc_claim_suf_0 (exists-trace): falsified - no trace found (14 steps) */
+  /* acc_claim_suf_1 (exists-trace): verified (25 steps) */
+  /* acc_claim_suf_2 (exists-trace): verified (22 steps) */
+  /* acc_claim_compl_empty_3 (all-traces): verified (8 steps) */
+  /* acc_claim_compl_nonempty_0 (all-traces): verified (7 steps) */
+  /* acc_claim_compl_nonempty_1 (all-traces): verified (17 steps) */
+  /* acc_claim_compl_nonempty_2 (all-traces): verified (7 steps) */
+  /* acc_claim_min_0_0 (all-traces): verified (13 steps) */
+  /* acc_claim_min_0_1 (all-traces): verified (13 steps) */
+  /* acc_claim_min_1_0 (all-traces): verified (39 steps) */
+  /* acc_claim_min_2_0 (all-traces): verified (15 steps) */
+  /* acc_claim_uniq_0 (all-traces): verified (12 steps) */
+  /* acc_claim_uniq_1 (all-traces): verified (43 steps) */
+  /* acc_claim_uniq_2 (all-traces): verified (15 steps) */
+
+// TODO:
+// 1. solve suf_0
+// 2. integrate uncomitted changes from ilkan (e.g., adversary can read lock)
+// 3. write verdict function v1 to prove accountability of A for fake log
+// 4. integrate both properties and verdict functions into one!
 
 lemma acc_claim:  // altered: S has correct result and a proof for it!
   v2 accounts  [cases]
