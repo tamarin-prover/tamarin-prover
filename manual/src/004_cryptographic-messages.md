@@ -52,6 +52,7 @@ following message theories:
 `hashing`,
 `asymmetric-encryption`,
 `signing`,
+`revealing-signing`,
 `symmetric-encryption`,
 `diffie-hellman`,
 `bilinear-pairing`, and
@@ -134,6 +135,14 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a signature scheme. It defines the function symbols
   `sign/2`, `verify/3`, `pk/1`, and `true`, which are related by
   the equation `verify(sign(m,sk),m,pk(sk)) = true`.
+
+`revealing-signing`:
+
+: This theory models a message-revealing signature scheme. It defines the function
+  symbols `revealingSign/2`, `revealingVerify/3`, `getMessage/1`, `pk/1`, and 
+  `true`, which are related by the equations
+  `revealingVerify(revealingSign(m,sk),m,pk(sk)) = true`
+  and `getMessage(revealingSign(m,sk)) = m`.
 
 `symmetric-encryption`:
 
