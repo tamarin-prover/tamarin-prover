@@ -13,7 +13,7 @@ Heuristics
 The commandline option `--heuristic` can be used to select which heuristic for
 goal selection should be used by the automated proof methods. 
 The argument of the `--heuristic` flag is a word built from the
-alphabet `{s,S,c,C,i,o}`. Each of these letters describes a different way to rank
+alphabet `{s,S,c,C,i,o,O}`. Each of these letters describes a different way to rank
 the open goals of a constraint system.
 
 `s`:
@@ -68,6 +68,9 @@ the open goals of a constraint system.
   the index of a single proof goal, as the first ranked goal will always be selected.
   Moreover, the oracle is also allowed to terminate without printing a valid index.
   In this case, the first goal of the 'Consecutive' ranking will be selected.
+
+`O`:
+: is the oracle ranking based on the 'smart' heuristic `s`. It works the same as `o` but uses 'smart' instead of 'Consecutive' ranking to start with.
 
 If several rankings are given for the heuristic flag, then they are employed
 in a round-robin fashion depending on the proof-depth. For example, a flag
