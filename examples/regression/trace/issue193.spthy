@@ -1,0 +1,39 @@
+theory RevealingSignatures
+begin
+
+functions: h/7
+builtins: hashing, revealing-signing
+
+rule ONE:
+  let
+    pk = pk( ~sk )
+    tSig = revealSign( ~random, ~sk )
+  in
+    [
+        Fr( ~sk )
+      , Fr( ~random )
+    ]
+  --[  ]->
+    [ Out( tSig ), Key(~sk) ]
+
+rule TWO:
+  let
+    m = getMessage( sig )
+    pk = pk( ~sk )
+  in
+    [
+        In( sig )
+      , Key( ~sk )
+    ]
+  --[ Equality(revealVerify(sig,m,pk),true), A() ]->
+    [  ]
+
+lemma debug: exists-trace
+  "
+    Ex #i . A() @ i
+  "
+
+restriction equality:
+  " All x y #i. Equality(x,y)@i ==> x = y "
+
+end

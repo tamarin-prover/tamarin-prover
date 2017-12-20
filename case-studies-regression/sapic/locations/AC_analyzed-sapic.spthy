@@ -954,7 +954,7 @@ unbound:
   rule `lookup_state_as_lio_0_12111111' has unbound variables: 
     lio
 
-restriction actions:
+Restriction actions:
   restriction `set_in' references action 
     (ProtoFact Linear "Delete" 1,1,Linear)
   but no rule has such an action.
@@ -987,7 +987,7 @@ analyzing: case-studies-sapic-regression/locations/AC.spthy
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies-sapic-regression/locations/AC.spthy.tmp
-  processing time: 5.21833s
+  processing time: 5.088477s
   WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1001,7 +1001,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies-sapic-regression/locations/AC.spthy.tmp
-  processing time: 5.21833s
+  processing time: 5.088477s
   WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   

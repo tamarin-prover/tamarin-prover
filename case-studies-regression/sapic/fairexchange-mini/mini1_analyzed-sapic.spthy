@@ -146,7 +146,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini1.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini1.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini1.spthy.tmp
-  processing time: 0.151292s
+  processing time: 0.101534s
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (7 steps)
 
@@ -158,7 +158,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini1.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini1.spthy.tmp
-  processing time: 0.151292s
+  processing time: 0.101534s
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (7 steps)
 
