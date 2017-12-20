@@ -721,6 +721,8 @@ builtins =
           *> extendSig asymEncMaudeSig
       , try (symbol "signing")
           *> extendSig signatureMaudeSig
+      , try (symbol "revealing-signing")
+          *> extendSig revealSignatureMaudeSig
       , symbol "hashing"
           *> extendSig hashMaudeSig
       ]

@@ -54,6 +54,7 @@ module Term.Unification (
   , symEncMaudeSig
   , asymEncMaudeSig
   , signatureMaudeSig
+  , revealSignatureMaudeSig
   , hashMaudeSig
   , rrulesForMaudeSig
   , stFunSyms
