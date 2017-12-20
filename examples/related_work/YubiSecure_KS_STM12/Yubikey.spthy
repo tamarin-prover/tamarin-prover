@@ -13,7 +13,7 @@ section{* The Yubikey-Protocol *}
 
 builtins: symmetric-encryption
 
-functions: S/1,zero/0
+functions: S/1,myzero/0
 
 /* We to model the Yubikey protocol, described in
 *  http://www.yubico.com/documentation
@@ -38,9 +38,9 @@ functions: S/1,zero/0
  * protocol actions.
 */
 rule InitSucc:
-    [In(zero),In(S(zero))]
-	 --[Theory(), IsSucc(zero,S(zero)),IsZero(zero)]->
-	[!Succ(zero,S(zero))]
+    [In(myzero),In(S(myzero))]
+	 --[Theory(), IsSucc(myzero,S(myzero)),IsZero(myzero)]->
+	[!Succ(myzero,S(myzero))]
 
 rule StepSucc:
     [In(y),In(S(y)), !Succ(x,y)]
@@ -57,18 +57,18 @@ rule ZExtendedSmaller:
 	--[Theory(), IsSmaller(x,z)]->
 	[!Smaller(x,z)]
 
-/* A Yubikey is initialised with a zero counter, a key and a public, as well as a
+/* A Yubikey is initialised with a zero (represented by myzero) counter, a key and a public, as well as a
  * secret identifier, ~pid and ~sid. This information is shared with the
  * Authentication Server, so we assume a trusted way of installing a
  * Yubikey
 */
 rule BuyANewYubikey:
         [Fr(~k),Fr(~pid),Fr(~sid)] //for fresh k, public and secret id..
-        --[Protocol(), Init(~pid,~k),ExtendedInit(~pid,~sid,~k),IsZero(zero)]->
-        [!Y(~pid,~sid), Y_counter(~pid,zero),
+        --[Protocol(), Init(~pid,~k),ExtendedInit(~pid,~sid,~k),IsZero(myzero)]->
+        [!Y(~pid,~sid), Y_counter(~pid,myzero),
         //..store public and secret id along with the starting counter
-        //(zero) on the Yubikey..
-		 Server(~pid,~sid,zero),!SharedKey(~pid,~k), //and on the server
+        //(myzero) on the Yubikey..
+		 Server(~pid,~sid,myzero),!SharedKey(~pid,~k), //and on the server
          Out(~pid)] //and make the public id public
 
 //On plugin, the session counter is increased and the token counter reset
