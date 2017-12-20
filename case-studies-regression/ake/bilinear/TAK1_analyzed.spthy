@@ -2650,7 +2650,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 47.57863s
+  processing time: 52.413975s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2662,7 +2662,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 47.57863s
+  processing time: 52.413975s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

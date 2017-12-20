@@ -22,18 +22,21 @@ b # e  = fAppAC Union [b,e]
 (+:) :: Ord a => Term a -> Term a -> Term a
 b +: e = fAppAC Xor [b,e]
 
-adec, aenc, sdec, senc, sign :: (Term a,Term a) -> Term a
-adec (a,b)   = fAppNoEq adecSym [a,b]
-aenc (a,b)   = fAppNoEq aencSym [a,b]
-sdec (a,b)   = fAppNoEq sdecSym [a,b]
-senc (a,b)   = fAppNoEq sencSym [a,b]
-sign (a,b)   = fAppNoEq signSym [a,b]
+adec, aenc, sdec, senc, sign, revealSign :: (Term a,Term a) -> Term a
+adec (a,b)       = fAppNoEq adecSym [a,b]
+aenc (a,b)       = fAppNoEq aencSym [a,b]
+sdec (a,b)       = fAppNoEq sdecSym [a,b]
+senc (a,b)       = fAppNoEq sencSym [a,b]
+sign (a,b)       = fAppNoEq signSym [a,b]
+revealSign (a,b) = fAppNoEq revealSignSym [a,b]
 
-verify :: (Term a,Term a,Term a) -> Term a
+verify, revealVerify :: (Term a,Term a,Term a) -> Term a
 verify (a,b,c) = fAppNoEq verifySym [a,b,c]
+revealVerify (a,b,c) = fAppNoEq revealVerifySym [a,b,c]
 
-pk :: Term a -> Term a
+pk, extractMessage :: Term a -> Term a
 pk a = fAppNoEq pkSym [a]
+extractMessage a = fAppNoEq extractMessageSym [a]
 
 trueC :: Term a
 trueC = fAppNoEq trueSym []

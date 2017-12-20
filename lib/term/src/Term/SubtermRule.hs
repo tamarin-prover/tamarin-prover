@@ -43,10 +43,12 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
   | frees rhs == [] = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
-  | otherwise       = case findAllSubterms lhs rhs of
-                        []:_     -> Nothing  -- proper subterm required
-                        []       -> Nothing
-                        pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
+  | otherwise       = do
+                         sbtms <- findAllSubterms lhs rhs
+                         case sbtms of
+                            []:_     -> Nothing  -- proper subterm required
+                            []       -> Nothing
+                            pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
   where
     subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
     subterms []     _    _ = []
@@ -68,11 +70,22 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
         concat $ zipWith (\lst i -> findSubterm lst r (i:rpos)) args [0..]
     findSubterm (viewTerm -> Lit _)         _ _  = []
     
+    -- Given a term l, finds all ocurrences of r in l.
+    -- If r does not occur in l, returns the occurrences of subterms of r.
+    -- Returns Nothing if some variable in r does never appear in l.
+    findAllSubterms :: LNTerm -> LNTerm -> Maybe [Position]
     findAllSubterms l r@(viewTerm -> FApp _ args)
-        | fSt == [] = concat $ map (\rst -> findAllSubterms l rst) args
-        | otherwise = fSt
+        | fSt == [] = do
+            stms <- mapM (\rst -> findAllSubterms l rst) args
+            return $ concat stms
+        | otherwise = Just $ fSt
             where fSt = findSubterm l r []
-    findAllSubterms l r@(viewTerm -> Lit _)       = findSubterm l r []
+    findAllSubterms l r@(viewTerm -> Lit (Var _))
+        | fSt == [] = Nothing
+        | otherwise = Just fSt
+            where fSt = findSubterm l r []
+    -- There should not be constants on the right hand side (enforced by the parser).
+    findAllSubterms _ (viewTerm -> Lit (Con _)) = Nothing
 
 -- | Convert a context subterm rewrite rule to a rewrite rule.
 ctxtStRuleToRRule :: CtxtStRule -> RRule LNTerm

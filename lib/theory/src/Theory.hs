@@ -89,8 +89,7 @@ module Theory (
   , cprRuleE
   , filterSide
   , addDefaultDiffLemma
-  , addProtoRuleLabels
-  , removeProtoRuleLabels
+  , addProtoRuleLabel
   , addIntrRuleLabels
 
   -- ** Open theories
@@ -611,9 +610,6 @@ type ClosedDiffTheory =
 type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
-type OpenDiffTheoryItem =
-    DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
-
 
 -- Shared theory modification functions
 ---------------------------------------
@@ -843,13 +839,8 @@ addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
 addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Observational_equivalence" []) thy
 
 -- Add the rule labels to an Open Diff Theory
-addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-addProtoRuleLabels thy =
-    modify diffThyItems (map addRuleLabel) thy
-  where
-    addRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
-    addRuleLabel (DiffRuleItem rule) = DiffRuleItem $ addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
-    addRuleLabel x                   = x
+addProtoRuleLabel :: OpenProtoRule -> OpenProtoRule
+addProtoRuleLabel rule = addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
     
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
@@ -858,26 +849,16 @@ addIntrRuleLabels thy =
   where
     addRuleLabel :: IntrRuleAC -> IntrRuleAC
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
-
--- Add the rule labels to an Open Diff Theory
-removeProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-removeProtoRuleLabels thy =
-    modify diffThyItems (map removeRuleLabel) thy
-  where
-    removeRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
-    removeRuleLabel (DiffRuleItem rule) = DiffRuleItem $ removeDiffLabel rule ("DiffProto" ++ (getRuleName rule))
-    removeRuleLabel x                   = x
-
     
 -- | Open a theory by dropping the closed world assumption and values whose
--- soundness dependens on it.
+-- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n sig c items) =
     Theory n (toSignaturePure sig) (openRuleCache c)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
 
 -- | Open a theory by dropping the closed world assumption and values whose
--- soundness dependens on it.
+-- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
     DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
@@ -888,12 +869,6 @@ openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
     find ((name ==) . L.get (preName . rInfo)) . theoryRules
-
--- | Find the open protocol rule with the given name.
--- REMOVE
--- lookupOpenDiffProtoRule :: Side -> ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
--- lookupOpenDiffProtoRule s name =
---     find ((name ==) . L.get rInfo) . (diffTheorySideRules s)
 
 -- | Find the open protocol rule with the given name.
 lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
@@ -1204,8 +1179,8 @@ closeDiffTheoryWithMaude sig thy0 = do
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
-    leftOpenRules  = map getLeftRule  diffRules
-    rightOpenRules = map getRightRule diffRules
+    leftOpenRules  = map (getLeftRule  . addProtoRuleLabel) diffRules
+    rightOpenRules = map (getRightRule . addProtoRuleLabel) diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig

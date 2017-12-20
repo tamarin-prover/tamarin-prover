@@ -739,6 +739,8 @@ builtins =
           *> extendSig asymEncMaudeSig
       , try (symbol "signing")
           *> extendSig signatureMaudeSig
+      , try (symbol "revealing-signing")
+          *> extendSig revealSignatureMaudeSig
       , symbol "hashing"
           *> extendSig hashMaudeSig
       ]
@@ -751,6 +753,9 @@ functions =
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
         priv <- option Public (symbol "[private]" *> pure Private)
+        if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em"])
+          then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
+          else return ()
         sig <- getState
         case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
           Just kp' | kp' /= (k,priv) ->
@@ -769,7 +774,7 @@ equations =
           Just str ->
               modifyState (addCtxtStRule str)
           Nothing  ->
-              fail $ "Not a subterm rule: " ++ show rrule
+              fail $ "Not a correct equation: " ++ show rrule
 
 ------------------------------------------------------------------------------
 -- Parsing Theories

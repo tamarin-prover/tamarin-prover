@@ -295,7 +295,7 @@ factReports thy = concat
     ]
   where
     ruleFacts ru =
-      ( "rule " ++ quote (showRuleCaseName ru)
+      ( "Rule " ++ quote (showRuleCaseName ru)
       , extFactInfo <$> concatMap (`get` ru) [rPrems, rActs, rConcs])
 
     -- NOTE: The check that the number of actual function arguments in a term
@@ -307,7 +307,7 @@ factReports thy = concat
       <|> do RuleItem ru <- get thyItems thy
              return $ ruleFacts ru
       <|> do LemmaItem l <- get thyItems thy
-             return $ (,) ("lemma " ++ quote (get lName l)) $ do
+             return $ (,) ("Lemma " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
                  return $ (text (show fa), factInfo fa)
 
@@ -323,7 +323,7 @@ factReports thy = concat
         (origin, fas) <- theoryFacts
         case mapMaybe reservedFactName fas of
           []   -> []
-          errs -> return $ (,) "reseved names" $ foldr1 ($--$) $
+          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved names:")
             : map (nest 2) errs
@@ -349,7 +349,7 @@ factReports thy = concat
            rhs = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) "special fact usage" $
+           check msg fas = return $ (,) "Special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -360,7 +360,7 @@ factReports thy = concat
     -- multiplicity or arity.
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) "fact usage" $ numbered' $ do
+       return $ (,) "Fact usage" $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
                           ", fact " ++ show (map toLower $ factTagName tag) ++
@@ -388,7 +388,7 @@ factReports thy = concat
             name = get lName l
         if info `S.member` ruleActions
           then []
-          else return $ (,) "lemma actions" $
+          else return $ (,) "Lemma actions" $
                  text ("lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
@@ -400,7 +400,7 @@ factReports thy = concat
             name = get rstrName l
         if info `S.member` ruleActions
           then []
-          else return $ (,) "restriction actions" $
+          else return $ (,) "Restriction actions" $
                  text ("restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
@@ -414,7 +414,7 @@ factReportsDiff thy = concat
     ]
   where
     ruleFacts ru =
-      ( "rule " ++ quote (showRuleCaseName ru)
+      ( "Rule " ++ quote (showRuleCaseName ru)
       , extFactInfo <$> concatMap (`get` ru) [rPrems, rActs, rConcs])
 
     -- NOTE: The check that the number of actual function arguments in a term
@@ -432,7 +432,7 @@ factReportsDiff thy = concat
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           theoryRuleFacts
       <|> do EitherLemmaItem (s, l) <- get diffThyItems thy
-             return $ (,) ("lemma " ++ show s ++ " " ++ quote (get lName l)) $ do
+             return $ (,) ("Lemma " ++ show s ++ " " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
                  return $ (text (show fa), factInfo fa)
 
@@ -448,7 +448,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryFacts
         case mapMaybe reservedFactName fas of
           []   -> []
-          errs -> return $ (,) "reseved names" $ foldr1 ($--$) $
+          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved names:")
             : map (nest 2) errs
@@ -463,7 +463,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryRuleFacts
         case mapMaybe reservedPrefixFactName fas of
           []   -> []
-          errs -> return $ (,) "reseved names" $ foldr1 ($--$) $
+          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved prefixes ('DiffIntr', 'DiffProto') inside names:")
             : map (nest 2) errs
@@ -489,7 +489,7 @@ factReportsDiff thy = concat
            rhs = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) "special fact usage" $
+           check msg fas = return $ (,) "Special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -500,7 +500,7 @@ factReportsDiff thy = concat
     -- multiplicity or arity.
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) "fact usage" $ numbered' $ do
+       return $ (,) "Fact usage" $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
                           ", fact " ++ show (map toLower $ factTagName tag) ++
@@ -532,7 +532,7 @@ factReportsDiff thy = concat
             name = get lName l
         if info `S.member` ruleActions
           then []
-          else return $ (,) "lemma actions" $
+          else return $ (,) "Lemma actions" $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
@@ -544,7 +544,7 @@ factReportsDiff thy = concat
             name = get rstrName l
         if info `S.member` ruleActions
           then []
-          else return $ (,) "restriction actions" $
+          else return $ (,) "Restriction actions" $
                  text (show s ++ "restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
@@ -579,7 +579,7 @@ lemmaAttributeReport thy = do
     lem <- theoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( "attributes"
+    return ( "Attributes"
            , text "lemma" <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
@@ -591,7 +591,7 @@ lemmaAttributeReportDiff thy = do
     (s, lem) <- diffTheoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( "attributes"
+    return ( "Attributes"
            , text ("lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
@@ -603,9 +603,9 @@ lemmaAttributeReportDiff thy = do
 formulaReports :: OpenTheory -> WfErrorReport
 formulaReports thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fm
-         , ((,) "formula terms")    <$> checkTerms header fm
-         , ((,) "guardedness")      <$> checkGuarded header fm
+    msum [ ((,) "Quantifier sorts") <$> checkQuantifiers header fm
+         , ((,) "Formula terms")    <$> checkTerms header fm
+         , ((,) "Guardedness")      <$> checkGuarded header fm
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
@@ -669,9 +669,9 @@ formulaReports thy = do
 formulaReportsDiff :: OpenDiffTheory -> WfErrorReport
 formulaReportsDiff thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) "quantifier sorts") <$> checkQuantifiers header fm
-         , ((,) "formula terms")    <$> checkTerms header fm
-         , ((,) "guardedness")      <$> checkGuarded header fm
+    msum [ ((,) "Quantifier sorts") <$> checkQuantifiers header fm
+         , ((,) "Formula terms")    <$> checkTerms header fm
+         , ((,) "Guardedness")      <$> checkGuarded header fm
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
@@ -739,7 +739,7 @@ formulaReportsDiff thy = do
 multRestrictedReport :: OpenTheory -> WfErrorReport
 multRestrictedReport thy = do
     ru <- theoryRules thy
-    (,) "multiplication restriction of rules" <$>
+    (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []
           (mults, unbounds) ->
@@ -805,7 +805,7 @@ multRestrictedReport thy = do
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
 multRestrictedReportDiff thy = do
     ru <- diffTheoryDiffRules thy
-    (,) "multiplication restriction of rules" <$>
+    (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []
           (mults, unbounds) ->

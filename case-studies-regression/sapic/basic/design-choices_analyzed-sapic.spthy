@@ -448,7 +448,7 @@ unbound:
   rule `lookup_visited_as_v_0_11' has unbound variables: 
     v
 
-restriction actions:
+Restriction actions:
   restriction `set_in' references action 
     (ProtoFact Linear "Delete" 1,1,Linear)
   but no rule has such an action.
@@ -473,7 +473,7 @@ analyzing: case-studies-sapic-regression/basic/design-choices.spthy
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.651604s
+  processing time: 0.619612s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -487,7 +487,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.651604s
+  processing time: 0.619612s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   

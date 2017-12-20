@@ -16,21 +16,24 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | Binary builtin function symbols.
-sdecSym, sencSym, adecSym, aencSym, signSym :: NoEqSym
+sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym :: NoEqSym
 sdecSym = ("sdec",(2, Public))
 sencSym = ("senc",(2, Public))
 adecSym = ("adec",(2, Public))
 aencSym = ("aenc",(2, Public))
 signSym = ("sign",(2, Public))
+revealSignSym = ("revealSign",(2, Public))
 
 -- | Ternary builtin function symbols.
-verifySym :: NoEqSym
+verifySym, revealVerifySym :: NoEqSym
 verifySym = ("verify",(3, Public))
+revealVerifySym = ("revealVerify",(3, Public))
 
 -- | Unary builtin function symbols.
-pkSym, hashSym :: NoEqSym
+pkSym, hashSym, extractMessageSym :: NoEqSym
 pkSym = ("pk",(1, Public))
 hashSym = ("h",(1, Public))
+extractMessageSym = ("getMessage",(1, Public))
 
 -- | Nullary builtin function symbols.
 trueSym :: NoEqSym
@@ -51,6 +54,10 @@ asymEncFunSig = S.fromList $ [ adecSym, aencSym, pkSym ]
 -- | The signature for cryptographic signatures.
 signatureFunSig :: NoEqFunSig
 signatureFunSig = S.fromList $ [ signSym, verifySym, trueSym, pkSym ]
+
+-- | The signature for cryptographic signatures that are message-revealing.
+revealSignatureFunSig :: NoEqFunSig
+revealSignatureFunSig = S.fromList $ [ revealSignSym, revealVerifySym, extractMessageSym, trueSym, pkSym ]
 
 -- | The signature for hashing.
 hashFunSig :: NoEqFunSig
