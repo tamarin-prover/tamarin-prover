@@ -105,6 +105,9 @@ theoryLoadFlags =
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
       "Strict mode that quits on any warning that is emitted."
 
+  , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
+      "Path to the oracle heuristic (default './oracle')."
+
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
   ]
@@ -336,10 +339,14 @@ constructAutoProver as =
         Just []                  -> error "--heuristic: at least one ranking must be given"
         _                        -> [SmartRanking False]
 
+    oracleName = case findArg "oraclename" as of
+      Nothing       -> "./oracle"
+      Just fileName -> "./" ++ fileName
+
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking
-    ranking 'O' = OracleSmartRanking
+    ranking 'o' = OracleRanking oracleName
+    ranking 'O' = OracleSmartRanking oracleName
     ranking 'p' = SapicRanking
     ranking 'l' = SapicLivenessRanking
     ranking 'P' = SapicPKCS11Ranking
@@ -386,10 +393,14 @@ constructAutoDiffProver as =
         Just []                  -> error "--heuristic: at least one ranking must be given"
         _                        -> [SmartDiffRanking]
 
+    oracleName = case findArg "oraclename" as of
+      Nothing       -> "./oracle"
+      Just fileName -> "./" ++ fileName
+
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking
-    ranking 'O' = OracleSmartRanking
+    ranking 'o' = OracleRanking oracleName
+    ranking 'O' = OracleSmartRanking oracleName
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $
