@@ -331,8 +331,8 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 -- order of solving in a constraint system.
 data GoalRanking =
     GoalNrRanking
-  | OracleRanking
-  | OracleSmartRanking
+  | OracleRanking String
+  | OracleSmartRanking String
   | SapicRanking
   | SapicLivenessRanking
   | SapicPKCS11Ranking
@@ -346,16 +346,16 @@ data GoalRanking =
 goalRankingName :: GoalRanking -> String
 goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
-        GoalNrRanking                -> "their order of creation"
-        OracleRanking                -> "an oracle for ranking"
-        OracleSmartRanking           -> "an oracle for ranking based on 'smart' heuristic"
-        UsefulGoalNrRanking          -> "their usefulness and order of creation"
-        SapicRanking                 -> "heuristics adapted to the output of the SAPIC tool"
-        SapicLivenessRanking         -> "heuristics adapted to the output of the SAPIC tool for liveness properties"
-        SapicPKCS11Ranking           -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
-        SmartRanking useLoopBreakers -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
-        SmartDiffRanking             -> "the 'smart' heuristic (for diff proofs)"
-        InjRanking useLoopBreakers   -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
+        GoalNrRanking                 -> "their order of creation"
+        OracleRanking oracleName      -> "an oracle for ranking, located at: " ++ oracleName
+        OracleSmartRanking oracleName -> "an oracle for ranking based on 'smart' heuristic, located at: " ++ oracleName
+        UsefulGoalNrRanking           -> "their usefulness and order of creation"
+        SapicRanking                  -> "heuristics adapted to the output of the SAPIC tool"
+        SapicLivenessRanking          -> "heuristics adapted to the output of the SAPIC tool for liveness properties"
+        SapicPKCS11Ranking            -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
+        SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
+        SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
+        InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
 
@@ -364,8 +364,8 @@ goalRankingName ranking =
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
-    OracleRanking -> oracleRanking ctxt
-    OracleSmartRanking -> oracleSmartRanking ctxt
+    OracleRanking oracleName -> oracleRanking oracleName ctxt
+    OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
@@ -480,10 +480,11 @@ goalNrRanking = sortOn (fst . snd)
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately.
-oracleRanking :: ProofContext
+oracleRanking :: String
+              -> ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleRanking ctxt _sys ags0
+oracleRanking oracleName ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -491,7 +492,7 @@ oracleRanking ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
       
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
@@ -512,10 +513,11 @@ oracleRanking ctxt _sys ags0
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
 --   as the baseline.
-oracleSmartRanking :: ProofContext
-              -> System
-              -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleSmartRanking ctxt _sys ags0
+oracleSmartRanking :: String
+                   -> ProofContext
+                   -> System
+                   -> [AnnotatedGoal] -> [AnnotatedGoal]
+oracleSmartRanking oracleName ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -523,7 +525,7 @@ oracleSmartRanking ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess "./oracle" [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
