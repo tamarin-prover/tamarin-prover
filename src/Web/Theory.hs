@@ -973,6 +973,9 @@ htmlThyPath renderUrl info path =
                 \ stops after finding a solution, and
                 \ <span class="keys">A</span>
                 \ searches for all solutions.
+                \ Needs to have a #
+                <tt>sorry
+                \ selected to work.
             <tr>
               <td>
                 <span class="keys">b/B
@@ -983,6 +986,9 @@ htmlThyPath renderUrl info path =
                 \ stops after finding a solution, and
                 \ <span class="keys">B</span>
                 \ searches for all solutions.
+                \ Needs to have a #
+                <tt>sorry
+                \ selected to work.
             <tr>
               <td>
                 <span class="keys">?
@@ -1102,6 +1108,9 @@ htmlDiffThyPath renderUrl info path =
                 \ stops after finding a solution, and
                 \ <span class="keys">A</span>
                 \ searches for all solutions.
+                \ Needs to have a #
+                <tt>sorry
+                \ selected to work.
             <tr>
               <td>
                 <span class="keys">b/B
@@ -1112,6 +1121,9 @@ htmlDiffThyPath renderUrl info path =
                 \ stops after finding a solution, and
                 \ <span class="keys">B</span>
                 \ searches for all solutions.
+                \ Needs to have a #
+                <tt>sorry
+                \ selected to work.
             <tr>
               <td>
                 <span class="keys">?
