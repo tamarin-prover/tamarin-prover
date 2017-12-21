@@ -175,3 +175,13 @@ em(pmult(x,p),q)     = pmult(x,em(q,p))
 
 : This theory introduces the associative-commutative operator `+` which is usually
   used to model multisets.
+
+
+Reserved function symbol names {#sec:reserved-names}
+------------------------
+
+Due to their use in built-in message theories, the following function
+names cannot be user-defined: `mun`, `one`, `exp`, `mult`, `inv`, `pmult`, `em`.
+
+If a theory contains any of these as user-defined function symbol the
+parser will reject the file, stating which reserved name was redeclared.
