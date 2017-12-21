@@ -642,8 +642,7 @@ var mainDisplay = {
 
     /**
      * Apply a prover to the currently selected constraint system,
-     * or to the first sorry-step when not on selected constrain
-     * system.
+     * or to the first sorry-step when no constraint system is selected.
      * @param prover The CSS style of the link to the prover
      */
     applyProver: function(prover) {
