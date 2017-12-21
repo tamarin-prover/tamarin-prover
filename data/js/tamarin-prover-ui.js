@@ -641,13 +641,27 @@ var mainDisplay = {
     },
 
     /**
-     * Apply a prover to the currently selected constraint system.
+     * Apply a prover to the currently selected constraint system,
+     * or to the first sorry-step when no constraint system is selected.
      * @param prover The CSS style of the link to the prover
      */
     applyProver: function(prover) {
         var auto = $("#ui-main-display").find("a.internal-link." + prover);
 
-        if(auto.length >= 1) $(auto.get(0)).click();
+        if(auto.length >= 1) {
+            $(auto.get(0)).click();
+        } else {
+            var firstStep = $("#proof").find("a.internal-link.sorry-step");
+
+            if(firstStep.length >= 1) {
+                $.when( $(firstStep.get(0)).click( ) ).done( function(  ) {
+                    setTimeout(function(){ 
+                        var autoP = $("#ui-main-display").find("a.internal-link." + prover );
+                        $(autoP.get(0)).click();
+                    }, 300);
+                });
+            }
+        }
     },
 
     /**
