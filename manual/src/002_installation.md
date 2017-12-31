@@ -74,6 +74,14 @@ There is a package in the official repositories. To install it, simply type:
 
   * `pacman -S tamarin-prover`
 
+### Automatic Installation for Nix/NixOS {#sec:NixBinInstall}
+
+There is a package in the official Nixpkgs repository. To install it, simply type:
+
+  * `nix-env -i tamarin-prover`
+
+This installs a per-user copy of Tamarin. If you're on NixOS, just add `tamarin-prover` to your
+`environment.systemPackages` for system-wide installation.
 
 Mac OS X {#sec:macosx}
 --------
