@@ -12,9 +12,12 @@ The source files can be found in the `src` directory.
 ## Prerequisites
 
 To compile the manual, you need [pandoc](http://pandoc.org) and pandoc-citeproc.
-We recommend to use [stack](www.haskellstack.org/) to install these dependencies.
+We recommend to use [stack](https://www.haskellstack.org/) to install these dependencies.
 
     stack install pandoc pandoc-citeproc
+
+(If you get any errors while running this, make sure you're running the latest version of Stack: 
+`stack update && stack upgrade` then try again.)
 
 To create the PDF, [xelatex](http://xetex.sourceforge.net/) is required,
 which is part of the texlive packages. On Ubuntu/Debian systems it can

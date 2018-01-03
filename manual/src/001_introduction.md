@@ -125,3 +125,21 @@ described in Section
 manual with contact information and further reading in [Contact
 Information and Further
 Reading](013_contact-and-further-reading.html#sec:contact).
+
+
+License
+-------
+
+Tamarin Prover Manual, by The Tamarin Team.
+Copyright © 2016.
+
+[tamarin-prover.github.io](https://tamarin-prover.github.io)
+
+
+This written work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International License. You may reproduce and edit this work with attribution for all non-commercial
+purposes.
+
+
+References
+----------
