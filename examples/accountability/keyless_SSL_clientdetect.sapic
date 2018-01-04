@@ -277,7 +277,7 @@ lemma acc2:
           (Ex #t0.  CSession('A','B',niprev,nrprev,cprev) @ t0)
         //or one of the previous session was faked.
         | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j )
-        | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j )
+        /* | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j ) */
         "
     for parties <'A','B'>
 
