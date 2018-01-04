@@ -184,7 +184,7 @@ lemma correct_dolevyao:
 lemma detect_sound [reuse]:
     "All a b #i.
         Detect(a,b) @ i 
-    ==> (Ex #j. #j < #i & Corrupted(b) @ j)
+    ==>  (Ex #j. #j < #i & Corrupted(b) @ j)
         |(Ex #j. #j < #i & Corrupted(a) @ j)"
 
 
@@ -233,8 +233,8 @@ lemma unmatching_implies_detect_with_W_uncompromised[use_induction,reuse]:
         | (Ex #t4.  Detect(a,b) @ t4 )
         //Or B was compromised
         | (Ex #k. Corrupted(b) @ k)
-        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j )
-        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j )
+        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j ) // <- Definitely need to be not outcommented 
+        /* | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j ) */ // <-- maybe can stay outcommented
         "
         /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
 
@@ -242,7 +242,7 @@ restriction b_not_corrupted: // assume party B is not corrupted.
     "not (Ex #k. Corrupted('B')@k)"
 
 verdictfunction v1:
-    "Ex #i #t2 #t3 ni nr c. 
+    "Ex #i #t2 #t3 ni nr c .
           CSession('A','B',ni,nr,c) @ t2
         & WSession('A','B',ni,nr,c) @ t3
         & Detect('A','B')@i " -> <'A'>,
@@ -260,7 +260,9 @@ verdictfunction v1:
 
 // suf_0_0     ?
 // compl_empty ?
-// compl_non-empty counter-example: detect without violation if not matching session exists..
+// compl_non-empty ?
+// min_0_0_0 auto quick
+// uniq_0 auto quick
 lemma acc2:
     v1 accounts 
     for 
