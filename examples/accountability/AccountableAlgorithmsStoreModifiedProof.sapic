@@ -170,6 +170,10 @@ A || S || J ||
        (if $x='A' then in(y); insert <'A','Log','S'>, y)
      ||
        (if $x='A' then in(y); insert <'A','Final'>, y)
+     ||
+       (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
+     ||
+       (if $x='S' then lookup <'A','Log','S'> as y in out(y))
      ) 
 
      )
@@ -252,13 +256,13 @@ lemma sanity:
 /*   for parties <'A','S'> */ 
 
 verdictfunction v2: 
-  "Ex #i #j #k
-      three x r sig_r rxp. 
-      Verified(<three,x,r,sig_r,rxp>)@#k // claim = <'3',x,res,sig_res,rxp>
-      &
-      DisHonestS()@#i & DisHonestA()@#j
-      "
-  -> <'A','S'>,
+  // "Ex #i #j #k
+  //     three x r sig_r rxp. 
+  //     Verified(<three,x,r,sig_r,rxp>)@#k // claim = <'3',x,res,sig_res,rxp>
+  //     &
+  //     DisHonestS()@#i & DisHonestA()@#j
+  //     "
+  // -> <'A','S'>,
 
   "Ex #i #j #k
       three x r sig_r rxp. 
