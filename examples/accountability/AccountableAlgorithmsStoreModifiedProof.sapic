@@ -173,7 +173,7 @@ A || S || J ||
      ||
        (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
      ||
-       (if $x='S' then lookup <'A','Log','S'> as y in out(y))
+       (if $x='S' then lookup <'A','Log','S'> as y in out(y))//
      ) 
 
      )
