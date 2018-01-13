@@ -9,7 +9,7 @@ Comments are C-style:
     /* for a multi-line comment */
     // for a line-comment
 
-All security protocol theory are named and delimited by 'begin' and 'end'.
+All security protocol theory are named and delimited by `begin` and `end`.
 We explain the non-terminals of the body in the following paragraphs.
 
     security_protocol_theory := 'theory' ident 'begin' body 'end'
@@ -28,7 +28,7 @@ only parse function applications of defined functions.
 Note that the equations must be subterm-convergent. Tamarin provides built-in
 sets of function definitions and subterm convergent equations. They are
 expanded upon parsing and you can therefore inspect them by pretty printing
-the file using 'tamarin-prover your_file.spthy'. The built-in 'diffie-hellman'
+the file using `tamarin-prover your_file.spthy`. The built-in `diffie-hellman`
 is special. It refers to the equations given in Section [Cryptographic
 Messages](004_cryptographic-messages.html#equational-theories). You need to 
 enable it to parse terms containing exponentiations, e.g.,  g ^ x.
@@ -90,7 +90,7 @@ In observational equivalence mode, lemmas can be associated to one side.
                              'hide_lemma=' ident | 'left' | 'right') ']'
 
 Formal comments are used to make the input more readable. In contrast
-to /*...*/ and //... comments, formal comments are stored and output
+to `/*...*/` and `//...` comments, formal comments are stored and output
 again when pretty-printing a security protocol theory.
 
     formal_comment := ident '{*' ident* '*}'
@@ -101,11 +101,11 @@ a position slightly before the actual use of the function due to some
 ambiguity in the grammar.
 
 We provide special syntax for tuples, multiplications, exponentiation, nullary
-and binary function symbols. An n-ary tuple <t1,...,tn> is parsed as n-ary,
+and binary function symbols. An n-ary tuple `<t1,...,tn>` is parsed as n-ary,
 right-associative application of pairing. Multiplication and exponentiation
-are parsed left-associatively. For a binary operator 'enc' you can write
-'enc{m}k' or 'enc(m,k)'. For nullary function symbols, there is no need to
-write 'nullary()'. Note that the number of arguments of an n-ary function
+are parsed left-associatively. For a binary operator `enc` you can write
+`enc{m}k` or `enc(m,k)`. For nullary function symbols, there is no need to
+write `nullary()`. Note that the number of arguments of an n-ary function
 application must agree with the arity given in the function definition.
 
     tupleterm := multterm list
@@ -131,12 +131,12 @@ application must agree with the arity given in the function definition.
              | ident               // a variable of sort 'msg'
 
 Facts do not have to be defined up-front. This will probably change once we
-implement user-defined sorts. Facts prefixed with '!' are persistent facts.
+implement user-defined sorts. Facts prefixed with `!` are persistent facts.
 All other facts are linear. There are six reserved fact symbols: In, Out, KU,
 KD, and K. KU and KD facts are used for construction and deconstruction
 rules. KU-facts also log the messages deduced by construction rules. Note that
 KU-facts have arity 2. Their first argument is used to track the
-exponentiation tags. See the 'loops/Crypto_API_Simple.spthy' example for more
+exponentiation tags. See the `loops/Crypto_API_Simple.spthy` example for more
 information.
 
     facts := fact list
@@ -150,7 +150,7 @@ guards.
     iff       := imp '<=>' imp
     imp       := disjuncts '==>' disjuncts
     disjuncts := conjuncts ('|' disjuncts)+  // left-associative
-    conjuncts := negation  ('|' conjuncts)+  // left-associative
+    conjuncts := negation  ('&' conjuncts)+  // left-associative
     negation  := 'not' formula
 
     atom := tvar '<' tvar              // ordering of temporal variables
@@ -165,7 +165,7 @@ guards.
     tvar := ['#'] ident
 
 Identifiers always start with a character. Moreover, they must not be one of the
-reserved keywords 'let', 'in', or 'rule'.
+reserved keywords `let`, `in`, or `rule`.
 
     ident := alpha (alpha | digit)*
 
