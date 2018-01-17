@@ -93,11 +93,20 @@ The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.
 If you already have this installed, it is as simple as running the following two commands in your terminal:
 
   * `brew update`
-  * `brew install homebrew/science/tamarin-prover`
+  * `brew tap brewsci/science`
+  * `brew install tamarin-prover`
 
 You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time.
+
+Please note, if you previously used homebrew to install Tamarin from homebrew-science, you will have to
+uninstall and untap:
+
+  * `brew uninstall tamarin-prover`
+  * `brew untap homebrew/science`
+
+Once complete run the above instructions.
 
 #### Installing Homebrew
 If you don't have Homebrew installed:
