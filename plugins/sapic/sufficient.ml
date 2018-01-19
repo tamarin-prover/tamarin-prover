@@ -299,9 +299,10 @@ let controlf task id op i j phi_i phi_j =
                     ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
                 Or (  
                       Not (bind_to_session (Msg "id1") phi_i),
-                      Or (Not (bind_to_session (Msg "id2") phi_j),
-                          control_condition)
-                )))))
+                      Or ( Not (bind_to_session (Msg "id2") phi_j),
+                          Or ( 
+                              Not (Atom(TLeq (Temp "i", Temp "j")))
+                              ,control_condition)))))))
        | Unrelate ->
             let label = Printf.sprintf "%s_unrel_%n_%n" id i j in
             let labelsym = Printf.sprintf "%s_unrel_%n_%n" id j i in
@@ -316,7 +317,9 @@ let controlf task id op i j phi_i phi_j =
                 Or (  
                       Not (bind_to_session (Msg "id1") phi_i),
                       Or (Not (bind_to_session (Msg "id2") phi_j),
-                          Not (control_condition))
+                          Or ( 
+                              Not (Atom(TLeq (Temp "i", Temp "j")))
+                              , Not (control_condition)))
                 )))))
 
 let relationLifting f id op (vf:verdictf) rel =
