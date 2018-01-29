@@ -60,7 +60,7 @@ lemma helpingSecrecy[reuse]:
   "All k #i. 
      Create(k)@i ==> not(Ex #j. K(k)@j)"
 
-// PROVEN, autoproof (~49 minutes CPU)
+// PROVEN, autoproof (~1 minute CPU)
 lemma noninjectiveagreementTAG[use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
