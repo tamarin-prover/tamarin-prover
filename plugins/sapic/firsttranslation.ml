@@ -17,6 +17,7 @@ open Restrictions
 open Translationhelper
 open Basetranslation
 open Progressfunction
+open Lemma
 
 module ActionSet = Set.Make( Action );;
 
@@ -188,24 +189,31 @@ let progresstrans anP = (* translation for processes with progress *)
     
     
 let generate_sapic_restrictions op annotated_process =
-  if (annotated_process = Empty) then ""
-  else 
-      (if contains_lookup annotated_process then 
-          (if  (contains_delete annotated_process) then 
-              res_set_in ^ res_set_notin 
-          else 
-              res_set_in_no_delete ^ res_set_notin_no_delete )
-            else "")
-    ^ (if contains_locking annotated_process then  res_locking else "")
-    ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
-    ^ (if op.progress then generate_progress_restrictions annotated_process else "")
-    ^ (if op.progress && contains_resilient_io annotated_process then res_resilient else "")
-    ^ (if op.accountability then "" else res_single_session)
-    (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
-     *                  TODO it would be better if we would actually check whether each lemma
-     *                  is of the right form so we can leave it out...
-     *                  *)
-
+    let restrs = 
+        if (annotated_process = Empty) then []
+      else 
+          (if contains_lookup annotated_process then 
+              (if  (contains_delete annotated_process) then 
+                  [res_set_in_l;  res_set_notin_l]
+              else 
+                  [res_set_in_no_delete_l; res_set_notin_no_delete_l])
+          else [])
+          @ (if contains_locking annotated_process then  [res_locking_l] else [])
+          @ (if contains_eq annotated_process then [res_predicate_eq_l; res_predicate_not_eq_l] else [])
+          @ (if op.progress then generate_progress_restrictions annotated_process else [])
+          @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
+          @ (if op.accountability then [] else [res_single_session_l])
+        (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
+         *                  TODO it would be better if we would actually check whether each lemma
+         *                  is of the right form so we can leave it out...
+         *                  *)
+    in
+        if op.accountability then
+            (* if an accountability lemma with control needs to be shown, we use a 
+             * more complex variant of the restritions, that applies them to only one execution *)
+            List.map (bind_lemma_to_session (Msg id_ExecId)) restrs
+        else 
+            restrs
 
 let annotate_eventId msr =
     let stop_fact = LFact("Stop",[Var(var_ExecId)]) in
@@ -231,7 +239,7 @@ let annotate_eventId msr =
           actions= [StopId]
         }
   in
-    let f' = function (l,a,r) -> rewrite_init (map flr l,map fa a,map flr r) in
+    let f' = function (l,a,r) -> rewrite_init (map flr l,EventId::(map fa a),map flr r) in
         stop_rule::(map (msrs_subst f') msr)
 
 let translation input =
@@ -242,9 +250,9 @@ let translation input =
       else noprogresstrans annotated_process 
   and lemmas_tamarin = print_lemmas input.lem
   and predicate_restrictions = print_predicates input.pred
-  and sapic_restrictions = generate_sapic_restrictions input.op annotated_process
+  and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   in
-  let msr' = if Lemma.contains_control input.lem
+  let msr' = if Lemma.contains_control input.lem (* equivalent to op.accountability *)
              then annotate_eventId msr 
              else msr
   in

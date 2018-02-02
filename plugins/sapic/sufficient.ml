@@ -225,16 +225,6 @@ it holds that NOT r(u,u')." phi_i' phi_j'
     in 
     ManualLemma (label,lemma)
 
-let rec bind_to_session (id:var) phi = match phi with 
-    Atom(At(s,v))    ->  And (Atom(At(s,v)),Atom(At(Action("Event",[Var id]),v)))
-  | Atom (_) -> phi
-  |Not(f)     -> Not (bind_to_session id f)
-  |Or(f1,f2)  -> Or(bind_to_session id f1,bind_to_session id f2)
-  |And(f1,f2) -> And(bind_to_session id f1,bind_to_session id f2)
-  |Imp(f1,f2) -> Imp(bind_to_session id f1,bind_to_session id f2)
-  |Iff(f1,f2) -> Iff(bind_to_session id f1,bind_to_session id f2)
-  |All(vs,f)  -> All(vs,bind_to_session id f)
-  |Ex(vs,f)   -> Ex(vs,bind_to_session id f)
 
 let controlf task id op i j phi_i phi_j = 
     let axiom_event =  
@@ -284,6 +274,9 @@ let controlf task id op i j phi_i phi_j =
               And(Atom ( At (Action("Control",[Var (Msg "pos2")]),Temp "p2")),
                Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
             Atom (Eq (Var (Msg "pos1") , Var(Msg "pos2")))))
+    (* and restrs = *)
+    (*         All(VarSet.of_list [id], bind_to_session id (big_and ) *)
+    (*         List.map (bind_lemma_to_session (Msg id_ExecId)) restrs *)
     in
     match task with
         Relate -> 

@@ -567,7 +567,8 @@ sapicRanking ctxt sys =
         -- ,
         isLastInsertAction . fst,
         isLastProtoFact . fst ,
-        isKnowsLastNameGoal . fst
+        isKnowsLastNameGoal . fst,
+        isEventAction . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -611,6 +612,9 @@ sapicRanking ctxt sys =
     isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _)) = True
     isUnlockAction  _                                 = False
 
+    isEventAction (ActionG _ (Fact (ProtoFact _ "Event" _) _)) = True
+    isEventAction  _                                 = False
+
     isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
@@ -619,7 +623,7 @@ sapicRanking ctxt sys =
 
     isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
         case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
+            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "L_" (show a)
             _ -> False
     isLastInsertAction _ = False
 
@@ -627,7 +631,7 @@ sapicRanking ctxt sys =
     isNotInsertAction  _                                 = True
 
     isStandardActionGoalButNotInsert g = 
-       (isStandardActionGoal g) &&  (isNotInsertAction g)
+       (isStandardActionGoal g) &&  (isNotInsertAction g) && (not $ isEventAction g)
 
 
     isLastProtoFact (PremiseG _ (Fact (ProtoFact _ ('L':'_':_) _) _)) = True
