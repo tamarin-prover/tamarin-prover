@@ -31,7 +31,7 @@ let basetrans act p tildex = match act with
   | Par  -> [([State(p,tildex)], [], [State(1::p,tildex);State(2::p,tildex)])] 
   | MSR(prems,acts,concls) ->
     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
-    [ ( State(p,tildex):: prems, EventEmpty::acts, State(1::p,tildex')::concls ) ]
+    [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
   | New(v) -> [([State(p,tildex);Fr(v)], [], [State(1::p, v@::tildex)])]
   | Msg_In(t) -> [([State(p,tildex);In(t)],[],[State(1::p,(vars_t t) @@ tildex)])]
   | Msg_Out(t) -> [([State(p,tildex)],[],[State(1::p,(vars_t t) @@ tildex);Out(t)])]
@@ -56,7 +56,7 @@ let basetrans act p tildex = match act with
             )
   | Cond(_) -> raise (InternalRepresentationError "Cond node should contain Action constructor")
   | Insert(t1,t2) -> [([State(p,tildex)], [Action("Insert",[t1 ; t2])], [State(1::p,tildex)])]
-  | Event(a) -> [([State(p,tildex)], [EventEmpty; a], [State(1::p,tildex)])]
+  | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
   | Lookup(t1,t2) -> 
     [
       ([State(p,tildex)], [Action("IsIn",[t1; t2])], [State(1::p, tildex @@ (vars_t t2))]);
