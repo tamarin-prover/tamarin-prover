@@ -224,6 +224,9 @@ let annotate_eventId msr =
                     (Fr(var_ExecId)::l,a,stop_fact::r)
                 else
                     (l,a,r)
+    and add_event_unless_empty = function
+        [] -> []
+       |l  -> EventId::l
     and flr = function 
         State(p,vs) -> State(p,VarSet.add var_ExecId vs)
        |PState(p,vs) -> PState(p,VarSet.add var_ExecId vs)
@@ -239,7 +242,7 @@ let annotate_eventId msr =
           actions= [StopId]
         }
   in
-    let f' = function (l,a,r) -> rewrite_init (map flr l,EventId::(map fa a),map flr r) in
+    let f' = function (l,a,r) -> rewrite_init (map flr l,add_event_unless_empty (map fa a),map flr r) in
         stop_rule::(map (msrs_subst f') msr)
 
 let translation input =
