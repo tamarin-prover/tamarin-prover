@@ -142,12 +142,12 @@ let J =
                        eq(z, open(Cz, rz))  // z from signed res should match zkp
                        ) 
                   then 
-                        event Control('1');event HonestS();event HonestA();event Verified(claim)
+                        event Control('0','1');event HonestS();event HonestA();event Verified(claim)
                   else 
                        if oracle(x,Cy,z)=true() then // see below.
-                       ( event Control('2');event HonestS();event HonestA(); event Verified(claim))
+                       ( event Control('0','2');event HonestS();event HonestA(); event Verified(claim))
                        else 
-                       ( event Control('3');event HonestS();event DisHonestA(); event Verified(claim))
+                       ( event Control('0','3');event HonestS();event DisHonestA(); event Verified(claim))
                   )
               else ( 
                   // A's log is alright, but S is definitely cheating
@@ -158,19 +158,19 @@ let J =
                   // how do we check whether x and z claimed have z=f(x,y)
                   // this maybe the case even if x is different from content of Cx.
                   if oracle(x,Cy,z)=true() then // trying this out for suf_nonempty_2 //Continue here...
-                    (event Control('4');event HonestS();
+                    (event Control('0','4');event HonestS();
                      event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
                      event Verified(claim))
                   else 
-                    (event Control('5');event DisHonestS();  
+                    (event Control('0','5');event DisHonestS();  
                      event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
                      event Verified(claim)))
             )
         else (// A is dishonest and produced bad log
             if oracle(x,CyL,z)=true() then // see above
-                    (event Control('6');event HonestS(); event HonestA(); event Verified(claim))
+                    (event Control('0','6');event HonestS(); event HonestA(); event Verified(claim))
             else (
-                event Control('7');event DisHonestA();
+                event Control('0','7');event DisHonestA();
                 event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
                 event Verified(claim))
         )

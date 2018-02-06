@@ -267,11 +267,12 @@ let controlf task id op i j phi_i phi_j =
                      Atom(TLeq (Temp "i", Temp "k"))))))
     and control_condition = 
       (* All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
-        All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"],
+      (* All sid1 sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+        All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"; Msg "sid"],
         Imp(
-            And(Atom ( At (Action("Control",[Var (Msg "pos1")]),Temp "p1")),
+             And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos1")]),Temp "p1")),
              And(Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1")),
-              And(Atom ( At (Action("Control",[Var (Msg "pos2")]),Temp "p2")),
+              And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos2")]),Temp "p2")),
                Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
             Atom (Eq (Var (Msg "pos1") , Var(Msg "pos2")))))
     (* and restrs = *)

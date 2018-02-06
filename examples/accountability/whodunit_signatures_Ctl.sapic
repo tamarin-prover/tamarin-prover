@@ -32,10 +32,10 @@ let Tr = let
          if and3(verify(a1sig,a1,pkS), verify(a2sigS,a2,pkS), verify(a2sigA,a2,pkA)) 
          then (
              if a1=a2 then
-              ( event Control('1');
+              ( event Control('0','1');
                 event Equal())
              else 
-              ( event Control('2');
+              ( event Control('0','2');
                 event BlameS();
                 event Unequal())
          )

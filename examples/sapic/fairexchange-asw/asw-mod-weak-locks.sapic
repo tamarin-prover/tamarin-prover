@@ -113,7 +113,7 @@ let B = (
 	let a1 = sign {<'Abort', m1>}sk($A) in
         in ('c', m1 );
       	new nb;
-        event StartB($A,$B,m1,m2,na,nb);
+        event StartB($A,$B,$TEXT,nb);
         out ('c', m2);
         (
         in ('c', m3);
@@ -128,7 +128,7 @@ let B = (
 		 in('r',<'responder',TTPID,$B,sign{<'Aborted', a1, h(nb)>}sk(TTPID)>);
                  /* modified -- aborted message contains h(nb) to link 
                   * response to right responder session */
-		 event AbortB($A,$B, m1, m2, na, nb); event EndB2($A,$B,$TEXT,na)
+		 event AbortB($A,$B, $TEXT, nb); event EndB2($A,$B,$TEXT,na)
 		 )
 		 +
 		 (

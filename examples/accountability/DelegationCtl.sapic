@@ -48,17 +48,17 @@ let C =
     in
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
-       event Control('1'); event LogA(a); event Execute(a)
+       event Control('0','1'); event LogA(a); event Execute(a)
        )
  /* + // Uncomment for testing, should find trace in rel_1_1 */
  /*  ( in(<m1,m1sign>); */ 
  /*     if verify(m1sign, m1, pk(sk('A'))) = true() then */
- /*       event LogA(a); event Execute(a); event Control('3')) */
+ /*       event LogA(a); event Execute(a); event Control('0','3')) */
  + 
   ( in(<m3,m3sign>); 
     if verify(m3sign, m3, pk(sk('B'))) = true() then
         if verify(m2sign, m2, pk(sk('A'))) = true() then
-            event Control('2'); event LogAB(a); event Execute(a))
+            event Control('0','2'); event LogAB(a); event Execute(a))
 
 // The trusted party can only run once during each run of the protocol
 let Proto = out(<pk(sk('A')), pk(sk('B'))>); ! (A || B ) || C

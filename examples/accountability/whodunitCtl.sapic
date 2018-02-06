@@ -20,10 +20,10 @@ let A = in(c_SA,a); out (c_AJ,a)
 let Tr = in(c_SJ,a1); in(c_AJ,a2); 
          if a1=a2 
          then 
-            (event Control('1');
+            (event Control('0','1');
             event Equal()) 
          else 
-            (event Control('2');
+            (event Control('0','2');
             event Unequal())
 
 new c_SA; new c_AJ; new c_SJ;

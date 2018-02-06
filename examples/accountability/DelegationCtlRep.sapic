@@ -88,11 +88,11 @@ lemma sanity_logAB:
 
 verdictfunction v1:
     "Ex a #i #j. 
-        Execute(a)@i & LogA(a)@j &  not(a=NormalAct() | a=SpecialAct()) & 
-        (All ap #ip.  Execute(ap)@ip ==> (ap=SpecialAct()) | (ap=NormalAct())) "
+        Execute(a)@i & LogA(a)@j &  not(a=NormalAct() | a=SpecialAct()) & #j< #i & 
+        (All ap #ip.  Execute(ap)@ip & #ip < i ==> (ap=SpecialAct()) | (ap=NormalAct())) "
     -> let verdict1 = <'A'>,
-    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() |a=SpecialAct()) & 
-        (All ap #ip.  Execute(ap)@ip ==> (ap=SpecialAct()) | (ap=NormalAct())) "
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() |a=SpecialAct()) & #j< #i &
+        (All ap #ip.  Execute(ap)@ip & #ip < i ==> (ap=SpecialAct()) | (ap=NormalAct())) "
     -> let verdict2 = <'A','B'> ,
     /* "Ex a #i #j. Execute(a)@i & LogA(a)@j & a=NormalAct()"   -> empty, */
     /* "Ex a #i #j. Execute(a)@i & LogAB(a)@j & a=SpecialAct()" -> empty, */
@@ -102,8 +102,9 @@ lemma acc:
     v1 accounts [control] 
     for " //violation is the first violation
     All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | Ex ap #ip . Execute(ap)@ip & not ((a=SpecialAct()) | (a=NormalAct()))
+                              | ( Ex ap #ip . Execute(ap)@ip & #ip < #i & not ((a=SpecialAct()) | (a=NormalAct())))
     " 
+    /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
 
 // if ctl is used, give well-formedness error if 
