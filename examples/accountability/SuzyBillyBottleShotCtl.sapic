@@ -9,9 +9,9 @@ let B = 0
 
 //Bottle
 let C = 
-    (in(~a); event Control('1'); event Shot_A(); event Shattered())
+    (in(~a); event Control('0','1'); event Shot_A(); event Shattered())
     +
-    (in(~b); event Control('2'); event Shot_B(); event Shattered())
+    (in(~b); event Control('0','2'); event Shot_B(); event Shattered())
 
 
 new ~a; new ~b;
