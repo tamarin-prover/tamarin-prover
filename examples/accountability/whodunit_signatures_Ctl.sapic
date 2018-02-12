@@ -43,7 +43,7 @@ let Tr = let
 
 new c_SA; new c_AJ; new c_SJ;
 (S || A || Tr ||
-      out(pk(sk('S'))); out(pk(sk('A')));
+      out(pk(sk('S'))); out(pk(sk('A')))
 ||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      out ('c',sk($x));
