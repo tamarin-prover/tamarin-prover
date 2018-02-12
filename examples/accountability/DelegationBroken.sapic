@@ -42,12 +42,13 @@ let C =
                      then event LogAB(fst(m)); event Execute(fst(m))
   )
 
-let I = 
-  ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
-  )
+// let I = 
+//   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
+//   )
 
 // The trusted party can only run once during each run of the protocol
-(! (A || B || I)) || C
+(! (A || B )) || C ||
+    out(<pk(sk('A')), pk(sk('B'))>)
 || !(   in('c',<'corrupt',$x>); 
         event Corrupted($x);
         out('c',sk($x))
