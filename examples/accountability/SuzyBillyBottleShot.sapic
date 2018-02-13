@@ -1,4 +1,11 @@
-theory BottleShot
+/*
+ * Protocol:    Causality - Early Preemption protocol
+ * Modeler:     Robert Künnemann, Ilkan Esiyok
+ * Date:        Feb 2018
+ * Source:
+ * */
+
+theory SuzyBillyBottleShot
 begin
 
 //Suzy

@@ -1,11 +1,10 @@
 /*
- * Protocol:    Causality - Dessert traveller protocol
+ * Protocol:    Causality - Late Preemption protocol
  * Modeler:     Robert Künnemann, Ilkan Esiyok
  * Date:        Feb 2018
  * Source:
  * */
-
-theory ThirstOrPoisoning
+theory ShootingOrPoisoningControl
 begin
 
 builtins: signing
@@ -26,18 +25,22 @@ let C =
       sig_s = sign(sk('B'), ~s)
   in
     (   in(sig_p); event DrinkAll();  
-        event Poisoned(); event Verdict())
+        event Control('0','1');event Poisoned(); event Verdict())
     +
     (   in(sig_p); event DrinkAll(); in(sig_s); 
-        event CanteenShoot(); event Verdict())
+        event Control('0','2');event Shoot(); event Verdict())
     +
-    (   in(sig_s); event CanteenShoot(); event Verdict())
+    (   in(sig_s); event Control('0','3');event Shoot(); event Verdict())
     +
-    (   event DrinkAll(); event Healthy(); event Verdict()) 
+    (   event DrinkAll(); event Control('0','4');event Healthy(); event Verdict()) 
         
     
 new ~p; new ~s;
 (A || B || C ||
+  ( out(pk(sk('A')));
+    out(pk(sk('B')))
+  )
+||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      !(
        (if $x='A' then out(sign(sk('A'), ~p)))
@@ -49,17 +52,17 @@ new ~p; new ~s;
 
 lemma sanity[reuse]:
 	"All #i. Verdict()@i 
-      ==> ((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j) | (Ex #j. Healthy()@j)) "
+      ==> ((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j) | (Ex #j. Healthy()@j)) "
 
 
 verdictfunction v1:
     "Ex #i. Poisoned()@i " -> <'A'>,
-    "Ex #i. CanteenShoot()@i " -> <'B'>,
+    "Ex #i. Shoot()@i " -> <'B'>,
     otherwise -> empty
 
 lemma acc:
-    v1 accounts [cases]
-    for "not((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j))"
+    v1 accounts [control]
+    for "not((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j))"
     for parties <'A','B'>
 
 end
