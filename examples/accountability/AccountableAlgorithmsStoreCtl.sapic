@@ -179,9 +179,11 @@ let J =
 
 ( 
 A || S || J ||
- !(in ('c',<'corrupt',$x>); event Corrupted($x); 
-     out ('c',sk($x));
-     !(
+    out(pk(sk('A'))); out(pk(sk('S')))
+||
+ !( in('c',<'corrupt',$x>); event Corrupted($x); 
+    out ('c',sk($x));
+    !(
        (if $x='A' then in(y); insert <'A','Initialize'>,y)//Adversary write access to logs
      ||
        (if $x='A' then in(y); insert <'A','Log','S'>, y)
@@ -191,10 +193,8 @@ A || S || J ||
        (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
      ||
        (if $x='S' then lookup <'A','Log','S'> as y in out(y))
-
-     )
-
-     )
+    )
+  )
 )
 
 
