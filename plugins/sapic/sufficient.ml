@@ -107,6 +107,31 @@ let sufficiencyComposite id rel vf =
                          else raise (VerdictNotWellFormed ("Sufficiency of case "^string_of_int(i)^" in "^id^" has |verdict| >= 2. It needs to refer to singleton cases for these sufficient conditions. "^(print_rel rel)))
         ) vf
             
+let rec pairwise  = function [] -> []
+                   | x::xs -> (List.map (fun x' -> (x,x')) xs) @ ( pairwise xs)
+
+let minimalityComposite id rel vf = 
+(* for the each mapping φ_i → V_i  and V_i not singleton *) 
+(* all cases are mapped to a singleton case by R *)
+(* no two of these should be ubset of each other *)
+(* rel is the non-reflexive part of R, and an associative list guaranteed to point 
+ * to singleton. Hence we only check for presence *)
+    mapi_opt (fun i -> function 
+        (_,[])
+        | (_,[_]) -> None
+        | (f,v) ->
+        let subset (j,k) = not (j=k) && ((VarSet.subset j k)) || (not (VarSet.subset k j))
+        in
+        try (match  find subset (pairwise v) with (j,k) -> 
+        raise (VerdictNotWellFormed ("Minimaliy of case "^string_of_int(i)^" in "^id^" with |verdict| >= 2. verdict need not to be subsets of each other, but "
+       ^(flatten_varlist_comma (VarSet.elements j))
+       ^" and "
+       ^(flatten_varlist_comma (VarSet.elements k))
+       ^" are."
+        )))
+        with Not_found -> None
+        ) vf
+            
 
 let completeness_empty id op vf phi = 
 (* for the each mapping φ_i → V_i  and V_i empty *) 
@@ -157,6 +182,7 @@ let minimality id op parties vf phi =
 
 let cartesian l l' = 
   List.concat (List.map (fun e -> List.map (fun e' -> (e,e')) l') l)
+
 
 let minimalitySingleton id op rel parties vf phi = 
 (* for each mapping φ_i → V_i *) 
@@ -267,7 +293,7 @@ let controlf task id op i j phi_i phi_j =
                      Atom(TLeq (Temp "i", Temp "k"))))))
     and control_condition = 
       (* All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
-      (* All sid1 sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+      (* All sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
         All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"; Msg "sid"],
         Imp(
              And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos1")]),Temp "p1")),
@@ -355,6 +381,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (completeness_nonempty id op vf phi)
         @
         (minimalitySingleton id op rel parties vf phi)
+        @
+        (minimalityComposite id rel vf)
         @
         (uniqueness id op vf)
     in

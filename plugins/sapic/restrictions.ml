@@ -189,7 +189,7 @@ let res_locking_l =  Restriction( "locking",
                               Atom (TEq (Temp "t2", Temp "t0"))))))
               ))))))),
          Or ( Atom (TLeq (Temp "t3", Temp "t1")),
-              Atom (TLeq (Temp "t1", Temp "t3")))))))
+              Atom (TEq (Temp "t1", Temp "t3")))))))
 
 let res_locking = lemma2string_noacc res_locking_l
 
