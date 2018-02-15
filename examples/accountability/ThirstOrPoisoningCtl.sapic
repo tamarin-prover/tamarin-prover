@@ -1,11 +1,11 @@
 /*
- * Protocol:    Causality - Dessert traveller protocol
+ * Protocol:    Causality - Dessert traveller protocol {with control}
  * Modeler:     Robert Künnemann, Ilkan Esiyok
  * Date:        Feb 2018
  * Source:
  * */
 
-theory ThirstOrPoisoning
+theory ThirstOrPoisoningControl
 begin
 
 builtins: signing
@@ -26,14 +26,14 @@ let C =
       sig_s = sign(sk('B'), ~s)
   in
     (   in(sig_p); event DrinkAll();  
-        event Poisoned(); event Verdict())
+        event Control('0','1');event Poisoned(); event Verdict())
     +
     (   in(sig_p); event DrinkAll(); in(sig_s); 
-        event CanteenShoot(); event Verdict())
+        event CanteenShoot(); event Control('0','2');event Verdict())
     +
-    (   in(sig_s); event CanteenShoot(); event Verdict())
+    (   in(sig_s); event CanteenShoot(); event Control('0','3');event Verdict())
     +
-    (   event DrinkAll(); event Healthy(); event Verdict()) 
+    (   event DrinkAll(); event Control('0','4');event Healthy(); event Verdict()) 
         
     
 new ~p; new ~s;
@@ -58,7 +58,7 @@ verdictfunction v1:
     otherwise -> empty
 
 lemma acc:
-    v1 accounts [cases]
+    v1 accounts [control]
     for "not((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j))"
     for parties <'A','B'>
 
