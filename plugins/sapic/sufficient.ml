@@ -292,15 +292,16 @@ let controlf task id op i j phi_i phi_j =
                 And( Atom( At (Action("Stop",[Var (Msg "id")]),Temp "k")),
                      Atom(TLeq (Temp "i", Temp "k"))))))
     and control_condition = 
-      (* All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
-      (* All sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
-        All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"; Msg "sid"],
+      (* old: All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+      (* old: All sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+      (* new: All #p2 pos2 sid . (Control(sid, pos2)@#p2 & Event(id2)@#p2) ==> Ex #p1 . (Control(sid, pos2)@#p1 & Event(id1)@#p1) *)
+        All(VarSet.of_list [ Temp "p2"; Msg "pos2"; Msg "sid"],
         Imp(
-             And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos1")]),Temp "p1")),
-             And(Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1")),
-              And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos2")]),Temp "p2")),
-               Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
-            Atom (Eq (Var (Msg "pos1") , Var(Msg "pos2")))))
+             And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos2")]),Temp "p2")),
+              Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))),
+             Ex(VarSet.of_list [Temp "p1";],
+              And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos2")]),Temp "p1")),
+                  Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1"))))))
     (* and restrs = *)
     (*         All(VarSet.of_list [id], bind_to_session id (big_and ) *)
     (*         List.map (bind_lemma_to_session (Msg id_ExecId)) restrs *)
@@ -316,7 +317,8 @@ let controlf task id op i j phi_i phi_j =
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
             Imp(
                 And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
-                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                 And( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")),
+                      Atom  (TLeq (Temp "i", Temp "j")))),
                 Or (  
                       Not (bind_to_session (Msg "id1") phi_i),
                       Or ( Not (bind_to_session (Msg "id2") phi_j),
