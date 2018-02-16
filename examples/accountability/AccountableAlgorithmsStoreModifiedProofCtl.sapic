@@ -1,5 +1,5 @@
 /*
- * Protocol:    Accountable Algorithms protocol
+ * Protocol:    Accountable Algorithms protocol -- with control
  * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
  * Date: 	Dec 2017
  * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
@@ -12,7 +12,7 @@
  * precisely this comittment. We hope that this gets rid of the notary in most places.
  * 
  * */
-theory AccountableAlgorithmsStoreModifiedProof
+theory AccountableAlgorithmsStoreModifiedProofControl
 begin
 
 builtins: signing
@@ -125,20 +125,22 @@ let J =
                        eq(x, open(Cx,rxp)) // honest S signed both messages, so this should hold
                        )
               then ( // We now believe S is honest and its claim is valid
-                  event HonestS();
+                  //event HonestS();
                   if and3(
                        verCom(Cz,rz),
                        eq(z, open(Cz, rz)),  // z from signed res should match zkp
                        true()
                        ) 
-                  then 
+                  then (    event Control('0','1');
+                            event HonestS();
                             event HonestA(); 
                             event Verified(claim)
+                        )
                   else 
                        if oracle(x,Cy,z)=true() then // see below.
-                       ( event HonestA(); event Verified(claim))
+                       ( event Control('0','2');event HonestS();event HonestA(); event Verified(claim))
                        else 
-                       ( event DisHonestA(); event Verified(claim))
+                       ( event Control('0','3');event HonestS();event DisHonestA(); event Verified(claim))
                   )
               else ( 
                   // A's log is alright, but S is definitely cheating
@@ -149,18 +151,21 @@ let J =
                   // how do we check whether x and z claimed have z=f(x,y)
                   // this maybe the case even if x is different from content of Cx.
                   if oracle(x,Cy,z)=true() then // trying this out for suf_nonempty_2 //Continue here...
-                    (event HonestS();
+                    (event Control('0','4');
+                     event HonestS();
                      event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
                      event Verified(claim))
                   else 
-                    (event DisHonestS();  
+                    (event Control('0','5');
+                     event DisHonestS();  
                      event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
                      event Verified(claim)))
             )
         else (// A is dishonest and produced bad log
             if oracle(x,CyL,z)=true() then // see above
-                    (event HonestS(); event HonestA(); event Verified(claim))
+                    (event Control('0','6');event HonestS(); event HonestA(); event Verified(claim))
             else (
+                event Control('0','7');
                 event DisHonestA();
                 event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
                 event Verified(claim))
@@ -251,33 +256,40 @@ verdictfunction v:
 
 /*	 Verified 
 
-// 	 no_overwrite_lookup (all-traces): verified (154 steps)
-//   sanity (exists-trace): verified (19 steps)
-//   acc_excl_0_1 (all-traces): verified (336 steps)
-//   acc_excl_0_2 (all-traces): verified (393 steps)
-//   acc_excl_0_3 (all-traces): verified (2 steps)
-//   acc_excl_1_2 (all-traces): verified (392 steps)
-//   acc_excl_1_3 (all-traces): verified (2 steps)
-//   acc_excl_2_3 (all-traces): verified (2 steps)
-//   acc_exh (all-traces): verified (5 steps)
-//   acc_suf_0 (exists-trace): verified (23 steps)
-//   acc_suf_1 (exists-trace): verified (26 steps)
-//   acc_suf_2 (exists-trace): verified (24 steps)
-//   acc_compl_empty_3 (all-traces): verified (16 steps)
-//   acc_compl_nonempty_0 (all-traces): verified (196 steps)
-//   acc_compl_nonempty_1 (all-traces): verified (272 steps)
-//   acc_compl_nonempty_2 (all-traces): verified (510 steps)
-//   acc_min_0_0 (all-traces): verified (311 steps)
-//   acc_min_0_1 (all-traces): verified (359 steps)
-//   acc_min_1_0 (all-traces): verified (270 steps)
-//   acc_min_2_0 (all-traces): verified (435 steps)
-//   acc_uniq_0 (all-traces): verified (262 steps)
-//   acc_uniq_1 (all-traces): verified (690 steps)
-//   acc_uniq_2 (all-traces): verified (597 steps)
+  // no_overwrite_lookup (all-traces): verified (1029 steps)
+  // sanity (exists-trace): verified (23 steps)
+  // acc_excl_0_1 (all-traces): verified (366 steps)
+  // acc_excl_0_2 (all-traces): verified (393 steps)
+  // acc_excl_0_3 (all-traces): verified (2 steps)
+  // acc_excl_1_2 (all-traces): verified (536 steps)
+  // acc_excl_1_3 (all-traces): verified (2 steps)
+  // acc_excl_2_3 (all-traces): verified (2 steps)
+  // acc_exh (all-traces): verified (5 steps)
+  // acc_suf_0 (exists-trace): verified (4 steps)
+  // acc_suf_1 (exists-trace): verified (4 steps)
+  // acc_suf_2 (exists-trace): verified (4 steps)
+  // acc_compl_empty_3 (all-traces): verified (16 steps)
+  // acc_compl_nonempty_0 (all-traces): verified (260 steps)
+  // acc_compl_nonempty_1 (all-traces): verified (584 steps)
+  // acc_compl_nonempty_2 (all-traces): verified (730 steps)
+  // acc_min_0_0 (all-traces): verified (282 steps)
+  // acc_min_0_1 (all-traces): verified (293 steps)
+  // acc_min_1_0 (all-traces): verified (364 steps)
+  // acc_min_2_0 (all-traces): verified (418 steps)
+  // acc_uniq_0 (all-traces): verified (262 steps)
+  // acc_uniq_1 (all-traces): verified (736 steps)
+  // acc_uniq_2 (all-traces): verified (523 steps)
+  // acc_rel_0_0 (all-traces): verified (2 steps)
+  // acc_rel_1_1 (all-traces): verified (2 steps)
+  // acc_rel_2_2 (all-traces): verified (2 steps)
+  // acc_unrel_0_1 (all-traces): verified (2 steps)
+  // acc_unrel_0_2 (all-traces): verified (2 steps)
+  // acc_unrel_1_2 (all-traces): verified (2 steps)
+
 */
 
 lemma acc: 
-  v accounts  [cases]
+  v accounts  [control]
   for "
       All three rxp x z r sig_r #k.
       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
