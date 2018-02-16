@@ -48,7 +48,8 @@ let C =
     in lock 'lock';
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
-       event Control('0','1'); new sid; event LogA(sid,a); event Execute(sid,a); unlock 'lock')
+          new sid;
+          event Control('0','1'); event LogA(sid,a); event Execute(sid,a); unlock 'lock')
  /* + // Uncomment for testing, should find trace in rel_1_1 */
  /*  ( in(<m1,m1sign>); */ 
  /*     if verify(m1sign, m1, pk(sk('A'))) = true() then */
@@ -57,8 +58,8 @@ let C =
   ( in(<m3,m3sign>); 
     if verify(m3sign, m3, pk(sk('B'))) = true() then
         if verify(m2sign, m2, pk(sk('A'))) = true() then
-            new sid;
-            event Control('0','2'); event LogAB(sid,a); event Execute(sid,a); unlock 'lock')//; event Control('2'))
+              new sid;
+              event Control('0','2'); event LogAB(sid,a); event Execute(sid,a); unlock 'lock')//; event Control('2'))
 
 let Proto = out(<pk(sk('A')), pk(sk('B'))>); ! (A || B || C)
 
@@ -72,7 +73,7 @@ Proto
 
 lemma sanity_logA_not_misbehaving:
     exists-trace
-    "Ex sid a #i #j. (a = NormalAct()) & LogA(sid,a)@i & Execute(sid,a)@j"
+    "Ex sid a #i #j. (a = NormalAct()) & LogA(sid,a)@i & Execute(sid,a)@j"   
 
 lemma sanity_logAB_not_misbehaving:
     exists-trace
@@ -102,7 +103,7 @@ lemma acc:
     v1 accounts [control] 
     for " //violation is the first violation
     All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | ( Ex sidp ap #ip . Execute(sidp,ap)@ip & #ip < #i & not ((a=SpecialAct()) | (a=NormalAct())))
+                              | ( Ex sidp ap #ip . Execute(sidp,ap)@ip & #ip < #i & not ((ap=SpecialAct()) | (ap=NormalAct())))
     " 
     /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
