@@ -138,20 +138,6 @@ verdictfunction v1:
 
     otherwise -> empty 
 
-  /* acc_unrel_0_1 (all-traces): verified (2 steps) */
-  /* acc_unrel_0_2 (all-traces): verified (4 steps) */
-  /* acc_unrel_0_3 (all-traces): verified (4 steps) */
-  /* acc_unrel_0_4 (all-traces): verified (4 steps) */
-  /* acc_unrel_1_2 (all-traces): falsified - found trace (47 steps) */
-  /* acc_unrel_1_3 (all-traces): falsified - found trace (64 steps) */
-  /* acc_unrel_1_4 (all-traces): falsified - found trace (64 steps) */
-  /* acc_unrel_2_0 (all-traces): verified (4 steps) */
-  /* acc_unrel_2_1 (all-traces): verified (4 steps) */
-  /* acc_unrel_2_3 (all-traces): verified (2 steps) */
-  /* acc_unrel_2_4 (all-traces): verified (5 steps) */
-  /* acc_unrel_3_0 (all-traces): falsified - found trace (42 steps) */
-  /* acc_unrel_3_1 (all-traces): falsified - found trace (62 steps) */
-  /* acc_unrel_3_4 (all-traces): falsified - found trace (64 steps) */
 
 lemma acc:
     v1 accounts [control] 
