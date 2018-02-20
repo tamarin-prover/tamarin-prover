@@ -1,4 +1,4 @@
-theory DelegationCtlRepTwo
+theory DelegationCtlRepAggregate
 begin
 
 /* builtins: signing */

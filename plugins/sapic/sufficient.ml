@@ -309,9 +309,9 @@ let controlf task id op i j phi_i phi_j =
     match task with
         Relate -> 
             let label = Printf.sprintf "%s_rel_%n_%n" id i j in
-            let labelsym = Printf.sprintf "%s_rel_%n_%n" id j i in
-            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
-            else
+            (* let labelsym = Printf.sprintf "%s_rel_%n_%n" id j i in *)
+            (* if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.") *)
+            (* else *)
             ForallLemma((label,op),
             Imp(And(And(axiom_event,axiom_cluster),axiom_force),
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
@@ -322,27 +322,24 @@ let controlf task id op i j phi_i phi_j =
                 Or (  
                       Not (bind_to_session (Msg "id1") phi_i),
                       Or ( Not (bind_to_session (Msg "id2") phi_j),
-                          Or ( 
-                              Not (Atom(TLeq (Temp "i", Temp "j")))
-                              ,control_condition)))))))
+                              control_condition))))))
        | Unrelate ->
             let label = Printf.sprintf "%s_unrel_%n_%n" id i j in
-            let labelsym = Printf.sprintf "%s_unrel_%n_%n" id j i in
-            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
-            else
+            (* let labelsym = Printf.sprintf "%s_unrel_%n_%n" id j i in *)
+            (* if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.") *)
+            (* else *)
             ForallLemma((label,op),
             Imp(And(And(axiom_event,axiom_cluster),axiom_force),
             All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
             Imp(
                 And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
-                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                 And( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")),
+                      Atom  (TLeq (Temp "i", Temp "j")))),
                 Or (  
                       Not (bind_to_session (Msg "id1") phi_i),
                       Or (Not (bind_to_session (Msg "id2") phi_j),
-                          Or ( 
-                              Not (Atom(TLeq (Temp "i", Temp "j")))
-                              , Not (control_condition)))
-                )))))
+                              Not (control_condition)))
+                ))))
 
 let relationLifting f id op (vf:verdictf) rel =
     let phi k     = match List.nth vf k with (f,_)-> f in

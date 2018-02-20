@@ -216,17 +216,19 @@ let generate_sapic_restrictions op annotated_process =
             restrs
 
 let annotate_eventId msr =
-    let stop_fact = LFact("Stop",[Var(var_ExecId)]) in
+    let stop_fact = LFact("Stop",[Var(var_ExecId)]) 
+    and has_init = List.exists (function InitId  -> true | _ -> false )
+    in
     let fa  = function EventEmpty -> EventId 
                     | InitEmpty -> InitId
                     | o -> o 
-    and rewrite_init (l,a,r) = if List.exists (function InitId  -> true | _ -> false ) a then
+    and rewrite_init (l,a,r) = if has_init a then
                     (Fr(var_ExecId)::l,a,stop_fact::r)
                 else
                     (l,a,r)
     and add_event_unless_empty = function
         [] -> []
-       |l  -> EventId::l
+       |l  -> if has_init l then l else EventId::l
     and flr = function 
         State(p,vs) -> State(p,VarSet.add var_ExecId vs)
        |PState(p,vs) -> PState(p,VarSet.add var_ExecId vs)
