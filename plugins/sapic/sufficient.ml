@@ -123,13 +123,17 @@ let minimalityComposite id rel vf =
         let subset (j,k) = not (j=k) && ((VarSet.subset j k)) || (not (VarSet.subset k j))
         in
         try (match  find subset (pairwise v) with (j,k) -> 
-        raise (VerdictNotWellFormed ("Minimaliy of case "^string_of_int(i)^" in "^id^" with |verdict| >= 2. verdict need not to be subsets of each other, but "
-       ^(flatten_varlist_comma (VarSet.elements j))
-       ^" and "
-       ^(flatten_varlist_comma (VarSet.elements k))
-       ^" are."
-        )))
-        with Not_found -> None
+            let warning = "Minimaliy of case "^string_of_int(i)^" in "^id^" with |verdict| >= 2. verdict need not to be subsets of each other, but "
+                           ^(flatten_varlist_comma (VarSet.elements j))
+                           ^" and "
+                           ^(flatten_varlist_comma (VarSet.elements k))
+                           ^" are."
+            and labelsym = Printf.sprintf "%s_comp_min_%n" id i 
+            in 
+                (* raise (VerdictNotWellFormed warning ) *)
+                Some (ManualLemma (labelsym, warning^"Exclude the smaller when reading the verdict.") )
+            )
+            with Not_found -> None
         ) vf
             
 
@@ -381,8 +385,6 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (minimalitySingleton id op rel parties vf phi)
         @
-        (minimalityComposite id rel vf)
-        @
         (uniqueness id op vf)
     in
     match kind with
@@ -404,11 +406,15 @@ let sufficient_conditions kind (id,op) parties vf' phi =
    | Cases ->
         cases_axioms
         @
+        (minimalityComposite id rel vf)
+        @
         (relationLifting manualf id op vf rel)
         (* @ Not sure if needed. TODO check in the end. *)
         (* [ManualLemma (id, "r is transitive") ] *)
    | Control ->
         (map (add_antecedent Restrictions.single_session_id) cases_axioms)
+        @
+        (minimalityComposite id rel vf)
         @
         (relationLifting controlf id op vf rel)
 
