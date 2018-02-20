@@ -258,6 +258,14 @@ let print_predicates pred_list =
 
 module PositionSet = Set.Make( Position );;
 
+let progress_init_lemma = Restriction ("progress_init",
+      Ex ( (VarSet.of_list [Temp "t"]), 
+                            Atom ( At (Action("Init",[]),Temp "t"))))
+
+let progress_init_lemma_acc = Restriction ("progress_init",
+      Ex ( (VarSet.of_list [Temp "t"; Msg "id"]), 
+                            Atom ( At (Action("Init",[Var(Msg "id")]),Temp "t"))))
+
 let generate_progress_restrictions anP =
   let pf = Progressfunction.generate anP in
   let rec big_or = function 
@@ -291,9 +299,4 @@ let generate_progress_restrictions anP =
   (* in *)
   (* (PMap.fold (fun a bsetset s -> (print_tosetset a bsetset) ^ s) pf "") *)
   let lemmas a bsetset = List.map (lemma a) (PSetSet.elements bsetset) in
-  let init_lemma = Restriction ("progress_init",
-      Ex ( (VarSet.of_list [Temp "t"]), 
-                            Atom ( At (Action("Init",[]),Temp "t"))))
-  in
-    init_lemma :: 
-        (List.flatten (PMap.fold (fun a bsetset s -> (lemmas a bsetset) :: s) pf []))
+        List.flatten (PMap.fold (fun a bsetset s -> (lemmas a bsetset) :: s) pf [])

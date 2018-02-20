@@ -211,9 +211,11 @@ let generate_sapic_restrictions op annotated_process =
         if op.accountability then
             (* if an accountability lemma with control needs to be shown, we use a 
              * more complex variant of the restritions, that applies them to only one execution *)
-            List.map (bind_lemma_to_session (Msg id_ExecId)) restrs
+            (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+            @ (if op.progress then [progress_init_lemma_acc] else [])
         else 
             restrs
+             @ (if op.progress then [progress_init_lemma] else [])
 
 let annotate_eventId msr =
     let stop_fact = LFact("Stop",[Var(var_ExecId)]) 

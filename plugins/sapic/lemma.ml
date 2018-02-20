@@ -46,8 +46,11 @@ let  lemma_map f = function
     | AccLemma(kind, header, verdictf,formula,parties) -> AccLemma(kind, header, verdictf,f formula,parties)  
     | ManualLemma(id,s) -> raise (NotImplementedError "Function cannot be applied to manual lemmas.")
 
+
 let rec bind_to_session (id:var) phi = match phi with 
-    Atom(At(s,v))    ->  And (Atom(At(s,v)),Atom(At(Action("Event",[Term.Var id]),v)))
+    (* Atom(At(InitEmpty,v))    ->  InitId *)
+    Atom(At(s,v))    ->  
+               And (Atom(At(s,v)),Atom(At(Action("Event",[Term.Var id]),v)))
   | Atom (_) -> phi
   |Not(f)     -> Not (bind_to_session id f)
   |Or(f1,f2)  -> Or(bind_to_session id f1,bind_to_session id f2)
@@ -57,8 +60,8 @@ let rec bind_to_session (id:var) phi = match phi with
   |All(vs,f)  -> All(vs,bind_to_session id f)
   |Ex(vs,f)   -> Ex(vs,bind_to_session id f)
 
-let bind_lemma_to_session (id:var) =
+let bind_lemma_to_session (id:var) l =
     let f phi = All(VarSet.of_list [id], bind_to_session id phi)
     in
-        lemma_map f 
+        lemma_map f l
 
