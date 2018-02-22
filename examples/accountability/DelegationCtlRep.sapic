@@ -113,15 +113,15 @@ lemma sanity_logAB:
 
 verdictfunction v1:
     "Ex a sid #i #j. 
-        Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()) & 
-        (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
-        & (All ap #ip sidp.  LogA(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()) 
+        & (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (sid = sidp) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        & (All ap #ip sidp.  LogA(sidp,ap)@ip & not (sid = sidp)  ==> (ap=SpecialAct()) | (ap=NormalAct()))
         "
     -> let verdict1 = <'A'>,
 
-    "Ex a sid #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) & 
-        (All sidp ap #ip.  LogA(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
-       &(All ap #ip sidp.  LogAB(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+    "Ex a sid #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) 
+       & (All sidp ap #ip.  LogA(sidp,ap)@ip &  not (sid = sidp)  ==> (ap=SpecialAct()) | (ap=NormalAct()))
+       & (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (sid = sidp) ==> (ap=SpecialAct()) | (ap=NormalAct()))
         "
     -> let verdict2 = <'A','B'> ,
 
@@ -131,10 +131,10 @@ verdictfunction v1:
 
 lemma acc:
     v1 accounts [control] 
-    for " //violation is the first violation
+    for " //violation is the only violation
     All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & not (#ip = #i) & not ((ap=SpecialAct()) | (ap=NormalAct())))
-                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & not (#ip = #i) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
     " 
     /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
