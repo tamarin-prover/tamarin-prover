@@ -152,6 +152,7 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 (x^y)^z  = x^(y*z)
 x^1      = x
 x*y      = y*x
+(x*y)*z  = x*(y*z)
 x*1      = x
 x*inv(x) = 1
 ~~~

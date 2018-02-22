@@ -237,7 +237,7 @@ mode by adding a `--diff` to the command:
 
     tamarin-prover interactive --diff ObservationalEquivalenceExample.spthy
 
-Now point you browser to <http://localhost:3001>. After clicking on the theory 
+Now point your browser to <http://localhost:3001>. After clicking on the theory 
 `ObservationalEquivalenceExample`, you should see the following.
 
 ![Observational Equivalence 
