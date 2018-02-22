@@ -30,19 +30,30 @@ let rec big_or = function
                 | f::fl -> Or(f,big_or fl)
                 | [] -> raise (VerdictNotWellFormed "Verdict should contain at least one case which is not \"otherwise\"")
 
-let rec deref' vf r = 
+let deref' vf r = 
     let filter r i = function RefCase(r',_,v) -> if String.equal r r' then Some(i,v) else None
                              | _ -> None
     in
     match mapi_opt (filter r) vf with
                 []     -> raise (VerdictNotWellFormed ("Could not find verdict named "^r^"."))
                |[(i,[VerdictPart(vs)])] -> (i,vs)
-               |[(i,[Ref(s)])] -> 
-                       (* raise (VerdictNotWellFormed ("Reference "^r^" points to another reference "^s^".")) *)
-                       (match deref' vf s with (* TODO might diverge, add loop detection later *)
-                       (_,vs) -> (i,vs) )
+               |[(_,[Ref(s)])] -> raise (VerdictNotWellFormed ("Reference "^r^"points to another reference "^s^"."))
                |[(_,v)]    -> raise (ImplementationError "Verdicts refered to need to be singleton. Parser should have caught that.")
                |x::xs  -> raise (VerdictNotWellFormed ("More than one verdict named "^r^"."))
+
+(* let rec deref' vf r = (* This version deferences recursively -- might be of future use .. *) *)
+(*     let filter r i = function RefCase(r',_,v) -> if String.equal r r' then Some(i,v) else None *)
+(*                              | _ -> None *)
+(*     in *)
+(*     match mapi_opt (filter r) vf with *)
+(*                 []     -> raise (VerdictNotWellFormed ("Could not find verdict named "^r^".")) *)
+(*                |[(i,[VerdictPart(vs)])] -> (i,vs) *)
+(*                |[(i,[Ref(s)])] -> *) 
+(*                        (1* raise (VerdictNotWellFormed ("Reference "^r^" points to another reference "^s^".")) *1) *)
+(*                        (match deref' vf s with (1* TODO might diverge, add loop detection later *1) *)
+(*                        (_,vs) -> (i,vs) ) *)
+(*                |[(_,v)]    -> raise (ImplementationError "Verdicts refered to need to be singleton. Parser should have caught that.") *)
+(*                |x::xs  -> raise (VerdictNotWellFormed ("More than one verdict named "^r^".")) *)
 
 let deref vf v =
     let f = function VerdictPart(s) -> s

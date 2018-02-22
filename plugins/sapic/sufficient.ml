@@ -255,9 +255,7 @@ it holds that NOT r(u,u')." phi_i' phi_j'
     in 
     ManualLemma (label,lemma)
 
-
-let controlf task id op i j phi_i phi_j = 
-    let axiom_event =  
+let axiom_event =  
     (* ( All #i #j #k id pos . Init(id)@i & Stop(id)@j & Event(id)@k ==> #i < #k & #k < #j ) *)
         All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Msg "id"],
         Imp(
@@ -268,7 +266,8 @@ let controlf task id op i j phi_i phi_j =
              Atom (TLeq (Temp "i", Temp "k")),
              Atom (TLeq (Temp "k", Temp "j")))
         ))
-    and axiom_cluster = 
+
+let axiom_cluster = 
     (* ( All #i #j #k #l id1 id2 . Init(id1)@i & Stop(id1)@j & Init(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l & )) *)
         All(VarSet.of_list [Temp "i"; Temp "j"; Temp "k"; Temp "l"; Msg "id1"; Msg "id2"],
         Imp(
@@ -287,7 +286,7 @@ let controlf task id op i j phi_i phi_j =
               And (
                Atom (TEq (Temp "i", Temp "k")),
                 Atom (TEq (Temp "j", Temp "l")))))))
-    and axiom_force =
+let axiom_force =
     (* ( All #i id . Init(id)@i ==> Ex #k . Stop(id)@k & i<k ) *)
         All(VarSet.of_list [Temp "i"; Msg "id"],
         Imp(
@@ -295,7 +294,60 @@ let controlf task id op i j phi_i phi_j =
             Ex( VarSet.singleton (Temp "k"),
                 And( Atom( At (Action("Stop",[Var (Msg "id")]),Temp "k")),
                      Atom(TLeq (Temp "i", Temp "k"))))))
-    and control_condition = 
+
+let controlf_equivalence task id op i j phi_i phi_j = 
+    let control_condition = 
+      (* All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+      (* All sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
+        All(VarSet.of_list [Temp "p1"; Temp "p2"; Msg "pos1"; Msg "pos2"; Msg "sid"],
+        Imp(
+             And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos1")]),Temp "p1")),
+             And(Atom ( At (Action("Event",[Var (Msg "id1")]),Temp "p1")),
+              And(Atom ( At (Action("Control",[Var (Msg "sid"); Var (Msg "pos2")]),Temp "p2")),
+               Atom ( At (Action("Event",[Var (Msg "id2")]),Temp "p2"))))),
+            Atom (Eq (Var (Msg "pos1") , Var(Msg "pos2")))))
+    in
+    match task with
+        Relate -> 
+            let label = Printf.sprintf "%s_rel_%n_%n" id i j in
+            let labelsym = Printf.sprintf "%s_rel_%n_%n" id j i in
+            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
+            else
+            ForallLemma((label,op),
+            Imp(And(And(axiom_event,axiom_cluster),axiom_force),
+            All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
+            Imp(
+                And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
+                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                Or (  
+                      Not (bind_to_session (Msg "id1") phi_i),
+                      Or ( Not (bind_to_session (Msg "id2") phi_j),
+                          Or ( 
+                              Not (Atom(TLeq (Temp "i", Temp "j")))
+                              ,control_condition)))))))
+       | Unrelate ->
+            let label = Printf.sprintf "%s_unrel_%n_%n" id i j in
+            let labelsym = Printf.sprintf "%s_unrel_%n_%n" id j i in
+            if i>j then ManualLemma (labelsym, "No need, skipped because of symmetric case.")
+            else
+            ForallLemma((label,op),
+            Imp(And(And(axiom_event,axiom_cluster),axiom_force),
+            All(VarSet.of_list [Msg "id1"; Msg "id2"; Temp "i"; Temp "j"],
+            Imp(
+                And ( Atom ( At (Action("Init",[Var (Msg "id1")]),Temp "i")),
+                    ( Atom ( At (Action("Init",[Var (Msg "id2")]),Temp "j")))),
+                Or (  
+                      Not (bind_to_session (Msg "id1") phi_i),
+                      Or (Not (bind_to_session (Msg "id2") phi_j),
+                          Or ( 
+                              Not (Atom(TLeq (Temp "i", Temp "j")))
+                              , Not (control_condition)))
+                )))))
+
+
+
+let controlf_subset task id op i j phi_i phi_j = 
+    let control_condition = 
       (* old: All pos1 pos2 #p1 #p2. Control(pos1)@p1 & Event(id1)@p1 & Control(pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
       (* old: All sid 2 pos1 pos2 #p1 #p2. Control(sid,pos1)@p1 & Event(id1)@p1 & Control(sid,pos2)@p2 & Event(id2)@p2==> pos1 = pos2 *)
       (* new: All #p2 pos2 sid . (Control(sid, pos2)@#p2 & Event(id2)@#p2) ==> Ex #p1 . (Control(sid, pos2)@#p1 & Event(id1)@#p1) *)
@@ -411,10 +463,16 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (relationLifting manualf id op vf rel)
         (* @ Not sure if needed. TODO check in the end. *)
         (* [ManualLemma (id, "r is transitive") ] *)
-   | Control ->
+   | ControlEquivalence ->
         (map (add_antecedent Restrictions.single_session_id) cases_axioms)
         @
         (minimalityComposite id rel vf)
         @
-        (relationLifting controlf id op vf rel)
+        (relationLifting controlf_equivalence id op vf rel)
+   | ControlSubset ->
+        (map (add_antecedent Restrictions.single_session_id) cases_axioms)
+        @
+        (minimalityComposite id rel vf)
+        @
+        (relationLifting controlf_subset id op vf rel)
 

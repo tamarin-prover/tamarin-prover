@@ -6,7 +6,7 @@ open Atomformulaaction
 
 module VarSet = Set.Make( Var );;
 
-type acckind = Coarse | Cases | Control
+type acckind = Coarse | Cases | ControlEquivalence | ControlSubset
 
 type lemma = ForallLemma of (string * string) * formula (* string is used for header and options *)
            | ExistsLemma of (string * string) * formula
@@ -17,7 +17,9 @@ type lemma = ForallLemma of (string * string) * formula (* string is used for he
 let isAccLemma = function AccLemma(_) -> true
                         | _ -> false 
 
-let isAccLemma_with_control = function AccLemma(Control,_,_,_,_) -> true
+let isAccLemma_with_control = function 
+                      AccLemma(ControlEquivalence,_,_,_,_) -> true
+                     |AccLemma(ControlSubset,_,_,_,_) -> true
                         | _ -> false 
 
 let contains_accountability  = List.exists isAccLemma

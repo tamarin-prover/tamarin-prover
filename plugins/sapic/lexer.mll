@@ -60,6 +60,8 @@ rule token = parse
      | "coarse" { COARSE }
      | "cases" { CASES }
      | "control" { CONTROL }
+     | "control-equivalence" { CONTROLEQUIVALENCE }
+     | "control-subset" { CONTROLSUBSET }
      | "for" { FOR }
      | "parties" { PARTIES }
      | "->"	   { RIGHTARROW }
