@@ -19,7 +19,8 @@ equations:
 
 predicates:
 isSpecial(a) <=> a=SpecialAct(),
-isNormal(a) <=> a=NormalAct()
+isNormal(a) <=> a=NormalAct(),
+isNormalOrSpecial(a) <=> a=NormalAct() | a=SpecialAct()
 
 let A = 
      let m1 = <'Do',a>
@@ -49,17 +50,34 @@ let C =
   ( in(<m1,m1sign>); 
      if verify(m1sign, m1, pk(sk('A'))) = true() then
           new sid;
-          event Control('0','1'); event LogA(sid,a); event Execute(sid,a); unlock 'lock')
- /* + // Uncomment for testing, should find trace in rel_1_1 */
- /*  ( in(<m1,m1sign>); */ 
- /*     if verify(m1sign, m1, pk(sk('A'))) = true() then */
- /*       event LogA(a); event Execute(a); event Control('3')) */
+          /* event Control(m1,'1'); */
+          event LogA(sid,a);
+          //capture kind of violation
+          if isNormalOrSpecial(a) then
+            /* event Control('0','1'); */
+            event Execute(sid,a);
+            unlock 'lock'
+          else
+            event Control('0','3');
+            event Execute(sid,a);
+            unlock 'lock'
+  )
  +
   ( in(<m3,m3sign>); 
     if verify(m3sign, m3, pk(sk('B'))) = true() then
         if verify(m2sign, m2, pk(sk('A'))) = true() then
               new sid;
-              event Control('0','2'); event LogAB(sid,a); event Execute(sid,a); unlock 'lock')//; event Control('2'))
+              /* event Control(m3,'2'); */ 
+              event LogAB(sid,a);
+              if isNormalOrSpecial(a) then
+                  /* event Control('0','2'); */
+                  event Execute(sid,a);
+                  unlock 'lock'
+              else
+                  event Control('0','4');
+                  event Execute(sid,a);
+                  unlock 'lock'
+  )
 
 let Proto = out(<pk(sk('A')), pk(sk('B'))>); ! (A || B || C)
 
@@ -87,14 +105,26 @@ lemma sanity_logAB:
     exists-trace
     "Ex sid a #i #j. LogAB(sid,a)@i & Execute(sid,a)@j" 
 
+/* restriction mini_progress_1: */
+/*     "All sid a #i . LogA(sid,a)@i ==> Ex #j. Execute(sid,a)@j" */
+
+/* restriction mini_progress_2: */
+/*     "All sid a #i . LogAB(sid,a)@i ==> Ex #j. Execute(sid,a)@j" */
+
 verdictfunction v1:
-    "Ex sid a #i #j. 
+    "Ex a sid #i #j. 
         Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()) & 
-        (All ap #ip sidp.  Execute(sidp,ap)@ip & #ip < #i ==> (ap=SpecialAct()) | (ap=NormalAct())) "
+        (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        & (All ap #ip sidp.  LogA(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        "
     -> let verdict1 = <'A'>,
-    "Ex sid a #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) & 
-        (All sidp ap #ip.  Execute(sidp,ap)@ip & #ip < #i ==> (ap=SpecialAct()) | (ap=NormalAct())) "
+
+    "Ex a sid #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) & 
+        (All sidp ap #ip.  LogA(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+       &(All ap #ip sidp.  LogAB(sidp,ap)@ip & not (#ip = #i) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        "
     -> let verdict2 = <'A','B'> ,
+
     /* "Ex a #i #j. Execute(a)@i & LogA(a)@j & a=NormalAct()"   -> empty, */
     /* "Ex a #i #j. Execute(a)@i & LogAB(a)@j & a=SpecialAct()" -> empty, */
     otherwise -> empty 
@@ -103,7 +133,8 @@ lemma acc:
     v1 accounts [control] 
     for " //violation is the first violation
     All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | ( Ex sidp ap #ip . Execute(sidp,ap)@ip & #ip < #i & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & not (#ip = #i) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & not (#ip = #i) & not ((ap=SpecialAct()) | (ap=NormalAct())))
     " 
     /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
