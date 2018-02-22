@@ -14,6 +14,8 @@ functions:
   extract/1, 
   sk/1[private]
 
+/* options: progress */
+
 //Poisoned
 let A = 0
 
@@ -25,24 +27,24 @@ let C =
   let sig_p = sign(sk('A'), ~p)
       sig_s = sign(sk('B'), ~s)
   in
-    (   in(sig_p); event DrinkAll();  
-        event Control('0','1');event Poisoned(); event Verdict())
+    (   in('c',sig_p); 
+        ( ( event DrinkAll(); event Poisoned(); 
+             (event Control('0','1'); event Verdict()) 
+            +(in('c',sig_s); event CanteenShoot(); event Control('0','2');event Verdict()))
+         +(in('c',sig_s); event CanteenShoot(); event Control('0','3');event Verdict())))
     +
-    (   in(sig_p); event DrinkAll(); in(sig_s); 
-        event CanteenShoot(); event Control('0','2');event Verdict())
+    (   in('c',sig_s); event CanteenShoot(); event Control('0','4');event Verdict())
     +
-    (   in(sig_s); event CanteenShoot(); event Control('0','3');event Verdict())
-    +
-    (   event DrinkAll(); event Control('0','4');event Healthy(); event Verdict()) 
+    (   event DrinkAll(); event Control('0','5');event Healthy(); event Verdict()) 
         
     
 new ~p; new ~s;
 (A || B || C ||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      !(
-       (if $x='A' then out(sign(sk('A'), ~p)))
+       (if $x='A' then out('c',sign(sk('A'), ~p)))
      ||
-       (if $x='B' then out(sign(sk('B'), ~s)))
+       (if $x='B' then out('c',sign(sk('B'), ~s)))
      )
    )
 )
@@ -53,13 +55,15 @@ lemma sanity[reuse]:
 
 
 verdictfunction v1:
-    "Ex #i. Poisoned()@i " -> <'A'>,
-    "Ex #i. CanteenShoot()@i " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & Poisoned()@i & Control('0','1')@j " -> <'A'>,
+    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','2')@j " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','3')@j " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','4')@j " -> <'B'>,
     otherwise -> empty
 
 lemma acc:
     v1 accounts [control]
-    for "not((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j))"
+    for "not((Ex #j. Verdict()@j) & ( (Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j)))"
     for parties <'A','B'>
 
 end

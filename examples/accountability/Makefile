@@ -1,7 +1,6 @@
 include Makefile.include
 
-BENCHMARKFILES = GJM-contract/contract.spthy.benchmark MoedersheimWebService/set-abstr-lookup.spthy.benchmark NSL/nsl-no_as-untagged.spthy.benchmark StatVerifLeftRight/stateverif_left_right.spthy.benchmark EncWrapDecUnwrap/encwrapdecunwrap.spthy.benchmark
-# EncWrapDecUnwrap
+BENCHMARKFILES =  whodunit_signatures.spthy.benchmark
 BENCHMARKFILESNOH = $(subst benchmark,benchmark-noh,$(BENCHMARKFILES))
 DATETIME = $(shell date "+%Y-%m-%d-%H:%M:%S")
 
@@ -15,14 +14,7 @@ benchmark-compute: $(BENCHMARKFILES)
 benchmark-show: $(BENCHMARKFILES)
 	@for file in $(BENCHMARKFILES); do echo "$$file: "; tail -n 3 $$file | grep real; done
 benchmark-verify: $(BENCHMARKFILES)
-	@for file in $(BENCHMARKFILES); do echo "$$file: "; tail -n 20 "$$file-cert" | grep steps ; done
-
-benchmark-noh-compute: $(BENCHMARKFILESNOH)
-benchmark-noh-show: $(BENCHMARKFILESNOH)
-	@for file in $(BENCHMARKFILESNOH); do echo "$$file: "; tail -n 3 $$file | grep real; done
-benchmark-noh-verify: $(BENCHMARKFILESNOH)
-	@for file in $(BENCHMARKFILESNOH); do echo "$$file: "; tail -n 20 "$$file-cert" | grep steps ; done
-
+	@for file in $(BENCHMARKFILES); do echo "$$file: "; tail -n 20 "$$file-cert" | grep steps | grep --color -E 'falsified|$$'; done
 
 test: $(TESTFILES)
 	    $(PROVER) $(FLAGS) --prove $(TESTFILES) | grep --color -E 'falsified|$$'
@@ -74,15 +66,6 @@ test: $(TESTFILES)
 	ssh -f -N -t -L $($(HOST)LOCALPORT):localhost:$($(HOST)REMOTEPORT) $(HOST) 
 	open http://localhost:$($(HOST)LOCALPORT)
 
-%.benchmark-rechen: %
-	scp $< rechen:spthy/
-	ssh rechen 'cd spthy; killall tamarin-prover; $(ULIMITSRECHEN); $(REMOTEPROVER) --prove$(PROOFFLAGS) $(REMOTEFLAGS) $<'
-
 %.benchmark: %
-	scp $< $(BENCHMARKMACHINE):spthy/
-	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove$(PROOFFLAGS) $(BENCHMARKFLAGS) $(notdir $<)' > $@-cert 2> $@
-
-%.benchmark-noh: %
-	scp $< $(BENCHMARKMACHINE):spthy/
-	ssh $(BENCHMARKMACHINE) 'cd spthy; killall tamarin-prover; $(BENCHMARKULIMITS); time $(BENCHMARKPROVER) --prove$(PROOFFLAGS) $(BENCHMARKFLAGSNOH) $(notdir $<)' > $@-cert 2> $@
+	/usr/bin/time $(PROVER) $(FLAGS) --prove$(PROOFFLAGS) $<  > $@-cert 2> $@
 
