@@ -133,8 +133,8 @@ lemma acc:
     v1 accounts [control] 
     for " //violation is the only violation
     All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
-                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & not (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & not (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
     " 
     /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
