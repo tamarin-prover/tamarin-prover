@@ -22,9 +22,9 @@ let B = 0
 let C = 
     (   in(~p); 
         ( (  event Poisoned();
-             (event Control('0','1'); event Verdict()) 
-            +(in(~s); event CanteenShoot(); event Control('0','2');event Verdict()))
-         +(in(~s); event CanteenShoot(); event Control('0','3');event Verdict())))
+             (event Control('0','2'); event Verdict()) // we see both branches as the same event, hence same control-flow
+            +(in(~s); event CanteenShoot(); event Control('0','2'); event Verdict()))
+         +(in(~s); event CanteenShoot(); event Control('0','4');event Verdict())))
     +
     (   in(~s); event CanteenShoot(); event Control('0','4');event Verdict())
     +
@@ -48,10 +48,10 @@ lemma sanity[reuse]:
 
 
 verdictfunction v1:
-    "Ex #i #j #k. Verdict()@k & Poisoned()@i & Control('0','1')@j " -> <'A'>,
-    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','2')@j " -> <'B'>,
-    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','3')@j " -> <'B'>,
-    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','4')@j " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & Poisoned()@i" -> <'A'>,
+    /* "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','2')@j " -> <'B'>, */
+    /* "Ex #i #j #k. Verdict()@k & CanteenShoot()@i & Control('0','3')@j " -> <'B'>, */
+    "Ex #i #j #k. Verdict()@k & CanteenShoot()@i" -> <'B'>,
     otherwise -> empty
 
 lemma acc:
