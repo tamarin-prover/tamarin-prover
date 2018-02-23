@@ -27,7 +27,7 @@ let contains_control  = List.exists isAccLemma_with_control
 
 let add_antecedent f = function
     ForallLemma(hd,f') -> ForallLemma(hd,Atomformulaaction.Imp(f,f'))
-  | ExistsLemma(hd,f') -> ExistsLemma(hd,Atomformulaaction.Imp(f,f'))
+  | ExistsLemma(hd,f') -> ExistsLemma(hd,Atomformulaaction.And(f,f'))
   | _ -> raise (ImplementationError "add_antecedent is only meant to be called on lemmas.")
 
 let rec lemma2string_base sufficient_conditions = function
