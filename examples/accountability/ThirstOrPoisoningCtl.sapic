@@ -27,19 +27,21 @@ let C =
   let sig_p = sign(sk('A'), ~p)
       sig_s = sign(sk('B'), ~s)
   in
-    (   in('c',sig_p); 
+    (   in(sig_p); 
         ( ( event DrinkAll();  
              (event Poisoned();event Control('0','1'); event Verdict()) 
-            +(in('c',sig_s); event CanteenShoot(); event Control('0','2');event Verdict()))
-         +(in('c',sig_s); event CanteenShoot(); event Control('0','3');event Verdict())))
+            +(in(sig_s); event CanteenShoot(); event Control('0','2');event Verdict()))
+         +(in(sig_s); event CanteenShoot(); event Control('0','3');event Verdict())))
     +
-    (   in('c',sig_s); event CanteenShoot(); event Control('0','4');event Verdict())
+    (   in(sig_s); event CanteenShoot(); event Control('0','4');event Verdict())
     +
     (   event DrinkAll(); event Control('0','5');event Healthy(); event Verdict()) 
         
     
 new ~p; new ~s;
 (A || B || C ||
+    ( out(pk(sk('A')));out(pk(sk('B'))))
+||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      !(
        (if $x='A' then out('c',sign(sk('A'), ~p)))
