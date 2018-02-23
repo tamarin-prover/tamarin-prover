@@ -28,14 +28,14 @@ let C =
       sig_s = sign(sk('B'), ~s)
   in
     (   in(sig_p); 
-        ( ( event DrinkAll();  
-             (event Poisoned();event Control('0','1'); event Verdict()) 
+        ( (  event Poisoned();
+             (event Control('0','1'); event Verdict()) 
             +(in(sig_s); event CanteenShoot(); event Control('0','2');event Verdict()))
          +(in(sig_s); event CanteenShoot(); event Control('0','3');event Verdict())))
     +
     (   in(sig_s); event CanteenShoot(); event Control('0','4');event Verdict())
     +
-    (   event DrinkAll(); event Control('0','5');event Healthy(); event Verdict()) 
+    (   event Control('0','5');event Healthy(); event Verdict()) 
         
     
 new ~p; new ~s;

@@ -114,14 +114,14 @@ lemma sanity_logAB:
 verdictfunction v1:
     "Ex a sid #i #j. 
         Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()) 
-        & (All #ip.  LogAB(sid,a)@ip  ==> (a=SpecialAct()) | (a=NormalAct()))
-        & (All #ip.  LogA(sid,a)@ip   ==> (a=SpecialAct()) | (a=NormalAct()))
+        & (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (sid = sidp) ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        & (All ap #ip sidp.  LogA(sidp,ap)@ip & not (sid = sidp)  ==> (ap=SpecialAct()) | (ap=NormalAct()))
         "
     -> let verdict1 = <'A'>,
 
-    "Ex a sid #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() | a=SpecialAct()) 
-       & (All #ip.  LogA(sid,a)@ip  ==> (a=SpecialAct()) | (a=NormalAct()))
-       & (All #ip.  LogAB(sid,a)@ip ==> (a=SpecialAct()) | (a=NormalAct()))
+    "Ex a sid #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) 
+       & (All sidp ap #ip.  LogA(sidp,ap)@ip &  not (sid = sidp)  ==> (ap=SpecialAct()) | (ap=NormalAct()))
+       & (All ap #ip sidp.  LogAB(sidp,ap)@ip & not (sid = sidp) ==> (ap=SpecialAct()) | (ap=NormalAct()))
         "
     -> let verdict2 = <'A','B'> ,
 
@@ -133,8 +133,8 @@ lemma acc:
     v1 accounts [control] 
     for " //violation is the only violation
     All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct()) 
-                              | ( Ex #ip . LogA(sid,a)@ip  & not ((a=SpecialAct()) | (a=NormalAct())))
-                              | ( Ex #ip . LogAB(sid,a)@ip & not ((a=SpecialAct()) | (a=NormalAct())))
+                              | ( Ex sidp ap #ip . LogA(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
+                              | ( Ex sidp ap #ip . LogAB(sidp,ap)@ip & (sid = sidp) & not ((ap=SpecialAct()) | (ap=NormalAct())))
     " 
     /* for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" */ 
     for parties <'A','B'>
@@ -214,29 +214,3 @@ lemma acc:
 /*     )" */
 
 end
-
-// summary of summaries:
-
-// analyzed: DelegationCtlRep.spthy
-
-//   sanity_logA_not_misbehaving (exists-trace): verified (7 steps)
-//   sanity_logAB_not_misbehaving (exists-trace): verified (8 steps)
-//   sanity_logA (exists-trace): verified (8 steps)
-//   sanity_logAB (exists-trace): verified (8 steps)
-//   acc_excl_0_1 (all-traces): verified (14 steps)
-//   acc_excl_0_2 (all-traces): verified (38 steps)
-//   acc_excl_1_2 (all-traces): verified (38 steps)
-//   acc_exh (all-traces): verified (60 steps)
-//   acc_suf_0 (exists-trace): verified (4 steps)
-//   acc_suf_1 (exists-trace): verified (4 steps)
-//   acc_compl_empty_2 (all-traces): verified (30 steps)
-//   acc_compl_nonempty_0 (all-traces): verified (38 steps)
-//   acc_compl_nonempty_1 (all-traces): verified (38 steps)
-//   acc_min_0_0 (all-traces): verified (14 steps)
-//   acc_min_1_0 (all-traces): verified (14 steps)
-//   acc_min_1_1 (all-traces): verified (14 steps)
-//   acc_uniq_0 (all-traces): verified (14 steps)
-//   acc_uniq_1 (all-traces): verified (14 steps)
-//   acc_rel_0_0 (all-traces): verified (14 steps)
-//   acc_rel_1_1 (all-traces): verified (14 steps)
-//   acc_unrel_0_1 (all-traces): verified (14 steps)
