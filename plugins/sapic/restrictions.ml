@@ -57,7 +57,7 @@ let res_set_notin_l =  Restriction("set_notin",
          Or(
               All(VarSet.of_list [Temp "t1"; Msg "y"],
                 Imp( Atom ( At (Action("Insert",[Var (Msg "x");Var (Msg "y")]),Temp "t1")),
-                       Atom (TLeq (Temp "t1", Temp "t3")))),
+                       Atom (TLeq (Temp "t3", Temp "t1")))),
              Ex( VarSet.of_list [Temp "t1"],
                 And (Atom ( At (Action("Delete",[Var (Msg "x")]),Temp "t1")), 
                  And ( Atom (TLeq (Temp "t1", Temp "t3")),
@@ -107,7 +107,7 @@ let res_set_notin_no_delete_l =  Restriction("set_notin",
          Atom ( At (Action("IsNotSet",[Var (Msg "x")]),Temp "t3")),
               All(VarSet.of_list [Temp "t1"; Msg "y"],
                 Imp( Atom ( At (Action("Insert",[Var (Msg "x");Var (Msg "y")]),Temp "t1")),
-                       Atom (TLeq (Temp "t1", Temp "t3")))
+                       Atom (TLeq (Temp "t3", Temp "t1")))
             ))))
 
 let res_set_notin_no_delete = lemma2string_noacc res_set_notin_no_delete_l
