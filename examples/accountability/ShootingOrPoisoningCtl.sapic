@@ -17,23 +17,25 @@ functions:
 let A = 0
 
 //Shot
-let B = 0
+let B = 0   
 
 //Victim
 let C = 
   let sig_p = sign(sk('A'), ~p)
       sig_s = sign(sk('B'), ~s)
   in
-    (   in(sig_p); event DrinkAll();  
-        event Control('0','1');event Poisoned(); event Verdict())
+    (   in('c',sig_p); 
+        ( ( event DrinkAll();  
+             (event Poisoned();event Control('0','1'); event Verdict()) 
+            +(in('c',sig_s); event Shoot(); event Control('0','2');event Verdict()))
+         +(in('c',sig_s); event Shoot(); event Control('0','3');event Verdict())))
     +
-    (   in(sig_p); event DrinkAll(); in(sig_s); 
-        event Control('0','2');event Shoot(); event Verdict())
+    (   in('c',sig_s); event Shoot(); event Control('0','4');event Verdict())
     +
-    (   in(sig_s); event Control('0','3');event Shoot(); event Verdict())
-    +
-    (   event DrinkAll(); event Control('0','4');event Healthy(); event Verdict()) 
-        
+    (   event DrinkAll(); event Control('0','5');event Healthy(); event Verdict()) 
+
+
+
     
 new ~p; new ~s;
 (A || B || C ||
@@ -55,14 +57,64 @@ lemma sanity[reuse]:
       ==> ((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j) | (Ex #j. Healthy()@j)) "
 
 
+
 verdictfunction v1:
-    "Ex #i. Poisoned()@i " -> <'A'>,
-    "Ex #i. Shoot()@i " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & Poisoned()@i & Control('0','1')@j " -> <'A'>,
+    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','2')@j " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','3')@j " -> <'B'>,
+    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','4')@j " -> <'B'>,
     otherwise -> empty
+
 
 lemma acc:
     v1 accounts [control]
-    for "not((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j))"
+    for "not((Ex #j. Verdict()@j) & ( (Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j)))"
     for parties <'A','B'>
+
+
+// summary of summaries:
+
+// analyzed: ShootingOrPoisoningCtl.spthy
+
+//   sanity (all-traces): verified (12 steps)
+//   acc_excl_0_1 (all-traces): verified (277 steps)
+//   acc_excl_0_2 (all-traces): verified (277 steps)
+//   acc_excl_0_3 (all-traces): verified (277 steps)
+//   acc_excl_0_4 (all-traces): verified (2 steps)
+//   acc_excl_1_2 (all-traces): verified (241 steps)
+//   acc_excl_1_3 (all-traces): verified (241 steps)
+//   acc_excl_1_4 (all-traces): verified (2 steps)
+//   acc_excl_2_3 (all-traces): verified (241 steps)
+//   acc_excl_2_4 (all-traces): verified (2 steps)
+//   acc_excl_3_4 (all-traces): verified (2 steps)
+//   acc_exh (all-traces): verified (6 steps)
+//   acc_suf_0 (exists-trace): verified (6 steps)
+//   acc_suf_1 (exists-trace): verified (6 steps)
+//   acc_suf_2 (exists-trace): verified (6 steps)
+//   acc_suf_3 (exists-trace): verified (6 steps)
+//   acc_compl_empty_4 (all-traces): verified (89 steps)
+//   acc_compl_nonempty_0 (all-traces): verified (17 steps)
+//   acc_compl_nonempty_1 (all-traces): verified (17 steps)
+//   acc_compl_nonempty_2 (all-traces): verified (17 steps)
+//   acc_compl_nonempty_3 (all-traces): verified (17 steps)
+//   acc_min_0_0 (all-traces): verified (63 steps)
+//   acc_min_1_0 (all-traces): verified (181 steps)
+//   acc_min_2_0 (all-traces): verified (181 steps)
+//   acc_min_3_0 (all-traces): verified (181 steps)
+//   acc_uniq_0 (all-traces): verified (63 steps)
+//   acc_uniq_1 (all-traces): verified (181 steps)
+//   acc_uniq_2 (all-traces): verified (181 steps)
+//   acc_uniq_3 (all-traces): verified (181 steps)
+//   acc_rel_0_0 (all-traces): verified (443 steps)
+//   acc_rel_1_1 (all-traces): verified (1049 steps)
+//   acc_rel_2_2 (all-traces): verified (1049 steps)
+//   acc_rel_3_3 (all-traces): verified (1049 steps)
+//   acc_unrel_0_1 (all-traces): verified (1 steps)
+//   acc_unrel_0_2 (all-traces): verified (1 steps)
+//   acc_unrel_0_3 (all-traces): verified (1 steps)
+//   acc_unrel_1_2 (all-traces): verified (1 steps)
+//   acc_unrel_1_3 (all-traces): verified (1 steps)
+//   acc_unrel_2_3 (all-traces): verified (1 steps)
+
 
 end

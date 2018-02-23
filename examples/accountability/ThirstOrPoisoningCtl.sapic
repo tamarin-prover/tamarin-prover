@@ -28,8 +28,8 @@ let C =
       sig_s = sign(sk('B'), ~s)
   in
     (   in('c',sig_p); 
-        ( ( event DrinkAll(); event Poisoned(); 
-             (event Control('0','1'); event Verdict()) 
+        ( ( event DrinkAll();  
+             (event Poisoned();event Control('0','1'); event Verdict()) 
             +(in('c',sig_s); event CanteenShoot(); event Control('0','2');event Verdict()))
          +(in('c',sig_s); event CanteenShoot(); event Control('0','3');event Verdict())))
     +
@@ -67,3 +67,58 @@ lemma acc:
     for parties <'A','B'>
 
 end
+
+
+// summary of summaries:
+
+// analyzed: ThirstOrPoisoningCtl.spthy
+
+//   sanity (all-traces): verified (20 steps)
+//   acc_excl_0_1 (all-traces): verified (81 steps)
+//   acc_excl_0_2 (all-traces): verified (81 steps)
+//   acc_excl_0_3 (all-traces): verified (81 steps)
+//   acc_excl_0_4 (all-traces): verified (2 steps)
+//   acc_excl_1_2 (all-traces): verified (160 steps)
+//   acc_excl_1_3 (all-traces): verified (160 steps)
+//   acc_excl_1_4 (all-traces): verified (2 steps)
+//   acc_excl_2_3 (all-traces): verified (160 steps)
+//   acc_excl_2_4 (all-traces): verified (2 steps)
+//   acc_excl_3_4 (all-traces): verified (2 steps)
+//   acc_exh (all-traces): verified (6 steps)
+//   acc_suf_0 (exists-trace): verified (6 steps)
+//   acc_suf_1 (exists-trace): verified (6 steps)
+//   acc_suf_2 (exists-trace): verified (6 steps)
+//   acc_suf_3 (exists-trace): verified (6 steps)
+//   acc_compl_empty_4 (all-traces): verified (85 steps)
+//   acc_compl_nonempty_0 (all-traces): verified (4 steps)
+//   acc_compl_nonempty_1 (all-traces): verified (4 steps)
+//   acc_compl_nonempty_2 (all-traces): verified (4 steps)
+//   acc_compl_nonempty_3 (all-traces): verified (4 steps)
+//   acc_min_0_0 (all-traces): verified (33 steps)
+//   acc_min_1_0 (all-traces): verified (72 steps)
+//   acc_min_2_0 (all-traces): verified (72 steps)
+//   acc_min_3_0 (all-traces): verified (72 steps)
+//   acc_uniq_0 (all-traces): verified (33 steps)
+//   acc_uniq_1 (all-traces): verified (101 steps)
+//   acc_uniq_2 (all-traces): verified (101 steps)
+//   acc_uniq_3 (all-traces): verified (94 steps)
+//   acc_rel_0_0 (all-traces): verified (1519 steps)
+//   acc_rel_1_1 (all-traces): verified (6255 steps)
+//   acc_rel_2_2 (all-traces): verified (6255 steps)
+//   acc_rel_3_3 (all-traces): verified (3195 steps)
+//   acc_unrel_0_1 (all-traces): verified (1 steps)
+//   acc_unrel_0_2 (all-traces): verified (1 steps)
+//   acc_unrel_0_3 (all-traces): verified (1 steps)
+//   acc_unrel_1_2 (all-traces): verified (1 steps)
+//   acc_unrel_1_3 (all-traces): verified (1 steps)
+//   acc_unrel_2_3 (all-traces): verified (1 steps)
+
+// ==============================================================================
+// 127851.86user 27904.49system 48:39.23elapsed 5335%CPU (0avgtext+0avgdata 1925100maxresident)k
+// 0inputs+0outputs (0major+507419minor)pagefaults 0swaps
+
+
+
+
+
+
