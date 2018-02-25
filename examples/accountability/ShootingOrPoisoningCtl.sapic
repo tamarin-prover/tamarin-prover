@@ -7,8 +7,6 @@
 theory ShootingOrPoisoningControl
 begin
 
-builtins: signing
-
 functions: 
   extract/1, 
   sk/1[private]
@@ -19,100 +17,46 @@ let A = 0
 //Shot
 let B = 0   
 
-//Victim
-let C = 
-  let sig_p = sign(sk('A'), ~p)
-      sig_s = sign(sk('B'), ~s)
-  in
-    (   in(sig_p); 
-        ( ( event DrinkAll();  
-             (event Poisoned();event Control('0','1'); event Verdict()) 
-            +(in(sig_s); event Shoot(); event Control('0','2');event Verdict()))
-         +(in(sig_s); event Shoot(); event Control('0','3');event Verdict())))
-    +
-    (   in(sig_s); event Shoot(); event Control('0','4');event Verdict())
-    +
-    (   event DrinkAll(); event Control('0','5');event Healthy(); event Verdict()) 
+let Victim = (in(~p); insert 'Victim',~p; in(~s); insert 'Victim',~s) 
+          +  (in(~s); insert 'Victim',~s) 
 
-
-
+let C =  insert 'Victim', 'Healthy'; 
+         // .. some time passes
+         lookup 'Victim' as x in (
+            if x=~p then (
+            	event Poisoned(); event Control('0','1'); event Verdict()
+            	)
+            else (
+            	if x=~s then (
+            		event Shoot(); event Control('0','2'); event Verdict()
+            	)
+            	else (
+            		event Healthy(); event Control('0','3'); event Verdict()
+            	)
+            )
+         )
     
 new ~p; new ~s;
-(A || B || C ||
-  ( out(pk(sk('A'))); out(pk(sk('B'))))
-||
+(A || B || C || Victim ||
  !(in ('c',<'corrupt',$x>); event Corrupted($x); 
      !(
-       (if $x='A' then out('c',sign(sk('A'), ~p)))
-     ||
-       (if $x='B' then out('c',sign(sk('B'), ~s)))
+       (if $x='A' then out('c',~p))
+    ||
+       (if $x='B' then out('c',~s))
      )
    )
 )
 
-lemma sanity[reuse]:
-	"All #i. Verdict()@i 
-      ==> ((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j) | (Ex #j. Healthy()@j)) "
-
-
 
 verdictfunction v1:
-    "Ex #i #j #k. Verdict()@k & Poisoned()@i & Control('0','1')@j " -> <'A'>,
-    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','2')@j " -> <'B'>,
-    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','3')@j " -> <'B'>,
-    "Ex #i #j #k. Verdict()@k & Shoot()@i & Control('0','4')@j " -> <'B'>,
+    "Ex #i #k. Verdict()@i & Poisoned()@k" -> <'A'>,
+    "Ex #i #k. Verdict()@i & Shoot()@k " -> <'B'>,
     otherwise -> empty
 
 
 lemma acc:
     v1 accounts [control]
-    for "not((Ex #j. Verdict()@j) & ( (Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j)))"
+    for "All #i . Verdict()@i ==> Ex #j. Healthy()@j"
     for parties <'A','B'>
-
-
-// summary of summaries:
-
-// analyzed: ShootingOrPoisoningCtl.spthy
-
-//   sanity (all-traces): verified (12 steps)
-//   acc_excl_0_1 (all-traces): verified (277 steps)
-//   acc_excl_0_2 (all-traces): verified (277 steps)
-//   acc_excl_0_3 (all-traces): verified (277 steps)
-//   acc_excl_0_4 (all-traces): verified (2 steps)
-//   acc_excl_1_2 (all-traces): verified (241 steps)
-//   acc_excl_1_3 (all-traces): verified (241 steps)
-//   acc_excl_1_4 (all-traces): verified (2 steps)
-//   acc_excl_2_3 (all-traces): verified (241 steps)
-//   acc_excl_2_4 (all-traces): verified (2 steps)
-//   acc_excl_3_4 (all-traces): verified (2 steps)
-//   acc_exh (all-traces): verified (6 steps)
-//   acc_suf_0 (exists-trace): verified (6 steps)
-//   acc_suf_1 (exists-trace): verified (6 steps)
-//   acc_suf_2 (exists-trace): verified (6 steps)
-//   acc_suf_3 (exists-trace): verified (6 steps)
-//   acc_compl_empty_4 (all-traces): verified (89 steps)
-//   acc_compl_nonempty_0 (all-traces): verified (17 steps)
-//   acc_compl_nonempty_1 (all-traces): verified (17 steps)
-//   acc_compl_nonempty_2 (all-traces): verified (17 steps)
-//   acc_compl_nonempty_3 (all-traces): verified (17 steps)
-//   acc_min_0_0 (all-traces): verified (63 steps)
-//   acc_min_1_0 (all-traces): verified (181 steps)
-//   acc_min_2_0 (all-traces): verified (181 steps)
-//   acc_min_3_0 (all-traces): verified (181 steps)
-//   acc_uniq_0 (all-traces): verified (63 steps)
-//   acc_uniq_1 (all-traces): verified (181 steps)
-//   acc_uniq_2 (all-traces): verified (181 steps)
-//   acc_uniq_3 (all-traces): verified (181 steps)
-//   acc_rel_0_0 (all-traces): verified (443 steps)
-//   acc_rel_1_1 (all-traces): verified (1049 steps)
-//   acc_rel_2_2 (all-traces): verified (1049 steps)
-//   acc_rel_3_3 (all-traces): verified (1049 steps)
-//   acc_unrel_0_1 (all-traces): verified (1 steps)
-//   acc_unrel_0_2 (all-traces): verified (1 steps)
-//   acc_unrel_0_3 (all-traces): verified (1 steps)
-//   acc_unrel_1_2 (all-traces): verified (1 steps)
-//   acc_unrel_1_3 (all-traces): verified (1 steps)
-//   acc_unrel_2_3 (all-traces): verified (1 steps)
-
 
 end
