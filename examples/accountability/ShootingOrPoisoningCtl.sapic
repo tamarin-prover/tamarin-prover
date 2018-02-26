@@ -23,12 +23,12 @@ let Victim = (in(~p); insert 'Victim',~p; in(~s); insert 'Victim',~s)
 let C =  insert 'Victim', 'Healthy'; 
          // .. some time passes
          lookup 'Victim' as x in (
-            if x=~p then (
-            	event Poisoned(); event Control('0','1'); event Verdict()
+            if x=~s then (
+            	event Shoot(); event Control('0','1'); event Verdict()
             	)
             else (
-            	if x=~s then (
-            		event Shoot(); event Control('0','2'); event Verdict()
+            	if x=~p then (
+            		event Poisoned(); event Control('0','2'); event Verdict()
             	)
             	else (
             		event Healthy(); event Control('0','3'); event Verdict()
