@@ -72,8 +72,8 @@ lemma sanity_logAB:
     "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
-    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
-    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct() | a=SpecialAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() | a=SpecialAct())" -> let verdict2 = <'A','B'> ,
     otherwise -> empty 
 
 lemma acc:
