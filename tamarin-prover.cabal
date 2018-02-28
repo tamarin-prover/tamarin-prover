@@ -12,7 +12,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2017
+copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -48,7 +48,7 @@ description:
     <http://tamarin-prover.github.io>. For observational equivalence proofs just 
     add the "--diff" flag when calling the @tamarin-prover@.
 
-homepage:           http://tamarin-prover.github.io
+homepage:           https://tamarin-prover.github.io
 
 
 --------------
