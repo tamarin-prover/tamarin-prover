@@ -5,7 +5,7 @@
  * Source:
  * */
 
-theory ThirstOrPoisoningControl
+theory Causality_DessertTraveller
 begin
 
 builtins: signing

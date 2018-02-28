@@ -4,7 +4,7 @@
  * Date:        Feb 2018
  * Source:
  * */
-theory SuzyBillyBottleShotControl
+theory Causality_EarlyPreemption
 begin
 
 //Suzy

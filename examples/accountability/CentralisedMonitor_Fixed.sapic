@@ -1,4 +1,10 @@
-theory DelegationCtl
+/*
+ * Protocol:    Centralised monitor protocol - Fixed
+ * Date:  Dec 2017
+ * Source:  
+ * */
+
+theory CentralisedMonitor_Fixed
 begin
 
 /* builtins: signing */

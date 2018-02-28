@@ -1,5 +1,5 @@
 /*
- * Protocol:    Accountable Algorithms protocol -- with control
+ * Protocol:    Accountable Algorithms protocol -- Modified - 2
  * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
  * Date: 	Dec 2017
  * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
@@ -12,7 +12,7 @@
  * precisely this comittment. We hope that this gets rid of the notary in most places.
  * 
  * */
-theory AccountableAlgorithmsStoreModifiedProofControl
+theory AccountableAlgorithms_Modified_2
 begin
 
 builtins: signing

@@ -1,4 +1,11 @@
-theory DelegationCtlRep
+/*
+ * Protocol:    Centralised monitor protocol - Replication
+ * Date:  Dec 2017
+ * Source:  
+ * */
+
+
+theory CentralisedMonitor_Replication
 begin
 
 /* builtins: signing */

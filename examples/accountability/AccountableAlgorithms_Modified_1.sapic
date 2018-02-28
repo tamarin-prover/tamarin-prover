@@ -1,5 +1,5 @@
 /*
- * Protocol:    Accountable Algorithms protocol
+ * Protocol:    Accountable Algorithms protocol - Modified - 1
  * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
  * Date: 	Dec 2017
  * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
@@ -15,9 +15,8 @@
  *        3. The public ledger is modelled using the explicit store, and
  *           a requirement that values are never overwritten. In an actual
  *           ledger, the public could e.g. consider to only regard the first entry.
- *		  4. The protocol runs easier on Tamarin with 'p' heuristics.
  * */
-theory AccountableAlgorithmsStoreControl
+theory AccountableAlgorithms_Modified_1
 begin
 
 builtins: signing

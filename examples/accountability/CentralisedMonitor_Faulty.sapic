@@ -1,4 +1,11 @@
-theory DelegationBroken
+/*
+ * Protocol:    Centralised monitor protocol - Faulty
+ * Date:  Dec 2017
+ * Source:  
+ * */
+
+
+theory CentralisedMonitor_Faulty
 begin
 
 /* builtins: signing */
