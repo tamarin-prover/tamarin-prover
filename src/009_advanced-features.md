@@ -77,7 +77,6 @@ the open goals of a constraint system.
   additionally pass the `--oraclename=FILE` flag as commandline option.
 
 
-
 If several rankings are given for the heuristic flag, then they are employed
 in a round-robin fashion depending on the proof-depth. For example, a flag
 `--heuristic=ssC` always uses two times the smart ranking and then once the

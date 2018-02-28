@@ -42,11 +42,16 @@ Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
 specified in the body of the theory.
 
-    rule := 'rule' ident ':'
+    rule := 'rule' ident [rule_anot] ':'
             [let_block]
             '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
-
+    rule_anot := '[' ('color=' | 'colour=') hexcolor ']'
     let_block := 'let' (ident '=' term)+ 'in'
+
+Rule annotations do not influence the rule's semantics. A color is represented
+as a triplet of 8 bit hexadecimal values optionally
+preceded by '#', and is used as the background color of the rule when it is
+rendered in graphs.
 
 The let-block allows more succinct specifications. The equations are applied
 in a bottom-up fashion. For example,
