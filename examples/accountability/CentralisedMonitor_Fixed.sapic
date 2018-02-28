@@ -1,7 +1,10 @@
 /*
  * Protocol:    Centralised monitor protocol - Fixed
- * Date:  Dec 2017
+ * Modeler:   Robert Künnemann, Ilkan Esiyok
+ * Date:  
  * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
  * */
 
 theory CentralisedMonitor_Fixed

@@ -1,10 +1,12 @@
 /*
- * Protocol:    Causality - Late Preemption protocol
- * Modeler:     Robert Künnemann, Ilkan Esiyok
- * Date:        Feb 2018
- * Source:
+ * Protocol:    Causality - late preemption protocol 
+ * Modeler:   Robert Künnemann, Ilkan Esiyok
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
  * */
-theory ShootingOrPoisoningControl
+theory Causality_LatePreemption
 begin
 
 functions: 

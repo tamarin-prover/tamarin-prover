@@ -1,4 +1,13 @@
-theory WhoDunitControl
+/*
+ * Protocol:    Whodunit protocol - Faulty
+ * Modeler:   Robert Künnemann
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+
+theory WhoDunit_Faulty
 begin
 
 /* builtins: signing */

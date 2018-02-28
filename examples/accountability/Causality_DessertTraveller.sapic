@@ -1,8 +1,10 @@
 /*
- * Protocol:    Causality - Dessert traveller protocol {with control}
- * Modeler:     Robert Künnemann, Ilkan Esiyok
- * Date:        Feb 2018
- * Source:
+ * Protocol:    Causality - Dessert traveller protocol 
+ * Modeler:   Robert Künnemann, Ilkan Esiyok
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
  * */
 
 theory Causality_DessertTraveller

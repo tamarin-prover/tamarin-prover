@@ -1,13 +1,13 @@
 /*
- * Protocol:  Whodunit fixed protocol
+ * Protocol:    Whodunit protocol - Fixed
  * Modeler:   Robert Künnemann
  * Date:  
  * Source:  
  * Status:  
  * Note:  execute with --heuristic=p 
- */
+ * */
 
-theory WhoDunitSignaturesCtl
+theory WhoDunit_Fixed
 begin
 
 /* builtins: signing */
