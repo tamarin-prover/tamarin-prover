@@ -52,6 +52,7 @@ following message theories:
 `hashing`,
 `asymmetric-encryption`,
 `signing`,
+`revealing-signing`,
 `symmetric-encryption`,
 `diffie-hellman`,
 `bilinear-pairing`, and
@@ -88,7 +89,7 @@ the same key. The syntax for adding equations to the context is:
 
     equations: lhs1 = rhs1, ..., lhsn = rhsn
 
-Both `lhs` and `rhs` can contain variables, but all variables on the right hand
+Both `lhs` and `rhs` can contain variables, but no public constants, and all variables on the right hand
 side must also appear on the left hand side. The symbolic proof search
 used by Tamarin supports a certain class of user-defined equations, namely 
 *convergent* equational theories that have the *finite variant property*
@@ -134,6 +135,14 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a signature scheme. It defines the function symbols
   `sign/2`, `verify/3`, `pk/1`, and `true`, which are related by
   the equation `verify(sign(m,sk),m,pk(sk)) = true`.
+
+`revealing-signing`:
+
+: This theory models a message-revealing signature scheme. It defines the function
+  symbols `revealingSign/2`, `revealingVerify/3`, `getMessage/1`, `pk/1`, and 
+  `true`, which are related by the equations
+  `revealingVerify(revealingSign(m,sk),m,pk(sk)) = true`
+  and `getMessage(revealingSign(m,sk)) = m`.
 
 `symmetric-encryption`:
 
