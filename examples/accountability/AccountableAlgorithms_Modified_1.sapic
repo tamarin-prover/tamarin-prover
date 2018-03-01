@@ -177,7 +177,7 @@ let J =
 )
 
 ( 
-A || S || J ||
+!(A || S) || J ||
     out(pk(sk('A'))); out(pk(sk('S')))
 ||
  !( in('c',<'corrupt',$x>); event Corrupted($x); 
