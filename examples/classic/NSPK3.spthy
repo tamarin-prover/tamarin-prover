@@ -1,4 +1,4 @@
-theory NSLPK3
+theory NSPK3
 begin
 
 builtins: asymmetric-encryption
