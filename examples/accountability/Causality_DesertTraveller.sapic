@@ -1,5 +1,5 @@
 /*
- * Protocol:    Causality - Dessert traveller protocol 
+ * Protocol:    Causality - Desert traveller protocol 
  * Modeler:   Robert Künnemann, Ilkan Esiyok
  * Date:  
  * Source:  
@@ -7,7 +7,7 @@
  * Note:  execute with --heuristic=p 
  * */
 
-theory Causality_DessertTraveller
+theory Causality_DesertTraveller
 begin
 
 builtins: signing
