@@ -61,7 +61,7 @@ To install Linuxbrew follow the [Installation Instructions](https://github.com/L
 If you already have this installed, it is as simple as running the following two commands in your terminal:
 
   * `brew update`
-  * `brew install homebrew/science/tamarin-prover`
+  * `brew install brewsci/science/tamarin-prover`
 
 You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
