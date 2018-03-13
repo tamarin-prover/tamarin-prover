@@ -60,8 +60,7 @@ To install Linuxbrew follow the [Installation Instructions](https://github.com/L
 
 If you already have this installed, it is as simple as running the following two commands in your terminal:
 
-  * `brew update`
-  * `brew install brewsci/science/tamarin-prover`
+  * `brew install tamarin-prover/tap/tamarin-prover`
 
 You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
@@ -103,6 +102,13 @@ To uninstall (and "untap" the Tamarin homebrew tap):
 
   * `brew uninstall tamarin-prover`
   * `brew untap tamarin-prover/tap`
+
+Note that Tamarin was previously distributed in the now-closed `homebrew-science`
+tap. If you have already installed it through Homebrew, you will have to uninstall
+and untap that version first:
+
+  * `brew uninstall tamarin-prover`
+  * `brew untap homebrew/science`
 
 #### Installing Homebrew
 If you don't have [Homebrew](http://brew.sh/) installed, follow the instructions on their
