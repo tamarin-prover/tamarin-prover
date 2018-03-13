@@ -66,6 +66,12 @@ You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time.
 
+Note that Tamarin was previously distributed in the now-closed `homebrew-science`
+tap. If you have already installed it through Linuxbrew, you will have to uninstall
+and untap that version first:
+
+  * `brew uninstall tamarin-prover`
+  * `brew untap homebrew/science`
 
 ### Automatic Installation for Arch Linux {#sec:ArchLinuxBinInstall}
 
