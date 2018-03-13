@@ -53,20 +53,12 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 
 ### Automatic Installation of Tamarin {#sec:LinuxBinInstall}
 
-The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/). Linuxbrew is a fork of Homebrew, the Mac OS package manager,
-for Linux.
+The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/).
+Linuxbrew is a fork of Homebrew, the Mac OS package manager, for Linux. To install Linuxbrew
+follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
 
-To install Linuxbrew follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
-
-If you already have this installed, it is as simple as running the following two commands in your terminal:
-
-  * `brew update`
-  * `brew install brewsci/science/tamarin-prover`
-
-You can now run Tamarin from the command line by typing `tamarin-prover`.
-Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
-run Tamarin for the first time.
-
+Once Linuxbrew is installed, follow the macOS Homebrew
+[installation instructions](#sec:MacOSBinInstall) below.
 
 ### Automatic Installation for Arch Linux {#sec:ArchLinuxBinInstall}
 
@@ -88,56 +80,42 @@ Mac OS X {#sec:macosx}
 
 ### Automatic Installation of Tamarin {#sec:MacOSBinInstall}
 
-The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/).
+The fastest way to install Tamarin on Mac OS X is to use [Homebrew](http://brew.sh/):
 
-If you already have this installed, it is as simple as running the following two commands in your terminal:
-
-  * `brew update`
-  * `brew tap brewsci/science`
-  * `brew install tamarin-prover`
+  * `brew install tamarin-prover/tap/tamarin-prover`
 
 You can now run Tamarin from the command line by typing `tamarin-prover`.
 Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time.
 
-Please note, if you previously used homebrew to install Tamarin from homebrew-science, you will have to
-uninstall and untap:
+If you want to install Tamarin from source through Homebrew, simply use: 
+`brew install --build-from-source tamarin-prover/tap/tamarin-prover`.
+
+To uninstall (and "untap" the Tamarin homebrew tap):
+
+  * `brew uninstall tamarin-prover`
+  * `brew untap tamarin-prover/tap`
+
+Note that Tamarin was previously distributed in the now-closed `homebrew-science`
+tap. If you have already installed it through Homebrew, you may have to uninstall
+and untap that version first:
 
   * `brew uninstall tamarin-prover`
   * `brew untap homebrew/science`
 
-Once complete run the above instructions.
-
 #### Installing Homebrew
-If you don't have Homebrew installed:
-
-1. Install [Homebrew](http://brew.sh/), by following the instructions on their
+If you don't have [Homebrew](http://brew.sh/) installed, follow the instructions on their
 website (this is a one-line copy paste install). Update everything with: `brew update`.
 Any issues, run `brew doctor` for more information.
 
-2. Install Tamarin: `brew install homebrew/science/tamarin-prover`
-    * This should just work. If for any reason this doesn't work, you might have to 'tap' (add) Homebrew
-    [Science](https://github.com/Homebrew/homebrew-science/blob/master/README.md) manually. 
-    This is currently achieved by `brew tap homebrew/science`, but could change. 
-    Check [the website](https://github.com/Homebrew/homebrew-science/blob/master/README.md) 
-    for the latest instructions.
-    * Tamarin's dependencies Maude and GraphViz are automatically installed
-    and added to your path.
-
-3. You can now run Tamarin from the terminal by typing `tamarin-prover`
-
 That's it! Homebrew will automatically update Tamarin when new versions are
-released, if you `brew update && brew upgrade` on a semi-regular basis.
+released, if you `brew update` and `brew upgrade` on a semi-regular basis.
 
 For reference, Homebrew will place a symlink to the binary in
 `/usr/local/bin/tamarin-prover`, but you should never need to touch this.
 To uninstall, just `brew remove tamarin-prover`, and if you want, also
-remove `maude` and `graphviz`, two dependencies which are automatically
+remove `maude`, `libbuddy` and `graphviz`, dependencies which are automatically
 installed with Tamarin.
-
-If you want to install Tamarin from source (through Homebrew), simply use: 
-`brew install --build-from-source homebrew/science/tamarin-prover`.
-
 
 ### Installing Tamarin from sources ###
 
@@ -159,7 +137,7 @@ The Haskell tool `stack` is not in the MacPorts repository and must be installed
 
   *   For Homebrew:
 ```
-  brew install homebrew/science/maude graphviz haskell-stack
+  brew install tamarin-prover/tap/maude graphviz haskell-stack
 ```
 
 
