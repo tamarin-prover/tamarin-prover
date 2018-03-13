@@ -67,7 +67,7 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
 run Tamarin for the first time.
 
 Note that Tamarin was previously distributed in the now-closed `homebrew-science`
-tap. If you have already installed it through Linuxbrew, you will have to uninstall
+tap. If you have already installed it through Linuxbrew, you may have to uninstall
 and untap that version first:
 
   * `brew uninstall tamarin-prover`
@@ -110,7 +110,7 @@ To uninstall (and "untap" the Tamarin homebrew tap):
   * `brew untap tamarin-prover/tap`
 
 Note that Tamarin was previously distributed in the now-closed `homebrew-science`
-tap. If you have already installed it through Homebrew, you will have to uninstall
+tap. If you have already installed it through Homebrew, you may have to uninstall
 and untap that version first:
 
   * `brew uninstall tamarin-prover`
