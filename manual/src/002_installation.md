@@ -53,25 +53,12 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 
 ### Automatic Installation of Tamarin {#sec:LinuxBinInstall}
 
-The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/). Linuxbrew is a fork of Homebrew, the Mac OS package manager,
-for Linux.
+The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/).
+Linuxbrew is a fork of Homebrew, the Mac OS package manager, for Linux. To install Linuxbrew
+follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
 
-To install Linuxbrew follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
-
-If you already have this installed, it is as simple as running the following two commands in your terminal:
-
-  * `brew install tamarin-prover/tap/tamarin-prover`
-
-You can now run Tamarin from the command line by typing `tamarin-prover`.
-Continue as described in Section [Running Tamarin](#sec:running-tamarin) to
-run Tamarin for the first time.
-
-Note that Tamarin was previously distributed in the now-closed `homebrew-science`
-tap. If you have already installed it through Linuxbrew, you may have to uninstall
-and untap that version first:
-
-  * `brew uninstall tamarin-prover`
-  * `brew untap homebrew/science`
+Once Linuxbrew is installed, follow the macOS Homebrew
+[installation instructions](#sec:MacOSBinInstall) below.
 
 ### Automatic Installation for Arch Linux {#sec:ArchLinuxBinInstall}
 
