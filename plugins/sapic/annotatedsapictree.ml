@@ -45,7 +45,7 @@ and
 in
 let (result,_) = fold_bottom (fun (l,p_l) (r,p_r) a->
              let p=(max p_l p_r)+1 in
-             let annotation=Fresh("lock"^string_of_int p) in
+             let annotation= p (* Fresh("lock"^string_of_int p) *) in
                match (a:annotated_sapic_action) with
                 Lock(t) -> (Node(AnnotatedLock(t,annotation),
                               annotate_each_closest_unlock t annotation l,

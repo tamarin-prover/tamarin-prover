@@ -149,13 +149,13 @@ let res_predicate_not_eq = lemma2string_noacc res_predicate_not_eq_l
 
 (* let res_locking = " *)
 (* restriction locking: *)
-(* \"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 *) 
+(* \"All p pp l x lp #t1 #t3 . Lock(p,l,x)@t1 & Lock(pp,lp,x)@t3 *) 
 (*         ==> *) 
 (*         ( #t1<#t3 *) 
-(*                 & (Ex #t2. Unlock(l,x)@t2 & #t1<#t2 & #t2<#t3 *) 
-(*                  & (All  #t0 . Unlock(l,x)@t0 ==> #t0=#t2) *) 
-(*                  & (All lp #t0 . Lock(lp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) *) 
-(*                  & (All lp #t0 . Unlock(lp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) *)
+(*                  & (Ex #t2. Unlock(p,l,x)@t2 & #t1<#t2 & #t2<#t3 *) 
+(*                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) *) 
+(*                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) *) 
+(*                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) *)
 (*                 )) *)
 (*         | #t3<#t1 | #t1=#t3 \" *)
 

@@ -17,8 +17,8 @@ type annotated_sapic_action = Null
                          | Ch_Out of sapic_term * sapic_term
                          | Insert of sapic_term * sapic_term
                          | Delete of sapic_term 
-                         | AnnotatedLock of sapic_term * sapic_var
-                         | AnnotatedUnlock of sapic_term * sapic_var
+                         | AnnotatedLock of sapic_term * int
+                         | AnnotatedUnlock of sapic_term * int
                          | Lock of sapic_term 
                          | Unlock of sapic_term 
                          | Lookup of sapic_term * sapic_term
