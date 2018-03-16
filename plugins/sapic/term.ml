@@ -13,7 +13,6 @@ type term = Mult of term * term
         (*| Var of varident *)
         | Plus of term * term
         | Var of var
-        | Str of string
 
 type termlist = term list
 
@@ -60,7 +59,6 @@ let rec vars_t = function
         | Var(Pub l) -> (VarSet.singleton (Pub l))
         | Var(FreshFixed _)
         | Var(PubFixed _) -> (VarSet.empty)
-        | Str(l) -> (VarSet.singleton (Msg ("'"^ l ^"'")))
 
 let rec term2string = function
         Mult(t1,t2) -> "("^(term2string t1) ^") * ("^ (term2string t2)^")"
@@ -71,7 +69,6 @@ let rec term2string = function
         term2string termlist) )^")"
         | Plus(t1,t2) -> "("^(term2string t1) ^") + ("^ (term2string t2)^")"
         | Var(l) -> var2string(l)
-        | Str(l) -> "'" ^ l ^ "'"
 
 let flatten_termlist termlist = (String.concat ", ") (List.map term2string termlist)
 let term2termlist s = [s] (* dummy for the moment .. TODO*)
@@ -85,5 +82,4 @@ let rec subs_t v t term =
             | List(termlist)    -> List(List.map f termlist)
             | App(g,termlist)   -> App(g,List.map f termlist)
             | Var(v')       -> if v=v' then t else Var(v')
-            | Str(v)            -> Str(v)
 
