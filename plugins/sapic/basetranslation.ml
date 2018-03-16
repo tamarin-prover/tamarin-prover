@@ -63,10 +63,10 @@ let basetrans act p tildex = match act with
       ([State(p,tildex)], [Action("IsNotSet",[t1])], [State(2::p,tildex)]) ]
   | AnnotatedUnlock(t,a)  ->
     let nonce=a in
-    [([ State(p,tildex)], [Action("Unlock",[Var(nonce); t])], [State(1::p, tildex) ])] 
+    [([ State(p,tildex)], [Action("Unlock",[Str (pos2string p); Var (nonce); t ])], [State(1::p, tildex) ])] 
   | AnnotatedLock(t,a)  ->
     let nonce=a in
-    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var nonce; t ])], [State(1::p, nonce @:: tildex)])]
+    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Str (pos2string p); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
   | Delete(t)  -> [
       ( [ State(p,tildex)], [Action("Delete",[ t ])], [State(1::p, tildex) ])]
   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))

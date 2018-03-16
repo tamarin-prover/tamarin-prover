@@ -162,28 +162,28 @@ let res_predicate_not_eq = lemma2string_noacc res_predicate_not_eq_l
 (* " *)
 
 let res_locking_l =  Restriction( "locking",
-    All(VarSet.of_list [Msg "l"; Msg "x"; Msg "lp"; Temp "t1"; Temp "t3"],
+    All(VarSet.of_list [Msg "p"; Msg "l"; Msg "x"; Msg "pp"; Msg "lp"; Temp "t1"; Temp "t3"],
         Imp(
          And(     
-             Atom ( At (Action("Lock",[Var (Msg "l"); Var (Msg "x") ]),Temp "t1")),
-             Atom ( At (Action("Lock",[Var (Msg "lp"); Var (Msg "x") ]),Temp "t3"))),
+             Atom ( At (Action("Lock",[Var (Msg "p"); Var (Msg "l"); Var (Msg "x") ]),Temp "t1")),
+             Atom ( At (Action("Lock",[Var (Msg "pp"); Var (Msg "lp"); Var (Msg "x") ]),Temp "t3"))),
          Or(
           And(
            Atom(TLeq (Temp "t1", Temp "t3")),
            Ex (VarSet.of_list [Temp "t2"],
-             And( Atom ( At (Action("Unlock",[Var (Msg "l");Var (Msg "x")]),Temp "t2")),
+             And( Atom ( At (Action("Unlock",[Var (Msg "p");Var (Msg "l");Var (Msg "x")]),Temp "t2")),
                And (Atom (TLeq (Temp "t1", Temp "t2")),
                And ( Atom (TLeq (Temp "t2", Temp "t3")),
                And ( All(VarSet.of_list [Temp "t0"],
-                         Imp( Atom ( At (Action("Unlock",[Var (Msg "l");Var (Msg "x")]),Temp "t0")),
+                         Imp( Atom ( At (Action("Unlock",[Var (Msg "p");Var (Msg "l");Var (Msg "x")]),Temp "t0")),
                          Atom (TEq (Temp "t0", Temp "t2")))),
-               And ( All(VarSet.of_list [Temp "t0"; Msg "lp"],
-                         Imp( Atom ( At (Action("Lock",[Var (Msg "lp");Var (Msg "x")]),Temp "t0")),
+               And ( All(VarSet.of_list [Temp "t0"],
+                         Imp( Atom ( At (Action("Lock",[Var (Msg "pp");Var (Msg "lp");Var (Msg "x")]),Temp "t0")),
                          Or ( Atom (TLeq (Temp "t0", Temp "t1")),
                          Or ( Atom (TEq (Temp "t0", Temp "t1")),
                               Atom (TLeq (Temp "t2", Temp "t0")))))),
-                    All(VarSet.of_list [Temp "t0"; Msg "lp"],
-                         Imp( Atom ( At (Action("Unlock",[Var (Msg "lp");Var (Msg "x")]),Temp "t0")),
+                    All(VarSet.of_list [Temp "t0"],
+                         Imp( Atom ( At (Action("Unlock",[Var (Msg "pp");Var (Msg "lp");Var (Msg "x")]),Temp "t0")),
                          Or ( Atom (TLeq (Temp "t0", Temp "t1")),
                          Or ( Atom (TLeq (Temp "t2", Temp "t0")),
                               Atom (TEq (Temp "t2", Temp "t0"))))))
