@@ -92,7 +92,7 @@ import           Debug.Trace.Ignore
 ----------------------------------------------------------------------
 
 -- | @unifyLTerm sortOf eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
-unifyLTermFactored :: (IsConst c , Show (Lit c LVar))
+unifyLTermFactored :: (IsConst c)
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
                    -> WithMaude (LSubst c, [SubstVFresh c LVar])
@@ -114,7 +114,7 @@ unifyLNTermFactored :: [Equal LNTerm]
 unifyLNTermFactored = unifyLTermFactored sortOfName
 
 -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
-unifyLTerm :: (IsConst c , Show (Lit c LVar))
+unifyLTerm :: (IsConst c)
            => (c -> LSort)
            -> [Equal (LTerm c)]
            -> WithMaude [SubstVFresh c LVar]
@@ -138,7 +138,7 @@ flattenUnif (subst, substs) =
 ----------------------------------------------------------------------
 
 -- | @unifyLTermFactoredAC sortOf eqs@ returns a complete set of unifiers for @eqs@ for terms without AC symbols.
-unifyLTermFactoredNoAC :: (IsConst c , Show (Lit c LVar))
+unifyLTermFactoredNoAC :: (IsConst c)
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
                    -> [(SubstVFresh c LVar)]
@@ -158,7 +158,7 @@ unifyLNTermFactoredNoAC :: [Equal LNTerm]
 unifyLNTermFactoredNoAC = unifyLTermFactoredNoAC sortOfName
 
 -- | @unifyLNTermNoAC eqs@ returns a complete set of unifiers for @eqs@  for terms without AC symbols.
-unifyLTermNoAC :: (IsConst c , Show (Lit c LVar))
+unifyLTermNoAC :: (IsConst c)
            => (c -> LSort)
            -> [Equal (LTerm c)]
            -> [SubstVFresh c LVar]

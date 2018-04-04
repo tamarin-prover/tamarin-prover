@@ -76,6 +76,7 @@ import           Prelude                                 hiding (id, (.))
 
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
+import qualified Data.Map.Strict                         as M'
 import qualified Data.Set                                as S
 import qualified Data.ByteString.Char8                   as BC
 import           Data.List                               (mapAccumL)
@@ -494,7 +495,7 @@ combineGoalStatus (GoalStatus solved1 age1 loops1)
 insertGoalStatus :: Goal -> GoalStatus -> Reduction ()
 insertGoalStatus goal status = do
     age <- getM sNextGoalNr
-    modM sGoals $ M.insertWith' combineGoalStatus goal (set gsNr age status)
+    modM sGoals $ M'.insertWith combineGoalStatus goal (set gsNr age status)
     sNextGoalNr =: succ age
 
 -- | Insert a 'Goal' and store its age.
@@ -616,7 +617,7 @@ substGoals = do
           | (isMsgVar m || isProduct m || isUnion m) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
-                  M.insertWith' combineGoalStatus (apply subst goal) status
+                  M'.insertWith combineGoalStatus (apply subst goal) status
                 return Unchanged
 
     return (mconcat changes)

@@ -78,7 +78,7 @@ lTermToMTerm sortOf =
 
 -- | Convert an 'MTerm' to an 'LNTerm' under the assumption that the bindings
 -- for the constants are already available.
-mTermToLNTerm :: (MonadBind MaudeLit (Lit c LVar) m, MonadFresh m, Show (Lit c LVar), Ord c, Show c)
+mTermToLNTerm :: (MonadBind MaudeLit (Lit c LVar) m, MonadFresh m, Ord c, Show c)
              => String -- ^ Name hint for freshly generated variables.
              -> MTerm  -- ^ The maude term to convert.
              -> m (VTerm c LVar)
@@ -121,7 +121,7 @@ runBackConversion back bindings =
 --   returned by Maude to a 'VFresh' substitution. It expects that the
 --   range of the maude substitution contains only fresh variables in its
 --   range and raises an error otherwise.
-msubstToLSubstVFresh :: (Ord c, Show (Lit c LVar), Show c)
+msubstToLSubstVFresh :: (Ord c, Show c)
                      => Map MaudeLit (Lit c LVar) -- ^ The binding map to use for constants.
                      -> MSubst -- ^ The maude substitution.
                      -> SubstVFresh c LVar
@@ -147,7 +147,7 @@ msubstToLSubstVFresh bindings substMaude
 --   returned by Maude to a 'VFree' substitution. It expects that the
 --   maude substitution contains no fresh variables in its range and raises an
 --   error otherwise.
-msubstToLSubstVFree ::  (Ord c, Show (Lit c LVar), Show c)
+msubstToLSubstVFree ::  (Ord c, Show c)
                     => Map MaudeLit (Lit c LVar) -> MSubst -> Subst c LVar
 msubstToLSubstVFree bindings substMaude
     | not $ null [i | (_,t) <- substMaude, FreshVar _ i <- lits t] =
