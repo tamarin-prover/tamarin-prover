@@ -216,7 +216,7 @@ prettySubstVFresh ppVar ppLit =
         (fsep $ punctuate comma $ map ppVar $ S.toList vs) <> operator_ "}"
 
 -- | Pretty print a substitution with logical variables.
-prettyLSubstVFresh :: (Show (Lit c LVar), Ord c, HighlightDocument d, Show c)
+prettyLSubstVFresh :: (Ord c, HighlightDocument d, Show c)
                    => LSubstVFresh c -> d
 prettyLSubstVFresh = vcat . prettySubstVFresh (text . show) (text . show)
 

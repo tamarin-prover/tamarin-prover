@@ -122,6 +122,7 @@ import qualified Data.DList                       as D
 import           Data.Foldable                    hiding (concatMap, elem, notElem, any)
 import           Data.Data
 import qualified Data.Map                         as M
+import qualified Data.Map.Strict                  as M'
 import           Data.Monoid
 import qualified Data.Set                         as S
 -- import           Data.Traversable
@@ -599,7 +600,7 @@ avoidPrecise :: HasFrees t => t -> Precise.FreshState
 avoidPrecise =
     foldl' ins M.empty . frees
   where
-    ins m v = M.insertWith' max (lvarName v) (lvarIdx v + 1) m
+    ins m v = M'.insertWith max (lvarName v) (lvarIdx v + 1) m
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
 --   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
