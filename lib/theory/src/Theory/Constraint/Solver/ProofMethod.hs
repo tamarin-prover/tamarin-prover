@@ -257,6 +257,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffBackwardSearchStep meth
           | (L.get dsProofType sys) == (Just RuleEquivalence)
+            && (meth /= Induction)
             && (meth /= (Contradiction (Just ForbiddenKD)))   -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
@@ -423,7 +424,9 @@ rankDiffProofMethods ranking ctxt sys = do
         <|> [(DiffAttack, "Found attack")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
-                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext ctxt s) sys')
+                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step"))
+                                          $ filter (\x -> not $ fst x == Induction)
+                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'
                   (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))

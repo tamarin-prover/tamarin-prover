@@ -208,6 +208,7 @@ import           Data.Maybe                           (fromMaybe,mapMaybe)
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S
 import           Data.Either                          (partitionEithers, lefts)
+import           Data.Tuple                           (swap)
 
 import           Control.Basics
 import           Control.Category
@@ -838,7 +839,7 @@ doRestrictionsHold :: ProofContext -> System -> [LNGuarded] -> Bool -> (Trivalen
 doRestrictionsHold _    sys []       _        = (TTrue, [sys])
 doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME Jannik: This is a temporary simulation of diff-safe restrictions!
   if (all (\(x, _) -> x == gtrue) simplifiedForms)
-    then {-trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} (TTrue, map snd simplifiedForms)
+    then {-trace ("doRestrictionsHold: True " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms) ++ " - " ++ (render $ prettySystem sys))-} (TTrue, map snd simplifiedForms)
     else if (any (\(x, _) -> x == gfalse) simplifiedForms)
           then {-trace ("doRestrictionsHold: False " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} (TFalse, map snd $ filter (\(x, _) -> x == gfalse) simplifiedForms)
           else {-trace ("doRestrictionsHold: Unkown " ++ (render. vsep $ map (prettyGuarded) formulas) ++ " - " ++ (render. vsep $ map (\(x, _) -> prettyGuarded x) simplifiedForms))-} (TUnknown, [sys])
@@ -915,22 +916,37 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
                                               
     unifyInstances :: [M.Map NodeId RuleACInst] -> [System]
     unifyInstances newrules =
-      foldl (\ret x ->
-        if (null $ unifiers $ equalities True x)
-           then ret
-           else (L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret)
-        [] newrules
-      -- We can stop if a corresponding system is found for one variant. Otherwise we continue until we find a system which we can unify, or return Nothing if no such system exists.
+      foldl f [] newrules
         where
-          freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
-          freeUnifiers newnodes = map (\y -> freshToFreeAvoiding y (newnodes, sys)) (unifiers $ equalities False newnodes)
+          f ret x = if (null foundUnifiers)
+                      then ret
+                      else (L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret
+            where
+              (foundUnifiers, constSubsts) = unifiers $ equalities True x
+              
+              finalSubst :: [LNSubst] -> [LNSubst]
+              finalSubst subst = map replaceConstants subst
+                where
+                  replaceConstants :: LNSubst -> LNSubst
+                  replaceConstants s = mapRange f s
+                    where
+                      f :: LNTerm -> LNTerm
+                      f x = case viewTerm x of
+                              (Lit l) | x `M.member` inversSubst -> varTerm $ inversSubst M.! x
+                                      | otherwise                -> x
+                              (FApp s ts)                        -> fApp s $ map f ts
+                      
+                      inversSubst = M.fromList $ map swap constSubsts
+              
+              freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
+              freeUnifiers newnodes = finalSubst $ map (\y -> freshToFreeAvoiding y (newnodes, sys)) foundUnifiers
         
-    unifiers :: Maybe [Equal LNFact] -> [SubstVFresh Name LVar]
-    unifiers (Nothing)         = []
-    unifiers (Just equalfacts) = runReader (unifyLNFactEqs equalfacts) (getMaudeHandle ctxt side)
+    unifiers :: (Maybe [(Equal LNFact, (LVar, LNTerm))],[Equal LNFact]) -> ([SubstVFresh Name LVar], [(LVar, LNTerm)])
+    unifiers (Nothing, _)                  = ([], [])
+    unifiers (Just equalfacts, equaledges) = (runReader (unifyLNFactEqs $ (map fst equalfacts) ++ equaledges) (getMaudeHandle ctxt side), map snd equalfacts)
     
-    equalities :: Bool -> M.Map NodeId RuleACInst -> Maybe [Equal LNFact]
-    equalities fixNewPublicVars newrules' = (++) <$> (Just ((getGraphEqualities newrules') ++ (getKUGraphEqualities newrules'))) <*> (getNewVarEqualities fixNewPublicVars newrules')
+    equalities :: Bool -> M.Map NodeId RuleACInst -> (Maybe [(Equal LNFact, (LVar, LNTerm))],[Equal LNFact])
+    equalities fixNewPublicVars newrules = (getNewVarEqualities fixNewPublicVars newrules, (getGraphEqualities newrules) ++ (getKUGraphEqualities newrules))
         
     getGraphEqualities :: M.Map NodeId RuleACInst -> [Equal LNFact]
     getGraphEqualities nodes = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys)
@@ -944,20 +960,23 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
           where
             eqs = map (\(x, _) -> (Equal (nodePremFactMap prem nodes) (nodePremFactMap x nodes))) $ filter (\(_, y) -> nid == y) goals
 
-    getNewVarEqualities :: Bool -> M.Map NodeId RuleACInst -> Maybe ([Equal LNFact])
+    getNewVarEqualities :: Bool -> M.Map NodeId RuleACInst -> Maybe ([(Equal LNFact, (LVar, LNTerm))])
     getNewVarEqualities fixNewPublicVars nodes = (++) <$> genTrivialEqualities <*> (Just (concat $ map (\(_, r) -> genEqualities $ map (\x -> (kuFact (varTerm x), x, x)) $ getNewVariables fixNewPublicVars r) $ M.toList nodes))
       where
-        genEqualities :: [(LNFact, LVar, LVar)] -> [Equal LNFact]
-        genEqualities = map (\(x, y, z) -> Equal x (replaceNewVarWithConstant x y z))
+        genEqualities :: [(LNFact, LVar, LVar)] -> [(Equal LNFact, (LVar, LNTerm))]
+        genEqualities = map (\(x, y, z) -> (Equal x (replaceNewVarWithConstant x y z), (y, constant y z)))
         
-        genTrivialEqualities :: Maybe ([Equal LNFact])
+        genTrivialEqualities :: Maybe ([(Equal LNFact, (LVar, LNTerm))])
         genTrivialEqualities = genEqualities <$> getTrivialFacts nodes sys
                 
         replaceNewVarWithConstant :: LNFact -> LVar -> LVar -> LNFact
         replaceNewVarWithConstant fact v cvar = apply subst fact
           where
-            subst = Subst (M.fromList [(v, constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName cvar))))])
-            
+            subst = Subst (M.fromList [(v, constant v cvar)])
+        
+        constant :: LVar -> LVar -> LNTerm
+        constant v cvar = constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName cvar)))
+          where
             toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
 
             pubOrFresh (LVar _ LSortFresh _) = FreshName
