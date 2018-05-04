@@ -1,36 +1,41 @@
 # Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml
-# and http://anil.recoil.org/2013/09/30/travis-and-ocaml.html
 
 # we use c for ocaml, stack automatically installs the correct GHC
 language: c
 
-# We run some sudo apt stuff to install OCAML for SAPIC
-sudo: required
 env:
-  - OCAML_VERSION=4.02.3 OPAM_VERSION=1.2.2
-  
+  - OPAMYES=1
+
 cache:
   directories:
   - $HOME/.stack
   
 addons:
   apt:
+    sources:
+      - avsm
     packages:
+    - camlp4-extra
     - libgmp-dev
+    - ocaml
+    - ocaml-native-compilers
+    - opam
 
 before_install:
-# Download and unpack the stack executable
-- mkdir -p ~/.local/bin
-- export PATH=$HOME/.local/bin:$PATH
-- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-- chmod a+x ~/.local/bin/stack
-- stack --no-terminal setup
+  # Download and unpack the stack executable
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - chmod a+x ~/.local/bin/stack
+  - stack --no-terminal setup
 
 install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
   - stack build mwc-random SHA -j 1
   - stack install
+  - opam init
 
-# build SAPIC
-script:
-  - bash -ex .travis-ci.sh
+  # SAPIC
+  - eval `opam config env`
+  - cd plugins/sapic
+  - make
