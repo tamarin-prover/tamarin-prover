@@ -225,8 +225,6 @@ XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_DIFF_TARGETS)
 xor-full-case-studies: $(XOR_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
 
-# XOR is for now NOT YET part of the overall set of case-studies
-
 ## Inductive Strengthening
 ##########################
 
@@ -407,7 +405,7 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
