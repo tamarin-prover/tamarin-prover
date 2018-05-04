@@ -209,7 +209,7 @@ XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/featur
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
 XOR_BASIC_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/basicfunctionality/,$(XOR_BASIC_TRACE_CASE_STUDIES)))
 
-XOR_DIFF_CASE_STUDIES= CH07-untrac-weak.spthy 
+XOR_DIFF_CASE_STUDIES= CH07-UK2.spthy 
 # CH07-untrac.spthy LAK06_UK-weak.spthy LAK06_UK.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
@@ -224,8 +224,6 @@ XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_DIFF_TARGETS)
 
 xor-full-case-studies: $(XOR_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
-
-# XOR is for now NOT YET part of the overall set of case-studies
 
 ## Inductive Strengthening
 ##########################
@@ -407,7 +405,7 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
 case-studies: 	$(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
