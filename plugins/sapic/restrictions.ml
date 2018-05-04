@@ -161,17 +161,17 @@ let res_predicate_not_eq = lemma2string_noacc res_predicate_not_eq_l
 
 (* " *)
 
-let res_locking_l =  Restriction( "locking",
+let res_locking_l pos =  Restriction( "locking",
     All(VarSet.of_list [Msg "p"; Msg "l"; Msg "x"; Msg "pp"; Msg "lp"; Temp "t1"; Temp "t3"],
         Imp(
          And(     
-             Atom ( At (Action("Lock",[Var (Msg "p"); Var (Msg "l"); Var (Msg "x") ]),Temp "t1")),
+             Atom ( At (Action("Lock_"^(string_of_int pos),[Var (Msg "p"); Var (Msg "l"); Var (Msg "x") ]),Temp "t1")),
              Atom ( At (Action("Lock",[Var (Msg "pp"); Var (Msg "lp"); Var (Msg "x") ]),Temp "t3"))),
          Or(
           And(
            Atom(TLeq (Temp "t1", Temp "t3")),
            Ex (VarSet.of_list [Temp "t2"],
-             And( Atom ( At (Action("Unlock",[Var (Msg "p");Var (Msg "l");Var (Msg "x")]),Temp "t2")),
+             And( Atom ( At (Action("Unlock_"^(string_of_int pos),[Var (Msg "p");Var (Msg "l");Var (Msg "x")]),Temp "t2")),
                And (Atom (TLeq (Temp "t1", Temp "t2")),
                And ( Atom (TLeq (Temp "t2", Temp "t3")),
                And ( All(VarSet.of_list [Temp "t0";Msg "pp"],
@@ -191,7 +191,7 @@ let res_locking_l =  Restriction( "locking",
          Or ( Atom (TLeq (Temp "t3", Temp "t1")),
               Atom (TEq (Temp "t1", Temp "t3")))))))
 
-let res_locking = lemma2string_noacc res_locking_l
+(* let res_locking = lemma2string_noacc res_locking_l *)
 
 let single_session = 
     let i = Temp "i"

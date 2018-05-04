@@ -186,7 +186,81 @@ let progresstrans anP = (* translation for processes with progress *)
     }
   in
   initrule::messsageidrule::(gen trans anP [] varset )
+
+
+(* 
+let rec sigma f = function
+    | [] -> 0
+    | x :: l -> f x + sigma f l;;  
+
+
+sigma (fun x -> x * x) [1; 2; 3] ;; *)
+
+
+
+(* 
+let rec fold_bottom f zero = function
+    | Empty -> zero
+    | Node(y, left, right) -> 
+            let res_l = fold_bottom f zero left
+            and res_r = fold_bottom f zero right
+            in
+              f res_l res_r y *)
+
+
+
+(*  let match_annotated_lock xp = match (xp:annotated_sapic_action) with
+    AnnotatedLock(_,a) -> a
+    | _ -> 0 *)
+
+(*   let rec get_lock_positions = function
+     _ -> []
+    | Node(AnnotatedLock(_,a), l, r) -> a :: get_lock_positions 
+ *)
+
+  let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> []
+
+    (* Node(AnnotatedLock(,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r)) *)
+
+
+(* 
+  let rec get_lock_positions  = fold_bottom (fun (l:annotated_btree) r y -> match y with 
+      _ -> []
+      | Node(AnnotatedLock(_,a), l, r) -> a :: fold_bottom l r
+     
+  )
+ *)
     
+
+
+ 
+(*   let get_lock_positions = fold_bottom (fun l r y -> match (y:annotated_sapic_action) with
+         AnnotatedLock(_,a) -> a::(l @ r)
+        | _ -> l @ r 
+  )  *)
+
+ (*      match ap with
+          Empty -> false
+        |   Node(AnnotatedLock _, left, right)
+        |   Node(_,left,right) -> (contains_locking left) || (contains_locking right)
+ *)
+
+(*   let get_lock_positions = fold_bottom (fun l r y -> match y with
+      AnnotatedLock(t,a) -> a::(l @ r)
+    | _ -> l @ r
+  )
+ *)
+
+
+(*  let rec get_lock_positions ap = 
+         match ap with
+              Node(AnnotatedLock _, l, r) -> fold_bottom (fun l r y -> match y with
+                          AnnotatedLock(_,a) -> a::(l @ r)
+                          | _ -> l @ r )
+             *)
+
     
 let generate_sapic_restrictions op annotated_process =
     let restrs = 
@@ -198,7 +272,7 @@ let generate_sapic_restrictions op annotated_process =
               else 
                   [res_set_in_no_delete_l; res_set_notin_no_delete_l])
           else [])
-          @ (if contains_locking annotated_process then  [res_locking_l] else [])
+          @ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])
           @ (if contains_eq annotated_process then [res_predicate_eq_l; res_predicate_not_eq_l] else [])
           @ (if op.progress then generate_progress_restrictions annotated_process else [])
           @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
