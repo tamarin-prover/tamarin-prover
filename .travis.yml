@@ -4,33 +4,15 @@
 # we use c for ocaml, stack automatically installs the correct GHC
 language: c
 
-# old, now that we use stack
-
-#language: haskell
-#sudo: false
-# selected by stack for us - ignore
-#env:
-#  - GHCVER=7.8.4
-#  - GHCVER=head
-
+# We run some sudo apt stuff to install OCAML for SAPIC
+sudo: required
 env:
   - OCAML_VERSION=4.02.3 OPAM_VERSION=1.2.2
-#  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.0
-#  - OCAML_VERSION=4.00.1 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=4.00.1 OPAM_VERSION=1.1.0
-#  - OCAML_VERSION=3.12.1 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=3.12.1 OPAM_VERSION=1.1.0
   
 cache:
   directories:
   - $HOME/.stack
   
-#matrix:
-#  allow_failures:
-#    - env: GHCVER=7.8.4
-#    - env: GHCVER=head
-
 addons:
   apt:
     packages:
@@ -52,4 +34,3 @@ install:
 # build SAPIC
 script:
   - bash -ex .travis-ci.sh
-
