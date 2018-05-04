@@ -101,6 +101,7 @@ ppMaudeACSym o =
     funSymPrefix <> case o of
                       Mult  -> "mult"
                       Union -> "mun"
+                      Xor   -> "xor"
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -171,6 +172,12 @@ ppTheory msig = BC.unlines $
        then
        [ theoryOp "pmult : Msg Msg -> Msg"
        , theoryOp "em : Msg Msg -> Msg [comm]" ]
+       else [])
+    ++
+    (if enableXor msig
+       then
+       [ theoryOp "zero : -> Msg"
+       , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)
@@ -271,6 +278,7 @@ parseTerm msig = choice
       where
         appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
                        | ident == ppMaudeACSym Union      = fAppAC Union args
+                       | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
         appIdent args                                     = fAppNoEq op args

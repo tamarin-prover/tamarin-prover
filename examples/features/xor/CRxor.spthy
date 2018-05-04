@@ -1,0 +1,68 @@
+theory CRXOR
+begin
+
+/*
+A&B:
+A->B: na
+B->A: <h(na ⊕ k ⊕ nb), nb>
+should find attack:
+- after watching one run and storing data
+- uses nb'=na+nb+na'
+ ((( na'+k+nb'= na'+k + na +nb+na' = k + na + nb )))
+*/
+
+builtins: xor,hashing
+
+rule Setup:
+  [ Fr(~k) ]
+--[ OnlyOnce() ]->
+  [ !InitLTK(~k), !RespLTK(~k) ]
+
+rule initiator:
+  [ Fr(~na) ]
+--[ Challenge(~na) ]->
+  [ Out(~na), Initiated(~na) ]
+
+rule responder:
+  [ In(na), Fr(~nb), !RespLTK(~k) ]
+--[ Response(~k)
+  , Neq(na, zero)
+  , NeqForExec(na,zero) ]->
+  [Out(<h(na ⊕ ~k ⊕ ~nb), ~nb>) ]
+
+rule initiator2:
+  [ Initiated(~na), !InitLTK(~k), In(<m,nb>) ]
+--[ Alive(~na, ~k), Eq(h(~na ⊕ ~k ⊕ nb),m) ]->
+  []
+
+
+
+restriction equality:
+  "All x y #i. Eq(x,y)@i ==> x=y"
+
+restriction unique:
+  "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
+
+restriction inequality:
+  "not (Ex x #i. Neq(x,x)@i)"
+
+// FINDS PROOF AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+lemma alive:
+  "All x y #i. Alive(x,y) @i ==> Ex #j. Response(y)@j"
+
+// FINDS ATTACK AUTOMATICALLY (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+// due to restriction on inequality of nonce with zero, we get a nicer looking attack
+lemma recentalive_tag:
+  all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j #k. Challenge(x) @k & Response( y ) @ #j & k < j & j < i)"
+
+
+// SHOWS CORRECT EXECUTION (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488)
+lemma executable:
+  exists-trace
+  "Ex x y #i #j. Alive(x,y)@i & Response(y)@j
+       // further restriction to automatically get the desired execution
+       ∧ (not Ex #k. Response(y) @ k & (not (#j=#k)))
+       // remove the execution where the received nonce is zero
+       ∧ (not Ex #l. NeqForExec(x,x)@l) "
+
+end

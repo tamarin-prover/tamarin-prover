@@ -1339,7 +1339,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
-            sequentList <- snd <$> getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
             if null sequentList then Nothing else return $ compact $ head sequentList  
           else do
             sequent <- get dsSystem diffSequent

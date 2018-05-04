@@ -44,11 +44,13 @@ module Term.Unification (
   , enableDH
   , enableBP
   , enableMSet
+  , enableXor
   , enableDiff
   , minimalMaudeSig
   , enableDiffMaudeSig
   , dhMaudeSig
   , bpMaudeSig
+  , xorMaudeSig
   , msetMaudeSig
   , pairMaudeSig
   , symEncMaudeSig

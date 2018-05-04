@@ -7,7 +7,10 @@ module Utils.Misc (
   -- * List operations
   , subsetOf
   , noDuplicates
-  , equivClasses  
+  , equivClasses
+  , partitions
+  , nonTrivialPartitions
+  , twoPartitions
  
   -- * Control
   , whileTrue
@@ -98,3 +101,27 @@ setAny f = S.foldr (\x b -> f x || b) False
 unsafeEq :: a -> a -> Bool
 unsafeEq a b =
   (I# (reallyUnsafePtrEquality# a b)) == 1
+
+-- | Generate all possible partitions of a list
+partitions :: [a] -> [[[a]]]
+partitions  []    = [[]]
+partitions (x:xs) = [ys | yss <- partitions xs, ys <- bloat x yss]
+
+bloat :: a -> [[a]] -> [[[a]]]
+bloat x  []      = [[[x]]]
+bloat x (xs:xss) = ((x:xs):xss) : map (xs:) (bloat x xss)
+
+-- | Generate all possible partitions of a list, excluding the trivial partition
+nonTrivialPartitions :: Eq a => [a] -> [[[a]]]
+nonTrivialPartitions l = delete [l] $ partitions l
+
+-- | Generate all possible ways of partitioning a list into two partitions
+twoPartitions :: [a] -> [([a], [a])]
+twoPartitions  []    = []
+twoPartitions (x:[]) = [ ([x],[]) ]
+twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
+    where
+        addToFirst  (a, b) = (x:a, b)
+        addToSecond (a, b) = (a, x:b)
+        ps = twoPartitions xs
+

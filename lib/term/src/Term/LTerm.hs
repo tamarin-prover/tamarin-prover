@@ -50,6 +50,8 @@ module Term.LTerm (
   , sortOfLit
   , isMsgVar
   , isFreshVar
+  , isPubVar
+  , isPubConst
   , isSimpleTerm
   , getVar
   , getMsgVar
@@ -233,6 +235,12 @@ sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
 
+-- | Is a term a public constant?
+isPubConst :: LNTerm -> Bool
+isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)
+isPubConst _                         = False
+
+
 ------------------------------------------------------------------------------
 -- LVar: logical variables
 ------------------------------------------------------------------------------
@@ -279,11 +287,15 @@ sortOfLit :: Lit Name LVar -> LSort
 sortOfLit (Con n) = sortOfName n
 sortOfLit (Var v) = lvarSort v
 
-
 -- | Is a term a message variable?
 isMsgVar :: LNTerm -> Bool
 isMsgVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortMsg)
 isMsgVar _                         = False
+
+-- | Is a term a public variable?
+isPubVar :: LNTerm -> Bool
+isPubVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortPub)
+isPubVar _                         = False
 
 -- | Is a term a fresh variable?
 isFreshVar :: LNTerm -> Bool
@@ -291,8 +303,8 @@ isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
 isFreshVar _                         = False
 
 -- | If the term is a variable, return it, nothing otherwise.
-getVar :: LNTerm -> Maybe [LVar]
-getVar (viewTerm -> Lit (Var v)) = Just [v]
+getVar :: LNTerm -> Maybe LVar
+getVar (viewTerm -> Lit (Var v)) = Just v
 getVar _                         = Nothing
 
 -- | If the term is a message variable, return it, nothing otherwise.
@@ -472,7 +484,7 @@ data MonotoneFunction f = Monotone (LVar -> f LVar )
 -- The 'foldFreesOcc' is only used to define the function 'varOccurences'. See
 -- below for required properties of the instance methods.
 --
--- Once we need it, we can use type synonym instances to parametrize over the
+-- Once we need it, we can use type synonym instances to parameterize over the
 -- variable type.
 --
 class HasFrees t where
@@ -708,6 +720,14 @@ instance (HasFrees a, HasFrees b, HasFrees c) => HasFrees (a, b, c) where
         foldFreesOcc f ("0":p) x `mappend` foldFreesOcc f ("1":p) y `mappend` foldFreesOcc f ("2":p) z
     mapFrees     f (x0, y0, z0) =
         (\(x, (y, z)) -> (x, y, z)) <$> mapFrees f (x0, (y0, z0))
+
+instance (HasFrees a, HasFrees b, HasFrees c, HasFrees d) => HasFrees (a, b, c, d) where
+    foldFrees    f (x, y, z, a)    = foldFrees f (x, (y, (z, a)))
+    foldFreesOcc f p (x, y, z, a)  =
+        foldFreesOcc f ("0":p) x `mappend` foldFreesOcc f ("1":p) y
+          `mappend` foldFreesOcc f ("2":p) z `mappend` foldFreesOcc f ("3":p) a
+    mapFrees     f (x0, y0, z0, a0) =
+        (\(x, (y, (z, a))) -> (x, y, z, a)) <$> mapFrees f (x0, (y0, (z0, a0)))
 
 instance HasFrees a => HasFrees [a] where
     foldFrees    f      = foldMap  (foldFrees f)

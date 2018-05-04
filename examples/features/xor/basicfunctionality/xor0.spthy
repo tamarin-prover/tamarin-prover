@@ -1,0 +1,22 @@
+theory xor0
+begin
+
+builtins: xor
+
+rule challenge:
+  [Fr(~a), Fr(~b) ]
+--[ Challenge(~a ⊕ ~b)]->
+  [ Out(<~a, ~b>) ]
+
+
+rule receive:
+ [ In(~a  ⊕ ~b) ]
+--[ Response(~a ⊕ ~b) ]->
+ []
+
+// FINDS EXPECTED TRACE AUTOMATICALLY (2017-03-22)
+lemma crworks:
+  exists-trace
+  "Ex x #i #j. Challenge(x)@i & Response(x)@j"
+
+end
