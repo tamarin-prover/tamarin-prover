@@ -209,7 +209,7 @@ XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/featur
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
 XOR_BASIC_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/basicfunctionality/,$(XOR_BASIC_TRACE_CASE_STUDIES)))
 
-XOR_DIFF_CASE_STUDIES= CH07-untrac-weak.spthy 
+XOR_DIFF_CASE_STUDIES= CH07-UK2.spthy 
 # CH07-untrac.spthy LAK06_UK-weak.spthy LAK06_UK.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
