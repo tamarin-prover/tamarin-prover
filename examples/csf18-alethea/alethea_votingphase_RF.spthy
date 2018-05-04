@@ -1,7 +1,7 @@
 theory alethea_votingphase_RF
 begin
 
-
+/*
 ============
 INTRODUCTION
 ============
@@ -15,7 +15,7 @@ The file contains:
 - a short explanation of the modeled version, 
 - the model in Alice & Bob notation, where we denote by ->, *->, ->*, and *->* insecure, authentic, confidential, and secure channels, respectively (see [1]),
 - a list of the results (with references to the lemmas in [1]),
-- the Tamarin protocol specification, the axioms, and the lemmas.
+- the Tamarin protocol specification, the restrictions, and the lemmas.
 
 
 ========
@@ -64,7 +64,7 @@ this model was analyzed with the oracle
 ========================================
 
 - lemma functional: 			  LHS = verified; RHS = verified (aut)
-- lemma secret_skS [typing]:  		  LHS = verified; RHS = verified (aut)
+- lemma secret_skS [sources]:  		  LHS = verified; RHS = verified (aut)
 - INDIVIDUAL VERIFIABILITY  ([1] Lemma 7)
 	- lemma indivVerif: 		  LHS = verified; RHS = verified (aut)
 - OBSERVATIONAL EQUIVALENCE ([1] Lemma 12)
@@ -227,18 +227,18 @@ rule H_3:
 
 
 /* ====
-AXIOMS
+RESTRICTIONS
 ====== */
 // there is only one setup
-axiom OneSetup: 
+restriction OneSetup: 
 	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
 
 /* ==========
-TYPING LEMMAS 
+SOURCES LEMMAS 
 ============= */
  
 // the adversary does not learn S's secret key
-lemma secret_skS [typing]:
+lemma secret_skS [sources]:
 	"All skS #i.  SKS(skS) @i ==> 
 		not(Ex #j. K(skS) @j)	"
 

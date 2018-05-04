@@ -16,7 +16,7 @@ The file contains:
 - a short explanation of the modeled version, 
 - the model in Alice & Bob notation, where we denote by ->, *->, ->*, and *->* insecure, authentic, confidential, and secure channels, respectively (see [1]),
 - a list of the results (with references to the lemmas in [1]),
-- the Tamarin protocol specification, the axioms, and the lemmas.
+- the Tamarin protocol specification, the restrictions, and the lemmas.
 
 ========
 Version:
@@ -227,10 +227,10 @@ rule H_3:
 
 
 /* ====
-AXIOMS
+RESTRICTIONS
 ====== */
 // there is only one setup
-axiom OneSetup: 
+restriction OneSetup: 
 	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
 
 
