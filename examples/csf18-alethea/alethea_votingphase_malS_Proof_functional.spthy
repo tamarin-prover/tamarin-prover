@@ -1,0 +1,1263 @@
+theory alethea_votingphase_malS_Proof_functional begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: PeqPVote/3, PeqPY/3, adec/2, aenc/2, cp/2, dcp/2, fst/1,
+           h/1, pair/2, pk/1, sdec/2, senc/2, sign/2, snd/1, true/0, verify/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    dcp(cp(x, pk(sk)), sk) = x,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Setup:
+   [ !Ltk( 'S', ~skS ), Fr( ~x1 ), Fr( ~x2 ) ]
+  --[
+  Setup( ), SKS( ~skS ), HV( '1', h(<~x1, $ind1>) ),
+  HV( '2', h(<~x2, $ind2>) ), HY( '1', h(~x1) ), HY( '2', h(~x2) ),
+  V( '1', $v1 ), V( '2', $v2 )
+  ]->
+   [
+   AgSt_H0( 'H1', <'D1', 'S', 'BB', $v1, h(<'H1', ~x1>)> ),
+   AgSt_H0( 'H2', <'D2', 'S', 'BB', $v2, h(<'H2', ~x2>)> ),
+   AgSt_D0( 'D1', <'S', 'BB', 'H1', pk(~skS), ~x1, $ind1> ),
+   AgSt_D0( 'D2', <'S', 'BB', 'H2', pk(~skS), ~x2, $ind2> ),
+   AgSt_BB0( 'BB', <'ySG', (h(<'H1', ~x1>)+h(<'H2', ~x2>))> ),
+   AgSt_Au( 'A', 'S' ),
+   Out_A( 'BB', <'ySG', (h(<'H1', ~x1>)+h(<'H2', ~x2>))> ),
+   Out( <~skS, 'H1', 'H2', 'D1', 'D2', ~x1, ~x2, $ind1, $ind2, 'BB'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_1:
+   [ AgSt_H0( $H, <$D, $S, $BB, vote, y> ) ]
+  --[ Vote( $H, vote ) ]->
+   [ AgSt_H1( $H, <$D, $S, $BB, vote, y> ), Out_S( $H, $D, vote ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) D_1:
+   [ AgSt_D0( $D, <$S, $BB, $H, pkS, ~x, $ind> ), In_S( $H, $D, vote )
+   ]
+  -->
+   [
+   Out_S( $D, $H,
+          <$H, 
+           <cp(<vote, h(<~x, $ind>)>, pkS), cp(<h(<$H, ~x>), h(~x)>, pkS)>, 
+           $ind>
+   )
+   ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_2:
+   [
+   AgSt_H1( $H, <$D, $S, $BB, vote, y> ),
+   In_S( $D, $H, <$H, code, ind> )
+   ]
+  --[
+  MyCode( $H, code ), Comm_H_C( $H, $S, code ),
+  Comm_H_V( $H, $S, vote )
+  ]->
+   [
+   AgSt_H2( $H, <$D, $S, $BB, vote, y, ind, code> ),
+   Out( <code, ind> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) BB:
+   [
+   AgSt_BB0( $BB, ySG ), In( <'votes', ($vote1+$vote2)> ),
+   In( <'pVs', (pV1+pV2)> ), In( <'pYs', (pY1+pY2)> ),
+   In( <'yPrime', (yPrime1+yPrime2)> ),
+   In( <'codes', (code1+code2)> ), In( <'proofV', proofV> ),
+   In( <'proofY', proofY> )
+   ]
+  --[
+  BB_V( '1', $BB, $vote1 ), BB_V( '2', $BB, $vote2 ),
+  BB_pV( '1', $BB, pV1 ), BB_pV( '2', $BB, pV2 ),
+  BB_yPrime( '1', $BB, yPrime1 ), BB_yPrime( '2', $BB, yPrime2 ),
+  BB_pY( '1', $BB, pY1 ), BB_pY( '2', $BB, pY2 ),
+  BB_C( '1', $BB, code1 ), BB_C( '2', $BB, code2 ),
+  BB_Cs( $BB, <'codes', (code1+code2)> ), BB_proofV( $BB, proofV ),
+  BB_proofY( $BB, proofY )
+  ]->
+   [
+   Out_A( $BB, <'votes', ($vote1+$vote2)> ),
+   Out_A( $BB, <'pVs', (pV1+pV2)> ), Out_A( $BB, <'pYs', (pY1+pY2)> ),
+   Out_A( $BB, <'yPrime', (yPrime1+yPrime2)> ),
+   Out_A( $BB, <'codes', (code1+code2)> ),
+   Out_A( $BB, <'proofV', proofV> ), Out_A( $BB, <'proofY', proofY> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) auditor:
+   [
+   AgSt_Au( $A, $S ), In_A( $BB, <'ySG', (y1+y2)> ),
+   In_A( $BB, <'yPrime', (y1+y2)> ), In_A( $BB, <'votes', (v1+v2)> ),
+   In_A( $BB, <'pVs', (<v1, hV1>+<v2, hV2>)> ),
+   In_A( $BB, <'pYs', (<y1, hY1>+<y2, hY2>)> ),
+   In_A( $BB, <'codes', (<fstcode1, sndcode1>+<fstcode2, sndcode2>)>
+   ),
+   In_A( $BB, <'proofV', proofV> ), In_A( $BB, <'proofY', proofY> )
+   ]
+  --[
+  Learn_A_Vs( $S, $A, <'votes', (v1+v2)> ),
+  Learn_A_YSGs( $S, $A, <'ySG', (y1+y2)> ),
+  Learn_A_Cs( $S, $A,
+              <'codes', (<fstcode1, sndcode1>+<fstcode2, sndcode2>)>
+  ),
+  VerProofV( $A, $BB, proofV, <fstcode1, fstcode2>,
+             <<v1, hV1>, v2, hV2>
+  ),
+  VerProofY( $A, $BB, proofY, <sndcode1, sndcode2>,
+             <<y1, hY1>, y2, hY2>
+  )
+  ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_3:
+   [
+   AgSt_H2( $H, <$D, $S, $BB, vote, y, ind, code> ),
+   In_A( $BB, <'codes', (codeBBOther+mycodeBB)> )
+   ]
+  --[ Learn_H_C( $H, $S, mycodeBB ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction OneSetup:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional:
+  exists-trace
+  "∃ #i #j #k H1 H2 S BB vote1 vote2 fstcode1 sndcode1 fstcode2
+     sndcode2 skS hV1 hV2 y1 y2 hY1 hY2 A #a #l #m #s.
+    (((((((((((((((((((((((((¬(H1 = H2)) ∧ (¬(vote1 = vote2))) ∧
+                           (Comm_H_C( H1, S, <fstcode1, sndcode1> ) @ #i)) ∧
+                          (Comm_H_V( H1, S, vote1 ) @ #i)) ∧
+                         (Comm_H_C( H2, S, <fstcode2, sndcode2> ) @ #j)) ∧
+                        (Comm_H_V( H2, S, vote2 ) @ #j)) ∧
+                       (HV( '1', hV1 ) @ #s)) ∧
+                      (V( '1', vote1 ) @ #s)) ∧
+                     (HV( '2', hV2 ) @ #s)) ∧
+                    (V( '2', vote2 ) @ #s)) ∧
+                   (HY( '1', hY1 ) @ #s)) ∧
+                  (HY( '2', hY2 ) @ #s)) ∧
+                 (BB_C( '1', BB, <fstcode1, sndcode1> ) @ #k)) ∧
+                (BB_C( '2', BB, <fstcode2, sndcode2> ) @ #k)) ∧
+               (BB_V( '1', BB, vote1 ) @ #k)) ∧
+              (BB_V( '2', BB, vote2 ) @ #k)) ∧
+             (BB_pV( '1', BB, <vote1, hV1> ) @ #k)) ∧
+            (BB_pV( '2', BB, <vote2, hV2> ) @ #k)) ∧
+           (BB_proofV( BB,
+                       PeqPVote(<fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>, skS)
+            ) @ #k)) ∧
+          (BB_pY( '1', BB, <y1, hY1> ) @ #k)) ∧
+         (BB_pY( '2', BB, <y2, hY2> ) @ #k)) ∧
+        (BB_proofY( BB,
+                    PeqPY(<sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>, skS)
+         ) @ #k)) ∧
+       (Learn_H_C( H1, S, <fstcode1, sndcode1> ) @ #l)) ∧
+      (Learn_H_C( H2, S, <fstcode2, sndcode2> ) @ #m)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>, skS),
+                 <fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>
+      ) @ #a)) ∧
+    (VerProofY( A, BB,
+                PeqPY(<sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>, skS),
+                <sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>
+     ) @ #a)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j #k H1 H2 S BB vote1 vote2 fstcode1 sndcode1 fstcode2
+   sndcode2 skS hV1 hV2 y1 y2 hY1 hY2 A #a #l #m #s.
+  (Comm_H_C( H1, S, <fstcode1, sndcode1> ) @ #i) ∧
+  (Comm_H_V( H1, S, vote1 ) @ #i) ∧
+  (Comm_H_C( H2, S, <fstcode2, sndcode2> ) @ #j) ∧
+  (Comm_H_V( H2, S, vote2 ) @ #j) ∧
+  (HV( '1', hV1 ) @ #s) ∧
+  (V( '1', vote1 ) @ #s) ∧
+  (HV( '2', hV2 ) @ #s) ∧
+  (V( '2', vote2 ) @ #s) ∧
+  (HY( '1', hY1 ) @ #s) ∧
+  (HY( '2', hY2 ) @ #s) ∧
+  (BB_C( '1', BB, <fstcode1, sndcode1> ) @ #k) ∧
+  (BB_C( '2', BB, <fstcode2, sndcode2> ) @ #k) ∧
+  (BB_V( '1', BB, vote1 ) @ #k) ∧
+  (BB_V( '2', BB, vote2 ) @ #k) ∧
+  (BB_pV( '1', BB, <vote1, hV1> ) @ #k) ∧
+  (BB_pV( '2', BB, <vote2, hV2> ) @ #k) ∧
+  (BB_proofV( BB,
+              PeqPVote(<fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>, skS)
+   ) @ #k) ∧
+  (BB_pY( '1', BB, <y1, hY1> ) @ #k) ∧
+  (BB_pY( '2', BB, <y2, hY2> ) @ #k) ∧
+  (BB_proofY( BB,
+              PeqPY(<sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>, skS)
+   ) @ #k) ∧
+  (Learn_H_C( H1, S, <fstcode1, sndcode1> ) @ #l) ∧
+  (Learn_H_C( H2, S, <fstcode2, sndcode2> ) @ #m) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>, skS),
+              <fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>
+   ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>, skS),
+              <sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>
+   ) @ #a)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(vote1 = vote2))"
+*/
+simplify
+solve( In_A( $BB.2,
+             <'proofV', 
+              PeqPVote(<fstcode1, fstcode2>, <<vote1, hV1>, vote2, hV2>, skS)>
+       ) ▶₇ #a )
+  case ChanIn_A
+  solve( !KU( PeqPVote(<fstcode1, fstcode2>,
+                       <<vote1, hV1>, vote2, hV2>, skS)
+         ) @ #vk.32 )
+    case H_2_case_1
+    by sorry
+  next
+    case H_2_case_2
+    by sorry
+  next
+    case c_PeqPVote
+    solve( !KU( PeqPY(<sndcode1, sndcode2>, <<y1, hY1>, y2, hY2>, skS)
+           ) @ #vk.36 )
+      case H_2_case_1
+      by sorry /* removed */
+    next
+      case H_2_case_2
+      by sorry
+    next
+      case c_PeqPY
+      solve( AgSt_H2( $H, <$D.2, $S.1, $BB.2, vote, y.2, ind.2, code>
+             ) ▶₀ #l )
+        case H_2_case_1
+        solve( AgSt_H2( $H, <$D.2, 'S', $BB.2, vote.1, y.2, ind.2, code>
+               ) ▶₀ #m )
+          case H_2_case_1
+          by sorry /* removed */
+        next
+          case H_2_case_2
+          solve( AgSt_H1( 'H2', <$D.1, 'S', $BB.1, vote2, y.1> ) ▶₀ #j )
+            case H_1
+            solve( AgSt_H1( 'H1', <$D, 'S', $BB, vote1, y> ) ▶₀ #i )
+              case H_1
+              solve( In_A( 'BB',
+                           <'proofY', 
+                            PeqPY(<cp(<h(<'H1', ~x1>), h(~x1)>, pk(~skS)), 
+                                   cp(<h(<'H2', ~x2>), h(~x2)>, pk(~skS))>,
+                                  <<y1, hY1>, y2, hY2>, skS.1)
+                           >
+                     ) ▶₈ #a )
+                case ChanIn_A
+                solve( In_A( 'BB',
+                             <'codes', 
+                              (
+                               <cp(<vote, h(<~x2, $ind2>)>, pk(~skS)), 
+                                cp(<h(<'H2', ~x2>), h(~x2)>, pk(~skS))>+
+                               <cp(<vote.1, h(<~x1, $ind1>)>, pk(~skS)), 
+                                cp(<h(<'H1', ~x1>), h(~x1)>, pk(~skS))>
+                              )
+                             >
+                       ) ▶₆ #a )
+                  case ChanIn_A_case_1
+                  solve( In_A( 'BB',
+                               <'codes', 
+                                (codeBBOther+
+                                 <cp(<vote.1, h(<~x1, $ind1>)>, pk(~skS)), 
+                                  cp(<h(<'H1', ~x1>), h(~x1)>, pk(~skS))>
+                                )
+                               >
+                         ) ▶₁ #l )
+                    case ChanIn_A
+                    solve( BB_C( '1', 'BB',
+                                 <cp(<vote.1, h(<~x1, $ind1>)>, pk(~skS)), 
+                                  cp(<h(<'H1', ~x1>), h(~x1)>, pk(~skS))>
+                           ) @ #k )
+                      case BB
+                      solve( BB_C( '2', 'BB',
+                                   <cp(<vote, h(<~x2, $ind2>)>, pk(~skS)), 
+                                    cp(<h(<'H2', ~x2>), h(~x2)>, pk(~skS))>
+                             ) @ #k )
+                        case BB
+                        solve( In_A( 'BB',
+                                     <'codes', 
+                                      (codeBBOther+
+                                       <cp(<vote, h(<~x2, $ind2>)>, pk(~skS)), 
+                                        cp(<h(<'H2', ~x2>), h(~x2)>, pk(~skS))>
+                                      )
+                                     >
+                               ) ▶₁ #m )
+                          case ChanIn_A
+                          solve( AgSt_BB0( 'BB', ySG ) ▶₀ #k )
+                            case Setup
+                            solve( AgSt_Au( $A, $S ) ▶₀ #a )
+                              case Setup
+                              solve( V( '1', $v1 ) @ #s )
+                                case Setup
+                                solve( !KU( cp(<h(<'H1', ~x1>), h(~x1)>, pk(~skS)) ) @ #vk.44 )
+                                  case H_2_case_1
+                                  by sorry /* removed */
+                                next
+                                  case H_2_case_2
+                                  solve( In_S( 'H1', 'D1', vote.1 ) ▶₁ #vr.6 )
+                                    case ChanIn_S
+                                    solve( In_S( 'H2', 'D2', vote ) ▶₁ #vr.10 )
+                                      case ChanIn_S
+                                      solve( In_A( 'BB', <'ySG', (y1+y2)> ) ▶₁ #a )
+                                        case ChanIn_A_case_1
+                                        solve( In_A( 'BB',
+                                                     <'yPrime', (h(<'H1', ~x1>)+h(<'H2', ~x2>))>
+                                               ) ▶₂ #a )
+                                          case ChanIn_A_case_1
+                                          solve( In_A( 'BB',
+                                                       <'pYs', 
+                                                        (<h(<'H1', ~x1>), hY1>+<h(<'H2', ~x2>), hY2>
+                                                        )
+                                                       >
+                                                 ) ▶₅ #a )
+                                            case ChanIn_A_case_1
+                                            solve( In_A( 'BB', <'pVs', (<$v1, hV1>+<$v2, hV2>)>
+                                                   ) ▶₄ #a )
+                                              case ChanIn_A_case_1
+                                              solve( In_A( 'BB', <'votes', ($v1+$v2)> ) ▶₃ #a )
+                                                case ChanIn_A_case_1
+                                                solve( HV( '2', hV2 ) @ #s )
+                                                  case Setup
+                                                  solve( V( '2', $v2 ) @ #s )
+                                                    case Setup
+                                                    solve( !KU( cp(<$v1, h(<~x1, $ind1>)>, pk(~skS))
+                                                           ) @ #vk.37 )
+                                                      case H_2_case_1
+                                                      solve( !KU( cp(<h(<'H2', ~x2>), h(~x2)>,
+                                                                     pk(~skS))
+                                                             ) @ #vk.41 )
+                                                        case H_2_case_1
+                                                        by sorry /* removed */
+                                                      next
+                                                        case H_2_case_2
+                                                        by sorry /* removed */
+                                                      next
+                                                        case H_2_case_3
+                                                        solve( !KU( cp(<$v2, h(<~x2, $ind2>)>,
+                                                                       pk(~skS))
+                                                               ) @ #vk.39 )
+                                                          case H_2_case_1
+                                                          by sorry /* removed */
+                                                        next
+                                                          case H_2_case_2
+                                                          solve( BB_V( '1', 'BB', $v1 ) @ #k )
+                                                            case BB
+                                                            solve( BB_V( '2', 'BB', $v2 ) @ #k )
+                                                              case BB
+                                                              solve( BB_pV( '1', 'BB', <$v1, hV1>
+                                                                     ) @ #k )
+                                                                case BB
+                                                                solve( !KU( h(<'H1', ~x1>)
+                                                                       ) @ #vk.34 )
+                                                                  case ChanOut_A
+                                                                  solve( !KU( h(<'H2', ~x2>)
+                                                                         ) @ #vk.35 )
+                                                                    case ChanOut_A
+                                                                    solve( !KU( h(<~x2, $ind2>)
+                                                                           ) @ #vk.41 )
+                                                                      case H_2_case_1
+                                                                      by sorry /* removed */
+                                                                    next
+                                                                      case H_2_case_2
+                                                                      by sorry /* removed */
+                                                                    next
+                                                                      case H_2_case_3
+                                                                      solve( BB_pV( '2', 'BB',
+                                                                                    <$v2, 
+                                                                                     h(<~x2, $ind2>)
+                                                                                    >
+                                                                             ) @ #k )
+                                                                        case BB
+                                                                        solve( !KU( ~skS
+                                                                               ) @ #vk.44 )
+                                                                          case H_2_case_1
+                                                                          by sorry /* removed */
+                                                                        next
+                                                                          case H_2_case_2
+                                                                          by sorry /* removed */
+                                                                        next
+                                                                          case Setup
+                                                                          solve( BB_pY( '1', 'BB',
+                                                                                        <
+                                                                                         h(<'H1', 
+                                                                                            ~x1>), 
+                                                                                         hY1>
+                                                                                 ) @ #k )
+                                                                            case BB
+                                                                            solve( BB_pY( '2', 'BB',
+                                                                                          <
+                                                                                           h(<'H2', 
+                                                                                              ~x2
+                                                                                             >), 
+                                                                                           hY2>
+                                                                                   ) @ #k )
+                                                                              case BB
+                                                                              solve( HY( '1', hY1
+                                                                                     ) @ #s )
+                                                                                case Setup
+                                                                                solve( HY( '2', hY2
+                                                                                       ) @ #s )
+                                                                                  case Setup
+                                                                                  solve( !KU( h(~x2)
+                                                                                         ) @ #vk.44 )
+                                                                                    case H_2_case_1
+                                                                                    by sorry
+                                                                                       /* removed */
+                                                                                  next
+                                                                                    case H_2_case_2
+                                                                                    by sorry
+                                                                                       /* removed */
+                                                                                  next
+                                                                                    case H_2_case_3
+                                                                                    solve( !KU( h(~x1)
+                                                                                           ) @ #vk.44 )
+                                                                                      case H_2_case_1
+                                                                                      by sorry
+                                                                                         /* removed
+                                                                                         */
+                                                                                    next
+                                                                                      case H_2_case_2
+                                                                                      solve( HV( '1',
+                                                                                                 hV1
+                                                                                             ) @ #s )
+                                                                                        case Setup
+                                                                                        solve( !KU( h(<
+                                                                                                       ~x1, 
+                                                                                                       $ind1
+                                                                                                      >)
+                                                                                               ) @ #vk.44 )
+                                                                                          case H_2_case_1
+                                                                                          by sorry
+                                                                                             /*
+                                                                                             removed
+                                                                                             */
+                                                                                        next
+                                                                                          case H_2_case_2
+                                                                                          SOLVED // trace found
+                                                                                        next
+                                                                                          case H_2_case_3
+                                                                                          by sorry
+                                                                                             /*
+                                                                                             removed
+                                                                                             */
+                                                                                        next
+                                                                                          case c_h
+                                                                                          by sorry
+                                                                                        qed
+                                                                                      qed
+                                                                                    next
+                                                                                      case H_2_case_3
+                                                                                      by sorry
+                                                                                         /* removed
+                                                                                         */
+                                                                                    next
+                                                                                      case c_h
+                                                                                      by sorry
+                                                                                    qed
+                                                                                  next
+                                                                                    case c_h
+                                                                                    by sorry
+                                                                                  qed
+                                                                                qed
+                                                                              qed
+                                                                            qed
+                                                                          qed
+                                                                        qed
+                                                                      qed
+                                                                    next
+                                                                      case c_h
+                                                                      by sorry
+                                                                    qed
+                                                                  next
+                                                                    case H_2_case_1
+                                                                    by sorry /* removed */
+                                                                  next
+                                                                    case H_2_case_2
+                                                                    by sorry /* removed */
+                                                                  next
+                                                                    case H_2_case_3
+                                                                    by sorry
+                                                                  next
+                                                                    case c_h
+                                                                    by sorry
+                                                                  qed
+                                                                next
+                                                                  case H_2_case_1
+                                                                  by sorry /* removed */
+                                                                next
+                                                                  case H_2_case_2
+                                                                  by sorry
+                                                                next
+                                                                  case H_2_case_3
+                                                                  by sorry /* removed */
+                                                                next
+                                                                  case c_h
+                                                                  by sorry
+                                                                qed
+                                                              qed
+                                                            qed
+                                                          qed
+                                                        next
+                                                          case H_2_case_3
+                                                          by sorry /* removed */
+                                                        next
+                                                          case c_cp
+                                                          by sorry
+                                                        qed
+                                                      next
+                                                        case c_cp
+                                                        by sorry
+                                                      qed
+                                                    next
+                                                      case H_2_case_2
+                                                      by sorry /* removed */
+                                                    next
+                                                      case H_2_case_3
+                                                      by sorry /* removed */
+                                                    next
+                                                      case c_cp
+                                                      by sorry
+                                                    qed
+                                                  qed
+                                                qed
+                                              next
+                                                case ChanIn_A_case_2
+                                                by sorry
+                                              qed
+                                            next
+                                              case ChanIn_A_case_2
+                                              by sorry
+                                            qed
+                                          next
+                                            case ChanIn_A_case_2
+                                            by sorry
+                                          qed
+                                        next
+                                          case ChanIn_A_case_2
+                                          by sorry
+                                        qed
+                                      next
+                                        case ChanIn_A_case_2
+                                        by sorry
+                                      qed
+                                    qed
+                                  qed
+                                next
+                                  case H_2_case_3
+                                  by sorry
+                                next
+                                  case c_cp
+                                  by sorry
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case ChanIn_A_case_2
+                  by sorry
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case H_2_case_2
+        by sorry /* removed */
+      qed
+    qed
+  qed
+qed
+
+lemma indivVerif:
+  all-traces
+  "∀ H S vote fstcode sndcode #i2 #i #j.
+    (((Vote( H, vote ) @ #i2) ∧
+      (MyCode( H, <fstcode, sndcode> ) @ #i)) ∧
+     (Learn_H_C( H, S, <fstcode, sndcode> ) @ #j)) ⇒
+    (∃ BB #k hV pkS codeOther.
+      (BB_Cs( BB, <'codes', (codeOther+<fstcode, sndcode>)> ) @ #k) ∧
+      (fstcode = cp(<vote, hV>, pkS)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H S vote fstcode sndcode #i2 #i #j.
+  (Vote( H, vote ) @ #i2) ∧
+  (MyCode( H, <fstcode, sndcode> ) @ #i) ∧
+  (Learn_H_C( H, S, <fstcode, sndcode> ) @ #j)
+ ∧
+  ∀ BB #k hV pkS codeOther.
+   (BB_Cs( BB, <'codes', (codeOther+<fstcode, sndcode>)> ) @ #k) ∧
+   (fstcode = cp(<vote, hV>, pkS))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v1:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v2:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v3:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v4:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v5:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v6:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v7:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofV_v8:
+  all-traces
+  "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
+    (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofV( A, BB,
+                 PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_V( n1, BB, v1 ) @ #b)) ∧
+       (BB_V( n2, BB, v2 ) @ #b)) ∧
+      (codes =
+       (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+        <cp(<v2, hV2>, pk(skS)), sndcode2>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S A x1 x2 skS #a #i BB v1 v2 codes.
+  (Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofV( A, BB,
+              PeqPVote(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hV1 hV2 sndcode1 sndcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_V( n1, BB, v1 ) @ #b) ∧
+   (BB_V( n2, BB, v2 ) @ #b) ∧
+   (codes =
+    (<cp(<v1, hV1>, pk(skS)), sndcode1>+
+     <cp(<v2, hV2>, pk(skS)), sndcode2>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v1:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v2:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v3:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v4:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v5:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v6:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v7:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x1, x2>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Universal_VerProofY_v8:
+  all-traces
+  "∀ A x1 x2 skS #i BB codes #a S y1 y2.
+    (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+      (Learn_A_Cs( S, A, <'codes', codes> ) @ #a)) ∧
+     (VerProofY( A, BB,
+                 PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+                 <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+      ) @ #i)) ⇒
+    (∃ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+      (((BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+        (BB_yPrime( n1, BB, y1 ) @ #b)) ∧
+       (BB_yPrime( n2, BB, y2 ) @ #b)) ∧
+      (codes =
+       (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+        <fstcode2, cp(<y2, hY2>, pk(skS))>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A x1 x2 skS #i BB codes #a S y1 y2.
+  (Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
+  (Learn_A_Cs( S, A, <'codes', codes> ) @ #a) ∧
+  (VerProofY( A, BB,
+              PeqPY(<cp(x1, pk(skS)), cp(x2, pk(skS))>, <x2, x1>, skS),
+              <cp(x2, pk(skS)), cp(x1, pk(skS))>, <x2, x1>
+   ) @ #i)
+ ∧
+  ∀ #b hY1 hY2 fstcode1 fstcode2 n1 n2.
+   (BB_Cs( BB, <'codes', codes> ) @ #b) ∧
+   (BB_yPrime( n1, BB, y1 ) @ #b) ∧
+   (BB_yPrime( n2, BB, y2 ) @ #b) ∧
+   (codes =
+    (<fstcode1, cp(<y1, hY1>, pk(skS))>+
+     <fstcode2, cp(<y2, hY2>, pk(skS))>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+end
