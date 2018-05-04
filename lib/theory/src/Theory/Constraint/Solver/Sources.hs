@@ -222,7 +222,7 @@ removeRedundantCases ctxt stableVars getSys cases0 =
     -- decorate with index and normed version of the system
     decoratedCases = map (second addNormSys) $  zip [(0::Int)..] cases0
     -- drop cases where the normed systems coincide
-    cases          =   map (fst . snd) . sortOn fst . sortednubOn (snd . snd) $ decoratedCases
+    cases          =   map (fst . snd) . sortOn fst . sortednubBy (\(_,(_, x)) (_,(_, y)) -> compareSystemsUpToNewVars x y) $ decoratedCases
 
     addNormSys = id &&& ((modify sEqStore dropNameHintsBound) . renameDropNameHints . getSys)
 

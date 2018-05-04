@@ -115,6 +115,7 @@ module Theory.Constraint.System (
   -- FIXME: The two functions below should also be prefixed with 'unsolved'
   , kuActionAtoms
   , standardActionAtoms
+  , compareSystemsUpToNewVars
 
   -- ** Edge and chain constraints
   , sEdges
@@ -1241,6 +1242,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("unsolved goals",  prettyGoals False se)
   , ("solved goals",    prettyGoals True se)
+--   , ("system",          text $ show se)
 --   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
 --   , ("DEBUG: Nodes",    vcat $ map prettyNode $ M.toList $ L.get sNodes se)
 --   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
@@ -1435,3 +1437,37 @@ instance HasFrees System where
                <*> mapFrees fun j
                <*> mapFrees fun k
                <*> mapFrees fun l
+
+
+-- Special comparison functions to ignore new var instantiations
+----------------------------------------------------------------
+
+compareListsUpToNewVars :: [(NodeId, RuleACInst)] -> [(NodeId, RuleACInst)] -> Ordering
+compareListsUpToNewVars []           []           = EQ
+compareListsUpToNewVars []           _            = LT
+compareListsUpToNewVars (_:_)        []           = GT
+compareListsUpToNewVars ((x1,x2):xs) ((y1,y2):ys) = case compare x1 y1 of
+                                                         EQ -> case compareRulesUpToNewVars x2 y2 of
+                                                                EQ -> compareListsUpToNewVars xs ys
+                                                                LT -> LT
+                                                                GT -> GT
+                                                         LT -> LT
+                                                         GT -> GT
+
+compareNodesUpToNewVars :: M.Map NodeId RuleACInst -> M.Map NodeId RuleACInst -> Ordering
+compareNodesUpToNewVars n1 n2 = compareListsUpToNewVars (M.toAscList n1) (M.toAscList n2)
+
+compareSystemsUpToNewVars :: System -> System -> Ordering
+-- when we have trace systems, we can ignore new variable instantiations
+compareSystemsUpToNewVars
+   (System a1 b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 False)
+   (System a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 False)
+       = if compareNodes == EQ then
+            compare (System M.empty b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 False)
+                (System M.empty b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 False)
+         else
+            compareNodes
+        where
+            compareNodes = compareNodesUpToNewVars a1 a2
+-- in case of diff systems, we remain prudent
+compareSystemsUpToNewVars s1 s2 = compare s1 s2

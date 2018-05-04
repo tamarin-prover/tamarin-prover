@@ -91,6 +91,7 @@ module Theory.Model.Rule (
   , isTrivialProtoVariantAC
   , getNewVariables
   , getSubstitutionsFixingNewVars
+  , compareRulesUpToNewVars
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -184,7 +185,7 @@ data Rule i = Rule {
        -- contains initially the new variables, then their instantiations
        , _rNewVars :: [LNTerm]
        }
-       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+       deriving(Eq, Ord, Show, Data, Typeable, Generic)
 
 instance NFData i => NFData (Rule i)
 instance Binary i => Binary (Rule i)
@@ -226,10 +227,24 @@ enumConcs = zip [(ConcIdx 0)..] . L.get rConcs
 -- Instances
 ------------
 
+-- we need special instances for Eq and Ord to ignore the new variable instantiations when comparing rules
 -- instance (Eq t) => Eq (Rule t) where
 --     (Rule i0 ps0 cs0 as0 _) == (Rule i1 ps1 cs1 as1 _) =
 --         (i0 == i1) && (ps0 == ps1) && (cs0 == cs1) && (as0 == as1)
--- 
+
+compareRulesUpToNewVars :: (Ord i) => Rule i -> Rule i -> Ordering
+compareRulesUpToNewVars (Rule i0 ps0 cs0 as0 _) (Rule i1 ps1 cs1 as1 _) =
+        if i0 == i1 then
+           if ps0 == ps1 then
+              if cs0 == cs1 then
+                   compare as0 as1
+                 else
+                   compare cs0 cs1
+              else
+                 compare ps0 ps1
+           else
+              compare i0 i1
+
 -- deriving instance (Ord t) => Ord (Rule t)
 
 instance Functor Rule where
@@ -242,7 +257,7 @@ instance (Show i, HasFrees i) => HasFrees (Rule i) where
         (foldFrees f cs `mappend`) $
         (foldFrees f as `mappend`) $
         (foldFrees f nvs)
-    -- for the moment we do not include the new variables in the occurrences
+    -- We do not include the new variables in the occurrences
     foldFreesOcc f c (Rule i ps cs as _) =
         foldFreesOcc f ((show i):c) (ps, cs, as)
     mapFrees f (Rule i ps cs as nvs) =
