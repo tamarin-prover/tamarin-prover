@@ -8,6 +8,8 @@ env:
 
 cache:
   directories:
+  - $HOME/.cabal
+  - $HOME/.ghc
   - $HOME/.stack
   
 addons:
@@ -33,9 +35,11 @@ install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
   - stack build mwc-random SHA -j 1
   - stack install
-  - opam init
 
   # SAPIC
+  - opam init
   - eval `opam config env`
-  - cd plugins/sapic
-  - make
+
+script:
+  - stack install
+  - cd plugins/sapic && make
