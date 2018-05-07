@@ -1,3 +1,10 @@
+* 1.4.0
+  - Added support for XOR operations in Tamarin as a new built-in, as described in the CSF'2018 paper (https://hal.archives-ouvertes.fr/hal-01780544)
+
+  - Better mirror displays in equivalence mode
+
+  - Numerous bug fixes
+
 * 1.2.3
   - GUI shows warnings on load that previously were only shown on command line
 
