@@ -90,7 +90,7 @@ attribute (key,value) = " " ++ key ++ "=\"" ++ escapeHtmlEntities value ++ "\""
 
 -- | A 'Document' transformer that adds proper HTML escaping.
 newtype HtmlDoc d = HtmlDoc { getHtmlDoc :: d }
-    deriving( Monoid )
+    deriving( Monoid, Semigroup )
 
 -- | Wrap a document such that HTML markup can be added without disturbing the
 -- layout.
@@ -182,9 +182,11 @@ getNoHtmlDoc = runIdentity . unNoHtmlDoc
 instance NFData d => NFData (NoHtmlDoc d) where
     rnf = rnf . getNoHtmlDoc
 
+instance Semigroup d => Semigroup (NoHtmlDoc d) where
+  (<>) = liftA2 (<>)
+
 instance Monoid d => Monoid (NoHtmlDoc d) where
   mempty = pure mempty
-  mappend = liftA2 mappend
 
 instance Document d => Document (NoHtmlDoc d) where
   char = pure . char
