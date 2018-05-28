@@ -70,7 +70,7 @@ are part of every installation of the Tamarin prover. See
 following sub-directories to organize the models.
 
 ~~~~
-accountability/ case studies for our 'Accountability in Security Protocols' paper.
+accountability/ case studies for our 'Automated Verification of Accountability in Security Protocols' paper.
 csf12/         the AKE case studies from our CSF'12 paper.
 classic/       classic security protocols like the ones from
                [SPORE](http://www.lsv.ens-cachan.fr/Software/spore/table.html)
