@@ -56,6 +56,8 @@ import System.IO
 import Utils.Misc
 import Extension.Data.Monoid
 
+-- import Debug.Trace
+
 
 -- Unification using a persistent Maude process
 -----------------------------------------------------------------------

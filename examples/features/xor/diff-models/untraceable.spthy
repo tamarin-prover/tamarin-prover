@@ -1,0 +1,68 @@
+theory untraceable
+begin
+
+/* A simple untraceable RFID protocol
+
+R: knows k
+T: knows k
+R -> T: nr
+T -> R: nt, h(nr,k,nt)
+
+*/
+
+builtins: hashing, multiset
+
+rule setup:
+  [ Fr(key1), Fr(key2) ]
+  --[ Setup() ]->
+  [ Reader('1'+diff(key1+key2,key1+key1)), Tag('1'+diff(key1+key2,key1+key1)) ]
+
+rule select_tag:
+  [ Tag(~k+z) ]
+  --[ Tag(~k+z) ]->
+  [ TagRun(~k), Tag(z) ]
+
+rule select_reader:
+  [ Reader(~k+z) ]
+  --[ Reader(~k+z) ]->
+  [ ReaderRun(~k), Reader(z) ]
+
+rule reader1:
+  [ Fr(~nr) ]
+  -->
+  [ Reader1(~nr) , Out(~nr) ]
+
+rule tag1:
+  [ In(x) , TagRun(k), Fr(~nt) ]
+  --[ TagRun(k) ]->
+  [ Out(<~nt,h(x,k,~nt)>) ]
+
+rule reader2:
+  [ Reader1(~nr), ReaderRun(k), In(<nt,h(~nr,k,nt)>) ]
+  --[ Finished() ]->
+  [ ]
+
+/*
+lemma max_number_of_tags_tag [use_induction,reuse]:
+  "All a b c d #i. Tag(a+b+c+d)@i ==> F"
+*/
+
+restriction max_number_of_tags_tag:
+  "All a b c d #i. Tag(a+b+c+d)@i ==> F"
+
+/*
+lemma max_number_of_tags_reader [use_induction,reuse]:
+  "All a b c d #i. Reader(a+b+c+d)@i ==> F"
+*/
+
+restriction max_number_of_tags_tag_reader:
+  "All a b c d #i. Reader(a+b+c+d)@i ==> F"
+
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
+lemma executable:
+  exists-trace "Ex #i. Finished() @i"
+
+// FINDS PROOF AUTOMATICALLY (2017-03-22) [with restrictions "max_number_of_tags_tag" and "max_number_of_tags_tag_reader"
+// Observational_equivalence lemma
+
+end

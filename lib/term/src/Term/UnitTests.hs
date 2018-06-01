@@ -286,7 +286,7 @@ tests maudePath = do
 allMaudeSig :: MaudeSig
 allMaudeSig = mconcat
     [ bpMaudeSig, msetMaudeSig
-    , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, hashMaudeSig ]
+    , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, revealSignatureMaudeSig, hashMaudeSig ]
 
 
 -- testing in ghci

@@ -1149,7 +1149,7 @@ unbound:
   rule `lookup_ct_as_status_0_11111112111111' has unbound variables: 
     status
 
-restriction actions:
+Restriction actions:
   restriction `set_in' references action 
     (ProtoFact Linear "Delete" 1,1,Linear)
   but no rule has such an action.
@@ -1174,7 +1174,7 @@ analyzing: case-studies-sapic-regression/GJM-contract/contract.spthy
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 29.048005s
+  processing time: 32.69049s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1190,7 +1190,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 29.048005s
+  processing time: 32.69049s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

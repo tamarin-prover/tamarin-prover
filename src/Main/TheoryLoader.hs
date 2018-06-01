@@ -63,7 +63,7 @@ import           Theory.Text.Parser                  (parseIntruderRules, parseO
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
-                                                     , multisetIntruderRules)
+                                                     , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 
 import           Main.Console
@@ -104,6 +104,9 @@ theoryLoadFlags =
 
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
       "Strict mode that quits on any warning that is emitted."
+
+  , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
+      "Path to the oracle heuristic (default './oracle')."
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -276,7 +279,7 @@ closeDiffThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma (addProtoRuleLabels thy2))
+  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2)
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
@@ -336,10 +339,14 @@ constructAutoProver as =
         Just []                  -> error "--heuristic: at least one ranking must be given"
         _                        -> [SmartRanking False]
 
+    oracleName = case findArg "oraclename" as of
+      Nothing       -> "./oracle"
+      Just fileName -> "./" ++ fileName
+
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking
-    ranking 'O' = OracleSmartRanking
+    ranking 'o' = OracleRanking oracleName
+    ranking 'O' = OracleSmartRanking oracleName
     ranking 'p' = SapicRanking
     ranking 'l' = SapicLivenessRanking
     ranking 'P' = SapicPKCS11Ranking
@@ -386,10 +393,14 @@ constructAutoDiffProver as =
         Just []                  -> error "--heuristic: at least one ranking must be given"
         _                        -> [SmartDiffRanking]
 
+    oracleName = case findArg "oraclename" as of
+      Nothing       -> "./oracle"
+      Just fileName -> "./" ++ fileName
+
     ranking 's' = SmartRanking False
     ranking 'S' = SmartRanking True
-    ranking 'o' = OracleRanking
-    ranking 'O' = OracleSmartRanking
+    ranking 'o' = OracleRanking oracleName
+    ranking 'O' = OracleSmartRanking oracleName
     ranking 'c' = UsefulGoalNrRanking
     ranking 'C' = GoalNrRanking
     ranking r   = error $ render $ fsep $ map text $ words $
@@ -447,7 +458,8 @@ addMessageDeductionRuleVariants thy0
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
-                   ++ if enableMSet msig then multisetIntruderRules else []
+                   ++ (if enableMSet msig then multisetIntruderRules else [])
+                   ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACs rules thy0
     addIntruderVariants mkRuless = do
         return $ addIntrRuleACs (concatMap ($ msig) mkRuless) thy
@@ -464,7 +476,8 @@ addMessageDeductionRuleVariantsDiff thy0
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
-                    ++ if enableMSet msig then multisetIntruderRules else []
+                    ++ (if enableMSet msig then multisetIntruderRules else [])
+                    ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless = do
         return $ addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)

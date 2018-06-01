@@ -262,7 +262,7 @@ unbound:
   rule `lookup_s_as_x_0_12' has unbound variables: 
     x
 
-restriction actions:
+Restriction actions:
   restriction `set_in' references action 
     (ProtoFact Linear "Delete" 1,1,Linear)
   but no rule has such an action.
@@ -295,7 +295,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.443059s
+  processing time: 0.386376s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -311,7 +311,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.443059s
+  processing time: 0.386376s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

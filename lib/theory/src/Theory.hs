@@ -89,8 +89,7 @@ module Theory (
   , cprRuleE
   , filterSide
   , addDefaultDiffLemma
-  , addProtoRuleLabels
-  , removeProtoRuleLabels
+  , addProtoRuleLabel
   , addIntrRuleLabels
 
   -- ** Open theories
@@ -184,12 +183,10 @@ import           Prelude                             hiding (id, (.))
 import           GHC.Generics                        (Generic)
 
 import           Data.Binary
--- import           Data.Foldable                       (Foldable, foldMap)
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
--- import           Data.Traversable                    (Traversable, traverse)
 
 import           Control.Basics
 import           Control.Category
@@ -282,8 +279,8 @@ instance HasRuleName ClosedProtoRule where
 -- | All intruder rules of a set of classified rules.
 intruderRules :: ClassifiedRules -> [IntrRuleAC]
 intruderRules rules = do
-    Rule (IntrInfo i) ps cs as <- joinAllRules rules
-    return $ Rule i ps cs as
+    Rule (IntrInfo i) ps cs as nvs <- joinAllRules rules
+    return $ Rule i ps cs as nvs
 
 -- | Open a rule cache. Variants and precomputed case distinctions are dropped.
 openRuleCache :: ClosedRuleCache -> OpenRuleCache
@@ -301,7 +298,7 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts) =
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs) =
   if subterm then [ru] else variantsIntruder hnd id False ru
     where
       ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
@@ -309,11 +306,11 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule 
                               -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts)
+                              else 0) subterm constant) prems concs acts nvs)
         where
            runMaude = (`runReader` hnd)
-closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _) = variantsIntruder hnd id False ir
-closeIntrRule _   ir                                      = [ir]
+closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
+closeIntrRule _   ir                                        = [ir]
 
 
 -- | Close a rule cache. Hower, note that the
@@ -613,9 +610,6 @@ type ClosedDiffTheory =
 type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
-type OpenDiffTheoryItem =
-    DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
-
 
 -- Shared theory modification functions
 ---------------------------------------
@@ -845,13 +839,8 @@ addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
 addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Observational_equivalence" []) thy
 
 -- Add the rule labels to an Open Diff Theory
-addProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-addProtoRuleLabels thy =
-    modify diffThyItems (map addRuleLabel) thy
-  where
-    addRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
-    addRuleLabel (DiffRuleItem rule) = DiffRuleItem $ addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
-    addRuleLabel x                   = x
+addProtoRuleLabel :: OpenProtoRule -> OpenProtoRule
+addProtoRuleLabel rule = addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
     
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
@@ -860,26 +849,16 @@ addIntrRuleLabels thy =
   where
     addRuleLabel :: IntrRuleAC -> IntrRuleAC
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
-
--- Add the rule labels to an Open Diff Theory
-removeProtoRuleLabels:: OpenDiffTheory -> OpenDiffTheory
-removeProtoRuleLabels thy =
-    modify diffThyItems (map removeRuleLabel) thy
-  where
-    removeRuleLabel :: OpenDiffTheoryItem -> OpenDiffTheoryItem
-    removeRuleLabel (DiffRuleItem rule) = DiffRuleItem $ removeDiffLabel rule ("DiffProto" ++ (getRuleName rule))
-    removeRuleLabel x                   = x
-
     
 -- | Open a theory by dropping the closed world assumption and values whose
--- soundness dependens on it.
+-- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n sig c items) =
     Theory n (toSignaturePure sig) (openRuleCache c)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
 
 -- | Open a theory by dropping the closed world assumption and values whose
--- soundness dependens on it.
+-- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
     DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
@@ -890,12 +869,6 @@ openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
     find ((name ==) . L.get (preName . rInfo)) . theoryRules
-
--- | Find the open protocol rule with the given name.
--- REMOVE
--- lookupOpenDiffProtoRule :: Side -> ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
--- lookupOpenDiffProtoRule s name =
---     find ((name ==) . L.get rInfo) . (diffTheorySideRules s)
 
 -- | Find the open protocol rule with the given name.
 lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
@@ -1206,8 +1179,8 @@ closeDiffTheoryWithMaude sig thy0 = do
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
-    leftOpenRules  = map getLeftRule  diffRules
-    rightOpenRules = map getRightRule diffRules
+    leftOpenRules  = map (getLeftRule  . addProtoRuleLabel) diffRules
+    rightOpenRules = map (getRightRule . addProtoRuleLabel) diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
@@ -1421,10 +1394,8 @@ proveDiffTheory :: (Lemma IncrementalProof -> Bool)       -- ^ Lemma selector.
             -> ClosedDiffTheory
             -> ClosedDiffTheory
 proveDiffTheory selector diffselector prover diffprover thy =
-  -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
- -- Not clear wether this is correct or useful   prove :: DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
     prove item = case item of
       EitherLemmaItem (s, l0) -> do l <- MS.gets (\x -> EitherLemmaItem (s, (proveLemma s l0 x)))
                                     MS.modify (l :)
@@ -1554,7 +1525,7 @@ modifyLemmaProofDiff s prover name thy =
     modA diffThyItems (changeItems s) thy
   where
     findLemma s'' (EitherLemmaItem (s''', lem)) = (name == L.get lName lem) && (s''' == s'')
-    findLemma _ _                            = False
+    findLemma _ _                               = False
 
     change s'' preItems (EitherLemmaItem (s''', lem)) = if s''==s'''
         then

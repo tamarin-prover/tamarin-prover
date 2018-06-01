@@ -1,3 +1,32 @@
+* 1.4.0
+  - Added support for XOR operations in Tamarin as a new built-in, as described in the CSF 2018 paper (https://hal.archives-ouvertes.fr/hal-01780544): "Automated Unbounded Verification of Stateful Cryptographic Protocols with Exclusive OR"
+
+  - Voting protocol models for "Alethea" added, described in "A Provably Secure Random Sample Voting Protocol", also at CSF 2018
+
+  - Better mirror displays in equivalence mode
+
+  - Numerous bug fixes
+
+  - Using stack LTS resolver 11.7 now
+
+* 1.2.3
+  - GUI shows warnings on load that previously were only shown on command line
+
+  - Additional warnings emitted on undefined (i.e., never defined in a rule) actions when only used in restrictions (lemmas already did this)
+
+  - New oracle ranking heuristic=O added that uses the default smart heuristic as base. Oracles can now be given in files with any name, with the option --oraclefile=FILE
+
+  - Rule coloring option added
+
+  - Prevent reuse of builtin function names by user-defined theory
+
+  - New built-in theory for signing which reveals the signed message
+
+  - Various performance improvements and bug fixes
+
+  - Now building with stack LTS resolver 10.7 with ghc-8.2.2
+
+
 * 1.2.2
   - "partial deconstructions" text added to cases with partial deconstructions, which makes them searchable.
 

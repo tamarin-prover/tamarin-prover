@@ -136,7 +136,9 @@ solveAllSafeGoals ths' =
                             then True 
                             else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
-        PremiseG _ fa -> not (isKUFact fa)
+        -- we do not solve KD goals for Xor facts as insertAction inserts
+        -- these goals directly. This prevents loops in the precomputations
+        PremiseG _ fa -> not (isKUFact fa) && not (isKDXorFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
         SplitG _      -> doSplit --extensiveSplitting &&
@@ -145,7 +147,7 @@ solveAllSafeGoals ths' =
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
 
-    isKDPrem (PremiseG _ fa,_) = isKDFact fa
+    isKDPrem (PremiseG _ fa,_) = (isKDFact fa) && (not (isKDXorFact fa))
     isKDPrem _                 = False
     isChainPrem1 (ChainG _ (_,PremIdx 1),_) = True
     isChainPrem1 _                          = False
@@ -173,6 +175,8 @@ solveAllSafeGoals ths' =
             safeGoals       = fst <$> filter (safeGoal splitAllowed chainsLeft) filteredGoals
             remainingChains ((ChainG _ _):_) = chainsLeft-1
             remainingChains _                = chainsLeft
+            -- we do not solve KD goals for Xor facts as insertAction inserts
+            -- these goals directly. This prevents loops in the precomputations
             kdPremGoals     = fst <$> filter (\g -> isKDPrem g || isChainPrem1 g) goals
             usefulGoals     = fst <$> filter usefulGoal goals
             nextStep :: Maybe (Reduction [String], Maybe Source)
@@ -218,7 +222,7 @@ removeRedundantCases ctxt stableVars getSys cases0 =
     -- decorate with index and normed version of the system
     decoratedCases = map (second addNormSys) $  zip [(0::Int)..] cases0
     -- drop cases where the normed systems coincide
-    cases          =   map (fst . snd) . sortOn fst . sortednubOn (snd . snd) $ decoratedCases
+    cases          =   map (fst . snd) . sortOn fst . sortednubBy (\(_,(_, x)) (_,(_, y)) -> compareSystemsUpToNewVars x y) $ decoratedCases
 
     addNormSys = id &&& ((modify sEqStore dropNameHintsBound) . renameDropNameHints . getSys)
 

@@ -123,7 +123,7 @@ next
           case Register_Voter_pk
           solve( !KU( sign(e, ~ltkV) ) @ #vk.2 )
             case A_1
-            solve( (#vr.5, 0) ~~> (#vk, 0) )
+            solve( (#vr.7, 0) ~~> (#vk, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
@@ -134,7 +134,7 @@ next
             case V_1_case_1
             solve( !KU( ~b ) @ #vk.3 )
               case A_1
-              solve( (#vr.9, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.11, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -149,7 +149,7 @@ next
             case V_1_case_3
             solve( !KU( ~b ) @ #vk.4 )
               case A_1
-              solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.12, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -161,7 +161,7 @@ next
             case V_1_case_4
             solve( !KU( ~b ) @ #vk.3 )
               case A_1
-              solve( (#vr.8, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.10, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -173,7 +173,7 @@ next
             case c_sign
             solve( !KU( ~ltkV ) @ #vk.3 )
               case A_1
-              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.7, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -201,7 +201,7 @@ next
           by contradiction /* from formulas */
         next
           case A_1_case_2
-          solve( (#vr.5, 0) ~~> (#vk, 0) )
+          solve( (#vr.7, 0) ~~> (#vk, 0) )
             case d_0_open
             by contradiction /* forbidden KD-fact */
           qed
@@ -221,7 +221,7 @@ next
           case c_sign
           solve( !KU( ~ltkA ) @ #vk.4 )
             case A_1
-            solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            solve( (#vr.7, 0) ~~> (#vk.1, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
@@ -327,7 +327,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 9.544289s
+  processing time: 1.021208s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -340,7 +340,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 9.544289s
+  processing time: 1.021208s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

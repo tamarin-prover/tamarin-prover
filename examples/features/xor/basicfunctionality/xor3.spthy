@@ -1,0 +1,26 @@
+theory xor3
+begin
+
+builtins: xor
+
+//  ⊕ or XOR
+
+
+rule testsend:
+  [ Fr(~a), Fr(~b), Fr(~c)]
+--[ OnlyOnce()
+  , Secret(~a XOR ~b) ]->
+  [ Out(<~a XOR ~c, ~b XOR ~c>)]
+
+
+restriction unique:
+  "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
+
+// this secrecy lemma should be broken!
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+lemma secrecybroken:
+  "All x #i. Secret(x) @i ==> not (Ex #j. K(x) @j)"
+
+
+
+end

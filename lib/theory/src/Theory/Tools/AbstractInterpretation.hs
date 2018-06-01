@@ -8,7 +8,7 @@
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
--- Abstract intepretation for partial evaluation of multiset rewriting
+-- Abstract interpretation for partial evaluation of multiset rewriting
 -- systems.
 module Theory.Tools.AbstractInterpretation (
   -- * Combinator to define abstract interpretations

@@ -220,13 +220,21 @@ multterm plit = do
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit False
 
+-- | A left-associative sequence of xors.
+xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
+xorterm plit = do
+    xor <- enableXor <$> getState
+    if xor -- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (multterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
+        else multterm plit
+
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
     if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (multterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else multterm plit
+        then chainl1 (xorterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else xorterm plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -314,8 +322,9 @@ protoRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps,as,cs) <- genericRule
-    return $ apply subst $ Rule ri ps cs as
+    (ps0,as0,cs0) <- genericRule
+    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    return $ Rule ri ps cs as (newVariables ps cs)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
@@ -330,7 +339,7 @@ intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
     (ps,as,cs) <- genericRule
-    return $ Rule info ps cs as
+    return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
         name     <- identifier
@@ -348,6 +357,13 @@ genericRule =
          <*> ((pure [] <* symbol "-->") <|>
               (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
          <*> list (fact llit)
+
+newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
+newVariables prems concs = map varTerm $ S.toList newvars
+  where
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concat $ map getFactVariables prems
+    concvars = S.fromList $ concat $ map getFactVariables concs
 
 {-
 -- | Add facts to a rule.
@@ -715,12 +731,16 @@ builtins =
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
           *> extendSig msetMaudeSig
+      , try (symbol "xor")
+          *> extendSig xorMaudeSig
       , try (symbol "symmetric-encryption")
           *> extendSig symEncMaudeSig
       , try (symbol "asymmetric-encryption")
           *> extendSig asymEncMaudeSig
       , try (symbol "signing")
           *> extendSig signatureMaudeSig
+      , try (symbol "revealing-signing")
+          *> extendSig revealSignatureMaudeSig
       , symbol "hashing"
           *> extendSig hashMaudeSig
       ]
@@ -733,6 +753,9 @@ functions =
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
         priv <- option Public (symbol "[private]" *> pure Private)
+        if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+          then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
+          else return ()
         sig <- getState
         case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
           Just kp' | kp' /= (k,priv) ->
@@ -751,7 +774,7 @@ equations =
           Just str ->
               modifyState (addCtxtStRule str)
           Nothing  ->
-              fail $ "Not a subterm rule: " ++ show rrule
+              fail $ "Not a correct equation: " ++ show rrule
 
 ------------------------------------------------------------------------------
 -- Parsing Theories

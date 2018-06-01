@@ -5,6 +5,4 @@ packages:
 - lib/term/
 - lib/utils/
 extra-deps: []
-resolver: lts-9.2
-# for GHC 7.10 use:
-# lts-6.35
+resolver: lts-11.7

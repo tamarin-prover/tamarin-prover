@@ -1,0 +1,266 @@
+theory alethea_selectionphase_anonymity
+begin
+
+/* 
+============
+INTRODUCTION
+============
+Protocol: Alethea's selection phase
+Modeler: Lara Schmid
+Described in:[1] Alethea: A Provably Secure Random Sample Voting Protocol, David Basin, Sasa Radomirovic, and Lara Schmid,CSF18.
+Date: 30th April 2018
+
+
+The file contains: 
+- a short explanation of the modeled version, 
+- the model in Alice & Bob notation, where we denote by ->, *->, ->*, and *->* insecure, authentic, confidential, and secure channels, respectively (see [1]),
+- a list of the results (with references to the lemmas in [1]),
+- the Tamarin protocol specification, the restrictions, and the lemmas.
+
+========
+Version:
+========
+This file models Alethea's selection phase with an honest server.
+
+- as S is honest, we do not model the environment E and say that "S knows the decision who is chosen" and acts accordingly
+- as S is honest, we model S and BB as one role and also model the first send of S in the setup rule (the adversary cannot see into an agent state of an honest agent)
+- as S is honest, we do not model the auditors. nevertheless we model the posting of messages to BB, such that the adversary can still learn everything that auditors normally learn.
+
+==========================
+Alice & Bob specification: 
+==========================
+0. S		: knows(BB,skS,H,D,pk(skD),x)			
+0. D		: knows(skD,S,pk(skS),H)
+0. H		: knows(D,S,BB)
+
+1. S  		: rand(x)
+		  y=h(H,x)
+2. S/BB*-> 	: 'yS', [y]  
+3. S  *-> D	: {x}pk(skD)
+4. D  *->* H	: h(H,x)  /  yD
+5.(BB)*->  H 	: 'yS', [y]  
+6. S/BB*->  H	: 'ySG', [y_SG]
+
+
+=========================================
+RESULTS: (aut) = automatically proven
+this model was analyzed without an oracle
+=========================================
+
+- lemma functional:					LHS = verified; RHS = verified (aut)
+- INDIVIDUAL VERIFIABILIY ([1] Lemmas 2 and 3)		 
+	- lemma individualVerifiability_votercode:	LHS = verified; RHS = verified (aut)
+	- lemma individualVerifiability_sel:		LHS = verified; RHS = verified (aut)
+- OBSERVATIONAL EQUIVALENCE ([1] Lemma 6)
+	- lemma Observational_equivalence: 		verified (aut)
+
+Additional Lemmas:
+==================
+- SECRECY 
+ 	- lemma secret_x: 				LHS = verified; RHS = verified (aut)
+- AGREEMENTS:
+	- lemma agreementHwrtS:				LHS = verified; RHS = verified (aut)
+	- lemma agreementDwrtS:				LHS = verified; RHS = verified (aut)
+		
+
+
+*/
+/*============
+SPECIFICATION:
+============== */
+
+/*=======
+built-ins 
+========= */
+builtins: signing, asymmetric-encryption, hashing, symmetric-encryption, multiset
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+/* =====
+Protocol
+======== */
+
+
+
+rule Setup: 
+  	[ Fr(~x1), Fr(~x2), !Ltk('S',~skS), !Ltk('D1',~skD1), !Ltk('D2',~skD2) ] 
+  	--[ 	Setup(), 
+		Comm_S_Ys('S',<'ys',diff(h('H1',~x1),h('H2',~x2))+diff(h('H2',~x2),h('H1',~x1)) >),
+		Running('S','D1',<pk(~skD1),'H1',~x1>),
+		Running('S','D2',<pk(~skD2),'H2',~x2>),
+
+		//on BB
+		BB_Ys('BB','ys',diff(h('H1',~x1),h('H2',~x2))+diff(h('H2',~x2),h('H1',~x1)))
+	]-> 
+	[ AgSt_D0(diff(<'D1',~skD1,'S',pk(~skS),'H1' >,<'D2',~skD2,'S',pk(~skS),'H2' > ) )
+	, AgSt_D0(diff(<'D2',~skD2,'S',pk(~skS),'H2' >,<'D1',~skD1,'S',pk(~skS),'H1'> ) )
+	
+	, AgSt_S0('S','BB',~skS,diff(<'H1','D1',pk(~skD1),~x1>,<'H2','D2',pk(~skD2),~x2>),
+			        diff(<'H2','D2',pk(~skD2),~x2>,<'H1','D1',pk(~skD1),~x1>)  ) 
+	
+	, AgSt_H0(diff(<'H1','D1','S','BB'>,<'H2','D2','S','BB'>))
+	, AgSt_H0(diff(<'H2','D2','S','BB'>,<'H1','D1','S','BB'>))
+	
+	
+	//first events of S:
+	//in left system choose H1 and send this information out first, in second choose H2 and send this code out first.
+	//the reodering is done such that Tamarin cannot find attacks just by seeing if something is sent out as 1st or 2nd fact (this models that the adverary cannot learn anything from the order of the codes in the lists)
+	, Out_A('S',diff( aenc(~x1,pk(~skD1)),aenc(~x2,pk(~skD2)) ) )
+	, Out_A('S',diff( aenc(~x2,pk(~skD2)),aenc(~x1,pk(~skD1)) ) )
+	, Out_A($BB,<'ys',diff(h('H1',~x1),h('H2',~x2))+diff(h('H2',~x2),h('H1',~x1))>)
+	
+	]
+
+rule D_4: 
+	[ AgSt_D0(<$D,~skD,$S,pkS,$H >)
+	, In_A($S,aenc(x,pk(~skD)) )
+	
+	]
+	--[ 	Commit($D,$S,<pk(~skD),$H,x>),
+	    	Comm_D_Y($D,h($H,x)),
+	    	Secret($D,x)
+	]->
+	[ Out_S($D,$H,h($H,x)) ]
+
+rule H_5: 
+	[ AgSt_H0(<$H,$D,$S,$BB >)
+	, In_S($D,$H,yD)
+	, In_A($BB,<'ys',y1+y2 >)
+	] 
+	--[ 	Learn_H_yD($H,$D,yD),
+	   	Learn_H_Ys($H,$S,<'ys',y1+y2 >)
+	]-> 
+	[ AgSt_H5($H,<$D,$S,$BB,yD,y1,y2 >)]
+
+rule S_7: 
+	[ AgSt_S0($S,$BB,~skS,<$HSel,   $DSel,   pkDSel,   ~xSel>,
+			      <$HNotsel,$DNotsel,pkDNotsel,~xNotsel> )
+	]
+ 	--[ 	Comm_S_ySG($S,<'ySG',h($HSel,~xSel) >),
+		BB_ySG($BB,<'ySG',h($HSel,~xSel)>)
+	]->  
+	[ Out_A($BB,<'ySG',h($HSel,~xSel)>)	
+	] 
+
+rule H_9: 
+	[ AgSt_H5($H,<$D,$S,$BB,yD,y1,y2 >),
+	  In_A($BB,<'ySG',ySG>)
+	]
+	--[ 	Learn_H_ySG($H,$S,<'ySG',ySG>)
+	]->
+	[ ]
+
+
+/* ====
+RESTRICTIONS
+====== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* =================
+functionality lemmas
+==================== */
+lemma functional: exists-trace
+	" (All #s1 #s2. 
+		Setup() @s1 &Setup() @s2 ==> #s1=#s2)
+	& (Ex #i #j1 #j2 #k1 #k2 #l #m1 #m2 
+	      S H1 H2 D1 D2 x1 x2 ySG
+		.
+		not (H1 = H2)
+		
+		& Comm_S_Ys(S,<'ys',h(H1,x1)+h(H2,x2)>) @i  
+		& Comm_D_Y(D1,h(H1,x1)) @j1
+		& Comm_D_Y(D2,h(H2,x2)) @j2
+		& Learn_H_yD(H1,D1,h(H1,x1)) @k1 
+		& Learn_H_yD(H2,D2,h(H2,x2)) @k2
+
+	   	& Learn_H_Ys(H1,S,<'ys',h(H1,x1)+h(H2,x2) >) @k1
+		& Learn_H_Ys(H2,S,<'ys',h(H1,x1)+h(H2,x2) >) @k2
+		 
+		& Comm_S_ySG(S,<'ySG',ySG >) @l
+		& Learn_H_ySG(H1,S,<'ySG',ySG >) @m1
+		& Learn_H_ySG(H2,S,<'ySG',ySG >) @m2
+		)"
+
+/* =====================
+individual verifiability
+======================== */
+
+lemma individualVerifiability_votercode:
+	" All H D yD #h1 S yOther #h2 .
+		// verify_yD(H,y_D in [y], true)
+		Learn_H_yD(H,D,yD) @h1 			//yD from device 
+	   	& Learn_H_Ys(H,S,<'ys',yD+yOther>) @h2  //same yD is part of [y] that H learned
+	==> Ex x BB y2 #b1. 
+		//then exists code on BB which is yD and really constructed as a hash for H
+		BB_Ys(BB,'ys',yD+y2) @b1
+		& yD =h(H,x)
+		"
+
+lemma individualVerifiability_sel:
+	" All H D yD #h1 S #h2 .
+		// sel(H, y_D in [y_SG], true)
+		Learn_H_yD(H,D,yD) @h1			//yD from device 
+	   	& Learn_H_ySG(H,S,<'ySG',yD>) @h2 	//learn that this (same) yD selected code (in list [y_SG])
+	==> Ex x BB #b1. 
+		//then yD is in list of selected codes and is a hash of H
+		BB_ySG(BB,<'ySG',yD>) @b1 
+		& yD = h(H,x)
+		"
+
+/* =============
+ADDITONAL LEMMAS 
+================ */
+/* ====
+secrecy 
+======= */
+//(not in [1]) tests that with honest S, x is not known to the adversary)
+
+lemma secret_x: 
+	"All D x #i. 	Secret(D,x) @i 		
+			==> not (Ex #j. K(x) @j)	"
+
+
+/* =====================================
+agreements - establish initial knowledge
+======================================== */
+//(not in [1]) this establishes that there is some shared knowledge between the participants after the selection phase, which justifies assuming the shared initial knowledge in the voting phase)
+
+ //agreement of H wrt S (all that H learns is indeed coming from S)
+lemma agreementHwrtS:
+	" (All H S x #i. Learn_H_Ys(H,S,x) @i  
+	   ==> Ex #j.    Comm_S_Ys(S,x) @j & j<i)
+	& (All H S x #i. Learn_H_ySG(H,S,x) @i	
+	   ==> Ex #j.    Comm_S_ySG(S,x) @j & j<i)"
+
+ // agreement of D wrt S 
+lemma agreementDwrtS: 
+	" All D S data #i. Commit(D,S,data) @i 		
+	  ==> Ex #j.       Running(S,D,data) @j & j<i " 
+
+
+end
+
+

@@ -787,7 +787,7 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-restriction actions:
+Restriction actions:
   restriction `predicate1' references action 
     (ProtoFact Linear "Pred_not_pred_rep" 2,2,Linear)
   but no rule has such an action.
@@ -812,7 +812,7 @@ analyzing: case-studies-sapic-regression/locations/licensing.spthy
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
-  processing time: 5.210468s
+  processing time: 5.121821s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -828,7 +828,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/licensing.spthy
 
   output:          case-studies-sapic-regression/locations/licensing.spthy.tmp
-  processing time: 5.210468s
+  processing time: 5.121821s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

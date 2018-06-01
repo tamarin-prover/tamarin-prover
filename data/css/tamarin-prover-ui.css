@@ -92,6 +92,15 @@ div.warning {
     font-size: large;
 }
 
+div.wf-warning {
+    margin: 1em;
+    padding: 2em;
+    background: #ffdddd;
+    border: solid 2px #ff8080;
+    font-weight: bold;
+    font-size: large;
+}
+
 
 /* Highlighting Styles
  *********************/

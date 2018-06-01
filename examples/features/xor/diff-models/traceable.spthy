@@ -1,0 +1,54 @@
+theory traceable
+begin
+
+/* A simple traceable RFID protocol
+
+R: knows k
+T: knows k
+R -> T: nr
+T -> R: h(nr,k)
+
+Attack: Challenge twice with the same nonce. Same tag gives responds with the same hash both times. Different tags answer with different hashes.
+
+*/
+
+builtins: hashing, multiset
+
+rule setup:
+  [ Fr(key1), Fr(key2) ]
+  --[ Setup() ]->
+  [ Reader('1'+diff(key1+key2,key1+key1)), Tag('1'+diff(key1+key2,key1+key1)) ]
+
+rule select_tag:
+  [ Tag(~k+z) ]
+  -->
+  [ TagRun(~k), Tag(z) ]
+
+rule select_reader:
+  [ Reader(~k+z) ]
+  -->
+  [ ReaderRun(~k), Reader(z) ]
+
+rule reader1:
+  [ Fr(~nr) ]
+  -->
+  [ Reader1(~nr) , Out(~nr) ]
+
+rule tag1:
+  [ In(x) , TagRun(k), Fr(~nt) ]
+  --[ TagRun(k) ]->
+  [ Out(h(x,k)) ]
+
+rule reader2:
+  [ Reader1(~nr), ReaderRun(k), In(h(~nr,k)) ]
+  --[ Finished() ]->
+  [ ]
+
+// FINDS PROOF AUTOMATICALLY (2017-03-22)
+lemma executable:
+  exists-trace "Ex #i. Finished() @i"
+
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+// Observational_equivalence lemma
+
+end

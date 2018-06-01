@@ -1,0 +1,22 @@
+theory xorbasic
+begin
+
+builtins: xor
+
+rule testsend:
+  [ Fr(~x), Fr(~y), Fr(~a), Fr(~b)]
+--[ OnlyOnce()
+  , Secret(~x ⊕ ~y) ]->
+  [ Out(<~x ⊕ ~a, ~y ⊕ ~b, ~a ⊕ ~b>)]
+
+restriction unique:
+  "All #i #j. OnlyOnce() @i & OnlyOnce() @j ==> #i = #j"
+
+
+// this secrecy lemma should be broken!
+// FINDS ATTACK AUTOMATICALLY (2017-03-22) [all 4 of them]
+lemma secrecybroken:
+  "All x #i. Secret(x) @i ==> not (Ex #j. K(x) @j)"
+// indeed it is, finds 4 different ways of recombining these (using Shift+A)
+
+end

@@ -1,0 +1,43 @@
+theory testConstructor
+begin
+
+builtins: xor
+
+rule Test1:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4) ]
+--[ Challenge1(~k1 XOR ~k2 XOR ~k3 XOR ~k4) ]->
+  [ Out(~k1 XOR ~k2), Out(~k3), Out(~k4) ]
+
+rule Test2:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4) ]
+--[ Challenge2(~k1 XOR ~k2 XOR ~k3 XOR ~k4) ]->
+  [ Out(~k1), Out(~k2), Out(~k3), Out(~k4) ]
+
+rule Test3:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4) ]
+--[ Challenge3(~k1 XOR ~k2 XOR ~k4) ]->
+  [ Out(~k1), Out(~k3), Out(~k2 XOR ~k3 XOR ~k4) ]
+
+/*
+rule Test4:
+  [ Fr(~k1), Fr(~k2), Fr(~k3), Fr(~k4), Fr(~k5), Fr(~k6) ]
+--[ Challenge(~k1 XOR ~k2 XOR ~k3 XOR ~k4 XOR ~k5 XOR ~k6) ]->
+  [ Out(~k1 XOR ~k2), Out(~k3 XOR ~k4), Out(~k5 XOR ~k6)]
+*/
+
+// should find attack
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+lemma secret1:
+  "All x #i. Challenge1(x) @i ==> not(Ex #j. K(x)@j)"
+
+// should find attack
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+lemma secret2:
+  "All x #i. Challenge2(x) @i ==> not(Ex #j. K(x)@j)"
+
+// should find attack
+// FINDS ATTACK AUTOMATICALLY (2017-03-22)
+lemma secret3:
+  "All x #i. Challenge3(x) @i ==> not(Ex #j. K(x)@j)"
+
+end

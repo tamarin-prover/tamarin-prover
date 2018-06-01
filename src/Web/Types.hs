@@ -68,8 +68,6 @@ import qualified Data.Binary         as Bin
 import           Data.Binary.Orphans()
 
 import           Control.DeepSeq
-import           Control.Monad
--- import           Control.Monad
 import           GHC.Generics (Generic)
 
 import           Text.Hamlet
@@ -78,11 +76,6 @@ import           Yesod.Static
 
 import           Theory
 
-
--- | Derived Instances to fix things
-instance Bin.Binary ZonedTime where
-  get = liftM2 ZonedTime Bin.get Bin.get
-  put (ZonedTime d tod) = Bin.put d >> Bin.put tod
 
 ------------------------------------------------------------------------------
 -- Types

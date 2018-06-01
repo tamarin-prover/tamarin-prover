@@ -2,14 +2,18 @@ name:               tamarin-prover-utils
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            1.3.0
+version:            1.5.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
 author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
-                    Simon Meier <simon.meier@inf.ethz.ch>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>
-copyright:          Benedikt Schmidt, Simon Meier, ETH Zurich, 2010-2012
+                    Simon Meier <simon.meier@inf.ethz.ch>,
+                    Jannik Dreier <research@jannikdreier.net>,
+                    Ralf Sasse <ralf.sasse@gmail.com>
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
+                    Jannik Dreier <research@jannikdreier.net>,
+                    Ralf Sasse <ralf.sasse@gmail.com>
+copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
 
 synopsis:           Utility library for the tamarin prover.
 
@@ -17,7 +21,7 @@ description:        This is an internal library of the Tamarin prover for
                     security protocol verification
                     (<hackage.haskell.org/package/tamarin-prover>).
 
-homepage:           http://www.infsec.ethz.ch/research/software/tamarin
+homepage:           https://tamarin-prover.github.io/
 
 source-repository head
   type:     git

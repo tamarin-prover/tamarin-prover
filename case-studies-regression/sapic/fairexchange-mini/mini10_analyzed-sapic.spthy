@@ -99,7 +99,7 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-restriction actions:
+Restriction actions:
   restriction `resilient' references action 
     (ProtoFact Linear "Send" 2,2,Linear)
   but no rule has such an action.
@@ -120,7 +120,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini10.spthy.tmp
-  processing time: 0.079056s
+  processing time: 0.063642s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -135,7 +135,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini10.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini10.spthy.tmp
-  processing time: 0.079056s
+  processing time: 0.063642s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

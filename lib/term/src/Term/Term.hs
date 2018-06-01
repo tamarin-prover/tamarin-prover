@@ -17,6 +17,7 @@ module Term.Term (
 
     -- ** Smart constructors
     , fAppOne
+    , fAppZero
     , fAppDiff
     , fAppExp
     , fAppInv
@@ -31,6 +32,7 @@ module Term.Term (
     , isDiff
     , isInverse
     , isProduct
+    , isXor
     , isUnion
     , isEMap
     , isNullaryPublicFunction
@@ -58,20 +60,25 @@ module Term.Term (
     , unionSymString
     , oneSymString
     , multSymString
+    , zeroSymString
+    , xorSymString
     
     -- ** Function symbols
     , diffSym
     , expSym
     , pmultSym
     , oneSym
+    , zeroSym
 
     -- ** concrete signatures
     , dhFunSig
     , bpFunSig
     , msetFunSig
+    , xorFunSig
     , pairFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
+    , xorReducibleFunSig
     , implicitFunSig
 
     , module Term.Term.Classes
@@ -99,8 +106,11 @@ import           Term.Term.Raw
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
+fAppZero :: Term a
+fAppZero = fAppNoEq zeroSym []
+
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
-fAppDiff, fAppPair, fAppExp,fAppPMult :: (Term a, Term a) -> Term a
+fAppDiff, fAppPair, fAppExp, fAppPMult :: (Term a, Term a) -> Term a
 fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
@@ -141,6 +151,11 @@ isInverse _                     = False
 isProduct :: Show a => Term a -> Bool
 isProduct (viewTerm2 -> FMult _) = True
 isProduct _                      = False
+
+-- | 'True' iff the term is a well-formed xor.
+isXor :: Show a => Term a -> Bool
+isXor (viewTerm2 -> FXor _) = True
+isXor _                     = False
 
 -- | 'True' iff the term is a well-formed emap.
 isEMap :: Show a => Term a -> Bool
@@ -209,6 +224,7 @@ prettyTerm ppLit = ppTerm
 
     ppACOp Mult  = "*"
     ppACOp Union = "+"
+    ppACOp Xor   = "⊕"
 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .

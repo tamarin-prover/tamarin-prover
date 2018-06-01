@@ -13,7 +13,7 @@ section{* The Yubikey-Protocol with a YubiHSM *}
 
 builtins: symmetric-encryption
 
-functions: S/1,zero/0
+functions: S/1,myzero/0
 
 /* We to model the Yubikey protocol, described in
 *  http://www.yubico.com/documentation
@@ -68,9 +68,9 @@ equations: keystream_kh(keystream(kh,n))=kh,
  * protocol actions.
 */
 rule InitSucc:
-    [In(zero),In(S(zero))]
-	 --[Theory(), IsSucc(zero,S(zero)),IsZero(zero)]->
-	[!Succ(zero,S(zero))]
+    [In(myzero),In(S(myzero))]
+	 --[Theory(), IsSucc(myzero,S(myzero)),IsZero(myzero)]->
+	[!Succ(myzero,S(myzero))]
 
 rule StepSucc:
     [In(y),In(S(y)), !Succ(x,y)]
@@ -175,10 +175,10 @@ rule BuyANewYubikey:
 //!YSM_AEAD_GENERATE(kh),
     [ Fr(~k2),Fr(~pid),Fr(~sid),
     !HSM(kh,~k),
-    !Succ(zero,one) ]
+    !Succ(myzero,one) ]
      --[Init(~pid,~k2)]->
     [Y_counter(~pid,one), !Y_Key(~pid,~k2), !Y_sid(~pid,~sid),
-    S_Counter(~pid,zero), !S_AEAD(~pid,aead), !S_sid(~pid,~sid),
+    S_Counter(~pid,myzero), !S_AEAD(~pid,aead), !S_sid(~pid,~sid),
     Out(~pid) ]
 
 //On plugin, the session counter is increased and the token counter reset
