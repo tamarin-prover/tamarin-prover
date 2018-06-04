@@ -39,7 +39,10 @@ install:
   # SAPIC
   - opam init
   - eval `opam config env`
-
-script:
   - stack install
   - cd plugins/sapic && make
+
+script:
+  - tamarin-prover test
+   # TODO(katriel) test SAPIC?
+
