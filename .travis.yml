@@ -1,10 +1,6 @@
-# Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml
+# Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml and https://raw.githubusercontent.com/commercialhaskell/stack/stable/doc/travis-simple.yml
 
-# we use c for ocaml, stack automatically installs the correct GHC
-language: c
-
-# really means "use containerised environment and hence caching"
-
+language: generic
 sudo: false
 env:
   - OPAMYES=1
@@ -39,8 +35,8 @@ before_install:
 
 install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
-  - stack build mwc-random SHA -j 1
-  - stack install
+  - stack --no-terminal build mwc-random SHA -j 1
+  - stack --no-terminal install
 
   # SAPIC
   - opam init
