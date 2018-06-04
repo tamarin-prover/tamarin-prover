@@ -43,11 +43,39 @@ Making new releases
 The Tamarin Prover is distributed through a number of channels: source and binaries through Github, and packages through Homebrew, Arch and NixOS. When a new release is cut, here's how to update the various distribution channels.
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
-1. Update the Homebrew tap at tamarin-prover/homebrew-tap:
+
+   1. run 'make case-studies' and compare 'case-studies/' with
+      'case-studies-regression/'
+
+   2. run 'make sapic-case-studies' and compare 'case-studies-sapic/' with
+      'case-studies-sapic-regression/'
+
+   3. run 'tamarin-prover test'
+
+   4. call 'tamarin-prover' and copy CSF'12 automatic command and
+      check whether verification succeeds.
+
+   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions in data/
+
+   6. call 'tamarin-prover' and copy CSF'12 interactive command and
+      execute the following steps
+
+        (a) open one of the presented theories
+        (b) try shortcuts (J,K,j,k,1,2,..,a)
+        (c) try different graph/sequent options
+        (d) try Download
+        (e) try 'Loading a new theory' from the start page
+
+   7. Bump version number to even minor version in cabal files and code,
+      commit version bump, merge from 'develop' into 'master', then use
+      GitHub "Release" functionality to prepare the release.
+
+
+2. Update the Homebrew tap at tamarin-prover/homebrew-tap:
    1. Update the [formula](https://github.com/tamarin-prover/homebrew-tap/blob/master/Formula/tamarin-prover.rb) to point to the new source tarball.
-   1. [Build bottles](https://github.com/tamarin-prover/homebrew-tap#building-bottles) for Mac and Windows, and add them to the Homebrew formula as well.
-1. Update the NixOS repo: @thoughtpolice usually does this ([example](https://github.com/NixOS/nixpkgs/commit/04002e2b7186c166af87c20da7a7ceb8c0edb021))
-1. Update the Arch repo: @felixonmars usually does this
+   2. [Build bottles](https://github.com/tamarin-prover/homebrew-tap#building-bottles) for Mac and Windows, and add them to the Homebrew formula as well.
+3. Update the NixOS repo: @thoughtpolice usually does this ([example](https://github.com/NixOS/nixpkgs/commit/04002e2b7186c166af87c20da7a7ceb8c0edb021))
+4. Update the Arch repo: @felixonmars usually does this
 
 
 Branches
