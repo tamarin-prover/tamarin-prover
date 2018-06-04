@@ -40,7 +40,7 @@ send us a pull request.
 Making new releases
 -------------------
 
-The Tamarin Prover is distributed through a number of channels: source and binaries through Github, and packages through Homebrew, Arch and NixOS. When a new release is cut, here's how to update the various distribution channels.
+The Tamarin Prover is distributed through a number of channels: source and binaries through Github, and packages through Homebrew, Arch and NixOS. A new release should be made whenever a major new feature has been added, some significant bug(s) have been fixed, a new version of GHC should be used (possibly necessary due to MacOS auto-update), or whenever the maintainers deem it desirable. When a new release is cut, here's how to prepare the release first and then update the various distribution channels.
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
 
@@ -53,12 +53,20 @@ The Tamarin Prover is distributed through a number of channels: source and binar
    3. run 'tamarin-prover test'
 
    4. call 'tamarin-prover' and copy CSF'12 automatic command and
-      check whether verification succeeds.
+      check whether verification succeeds, i.e., run
+      'tamarin-prover --prove *'
+      in the examples/csf12 folder.
 
-   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions in data/
+   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
+      in data/ so:
+      'tamarin-prover variants > tmp.txt'
+      'diff tmp.txt data/intrudervariants_both_bp_dh_for_diff.txt'
+      which should be empty.
 
    6. call 'tamarin-prover' and copy CSF'12 interactive command and
-      execute the following steps
+      execute the following steps in the GUI after running
+      'tamarin-prover interactive .'
+      in the examples/csf12 folder.
 
         (a) open one of the presented theories
         (b) try shortcuts (J,K,j,k,1,2,..,a)
@@ -67,8 +75,9 @@ The Tamarin Prover is distributed through a number of channels: source and binar
         (e) try 'Loading a new theory' from the start page
 
    7. Bump version number to even minor version in cabal files and code,
-      commit version bump, merge from 'develop' into 'master', then use
-      GitHub "Release" functionality to prepare the release.
+      commit version bump, by running the 'version-change.sh' script as
+      described in its comments. Then merge from 'develop' into 'master'
+      and use "Release" functionality to prepare the release.
 
 
 2. Update the Homebrew tap at tamarin-prover/homebrew-tap:
