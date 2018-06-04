@@ -19,7 +19,7 @@ addons:
       - avsm
     packages:
     - camlp4-extra
-    - dot
+    - graphviz
     - libgmp-dev
     - maude
     - ocaml
