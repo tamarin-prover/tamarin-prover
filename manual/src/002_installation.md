@@ -56,7 +56,7 @@ Continue as described in Section [Running Tamarin](#sec:running-tamarin) to run 
 The fastest way to install Tamarin on Linux is to use [Linuxbrew](http://linuxbrew.sh/). Linuxbrew is a fork of Homebrew, the Mac OS package manager,
 for Linux.
 
-To install Linuxbrew follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr).
+To install Linuxbrew follow the [Installation Instructions](https://github.com/Linuxbrew/brew#install-linuxbrew).
 
 If you already have this installed, it is as simple as running the following two commands in your terminal:
 
