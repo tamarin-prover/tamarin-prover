@@ -3,6 +3,9 @@
 # we use c for ocaml, stack automatically installs the correct GHC
 language: c
 
+# really means "use containerised environment and hence caching"
+
+sudo: false
 env:
   - OPAMYES=1
 
@@ -10,7 +13,9 @@ cache:
   directories:
   - $HOME/.cabal
   - $HOME/.ghc
+  - $HOME/.local/bin/
   - $HOME/.stack
+  - .stack-work/
   
 addons:
   apt:
@@ -19,6 +24,7 @@ addons:
     packages:
     - camlp4-extra
     - libgmp-dev
+    - maude
     - ocaml
     - ocaml-native-compilers
     - opam
