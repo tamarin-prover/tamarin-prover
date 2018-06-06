@@ -47,7 +47,7 @@ install:
 
 script:
   - tamarin-prover test
-   # TODO(katriel) test SAPIC?
+  - sapic examples/sapic/basic/channels1.sapic
 
 notifications:
   slack:
