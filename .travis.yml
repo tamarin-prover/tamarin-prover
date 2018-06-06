@@ -1,55 +1,54 @@
-# Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml
-# and http://anil.recoil.org/2013/09/30/travis-and-ocaml.html
+# Adapted from https://github.com/commercialhaskell/all-cabal-hashes-tool/blob/master/.travis.yml and https://raw.githubusercontent.com/commercialhaskell/stack/stable/doc/travis-simple.yml
 
-# we use c for ocaml, stack automatically installs the correct GHC
-language: c
-
-# old, now that we use stack
-
-#language: haskell
-#sudo: false
-# selected by stack for us - ignore
-#env:
-#  - GHCVER=7.8.4
-#  - GHCVER=head
-
+language: generic
+sudo: false
 env:
-  - OCAML_VERSION=4.02.3 OPAM_VERSION=1.2.2
-#  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.0
-#  - OCAML_VERSION=4.00.1 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=4.00.1 OPAM_VERSION=1.1.0
-#  - OCAML_VERSION=3.12.1 OPAM_VERSION=1.0.0
-#  - OCAML_VERSION=3.12.1 OPAM_VERSION=1.1.0
-  
+  - OPAMYES=1
+
 cache:
   directories:
+  - $HOME/.cabal
+  - $HOME/.ghc
+  - $HOME/.local/bin/
   - $HOME/.stack
+  - .stack-work/
   
-#matrix:
-#  allow_failures:
-#    - env: GHCVER=7.8.4
-#    - env: GHCVER=head
-
 addons:
   apt:
+    sources:
+      - avsm
     packages:
+    - camlp4-extra
+    - graphviz
     - libgmp-dev
+    - maude
+    - ocaml
+    - ocaml-native-compilers
+    - opam
 
 before_install:
-# Download and unpack the stack executable
-- mkdir -p ~/.local/bin
-- export PATH=$HOME/.local/bin:$PATH
-- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-- chmod a+x ~/.local/bin/stack
-- stack --no-terminal setup
+  # Download and unpack the stack executable
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - chmod a+x ~/.local/bin/stack
+  - stack --no-terminal setup
 
 install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
-  - stack build mwc-random SHA -j 1
+  - stack --no-terminal build mwc-random SHA -j 1
+  - stack --no-terminal install
+
+  # SAPIC
+  - opam init
+  - eval `opam config env`
   - stack install
+  - make -C plugins/sapic
 
-# build SAPIC
 script:
-  - bash -ex .travis-ci.sh
+  - tamarin-prover test
+  - make sapic-case-studies
 
+notifications:
+  slack:
+    secure: Jbo4DleHEw22sDT4H4R0qY5yIkzho7u6uS0UKi9EYOe4o8ec8yrdkf3/VhyGdNvPHW+7I9RR6zFQ4j3iqJs5/TlT+Hfa4Duq9Epvr33SGuo/H8JXicly8QiWJunaTFz7t5kMttg/aUQcN8VAqwzkrUovB+gnHy9G6FmiKr1ejTQ=
