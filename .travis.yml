@@ -47,8 +47,7 @@ install:
 
 script:
   - tamarin-prover test
-  - pwd
-  - sapic examples/sapic/basic/channels1.sapic
+  - make sapic-case-studies
 
 notifications:
   slack:
