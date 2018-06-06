@@ -22,11 +22,11 @@ rule Rep_1_: //Rep, 1
 rule new_skT_1: //new skT 
  [ State_1(), Fr(skT)] --[]-> [State_11(skT)]
 
-rule event_TrustedPartyskT_11: //event TrustedParty(skT) 
- [ State_11(skT)] --[Event(), TrustedParty(skT)]-> [State_111(skT)]
+rule out_pkskT_11: //out pk(skT) 
+ [ State_11(skT)] --[]-> [State_111(skT), Out(pk(skT))]
 
-rule out_pkskT_111: //out pk(skT) 
- [ State_111(skT)] --[]-> [State_1111(skT), Out(pk(skT))]
+rule Par_111: //Par 
+ [ State_111(skT)] --[]-> [State_1111(skT), State_1112(skT)]
 
 rule Par_1111: //Par 
  [ State_1111(skT)] --[]-> [State_11111(skT), State_11112(skT)]
@@ -37,191 +37,53 @@ rule Par_11111: //Par
 rule Par_111111: //Par 
  [ State_111111(skT)] --[]-> [State_1111111(skT), State_1111112(skT)]
 
-rule Par_1111111: //Par 
- [ State_1111111(skT)] --[]-> [State_11111111(skT), State_11111112(skT)]
+rule Rep_0_1111111: //Rep, 0 
+ [ State_1111111(skT)] --[]-> [!Semistate_11111111(skT)]
 
-rule Par_11111111: //Par 
- [ State_11111111(skT)] --[]-> [State_111111111(skT), State_111111112(skT)]
+rule Rep_1_1111111: //Rep, 1 
+ [ !Semistate_11111111(skT)] --[]-> [State_11111111(skT)]
 
-rule Rep_0_111111111: //Rep, 0 
- [ State_111111111(skT)] --[]-> [!Semistate_1111111111(skT)]
+rule in_abort_ct_pk1_pk2_ysig__11111111: //in <'abort', <ct, pk1, pk2, ysig>> 
+ [ State_11111111(skT), In(<'abort', <ct, pk1, pk2, ysig>>)] --[]-> [State_111111111(ct, pk1, pk2, skT, ysig)]
 
-rule Rep_1_111111111: //Rep, 1 
- [ !Semistate_1111111111(skT)] --[]-> [State_1111111111(skT)]
+rule if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__0_111111111: //if eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>), 0 
+ [ State_111111111(ct, pk1, pk2, skT, ysig)] --[Pred_eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>)]-> [State_1111111111(ct, pk1, pk2, skT, ysig)]
 
-rule in_abort_ct_pk1_pk2_ysig__1111111111: //in <'abort', <ct, pk1, pk2, ysig>> 
- [ State_1111111111(skT), In(<'abort', <ct, pk1, pk2, ysig>>)] --[]-> [State_11111111111(ct, pk1, pk2, skT, ysig)]
+rule if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__1_111111111: //if eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>), 1 
+ [ State_111111111(ct, pk1, pk2, skT, ysig)] --[Pred_not_eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>)]-> [State_1111111112(ct, pk1, pk2, skT, ysig)]
 
-rule if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__0_11111111111: //if eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>), 0 
- [ State_11111111111(ct, pk1, pk2, skT, ysig)] --[Pred_eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>)]-> [State_111111111111(ct, pk1, pk2, skT, ysig)]
+rule lock_ct_1111111111: //lock ct 
+ [ State_1111111111(ct, pk1, pk2, skT, ysig), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_11111111111(~lock7, ct, pk1, pk2, skT, ysig)]
 
-rule if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__1_11111111111: //if eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>), 1 
- [ State_11111111111(ct, pk1, pk2, skT, ysig)] --[Pred_not_eq(check_getmsg(ysig, pk1), <ct, pk1, pk2>)]-> [State_111111111112(ct, pk1, pk2, skT, ysig)]
+rule lookup_ct_as_state_0_11111111111: //lookup ct as state, 0 
+ [ State_11111111111(~lock7, ct, pk1, pk2, skT, ysig)] --[IsIn(ct, state)]-> [State_111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)]
 
-rule lock_ct_111111111111: //lock ct 
- [ State_111111111111(ct, pk1, pk2, skT, ysig), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_1111111111111(~lock7, ct, pk1, pk2, skT, ysig)]
+rule lookup_ct_as_state_1_11111111111: //lookup ct as state, 1 
+ [ State_11111111111(~lock7, ct, pk1, pk2, skT, ysig)] --[IsNotSet(ct)]-> [State_111111111112(~lock7, ct, pk1, pk2, skT, ysig)]
 
-rule lookup_ct_as_state_0_1111111111111: //lookup ct as state, 0 
- [ State_1111111111111(~lock7, ct, pk1, pk2, skT, ysig)] --[IsIn(ct, state)]-> [State_11111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)]
+rule unlock_ct_111111111111: //unlock ct 
+ [ State_111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)] --[Unlock(~lock7, ct)]-> [State_1111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)]
 
-rule lookup_ct_as_state_1_1111111111111: //lookup ct as state, 1 
- [ State_1111111111111(~lock7, ct, pk1, pk2, skT, ysig)] --[IsNotSet(ct)]-> [State_11111111111112(~lock7, ct, pk1, pk2, skT, ysig)]
+rule Zero_1111111111111: //Zero 
+ [ State_1111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)] --[]-> []
 
-rule unlock_ct_11111111111111: //unlock ct 
- [ State_11111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)] --[Unlock(~lock7, ct)]-> [State_111111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)]
+rule insert_ct_aborted__111111111112: //insert ct,'aborted' 
+ [ State_111111111112(~lock7, ct, pk1, pk2, skT, ysig)] --[Insert(ct, 'aborted')]-> [State_1111111111121(~lock7, ct, pk1, pk2, skT, ysig)]
 
-rule Zero_111111111111111: //Zero 
- [ State_111111111111111(~lock7, ct, pk1, pk2, skT, state, ysig)] --[]-> []
+rule event_Abort1ct_1111111111121: //event Abort1(ct) 
+ [ State_1111111111121(~lock7, ct, pk1, pk2, skT, ysig)] --[Event(), Abort1(ct)]-> [State_11111111111211(~lock7, ct, pk1, pk2, skT, ysig)]
 
-rule insert_ct_aborted__11111111111112: //insert ct,'aborted' 
- [ State_11111111111112(~lock7, ct, pk1, pk2, skT, ysig)] --[Insert(ct, 'aborted')]-> [State_111111111111121(~lock7, ct, pk1, pk2, skT, ysig)]
+rule unlock_ct_11111111111211: //unlock ct 
+ [ State_11111111111211(~lock7, ct, pk1, pk2, skT, ysig)] --[Unlock(~lock7, ct)]-> [State_111111111112111(~lock7, ct, pk1, pk2, skT, ysig)]
 
-rule event_Abort1ct_111111111111121: //event Abort1(ct) 
- [ State_111111111111121(~lock7, ct, pk1, pk2, skT, ysig)] --[Event(), Abort1(ct)]-> [State_1111111111111211(~lock7, ct, pk1, pk2, skT, ysig)]
+rule out_sign_ct_pk1_pk2_ysig_skT_111111111112111: //out sign(<<ct, pk1, pk2>, ysig>, skT) 
+ [ State_111111111112111(~lock7, ct, pk1, pk2, skT, ysig)] --[]-> [State_1111111111121111(~lock7, ct, pk1, pk2, skT, ysig), Out(sign(<<ct, pk1, pk2>, ysig>, skT))]
 
-rule unlock_ct_1111111111111211: //unlock ct 
- [ State_1111111111111211(~lock7, ct, pk1, pk2, skT, ysig)] --[Unlock(~lock7, ct)]-> [State_11111111111112111(~lock7, ct, pk1, pk2, skT, ysig)]
+rule Zero_1111111111121111: //Zero 
+ [ State_1111111111121111(~lock7, ct, pk1, pk2, skT, ysig)] --[]-> []
 
-rule out_sign_ct_pk1_pk2_ysig_skT_11111111111112111: //out sign(<<ct, pk1, pk2>, ysig>, skT) 
- [ State_11111111111112111(~lock7, ct, pk1, pk2, skT, ysig)] --[]-> [State_111111111111121111(~lock7, ct, pk1, pk2, skT, ysig), Out(sign(<<ct, pk1, pk2>, ysig>, skT))]
-
-rule Zero_111111111111121111: //Zero 
- [ State_111111111111121111(~lock7, ct, pk1, pk2, skT, ysig)] --[]-> []
-
-rule Zero_111111111112: //Zero 
- [ State_111111111112(ct, pk1, pk2, skT, ysig)] --[]-> []
-
-rule Rep_0_111111112: //Rep, 0 
- [ State_111111112(skT)] --[]-> [!Semistate_1111111121(skT)]
-
-rule Rep_1_111111112: //Rep, 1 
- [ !Semistate_1111111121(skT)] --[]-> [State_1111111121(skT)]
-
-rule in_resolve2_ct_pk1_pk2_ypcs1_ysig2__1111111121: //in <'resolve2', <ct, pk1, pk2, ypcs1, ysig2>> 
- [ State_1111111121(skT), In(<'resolve2', <ct, pk1, pk2, ypcs1, ysig2>>)] --[]-> [State_11111111211(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheck_getmsgysig2_pk2_ct_0_11111111211: //if eq(check_getmsg(ysig2, pk2), ct), 0 
- [ State_11111111211(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(check_getmsg(ysig2, pk2), ct)]-> [State_111111112111(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheck_getmsgysig2_pk2_ct_1_11111111211: //if eq(check_getmsg(ysig2, pk2), ct), 1 
- [ State_11111111211(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(check_getmsg(ysig2, pk2), ct)]-> [State_111111112112(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_0_111111112111: //if eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct), 0 
- [ State_111111112111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct)]-> [State_1111111121111(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_1_111111112111: //if eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct), 1 
- [ State_111111112111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct)]-> [State_1111111121112(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_0_1111111121111: //if eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true()), 0 
- [ State_1111111121111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true())]-> [State_11111111211111(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_1_1111111121111: //if eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true()), 1 
- [ State_1111111121111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true())]-> [State_11111111211112(ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule lock_ct_11111111211111: //lock ct 
- [ State_11111111211111(ct, pk1, pk2, skT, ypcs1, ysig2), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_111111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule lookup_ct_as_status_0_111111112111111: //lookup ct as status, 0 
- [ State_111111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[IsIn(ct, status)]-> [State_1111111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)]
-
-rule lookup_ct_as_status_1_111111112111111: //lookup ct as status, 1 
- [ State_111111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[IsNotSet(ct)]-> [State_1111111121111112(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule unlock_ct_1111111121111111: //unlock ct 
- [ State_1111111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)] --[Unlock(~lock7, ct)]-> [State_11111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)]
-
-rule Zero_11111111211111111: //Zero 
- [ State_11111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)] --[]-> []
-
-rule insert_ct_resolved2__1111111121111112: //insert ct,'resolved2' 
- [ State_1111111121111112(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Insert(ct, 'resolved2')]-> [State_11111111211111121(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule event_Resolve2ct_11111111211111121: //event Resolve2(ct) 
- [ State_11111111211111121(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Event(), Resolve2(ct)]-> [State_111111112111111211(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule unlock_ct_111111112111111211: //unlock ct 
- [ State_111111112111111211(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Unlock(~lock7, ct)]-> [State_1111111121111112111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
-
-rule out_sign_convertpcsskT_ypcs1_ysig2_skT_1111111121111112111: //out sign(<convertpcs(skT, ypcs1), ysig2>, skT) 
- [ State_1111111121111112111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> [State_11111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2), Out(sign(<convertpcs(skT, ypcs1), ysig2>, skT))]
-
-rule Zero_11111111211111121111: //Zero 
- [ State_11111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
-
-rule Zero_11111111211112: //Zero 
- [ State_11111111211112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
-
-rule Zero_1111111121112: //Zero 
- [ State_1111111121112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
-
-rule Zero_111111112112: //Zero 
- [ State_111111112112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
-
-rule Rep_0_11111112: //Rep, 0 
- [ State_11111112(skT)] --[]-> [!Semistate_111111121(skT)]
-
-rule Rep_1_11111112: //Rep, 1 
- [ !Semistate_111111121(skT)] --[]-> [State_111111121(skT)]
-
-rule in_resolve1_ct_pk1_pk2_ysig1_ypcs2__111111121: //in <'resolve1', <ct, pk1, pk2, ysig1, ypcs2>> 
- [ State_111111121(skT), In(<'resolve1', <ct, pk1, pk2, ysig1, ypcs2>>)] --[]-> [State_1111111211(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheck_getmsgysig1_pk1_ct_0_1111111211: //if eq(check_getmsg(ysig1, pk1), ct), 0 
- [ State_1111111211(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(check_getmsg(ysig1, pk1), ct)]-> [State_11111112111(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheck_getmsgysig1_pk1_ct_1_1111111211: //if eq(check_getmsg(ysig1, pk1), ct), 1 
- [ State_1111111211(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(check_getmsg(ysig1, pk1), ct)]-> [State_11111112112(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_0_11111112111: //if eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct), 0 
- [ State_11111112111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct)]-> [State_111111121111(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_1_11111112111: //if eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct), 1 
- [ State_11111112111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct)]-> [State_111111121112(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_0_111111121111: //if eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true()), 0 
- [ State_111111121111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true())]-> [State_1111111211111(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_1_111111121111: //if eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true()), 1 
- [ State_111111121111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true())]-> [State_1111111211112(ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule lock_ct_1111111211111: //lock ct 
- [ State_1111111211111(ct, pk1, pk2, skT, ypcs2, ysig1), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_11111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule lookup_ct_as_status_0_11111112111111: //lookup ct as status, 0 
- [ State_11111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[IsIn(ct, status)]-> [State_111111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)]
-
-rule lookup_ct_as_status_1_11111112111111: //lookup ct as status, 1 
- [ State_11111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[IsNotSet(ct)]-> [State_111111121111112(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule unlock_ct_111111121111111: //unlock ct 
- [ State_111111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)] --[Unlock(~lock7, ct)]-> [State_1111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)]
-
-rule Zero_1111111211111111: //Zero 
- [ State_1111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)] --[]-> []
-
-rule insert_ct_resolved1__111111121111112: //insert ct,'resolved1' 
- [ State_111111121111112(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Insert(ct, 'resolved1')]-> [State_1111111211111121(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule event_Resolve1ct_1111111211111121: //event Resolve1(ct) 
- [ State_1111111211111121(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Event(), Resolve1(ct)]-> [State_11111112111111211(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule unlock_ct_11111112111111211: //unlock ct 
- [ State_11111112111111211(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Unlock(~lock7, ct)]-> [State_111111121111112111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
-
-rule out_sign_ysig1_convertpcsskT_ypcs2_skT_111111121111112111: //out sign(<ysig1, convertpcs(skT, ypcs2)>, skT) 
- [ State_111111121111112111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> [State_1111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1), Out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT))]
-
-rule Zero_1111111211111121111: //Zero 
- [ State_1111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
-
-rule Zero_1111111211112: //Zero 
- [ State_1111111211112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
-
-rule Zero_111111121112: //Zero 
- [ State_111111121112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
-
-rule Zero_11111112112: //Zero 
- [ State_11111112112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
+rule Zero_1111111112: //Zero 
+ [ State_1111111112(ct, pk1, pk2, skT, ysig)] --[]-> []
 
 rule Rep_0_1111112: //Rep, 0 
  [ State_1111112(skT)] --[]-> [!Semistate_11111121(skT)]
@@ -229,14 +91,65 @@ rule Rep_0_1111112: //Rep, 0
 rule Rep_1_1111112: //Rep, 1 
  [ !Semistate_11111121(skT)] --[]-> [State_11111121(skT)]
 
-rule in_signpcssignct_sk1_pkysk_pkskT_skT_11111121: //in sign(pcs(sign(ct, sk1), pk(ysk), pk(skT)), skT) 
- [ State_11111121(skT), In(sign(pcs(sign(ct, sk1), pk(ysk), pk(skT)), skT))] --[]-> [State_111111211(ct, sk1, skT, ysk)]
+rule in_resolve2_ct_pk1_pk2_ypcs1_ysig2__11111121: //in <'resolve2', <ct, pk1, pk2, ypcs1, ysig2>> 
+ [ State_11111121(skT), In(<'resolve2', <ct, pk1, pk2, ypcs1, ysig2>>)] --[]-> [State_111111211(ct, pk1, pk2, skT, ypcs1, ysig2)]
 
-rule event_AbortCertct_111111211: //event AbortCert(ct) 
- [ State_111111211(ct, sk1, skT, ysk)] --[Event(), AbortCert(ct)]-> [State_1111112111(ct, sk1, skT, ysk)]
+rule if_eqcheck_getmsgysig2_pk2_ct_0_111111211: //if eq(check_getmsg(ysig2, pk2), ct), 0 
+ [ State_111111211(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(check_getmsg(ysig2, pk2), ct)]-> [State_1111112111(ct, pk1, pk2, skT, ypcs1, ysig2)]
 
-rule Zero_1111112111: //Zero 
- [ State_1111112111(ct, sk1, skT, ysk)] --[]-> []
+rule if_eqcheck_getmsgysig2_pk2_ct_1_111111211: //if eq(check_getmsg(ysig2, pk2), ct), 1 
+ [ State_111111211(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(check_getmsg(ysig2, pk2), ct)]-> [State_1111112112(ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_0_1111112111: //if eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct), 0 
+ [ State_1111112111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct)]-> [State_11111121111(ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_1_1111112111: //if eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct), 1 
+ [ State_1111112111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(check_getmsg(convertpcs(skT, ypcs1), pk1), ct)]-> [State_11111121112(ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_0_11111121111: //if eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true()), 0 
+ [ State_11111121111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true())]-> [State_111111211111(ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_1_11111121111: //if eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true()), 1 
+ [ State_11111121111(ct, pk1, pk2, skT, ypcs1, ysig2)] --[Pred_not_eq(checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true())]-> [State_111111211112(ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule lock_ct_111111211111: //lock ct 
+ [ State_111111211111(ct, pk1, pk2, skT, ypcs1, ysig2), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_1111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule lookup_ct_as_status_0_1111112111111: //lookup ct as status, 0 
+ [ State_1111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[IsIn(ct, status)]-> [State_11111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)]
+
+rule lookup_ct_as_status_1_1111112111111: //lookup ct as status, 1 
+ [ State_1111112111111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[IsNotSet(ct)]-> [State_11111121111112(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule unlock_ct_11111121111111: //unlock ct 
+ [ State_11111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)] --[Unlock(~lock7, ct)]-> [State_111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)]
+
+rule Zero_111111211111111: //Zero 
+ [ State_111111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs1, ysig2)] --[]-> []
+
+rule insert_ct_resolved2__11111121111112: //insert ct,'resolved2' 
+ [ State_11111121111112(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Insert(ct, 'resolved2')]-> [State_111111211111121(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule event_Resolve2ct_111111211111121: //event Resolve2(ct) 
+ [ State_111111211111121(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Event(), Resolve2(ct)]-> [State_1111112111111211(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule unlock_ct_1111112111111211: //unlock ct 
+ [ State_1111112111111211(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[Unlock(~lock7, ct)]-> [State_11111121111112111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)]
+
+rule out_sign_convertpcsskT_ypcs1_ysig2_skT_11111121111112111: //out sign(<convertpcs(skT, ypcs1), ysig2>, skT) 
+ [ State_11111121111112111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> [State_111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2), Out(sign(<convertpcs(skT, ypcs1), ysig2>, skT))]
+
+rule Zero_111111211111121111: //Zero 
+ [ State_111111211111121111(~lock7, ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
+
+rule Zero_111111211112: //Zero 
+ [ State_111111211112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
+
+rule Zero_11111121112: //Zero 
+ [ State_11111121112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
+
+rule Zero_1111112112: //Zero 
+ [ State_1111112112(ct, pk1, pk2, skT, ypcs1, ysig2)] --[]-> []
 
 rule Rep_0_111112: //Rep, 0 
  [ State_111112(skT)] --[]-> [!Semistate_1111121(skT)]
@@ -244,14 +157,65 @@ rule Rep_0_111112: //Rep, 0
 rule Rep_1_111112: //Rep, 1 
  [ !Semistate_1111121(skT)] --[]-> [State_1111121(skT)]
 
-rule in_sign_signct_sk1_signct_sk2_skT_1111121: //in sign(<sign(ct, sk1), sign(ct, sk2)>, skT) 
- [ State_1111121(skT), In(sign(<sign(ct, sk1), sign(ct, sk2)>, skT))] --[]-> [State_11111211(ct, sk1, sk2, skT)]
+rule in_resolve1_ct_pk1_pk2_ysig1_ypcs2__1111121: //in <'resolve1', <ct, pk1, pk2, ysig1, ypcs2>> 
+ [ State_1111121(skT), In(<'resolve1', <ct, pk1, pk2, ysig1, ypcs2>>)] --[]-> [State_11111211(ct, pk1, pk2, skT, ypcs2, ysig1)]
 
-rule event_ResolveCertct_11111211: //event ResolveCert(ct) 
- [ State_11111211(ct, sk1, sk2, skT)] --[Event(), ResolveCert(ct)]-> [State_111112111(ct, sk1, sk2, skT)]
+rule if_eqcheck_getmsgysig1_pk1_ct_0_11111211: //if eq(check_getmsg(ysig1, pk1), ct), 0 
+ [ State_11111211(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(check_getmsg(ysig1, pk1), ct)]-> [State_111112111(ct, pk1, pk2, skT, ypcs2, ysig1)]
 
-rule Zero_111112111: //Zero 
- [ State_111112111(ct, sk1, sk2, skT)] --[]-> []
+rule if_eqcheck_getmsgysig1_pk1_ct_1_11111211: //if eq(check_getmsg(ysig1, pk1), ct), 1 
+ [ State_11111211(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(check_getmsg(ysig1, pk1), ct)]-> [State_111112112(ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_0_111112111: //if eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct), 0 
+ [ State_111112111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct)]-> [State_1111121111(ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_1_111112111: //if eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct), 1 
+ [ State_111112111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(check_getmsg(convertpcs(skT, ypcs2), pk2), ct)]-> [State_1111121112(ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_0_1111121111: //if eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true()), 0 
+ [ State_1111121111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true())]-> [State_11111211111(ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_1_1111121111: //if eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true()), 1 
+ [ State_1111121111(ct, pk1, pk2, skT, ypcs2, ysig1)] --[Pred_not_eq(checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true())]-> [State_11111211112(ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule lock_ct_11111211111: //lock ct 
+ [ State_11111211111(ct, pk1, pk2, skT, ypcs2, ysig1), Fr(~lock7)] --[Lock(~lock7, ct)]-> [State_111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule lookup_ct_as_status_0_111112111111: //lookup ct as status, 0 
+ [ State_111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[IsIn(ct, status)]-> [State_1111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)]
+
+rule lookup_ct_as_status_1_111112111111: //lookup ct as status, 1 
+ [ State_111112111111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[IsNotSet(ct)]-> [State_1111121111112(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule unlock_ct_1111121111111: //unlock ct 
+ [ State_1111121111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)] --[Unlock(~lock7, ct)]-> [State_11111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)]
+
+rule Zero_11111211111111: //Zero 
+ [ State_11111211111111(~lock7, ct, pk1, pk2, skT, status, ypcs2, ysig1)] --[]-> []
+
+rule insert_ct_resolved1__1111121111112: //insert ct,'resolved1' 
+ [ State_1111121111112(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Insert(ct, 'resolved1')]-> [State_11111211111121(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule event_Resolve1ct_11111211111121: //event Resolve1(ct) 
+ [ State_11111211111121(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Event(), Resolve1(ct)]-> [State_111112111111211(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule unlock_ct_111112111111211: //unlock ct 
+ [ State_111112111111211(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[Unlock(~lock7, ct)]-> [State_1111121111112111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)]
+
+rule out_sign_ysig1_convertpcsskT_ypcs2_skT_1111121111112111: //out sign(<ysig1, convertpcs(skT, ypcs2)>, skT) 
+ [ State_1111121111112111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> [State_11111211111121111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1), Out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT))]
+
+rule Zero_11111211111121111: //Zero 
+ [ State_11111211111121111(~lock7, ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
+
+rule Zero_11111211112: //Zero 
+ [ State_11111211112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
+
+rule Zero_1111121112: //Zero 
+ [ State_1111121112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
+
+rule Zero_111112112: //Zero 
+ [ State_111112112(ct, pk1, pk2, skT, ypcs2, ysig1)] --[]-> []
 
 rule Rep_0_11112: //Rep, 0 
  [ State_11112(skT)] --[]-> [!Semistate_111121(skT)]
@@ -259,41 +223,29 @@ rule Rep_0_11112: //Rep, 0
 rule Rep_1_11112: //Rep, 1 
  [ !Semistate_111121(skT)] --[]-> [State_111121(skT)]
 
-rule Par_111121: //Par 
- [ State_111121(skT)] --[]-> [State_1111211(skT), State_1111212(skT)]
+rule in_sign_ct_pksk1_pk2_sign_ct_pksk1_pk2_sk1_skT_111121: //in sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, skT) 
+ [ State_111121(skT), In(sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, skT))] --[]-> [State_1111211(ct, pk2, sk1, skT)]
 
-rule new_skA_1111211: //new skA 
- [ State_1111211(skT), Fr(skA)] --[]-> [State_11112111(skA, skT)]
+rule event_AbortCertct_1111211: //event AbortCert(ct) 
+ [ State_1111211(ct, pk2, sk1, skT)] --[Event(), AbortCert(ct)]-> [State_11112111(ct, pk2, sk1, skT)]
 
-rule out_pkskA_11112111: //out pk(skA) 
- [ State_11112111(skA, skT)] --[]-> [State_111121111(skA, skT), Out(pk(skA))]
+rule Zero_11112111: //Zero 
+ [ State_11112111(ct, pk2, sk1, skT)] --[]-> []
 
-rule in_ct_xpkB__111121111: //in <ct, xpkB> 
- [ State_111121111(skA, skT), In(<ct, xpkB>)] --[]-> [State_1111211111(ct, skA, skT, xpkB)]
+rule Rep_0_1112: //Rep, 0 
+ [ State_1112(skT)] --[]-> [!Semistate_11121(skT)]
 
-rule out_signct_skA_1111211111: //out sign(ct, skA) 
- [ State_1111211111(ct, skA, skT, xpkB)] --[]-> [State_11112111111(ct, skA, skT, xpkB), Out(sign(ct, skA))]
+rule Rep_1_1112: //Rep, 1 
+ [ !Semistate_11121(skT)] --[]-> [State_11121(skT)]
 
-rule in_sigB_11112111111: //in sigB 
- [ State_11112111111(ct, skA, skT, xpkB), In(sigB)] --[]-> [State_111121111111(ct, sigB, skA, skT, xpkB)]
+rule in_sign_signct_sk1_signct_sk2_skT_11121: //in sign(<sign(ct, sk1), sign(ct, sk2)>, skT) 
+ [ State_11121(skT), In(sign(<sign(ct, sk1), sign(ct, sk2)>, skT))] --[]-> [State_111211(ct, sk1, sk2, skT)]
 
-rule if_eqverifysigB_ct_xpkB_true_0_111121111111: //if eq(verify(sigB, ct, xpkB), true()), 0 
- [ State_111121111111(ct, sigB, skA, skT, xpkB)] --[Pred_eq(verify(sigB, ct, xpkB), true())]-> [State_1111211111111(ct, sigB, skA, skT, xpkB)]
+rule event_ResolveCertct_111211: //event ResolveCert(ct) 
+ [ State_111211(ct, sk1, sk2, skT)] --[Event(), ResolveCert(ct)]-> [State_1112111(ct, sk1, sk2, skT)]
 
-rule if_eqverifysigB_ct_xpkB_true_1_111121111111: //if eq(verify(sigB, ct, xpkB), true()), 1 
- [ State_111121111111(ct, sigB, skA, skT, xpkB)] --[Pred_not_eq(verify(sigB, ct, xpkB), true())]-> [State_1111211111112(ct, sigB, skA, skT, xpkB)]
-
-rule event_AhasSignaturect_1111211111111: //event AhasSignature(ct) 
- [ State_1111211111111(ct, sigB, skA, skT, xpkB)] --[Event(), AhasSignature(ct)]-> [State_11112111111111(ct, sigB, skA, skT, xpkB)]
-
-rule Zero_11112111111111: //Zero 
- [ State_11112111111111(ct, sigB, skA, skT, xpkB)] --[]-> []
-
-rule Zero_1111211111112: //Zero 
- [ State_1111211111112(ct, sigB, skA, skT, xpkB)] --[]-> []
-
-rule Zero_1111212: //Zero 
- [ State_1111212(skT)] --[]-> []
+rule Zero_1112111: //Zero 
+ [ State_1112111(ct, sk1, sk2, skT)] --[]-> []
 
  restriction set_in:
 "All x y #t3 . IsIn(x,y)@t3 ==>
@@ -334,6 +286,9 @@ restriction single_session: // for a single session
 
 lemma aborted_and_resolved_exclusive :
 "	not( Ex ct #i #j. AbortCert(ct) @ i & ResolveCert(ct) @ j )"
+
+lemma aborted_contract_reachable : exists-trace
+"	( Ex ct #i. AbortCert(ct) @ i ) & ( All ct1 ct2 #i1 #i2. Abort1(ct1) @ i1 & Abort1(ct2) @ i2 ==> #i1 = #i2 ) & ( All ct #i. Resolve1(ct) @ i ==> F ) & ( All ct #i. Resolve2(ct) @ i ==> F )"
 
 lemma resolved1_contract_reachable : exists-trace
 "	( Ex ct #i. ResolveCert(ct) @ i ) & ( All ct #i. Abort1(ct) @ i ==> F ) & ( All ct1 ct2 #i1 #i2. Resolve1(ct1) @ i1 & Resolve1(ct2) @ i2 ==> #i1 = #i2 ) & ( All ct #i. Resolve2(ct) @ i ==> F )"
