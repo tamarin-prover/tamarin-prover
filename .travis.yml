@@ -43,10 +43,11 @@ install:
   - opam init
   - eval `opam config env`
   - stack install
-  - cd plugins/sapic && make
+  - make -C plugins/sapic
 
 script:
   - tamarin-prover test
+  - pwd
   - sapic examples/sapic/basic/channels1.sapic
 
 notifications:
