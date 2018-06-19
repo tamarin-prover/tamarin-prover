@@ -3,74 +3,73 @@ Obsolete: ESORICS Symmetric-only files, included for reference only.
 
 *******************************************************************************
 
-* DNP3 SAv5 Tamarin file README
+ DNP3 SAv5 Tamarin file README
 
-* This is the README for the Tamarin files associated with ESORICS submission 
-* ''Secure Authentication in the Grid: A formal analysis of DNP3: SAv5''.
-* Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
+This is the README for the Tamarin files associated with ESORICS 2017 submission
+''Secure Authentication in the Grid: A formal analysis of DNP3: SAv5''.
 
-* TL;DR: Install Tamarin. Run make on this directory.
+Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
+
+**TL;DR: Install Tamarin. Run make on this directory. Visit http://127.0.0.1:3001/**
 
 *******************************************************************************
 
-To run these files, you will need the Tamarin prover tool installed.
+Tamarin Installation
+--------------------
 
-Follow the instructions at the following URL:
-https://tamarin-prover.github.io/manual/book/002_installation.html
+To run these files, you will need the Tamarin Prover tool installed.
 
-- On Mac, (with Homebrew) this is as simple as 'brew install tamarin-prover'.
+Please follow the [instruction instructions within the Tamarin Manual (link)](https://tamarin-prover.github.io/manual/book/002_installation.html).
 
-- On Linux, it is as simple as downloading the binary from the following 
-  location:
-https://github.com/tamarin-prover/tamarin-prover/releases/download/1.2.1/tamarin-prover-1.2.1-linux64.tar.gz
 
-For both, if you want to run the latest version (not necessary, but slightly 
-faster), please build Tamarin from source (see the manual).
+Running Tamarin to verify these files
+-------------------------------------
 
-If you have both m4 and make installed, please then just run `make' on this
-directory. This will generate the correct files, and then run the Tamarin prover
-program on the directory's files. You may have to click ''Allow the application
-tamarin-prover to accept incoming network connections''.
-Once Tamarin has been opened, it should open your browser at the right local
-URL. If it does not, please visit http://127.0.0.1:3001/
-If port 3001 is already being used for something on your system, please change
-this port number in the Makefile.
+If you have both m4 and make installed, please then run
 
-If you do not have both m4 and make installed, please copy and paste the
-following command into a terminal in this folder:
-    tamarin-prover interactive . --port=3001 --heuristic=i
-and then point your browser to http://localhost:3001/
-This will open the Tamarin web-GUI.
+>     make
 
-Within this web-page, you then have the choice between DNP3, DNP3_proven, and
-DNP3_incorrect.
+on this directory. This will generate the correct output files.
 
-- 'DNP3' is the main model. Feel free to play around with this, or to click
-  'autoprove' on any or all of these lemmas. These all auto-prove fairly quickly
-  on modern computers, but prove fastest with the latest version of Tamarin 
-  (1.3.0, built from source). Minimum version required: 1.2.1.
-  This is from the file 'dnp3.spthy' (generated from 'dnp3.m4').
-  If you just want to read the source-code, please read dnp3.m4, as this
-  will make the most sense to the reader.
+Once this is running, please then visit [http://127.0.0.1:3001/](http://127.0.0.1:3001/) in your browser.
 
-- 'DNP3_proven' is the same main model, but with all the proofs pre-calculated.
-  This is from the file 'dnp3-proven.spthy'.
-  This may take a little while to load as it has to check that the presented
-  proofs are indeed correct. When it does load, everything should be green.
+This will open the interactive Tamarin web GUI, where you will be able to interact with the lemmas and generate proofs.
 
-- 'DNP3_incorrect' is the incorrect attack from Amoah et al., [7]. This is a
-  significant under-approximation of the main model, to make the attack work.
-  Please read Section 6 of the main paper for more details.
-  This is from the file 'dnp3-amoah-attack.spthy'.
 
-The main (correct) DNP3 file is provided as an m4 file, as we use m4 macros
+You may have to click ''Allow the application tamarin-prover to accept incoming network connections''.
+If port 3001 is already being used for something on your system, please change this port number in the Makefile.
+
+If you do not have both `m4` and `make` installed, please copy and paste the following command into a terminal in this directory:
+
+>     tamarin-prover interactive . --port=3001 --heuristic=i
+
+and then point your browser to [http://localhost:3001/](http://localhost:3001/).
+This will run the Tamarin Prover with the correct heuristic against the current folder (and the `*.spthy` files in it), and then open the interactive Tamarin web-GUI.
+
+Within this web-page, you then have the choice between `DNP3`, `DNP3_proven`, and
+`DNP3_incorrect`.
+
+- `DNP3` is the main (symmetric-only) model. Feel free to play around with this, or to click
+  'autoprove' on any or all of these lemmas. These all auto-prove fairly quickly on modern computers, but prove fastest with the latest version of Tamarin (1.3.0 or higher, built from source). Minimum version required: 1.2.1.
+  This is from the file `dnp3.spthy` (generated from `dnp3.m4`).
+  If you just want to read the source-code, please read `dnp3.m4`, as this will make the most sense to the reader.
+
+- `DNP3_proven` is the same main model, but with all the proofs pre-calculated.
+  This is from the file `dnp3-proven.spthy`.
+  This may take a little while to load as it has to check that the presented proofs are indeed correct. When it does load, everything should be green.
+
+- `DNP3_incorrect` is the incorrect attack from Amoah et al., 2014 (ESORICS paper reference number [7]). This is a significant under-approximation of the main model, to make the attack work.
+  Please read Section 6 of the main (ESORICS) paper for more details.
+  This is from the file `dnp3-amoah-attack.spthy`.
+
+The main (correct) DNP3 file is provided as an `m4` file, as we use m4 macros
 to change the order of some of the protocol rules for the sake of proof-speed;
 Tamarin solves goals for various rules dependent on the order of the rules in
 the file, so the logical order as per the protocol execution is not the most
 efficient for Tamarin's heuristics. Note: this DOES NOT affect the protocol
 model's correctness or validity, or possible protocol execution paths, it merely
 changes the order in which goals are solved.
-We also provide dnp3.spthy pre-generated (for users without m4), but it is not
+We also provide `dnp3.spthy` pre-generated (for users without m4), but it is not
 recommended that you attempt to read this version. 
-Feel free to run `m4 dnp3.m4 > dnp3.spthy' to confirm that the latter file was
+Feel free to run `m4 dnp3.m4 > dnp3.spthy` to confirm that the latter file was
 actually generated by the former.
