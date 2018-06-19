@@ -1,10 +1,10 @@
 DNP3 SAv5 (Asymmetric) Tamarin file README
 ==========================================
 
-This is the README for the Tamarin files associated with JCS submission 
+This is the README for the Tamarin files associated with the Journal of Computer Security submission 
 ''Secure Authentication in the Grid: A formal analysis of DNP3: SAv5''.
 These models have the Asymmetric mode of the UKCP included (where the ESORICS
-2017 submission did not.)
+2017 submission did not.) Full paper link at https://tamarin-prover.github.io/
 
 Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
 
