@@ -13,9 +13,6 @@ looping facts with injective instances:
   L_OutSentKeyStatus/2, L_OutstationState/7, L_UserState/6
 */
 
-restriction Eq_testing:
-  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
-  // safety formula
 
 restriction InEq_testing:
   "∀ x y #i. (InEq( x, y ) @ #i) ⇒ (¬(x = y))"

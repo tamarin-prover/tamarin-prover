@@ -17,7 +17,6 @@ builtins: hashing, symmetric-encryption
 
 functions: hmac/2
 
-restriction Eq_testing: "All x y #i. Eq( x, y ) @ i ==> x = y"
 restriction InEq_testing: "All x y #i. InEq( x, y ) @ i ==> not( x = y )"
 restriction Unique_Pairings_id: "All x #i #j. Unique( x ) @ i & Unique( x ) @ j ==> #i = #j"
 // This enforces that x and y are of distinct 'types': specifically in this case,
