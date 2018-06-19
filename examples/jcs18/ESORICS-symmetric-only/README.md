@@ -3,11 +3,17 @@ Obsolete: ESORICS Symmetric-only files, included for reference only.
 
 *******************************************************************************
 
- DNP3 SAv5 Tamarin file README
+DNP3 SAv5 Symmetric Only models Tamarin file README
+---
 
 This is the README for the Tamarin files associated with ESORICS 2017 submission
 ''Secure Authentication in the Grid: A formal analysis of DNP3: SAv5''.
 This paper can be found at https://doi.org/10.1007/978-3-319-66402-6_23
+
+The models in this folder have been substantially built upon to create the
+Asymmetric AND Symmetric version of the models to be found in this folder's
+parent directory. If unsure, you want the models in `/examples/jcs18/`, not these.
+
 
 Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
 
@@ -15,37 +21,10 @@ Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
 
 *******************************************************************************
 
-Tamarin Installation
---------------------
+Tamarin Installation & Usage
+----------------------------
 
-To run these files, you will need the Tamarin Prover tool installed.
-
-Please follow the [instruction instructions within the Tamarin Manual (link)](https://tamarin-prover.github.io/manual/book/002_installation.html).
-
-
-Running Tamarin to verify these files
--------------------------------------
-
-If you have both m4 and make installed, please then run
-
->     make
-
-on this directory. This will generate the correct output files.
-
-Once this is running, please then visit [http://127.0.0.1:3001/](http://127.0.0.1:3001/) in your browser.
-
-This will open the interactive Tamarin web GUI, where you will be able to interact with the lemmas and generate proofs.
-
-
-You may have to click ''Allow the application tamarin-prover to accept incoming network connections''.
-If port 3001 is already being used for something on your system, please change this port number in the Makefile.
-
-If you do not have both `m4` and `make` installed, please copy and paste the following command into a terminal in this directory:
-
->     tamarin-prover interactive . --port=3001 --heuristic=i
-
-and then point your browser to [http://localhost:3001/](http://localhost:3001/).
-This will run the Tamarin Prover with the correct heuristic against the current folder (and the `*.spthy` files in it), and then open the interactive Tamarin web-GUI.
+Follow the instructions in `examples/jcs18/README.md`, and open the Tamarin web GUI at http://localhost:3001/
 
 Within this web-page, you then have the choice between `DNP3`, `DNP3_proven`, and
 `DNP3_incorrect`.
