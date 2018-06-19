@@ -22,8 +22,7 @@ https://tamarin-prover.github.io/manual/book/002_installation.html
 - On Mac, (with Homebrew installed) this is as simple as:
 
 >     brew update
->     brew tap brewsci/science
->     brew install tamarin-prover
+>     brew install tamarin-prover/tap/tamarin-prover
 
 
 - On Linux, you can either use LinuxBrew, or download the the binary from
