@@ -6,7 +6,7 @@ This is the README for the Tamarin files associated with the Journal of Computer
 These models have the Asymmetric mode of the Update Key Change Protocol included (where the ESORICS
 2017 submission did not.) Full paper link at [https://tamarin-prover.github.io/](https://tamarin-prover.github.io/).
 
-Please see the sub-directory `/examples/jcs18/ESORICS-symmetric-only/` for the (obsolete) symmetric-only models from the ESORICS 2017 submission.
+Please see the sub-directory `/examples/jcs18/ESORICS-symmetric-only/` for the (obsolete) symmetric-only models from the ESORICS 2017 submission (The ESORICS paper can be found at https://doi.org/10.1007/978-3-319-66402-6_23).
 
 Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
 

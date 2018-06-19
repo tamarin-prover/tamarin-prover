@@ -7,6 +7,7 @@ Obsolete: ESORICS Symmetric-only files, included for reference only.
 
 This is the README for the Tamarin files associated with ESORICS 2017 submission
 ''Secure Authentication in the Grid: A formal analysis of DNP3: SAv5''.
+This paper can be found at https://doi.org/10.1007/978-3-319-66402-6_23
 
 Authors: Cas Cremers, Martin Dehnel-Wild, Kevin Milner.
 
