@@ -1,8 +1,9 @@
 /*
- * Protocol:    
- * Modeler:   
- * Date:  
- * Source:  
+ * Protocol:    Certificate Transparency
+ * Modeler:   Robert Künnemann
+ * Date:  Jun 2018
+ * Source:  Based on Alessandro Bruni, Rosario Giustolisi(B), and Carsten
+ * Schuermann: Automated Analysis of Accountability 
  * Status:  
  * Note:  execute with --heuristic=p 
  * */
@@ -16,12 +17,14 @@ functions:
     skca/1[private], 
     /* aenc/2, adec/2, */
     sign/2, verify/3,
+    read/1,
     true/0
 
 equations: 
     /* adec(aenc(m,pk(i)),sk(i))=m, */
     // only accept signatures from corresponding public keys
-    verify(sign(m, sk),m, pk(sk)) = true
+    verify(sign(sk,m ),m, pk(sk)) = true,
+    read(sign(sk,m))=m
 
 let CA = /* CA */
     let id = 'CA' in
@@ -32,6 +35,7 @@ let CA = /* CA */
         new sk_S;
         event HonestRegister(S,id,pk(sk_S));
         insert <'proofOfID',S,pk(sk_S)>,'yes'; 
+        out(pk(sk_S));
         out(sign(sk,<pk(sk_S),S>))
     )
     ||
@@ -46,15 +50,20 @@ let LogCert =
     in(sign(skca('CA'),<pk,S>));
     (
     !(
-    insert <'Log','LA',S,pk,'c1'>,'yes';
-    insert <'Log','LA',S,pk,'s1'>,'yes';
-    insert <'Log','LA',S,pk,'i'>,'yes'
+        lock 'log';
+        event HonestLog(pk);
+        insert <'log','LA',S,pk,'c1'>,'yes';
+        insert <'log','LA',S,pk,'s1'>,'yes';
+        insert <'log','LA',S,pk,'i'>,'yes';
+        unlock 'log'
     )
     ||
     !(
+        lock 'log';
         event Corrupted('LA');
-        insert <'Log','LA',S,pk,'s1'>,'yes';
-        insert <'Log','LA',S,pk,'i'>,'yes'
+        insert <'log','LA',S,pk,'s1'>,'yes';
+        insert <'log','LA',S,pk,'i'>,'yes';
+        unlock 'log'
     ))
         
 
@@ -70,28 +79,36 @@ let TestCA =
         event TestCA(S,pk);
         unlock 'testCA'
 
-let Terminate = lock 'testCA'; event Terminate()
 
 let TestLA =
     let u1='c1' in
     let u2='s1' in /* This is the test that the AIFom file compiles to, modulo symmetry */
+    lock 'log';
     in(<u1,u2,S,pk>);
-    lookup <'Log','LA',S,pk,u1> as x1 in
+    lookup <'log','LA',S,pk,u1> as x1 in
     (
-        lookup <'Log','LA',S,pk,u2> as x2 in
-            event honestLA()
+        lookup <'log','LA',S,pk,u2> as x2 in
+            event HonestLA();
+            event TestLA(pk);
+            unlock 'log'
         else
-            event dishonestLA()
+            event DishonestLA();
+            event TestLA(pk);
+            unlock 'log'
     )
     else (
-        lookup <'Log','LA',S,pk,u2> as x2 in
-            event dishonestLA()
+        lookup <'log','LA',S,pk,u2> as x2 in
+            event DishonestLA();
+            event TestLA(pk);
+            unlock 'log'
         else
-            event honestLA()
+            0 // No statement is S pk is in no view.
     )
 
+let Terminate = lock 'testCA'; lock 'log'; event Terminate()
+
 // The trusted party can only run once during each run of the protocol
-let Proto = CA || LogCert || TestCA || Terminate
+let Proto = CA || LogCert || TestCA || TestLA || Terminate
 
 // general form for accountabilty processes
 Proto
@@ -113,85 +130,48 @@ verdictfunction v1:
     "Ex #i . DishonestCA()@i" -> let verdict1 = <'CA'>,
     otherwise -> empty 
 
-lemma acc:
+verdictfunction v2:
+    "Ex #i . DishonestLA()@i" -> let verdict1 = <'LA'>,
+    otherwise -> empty 
+
+verdictfunction v3:
+    "(Ex #i . DishonestCA()@i) & not (Ex #i . DishonestLA()@i)" -> let verdict1 = <'CA'>,
+    "not(Ex #i . DishonestCA()@i) & (Ex #i . DishonestLA()@i)" -> let verdict2 = <'LA'>,
+    "(Ex #i . DishonestCA()@i) & (Ex #i . DishonestLA()@i)" -> <verdict1> | <verdict2>,
+    otherwise -> empty 
+
+
+lemma acc_ca:
     v1 accounts [coarse] 
     for "All S pk #i.  TestCA(S,pk)@i ==> 
                 Ex #j. HonestRegister(S,'CA',pk)@j
                 " 
     for parties <'CA','LA'>
 
-// if ctl is used, give well-formedness error if 
-// - check also if process is of right form and output template if not
+lemma acc_la:
+    v2 accounts [coarse] 
+    for "All pk #i.  TestLA(pk)@i ==> 
+                Ex #j. HonestLog(pk)@j 
+                & j<i 
+                // need this condition, otherwise, non-empty verdict does
+                // not imply violation if honest log entry can be produced
+                // afterwards
+                " 
+    for parties <'CA','LA'>
 
-/* lemma acc_rel_1_1: */
-/*     " */
-/*     // Axiom: */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
-/*     & */
-/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
-/*     ==> */
-/*     ( */
-/*       All id1 #i1 #j1 a1 .  (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct()))) // rename first case with variable plus 1 */
-/*       ==> */
-/*       All id2 #i2 #j2 a2 .  (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct()))) // rename second case with variable plus 2 */
-/*       ==> */ 
-/*       All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2 */
-/*     )" */
-
-/* lemma acc_rel_1_1_rewrite: */
-/*     " */
-/*     // Axiom: */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
-/*     & */
-/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
-/*     ==> */
-/*     ( */
-/*       All id1 id2 #i #j . Start(id1)@i & Start(id2)@j */ 
-/*       ==> */
-/*       not (Ex #i1 #j1 a1 .  (Execute(id1,a1)@#i1 & (LogAB(id1,a1)@#j1 & not(a1 = SpecialAct())))) // rename first case with variable plus 1 */
-/*       | */
-/*       not (Ex #i2 #j2 a2 .  (Execute(id2,a2)@#i2 & (LogAB(id2,a2)@#j2 & not(a2 = SpecialAct())))) // rename second case with variable plus 2 */
-/*       | */
-/*       All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> pos1 = pos2 */
-/*     )" */
+// composed statement
+lemma acc_la:
+    v3 accounts [cases] 
+    for "( All pk #i.  TestLA(pk)@i ==> 
+                Ex #j. HonestLog(pk)@j 
+                & j<i )
+                & 
+         ( All S pk #i.  TestCA(S,pk)@i ==> 
+                Ex #j. HonestRegister(S,'CA',pk)@j
+                )
+                " 
+    for parties <'CA','LA'>
 
 
-/* // acc_rel_2_2 left out */
-
-/* lemma acc_rel_1_2: // Example for negation. */
-/*     " */
-/*     // Axiom: */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & Execute(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id a . Start(id)@i & Stop(id)@j & LogAB(id,a)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k id pos . Start(id)@i & Stop(id)@j & Ctl(id,pos)@k ==> #i < #k & #k < #j ) */
-/*     & */
-/*     ( All #i #j #k #l id id2 . Start(id)@i & Stop(id)@j & Start(id2)@k & Stop(id2)@l ==> (#j < #k & #j < #l) | (#l < #i & #l < #j) | (#i=#k & #j=#l)) */
-/*     & */
-/*     ( All #i id . Start(id)@i ==> Ex #k . Stop(id)@k & i<k ) */
-/*     ==> */
-/*     (All #i1 #j1 id1 a1 id2 #s . */
-/*      ( Execute(id1, a1)@#i1 & (LogAB(id1, a1)@#j1 & not(a1 = SpecialAct())) ) */
-/*      & */
-/*      Start(id2)@s // <- for guardedness */
-/*       ==> */ 
-/*       ( All pos1 pos2 #p1 #p2. Ctl(id1,pos1)@p1 & Ctl(id2,pos2)@p2 ==> not (pos1 = pos2) | #p1=#p2) */
-/*      | */ 
-/*     ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & a = SpecialAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & a = NormalAct())))) | ((Ex #i #j a . ((Execute(id2, a)@#i & (LogAB(id2, a)@#j & not(a = SpecialAct()))))) | (Ex #i #j a . ((Execute(id2, a)@#i & (LogA(id2, a)@#j & not(a = NormalAct())))))))) */
-/*       // ^^ do not rebind id2 */
-/*     )" */
 
 end
