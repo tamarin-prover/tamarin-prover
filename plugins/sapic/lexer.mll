@@ -85,6 +85,7 @@ rule token = parse
      | '+'	   { PLUS }
      | "⊕"
      | "XOR"       { XOR }
+     | "zero"      { ZERO }
      | '0'         { NULL } 
      | "new" 	   { NEW }
      | "in"	   { IN }
