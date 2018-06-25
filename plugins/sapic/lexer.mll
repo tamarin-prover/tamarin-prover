@@ -25,6 +25,7 @@ rule token = parse
      | "asymmetric-encryption" as theory { BUILTIN_THEORY (theory) }
      | "multiset" as theory { BUILTIN_THEORY (theory) }
      | "signing" as theory     	  	 { BUILTIN_THEORY (theory) }
+     | "xor" as theory     	  	 { BUILTIN_THEORY (theory) }
      | "functions" { FUNCTIONS }
      | "equations" { EQUATIONS }
      | "predicates" { PREDICATES }
@@ -43,14 +44,23 @@ rule token = parse
      | "hide_lemma" { HIDE_LEMMA }
      | "all-traces" { ALL_TRACES ('A') }
      | "exists-trace" { EXISTS_TRACE ('E') }
-     | "All"	   { ALL }
-     | "Ex"	   { EXISTS }
+     | "All"
+     | "∀"         { ALL }
+     | "Ex"
+     | "∃"	   { EXISTS }
+     | "⇔"
      | "<=>"	   { IFF }
+     | "⇒"
      | "==>"	   { IMP }
+     | "¬"
      | "not"	   { NOT}
+     | "⊤"
      | "T"	   { TRUE }
+     | "⊥"
      | "F"	   { FALSE }
+     | "∨"
      | "|"	   { OR }
+     | "∧"
      | "&"	   { AND }
      | "@"	   { AT }
      | "-->"	   { TRANSIT }
@@ -73,6 +83,8 @@ rule token = parse
      | '~'	   { TILDE }
      | '#'	   { SHARP }
      | '+'	   { PLUS }
+     | "⊕"
+     | "XOR"       { XOR }
      | '0'         { NULL } 
      | "new" 	   { NEW }
      | "in"	   { IN }
