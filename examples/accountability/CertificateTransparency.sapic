@@ -34,15 +34,8 @@ let CA = /* CA */
         in(<S,id>); //Request to register S at CA
         new sk_S;
         event HonestRegister(S,id,pk(sk_S));
-        insert <'proofOfID',S,pk(sk_S)>,'yes'; 
+        insert <'proofOfID',S,pk(sk_S)>,'yes'; // Dishonest CAs cannot register proofs, because they don't have them.
         out(pk(sk_S));
-        out(sign(sk,<pk(sk_S),S>))
-    )
-    ||
-    !( 
-        event Corrupted(id);
-        in(<S,id>); //Request to register S at CA
-        new sk_S;
         out(sign(sk,<pk(sk_S),S>))
     )
 
@@ -112,11 +105,11 @@ let Proto = CA || LogCert || TestCA || TestLA || Terminate
 
 // general form for accountabilty processes
 Proto
-/* || !( in('c',<'corrupt',$x>); */ 
-/*       event Corrupted($x); */
-/*       out('c',sk($x)) */
+|| !( in('c',<'corrupt',$id>); 
+      event Corrupted($id);
+      out('c',skca($id))
       /* (  !(in('r',<$x,sid,m>);0) ) */
-    /* ) */
+    )
 
 /* lemma sanity_logA_not_misbehaving: */
 /*     exists-trace */
@@ -148,30 +141,28 @@ lemma acc_ca:
                 " 
     for parties <'CA','LA'>
 
-lemma acc_la:
-    v2 accounts [coarse] 
-    for "All pk #i.  TestLA(pk)@i ==> 
-                Ex #j. HonestLog(pk)@j 
-                & j<i 
-                // need this condition, otherwise, non-empty verdict does
-                // not imply violation if honest log entry can be produced
-                // afterwards
-                " 
-    for parties <'CA','LA'>
+/* lemma acc_la: */
+/*     v2 accounts [coarse] */ 
+/*     for "All pk #i.  TestLA(pk)@i ==> */ 
+/*                 Ex #j. HonestLog(pk)@j */ 
+/*                 & j<i */ 
+/*                 // need this condition, otherwise, non-empty verdict does */
+/*                 // not imply violation if honest log entry can be produced */
+/*                 // afterwards */
+/*                 " */ 
+/*     for parties <'CA','LA'> */
 
 // composed statement
-lemma acc_la2:
-    v3 accounts [cases] 
-    for "( All pk #i.  TestLA(pk)@i ==> 
-                Ex #j. HonestLog(pk)@j 
-                & j<i )
-                & 
-         ( All S pk #i.  TestCA(S,pk)@i ==> 
-                Ex #j. HonestRegister(S,'CA',pk)@j
-                )
-                " 
-    for parties <'CA','LA'>
-
-
+/* lemma acc: */
+/*     v3 accounts [cases] */ 
+/*     for "( All pk #i.  TestLA(pk)@i ==> */ 
+/*                 Ex #j. HonestLog(pk)@j */ 
+/*                 & j<i ) */
+/*                 & */ 
+/*          ( All S pk #i.  TestCA(S,pk)@i ==> */ 
+/*                 Ex #j. HonestRegister(S,'CA',pk)@j */
+/*                 ) */
+/*                 " */ 
+/*     for parties <'CA','LA'> */
 
 end
