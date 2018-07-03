@@ -160,7 +160,7 @@ lemma acc_la:
     for parties <'CA','LA'>
 
 // composed statement
-lemma acc_la:
+lemma acc_la2:
     v3 accounts [cases] 
     for "( All pk #i.  TestLA(pk)@i ==> 
                 Ex #j. HonestLog(pk)@j 
