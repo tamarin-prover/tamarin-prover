@@ -4,8 +4,10 @@
  * Date:  Jun 2018
  * Source:  Based on Alessandro Bruni, Rosario Giustolisi(B), and Carsten
  * Schuermann: Automated Analysis of Accountability 
- * Status:  
+ * Status:  working
  * Note:  execute with --heuristic=p 
+ *        extended: 
+ *              corrruption mechanism modelled properly: corrupted LA can chose who to provide which inconsistent view.
  * */
 
 theory CertificateTransparencyExt

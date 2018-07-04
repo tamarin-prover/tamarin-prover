@@ -4,21 +4,22 @@
  * Date:  Jun 2018
  * Source:  Based on Alessandro Bruni, Rosario Giustolisi(B), and Carsten
  * Schuermann: Automated Analysis of Accountability 
- * Status:  working
+ * Status: not working
  * Note:  execute with --heuristic=p 
  * */
 
-theory CertificateTransparency
+theory CertificateTransparencyTime
 begin
 
-/* builtins: signing */
+/* builtins: multiset */
 functions: 
     pk/1,
     skca/1[private], 
     /* aenc/2, adec/2, */
     sign/2, verify/3,
     read/1,
-    true/0
+    true/0,
+    h/2
 
 equations: 
     /* adec(aenc(m,pk(i)),sk(i))=m, */
@@ -40,24 +41,22 @@ let CA = /* CA */
     )
 
 let LogCert = 
+    lock 'log';
     in(sign(skca('CA'),<pk,S>));
-    (
-    !(
-        lock 'log';
-        event HonestLog(pk);
-        insert <'log','LA',S,pk,'c1'>,'yes';
-        insert <'log','LA',S,pk,'s1'>,'yes';
-        insert <'log','LA',S,pk,'i'>,'yes';
+    lookup <'loghash','LA'> as hash in // tree hash
+        insert <'log','LA',S,pk>,'yes';
+        insert <'loghash','LA'>,h(hash,<S,pk>);
         unlock 'log'
-    )
-    ||
-    !(
-        lock 'log';
-        event Corrupted('LA');
-        insert <'log','LA',S,pk,'s1'>,'yes';
-        insert <'log','LA',S,pk,'i'>,'yes';
-        unlock 'log'
-    ))
+
+        |
+        !(
+           lock 'log';
+           in($P);
+           event ProvideView(S,pk,$P);
+
+           insert <'log','LA',S,pk,$P>,'yes';
+        )
+        
 
 let TestCA = 
     lock 'testCA';
@@ -67,31 +66,30 @@ let TestCA =
             event TestCA(S,pk);
             unlock 'testCA'
     else
-        event DishonestCA();
-        event TestCA(S,pk);
-        unlock 'testCA'
+            event DishonestCA();
+            event TestCA(S,pk);
+            unlock 'testCA'
 
 
 let TestLA =
-    let u1='c1' in
-    let u2='s1' in /* This is the test that the AIFom file compiles to, modulo symmetry */
+    in(<u1,u2>);
     lock 'log';
     in(<u1,u2,S,pk>);
     lookup <'log','LA',S,pk,u1> as x1 in
     (
         lookup <'log','LA',S,pk,u2> as x2 in
             event HonestLA();
-            event TestLA(pk);
+            event TestLA(u1,u2,S,pk);
             unlock 'log'
         else
             event DishonestLA();
-            event TestLA(pk);
+            event TestLA(u1,u2,S,pk);
             unlock 'log'
     )
     else (
         lookup <'log','LA',S,pk,u2> as x2 in
             event DishonestLA();
-            event TestLA(pk);
+            event TestLA(u1,u2,S,pk);
             unlock 'log'
         else
             0 // No statement if S pk is in no view.
@@ -104,12 +102,21 @@ let Proto = CA || LogCert || TestCA || TestLA || Terminate
 
 // general form for accountabilty processes
 Proto
-/* || !( in('c',<'corrupt',$x>); */ 
-/*       event Corrupted($x); */
-/*       out('c',sk($x)) */
-      /* (  !(in('r',<$x,sid,m>);0) ) */
-    /* ) */
-        
+|| !( in('c',<'CAcorrupt',$id>); // corrupt CAs
+      event Corrupted($id);
+      out('c',skca($id))
+    )
+    ||
+    !(
+        in('c',<'LAcorrupt',$id>); // corrupt LA
+        event Corrupted('LA');
+        !( // can now selectively insert
+        in('c',<S,pk,entity>);
+        lock 'log';
+        insert <'log','LA',S,pk,entity>, 'yes';
+        unlock 'log'
+        )
+    )
 
 /* lemma sanity_logA_not_misbehaving: */
 /*     exists-trace */
@@ -134,35 +141,41 @@ verdictfunction v3:
     otherwise -> empty 
 
 
-lemma acc_ca:
-    v1 accounts [coarse] 
-    for "All S pk #i.  TestCA(S,pk)@i ==> 
-                Ex #j. HonestRegister(S,'CA',pk)@j
-                " 
-    for parties <'CA','LA'>
+/* lemma acc_ca: */
+/*     v1 accounts [coarse] */ 
+/*     for "All S pk #i.  TestCA(S,pk)@i ==> */ 
+/*                 Ex #j. HonestRegister(S,'CA',pk)@j */
+/*                 " */ 
+/*     for parties <'CA','LA'> */
 
 lemma acc_la:
     v2 accounts [coarse] 
-    for "All pk #i.  TestLA(pk)@i ==> 
-                Ex #j. HonestLog(pk)@j 
-                & j<i 
+    for "All u1 u2 S pk #i.  TestLA(u1,u2,S,pk)@i ==> 
+                /* Ex #j. HonestLog(pk)@j */ 
+                (Ex #j. Insert(<'log', 'LA', S, pk, u1>, 'yes')@j & j<i)
+                &
+                (Ex #j. Insert(<'log', 'LA', S, pk, u2>, 'yes')@j & j<i)
                 // need this condition, otherwise, non-empty verdict does
                 // not imply violation if honest log entry can be produced
                 // afterwards
                 " 
     for parties <'CA','LA'>
 
-// composed statement
-lemma acc:
-    v3 accounts [cases] 
-    for "( All pk #i.  TestLA(pk)@i ==> 
-                Ex #j. HonestLog(pk)@j 
-                & j<i )
-                & 
-         ( All S pk #i.  TestCA(S,pk)@i ==> 
-                Ex #j. HonestRegister(S,'CA',pk)@j
-                )
-                " 
-    for parties <'CA','LA'>
+/* // composed statement */
+/* // */
+/* lemma acc: */
+/*     v3 accounts [cases] */ 
+/*     for "(All S pk #i.  TestLA(S,pk)@i ==> */ 
+/*                 /1* Ex #j. HonestLog(pk)@j *1/ */ 
+/*                 (Ex #j. Insert(<'log', 'LA', S, pk, 'c1'>, 'yes')@j & j<i) */
+/*                 & */
+/*                 (Ex #j. Insert(<'log', 'LA', S, pk, 's1'>, 'yes')@j & j<i) */
+/*                 ) */
+/*          & */
+/*          ( All S pk #i.  TestCA(S,pk)@i ==> */ 
+/*                 Ex #j. HonestRegister(S,'CA',pk)@j */
+/*                 ) */
+/*                 " */ 
+/*     for parties <'CA','LA'> */
 
 end
