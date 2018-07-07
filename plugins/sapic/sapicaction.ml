@@ -24,6 +24,7 @@ type sapic_action = Null
                  | Event of action
                  | Cond of action
                  | MSR of msr 
+                 | Let of string
 
 let sapic_action2string = function
      Null -> "Zero"
@@ -43,6 +44,7 @@ let sapic_action2string = function
     | Event(a) -> "event "^action2string(a)
     | Cond(f) -> "if "^action2string(f)
     | MSR(prem,ac,conl) -> "MSR"   
+    | Let(s) -> "let "^s^" = "
 
 let rec substitute  (id:string) (t:term) process =
   match process with
@@ -55,6 +57,7 @@ let rec substitute  (id:string) (t:term) process =
       | Par
       | NDC -> Node(a, substitute id t left, substitute id t right)
       | Rep -> Node(a, substitute id t left, right)
+      | Let(_) -> raise (InternalRepresentationError "Let node should not be present at this point")
       | New (x) ->
 	if VarSet.mem ( Var.Msg(id) ) ( vars_t (Var(x)) ) then (* rebinding variable id, stop substituting *)
 	  Node( a, left, right )
