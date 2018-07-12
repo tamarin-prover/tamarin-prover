@@ -29,7 +29,6 @@ equations:
     read(sign(sk,m))=m
 
 let CA = /* CA */
-    let id = 'CA' in
     let sk =  skca(id) in
     out(pk(sk));
     !( 
@@ -94,7 +93,11 @@ let TestLA =
 let Terminate = lock 'testCA'; lock 'log'; event Terminate()
 
 // The trusted party can only run once during each run of the protocol
-let Proto = CA || LogCert || TestCA || TestLA || Terminate
+let Proto = 
+    ( let id = 'CA' in CA)
+    /* || TODO try out */
+    /* (! new id; CA) */
+    || LogCert || TestCA || TestLA || Terminate
 
 // general form for accountabilty processes
 Proto
