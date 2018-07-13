@@ -19,7 +19,7 @@ After cloning this repository run 'make default', which will install an
 appropriate GHC for your system, including all dependencies, and the
 tamarin-prover executable will be copied to
 
-  ~/.local/bin/tamarin-prover
+    ~/.local/bin/tamarin-prover
 
 This file is relocatable and you can copy it anywhere you'd like. Also to
 other systems with the same 'libc' and 'libgmp' libraries.
@@ -37,6 +37,56 @@ Note that we welcome all contributions, e.g., further protocol models. Just
 send us a pull request.
 
 
+Making new releases
+-------------------
+
+The Tamarin Prover is distributed through a number of channels: source and binaries through Github, and packages through Homebrew, Arch and NixOS. A new release should be made whenever a major new feature has been added, some significant bug(s) have been fixed, a new version of GHC should be used (possibly necessary due to MacOS auto-update), or whenever the maintainers deem it desirable. When a new release is cut, here's how to prepare the release first and then update the various distribution channels.
+
+1. Make the new release on Github. @rsasse or @jdreier usually does this.
+
+   1. run 'make case-studies' and compare 'case-studies/' with
+      'case-studies-regression/'
+
+   2. run 'make sapic-case-studies' and compare 'case-studies-sapic/' with
+      'case-studies-sapic-regression/'
+
+   3. run 'tamarin-prover test'
+
+   4. call 'tamarin-prover' and copy CSF'12 automatic command and
+      check whether verification succeeds, i.e., run
+      'tamarin-prover --prove *'
+      in the examples/csf12 folder.
+
+   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
+      in data/ so:
+      'tamarin-prover variants > tmp.txt'
+      'diff tmp.txt data/intrudervariants_both_bp_dh_for_diff.txt'
+      which should be empty.
+
+   6. call 'tamarin-prover' and copy CSF'12 interactive command and
+      execute the following steps in the GUI after running
+      'tamarin-prover interactive .'
+      in the examples/csf12 folder.
+
+        (a) open one of the presented theories
+        (b) try shortcuts (J,K,j,k,1,2,..,a)
+        (c) try different graph/sequent options
+        (d) try Download
+        (e) try 'Loading a new theory' from the start page
+
+   7. Bump version number to even minor version in cabal files and code,
+      commit version bump, by running the 'version-change.sh' script as
+      described in its comments. Then merge from 'develop' into 'master'
+      and use "Release" functionality to prepare the release.
+
+
+2. Update the Homebrew tap at tamarin-prover/homebrew-tap:
+   1. Update the [formula](https://github.com/tamarin-prover/homebrew-tap/blob/master/Formula/tamarin-prover.rb) to point to the new source tarball.
+   2. [Build bottles](https://github.com/tamarin-prover/homebrew-tap#building-bottles) for Mac and Windows, and add them to the Homebrew formula as well.
+3. Update the NixOS repo: @thoughtpolice usually does this ([example](https://github.com/NixOS/nixpkgs/commit/04002e2b7186c166af87c20da7a7ceb8c0edb021))
+4. Update the Arch repo: @felixonmars usually does this
+
+
 Branches
 --------
 
@@ -47,24 +97,26 @@ and send pull requests to include. There are some historical branches
 that we will keep around, but that are definitely stale and will
 bitrot:
 
-feature-user-defined-sorts
-feature-ac-rewrite-rules
+  - `feature-user-defined-sorts`
+  - `feature-ac-rewrite-rules`
 
 Regression testing for pull requests
 ------------------------------------
 
 Before submitting a pull request, please double check that your changes do not break any of the existing proofs by running the regression test suite. To do this run the following commands in your clone of tamarin-prover:
 
+```
 rm -rf case-studies
-
 make case-studies
-
 diff -r case-studies case-studies-regression
+```
 
 This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on). If that is the only change, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
 
 If you are running the regression on a server you can run multiple case studies in parallel by adding the "-j #" parameter where # is the number of parallel runs. Note that your machine should have 16GB of memory per run, and each run uses 3 threads already. For example:
 
+```
 make -j 6 case-studies
+```
 
 to run 6 case studies in parallel.

@@ -1,0 +1,869 @@
+theory DNP3_incorrect
+begin
+/*
+DNP3 Secure Authentication v5 - With Amoah Attack
+=============================
+*/
+
+builtins: hashing, symmetric-encryption//, asymmetric-encryption
+
+functions: hmac/2
+
+restriction InEq_testing: "All x y #i. InEq(x,y) @ i ==> not(x = y)"
+restriction Unique_Pairings_id: "All x #i #j. Unique(x) @ i & Unique(x) @ j ==> #i = #j"
+//This enforces that x and y are of distinct 'types': specifically in this case,
+//no outstation ID will end up being used as a user ID and vice versa
+restriction USR_and_OutstationID_distinct: "All x y #i. Distinct(x,y) @ i 
+    ==> not(Ex #j z. Distinct(y,z) @ j) & not(Ex #j z. Distinct(z,x) @ j)"
+
+/*********************************************************
+ * Adversary Rules
+ *********************************************************/
+
+rule Update_key_reveal:
+    [ !F_UpdateKey(~linkid,k ) ]
+  --[ UpdateKeyReveal( k ), AdversaryRule('Update_key_reveal') ]->
+    [ Out( k ) ]
+
+rule cdsk_reveal:          // Takes in the fact of the CDSK from the S3_SKC_session_key_change rule
+    [ !CDSKToReveal( k1 ) ]
+  --[ CDSKReveal( k1), AdversaryRule('Update_key_reveal') ]->
+    [ Out( k1 ) ]                 // Then outputs them again as a fact so that the Adversary can use it
+
+rule mdsk_reveal:          // Takes in the fact of the MDSK from the S3_SKC_session_key_change rule
+    [ !MDSKToReveal( k1 ) ]
+  --[ MDSKReveal( k1 ), AdversaryRule('Update_key_reveal') ]->
+    [ Out( k1 ) ]                 // Then outputs them again as a fact so that the Adversary can use it
+
+rule authority_key_reveal:
+    [ !F_AuthorityKey(k1 ) ]
+  --[ AuthorityKeyReveal( k1 ), AdversaryRule('Update_key_reveal') ]->
+    [ Out( k1 ) ]
+
+
+rule Authority_Key:
+    [ Fr(~AK) ]
+  --[ AuthorityCertKey( ~AK ) ]->
+    [ !F_AuthorityKey(~AK) ]
+
+
+// L_Counter() rule:
+rule CountUp:
+    [ L_Counter(~id,val)
+    ]
+  --[ NewCounterValue(~id,h(val))
+    ]->
+    [ L_Counter(~id,h(val))
+    , L_CounterValue(~id,h(val))
+    , Out(h(val)) //Just so we can be sure counters are public
+    ]
+
+rule A2_C_AC_Authentication_Challenge:                     // g120v1
+    let AC = < h(cCSQ), $USR, ~CD > in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<cCSQ,cChal>,mCS,'SecurityIdle')
+    , L_CounterValue(~oid,h(cCSQ))
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , Fr(~CD)
+    ]
+  --[ CSQ(~oid, h(cCSQ))
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<cCSQ,cChal>,mCS,<'WaitForReply',<h(cCSQ),AC>>)
+    , F_OutWaitForReply(~oid, KSQ,~ou,~os, <cCSQ, cChal>, mCS, <h(cCSQ),AC>)
+    , !F_OutCCSInvariant(~oid,~os,AC)
+    , Out( AC )
+    ]
+
+
+rule A2_M_AC_Authentication_Challenge:                     // g120v1
+    let AC = < h(mCSQ), $USR, ~CD > in
+    [ L_UserState(~uid,~uu,~us,cCS,<mCSQ,mChal>,'SecurityIdle')
+    , L_CounterValue(~uid,h(mCSQ))
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , Fr(~CD)
+    ]
+  --[ CSQ(~uid, h(mCSQ))
+    ]->
+    [ L_UserState(~uid,~uu,~us,cCS,<mCSQ,mChal>,<'WaitForReply',<h(mCSQ),AC>>)
+    , F_UserWaitForReply(~uid, ~uu,~us, cCS, <mCSQ, mChal>, <h(mCSQ), AC>)
+    , !F_UserMCSInvariant(~uid,~us,AC)
+    , Out( AC )
+    ]
+
+rule S3_SKC_session_key_change:
+    let SKSM_j = < KSQ, $USR, keystatus, CD_j > //We'll let S3 change session keys regardless of keystatus
+        SKCM_j = < KSQ, $USR,
+             senc( < ~CDSK, ~MDSK, SKSM_j >, UK ) > in
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,'SessionKeyChange' )
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !UserUpdateKey(~uid,~uu,UK)
+    , Fr( ~CDSK ), Fr( ~MDSK )                    // New session keys
+    , Fr( ~newus )
+    , In( SKSM_j )
+    ]
+  --[ SessKeys( ~CDSK, ~MDSK, $USR )
+    , NewSKs(~linkid,UK,~CDSK,~MDSK)
+    , Sourced_UpdateKey(~linkid,UK)
+    , UpdateKeyUsedForSKs(~linkid,UK,~CDSK,~MDSK)
+//    , UsingSessKeys(~CDSK,~MDSK)
+    ]->
+    [ //Update key state to a new one, although we are still in the waiting for confirmation state, with an oustanding challenge
+      L_UserState(~uid,~uu,~newus,cCS,mCS,<'WaitForKeyChangeConfirmation',SKCM_j,~CDSK,~MDSK> )
+    , !F_UserSessKeys(~uid,~newus,'OK',~CDSK,~MDSK)
+    , !CDSKToReveal( ~CDSK )                                  // Also add these to U4, to simulate Outstation compromise?
+    , !MDSKToReveal( ~MDSK )
+    , Out( SKCM_j )
+    ]
+
+rule S4_SKS_session_key_status:                                     // This message is the one that the outstation sends back
+    let SKSM_j =  <KSQ, $USR, keystatus, CD_j>
+        SKCM_j =  <KSQ, $USR, senc( <CDSK, MDSK, SKSM_j>, UK)>
+        SKSM_j_plus_1 = < h(KSQ), $USR, 'OK', ~CD_j_plus_1,       // SessionKeyStatus is now 'OK' as keys have been agreed
+                          hmac(SKCM_j, MDSK ) >               // HMAC of SKCM_j, keyed with MDSK_j_USR_O
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<cCSQ,cChal>,<mCSQ,mChal>,'SecurityIdle' )
+    , L_CounterValue(~oid,h(cCSQ))
+    , L_OutSentKeyStatus(~oid,SKSM_j)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !OutUpdateKey(~oid,~ou, UK)
+    , Fr( ~CD_j_plus_1 )
+    , Fr( ~newos )
+    , In( SKCM_j )
+    ]
+  --[ GotSessKeysOutSt( CDSK, MDSK, $USR )
+    , CSQ(~oid, h(cCSQ))
+    , Sourced_UpdateKey(~linkid,UK)
+    , Sourced_SKs(~linkid,UK,CDSK,MDSK)
+    , UpdateKeyUsedForSKs(~linkid,UK,CDSK,MDSK)
+      ]->
+    [ //Drop last challenge on key update
+      L_OutstationState(~oid,h(KSQ),~ou,~newos,<h(cCSQ),'none'>,<h(mCSQ),'none'>,'SecurityIdle' )
+    , L_OutSentKeyStatus(~oid,SKSM_j_plus_1)
+    , !F_OutSessKeys(~oid,~newos,'OK',CDSK,MDSK)
+    , Out( SKSM_j_plus_1 )
+    ]
+
+rule U2_UKCRp_Key_Change_Reply:
+    [ !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , Fr(~CD_b) 
+    ]
+  --[
+    ]->
+    [ OutUpdateKeyChallenge(~oid,~CD_b)
+    , Out(<$USR, ~CD_b>)
+    ]
+
+rule U3_U4_U5_new_update_key:
+    let UKCRp = <KSQ, $USR, CD_b>
+        UKC   = <KSQ, $USR, senc(<$USR,~UK,CD_b>,~AK)>
+        UKCCu = hmac(<$OSID,~CD_a,CD_b,KSQ>,~UK)
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,'SecurityIdle')
+    , !F_UserInvariants(~uid,~AK,$USR,$OSID,~linkid)
+    , !F_AuthorityKey(~AK)
+    , Fr(~CD_a)
+    , Fr(~UK)
+    , In(UKCRp)
+    ]
+  --[ NewUpdateKey(~linkid,~UK)
+    ]->
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,<'WaitForKCC',UKCCu>)
+    , F_WaitForKCC(~uid,~uu,~us,cCS,mCS,UKCCu)
+    , !F_UpdateKey(~linkid,~UK)
+    , Out(<~CD_a,UKC, UKCCu>)
+    ]
+
+
+rule S5_receive_SKS_confirmation:
+    let SKSM_j_plus_1 = < KSQ, $USR, 'OK', CD_j_plus_1,        // SessionKeyStatus is now 'OK' as keys have been agreed
+                           hmac(SKCM_j, MDSK ) >               // HMAC of SKCM_j, keyed with ~MDSK_j_USR_O
+    in
+    [ L_UserState(~uid,~uu,~us,<cCSQ,cChal>,<mCSQ,cChal>,<'WaitForKeyChangeConfirmation',SKCM_j,CDSK,MDSK> )
+    , L_CounterValue(~uid,h(mCSQ))
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , Fr(~cid)
+    , In( SKSM_j_plus_1 )
+    ]
+  --[ GotSessKeysUser( CDSK, MDSK, $USR )
+    , CSQ(~uid, h(mCSQ))
+    ]->
+    [ //Last challenge is dropped on a key update
+      L_UserState(~uid,~uu,~us,<h(cCSQ),'none'>,<h(mCSQ),'none'>,'SecurityIdle' )
+    ]
+
+rule Initial_key_pre_distribution:         // 0_ is just for heuristics, so this case often gets chosen first.
+    let CDSK = 'undefined'
+        MDSK = 'undefined'
+    in
+    [ Fr( ~UK )     // First Update Key, between USR and Outstation (O)
+    , !F_AuthorityKey(~AK)
+    , Fr( ~uid ), Fr( ~oid ) // These two Fr() terms are Tamarin-specific, and for injectivity.
+    , Fr( ~uu), Fr( ~ou), Fr(~us), Fr(~os) //These are for unifying the key source invariants
+    , Fr( ~linkid )     //This is the unique shared 'link identifier' that the outstation and user should agree upon each session
+    ]
+  --[ //The association of user number to outstation is unique *per authority key*. 
+      //We give this tuple the fresh ~linkid to refer to it in agreement properties
+      Unique(<~AK,$USR,$OUTSTATION>), Unique(<~AK,$OUTSTATION,$USR>)
+    , Distinct($USR,$OUTSTATION)
+
+    , AuthorityCertKey( ~AK )
+    , NewCounterValue(~uid, '0'), NewCounterValue(~oid, '0')
+    , NewUpdateKey(~linkid,~UK)
+      ]->
+    [ //We put cid and csq together in a single term so most rules can just pass it through
+      L_UserState(~uid,~uu,~us,<'0','none'>,<'0','none'>,'Init')
+    , L_OutstationState(~oid,'0',~ou,~os,<'0','none'>,<'0','none'>,'SecurityIdle' )
+
+    //These parts of state never change, so we mark them persistent
+    , !F_UserInvariants(~uid,~AK,$USR,$OUTSTATION,~linkid )
+    , !F_OutInvariants(~oid,~AK,$USR,$OUTSTATION,~linkid )
+
+    //These hold the key state for each KSQ value
+    , !UserUpdateKey(~uid, ~uu, ~UK), !OutUpdateKey(~oid, ~ou, ~UK)
+    , !F_UserSessKeys(~uid,~us,'NOT_INIT','undefined','undefined')
+    , !F_OutSessKeys(~oid,~os,'NOT_INIT','undefined','undefined')
+
+    //This is the last key status message, which the outstation is expected
+    //to accept key changes on, even if things have happened since it was sent
+    , L_OutSentKeyStatus(~oid,'none')
+
+    //These are the counter facts, which will go into a special 'count up' rule
+    //so we can easily prove monotonicity (and therefore uniqueness) of counter values
+    , L_Counter(~uid,'0'), L_Counter(~oid,'0')
+
+    , !F_UpdateKey(~linkid,~UK )   // For adversary key-reveal events
+    ]
+
+rule S1_SKSR_session_key_status_request:
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,anystate)
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    ]
+  --[
+    ]->
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,'SessionKeyChange')
+    , Out( $USR )
+    ]
+
+rule S2_SKS_session_key_status:
+    let SKSM_j = < h(KSQ), $USR, keystatus, ~CD_j >
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<cCSQ,cChal>,<mCSQ,mChal>,'SecurityIdle' )
+    , L_OutSentKeyStatus(~oid,lastkeystatus)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutSessKeys(~oid,~os,keystatus,CDSK,MDSK)
+    , Fr( ~CD_j )
+    , In( $USR )
+      ]
+  --[
+    ]->
+    [ L_OutstationState(~oid,h(KSQ),~ou,~os,<cCSQ,cChal>,<mCSQ,mChal>,'SecurityIdle' )
+    , L_OutSentKeyStatus(~oid,SKSM_j)
+    , Out( SKSM_j )
+    ]
+
+rule A3_C_AR_Authentication_Reply:
+    let AC = < CSQ, $USR, CD >
+        AR = < CSQ, $USR, hmac(<CSQ,AC,$ASDU>, CDSK) >
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,'SecurityIdle')
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !F_UserSessKeys(~uid,~us,'OK',CDSK,MDSK)
+    , Fr(~cinvar)
+    , In(AC)
+    ]
+  --[ SentASDU(~linkid, AR, 'normal', 'control')
+    , UsingSessKeys(CDSK,MDSK)
+    , AuthReply( AC, $ASDU, CDSK)
+    ]->
+    [ //Overwrite previous 'last C challenge data' with newly received value
+      L_UserState(~uid,~uu,~us,<CSQ,~cinvar,AC>,mCS,'SecurityIdle')
+    , !UserCCSInvariant(~uid,~us,~cinvar,AC)
+    , Out(AR)
+    ]
+
+rule A3_C_AR_Authentication_Aggressive:
+    let AR = < h(cCSQ), $USR, hmac(<h(cCSQ),cChal,$ASDU>, CDSK) >
+    in
+    [ L_UserState(~uid,~uu,~us,<cCSQ,~cinv,cChal>,mCS,'SecurityIdle')
+    , !UserCCSInvariant(~uid,~us,~cinv,cChal)
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !F_UserSessKeys(~uid,~us,'OK',CDSK,MDSK)
+    ]
+  --[ SentASDU(~linkid, AR, 'aggressive', 'control')
+    , UsingSessKeys(CDSK,MDSK)
+    , AuthReply( cChal, $ASDU, CDSK)
+    ]->
+    [ L_UserState(~uid,~uu,~us,<h(cCSQ),~cinv,cChal>,mCS,'SecurityIdle')
+    , Out(AR)
+    ]
+
+
+// Outstation receives MAC'd value of the ASDU (non-agressive mode)
+rule A4_receive_C_AC_of_ASDU:
+    let AC = < CSQ, $USR, CD >
+        AR = < CSQ, $USR, hmac(<CSQ,AC,$ASDU>, CDSK)>
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,mCS,<'WaitForReply',<CSQ,AC>>)
+    , F_OutWaitForReply(~oid, KSQ,~ou,~os, cCS, mCS, <CSQ, AC>)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutSessKeys(~oid,~os,'OK',CDSK,MDSK)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'normal', 'control')
+    , UsingSessKeys(CDSK,MDSK)
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<CSQ,AC>,mCS,'SecurityIdle')
+    ]
+
+rule A4_idle_receive_C_AC_aggressive:
+    let AR = < uCSQ, $USR, hmac(<uCSQ,AC,$ASDU>, CDSK)>
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<CSQ,AC>,mCS,'SecurityIdle')
+    , L_CounterValue(~oid,h(CSQ))
+    , !F_OutSessKeys(~oid,~os,'OK',CDSK,MDSK)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutCCSInvariant(~oid,~os,AC)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'aggressive', 'control')
+    , UsingSessKeys(CDSK,MDSK)
+    , CSQ(~oid, h(CSQ))
+    , InEq(AC, 'none')
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<h(CSQ),AC>,mCS,'SecurityIdle')
+    ]
+
+rule A4_waiting_receive_C_AC_aggressive:
+    let AC = < h(CSQ), $USR, CD >
+        AR = < uCSQ, $USR, hmac(<uCSQ,AC,$ASDU>, CDSK)>
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<CSQ,AC>,mCS,<'WaitForReply',newChal>)
+    , F_OutWaitForReply(~oid, KSQ,~ou,~os, <CSQ, AC>, mCS, newChal)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutSessKeys(~oid,~os,'OK',CDSK,MDSK)
+    , !F_OutCCSInvariant(~oid,~os,AC)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'aggressive', 'control')
+    , UsingSessKeys(CDSK,MDSK)
+    , InEq(AC, 'none')
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,<h(CSQ),AC>,mCS,'SecurityIdle')
+    ]
+
+rule A_OutstationWaitForReply_TimeoutorError:
+    [L_OutstationState(~oid,KSQ,~ou,~os,cCS,mCS,<'WaitForReply',newChal>)
+    , F_OutWaitForReply(~oid, KSQ,~ou,~os, cCS, mCS, newChal)]
+    -->
+    [L_OutstationState(~oid,KSQ,~ou,~os,newChal,mCS,'SecurityIdle')]
+
+
+rule A3_M_AR_Authentication_Reply:
+    let AC = < CSQ, $USR, CD >
+        AR = < CSQ, $USR, hmac(<CSQ,AC,$ASDU>, MDSK) >
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,mCS,'SecurityIdle')
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutSessKeys(~oid,~os,'OK',CDSK,MDSK)
+    , Fr(~cinv)
+    , In(AC)
+    ]
+  --[ SentASDU(~linkid, AR, 'normal', 'monitor')
+    , UsingSessKeys(CDSK,MDSK)
+    , AuthReply( AC, $ASDU, MDSK)
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,<CSQ,~cinv,AC>,'SecurityIdle')
+    , !OutMCSInvariant(~oid, ~os, ~cinv, AC)
+    , Out(AR)
+    ]
+
+rule A3_M_AR_Authentication_Aggressive:
+    let AR = < h(mCSQ), $USR, hmac(<'amode',h(mCSQ),mChal,$ASDU>, MDSK) >
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,<mCSQ,~cinv,mChal>,'SecurityIdle')
+    , !OutMCSInvariant(~oid, ~os, ~cinv, mChal)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , !F_OutSessKeys(~oid,~os,'OK',CDSK,MDSK)
+    ]
+  --[ SentASDU(~linkid, AR, 'aggressive', 'monitor')
+    , UsingSessKeys(CDSK,MDSK)
+    , AuthReply( mChal, $ASDU, MDSK)
+    ]->
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,<h(mCSQ),~cinv,mChal>,'SecurityIdle')
+    , Out(AR)
+    ]
+
+
+rule A4_receive_M_AC_of_ASDU:
+    let AC = < CSQ, $USR, CD >
+        AR = < CSQ, $USR, hmac(<CSQ,AC,$ASDU>, MDSK)>
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,<mCSQ,mChal>,<'WaitForReply',<CSQ,AC>>)
+    , F_UserWaitForReply(~uid,~uu,~us, cCS, <mCSQ, mChal>, <CSQ, AC>)
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !F_UserSessKeys(~uid,~us,'OK',CDSK,MDSK)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'normal', 'monitor')
+    , UsingSessKeys(CDSK,MDSK)
+     ]->
+    [ L_UserState(~uid,~uu,~us,cCS,<CSQ,AC>,'SecurityIdle')
+    ]
+
+rule A4_idle_receive_M_AC_aggressive:
+    let AR = < h(mCSQ), $USR, hmac(<'amode',h(mCSQ),mChal,$ASDU>, MDSK)>
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,<mCSQ,mChal>,'SecurityIdle')
+    , L_CounterValue(~uid,h(mCSQ))
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !F_UserSessKeys(~uid,~us,'OK',CDSK,MDSK)
+    , !F_UserMCSInvariant(~uid,~us,AC)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'aggressive', 'monitor')
+    , UsingSessKeys(CDSK,MDSK)
+    , CSQ(~uid, h(mCSQ))
+    , InEq(mChal, 'none')
+    ]->
+    [ L_UserState(~uid,~uu,~us,cCS,<h(mCSQ),mChal>,'SecurityIdle')
+    ]
+
+rule A4_waiting_receive_M_AC_aggressive:
+    let AR = < h(mCSQ), $USR, hmac(<'amode',h(mCSQ), mChal,$ASDU>, MDSK)>
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,<mCSQ,mChal>,<'WaitForReply',newChal>)
+    , F_UserWaitForReply(~uid, ~uu,~us, cCS, <mCSQ, mChal>, newChal)
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , !F_UserSessKeys(~uid,~us,'OK',CDSK,MDSK)
+    , !F_UserMCSInvariant(~uid,~us,AC)
+    , In(AR)
+    ]
+  --[ AuthASDU(~linkid, AR, 'aggressive', 'monitor')
+    , UsingSessKeys(CDSK,MDSK)
+    , InEq(mChal, 'none')
+    ]->
+    [ L_UserState(~uid,~uu,~us,cCS,<h(mCSQ),mChal>,'SecurityIdle')
+    ]
+
+rule A_UserWaitForReply_Timeout:
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,<'WaitForReply',newChal>)
+    , F_UserWaitForReply(~uid,~uu,~us, cCS, mCS, newChal)
+    ]
+    -->
+    [L_UserState(~uid,~uu,~us,cCS,newChal,'SecurityIdle')]
+
+
+rule U6_UKCC_Update_Key_Change_Confirmation:
+    let UKC = <h(KSQ), $USR, senc(<$USR,UK,CD_b>,AK)>
+        UKCCu = hmac(<$OSID,CD_a,CD_b,h(KSQ)>,UK)
+        UKCCo = hmac(<$USR,CD_b,CD_a,h(KSQ)>,UK)
+    in
+    [ L_OutstationState(~oid,KSQ,~ou,~os,cCS,mCS,'SecurityIdle')
+    , OutUpdateKeyChallenge(~oid,CD_b)
+    , !F_OutInvariants(~oid,AK,$USR,$OSID,~linkid)
+    , Fr(~newou)
+    , In(CD_a)
+    , In(<UKC, UKCCu>)
+    ]
+  --[ OutstationUpdateKeySession(~oid,UKCCu,UKCCo)
+    , Sourced_UpdateKey(~linkid,UK)
+     ]->
+    [ L_OutstationState(~oid,h(KSQ),~newou,~os,cCS,mCS,'SecurityIdle')
+    , !OutUpdateKey(~oid,~newou, UK)
+    , Out(UKCCo)
+    ]
+
+rule U7_receive_UKCC_from_Outstation:
+    let UKCCu = hmac(<$OSID,CD_a,CD_b,KSQ>,UK)
+        UKCCo = hmac(<$USR,CD_b,CD_a,KSQ>,UK)
+    in
+    [ L_UserState(~uid,~uu,~us,cCS,mCS,<'WaitForKCC',UKCCu>)
+    , F_WaitForKCC(~uid,~uu,~us,cCS,mCS,UKCCu)
+    , !F_UserInvariants(~uid,AK,$USR,$OSID,~linkid)
+    , Fr(~newuu)
+    , In(UKCCo)
+    ]
+  --[ UserUpdateKeySession(~uid,UKCCu,UKCCo)
+    , Sourced_UpdateKey(~linkid,UK)
+     ]->
+    [ L_UserState(~uid,~newuu,~us,cCS,mCS,'SecurityIdle')
+    , !UserUpdateKey(~uid,~newuu, UK)
+    ]
+
+lemma countervalue_uniqueness[reuse, use_induction]:
+    "All id x #i #j.
+        NewCounterValue(id,x) @ i & NewCounterValue(id,x) @ j ==> #i = #j"
+
+lemma CSQ_Uniqueness[reuse, use_induction]:
+    "All id csq #i #j.
+        CSQ(id,csq) @ i & CSQ(id,csq) @ j ==> #i = #j"
+induction
+  case empty_trace
+  by contradiction
+next
+  case non_empty_trace
+  simplify
+  solve( CSQ( id, csq ) @ #i )
+    case A2_C_AC_Authentication_Challenge
+    solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~oid, h(cCSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction
+        qed
+      next
+        case A2_M_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_C_AC_aggressive
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_M_AC_aggressive
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case S4_SKS_session_key_status
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case S5_receive_SKS_confirmation
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      qed
+    qed
+  next
+    case A2_M_AC_Authentication_Challenge
+    solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~uid, h(mCSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A2_M_AC_Authentication_Challenge
+        solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction
+        qed
+      next
+        case A4_idle_receive_C_AC_aggressive
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_M_AC_aggressive
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case S4_SKS_session_key_status
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case S5_receive_SKS_confirmation
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      qed
+    qed
+  next
+    case A4_idle_receive_C_AC_aggressive
+    solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~oid, h(CSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+      next
+        case A2_M_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_C_AC_aggressive
+        solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction
+        qed
+      next
+        case A4_idle_receive_M_AC_aggressive
+        by solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+      next
+        case S4_SKS_session_key_status
+        by solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+      next
+        case S5_receive_SKS_confirmation
+        by solve( L_CounterValue( ~oid, h(CSQ) ) ▶₁ #j )
+      qed
+    qed
+  next
+    case A4_idle_receive_M_AC_aggressive
+    solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~uid, h(mCSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A2_M_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_C_AC_aggressive
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_M_AC_aggressive
+        solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction
+        qed
+      next
+        case S4_SKS_session_key_status
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case S5_receive_SKS_confirmation
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      qed
+    qed
+  next
+    case S4_SKS_session_key_status
+    solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~oid, h(cCSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case A2_M_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_C_AC_aggressive
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_M_AC_aggressive
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      next
+        case S4_SKS_session_key_status
+        solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction /* from formulas */
+        qed
+      next
+        case S5_receive_SKS_confirmation
+        by solve( L_CounterValue( ~oid, h(cCSQ) ) ▶₁ #j )
+      qed
+    qed
+  next
+    case S5_receive_SKS_confirmation
+    solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #i )
+      case CountUp
+      solve( CSQ( ~uid, h(mCSQ) ) @ #j )
+        case A2_C_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A2_M_AC_Authentication_Challenge
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_C_AC_aggressive
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case A4_idle_receive_M_AC_aggressive
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case S4_SKS_session_key_status
+        by solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+      next
+        case S5_receive_SKS_confirmation
+        solve( L_CounterValue( ~uid, h(mCSQ) ) ▶₁ #j )
+          case CountUp
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma authed_sessions_unique[reuse]:
+    "(All id ar mode mode2 direction #i #j.
+        AuthASDU(id,ar,mode,direction) @ i & AuthASDU(id,ar,mode2,direction) @ j ==> #i = #j)"
+
+//Status: All of the following autoprove
+lemma update_key_sourced[reuse, use_induction]:
+    "not(Ex ak #r. AuthorityKeyReveal(ak) @ r)
+    ==>
+    (All id uk #i. 
+        not(Ex #r. UpdateKeyReveal(uk) @ r & #r < #i)
+        & Sourced_UpdateKey(id,uk) @ i
+        ==> Ex #j. #j < #i & NewUpdateKey(id,uk) @ j
+    )"
+
+lemma sessionkeys_sourced[reuse,use_induction]:
+    "not(Ex ak #r. AuthorityKeyReveal(ak) @ r)
+    ==>
+    (All linkid uk CDSK MDSK #i.
+        //If the Update key wasn't revealed, the session keys were set correctly
+        not(Ex #kr. UpdateKeyReveal(uk) @ kr & #kr < #i)
+        & Sourced_SKs(linkid, uk, CDSK, MDSK ) @ i
+        ==> Ex #j MDSK2. #j < #i & NewSKs(linkid, uk, CDSK, MDSK2) @ j
+    )"
+
+lemma asdu_agreement_implies_mode_agreement[reuse]:
+    "not(Ex ak #r. AuthorityKeyReveal(ak) @ r)
+    ==>
+    (All linkid ar mode direction linkid2 mode2 direction2 #i #j.
+        (All cdsk mdsk. UsingSessKeys(cdsk,mdsk) @ i
+        ==> //The update key that was used to send out the current session keys cannot be revealed
+            (All uk #k. UpdateKeyUsedForSKs(linkid,uk,cdsk,mdsk) @ k 
+                ==> not(Ex #kr. UpdateKeyReveal(uk) @ kr & #kr < #i))
+            //If the direction is control, then then no reveal of the current CDSK
+            & (direction = 'control' ==> not(Ex #skr. CDSKReveal( cdsk ) @ skr & #skr < #i))
+            //And if the direction is monitor, then no reveal of the current MDSK
+            & (direction = 'monitor' ==> not(Ex #skr. MDSKReveal( mdsk ) @ skr & #skr < #i)))
+        & AuthASDU( linkid, ar, mode, direction ) @ i
+        & SentASDU(linkid2,ar,mode2,direction2) @ j & #j < #i
+        ==> (mode = mode2) & (direction = direction2) & (linkid = linkid2)
+    )"
+simplify
+solve( AuthASDU( linkid, ar, mode, direction ) @ #i )
+  case A4_idle_receive_C_AC_aggressive
+  solve( SentASDU( linkid2,
+                   <uCSQ, $USR, hmac(<uCSQ, AC, $ASDU>, CDSK)>, mode2,
+                   direction2
+         ) @ #j )
+    case A3_C_AR_Authentication_Aggressive
+    by sorry
+  next
+    case A3_C_AR_Authentication_Reply
+    solve( !F_OutSessKeys( ~oid, ~os, 'OK', CDSK, MDSK
+           ) ▶₂ #i )
+      case S4_SKS_session_key_status_case_1
+      solve( !F_OutInvariants( ~oid, AK, $USR, $OSID, ~linkid ) ▶₃ #i )
+        case Initial_key_pre_distribution
+        solve( !F_OutCCSInvariant( ~oid, ~os, <uCSQ, $USR, CD>
+               ) ▶₄ #i )
+          case A2_C_AC_Authentication_Challenge
+          solve( !F_UserInvariants( ~uid, AK.1, $USR, $OSID.1, ~linkid.1
+                 ) ▶₁ #j )
+            case Initial_key_pre_distribution
+            solve( !F_UserSessKeys( ~uid, ~us, 'OK', CDSK, MDSK.1
+                   ) ▶₂ #j )
+              case S3_SKC_session_key_change_case_1
+              solve( !KU( senc(<~CDSK, MDSK, KSQ.1, $USR, keystatus, CD_j>,
+                               ~UK)
+                     ) @ #vk.12 )
+                case S3_SKC_session_key_change
+                solve( L_OutstationState( ~oid, KSQ, ~ou, ~os,
+                                          <CSQ, h(cCSQ), $USR, ~CD>, mCS,
+                                          'SecurityIdle'
+                       ) ▶₀ #i )
+                  case A_OutstationWaitForReply_TimeoutorError
+                  solve( L_OutstationState( ~oid, KSQ.1, ~ou.1, ~os.1,
+                                            <cCSQ.1, cChal>, <mCSQ, mChal>,
+                                            'SecurityIdle'
+                         ) ▶₀ #vr )
+                    case S2_SKS_session_key_status_case_3
+                    solve( L_OutstationState( ~oid, KSQ.1, ~ou.1, ~os.1,
+                                              <cCSQ.1, cChal>, <mCSQ, mChal>,
+                                              'SecurityIdle'
+                           ) ▶₀ #vr.11 )
+                      case Initial_key_pre_distribution
+                      solve( L_OutstationState( ~oid, KSQ, ~ou, ~os, <cCSQ, cChal>,
+                                                mCS, 'SecurityIdle'
+                             ) ▶₀ #vr.4 )
+                        case S4_SKS_session_key_status
+                        solve( L_UserState( ~uid, ~uu, ~us, cCS, mCS,
+                                            'SecurityIdle'
+                               ) ▶₀ #j )
+                          case S5_receive_SKS_confirmation
+                          solve( L_UserState( ~uid, ~uu, ~us.2, <cCSQ, cChal>,
+                                              <mCSQ, cChal>, anystate
+                                 ) ▶₀ #vr.7 )
+                            case Initial_key_pre_distribution
+                            solve( L_CounterValue( ~oid, h(h(h('0'))) ) ▶₁ #i )
+                              case CountUp
+                              solve( L_Counter( ~oid, '0' ) ▶₀ #vr.1 )
+                                case Initial_key_pre_distribution
+                                solve( L_Counter( ~oid, h('0') ) ▶₀ #vr.5 )
+                                  case CountUp
+                                  solve( L_Counter( ~uid, '0' ) ▶₀ #vr.13 )
+                                    case Initial_key_pre_distribution
+                                    solve( L_Counter( ~oid, h(h('0')) ) ▶₀ #vr.14 )
+                                      case CountUp
+                                      solve( !KU( ~CD ) @ #vk.14 )
+                                        case A2_C_AC_Authentication_Challenge
+                                        solve( L_OutSentKeyStatus( ~oid, lastkeystatus ) ▶₁ #vr.11 )
+                                          case Initial_key_pre_distribution
+                                          solve( L_OutSentKeyStatus( ~oid,
+                                                                     <h('0'), $USR, 
+                                                                      keystatus, CD_j>
+                                                 ) ▶₂ #vr )
+                                            case S2_SKS_session_key_status_case_1
+                                            by sorry
+                                          next
+                                            case S2_SKS_session_key_status_case_2
+                                            by sorry
+                                          next
+                                            case S2_SKS_session_key_status_case_3
+                                            solve( L_OutstationState( ~oid, '0', ~ou.1,
+                                                                      ~os.1, <cCSQ, cChal>,
+                                                                      <mCSQ, mChal>,
+                                                                      'SecurityIdle'
+                                                   ) ▶₀ #vr.17 )
+                                              case A_OutstationWaitForReply_TimeoutorError
+                                              by sorry
+                                            next
+                                              case Initial_key_pre_distribution
+                                              solve( !KU( ~CD_j ) @ #vk.18 )
+                                                case S2_SKS_session_key_status
+                                                solve( !KU( h(h('0')) ) @ #vk.8 )
+                                                  case c_h
+                                                  solve( !KU( h('0') ) @ #vk.17 )
+                                                    case c_h
+                                                    solve( !KU( hmac(<h('0'), $USR, 
+                                                                      senc(<~CDSK, ~MDSK, 
+                                                                            h('0'), $USR, 
+                                                                            'NOT_INIT', 
+                                                                            ~CD_j>,
+                                                                           ~UK)
+                                                                     >,
+                                                                     ~MDSK)
+                                                           ) @ #vk.24 )
+                                                      case S4_SKS_session_key_status_case_1
+                                                      solve( L_OutSentKeyStatus( ~oid,
+                                                                                 <
+                                                                                  h('0'), 
+                                                                                  $USR, 
+                                                                                  'NOT_INIT', 
+                                                                                  ~CD_j>
+                                                             ) ▶₂ #vr.20 )
+                                                        case S2_SKS_session_key_status
+                                                        solve( !KU( hmac(<h(h('0')), 
+                                                                          <h(h('0')), 
+                                                                           $USR, ~CD>, 
+                                                                          $ASDU>,
+                                                                         ~CDSK)
+                                                               ) @ #vk.19 )
+                                                          case A3_C_AR_Authentication_Reply
+                                                          solve( L_UserState( ~uid, ~uu.1, ~us, cCS,
+                                                                              mCS,
+                                                                              'SecurityIdle'
+                                                                 ) ▶₀ #vr.24 )
+                                                            case S5_receive_SKS_confirmation
+                                                            SOLVED // trace found
+                                                          qed
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+end
+// vim: ft=spthy
