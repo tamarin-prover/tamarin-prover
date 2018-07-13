@@ -163,7 +163,7 @@ verdictfunction v3:
 // composed statement
 //
 lemma acc:
-    v3 accounts [cases] 
+    v3 accounts [coarse] //also works for cases.
     for "(All S pk #i.  TestLA(S,pk)@i ==> 
                 /* Ex #j. HonestLog(pk)@j */ 
                 (Ex #j. Insert(<'log', 'LA', S, pk, 'c1'>, 'yes')@j & j<i)
