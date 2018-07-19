@@ -161,7 +161,8 @@ let res_predicate_not_eq = lemma2string_noacc res_predicate_not_eq_l
 
 (* " *)
 
-let res_locking_l pos =  Restriction( "locking",
+(*Tamarin won't read duplicate named restrictions, so we made the names dynamic *)
+let res_locking_l pos =  Restriction( "locking_"^(string_of_int pos),
     All(VarSet.of_list [Msg "p"; Msg "l"; Msg "x"; Msg "pp"; Msg "lp"; Temp "t1"; Temp "t3"],
         Imp(
          And(     

@@ -11,6 +11,7 @@ open Lemma
 open Term
 open Var
 open Verdict
+open Restrictions
 
 let lemma2string = lemma2string_base Sufficient.sufficient_conditions
 let print_lemmas = print_lemmas_base Sufficient.sufficient_conditions
@@ -47,3 +48,11 @@ let rec contains_resilient_io t =
     |   Node(Ch_Out(Var(PubFixed("r")),_), _, _)  -> true
     |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)
 
+let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | Node(_, l, r) -> ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> []
+
+let rec remove_duplicates lst= match lst with
+      [] -> []
+    | h::hs -> h :: (remove_duplicates (List.filter (fun x -> x<>h) hs))
