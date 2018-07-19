@@ -185,13 +185,32 @@ let progresstrans anP = (* translation for processes with progress *)
     }
   in
   initrule::messsageidrule::(gen trans anP [] varset )
-    
+
+
+(*Returns a list of positions of each defined locks*)
+(* let rec get_lock_positions x = match x with
+      Node(AnnotatedLock(_,a), l, r) -> res_locking_l a ^ ( get_lock_positions (l) ^ get_lock_positions (r))
+    | Node(_, l, r) ->  ( get_lock_positions (l) ^ get_lock_positions (r))
+    | _ -> ""
+ *)
+
+
+(*       Empty -> ""
+    |   Node(AnnotatedLock (_,a), left, right) -> res_locking_l a
+    |   Node(AnnotatedUnlock _, left, right) -> ""
+    |   Node(_,left,right) -> (get_lock_positions left) ^ (get_lock_positions right) *)
+
+
+(* let rec get_lock_restrictions x =  match x with
+    [] -> ""
+    | a :: as -> print_lemmas a ^ (get_lock_positions as) ) 
+     *)
     
 let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
   else 
       (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
-    ^ (if contains_locking annotated_process then  res_locking else "")
+    (*^ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])*)
     ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
     ^ (* Stuff that's always there *)
     res_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
@@ -212,7 +231,15 @@ let translation input =
       ^ res_resilient 
     else 
       generate_sapic_restrictions annotated_process
+  (*and sapic_restrictions = List.map print_lemmas (generate_sapic_restrictions annotated_process)*)
+  and sapic_restrictions_locks = 
+    if contains_locking annotated_process
+    then  
+      let lock_list = get_lock_positions annotated_process  
+      in
+      print_lock_restrictions  (remove_duplicates lock_list)
+    else ""
   in
-  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^
+  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^  sapic_restrictions_locks ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"
