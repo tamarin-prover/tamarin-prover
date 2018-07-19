@@ -1,0 +1,50 @@
+/*
+ * Protocol:    Causality - early preemption protocol 
+ * Modeler:   Robert Künnemann, Ilkan Esiyok
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+theory Causality_EarlyPreemption
+begin
+
+//Suzy
+let A = 0
+
+//Billy
+let B = 0
+
+//Bottle
+let C = 
+    (in(~a); event Control('0','1'); event Shot_A(); event Shattered())
+    +
+    (in(~b); event Control('0','2'); event Shot_B(); event Shattered())
+
+
+new ~a; new ~b;
+(A || B || C ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     !(
+       (if $x='A' then out(~a))
+     ||
+       (if $x='B' then out(~b))
+     )
+   )
+)
+
+lemma sanity[reuse]:
+	"All #i. Shattered()@i ==> ((Ex #j. Shot_A()@j) | (Ex #j. Shot_B()@j)) "
+
+
+verdictfunction v1:
+    "Ex #i. Shot_A()@i " -> <'A'>,
+    "Ex #i. Shot_B()@i " -> <'B'>,
+    otherwise -> empty
+
+lemma acc:
+    v1 accounts [control]
+    for "not((Ex #j. Shot_A()@j) | (Ex #j. Shot_B()@j))"
+    for parties <'A','B'>
+
+end

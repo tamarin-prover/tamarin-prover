@@ -1,0 +1,90 @@
+/*
+ * Protocol:    Whodunit protocol - Fixed
+ * Modeler:   Robert Künnemann
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+
+theory WhoDunit_Fixed
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    sign/2, verify/3,
+    true/0,
+    extract/1
+
+equations: 
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    extract(sign(m,sk(i)))=m
+
+predicates:
+  and3(x,y,z) <=> (x=true() & y=true() & z=true() )
+
+
+let S = let m = <a,sign(a,sk('S'))> in
+        in (a); out(c_SA,m); out(c_SJ,m)
+
+let A = let pkS = pk(sk('S')) in
+        in(c_SA,<a,asig>);
+        if verify(asig,a,pkS)=true() then 
+            out (c_AJ,<a,asig,sign(a,sk('A'))>)
+
+let Tr = let
+             pkS = pk(sk('S')) 
+             pkA = pk(sk('A')) 
+         in
+         in(c_SJ,<a1,a1sig>); in(c_AJ,<a2,a2sigS,a2sigA>); 
+         if and3(verify(a1sig,a1,pkS), verify(a2sigS,a2,pkS), verify(a2sigA,a2,pkA)) 
+         then (
+             if a1=a2 then
+              ( event Control('0','1');
+                event Equal())
+             else 
+              ( event Control('0','2');
+                event BlameS();
+                event Unequal())
+         )
+
+
+new c_SA; new c_AJ; new c_SJ;
+(S || A || Tr ||
+      out(pk(sk('S'))); out(pk(sk('A')))
+||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     out ('c',sk($x));
+     !(
+       (if $x='S' then out(c_SA); out (c_SJ))
+     ||
+       (if $x='A' then out(c_SA); out (c_AJ))
+     )
+     )
+)
+
+lemma sanity:
+    exists-trace
+    "Ex #i. Equal()@i" 
+
+  /* sanity (exists-trace): verified (8 steps) */
+  /* acc3_excl_0_1 (all-traces): verified (2 steps) */
+  /* acc3_exh (all-traces): verified (2 steps) */
+  /* acc3_suf_0 (exists-trace): verified (12 steps) */
+  /* acc3_compl_empty_1 (all-traces): verified (6 steps) */
+  /* acc3_compl_nonempty_0 (all-traces): verified (2 steps) */
+  /* acc3_min_0_0 (all-traces): verified (66 steps) */
+  /* acc3_uniq_0 (all-traces): verified (235 steps) */
+verdictfunction v3:
+    /* "Ex #i #j. Unequal()@i & BlameA()@j"   -> let verdict1 = <'A'>, */
+    "Ex #i #j. Unequal()@i & BlameS()@j"   -> let verdict2 = <'S'>,
+    otherwise -> empty 
+
+// everything proofs except for
+lemma acc3:
+    v3 accounts [control]
+    for "not (Ex #i.  Unequal()@i)"
+    for parties <'A','S'>
+
+end

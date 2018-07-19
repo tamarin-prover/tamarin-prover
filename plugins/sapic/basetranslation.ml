@@ -31,7 +31,7 @@ let basetrans act p tildex = match act with
   | Par  -> [([State(p,tildex)], [], [State(1::p,tildex);State(2::p,tildex)])] 
   | MSR(prems,acts,concls) ->
     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
-    [ ( State(p,tildex):: prems, Action("Event",[])::acts, State(1::p,tildex')::concls ) ]
+    [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
   | New(v) -> [([State(p,tildex);Fr(v)], [], [State(1::p, v@::tildex)])]
   | Msg_In(t) -> [([State(p,tildex);In(t)],[],[State(1::p,(vars_t t) @@ tildex)])]
   | Msg_Out(t) -> [([State(p,tildex)],[],[State(1::p,(vars_t t) @@ tildex);Out(t)])]
@@ -56,17 +56,21 @@ let basetrans act p tildex = match act with
             )
   | Cond(_) -> raise (InternalRepresentationError "Cond node should contain Action constructor")
   | Insert(t1,t2) -> [([State(p,tildex)], [Action("Insert",[t1 ; t2])], [State(1::p,tildex)])]
-  | Event(a) -> [([State(p,tildex)], [Action("Event",[]); a], [State(1::p,tildex)])]
+  | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
   | Lookup(t1,t2) -> 
     [
       ([State(p,tildex)], [Action("IsIn",[t1; t2])], [State(1::p, tildex @@ (vars_t t2))]);
       ([State(p,tildex)], [Action("IsNotSet",[t1])], [State(2::p,tildex)]) ]
   | AnnotatedUnlock(t,a)  ->
+    let str = "lock"^(string_of_int a) in
+    let unlock_str = "Unlock_"^(string_of_int a) in
     let nonce=a in
-    [([ State(p,tildex)], [Action("Unlock",[Var(nonce); t])], [State(1::p, tildex) ])] 
+    [([ State(p,tildex)], [Action("Unlock",[Var (Pub (string_of_int nonce));  Var (Fresh str); t ]); Action(unlock_str,[Var (Pub (string_of_int nonce));  Var (Fresh str); t ])], [State(1::p, tildex) ])] 
   | AnnotatedLock(t,a)  ->
-    let nonce=a in
-    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var nonce; t ])], [State(1::p, nonce @:: tildex)])]
+    let str = "lock"^(string_of_int a) in
+    let lock_str = "Lock_"^(string_of_int a) in
+    let nonce=(Fresh str) in
+    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
   | Delete(t)  -> [
       ( [ State(p,tildex)], [Action("Delete",[ t ])], [State(1::p, tildex) ])]
   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))
@@ -104,7 +108,7 @@ let next_tildex p msrs =
   in
   match state_list  with 
     State(p,v)::_ | PState(p,v)::_ -> v
-   | _::_ -> raise ProgrammingError (* Should not happen by List.filter *)
+   | _::_ -> raise (ImplementationError "Should not happen by List.filter")
    |  [] -> raise NoNextState (* If state_list is empty *)
     (* TODO might try to detect inconsistencies *)
      

@@ -175,7 +175,7 @@ let find_from pf p =
   | _ ->
     Printf.printf "Progress function is defined as\n";
     PMap.print pf;
-    raise ProgrammingError
+    raise (ImplementationError "Progress function faulty") 
 	  
 let is_from pf q = PMap.mem q pf
 

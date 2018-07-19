@@ -15,10 +15,9 @@ let atom2string = function
     |True        -> "T"
     |False       -> "F"
 
-let vars_a = function 
-     TLeq(v1,v2) 
+let rec vars_atom = function 
+    TLeq(v1,v2) 
     |TEq(v1,v2) -> VarSet.add v2 (VarSet.singleton v1)
     |Eq(t1,t2)   -> VarSet.union (vars_t t1) (vars_t t2)
-    |At(a,v)     -> raise (NotImplementedError "Computing the variables in an action has not been implemented yet, but it should not be necessary")
-    |True        
-    |False       -> VarSet.empty
+    |At(a,v)     -> VarSet.add v (vars_action a)
+    |True |False -> VarSet.empty

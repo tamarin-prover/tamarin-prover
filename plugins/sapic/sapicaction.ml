@@ -49,38 +49,27 @@ let rec substitute  (id:string) (t:term) process =
   | Empty -> Empty
   | Node(a, left, right) ->
     begin
-      let f = Term.subs_t id t in
+      let v = (Var.Msg id) in
+      let f = Term.subs_t v t in
       match a with
       | Null -> Node(a, left, right)
       | Par
       | NDC -> Node(a, substitute id t left, substitute id t right)
       | Rep -> Node(a, substitute id t left, right)
-      | New (x) ->
-	if VarSet.mem ( Var.Msg(id) ) ( vars_t (Var(x)) ) then (* rebinding variable id, stop substituting *)
-	  Node( a, left, right )
-	else Node(a, substitute id t left, right)
+      | New (x) -> Node(a, substitute id t left, right)
       | Delete (u) -> Node(Delete( (f u) ), substitute id t left, right)
       | Lock(u) -> Node(Lock( (f u) ), substitute id t left, right)
       | Unlock(u) -> Node(Unlock( (f u) ), substitute id t left, right)
       | Msg_Out(u) -> Node(Msg_Out( (f u) ), substitute id t left, right)
       | Insert(u1,u2) -> Node(Insert( (f  u1), (f u2)), substitute id t left, right)
       | Ch_Out(u1,u2) -> Node(Ch_Out( (f  u1), (f u2)), substitute id t left, right)
-      | Event(a) -> Node(Event(subs_a id t a), substitute id t left, substitute id t right)
-      | Cond(a) -> Node(Cond(subs_a id t a), substitute id t left, substitute id t right)
+      | Event(a) -> Node(Event(substitute_a v t a), substitute id t left, substitute id t right)
+      | Cond(a) -> Node(Cond(substitute_a v t a), substitute id t left, substitute id t right)
       | Msg_In(u) ->
-	  if  VarSet.mem ( Var.Msg(id) ) (vars_t u) then (* rebinding variable id, stop substituting *)
-	    Node( Msg_In(u), left, right )
-	  else
 	    Node( Msg_In(f u), substitute id t left, substitute id t right )
       | Ch_In(u1, u2) ->
-	  if  VarSet.mem ( Var.Msg(id) ) (vars_t u2) then (* rebinding variable id, stop substituting *)
-	    Node( Ch_In(f u1, u2), left, right )
-	  else
 	    Node( Ch_In(f u1, f u2), substitute id t left, substitute id t right )
       | Lookup(u1,u2) ->
-	  if  VarSet.mem ( Var.Msg(id) ) (vars_t u2) then (* rebinding variable id, stop substituting *)
-	    Node( Lookup(f u1, u2), left, right )
-	  else
 	    Node( Lookup(f u1, f u2), substitute id t left, substitute id t right )
       | MSR(prem,ac,conl) -> raise (NotImplementedError "Substitution cannot be used in embedded MSRs")
     end

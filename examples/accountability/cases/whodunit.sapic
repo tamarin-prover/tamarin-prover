@@ -1,0 +1,58 @@
+theory WhoDunit
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    sign/2, verify/3,
+    true/0,
+    extract/1
+
+equations: 
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    extract(sign(m,sk(i)))=m
+
+
+let S = in (a); out(c_SA,a); out(c_SJ,a)
+
+let A = in(c_SA,a); out (c_AJ,a)
+
+let Tr = in(c_SJ,a1); in(c_AJ,a2); if a1=a2 then event Equal() else event Unequal()
+
+new c_SA; new c_AJ; new c_SJ;
+(S || A || Tr ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     out ('c',sk($x));
+     !(
+       (if $x='S' then out(c_SA); out (c_SJ))
+     ||
+       (if $x='A' then out(c_SA); out (c_AJ))
+     )
+     )
+)
+
+lemma sanity:
+    exists-trace
+    "Ex #i. Equal()@i" 
+
+verdictfunction v1:
+    "Ex #i . Unequal()@i"   -> let verdict1 = <'S'>,
+    otherwise -> empty 
+
+verdictfunction v2:
+    "Ex #i . Unequal()@i"   -> let verdict1 = <'A'>,
+    otherwise -> empty 
+
+// fails because of uniqueness lemma, like it should
+lemma acc1:
+    v1 accounts [cases]
+    for "not (Ex #i.  Unequal()@i)"
+    for parties <'A','S'>
+
+// fails because of uniqueness lemma, like it should
+lemma acc2:
+    v2 accounts [cases]
+    for "not (Ex #i.  Unequal()@i)"
+    for parties <'A','S'>
+
+end
