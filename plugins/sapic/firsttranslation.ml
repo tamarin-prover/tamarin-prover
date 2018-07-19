@@ -186,25 +186,6 @@ let progresstrans anP = (* translation for processes with progress *)
   in
   initrule::messsageidrule::(gen trans anP [] varset )
 
-
-(*Returns a list of positions of each defined locks*)
-(* let rec get_lock_positions x = match x with
-      Node(AnnotatedLock(_,a), l, r) -> res_locking_l a ^ ( get_lock_positions (l) ^ get_lock_positions (r))
-    | Node(_, l, r) ->  ( get_lock_positions (l) ^ get_lock_positions (r))
-    | _ -> ""
- *)
-
-
-(*       Empty -> ""
-    |   Node(AnnotatedLock (_,a), left, right) -> res_locking_l a
-    |   Node(AnnotatedUnlock _, left, right) -> ""
-    |   Node(_,left,right) -> (get_lock_positions left) ^ (get_lock_positions right) *)
-
-
-(* let rec get_lock_restrictions x =  match x with
-    [] -> ""
-    | a :: as -> print_lemmas a ^ (get_lock_positions as) ) 
-     *)
     
 let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
