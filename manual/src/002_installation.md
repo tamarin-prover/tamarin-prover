@@ -7,20 +7,21 @@ The easiest way to install Tamarin on Mac or Linux is to use
 
   * `brew install tamarin-prover/tap/tamarin-prover`
 
-You can also [download binaries directly from
-GitHub](https://github.com/tamarin-prover/tamarin-prover/releases) and install dependencies
-yourself. It's separately packaged for
+It's separately packaged for
 
   - Arch Linux: `pacman -S tamarin-prover`
   - Nixpkgs: `nix-env -i tamarin-prover`
   - NixOS: add `tamarin-prover` to your `environment.systemPackages`.
 
+You can also [download binaries directly from GitHub](https://github.com/tamarin-prover/tamarin-prover/releases)
+and manually install dependencies yourself (see below).
+  
 ## Compiling from source {#sec:LinuxSrcInstall}
 
 You don't need to compile Tamarin from source unless you are developing a new feature for it or you
 want to use an unreleased feature. However, if you do want to install it from source:
 
-### Manually install dependencies.
+### Manually install dependencies
 
 Tamarin requires Haskell Stack to build and GraphViz and Maude 2.7 to run. The easiest way to
 install these is
