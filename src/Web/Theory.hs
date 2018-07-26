@@ -137,7 +137,7 @@ applyDiffMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
     subProof <- get lDiffProof lemma `atPathDiff` proofPath
     let ctxt  = getDiffProofContext lemma thy
         sys   = dpsInfo (root subProof)
-        heuristic = defaultHeuristic
+        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic $ get dpcPCLeft ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -724,7 +724,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    ranking                 = useHeuristic (apDefaultHeuristic $ dtiAutoProver ti) depth
+    heuristic               = fromMaybe (apDefaultHeuristic $ dtiAutoProver ti)
+                                $ get pcHeuristic $ get dpcPCLeft ctxt
+    ranking                 = useHeuristic heuristic depth
     diffProofMethods        = rankDiffProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =

@@ -392,7 +392,7 @@ data DiffProofContext = DiffProofContext
        , _dpcProtoRules           :: [ProtoRuleE]
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
-       , _dpcRestrictions               :: [(Side, [LNGuarded])]
+       , _dpcRestrictions         :: [(Side, [LNGuarded])]
        }
        deriving( Eq, Ord, Show )
 

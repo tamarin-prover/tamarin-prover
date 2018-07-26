@@ -1072,7 +1072,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
-            Nothing
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1086,7 +1086,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
-            Nothing
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
