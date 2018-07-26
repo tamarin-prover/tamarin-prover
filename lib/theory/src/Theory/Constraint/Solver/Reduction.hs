@@ -76,7 +76,6 @@ import           Prelude                                 hiding (id, (.))
 
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
-import qualified Data.Map.Strict                         as M'
 import qualified Data.Set                                as S
 import qualified Data.ByteString.Char8                   as BC
 import           Data.List                               (mapAccumL)
@@ -100,6 +99,7 @@ import           Logic.Connectives
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
+
 
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
@@ -222,11 +222,11 @@ labelNodeId = \i rules parent -> do
     importRule ru = someRuleACInst ru `evalBindT` noBindings
 
     mkISendRuleAC m = return $ Rule (IntrInfo (ISendRule))
-                                    [kuFact m] [inFact m] [kLogFact m] []
+                                    [kuFact m] [inFact m] [kLogFact m]
 
 
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule [] []))
-                           [] [freshFact m] [] [m]
+                           [] [freshFact m] []
 
     exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)
 
@@ -294,7 +294,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -313,7 +313,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -332,7 +332,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -348,11 +348,11 @@ insertAction i fa = do
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
-                       then do                        
+                       then do                          
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa])))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed
@@ -493,7 +493,7 @@ combineGoalStatus (GoalStatus solved1 age1 loops1)
 insertGoalStatus :: Goal -> GoalStatus -> Reduction ()
 insertGoalStatus goal status = do
     age <- getM sNextGoalNr
-    modM sGoals $ M'.insertWith combineGoalStatus goal (set gsNr age status)
+    modM sGoals $ M.insertWith' combineGoalStatus goal (set gsNr age status)
     sNextGoalNr =: succ age
 
 -- | Insert a 'Goal' and store its age.
@@ -612,10 +612,10 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m {-|| isXor m-}) && (apply subst m /= m) ->
+          | (isMsgVar m || isProduct m || isUnion m) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
-                  M'.insertWith combineGoalStatus (apply subst goal) status
+                  M.insertWith' combineGoalStatus (apply subst goal) status
                 return Unchanged
 
     return (mconcat changes)
@@ -666,7 +666,7 @@ data SplitStrategy = SplitNow | SplitLater
 -- The 'ChangeIndicator' indicates whether at least one non-trivial equality
 -- was solved.
 
--- | @noContradictoryEqStore@ succeeds iff the equation store is not
+-- | @noContradictoryEqStore@ suceeds iff the equation store is not
 -- contradictory.
 noContradictoryEqStore :: Reduction ()
 noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< getM sEqStore

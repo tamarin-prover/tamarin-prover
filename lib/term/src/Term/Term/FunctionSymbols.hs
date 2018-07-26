@@ -32,8 +32,6 @@ module Term.Term.FunctionSymbols (
     , unionSymString
     , oneSymString
     , multSymString
-    , zeroSymString
-    , xorSymString
 
     -- ** concrete symbols
     , diffSym
@@ -44,17 +42,15 @@ module Term.Term.FunctionSymbols (
     , pairSym
     , fstSym
     , sndSym
-    , zeroSym
 
     -- ** concrete signatures
     , dhFunSig
-    , xorFunSig
     , bpFunSig
     , msetFunSig
     , pairFunSig
+    , diffFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
-    , xorReducibleFunSig
     , implicitFunSig
     ) where
 
@@ -78,7 +74,7 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = Union | Mult | Xor
+data ACSym = Union | Mult
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.
@@ -109,14 +105,12 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, multSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
 multSymString = "mult"
-zeroSymString = "zero"
-xorSymString = "xor"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -125,7 +119,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -142,8 +136,6 @@ fstSym   = ("fst",(1,Public))
 sndSym   = ("snd",(1,Public))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,Public))
--- | The zero for XOR.
-zeroSym  = (zeroSymString,(0,Public))
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -152,10 +144,6 @@ zeroSym  = (zeroSymString,(0,Public))
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
 dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
-
--- | The signature for Xor function symbols.
-xorFunSig :: FunSig
-xorFunSig = S.fromList [ AC Xor, NoEq zeroSym ]
 
 -- | The signature for the bilinear pairing function symbols.
 bpFunSig :: FunSig
@@ -169,6 +157,10 @@ msetFunSig = S.fromList [AC Union]
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
 
+-- | The signature for diff terms.
+diffFunSig :: NoEqFunSig
+diffFunSig = S.fromList [ diffSym ]
+
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig
 dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
@@ -176,10 +168,6 @@ dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
 -- | Reducible function symbols for BP.
 bpReducibleFunSig :: FunSig
 bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
-
--- | Reducible function symbols for XOR.
-xorReducibleFunSig :: FunSig
-xorReducibleFunSig = S.fromList [ AC Xor ]
 
 -- | Implicit function symbols.
 implicitFunSig :: FunSig

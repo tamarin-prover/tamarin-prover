@@ -755,12 +755,11 @@ multRestrictedReport thy = do
                 $-$ (if null unbounds then mempty
                      else nest 2 $ (text "Variables that occur only in rhs: ") <-> (prettyVarList unbounds))
   where
-    abstractRule ru@(Rule i lhs acts rhs nvs) =
+    abstractRule ru@(Rule i lhs acts rhs) =
         (`evalFreshAvoiding` ru) .  (`evalBindT` noBindings) $ do
         Rule i <$> mapM (traverse abstractTerm) lhs
                <*> mapM (traverse replaceAbstracted) acts
                <*> mapM (traverse replaceAbstracted) rhs
-               <*> (traverse replaceAbstracted) nvs
 
     abstractTerm (viewTerm -> FApp o args) | o `S.member` irreducible =
         fApp o <$> mapM abstractTerm args
@@ -821,12 +820,11 @@ multRestrictedReportDiff thy = do
                 $-$ (if null unbounds then mempty
                      else nest 2 $ (text "Variables that occur only in rhs: ") <-> (prettyVarList unbounds))
   where
-    abstractRule ru@(Rule i lhs acts rhs nvs) =
+    abstractRule ru@(Rule i lhs acts rhs) =
         (`evalFreshAvoiding` ru) .  (`evalBindT` noBindings) $ do
         Rule i <$> mapM (traverse abstractTerm) lhs
                <*> mapM (traverse replaceAbstracted) acts
                <*> mapM (traverse replaceAbstracted) rhs
-               <*> (traverse replaceAbstracted) nvs
 
     abstractTerm (viewTerm -> FApp o args) | o `S.member` irreducible =
         fApp o <$> mapM abstractTerm args

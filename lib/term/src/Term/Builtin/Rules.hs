@@ -12,7 +12,6 @@ module Term.Builtin.Rules (
   , bpRules
   , msetRules
   , pairRules
-  , xorRules
   , symEncRules
   , asymEncRules
   , signatureRules
@@ -76,16 +75,6 @@ bpRules = S.fromList
 -- | The rewriting rules for multisets.
 msetRules :: Set (RRule LNTerm)
 msetRules = S.empty
-
--- | The rewriting rules for Xor. This is a presentation with the finite variant property.
-xorRules :: Set (RRule LNTerm)
-xorRules = S.fromList
-    [ x1 +: zero `RRule` x1
-    , x1 +: x1 `RRule` zero
-    , x1 +: x1 +: x2 `RRule` x2
-    ]
-  where
-    zero  = fAppZero
 
 -- | The rewriting rules for standard subterm operators that are builtin.
 pairRules, symEncRules, asymEncRules, signatureRules, revealSignatureRules :: Set (CtxtStRule)

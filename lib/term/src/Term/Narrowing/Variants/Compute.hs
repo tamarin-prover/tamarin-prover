@@ -60,7 +60,7 @@ instance Sized Variant where
     size = size . varSubst
 
 -- | @narrowVariant rules t maxdepth@ either returns @Nothing@
---   if variant narrowing hit the bound and there are still unexplored steps
+--   if variant narrrowing hit the bound and there are still unexplored steps
 --   or @Just explored@ if the search finished before hitting the
 --   bound.
 narrowVariant :: LNTerm -- ^ The term.

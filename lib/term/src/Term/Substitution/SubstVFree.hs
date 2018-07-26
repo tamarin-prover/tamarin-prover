@@ -265,9 +265,6 @@ instance Apply Bool where
 instance (Apply a, Apply b) => Apply (a, b) where
     apply subst (x,y) = (apply subst x, apply subst y)
 
-instance (Apply a, Apply b, Apply c) => Apply (a, b, c) where
-    apply subst (x,y,z) = (apply subst x, apply subst y, apply subst z)
-
 instance Apply a => Apply (Maybe a) where
     apply subst = fmap (apply subst)
 
@@ -307,6 +304,6 @@ prettySubst ppVar ppLit =
         (fsep $ punctuate comma $ map ppVar $ S.toList vs) <> operator_ "}"
 
 -- | Pretty print a substitution with logical variables.
-prettyLNSubst :: (Ord c, HighlightDocument d, Show c)
+prettyLNSubst :: (Show (Lit c LVar), Ord c, HighlightDocument d, Show c)
               => LSubst c -> d
 prettyLNSubst = vcat . prettySubst (text . show) (text . show)

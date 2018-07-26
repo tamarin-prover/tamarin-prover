@@ -1,0 +1,48 @@
+Before a release, the following things should be checked:
+
+1. run 'make case-studies' and compare 'case-studies/' with
+   'case-studies-regression/'
+
+2. run 'make sapic-case-studies' and compare 'case-studies-sapic/' with
+   'case-studies-sapic-regression/'
+
+3. run 'tamarin-prover test'
+
+4. call 'tamarin-prover' and copy CSF'12 automatic command and
+   check whether verification succeeds.
+
+5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions in data/
+
+6. call 'tamarin-prover' and copy CSF'12 interactive command and
+   execute the following steps
+
+     (a) open one of the presented theories
+     (b) try shortcuts (J,K,j,k,1,2,..,a)
+     (c) try different graph/sequent options
+     (d) try Download
+
+     (e) try 'Loading a new theory' from the start page
+
+7. Bump version number to even minor version in cabal files and code,
+   commit version bump, add tag 'tamarin-prover-XXXX' to repository,
+   and merge into 'main' branch.
+
+8. Update homebrew: fork homebrew-science
+   (https://github.com/Homebrew/homebrew-science).
+   Once forked open tamarin-prover.rb
+   and edit lines 4, 5 and 6. See 
+   http://docs.brew.sh/Formula-Cookbook.html#updating-formulae
+   for why those lines must be updated.
+
+   For sha256 on Linux you can use sha256sum < FILE > on OS X shasum -a 256 < FILE >
+   It will look something like:
+
+   - url "https://github.com/tamarin-prover/tamarin-prover/archive/1.2.1.tar.gz"
+   + url "https://github.com/tamarin-prover/tamarin-prover/archive/1.3.0.tar.gz"
+   - sha256 "3c8a91c23896f61f1c04b8121125b3fd603191522512ef5a459260d89fdd911a"
+   + sha256 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   - revision 1
+   + revision 2
+
+   More detailed advice can be seen here: https://github.com/Homebrew/homebrew-science/blob/master/.github/CONTRIBUTING.md
+

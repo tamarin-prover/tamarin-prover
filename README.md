@@ -1,6 +1,6 @@
 The Tamarin prover repository
 =============================
-[![master branch build-status](https://travis-ci.org/tamarin-prover/tamarin-prover.svg?branch=develop)](https://travis-ci.org/tamarin-prover/tamarin-prover)
+![master branch build-status](https://travis-ci.org/tamarin-prover/tamarin-prover.svg?branch=develop)
 
 This README describes the organization of the repository of the Tamarin prover
 for security protocol verification. Its intended audience are interested
@@ -12,8 +12,7 @@ https://tamarin-prover.github.io/manual/book/002_installation.html
 Developing and contributing
 ---------------------------
 
-See [contributing instructions](CONTRIBUTING.md) for instructions on how to develop,
-test and release changes to the Tamarin prover source code.
+See [contributing instructions](CONTRIBUTING.md).
 
 
 Version Numbering Policy

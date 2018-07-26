@@ -1232,8 +1232,8 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
           renderedOrRendering n = do
               graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
-              if (n > 0 && graphExists && not imgExists)
-                  then do threadDelay (10 * 1000) -- wait 10 ms
+              if (n <= 0 || (graphExists && not imgExists))
+                  then do threadDelay 100             -- wait 10 ms
                           renderedOrRendering (n - 1)
                   else return imgExists
 
@@ -1348,7 +1348,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
-            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            sequentList <- snd <$> getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
             if null sequentList then Nothing else return $ compact $ head sequentList  
           else do
             sequent <- get dsSystem diffSequent
@@ -1364,8 +1364,8 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           renderedOrRendering n = do
               dotExists <- doesFileExist dotPath
               imgExists <- doesFileExist imgPath
-              if (n > 0 && dotExists && not imgExists)
-                  then do threadDelay (10 * 1000) -- wait 10 ms
+              if (n <= 0 || (dotExists && not imgExists))
+                  then do threadDelay 100             -- wait 10 ms
                           renderedOrRendering (n - 1)
                   else return imgExists
 

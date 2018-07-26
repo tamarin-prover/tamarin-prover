@@ -182,10 +182,12 @@ import           Prelude                             hiding (id, (.))
 import           GHC.Generics                        (Generic)
 
 import           Data.Binary
+-- import           Data.Foldable                       (Foldable, foldMap)
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
+-- import           Data.Traversable                    (Traversable, traverse)
 
 import           Control.Basics
 import           Control.Category
@@ -279,8 +281,8 @@ instance HasRuleName ClosedProtoRule where
 -- | All intruder rules of a set of classified rules.
 intruderRules :: ClassifiedRules -> [IntrRuleAC]
 intruderRules rules = do
-    Rule (IntrInfo i) ps cs as nvs <- joinAllRules rules
-    return $ Rule i ps cs as nvs
+    Rule (IntrInfo i) ps cs as <- joinAllRules rules
+    return $ Rule i ps cs as
 
 -- | Open a rule cache. Variants and precomputed case distinctions are dropped.
 openRuleCache :: ClosedRuleCache -> OpenRuleCache
@@ -298,7 +300,7 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs) =
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts) =
   if subterm then [ru] else variantsIntruder hnd id False ru
     where
       ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
@@ -306,11 +308,11 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule 
                               -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts nvs)
+                              else 0) subterm constant) prems concs acts)
         where
            runMaude = (`runReader` hnd)
-closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
-closeIntrRule _   ir                                        = [ir]
+closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _) = variantsIntruder hnd id False ir
+closeIntrRule _   ir                                      = [ir]
 
 
 -- | Close a rule cache. Hower, note that the
@@ -1400,8 +1402,10 @@ proveDiffTheory :: (Lemma IncrementalProof -> Bool)       -- ^ Lemma selector.
             -> ClosedDiffTheory
             -> ClosedDiffTheory
 proveDiffTheory selector diffselector prover diffprover thy =
+  -- FIXME!
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
+ -- Not clear wether this is correct or useful   prove :: DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalProof IncrementalProof
     prove item = case item of
       EitherLemmaItem (s, l0) -> do l <- MS.gets (\x -> EitherLemmaItem (s, (proveLemma s l0 x)))
                                     MS.modify (l :)
@@ -1531,7 +1535,7 @@ modifyLemmaProofDiff s prover name thy =
     modA diffThyItems (changeItems s) thy
   where
     findLemma s'' (EitherLemmaItem (s''', lem)) = (name == L.get lName lem) && (s''' == s'')
-    findLemma _ _                               = False
+    findLemma _ _                            = False
 
     change s'' preItems (EitherLemmaItem (s''', lem)) = if s''==s'''
         then

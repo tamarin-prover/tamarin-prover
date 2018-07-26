@@ -3,8 +3,8 @@ theory YubikeyHSM begin
 // Function signature and definition of the equational theory E
 
 functions: S/1, demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
-           keystream_kh/1, keystream_n/1, mac/2, myzero/0, pair/2, sdec/2, senc/2,
-           snd/1, xorc/2
+           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2, senc/2, snd/1,
+           xorc/2, zero/0
 equations:
     demac(mac(m, k), k) = m,
     dexor1(xorc(a, b), a) = b,
@@ -20,9 +20,9 @@ equations:
 section{* The Yubikey-Protocol with a YubiHSM *}
 
 rule (modulo E) InitSucc:
-   [ In( myzero ), In( S(myzero) ) ]
-  --[ Theory( ), IsSucc( myzero, S(myzero) ), IsZero( myzero ) ]->
-   [ !Succ( myzero, S(myzero) ) ]
+   [ In( zero ), In( S(zero) ) ]
+  --[ Theory( ), IsSucc( zero, S(zero) ), IsZero( zero ) ]->
+   [ !Succ( zero, S(zero) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -126,12 +126,11 @@ rule (modulo E) YSM_AEAD_YUBIKEY_OTP_DECODE:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) BuyANewYubikey:
-   [ Fr( ~k2 ), Fr( ~pid ), Fr( ~sid ), !HSM( kh, ~k ), !Succ( myzero, one )
-   ]
+   [ Fr( ~k2 ), Fr( ~pid ), Fr( ~sid ), !HSM( kh, ~k ), !Succ( zero, one ) ]
   --[ Init( ~pid, ~k2 ) ]->
    [
    Y_counter( ~pid, one ), !Y_Key( ~pid, ~k2 ), !Y_sid( ~pid, ~sid ),
-   S_Counter( ~pid, myzero ),
+   S_Counter( ~pid, zero ),
    !S_AEAD( ~pid,
             <xorc(senc(keystream(kh, ~pid), ~k), <~k2, ~sid>), mac(<~k2, ~sid>, ~k)>
    ),
@@ -994,11 +993,11 @@ next
             case SimpleSmaller
             solve( !Succ( a, b ) ▶₀ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t3 after last node #last */
                   next
@@ -1013,7 +1012,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case StepSucc
-                  solve( IsSmaller( myzero, S(y) ) @ #last )
+                  solve( IsSmaller( zero, S(y) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t3 after last node #last */
                   next
@@ -1040,7 +1039,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t3 after last node #last */
                   next
@@ -1063,11 +1062,11 @@ next
             case ZExtendedSmaller
             solve( !Succ( y, b ) ▶₁ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( a, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t3 after last node #last */
                   next
@@ -1109,7 +1108,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y.1, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t3 after last node #last */
                   next
@@ -1177,7 +1176,7 @@ next
       case case_1
       solve( !HSM( kh, ~k ) ▶₃ #t1 )
         case HSMInit
-        solve( !Succ( myzero, one ) ▶₄ #t1 )
+        solve( !Succ( zero, one ) ▶₄ #t1 )
           case InitSucc
           solve( !KU( ~k2 ) @ #vk )
             case irecvHSM
@@ -1237,7 +1236,7 @@ next
       case case_2
       solve( !HSM( kh, ~k ) ▶₃ #t1 )
         case HSMInit
-        solve( !Succ( myzero, one ) ▶₄ #t1 )
+        solve( !Succ( zero, one ) ▶₄ #t1 )
           case InitSucc
           solve( !KU( ~k2 ) @ #vk )
             case irecvHSM
@@ -1271,17 +1270,17 @@ next
     case case_2
     solve( !HSM( kh, ~k ) ▶₃ #t1 )
       case HSMInit
-      solve( !Succ( myzero, one ) ▶₄ #t1 )
+      solve( !Succ( zero, one ) ▶₄ #t1 )
         case InitSucc
         solve( IsSmaller( a, b ) @ #t1.1 )
           case SimpleSmaller
           solve( !Succ( a, b ) ▶₀ #t1.1 )
             case InitSucc
-            solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+            solve( IsSmaller( S(zero), c ) @ #t2.1 )
               case SimpleSmaller
-              solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+              solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                 case StepSucc
-                solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1296,7 +1295,7 @@ next
                 by contradiction /* cyclic */
               next
                 case StepSucc
-                solve( IsSmaller( myzero, S(y) ) @ #last )
+                solve( IsSmaller( zero, S(y) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1323,7 +1322,7 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, c ) ▶₁ #t2.1 )
                 case InitSucc
-                solve( IsSmaller( a, S(myzero) ) @ #last )
+                solve( IsSmaller( a, S(zero) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1346,11 +1345,11 @@ next
           case ZExtendedSmaller
           solve( !Succ( y, b ) ▶₁ #t1.1 )
             case InitSucc
-            solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+            solve( IsSmaller( S(zero), c ) @ #t2.1 )
               case SimpleSmaller
-              solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+              solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                 case StepSucc
-                solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                solve( IsSmaller( a, S(S(zero)) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1392,7 +1391,7 @@ next
               case ZExtendedSmaller
               solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                 case InitSucc
-                solve( IsSmaller( a, S(myzero) ) @ #last )
+                solve( IsSmaller( a, S(zero) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1418,11 +1417,11 @@ next
           case SimpleSmaller
           solve( !Succ( a, b ) ▶₀ #t1.1 )
             case InitSucc
-            solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+            solve( IsSmaller( S(zero), c ) @ #t2.1 )
               case SimpleSmaller
-              solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+              solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                 case StepSucc
-                solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1437,7 +1436,7 @@ next
                 by contradiction /* cyclic */
               next
                 case StepSucc
-                solve( IsSmaller( myzero, S(y) ) @ #last )
+                solve( IsSmaller( zero, S(y) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1464,7 +1463,7 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, c ) ▶₁ #t2.1 )
                 case InitSucc
-                solve( IsSmaller( a, S(myzero) ) @ #last )
+                solve( IsSmaller( a, S(zero) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1487,11 +1486,11 @@ next
           case ZExtendedSmaller
           solve( !Succ( y, b ) ▶₁ #t1.1 )
             case InitSucc
-            solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+            solve( IsSmaller( S(zero), c ) @ #t2.1 )
               case SimpleSmaller
-              solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+              solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                 case StepSucc
-                solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                solve( IsSmaller( a, S(S(zero)) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1533,7 +1532,7 @@ next
               case ZExtendedSmaller
               solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                 case InitSucc
-                solve( IsSmaller( a, S(myzero) ) @ #last )
+                solve( IsSmaller( a, S(zero) ) @ #last )
                   case SimpleSmaller
                   by contradiction /* node #t1 after last node #last */
                 next
@@ -1610,11 +1609,11 @@ next
         case SimpleSmaller
         solve( !Succ( a, b ) ▶₀ #t1.1 )
           case InitSucc
-          solve( IsSmaller( S(myzero), c ) @ #t2 )
+          solve( IsSmaller( S(zero), c ) @ #t2 )
             case SimpleSmaller
-            solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+            solve( !Succ( S(zero), c ) ▶₀ #t2 )
               case StepSucc
-              solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+              solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                 case SimpleSmaller
                 by contradiction /* node #t1 after last node #last */
               next
@@ -1629,7 +1628,7 @@ next
               by contradiction /* cyclic */
             next
               case StepSucc
-              solve( IsSmaller( myzero, S(y) ) @ #last )
+              solve( IsSmaller( zero, S(y) ) @ #last )
                 case SimpleSmaller
                 by contradiction /* node #t1 after last node #last */
               next
@@ -1656,7 +1655,7 @@ next
             case ZExtendedSmaller
             solve( !Succ( y, c ) ▶₁ #t2 )
               case InitSucc
-              solve( IsSmaller( a, S(myzero) ) @ #last )
+              solve( IsSmaller( a, S(zero) ) @ #last )
                 case SimpleSmaller
                 by contradiction /* node #t1 after last node #last */
               next
@@ -1679,11 +1678,11 @@ next
         case ZExtendedSmaller
         solve( !Succ( y, b ) ▶₁ #t1.1 )
           case InitSucc
-          solve( IsSmaller( S(myzero), c ) @ #t2 )
+          solve( IsSmaller( S(zero), c ) @ #t2 )
             case SimpleSmaller
-            solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+            solve( !Succ( S(zero), c ) ▶₀ #t2 )
               case StepSucc
-              solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+              solve( IsSmaller( a, S(S(zero)) ) @ #last )
                 case SimpleSmaller
                 by contradiction /* node #t1 after last node #last */
               next
@@ -1725,7 +1724,7 @@ next
             case ZExtendedSmaller
             solve( !Succ( y.1, c ) ▶₁ #t2 )
               case InitSucc
-              solve( IsSmaller( a, S(myzero) ) @ #last )
+              solve( IsSmaller( a, S(zero) ) @ #last )
                 case SimpleSmaller
                 by contradiction /* node #t1 after last node #last */
               next
@@ -1767,14 +1766,14 @@ next
         case case_1
         solve( !HSM( kh, ~k ) ▶₃ #t5 )
           case HSMInit
-          solve( !Succ( myzero, one ) ▶₄ #t5 )
+          solve( !Succ( zero, one ) ▶₄ #t5 )
             case InitSucc
             solve( !KU( ~k2 ) @ #t6 )
               case irecvHSM
               by contradiction /* cyclic */
             next
               case read_AEAD_case_1
-              solve( !KU( S(myzero) ) @ #vk.1 )
+              solve( !KU( S(zero) ) @ #vk.1 )
                 case c_S
                 solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
                   case c_senc
@@ -1801,7 +1800,7 @@ next
               by contradiction /* cyclic */
             next
               case read_AEAD_case_1
-              solve( !KU( S(myzero) ) @ #vk.1 )
+              solve( !KU( S(zero) ) @ #vk.1 )
                 case c_S
                 solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
                   case c_senc
@@ -1827,7 +1826,7 @@ next
         case case_2
         solve( !HSM( kh, ~k ) ▶₃ #t5 )
           case HSMInit
-          solve( !Succ( myzero, one ) ▶₄ #t5 )
+          solve( !Succ( zero, one ) ▶₄ #t5 )
             case InitSucc
             solve( !KU( ~k2 ) @ #t6 )
               case irecvHSM
@@ -1858,17 +1857,17 @@ next
       case case_2
       solve( !HSM( kh, ~k ) ▶₃ #t5 )
         case HSMInit
-        solve( !Succ( myzero, one ) ▶₄ #t5 )
+        solve( !Succ( zero, one ) ▶₄ #t5 )
           case InitSucc
           solve( IsSmaller( a, b ) @ #t1 )
             case SimpleSmaller
             solve( !Succ( a, b ) ▶₀ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -1883,7 +1882,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case StepSucc
-                  solve( IsSmaller( myzero, S(y) ) @ #last )
+                  solve( IsSmaller( zero, S(y) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -1910,7 +1909,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -1933,11 +1932,11 @@ next
             case ZExtendedSmaller
             solve( !Succ( y, b ) ▶₁ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( a, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -1979,7 +1978,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y.1, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2005,11 +2004,11 @@ next
             case SimpleSmaller
             solve( !Succ( a, b ) ▶₀ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2024,7 +2023,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case StepSucc
-                  solve( IsSmaller( myzero, S(y) ) @ #last )
+                  solve( IsSmaller( zero, S(y) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2051,7 +2050,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2074,11 +2073,11 @@ next
             case ZExtendedSmaller
             solve( !Succ( y, b ) ▶₁ #t1 )
               case InitSucc
-              solve( IsSmaller( S(myzero), c ) @ #t2 )
+              solve( IsSmaller( S(zero), c ) @ #t2 )
                 case SimpleSmaller
-                solve( !Succ( S(myzero), c ) ▶₀ #t2 )
+                solve( !Succ( S(zero), c ) ▶₀ #t2 )
                   case StepSucc
-                  solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                  solve( IsSmaller( a, S(S(zero)) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2120,7 +2119,7 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y.1, c ) ▶₁ #t2 )
                   case InitSucc
-                  solve( IsSmaller( a, S(myzero) ) @ #last )
+                  solve( IsSmaller( a, S(zero) ) @ #last )
                     case SimpleSmaller
                     by contradiction /* node #t5 after last node #last */
                   next
@@ -2189,7 +2188,7 @@ next
             case BuyANewYubikey
             solve( !Smaller( otc, x ) ▶₅ #t2 )
               case SimpleSmaller_case_1
-              solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.4 )
+              solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.4 )
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
@@ -2213,7 +2212,7 @@ next
               qed
             next
               case ZExtendedSmaller_case_1
-              solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.4 )
+              solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.4 )
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
@@ -2254,11 +2253,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2273,7 +2272,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2300,7 +2299,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2323,11 +2322,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2369,7 +2368,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2395,11 +2394,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2414,7 +2413,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2441,7 +2440,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2464,11 +2463,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2510,7 +2509,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2536,11 +2535,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2555,7 +2554,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2582,7 +2581,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2605,11 +2604,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2651,7 +2650,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2677,11 +2676,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2696,7 +2695,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                    solve( IsSmaller( zero, S(y.1) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2723,7 +2722,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2746,11 +2745,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2792,7 +2791,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2839,7 +2838,7 @@ next
             case BuyANewYubikey
             solve( !Smaller( otc, x ) ▶₅ #t2 )
               case SimpleSmaller_case_1
-              solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.4 )
+              solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.4 )
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
@@ -2863,7 +2862,7 @@ next
               qed
             next
               case ZExtendedSmaller_case_1
-              solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.4 )
+              solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.4 )
                 case Yubikey_PressButton
                 by contradiction /* from formulas */
               next
@@ -2904,11 +2903,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2923,7 +2922,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2950,7 +2949,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -2973,11 +2972,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3019,7 +3018,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3045,11 +3044,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3064,7 +3063,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3091,7 +3090,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3114,11 +3113,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3160,7 +3159,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3186,11 +3185,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3205,7 +3204,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y) ) @ #last )
+                    solve( IsSmaller( zero, S(y) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3232,7 +3231,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3255,11 +3254,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3301,7 +3300,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3327,11 +3326,11 @@ next
               case SimpleSmaller
               solve( !Succ( a, b ) ▶₀ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3346,7 +3345,7 @@ next
                     by contradiction /* cyclic */
                   next
                     case StepSucc
-                    solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                    solve( IsSmaller( zero, S(y.1) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3373,7 +3372,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3396,11 +3395,11 @@ next
               case ZExtendedSmaller
               solve( !Succ( y, b ) ▶₁ #t1 )
                 case InitSucc
-                solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                solve( IsSmaller( S(zero), c ) @ #t2.1 )
                   case SimpleSmaller
-                  solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                  solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                     case StepSucc
-                    solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                    solve( IsSmaller( a, S(S(zero)) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3442,7 +3441,7 @@ next
                   case ZExtendedSmaller
                   solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                     case InitSucc
-                    solve( IsSmaller( a, S(myzero) ) @ #last )
+                    solve( IsSmaller( a, S(zero) ) @ #last )
                       case SimpleSmaller
                       by contradiction /* node #t2 after last node #last */
                     next
@@ -3502,7 +3501,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case read_AEAD_case_1
-                  solve( !KU( senc(<~sid, S(myzero), ~pr>, k2) ) @ #vk.7 )
+                  solve( !KU( senc(<~sid, S(zero), ~pr>, k2) ) @ #vk.7 )
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
@@ -3994,7 +3993,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case read_AEAD_case_1
-                  solve( !KU( senc(<~sid, S(myzero), ~pr>, k2) ) @ #vk.7 )
+                  solve( !KU( senc(<~sid, S(zero), ~pr>, k2) ) @ #vk.7 )
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
@@ -4489,7 +4488,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case read_AEAD_case_1
-                  solve( !KU( senc(<~sid, S(myzero), ~pr>, k2) ) @ #vk.7 )
+                  solve( !KU( senc(<~sid, S(zero), ~pr>, k2) ) @ #vk.7 )
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
@@ -4981,7 +4980,7 @@ next
                   by contradiction /* cyclic */
                 next
                   case read_AEAD_case_1
-                  solve( !KU( senc(<~sid, S(myzero), ~pr>, k2) ) @ #vk.7 )
+                  solve( !KU( senc(<~sid, S(zero), ~pr>, k2) ) @ #vk.7 )
                     case Yubikey_PressButton
                     by contradiction /* from formulas */
                   next
@@ -5479,11 +5478,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5498,7 +5497,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5525,7 +5524,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5548,11 +5547,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5594,7 +5593,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5620,11 +5619,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5639,7 +5638,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5666,7 +5665,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5689,11 +5688,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5735,7 +5734,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5761,11 +5760,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5780,7 +5779,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5807,7 +5806,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5830,11 +5829,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5876,7 +5875,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5902,11 +5901,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5921,7 +5920,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                      solve( IsSmaller( zero, S(y.1) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5948,7 +5947,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -5971,11 +5970,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6017,7 +6016,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6046,11 +6045,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6065,7 +6064,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6092,7 +6091,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6115,11 +6114,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6161,7 +6160,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6187,11 +6186,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6206,7 +6205,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6233,7 +6232,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6256,11 +6255,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6302,7 +6301,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6328,11 +6327,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6347,7 +6346,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6374,7 +6373,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6397,11 +6396,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6443,7 +6442,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6469,11 +6468,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6488,7 +6487,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                      solve( IsSmaller( zero, S(y.1) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6515,7 +6514,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6538,11 +6537,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6584,7 +6583,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6640,7 +6639,7 @@ next
               case BuyANewYubikey
               solve( !Smaller( otc, x ) ▶₅ #t2 )
                 case SimpleSmaller_case_1
-                solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.6 )
+                solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.6 )
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
@@ -6664,7 +6663,7 @@ next
                 qed
               next
                 case ZExtendedSmaller_case_1
-                solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.6 )
+                solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.6 )
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
@@ -6705,11 +6704,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6724,7 +6723,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6751,7 +6750,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6774,11 +6773,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6820,7 +6819,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6846,11 +6845,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6865,7 +6864,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6892,7 +6891,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6915,11 +6914,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6961,7 +6960,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -6987,11 +6986,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7006,7 +7005,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7033,7 +7032,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7056,11 +7055,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7102,7 +7101,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7128,11 +7127,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7147,7 +7146,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                      solve( IsSmaller( zero, S(y.1) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7174,7 +7173,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7197,11 +7196,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7243,7 +7242,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7290,7 +7289,7 @@ next
               case BuyANewYubikey
               solve( !Smaller( otc, x ) ▶₅ #t2 )
                 case SimpleSmaller_case_1
-                solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.6 )
+                solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.6 )
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
@@ -7314,7 +7313,7 @@ next
                 qed
               next
                 case ZExtendedSmaller_case_1
-                solve( !KU( senc(<~sid, S(myzero), ~pr>, ~k2) ) @ #vk.6 )
+                solve( !KU( senc(<~sid, S(zero), ~pr>, ~k2) ) @ #vk.6 )
                   case Yubikey_PressButton
                   by contradiction /* from formulas */
                 next
@@ -7355,11 +7354,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7374,7 +7373,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7401,7 +7400,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7424,11 +7423,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7470,7 +7469,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7496,11 +7495,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7515,7 +7514,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7542,7 +7541,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7565,11 +7564,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7611,7 +7610,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7637,11 +7636,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7656,7 +7655,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y) ) @ #last )
+                      solve( IsSmaller( zero, S(y) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7683,7 +7682,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7706,11 +7705,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7752,7 +7751,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7778,11 +7777,11 @@ next
                 case SimpleSmaller
                 solve( !Succ( a, b ) ▶₀ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( myzero, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( zero, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7797,7 +7796,7 @@ next
                       by contradiction /* cyclic */
                     next
                       case StepSucc
-                      solve( IsSmaller( myzero, S(y.1) ) @ #last )
+                      solve( IsSmaller( zero, S(y.1) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7824,7 +7823,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.1, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7847,11 +7846,11 @@ next
                 case ZExtendedSmaller
                 solve( !Succ( y, b ) ▶₁ #t1 )
                   case InitSucc
-                  solve( IsSmaller( S(myzero), c ) @ #t2.1 )
+                  solve( IsSmaller( S(zero), c ) @ #t2.1 )
                     case SimpleSmaller
-                    solve( !Succ( S(myzero), c ) ▶₀ #t2.1 )
+                    solve( !Succ( S(zero), c ) ▶₀ #t2.1 )
                       case StepSucc
-                      solve( IsSmaller( a, S(S(myzero)) ) @ #last )
+                      solve( IsSmaller( a, S(S(zero)) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7893,7 +7892,7 @@ next
                     case ZExtendedSmaller
                     solve( !Succ( y.2, c ) ▶₁ #t2.1 )
                       case InitSucc
-                      solve( IsSmaller( a, S(myzero) ) @ #last )
+                      solve( IsSmaller( a, S(zero) ) @ #last )
                         case SimpleSmaller
                         by contradiction /* node #t2 after last node #last */
                       next
@@ -7938,7 +7937,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 29.31626s
+  processing time: 30.453455s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)
@@ -7953,7 +7952,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 29.31626s
+  processing time: 30.453455s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   k2_is_secret_use_induction (all-traces): verified (132 steps)

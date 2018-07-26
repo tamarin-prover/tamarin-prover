@@ -191,13 +191,11 @@ execProofMethod ctxt method sys =
 
     -- solve the given goal
     -- PRE: Goal must be valid in this system.
-    execSolveGoal :: Goal -> Maybe (M.Map CaseName System)
     execSolveGoal goal =
         return . makeCaseNames . removeRedundantCases ctxt [] snd
                . map (second cleanupSystem) . map fst . getDisj
-               $ reduc
+               $ runReduction solver ctxt sys (avoid sys)
       where
-        reduc  = runReduction solver ctxt sys (avoid sys)
         ths    = L.get pcSources ctxt
         solver = do name <- maybe (solveGoal goal)
                                   (fmap $ concat . intersperse "_")
@@ -254,21 +252,20 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | otherwise                                         -> Nothing
         DiffBackwardSearchStep meth
           | (L.get dsProofType sys) == (Just RuleEquivalence)
-            && (meth /= Induction)
             && (meth /= (Contradiction (Just ForbiddenKD)))   -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TTrue))
+                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just True))
                                                                                                         then return M.empty 
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (fmap fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == Just False)
                                                                                                         then return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
@@ -377,8 +374,8 @@ rankProofMethods ranking ctxt sys = do
       )
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
--- 'ProofMethod's and their corresponding results in this 'DiffProofContext' and
--- for this 'DiffSystem'. If the resulting list is empty, then the constraint
+-- 'ProofMethod's and their corresponding results in this 'ProofContext' and
+-- for this 'System'. If the resulting list is empty, then the constraint
 -- system is solved.
 rankDiffProofMethods :: GoalRanking -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
@@ -389,9 +386,7 @@ rankDiffProofMethods ranking ctxt sys = do
         <|> [(DiffAttack, "Found attack")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
-                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step"))
-                                          $ filter (\x -> not $ fst x == Induction)
-                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'
+                  (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step")) (rankProofMethods ranking (eitherProofContext ctxt s) sys')
                   (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))

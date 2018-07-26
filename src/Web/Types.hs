@@ -68,6 +68,8 @@ import qualified Data.Binary         as Bin
 import           Data.Binary.Orphans()
 
 import           Control.DeepSeq
+import           Control.Monad
+-- import           Control.Monad
 import           GHC.Generics (Generic)
 
 import           Text.Hamlet

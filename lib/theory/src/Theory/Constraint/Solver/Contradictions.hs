@@ -144,9 +144,9 @@ hasNonNormalTerms sig se = -- trace ("non-normal terms" ++ show (maybeNonNormalT
 maybeNonNormalTerms :: MaudeHandle -> System -> [LNTerm]
 maybeNonNormalTerms hnd se =
     sortednub . concatMap getTerms . M.elems . L.get sNodes $ se
-    where getTerms (Rule _ ps cs as nvs) = do
+  where getTerms (Rule _ ps cs as) = do
           f <- ps++cs++as
-          t <- factTerms f ++ nvs
+          t <- factTerms f
           maybeNotNfSubterms (mhMaudeSig hnd) t
 
 substCreatesNonNormalTerms :: MaudeHandle -> System -> LNSubst -> LNSubstVFresh -> Bool

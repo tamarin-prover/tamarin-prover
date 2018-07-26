@@ -79,7 +79,6 @@ import           Web.Types
 import           Yesod.Core
 
 import           Control.Monad.Trans.Resource (runResourceT)
-import           Control.Monad.Trans.Unlift
 
 import           Data.Label
 import           Data.Maybe

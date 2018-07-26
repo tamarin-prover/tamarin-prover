@@ -43,17 +43,12 @@ module Theory.Model.Fact (
   , DirTag(..)
   , kuFact
   , kdFact
-  , termFact
   , kFactView
   , dedFactView
 
   , isKFact
   , isKUFact
   , isKDFact
-  , isKDXorFact
-  
-  , convertKUtoKD
-  , convertKDtoKU
 
   -- ** Construction
   , freshFact
@@ -116,8 +111,6 @@ data FactTag = ProtoFact Multiplicity String Int
              | KDFact     -- ^ Down-knowledge fact in message deduction.
              | DedFact    -- ^ Log-fact denoting that the intruder deduced
                           -- a message using a construction rule.
-             | TermFact   -- ^ internal fact, only used to convert terms to facts 
-                          -- to simplify computations. should never occur in a graph.
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Facts.
@@ -160,10 +153,9 @@ instance Apply t => Apply (Fact t) where
 data DirTag = UpK | DnK
             deriving( Eq, Ord, Show )
 
-kdFact, kuFact, termFact :: t -> Fact t
+kdFact, kuFact :: t -> Fact t
 kdFact = Fact KDFact . return
 kuFact = Fact KUFact . return
-termFact = Fact TermFact . return
 
 -- | View a message-deduction fact.
 kFactView :: LNFact -> Maybe (DirTag, LNTerm)
@@ -194,21 +186,6 @@ isKUFact _               = False
 isKDFact :: LNFact -> Bool
 isKDFact (Fact KDFact _) = True
 isKDFact _               = False
-
--- | True if the fact is a KD-fact concerning an Xor Term.
-isKDXorFact :: LNFact -> Bool
-isKDXorFact (Fact KDFact [m]) = isXor m
-isKDXorFact _                 = False
-
--- | converts a KU-Fact into a KD-Fact with the same terms
-convertKUtoKD :: LNFact -> LNFact
-convertKUtoKD (Fact KUFact m) = (Fact KDFact m)
-convertKUtoKD f               = f
-
--- | converts a KD-Fact into a KU-Fact with the same terms
-convertKDtoKU :: LNFact -> LNFact
-convertKDtoKU (Fact KDFact m) = (Fact KUFact m)
-convertKDtoKU f               = f
 
 -- | Mark a fact as malformed.
 errMalformed :: String -> LNFact -> a
@@ -278,7 +255,6 @@ factTagArity tag = case  tag of
     FreshFact       -> 1
     InFact          -> 1
     OutFact         -> 1
-    TermFact        -> 1
 
 -- | The arity of a 'Fact'.
 factArity :: Fact t -> Int
@@ -383,7 +359,6 @@ factTagName tag = case tag of
     OutFact           -> "Out"
     FreshFact         -> "Fr"
     (ProtoFact _ n _) -> n
-    TermFact          -> "Term"
 
 -- | Show a fact tag as a 'String'. This is the 'factTagName' prefixed with
 -- the multiplicity.

@@ -58,7 +58,7 @@ tmpdir = "/tmp/tamarin/"
 --      to obtain DNF of equations.
 --   4. Simplify rule.
 variantsProtoRule :: MaudeHandle -> ProtoRuleE -> ProtoRuleAC
-variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr) prems0 concs0 acts0 nvs0) =
+variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr) prems0 concs0 acts0) =
     -- rename rule to decrease variable indices
     (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshAvoiding` ru
   where
@@ -90,11 +90,10 @@ variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr) prems0 concs0 acts0 nvs0
 
     abstrRule = (`runBindT` noBindings) $ do
         -- first import all vars into binding to obtain nicer names
-        mapM_ abstrTerm [ varTerm v | v <- frees (prems0, concs0, acts0, nvs0) ]
-        (,,,) <$> mapM abstrFact prems0
-              <*> mapM abstrFact concs0
-              <*> mapM abstrFact acts0
-              <*> mapM abstrTerm nvs0
+        mapM_ abstrTerm [ varTerm v | v <- frees (prems0, concs0, acts0) ]
+        (,,) <$> mapM abstrFact prems0
+             <*> mapM abstrFact concs0
+             <*> mapM abstrFact acts0
 
     irreducible = irreducibleFunSyms (mhMaudeSig hnd)
     abstrFact = traverse abstrTerm
@@ -106,14 +105,12 @@ variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr) prems0 concs0 acts0 nvs0
       where getHint (viewTerm -> Lit (Var v)) = lvarName v
             getHint _                         = "z"
 
-    makeRule (ps, cs, as, nvs) subst freshSubsts0 =
-        Rule (ProtoRuleACInfo na attr (Disj freshSubsts) []) prems concs acts newvs
-
+    makeRule (ps, cs, as) subst freshSubsts0 =
+        Rule (ProtoRuleACInfo na attr (Disj freshSubsts) []) prems concs acts
       where prems = apply subst ps
             concs = apply subst cs
             acts  = apply subst as
-            newvs = apply subst nvs
-            freshSubsts = map (restrictVFresh (frees (prems, concs, acts, newvs))) freshSubsts0
+            freshSubsts = map (restrictVFresh (frees (prems, concs, acts))) freshSubsts0
 
     trueDisj = [ emptySubstVFresh ]
 
