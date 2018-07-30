@@ -74,8 +74,7 @@ goalRankingIdentifiers = M.fromList
 
 goalRankingIdentifiersDiff :: M.Map Char GoalRanking
 goalRankingIdentifiersDiff  = M.fromList
-                            [ ('s', SmartRanking False)
-                            , ('S', SmartRanking True)
+                            [ ('s', SmartDiffRanking)
                             , ('o', OracleRanking "./oracle")
                             , ('O', OracleSmartRanking "./oracle")
                             , ('c', UsefulGoalNrRanking)
@@ -87,7 +86,7 @@ charToGoalRankingMay c = M.lookup c goalRankingIdentifiers
 
 charToGoalRanking :: Char -> GoalRanking
 charToGoalRanking c = fromMaybe
-    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking'" ++ [c]
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ [c]
         ++ "'. Use one of the following:\n" ++ listGoalRankings)
     $ charToGoalRankingMay c
 
@@ -96,7 +95,7 @@ charToGoalRankingDiffMay c = M.lookup c goalRankingIdentifiersDiff
 
 charToGoalRankingDiff :: Char -> GoalRanking
 charToGoalRankingDiff c = fromMaybe
-    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking'" ++ [c]
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ [c]
         ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff)
     $ charToGoalRankingDiffMay c
 
