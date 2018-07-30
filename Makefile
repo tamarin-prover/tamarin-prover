@@ -169,7 +169,7 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
 
-REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
