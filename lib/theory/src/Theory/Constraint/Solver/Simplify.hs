@@ -46,7 +46,6 @@ import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
--- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
