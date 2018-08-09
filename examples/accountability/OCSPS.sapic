@@ -1,0 +1,136 @@
+/*
+ * Protocol:   OCSP Stapling
+ * Modeler:   Robert Künnemann
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+
+theory OCSPS
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    cert/1, // cert contains secret...
+    true/0,
+    S/1,
+    NormalAct/0, UnusualAct/0
+
+equations: 
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true
+
+let S = 
+    let cert = sign(sk,sk('CA'))
+        m1   = sign(cert,sk('S'))
+        m1t  = <cert,t>
+        m2   = <m1t,sign(m1t,sk('OCSP'))>
+    in
+    new sk; // nevermind certification, just the date
+    insert <'ocspstatus',cert>,'good';
+    event Secret(cert,sk);
+    out (cert);
+    (!(
+    lock 'unhacked';
+        out (m1); // S, OCSP and Judge have preshared signature keys
+        in (m2);
+        out (m2);
+        unlock 'unhacked'
+    )
+    ||
+    ( lock 'unhacked'; //adversary hacks
+      lock 'ocspstatus'; // can be more specific
+      lock 'time';
+      lookup 'time' as t in
+          event Hacked(t);
+          insert <'ocspstatus',cert>,'revoked';
+          out(sk);
+          unlock 'time';
+          unlock 'ocspstatus'
+          // no unlock 'unhacked'... server stops operating..
+    ))
+
+let Clock =
+    insert 'time', '0';
+    !( 
+        lock 'time';
+        lookup 'time' as t in
+            event Outdated(t);
+            /* insert 'time', S(t); */
+            new tn; out(tn);
+            insert 'time', tn;
+            unlock 'time'
+    )
+        
+let OCSP =
+    let cert = sign(sk,sk('CA'))
+        m1   = sign(cert,sk('S'))
+        m1t  = <cert,t>
+        m2   = <m1t,sign(m1t,sk('OCSP'))>
+    in
+    !( 
+    in(m1);
+    lock 'time';
+    lock 'ocspstatus';
+    lookup <'ocspstatus',cert> as status in 
+        if status = 'good' then 
+            lookup 'time' as t in
+                out(m2);
+                unlock 'time';
+                unlock 'ocspstatus'
+    )
+
+let Judge =
+    let cert = sign(sk,sk('CA'))
+        m1   = sign(cert,sk('S'))
+        m1t  = <cert,t>
+        m2   = <m1t,sign(m1t,sk('OCSP'))>
+    in
+    in(m2);
+    lookup 'time' as tc in
+        if tc = t then
+            event BlameEmpty();
+            event Judged(tc,cert)
+        else
+            event BlameS();
+            event Judged(tc,cert)
+
+let Proto = S || OCSP || Judge || Clock
+
+// general form for accountabilty processes
+Proto
+|| !( in('c',<'corrupt',$x>); 
+      event Corrupted($x);
+      out('c',sk($x))
+      /* (  !(in('r',<$x,sid,m>);0) ) */
+      /* TODO database access... */
+    )
+
+lemma sanity_logA_not_misbehaving:
+    exists-trace
+    "Ex #i t cert. Judged(t,cert)@i"
+
+// first: assume OCSP is trusted, should hold
+// then: assume OCSP is not trusted, show lack of accountability
+// then: make the protocol accountable. (Ilkan?)
+
+verdictfunction v1:
+    "Ex #i #j t cert. Judged(t,cert)@i & BlameS()@j " -> <'S'>,
+    otherwise -> empty 
+
+restriction no_corrupt_ocsp:
+    "not (Ex #i. Corrupted('OCSP')@i)"
+
+restriction no_corrupt_ca:
+    "not (Ex #i. Corrupted('CA')@i)"
+
+lemma acc_S:
+    v1 accounts [coarse] 
+    for "All cert sk t #i #j #k.  Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k
+           ==> Ex #h. Hacked(sk)@h "
+    for parties <'S'>
+
+end
