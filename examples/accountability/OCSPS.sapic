@@ -26,7 +26,7 @@ equations:
 let S = 
     let cert = sign(sk,sk('CA'))
         m1   = sign(cert,sk('S'))
-        m1t  = <cert,t>
+        m1t  = <cert,~t>
         m2   = <m1t,sign(m1t,sk('OCSP'))>
     in
     new sk; // nevermind certification, just the date
@@ -44,8 +44,8 @@ let S =
     ( lock 'unhacked'; //adversary hacks
       lock 'ocspstatus'; // can be more specific
       lock 'time';
-      lookup 'time' as t in
-          event Hacked(t);
+      lookup 'time' as ~t in
+          event Hacked(~t,sk);
           insert <'ocspstatus',cert>,'revoked';
           out(sk);
           unlock 'time';
@@ -54,21 +54,21 @@ let S =
     ))
 
 let Clock =
-    insert 'time', '0';
+    /* insert 'time', '0'; */
     !( 
         lock 'time';
-        lookup 'time' as t in
-            event Outdated(t);
-            /* insert 'time', S(t); */
-            new tn; out(tn);
-            insert 'time', tn;
+        /* lookup 'time' as ~t in */
+            /* event Outdated(~t); */
+            /* insert 'time', S(~t); */
+            new ~tn; out(~tn);
+            insert 'time', ~tn;
             unlock 'time'
     )
         
 let OCSP =
     let cert = sign(sk,sk('CA'))
         m1   = sign(cert,sk('S'))
-        m1t  = <cert,t>
+        m1t  = <cert,~t>
         m2   = <m1t,sign(m1t,sk('OCSP'))>
     in
     !( 
@@ -77,7 +77,7 @@ let OCSP =
     lock 'ocspstatus';
     lookup <'ocspstatus',cert> as status in 
         if status = 'good' then 
-            lookup 'time' as t in
+            lookup 'time' as ~t in
                 out(m2);
                 unlock 'time';
                 unlock 'ocspstatus'
@@ -86,17 +86,17 @@ let OCSP =
 let Judge =
     let cert = sign(sk,sk('CA'))
         m1   = sign(cert,sk('S'))
-        m1t  = <cert,t>
+        m1t  = <cert,~t>
         m2   = <m1t,sign(m1t,sk('OCSP'))>
     in
     in(m2);
-    lookup 'time' as tc in
-        if tc = t then
+    lookup 'time' as ~tc in
+        if ~tc = ~t then
             event BlameEmpty();
-            event Judged(tc,cert)
+            event Judged(~tc,cert)
         else
             event BlameS();
-            event Judged(tc,cert)
+            event Judged(~tc,cert)
 
 let Proto = S || OCSP || Judge || Clock
 
@@ -130,7 +130,7 @@ restriction no_corrupt_ca:
 lemma acc_S:
     v1 accounts [coarse] 
     for "All cert sk t #i #j #k.  Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k
-           ==> Ex #h. Hacked(sk)@h "
+           ==> Ex #h. Hacked(t,sk)@h "
     for parties <'S'>
 
 end
