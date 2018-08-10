@@ -187,10 +187,20 @@ let progresstrans anP = (* translation for processes with progress *)
   in
   initrule::messsageidrule::(gen trans anP [] varset )
 
+(*Old version of getting locks, problematic when there are multiple locks*)
+(* let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> [] *)
+
 (*Returns a list of positions of each defined locks*)
 let rec get_lock_positions x = match x with
    Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | Node(_, l, r) -> ( get_lock_positions (l)  @ get_lock_positions (r))
     | _ -> []
+
+let rec remove_duplicates lst= match lst with
+      [] -> []
+    | h::hs -> h :: (remove_duplicates (List.filter (fun x -> x<>h) hs))
     
 let generate_sapic_restrictions op annotated_process =
     let restrs = 
@@ -202,7 +212,7 @@ let generate_sapic_restrictions op annotated_process =
               else 
                   [res_set_in_no_delete_l; res_set_notin_no_delete_l])
           else [])
-          @ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])
+          @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
           @ (if contains_eq annotated_process then [res_predicate_eq_l; res_predicate_not_eq_l] else [])
           @ (if op.progress then generate_progress_restrictions annotated_process else [])
           @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
