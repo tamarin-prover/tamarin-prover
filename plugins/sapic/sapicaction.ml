@@ -55,9 +55,9 @@ let rec substitute  (id:string) (t:term) process =
       match a with
       | Null -> Node(a, left, right)
       | Par
+      | Let(_)
       | NDC -> Node(a, substitute id t left, substitute id t right)
       | Rep -> Node(a, substitute id t left, right)
-      | Let(_) -> raise (InternalRepresentationError "Let node should not be present at this point")
       | New (x) ->
 	if VarSet.mem ( Var.Msg(id) ) ( vars_t (Var(x)) ) then (* rebinding variable id, stop substituting *)
 	  Node( a, left, right )
