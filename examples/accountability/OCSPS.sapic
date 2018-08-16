@@ -2,7 +2,7 @@
  * Protocol:   OCSP Stapling
  * Modeler:   Robert Künnemann
  * Date:  
- * Source:  
+ * Source:  https://tools.ietf.org/html/rfc6960
  * Status:  
  * Note:  execute with --heuristic=p 
  * */
@@ -24,10 +24,14 @@ equations:
     verify(sign(m, sk(i)),m, pk(sk(i))) = true
 
 let S = 
-    let cert = sign(sk,sk('CA'))
-        m1   = sign(cert,sk('S'))
-        m1t  = <cert,~t>
-        m2   = <m1t,sign(m1t,sk('OCSP'))>
+    let 
+        cert = sign(sk,sk('CA'))
+        m1   = cert
+        /* m1   = sign(cert,sk('S')) */
+        m1t  = <cert,~t,'good'>
+        m1f  = <cert,~t,'revoked'>
+        m2t   = <m1t,sign(m1t,sk('OCSP'))>
+        m2f   = <m1f,sign(m1f,sk('OCSP'))>
     in
     new sk; // nevermind certification, just the date
     insert <'ocspstatus',cert>,'good';
@@ -40,18 +44,19 @@ let S =
         out (m2);
         unlock 'unhacked'
     )
-    ||
+    || // only server can be corrupted
     ( lock 'unhacked'; //adversary hacks
       lock 'ocspstatus'; // can be more specific
       lock 'time';
       lookup 'time' as ~t in
-          event Hacked(~t,sk);
+          event Corrupted('S');
           insert <'ocspstatus',cert>,'revoked';
           out(sk);
           unlock 'time';
           unlock 'ocspstatus'
           // no unlock 'unhacked'... server stops operating..
-    ))
+    )
+    )
 
 let Clock =
     /* insert 'time', '0'; */
@@ -60,58 +65,87 @@ let Clock =
         /* lookup 'time' as ~t in */
             /* event Outdated(~t); */
             /* insert 'time', S(~t); */
-            new ~tn; out(~tn);
-            insert 'time', ~tn;
-            unlock 'time'
+        new ~tn; out(~tn);
+        event Time(~tn);
+        insert 'time', ~tn;
+        unlock 'time'
     )
         
-let OCSP =
+let OCSP = // Trusted responder
     let cert = sign(sk,sk('CA'))
-        m1   = sign(cert,sk('S'))
-        m1t  = <cert,~t>
-        m2   = <m1t,sign(m1t,sk('OCSP'))>
+        m1   = cert
+        /* m1   = sign(cert,sk('S')) */
+        m1t  = <cert,~t,'good'>
+        m1f  = <cert,~t,'revoked'>
+        m1u  = <cert,~t,'unknown'>
+        m2t   = <m1t,sign(m1t,sk('OCSP'))>
+        m2f   = <m1f,sign(m1f,sk('OCSP'))>
+        m2u   = <m1u,sign(m1u,sk('OCSP'))>
     in
     !( 
     in(m1);
     lock 'time';
     lock 'ocspstatus';
-    lookup <'ocspstatus',cert> as status in 
-        if status = 'good' then 
-            lookup 'time' as ~t in
-                out(m2);
+    lookup 'time' as ~t in
+    lookup <'ocspstatus',cert> as status in (
+            if status = 'good' then  (
+                out(m2t);
+                unlock 'time';
+                unlock 'ocspstatus' )
+            else 
+                (
+                out(m2f);
                 unlock 'time';
                 unlock 'ocspstatus'
+             ))
+    /* else 0 //TODO out(m2u) (judge needs to also distinguish...) */
+        else out(m2u)
     )
 
 let Judge =
     let cert = sign(sk,sk('CA'))
-        m1   = sign(cert,sk('S'))
-        m1t  = <cert,~t>
-        m2   = <m1t,sign(m1t,sk('OCSP'))>
+        m1t  = <cert,~t,'good'>
+        m1f  = <cert,~t,'revoked'>
+        m2t   = <m1t,sign(m1t,sk('OCSP'))>
+        m2f   = <m1f,sign(m1f,sk('OCSP'))>
+        m1g  = <cert,~t,status>
+        m2g   = <m1g,sign(m1g,sk('OCSP'))>
     in
-    in(m2);
+    in(m2g);
     lookup 'time' as ~tc in
-        if ~tc = ~t then
+        if status = 'good' then
             event BlameEmpty();
             event Judged(~tc,cert)
         else
-            event BlameS();
-            event Judged(~tc,cert)
+            (if status = 'revoked' then
+                event BlameS();
+                event Judged(~tc,cert)
+            else
+                0 //only judge if response actually contains information
+                )
+
 
 let Proto = S || OCSP || Judge || Clock
 
 // general form for accountabilty processes
 Proto
-|| !( in('c',<'corrupt',$x>); 
-      event Corrupted($x);
-      out('c',sk($x))
+|| ( event Corrupted('OCSP');
+      out('c',sk('OCSP'))
       /* (  !(in('r',<$x,sid,m>);0) ) */
       /* TODO database access... */
     )
+/* || !( in('c',<'corrupt',$x>); */ 
+/*       event Corrupted($x); */
+/*       out('c',sk($x)) */
+/*       /1* (  !(in('r',<$x,sid,m>);0) ) *1/ */
+/*       /1* TODO database access... *1/ */
+/*     ) */
 
 lemma sanity_logA_not_misbehaving:
     exists-trace
-    "Ex #i t cert. Judged(t,cert)@i"
+    "(Ex #i t cert. Judged(t,cert)@i )
+    & not (Ex #i a. Corrupted(a)@i)
+    "
 
 // first: assume OCSP is trusted, should hold
 // then: assume OCSP is not trusted, show lack of accountability
@@ -121,16 +155,43 @@ verdictfunction v1:
     "Ex #i #j t cert. Judged(t,cert)@i & BlameS()@j " -> <'S'>,
     otherwise -> empty 
 
-restriction no_corrupt_ocsp:
-    "not (Ex #i. Corrupted('OCSP')@i)"
+/* restriction no_corrupt_ocsp: */
+/*     "not (Ex #i. Corrupted('OCSP')@i)" */
 
 restriction no_corrupt_ca:
     "not (Ex #i. Corrupted('CA')@i)"
 
-lemma acc_S:
+/* lemma acc_S: */
+/*     v1 accounts [coarse] */ 
+/*     for "not ( Ex cert sk t #i #j #k #l. */
+/*     Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l) */
+/*      | (Ex #i. Corrupted('OCSP')@i) */
+/*            " */
+/*     for parties <'S'> */
+
+
+  /* sanity_logA_not_misbehaving (exists-trace): verified (14 steps) */
+  /* acc_S_excl_0_1 (all-traces): verified (2 steps) */
+  /* acc_S_exh (all-traces): verified (2 steps) */
+  /* acc_S_suf_0_0 (exists-trace): verified (39 steps) */
+  /* acc_S_compl_empty_1 (all-traces): verified (6068 steps) */
+  /* acc_S_min_0_0_0 (all-traces): verified (82 steps) */
+  /* acc_S_uniq_0 (all-traces): verified (1003 steps) */
+
+lemma acc_SOCSP:
     v1 accounts [coarse] 
-    for "All cert sk t #i #j #k.  Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k
-           ==> Ex #h. Hacked(t,sk)@h "
-    for parties <'S'>
+    for "not ( Ex cert sk t #i #j #k #l.
+    Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l)
+     | (Ex #i. Corrupted('OCSP')@i)
+           "
+    for parties <'S','OCSP'>
+
+  /* sanity_logA_not_misbehaving (exists-trace): verified (14 steps) */
+  /* acc_SOCSP_excl_0_1 (all-traces): verified (2 steps) */
+  /* acc_SOCSP_exh (all-traces): verified (2 steps) */
+  /* acc_SOCSP_suf_0_0 (exists-trace): verified (40 steps) */
+  /* acc_SOCSP_compl_empty_1 (all-traces): verified (6101 steps) */
+  /* acc_SOCSP_min_0_0_0 (all-traces): verified (82 steps) */
+  /* acc_SOCSP_uniq_0 (all-traces): falsified - found trace (12 steps) */
 
 end

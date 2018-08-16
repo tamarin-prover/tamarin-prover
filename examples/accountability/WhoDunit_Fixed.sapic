@@ -81,8 +81,12 @@ verdictfunction v3:
     "Ex #i #j. Unequal()@i & BlameS()@j"   -> let verdict2 = <'S'>,
     otherwise -> empty 
 
-// everything proofs except for
-lemma acc3:
+lemma acc_coarse:
+    v3 accounts [coarse]
+    for "not (Ex #i.  Unequal()@i)"
+    for parties <'A','S'>
+
+lemma acc_control:
     v3 accounts [control]
     for "not (Ex #i.  Unequal()@i)"
     for parties <'A','S'>
