@@ -104,6 +104,10 @@ let Proto = CA || LogCert || TestCA || TestLA || Terminate
 
 // general form for accountabilty processes
 Proto
+|| !( in('c',<'CAcorrupt',$id>); // corrupt CAs
+      event Corrupted($id);
+      out('c',skca($id))
+    )
 /* || !( in('c',<'corrupt',$x>); */ 
 /*       event Corrupted($x); */
 /*       out('c',sk($x)) */
