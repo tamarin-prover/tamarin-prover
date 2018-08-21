@@ -299,7 +299,7 @@ process:
 							     $2
 							     (Term.App("rep", [$6;Term.Var(Var.Msg("_loc_"))]))
 							     $9 }
-    | IDENTIFIER                                     { try Hashtbl.find proc_table $1
+    | IDENTIFIER                                     { try Node(Let($1), Hashtbl.find proc_table $1, Empty)
             with Not_found -> Printf.eprintf "The process: %s is undefined. \n " $1; raise Parsing.Parse_error }
      |    rule_body optprocess { Node(MSR($1), $2, Empty) }
 ;
