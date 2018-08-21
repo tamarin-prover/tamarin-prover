@@ -199,13 +199,13 @@ let progresstrans anP = (* translation for processes with progress *)
     }
   in
   initrule::messsageidrule::(gen trans anP [] varset )
-    
+
     
 let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
   else 
       (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
-    ^ (if contains_locking annotated_process then  res_locking else "")
+    (*^ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])*)
     ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
     ^ (* Stuff that's always there *)
     res_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
@@ -228,7 +228,15 @@ let translation input =
       ^ res_resilient 
     else 
       generate_sapic_restrictions annotated_process
+  (*and sapic_restrictions = List.map print_lemmas (generate_sapic_restrictions annotated_process)*)
+  and sapic_restrictions_locks = 
+    if contains_locking annotated_process
+    then  
+      let lock_list = get_lock_positions annotated_process  
+      in
+      print_lock_restrictions  (remove_duplicates lock_list)
+    else ""
   in
-  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^
+  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^  sapic_restrictions_locks ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"
