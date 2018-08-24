@@ -5,46 +5,46 @@ builtins: asymmetric-encryption
 
 /* We formalize the following protocol:
 
-    1. A -> B: {A,na}sk(A)
+    1. A -> B: {A,na}pk(B)
 
 */
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(~ltkA) ]
+  [ Fr(~ltkE) ]
   -->
-  [ !Ltk($A, ~ltkA)
-  , !Pk($A, pk(~ltkA))
-  , Out(pk(~ltkA)) 
+  [ !Ltk($E, ~ltkE)
+  , !Pk($E, pk(~ltkE))
+  , Out(pk(~ltkE)) 
   ] 
 
 // Compromising an agent's long-term key
 rule Reveal_ltk:
-  [ !Ltk(A, ltkA) ] --[ Reveal(A) ]-> [ Out(ltkA) ]
+  [ !Ltk(E, ltkE) ] --[ Reveal(E) ]-> [ Out(ltkE) ]
 
 // Role A sends first message
 rule A_1_send:
   [ Fr(~na)
-  , !Ltk(A, ltkA)
-  , !Pk(B, pkB)
+  , !Ltk($A, ltkA)
+  , !Pk($B, pkB)
   ]
---[ Send(A, aenc(<A, ~na>, pkB)) 
-  , Secret(~na), Honest(A), Honest(B), Role('A')
+--[ Send($A, aenc(<$A, ~na>, pkB)) 
+  , Secret(~na), Honest($A), Honest($B), Role('A')
   ]->
-  [ St_A_1(A, ltkA, pkB, B, ~na) 
-  , Out(aenc(<A, ~na>, pkB))
+  [ St_A_1($A, ltkA, pkB, $B, ~na) 
+  , Out(aenc(<$A, ~na>, pkB))
   ]
 
 // Role B receives first message
 rule B_1_receive:
-  [ !Ltk(B, ltkB)
-  , !Pk(A, pkA)
-  , In(aenc(<A, na>,pkB))
+  [ !Ltk($B, ltkB)
+  , !Pk($B, pkB)
+  , In(aenc(<$A, na>,pkB))
   ]
---[ Recv(B, aenc(<A, na>, pkB)) 
-  , Secret(na), Honest(B), Honest(A), Role('B')
+--[ Recv($B, aenc(<$A, na>, pkB)) 
+  , Secret(na), Honest($B), Honest($A), Role('B')
   ]->
-  [ St_B_1(B, ltkB, pkA, A, na)
+  [ St_B_1($B, ltkB, $A, na)
   ]
 
 lemma executable:
