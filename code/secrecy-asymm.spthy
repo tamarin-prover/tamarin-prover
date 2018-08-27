@@ -11,16 +11,16 @@ builtins: asymmetric-encryption
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(~ltkE) ]
+  [ Fr(~ltkX) ]
   -->
-  [ !Ltk($E, ~ltkE)
-  , !Pk($E, pk(~ltkE))
-  , Out(pk(~ltkE)) 
+  [ !Ltk($X, ~ltkX)
+  , !Pk($X, pk(~ltkX))
+  , Out(pk(~ltkX))
   ] 
 
 // Compromising an agent's long-term key
 rule Reveal_ltk:
-  [ !Ltk(E, ltkE) ] --[ Reveal(E) ]-> [ Out(ltkE) ]
+  [ !Ltk($X, ltkX) ] --[ Reveal($X) ]-> [ Out(ltkX) ]
 
 // Role A sends first message
 rule A_1_send:
