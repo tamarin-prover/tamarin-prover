@@ -11,37 +11,33 @@ builtins: asymmetric-encryption
 
 // Public key infrastructure
 rule Register_pk:
-  [ Fr(~ltkA) ]
+  [ Fr(~ltkX) ]
   -->
-  [ !Ltk($A, ~ltkA)
-  , !Pk($A, pk(~ltkA))
-  , Out(pk(~ltkA)) 
+  [ !Ltk($X, ~ltkX)
+  , !Pk($X, pk(~ltkX))
+  , Out(pk(~ltkX)) 
   ] 
 
 // Role A sends first message
 rule A_1_send:
-  let m = <A, ~na>
-  in 
   [ Fr(~na)
-  , !Ltk(A, ltkA)
-  , !Pk(B, pkB)
+  , !Ltk($A, ltkA)
   ]
---[ Send(A, m) 
+--[ Send($A, <$A, ~na>) 
   ]->
-  [ St_A_1(A, ltkA, pkB, B, ~na) 
-  , Out(aenc(m,ltkA))
+  [ St_A_1($A, ltkA, ~na) 
+  , Out(aenc(<$A, ~na>,ltkA))
   ]
 
 // Role B receives first message
 rule B_1_receive:
-  [ !Ltk(B, ltkB)
-  , !Pk(A, pk(skA))
-  , In(aenc(m,skA))
+  [ !Pk($A, pk(skA))
+  , In(aenc(<$A, na>,skA))
   ]
---[ Recv(B, m)
-  , Authentic(A,m), Honest(B), Honest(A)
+--[ Recv($B, <$A, na>)
+  , Authentic($A,<$A, na>), Honest($B), Honest($A)
   ]->
-  [ St_B_1(B, ltkB, pk(skA), A, m)
+  [ St_B_1($B, pk(skA), $A, <$A, na>)
   ]
 
 lemma executable:
