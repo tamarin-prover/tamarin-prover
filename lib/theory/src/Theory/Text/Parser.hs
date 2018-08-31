@@ -305,7 +305,7 @@ ruleAttribute = asum
         hc <- hexColor
         case hexToRGB hc of
             Just rgb  -> return rgb
-            Nothing -> fail $ "Color could not be parsed to RGB"
+            Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
