@@ -435,7 +435,7 @@ gall ss atos gf               = GGuarded All ss atos gf
 
 -- | Local newtype to avoid orphan instance.
 newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
-    deriving( Monoid, NFData, Document, HighlightDocument )
+    deriving( Monoid, Semigroup, NFData, Document, HighlightDocument )
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ under the assumption that this is possible.

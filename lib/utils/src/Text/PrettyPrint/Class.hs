@@ -187,9 +187,11 @@ instance Document Doc where
   nest i (Doc d) = Doc $ P.nest i d
   caseEmptyDoc yes no (Doc d) = if P.isEmpty d then yes else no
 
+instance Semigroup Doc where
+    Doc d1 <> Doc d2 = Doc $ (P.<>) d1 d2
+
 instance Monoid Doc where
     mempty = Doc $ P.empty
-    mappend (Doc d1) (Doc d2) = Doc $ (P.<>) d1 d2
   
 ------------------------------------------------------------------------------
 -- Additional combinators

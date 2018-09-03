@@ -138,12 +138,13 @@ execReduction m ctxt se fs =
 data ChangeIndicator = Unchanged | Changed
        deriving( Eq, Ord, Show )
 
+instance Semigroup ChangeIndicator where
+    Changed   <> _         = Changed
+    _         <> Changed   = Changed
+    Unchanged <> Unchanged = Unchanged
+
 instance Monoid ChangeIndicator where
     mempty = Unchanged
-
-    Changed   `mappend` _         = Changed
-    _         `mappend` Changed   = Changed
-    Unchanged `mappend` Unchanged = Unchanged
 
 -- | Return 'True' iff there was a change.
 wasChanged :: ChangeIndicator -> Bool
