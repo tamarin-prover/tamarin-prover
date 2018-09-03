@@ -184,7 +184,7 @@ em(pmult(x,p),q)     = pmult(x,em(q,p))
 `xor`:
 
 : This theory models the exclusive-or operation. It adds the function
-  symbols `XOR/2` (also written as `⊕/2`) and `zero/0`. `⊕`is
+  symbols `⊕/2` (also written as `XOR/2`) and `zero/0`. `⊕` is
   associative and commutative and satisfies the cancellation
   equations:
 
