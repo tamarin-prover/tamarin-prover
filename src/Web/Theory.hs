@@ -92,11 +92,12 @@ applyMethodAtPath :: ClosedTheory -> String -> ProofPath
                   -> Heuristic             -- ^ How to extract/order the proof methods.
                   -> Int                   -- What proof method to use.
                   -> Maybe ClosedTheory
-applyMethodAtPath thy lemmaName proofPath heuristic i = do
+applyMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
     lemma <- lookupLemma lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
     let ctxt  = getProofContext lemma thy
         sys   = psInfo (root subProof)
+        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -111,11 +112,12 @@ applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> Heuristic             -- ^ How to extract/order the proof methods.
                       -> Int                   -- What proof method to use.
                       -> Maybe ClosedDiffTheory
-applyMethodAtPathDiff thy s lemmaName proofPath heuristic i = do
+applyMethodAtPathDiff thy s lemmaName proofPath defaultHeuristic i = do
     lemma <- lookupLemmaDiff s lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
     let ctxt  = getProofContextDiff s lemma thy
         sys   = psInfo (root subProof)
+        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -130,11 +132,12 @@ applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
                       -> Heuristic             -- ^ How to extract/order the proof methods.
                       -> Int                   -- What proof method to use.
                       -> Maybe ClosedDiffTheory
-applyDiffMethodAtPath thy lemmaName proofPath heuristic i = do
+applyDiffMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
     lemma <- lookupDiffLemma lemmaName thy
     subProof <- get lDiffProof lemma `atPathDiff` proofPath
     let ctxt  = getDiffProofContext lemma thy
         sys   = dpsInfo (root subProof)
+        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic $ get dpcPCLeft ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -553,7 +556,9 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    ranking                 = useHeuristic (apHeuristic $ tiAutoProver ti) depth
+    heuristic               = fromMaybe (apDefaultHeuristic $ tiAutoProver ti)
+                                $ get pcHeuristic ctxt
+    ranking                 = useHeuristic heuristic depth
     proofMethods            = rankProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
@@ -628,7 +633,9 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    ranking                 = useHeuristic (apHeuristic $ dtiAutoProver ti) depth
+    heuristic               = fromMaybe (apDefaultHeuristic $ dtiAutoProver ti)
+                                $ get pcHeuristic ctxt
+    ranking                 = useHeuristic heuristic depth
     proofMethods            = rankProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
@@ -717,7 +724,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    ranking                 = useHeuristic (apHeuristic $ dtiAutoProver ti) depth
+    heuristic               = fromMaybe (apDefaultHeuristic $ dtiAutoProver ti)
+                                $ get pcHeuristic $ get dpcPCLeft ctxt
+    ranking                 = useHeuristic heuristic depth
     diffProofMethods        = rankDiffProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
@@ -1223,8 +1232,8 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
           renderedOrRendering n = do
               graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
-              if (n <= 0 || (graphExists && not imgExists))
-                  then do threadDelay 100             -- wait 10 ms
+              if (n > 0 && graphExists && not imgExists)
+                  then do threadDelay (10 * 1000) -- wait 10 ms
                           renderedOrRendering (n - 1)
                   else return imgExists
 
@@ -1355,8 +1364,8 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           renderedOrRendering n = do
               dotExists <- doesFileExist dotPath
               imgExists <- doesFileExist imgPath
-              if (n <= 0 || (dotExists && not imgExists))
-                  then do threadDelay 100             -- wait 10 ms
+              if (n > 0 && dotExists && not imgExists)
+                  then do threadDelay (10 * 1000) -- wait 10 ms
                           renderedOrRendering (n - 1)
                   else return imgExists
 

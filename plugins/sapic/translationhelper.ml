@@ -6,6 +6,7 @@ open Annotatedrule
 open Annotatedsapicaction
 open Annotatedsapictree
 open Atomformulaaction
+open Restrictions
 open Btree
 open Lemma
 open Term
@@ -46,4 +47,3 @@ let rec contains_resilient_io t =
     |   Node(Ch_In(Var(PubFixed("r")),_), _, _) 
     |   Node(Ch_Out(Var(PubFixed("r")),_), _, _)  -> true
     |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)
-

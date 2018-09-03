@@ -36,6 +36,7 @@ module Theory.Constraint.System (
   , pcSources
   , pcSourceKind
   , pcUseInduction
+  , pcHeuristic
   , pcTraceQuantifier
   , pcLemmaName
   , pcHiddenLemmas
@@ -222,6 +223,7 @@ import qualified Extension.Data.Label                 as L
 
 import           Logic.Connectives
 import           Theory.Constraint.System.Constraints
+import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.EquationStore
@@ -371,6 +373,7 @@ data ProofContext = ProofContext
        , _pcSourceKind         :: SourceKind
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
+       , _pcHeuristic          :: Maybe Heuristic
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
@@ -389,7 +392,7 @@ data DiffProofContext = DiffProofContext
        , _dpcProtoRules           :: [ProtoRuleE]
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
-       , _dpcRestrictions               :: [(Side, [LNGuarded])]
+       , _dpcRestrictions         :: [(Side, [LNGuarded])]
        }
        deriving( Eq, Ord, Show )
 

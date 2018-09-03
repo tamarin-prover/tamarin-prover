@@ -305,7 +305,7 @@ ruleAttribute = asum
         hc <- hexColor
         case hexToRGB hc of
             Just rgb  -> return rgb
-            Nothing -> fail $ "Color could not be parsed to RGB"
+            Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -584,6 +584,7 @@ lemmaAttribute = asum
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> identifier)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
