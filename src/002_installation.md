@@ -3,7 +3,7 @@ Installation {#sec:installation}
 ============
 
 The easiest way to install Tamarin on Mac or Linux is to use
-[Homebrew](http://brew.sh/)/[Linuxbrew](https://github.com/Linuxbrew/brew#install-linuxbrew-tldr):
+[Homebrew](http://brew.sh/)/[Linuxbrew](https://github.com/Linuxbrew/brew#install-linuxbrew):
 
   * `brew install tamarin-prover/tap/tamarin-prover`
 
