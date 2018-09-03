@@ -405,6 +405,7 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 case-studies/system.info:
+	mkdir -p case-studies
 	top | head > $@
 	hostname >> $@
 
