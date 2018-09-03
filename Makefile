@@ -406,7 +406,9 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 
 case-studies/system.info:
 	mkdir -p case-studies
-	top | head > $@
+	cat /proc/cpuinfo  | grep 'name'| uniq > $@
+	cat /proc/cpuinfo  | grep process| wc -l >> $@
+#	top -b | head >> $@
 	hostname >> $@
 
 CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
