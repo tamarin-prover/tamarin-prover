@@ -46,7 +46,7 @@ import           Data.Char                    (toUpper)
 import           Data.List
 import qualified Data.Map                     as M
 import           Data.Maybe
-import           Data.Monoid
+-- import           Data.Monoid
 import qualified Data.Set                     as S
 import qualified Data.Text                    as T
 import           Data.Time.Format             (formatTime)

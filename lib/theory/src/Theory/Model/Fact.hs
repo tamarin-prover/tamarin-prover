@@ -89,7 +89,7 @@ import           Data.Binary
 -- import           Data.Foldable          (Foldable(..))
 import           Data.Data
 import           Data.Maybe             (isJust)
-import           Data.Monoid
+-- import           Data.Monoid
 -- import           Data.Traversable       (Traversable(..))
 import qualified Data.Set               as S
 

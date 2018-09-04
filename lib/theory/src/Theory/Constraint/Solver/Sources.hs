@@ -43,7 +43,7 @@ import           Control.Parallel.Strategies
 -- import           System.Environment
 -- import           System.IO.Unsafe
 
-import           Text.PrettyPrint.Highlight
+-- import           Text.PrettyPrint.Highlight
 
 import           Extension.Data.Label
 import           Extension.Prelude

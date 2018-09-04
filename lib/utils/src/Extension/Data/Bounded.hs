@@ -11,7 +11,7 @@ module Extension.Data.Bounded (
   ) where
 
 -- import Data.Monoid
-import Data.Semigroup
+-- import Data.Semigroup
 
 -- | A newtype wrapper for a monoid of the maximum of a bounded type.
 newtype BoundedMax a = BoundedMax {getBoundedMax :: a}
