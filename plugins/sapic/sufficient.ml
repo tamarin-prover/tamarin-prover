@@ -137,27 +137,27 @@ let minimalityComposite id rel vf =
         ) vf
             
 
-let completeness_empty id op vf phi = 
+let verifiability_empty id op vf phi = 
 (* for the each mapping φ_i → V_i  and V_i empty *) 
 (* For all traces $t$: $φ_i(t) ⇒ φ(t)$. *)
-    let complete i (f,v) = 
-        let label = Printf.sprintf "%s_compl_empty_%n" id i in
+    let aux i (f,v) = 
+        let label = Printf.sprintf "%s_ver_empty_%n" id i in
         match v with
           [] -> Some (ForallLemma ((label,op),Imp(f,phi)))
         | (x::cs)  ->  None 
         in
-    mapi_opt complete vf 
+    mapi_opt aux vf 
 
-let completeness_nonempty id op vf phi = 
+let verifiability_nonempty id op vf phi = 
 (* for the each mapping φ_i → V_i  and V_i non-empty *) 
 (* For all traces $t$: $φ_i(t) ⇒ ¬φ(t)$. *)
-    let complete i (f,v) = 
-        let label = Printf.sprintf "%s_compl_nonempty_%n" id i in
+    let aux i (f,v) = 
+        let label = Printf.sprintf "%s_ver_nonempty_%n" id i in
         match v with
           [] -> None 
         | (x::cs)  ->  Some (ForallLemma ((label,op),Imp(f,Not(phi))))
         in
-    mapi_opt complete vf 
+    mapi_opt aux vf 
 
 let minimality id op parties vf phi = 
 (* for the each mapping φ_i → V_i *) 
@@ -404,13 +404,14 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (sufficiencyComposite id rel vf)
         @
-        (completeness_empty id op vf phi)
+        (verifiability_empty id op vf phi)
         @
-        (completeness_nonempty id op vf phi)
+        (verifiability_nonempty id op vf phi)
         @
         (minimalitySingleton id op rel parties vf phi)
-        @
-        (uniqueness id op vf)
+        (* @ TODO
+        (completenessComposite id op rel vf) *)
+
     in
     match kind with
     (* (id,op) -> (1* TODO ignore options for now *1) *)
@@ -421,9 +422,9 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (sufficiency id op parties vf phi)
         @
-        (completeness_empty id op vf phi)
+        (verifiability_empty id op vf phi)
         @
-        (completeness_nonempty id op vf phi)
+        (verifiability_nonempty id op vf phi)
         @
         (minimality id op parties vf phi)
         @
