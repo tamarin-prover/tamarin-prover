@@ -247,6 +247,7 @@ factAnnotation :: Parser FactAnnotation
 factAnnotation = asum
   [ opPlus  *> pure SolveFirst
   , opMinus *> pure SolveLast
+  , symbol "no_precomp" *> pure NoSources
   ]
 
 -- | Parse a fact.

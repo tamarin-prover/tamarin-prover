@@ -137,7 +137,7 @@ solveAllSafeGoals ths' =
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
-        PremiseG _ fa -> not (isKUFact fa) && not (isKDXorFact fa)
+        PremiseG _ fa -> not (isKUFact fa) && not (isKDXorFact fa) && not (isNoSourcesFact fa)
         DisjG _       -> doSplit
         -- Uncomment to get more extensive case splitting
         SplitG _      -> doSplit --extensiveSplitting &&

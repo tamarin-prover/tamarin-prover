@@ -43,6 +43,7 @@ module Theory.Model.Fact (
   , isTrivialFact
   , isSolveFirstFact
   , isSolveLastFact
+  , isNoSourcesFact
 
   , DirTag(..)
   , kuFact
@@ -134,7 +135,7 @@ data FactTag = ProtoFact Multiplicity String Int
 -- | Annotations are properties thhat might be used elsewhere (e.g. in
 --   dot rendering, or for sorting by heuristics) but do not affect
 --   the semantics of the fact
-data FactAnnotation = SolveFirst | SolveLast
+data FactAnnotation = SolveFirst | SolveLast | NoSources
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Facts.
@@ -350,6 +351,10 @@ isSolveFirstFact (Fact tag ann _) = SolveFirst `S.member` ann || (isPrefixOf "F_
 isSolveLastFact :: Fact t -> Bool
 isSolveLastFact (Fact tag ann _)  = SolveLast `S.member` ann  || (isPrefixOf "L_" $ factTagName tag)
 
+-- | Whether the fact should not have its source solved
+isNoSourcesFact :: Fact t -> Bool
+isNoSourcesFact (Fact _ ann _) = NoSources `S.member` ann
+
 ------------------------------------------------------------------------------
 -- NFact
 ------------------------------------------------------------------------------
@@ -455,6 +460,7 @@ showFactAnnotation :: FactAnnotation -> String
 showFactAnnotation an = case an of
     SolveFirst     -> "+"
     SolveLast      -> "-"
+    NoSources      -> "no_precomp"
 
 -- | Pretty print a fact.
 prettyFact :: Document d => (t -> d) -> Fact t -> d
