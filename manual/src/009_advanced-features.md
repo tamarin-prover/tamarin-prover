@@ -62,11 +62,50 @@ in a round-robin fashion depending on the proof-depth. For example, a flag
 'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
 in this way.
 
-### Marking facts to be solved preferentially or delayed
+### Fact Annotations
 
-By starting a fact name with `F_` (for first) the tool will solve instances 
-of that fact earlier than normal, while putting `L_` (for last) as the prefix 
-will delay solving the fact. This can have a performance impact.
+Facts can be annotated with `+` or `-` to influence their priority in heuristics.
+Annotating a fact with `+` causes the tool to solve instances of that fact
+earlier than normal, while annotating a fact with `-` will delay solving those
+instances.
+A fact can be annotated by suffixing it with the annotation in square
+brackets. For example, a fact `F(x)[+]` will be prioritized, while a fact
+`G(x)[-]` will be delayed.
+
+Fact annotations
+apply only to the instances that are annotated, and are not considered during
+unification. For example, a rule premise containing `A(x)[+]` can unify
+with a rule conclusion containing `A(x)`. This allows multiple instances
+of the same fact to be solved with different priorities by annotating them
+differently.
+
+The `+` and `-` annotations can also be used to prioritize actions.
+For example, A reusable lemma of the form
+```
+    "All x #i #j. A(x) @ i ==> B(x)[+] @ j"
+```
+will cause the `B(x)[+]` actions created when applying this lemma
+to be solved with higher priority.
+
+Heuristic priority can also be influenced by starting a fact name with `F_`
+(for first) or `L_` (for last) corresponding to the `+` and `-` annotations
+respectively. Note however that these prefixes must apply to every instance
+of the fact, as a fact `F_A(x)` cannot unify with a fact `A(x)`.
+
+Facts in rule premises can also be annotated with `no_precomp` to prevent the
+tool from precomputing their sources.
+Use of the `no_precomp` annotation in key places can be very
+useful for reducing the precomputation time required to load large models, however
+it should be used sparingly. Preventing the precomputation of sources for a premise
+that is solved frequently will typically slow down the tool, as it must solve the
+premise each time instead of directly applying precomputed sources. Note also that
+using this annotation may cause partial deconstructions if the source of a premise
+was necessary to compute a full deconstruction.
+
+The `no_precomp` annotation can be used in combination with heuristic annotations
+by including both separated by commas---e.g., a premise
+`A(x)[-,no_precomp]` will be delayed and also will not have its sources precomputed.
+
 
 <!-- FIXME: Describe oracle script mechanism -->
 
