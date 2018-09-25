@@ -1368,7 +1368,7 @@ prettyGoals solved sys = vsep $ do
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact [t] <- L.get rConcs ru] <|>
+                [ t | Fact OutFact _ [t] <- L.get rConcs ru] <|>
                 [ t | Just (DnK, t)    <- kFactView <$> L.get rConcs ru]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does

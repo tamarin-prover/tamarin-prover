@@ -298,7 +298,7 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs) =
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
   if subterm then [ru] else variantsIntruder hnd id False ru
     where
       ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)

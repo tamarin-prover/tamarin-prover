@@ -81,11 +81,11 @@ rule iequality:
 --   included independently of the message theory
 specialIntruderRules :: Bool -> [IntrRuleAC]
 specialIntruderRules diff =
-    [ kuRule CoerceRule      [kdFact x_var]                 (x_var)         []
+    [ kuRule CoerceRule      [kdFact x_var]                 (x_var)         [] 
     , kuRule PubConstrRule   []                             (x_pub_var)     [(x_pub_var)]
-    , kuRule FreshConstrRule [Fact FreshFact [x_fresh_var]] (x_fresh_var)   []
-    , Rule ISendRule [kuFact x_var]  [Fact InFact [x_var]] [kLogFact x_var] []
-    , Rule IRecvRule [Fact OutFact [x_var]] [Fact KDFact [x_var]] []        []
+    , kuRule FreshConstrRule [freshFact x_fresh_var] (x_fresh_var)          []
+    , Rule ISendRule [kuFact x_var]  [inFact x_var] [kLogFact x_var]        []
+    , Rule IRecvRule [outFact x_var] [kdFact x_var] []                      []
     ] ++
     if diff 
        then [ Rule IEqualityRule [kuFact x_var, kdFact x_var]  [] [] [] ]
@@ -177,10 +177,10 @@ minimizeIntruderRules diff rules =
                    else r:checked
     
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
-    isDoublePremiseRule (Rule _ ((Fact KDFact [t]):prems) concs _ _) =
+    isDoublePremiseRule (Rule _ ((Fact KDFact _ [t]):prems) concs _ _) = 
         frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
-         && isMsgVar t && any (==(Fact KUFact [t])) prems
+         && isMsgVar t && any (==(kuFact t)) prems
     isDoublePremiseRule _                                               = False
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
@@ -393,10 +393,10 @@ bpVariantsIntruder hnd ru = do
     -- fact that all other variants are of the form
     -- "pmult(..), pmult(..) -> em(..)"
     case ruvariant of
-      Rule i [Fact KDFact args@[viewTerm -> Lit (Var _)], yfact] concs actions nvs ->
-        return $ Rule i [Fact KUFact args, yfact] concs actions nvs
-      Rule i [yfact, Fact KDFact args@[viewTerm -> Lit (Var _)]] concs actions nvs ->
-        return $ Rule i [yfact, Fact KUFact args] concs actions nvs
+      Rule i [Fact KDFact an args@[viewTerm -> Lit (Var _)], yfact] concs actions nvs ->
+        return $ Rule i [Fact KUFact an args, yfact] concs actions nvs
+      Rule i [yfact, Fact KDFact an args@[viewTerm -> Lit (Var _)]] concs actions nvs ->
+        return $ Rule i [yfact, Fact KUFact an args] concs actions nvs
       _ -> return ruvariant
 
   where
