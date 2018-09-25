@@ -144,8 +144,10 @@ KU-facts have arity 2. Their first argument is used to track the
 exponentiation tags. See the `loops/Crypto_API_Simple.spthy` example for more
 information.
 
-    facts := fact list
-    fact := ['!'] ident '(' multterm list ')'
+    facts      := fact list
+    fact       := ['!'] ident '(' multterm list ')' [fact_attrs]
+    fact_attrs := '[' fact_attr (',' fact_attr)* ']'
+    fact_attr  := '+' | '-' | 'no_precomp'
 
 Formulas are trace formulas as described previously. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
