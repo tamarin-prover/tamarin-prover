@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     DH-proto-proof Security Protocol Theory Files
 " Maintainer:   Nick Moore <nicholas.moore@cs.ox.ac.uk>
-" Last Change:  2017 06 07
+" Last Change:  2018 04 10
 " based on Claudio Fleiner's <claudio@fleiner.com> spthy syntax highlighting
 " file.
 
@@ -66,7 +66,7 @@ syn match spthyDecl             ":"
 syn match spthyDecl             "{\*"
 syn match spthyDecl             "\*}"
 syn match spthyDecl             "\""
-syn match spthyDecl             "\d\+\."
+syn match spthyDecl             "[a-zA-Z\-_]\@<!\d\+\."
 
 syn match spthyTransfer         "->"
 syn match spthyTransfer         "<-"

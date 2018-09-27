@@ -265,9 +265,11 @@ unifyRaw l0 r0 = do
 
 data MatchFailure = NoMatcher | ACProblem
 
+instance Semigroup MatchFailure where
+  _ <> _ = NoMatcher
+
 instance Monoid MatchFailure where
   mempty = NoMatcher
-  mappend _ _ = NoMatcher
 
 -- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.

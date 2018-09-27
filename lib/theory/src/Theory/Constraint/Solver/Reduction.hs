@@ -98,7 +98,6 @@ import           Extension.Prelude
 import           Logic.Connectives
 
 import           Theory.Constraint.Solver.Contradictions
--- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 
@@ -139,12 +138,13 @@ execReduction m ctxt se fs =
 data ChangeIndicator = Unchanged | Changed
        deriving( Eq, Ord, Show )
 
+instance Semigroup ChangeIndicator where
+    Changed   <> _         = Changed
+    _         <> Changed   = Changed
+    Unchanged <> Unchanged = Unchanged
+
 instance Monoid ChangeIndicator where
     mempty = Unchanged
-
-    Changed   `mappend` _         = Changed
-    _         `mappend` Changed   = Changed
-    Unchanged `mappend` Unchanged = Unchanged
 
 -- | Return 'True' iff there was a change.
 wasChanged :: ChangeIndicator -> Bool
@@ -222,8 +222,8 @@ labelNodeId = \i rules parent -> do
     -- | Import a rule with all its variables renamed to fresh variables.
     importRule ru = someRuleACInst ru `evalBindT` noBindings
 
-    mkISendRuleAC m = return $ Rule (IntrInfo (ISendRule))
-                                    [kuFact m] [inFact m] [kLogFact m] []
+    mkISendRuleAC ann m = return $ Rule (IntrInfo (ISendRule))
+                                    [kuFactAnn ann m] [inFact m] [kLogFact m] []
 
 
     mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule [] []))
@@ -233,15 +233,15 @@ labelNodeId = \i rules parent -> do
 
     exploitPrem i ru (v, fa) = case fa of
         -- CR-rule *DG2_2* specialized for *In* facts.
-        Fact InFact [m] -> do
+        Fact InFact ann [m] -> do
             j <- freshLVar "vf" LSortNode
-            ruKnows <- mkISendRuleAC m
+            ruKnows <- mkISendRuleAC ann m
             modM sNodes (M.insert j ruKnows)
             modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
             exploitPrems j ruKnows
 
         -- CR-rule *DG2_2* specialized for *Fr* facts.
-        Fact FreshFact [m] -> do
+        Fact FreshFact _ [m] -> do
             j <- freshLVar "vf" LSortNode
             modM sNodes (M.insert j (mkFreshRuleAC m))
             unless (isFreshVar m) $ do
@@ -281,7 +281,7 @@ insertEdges edges = do
 -- FIXME: Ensure that intermediate products are also solved before stating
 -- that no rule is applicable.
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
-insertAction i fa = do
+insertAction i fa@(Fact _ ann _) = do
     present <- (goal `M.member`) <$> getM sGoals
     isdiff <- getM sDiffSystem
     nodePresent <- (i `M.member`) <$> getM sNodes
@@ -295,7 +295,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(Fact KUFact [m1]),(Fact KUFact [m2])]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(kuFactAnn ann m1),(kuFactAnn ann m2)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -314,7 +314,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(Fact KUFact [m])]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(kuFactAnn ann m)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -333,7 +333,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -353,7 +353,7 @@ insertAction i fa = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> Fact KUFact [x]) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed
@@ -375,7 +375,7 @@ insertAction i fa = do
     -- loop due to generating new KU-nodes that are merged immediately.
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
-      let faKU = kuFact t
+      let faKU = kuFactAnn ann t
       insertLess j i
       void (insertAction j faKU)
 

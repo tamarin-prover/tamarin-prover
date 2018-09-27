@@ -1,5 +1,6 @@
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ViewPatterns  #-}
+{-# LANGUAGE TupleSections    #-}
+{-# LANGUAGE ViewPatterns     #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -45,7 +46,6 @@ import           Extension.Data.Label
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
--- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
@@ -155,7 +155,7 @@ openGoals sys = do
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact [t] <- get rConcs ru] <|>
+                [ t | Fact OutFact _ [t] <- get rConcs ru] <|>
                 [ t | Just (DnK, t)    <- kFactView <$> get rConcs ru]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does
@@ -218,11 +218,11 @@ solveGoal goal = do
 solveAction :: [RuleAC]          -- ^ All rules labelled with an action
             -> (NodeId, LNFact)  -- ^ The action we are looking for.
             -> Reduction String  -- ^ A sensible case name.
-solveAction rules (i, fa) = do
+solveAction rules (i, fa@(Fact _ ann _)) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
         Nothing -> case fa of
-            (Fact KUFact [m@(viewTerm2 -> FXor ts)]) -> do
+            (Fact KUFact _ [m@(viewTerm2 -> FXor ts)]) -> do
                    partitions <- disjunctionOfList $ twoPartitions ts
                    case partitions of
                        (_, []) -> do
@@ -237,7 +237,7 @@ solveAction rules (i, fa) = do
                             modM sNodes (M.insert i ru)
                             mapM_ requiresKU [a, b] *> return ru
             _                                        -> do
-                   ru  <- labelNodeId i rules Nothing
+                   ru  <- labelNodeId i (annotatePrems <$> rules) Nothing
                    act <- disjunctionOfList $ get rActs ru
                    void (solveFactEqs SplitNow [Equal fa act])
                    return ru
@@ -246,9 +246,15 @@ solveAction rules (i, fa) = do
                           act <- disjunctionOfList $ get rActs ru
                           void (solveFactEqs SplitNow [Equal fa act])
                       return ru
-
-    where
-      requiresKU t = do
+  where
+    -- If the fact in the action goal has annotations, then consider annotated
+    -- versions of intruder rules (this allows high or low priority intruder knowledge
+    -- goals to propagate to intruder knowledge of subterms)
+    annotatePrems ru@(Rule ri ps cs as nvs) =
+        if not (S.null ann) && isIntruderRule ru then
+            Rule ri (annotateFact ann <$> ps) cs (annotateFact ann <$> as) nvs
+            else ru
+    requiresKU t = do
         j <- freshLVar "vk" LSortNode
         let faKU = kuFact t
         insertLess j i

@@ -1,0 +1,205 @@
+## WITHOUT A BINDING CHANNEL SN-HN
+
+Note that injective agreement on constant terms is always violated.
+
+Agreement of UE with SEAF before KC:
+	- weakagreement_ue_seaf_noRev fails
+	- => N.I. and I. on K_seaf and SUPI fail as well
+	- REASON: Trivially, as SEAF does not yet make the Running-claim at this point
+
+Agreement of UE with SEAF after KC:
+	- weakagreement_ue_seaf_keyConf_noRev fails
+	- => N.I. and I. on K_seaf and SUPI fail as well
+	- REASON: Channel is not binding, so SEAF does not agree on supi.
+
+Agreement of UE with HSS before KC:
+  = Kseaf:
+        - noninjectiveagreement_ue_hss_kseaf_noRev is violated.
+	- => I. on kseaf is also violated.
+	- REASON: disagreement on SNID.
+
+  = SUPI
+	- injectiveagreement_ue_hss_supi_noRev is violated.
+	- REASON: supi is constant.
+	- noninjectiveagreement_ue_hss_supi_noKeyRev holds.
+	- noninjectiveagreement_ue_hss_supi_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev
+	  is violated as weakagreement_ue_hss_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev
+	  is violated.
+
+  = SNname
+	- noninjectiveagreement_ue_hss_snname_noRev is violated.
+
+  = W-A:
+	- weakagreement_ue_hss_noKeyRev holds because noninjectiveagreement_ue_hss_supi_noKeyRev holds.
+	- weakagreement_ue_hss_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- => minimal assumption: not K
+
+Agreement of UE with HSS after KC:
+  = Kseaf:
+        - injectiveagreement_ue_hss_kseaf_keyConf_noKeyRev holds.
+	- => noninjectiveagreement_ue_hss_kseaf_keyConf_noKeyRev also holds.
+	- REASON: UE got confirmation of SNID.
+	- (non)injectiveagreement_ue_hss_kseaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev
+	  are violated because weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- => minimal assumption: not K (and k-c) for I/NI
+
+  = SUPI:
+	- injectiveagreement_ue_hss_keyConf_supi_noRev is violated.
+	- noninjectiveagreement_ue_hss_keyConf_supi_noKeyRev holds.
+	- (non)injectiveagreement_ue_hss_keyConf_supi_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev are violated
+	  because weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- => minimal assumption: not K (and k-c) for NI
+
+  = SNname:
+	- noninjectiveagreement_ue_hss_snname_keyConf_noKeyRev is satisfied.
+
+  = W-A:
+	- weakagreement_ue_hss_keyConf_noKeyRev holds because injectiveagreement_ue_hss_kseaf_keyConf_noKeyRev holds.
+	- weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- => minimal assumption: not K
+
+Agreement of SEAF with UE before KC:
+  = Kseaf:
+	- noninjectiveagreement_seaf_ue_kseaf_noRev is violated.
+	- => injectiveagreement_seaf_ue_kseaf_noRev is violated.
+	- REASON: Channel is not binding.
+
+  = SUPI:
+	- injectiveagreement_seaf_ue_supi_noRev is violated.
+	- noninjectiveagreement_seaf_ue_supi_noKeyRev_noChanRev is satisfied.
+	- noninjectiveagreement_seaf_ue_supi_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev and
+	  noninjectiveagreement_seaf_ue_supi_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev are violated as consequence
+	  of weakagreement attacks.
+	- => minimal assumption: not K and not channel for NI-agr. while I-agr. is violated
+
+  = W-A:
+	- weakagreement_seaf_ue_noKeyRev_noChanRev holds.
+	- weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev is violated.
+	- weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- REASON: If k and channel cannot be revealed, then SEAF knows that the supi reported in 5G-ACA
+		  was indeed authenticated and the corresponding UE had to be involved in order
+		  to satisfy HSS.
+	- => minimal assumption: not K and not channel.
+
+Agreement of SEAF with UE after KC:
+  = Kseaf:
+	- noninjectiveagreement_seaf_ue_kseaf_keyConf_noRev is violated.
+	- => injectiveagreement_seaf_ue_kseaf_keyConf_noRev is violated.
+	- REASON: Channel is not binding.
+
+  = SUPI:
+	- injectiveagreement_seaf_ue_supi_keyConf_noRev is violated because supi is constant.
+	- noninjectiveagreement_seaf_ue_supi_keyConf_noKeyRev_noChanRev is satisfied.
+	- noninjectiveagreement_seaf_ue_supi_keyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev and
+	  noninjectiveagreement_seaf_ue_supi_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev are violated
+	  as consequence of weakagreement attacks.
+	- => minimal assumption: not K and not channel for NI-agr. while I-agr. is violated
+
+  = W-A:
+	- weakagreement_seaf_ue_keyConf_noKeyRev_noChanRev holds.
+	- weakagreement_seaf_ue_keyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev is violated.
+	- weakagreement_seaf_ue_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- REASON: If k and channel cannot be revealed, then SEAF knows that the supi reported in 5G-ACA
+		  was indeed authenticated and the corresponding UE had to be involved in order
+		  to satisfy HSS.
+	- => minimal assumption: not K and not channel.
+
+Agreement of SEAF with HSS before KC:
+  = Kseaf:
+	- noninjectiveagreement_seaf_hss_kseaf_noChanRev holds.
+	- (non)injectiveagreement_seaf_hss_kseaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev are violated due to attack
+	  on weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev
+	- injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev is violated.
+	- injectiveagreement_seaf_hss_kseaf_noKeyRev_noChanRev holds.
+	- REASON: If the channel can be revealed then all is lost.
+		  If the key k can be revealed then there is an attack on injectivity where the adversary
+		  computes kseaf and injects it into another seafs run such that two commit claims on the
+		  same key are made.
+  = SUPI:
+	- injectiveagreement_seaf_hss_supi_noRev is violated because supi is constant.
+	- noninjectiveagreement_seaf_hss_supi_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev is violated due to attack
+	  on weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev
+    	- noninjectiveagreement_seaf_hss_supi_noChanRev is satisfied.
+
+  = W-A:
+	- weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev is violated.
+	- weakagreement_seaf_hss_noChanRev holds as consequence of noninjectiveagreement_seaf_hss_kseaf_noChanRev.
+	- REASON: If the channel can be revealed then all is lost.
+	
+Agreement of SEAF with HSS after KC:
+  = Kseaf:
+	- noninjectiveagreement_seaf_hss_kseaf_keyConf_noChanRev holds.
+	- (non)injectiveagreement_seaf_hss_kseaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev are violated due
+	  to attack on weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev.
+	- injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev is violated.
+	- injectiveagreement_seaf_hss_kseaf_keyConf_noKeyRev_noChanRev holds.
+	- REASON: If the channel can be revealed then all is lost.
+		  If the key k can be revealed then there is an attack on injectivity where the adversary
+		  computes kseaf and injects it into another seafs run such that two commit claims on the
+		  same key are made.
+  = SUPI:
+	- injectiveagreement_seaf_hss_supi_keyConf_noRev is violated because supi is constant.
+	- noninjectiveagreement_seaf_hss_supi_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev is violated due to attack
+	  on weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev.
+	- noninjectiveagreement_seaf_hss_keyConf_supi_noChanRev holds.
+
+  = W-A:
+	- weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev is violated.
+	- weakagreement_seaf_hss_keyConf_noChanRev holds as
+	  consequence of noninjectiveagreement_seaf_hss_kseaf_keyConf_noChanRev.
+	- REASON: If the channel can be revealed then all is lost.
+
+Agreement of HSS with UE:
+  = Kseaf:
+	- injectiveagreement_hss_ue_kseaf_noKeyRev is satisfied.
+	- noninjectiveagreement_hss_ue_kseaf_noKeyRev is satisfied.
+	- (non)injectiveagreement_hss_ue_kseaf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev are violated as consequence of
+	  attack on weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev.
+
+  = SUPI:
+	- injectiveagreement_hss_ue_supi_noRev is violated because supi is constant.
+	- noninjectiveagreement_hss_ue_supi_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated as consequence of
+	  attack on weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev.
+	- noninjectiveagreement_hss_ue_supi_noKeyRev is satisfied.
+
+  = SNname:
+	- noninjectiveagreement_hss_ue_snname_noKeyRev is satisfied.
+
+  = W-A:
+	- weakagreement_hss_ue_noKeyRev holds because injectiveagreement_hss_ue_kseaf_noKeyRev holds.
+	- weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev is violated.
+	- => minimal assumption: not K
+
+Agreement of HSS with SEAF:
+  = Kseaf:
+	- injectiveagreement_hss_seaf_kseaf_noChanRev is satisfied.
+	- noninjectiveagreement_hss_seaf_kseaf_noChanRev is satisfied.
+	- (non)injectiveagreement_hss_seaf_kseaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev are violated because the
+	  corresponding weak agreement is violated.
+
+  = SUPI:
+	- noninjectiveagreement_hss_seaf_supi_noRev is violated.
+	- REASON: Trivially, SEAF does not make the Running claim at this point in time.
+
+  = W-A:
+	- weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev is violated.
+	- weakagreement_hss_seaf_noChanRev is satisfied as consequence of injectiveagreement_hss_seaf_kseaf_noChanRev.
+
+Secrecy:
+	- For UE, HSS, and SEAF the same:
+	- Secrecy on kseaf is violated iff k or channel is compromised.
+	- Secrecy on k is violated iff k is compromised.
+	- Secrecy on supi is violated even if no claimed-to-be-honest party is compromised, because ANOTHER SEAF can leak the supi.
+
+	- secrecy_ue_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev holds, while secrecy_ue_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev is violated.
+	- secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev holds, while secrecy_hss_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev is violated.
+	- secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev holds, while secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev is violated.
+	- NOTE: noChanRevAtAll means that no SEAF can be compromised.
+
+
+## First FIX described in Section 5.3.3 (adding SNname in MAC): 5G_AKA_fix.spthy
+        - injectiveagreement_ue_hss_kseaf_noKeyRev: autoproven with the oracle 5G_AKA_fix.oracle (~few minutes)
+        - noninjectiveagreement_ue_hss_snname_noKeyRev: autoproven with the oracle 5G_AKA_fix.oracle (instant)
+
+## Second FIX described in Section 5.3.3 (unidirectional key-confirmation)
+  A careful inspection of Table 1 from the paper reveals that only agreement properties from the UE's point of view may require a key-confirmation roundtrip. However, all agreement properties from the UE's point of view make commit claims before UE sends the second key-confirmation message to SN (second part of the key-confirmation message). Thanks to the trace semantics of Tamarin (see explanations in Section C.2), those properties equally hold without this second part of the key-confirmation. Therefore, the same properties for the UE's point of view are provided for a simple, unidirectional key-confirmation from UE to SN. Since properties from other points of view do not require a full key-confirmation at all, we obtain the desired result.

@@ -255,7 +255,9 @@ indexedIdentifier = do
 
 -- | Parse a hex RGB color code
 hexColor :: Parser String
-hexColor = optional (symbol "'") *> optional (symbol "#") *> identifier <* optional (symbol "'")
+hexColor = singleQuoted hexCode <|> hexCode
+  where
+    hexCode = optional (symbol "#") *> many1 hexDigit
 
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar

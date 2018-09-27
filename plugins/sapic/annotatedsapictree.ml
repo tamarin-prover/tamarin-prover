@@ -26,7 +26,16 @@ let rec sapic_tree2annotatedtree (tree:sapic_btree) = fold_bottom (fun (left:ann
         | Sapicaction.Event(a) -> Node(Event(a),left,right)
         | Sapicaction.Cond(a) -> Node(Cond(a),left,right)
         | Sapicaction.MSR(prem,ac,conl) -> Node(MSR(prem,ac,conl) ,left,right)
+        | Sapicaction.Let(s) -> Node(Let(s), left, right)
     ) Empty tree
+
+
+let annotatedtree2string (tree: annotated_btree) =
+    let rec annotatedtree2string_ex tree indent p = match tree with
+        | Empty -> (Printf.sprintf "%s" (pos2string p)) ^ (String.make indent ' ') ^ (Printf.sprintf "Empty \n")
+        | Node(y, l, r) -> (Printf.sprintf "%s" (pos2string p)) ^ (String.make indent ' ') ^ (Printf.sprintf "%s \n" (annotated_sapic_action2string y)) ^ (annotatedtree2string_ex l (indent+2) (1::p)) ^ (annotatedtree2string_ex r (indent+2) (2::p))
+    in
+        annotatedtree2string_ex tree 0 []
 
 (* We assume that locks are closed in the order of the following unlocks,
 * and that eachone is closed indeed.
@@ -45,7 +54,7 @@ and
 in
 let (result,_) = fold_bottom (fun (l,p_l) (r,p_r) a->
              let p=(max p_l p_r)+1 in
-             let annotation=Fresh("lock"^string_of_int p) in
+             let annotation= p (* Fresh("lock"^string_of_int p) *) in
                match (a:annotated_sapic_action) with
                 Lock(t) -> (Node(AnnotatedLock(t,annotation),
                               annotate_each_closest_unlock t annotation l,
@@ -65,6 +74,18 @@ let rec process_at anP = function
         Empty -> raise (InvalidPosition (pos2string (2::xr)))
       | Node(_,_,r) -> r)
   |p -> raise (InvalidPosition ((pos2string p)))
+
+let replace_process_at anP rp p = 
+    let rev_pos = List.rev p in
+    let rec replace_process_at_ex anP rp a cp = match (process_at anP a) with
+        Empty -> raise (InvalidPosition (pos2string p))
+      | Node(y,l,r) -> match cp with
+           [] -> rp
+         | 1::xr -> Node(y, replace_process_at_ex anP rp (1::a) xr, r)
+         | 2::xr -> Node(y, l, replace_process_at_ex anP rp (2::a) xr)
+         | _ ->  raise (InvalidPosition (pos2string p))
+    in
+    replace_process_at_ex anP rp [] rev_pos
 
 module PositionSet = Set.Make( Position );;
 let (@@) (a:PositionSet.t) (b:PositionSet.t) = PositionSet.union a b

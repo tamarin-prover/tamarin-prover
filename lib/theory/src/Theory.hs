@@ -172,7 +172,6 @@ module Theory (
   -- * Convenience exports
   , module Theory.Model
   , module Theory.Proof
---   , module Theory.Constraint.Solver.Types
 
   ) where
 
@@ -198,6 +197,8 @@ import           Control.Parallel.Strategies
 import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 
+import           Safe                                (headMay)
+
 import           Theory.Model
 import           Theory.Proof
 import           Theory.Text.Pretty
@@ -206,7 +207,6 @@ import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
 import           Theory.Tools.IntruderRules
--- import           Theory.Constraint.Solver.Types
 
 import           Term.Positions
 
@@ -298,7 +298,7 @@ closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact [t]):_) concs@[Fact KDFact [rhs]] acts nvs) =
+closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
   if subterm then [ru] else variantsIntruder hnd id False ru
     where
       ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
@@ -327,7 +327,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
         (all isSubtermRule {-$ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
@@ -400,6 +400,7 @@ data LemmaAttribute =
        | HideLemma String
        | LHSLemma
        | RHSLemma
+       | LemmaHeuristic String
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1000,6 +1001,7 @@ getProofContext l thy = ProofContext
     kind
     ( L.get (cases . thyCache)                 thy)
     inductionHint
+    (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
@@ -1024,6 +1026,7 @@ getProofContextDiff s l thy = case s of
             kind
             ( L.get (cases . diffThyCacheLeft)                 thy)
             inductionHint
+            (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1037,6 +1040,7 @@ getProofContextDiff s l thy = case s of
             kind
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
+            (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1068,6 +1072,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1081,6 +1086,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1626,12 +1632,13 @@ prettyLemmaName l = case L.get lAttributes l of
       as -> text (L.get lName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
   where
-    prettyLemmaAttribute SourceLemma    = text "sources"
-    prettyLemmaAttribute ReuseLemma     = text "reuse"
-    prettyLemmaAttribute InvariantLemma = text "use_induction"
-    prettyLemmaAttribute (HideLemma s)  = text ("hide_lemma=" ++ s)
-    prettyLemmaAttribute LHSLemma       = text "left"
-    prettyLemmaAttribute RHSLemma       = text "right"
+    prettyLemmaAttribute SourceLemma        = text "sources"
+    prettyLemmaAttribute ReuseLemma         = text "reuse"
+    prettyLemmaAttribute InvariantLemma     = text "use_induction"
+    prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
+    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ h)
+    prettyLemmaAttribute LHSLemma           = text "left"
+    prettyLemmaAttribute RHSLemma           = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"
 
 

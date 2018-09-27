@@ -104,9 +104,9 @@ maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableXor,enableDiff=_,stF
           `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig
 
 -- | A monoid instance to combine maude signatures.
-instance Monoid MaudeSig where
-    (MaudeSig dh1 bp1 mset1 xor1 diff1 stFunSyms1 stRules1 _ _) `mappend`
-      (MaudeSig dh2 bp2 mset2 xor2 diff2 stFunSyms2 stRules2 _ _) =
+instance Semigroup MaudeSig where
+    MaudeSig dh1 bp1 mset1 xor1 diff1 stFunSyms1 stRules1 _ _ <>
+      MaudeSig dh2 bp2 mset2 xor2 diff2 stFunSyms2 stRules2 _ _ =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
@@ -114,6 +114,8 @@ instance Monoid MaudeSig where
                            ,enableDiff=diff1||diff2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
                            ,stRules=S.union stRules1 stRules2})
+
+instance Monoid MaudeSig where
     mempty = MaudeSig False False False False False S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
