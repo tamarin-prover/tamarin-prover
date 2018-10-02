@@ -227,6 +227,20 @@ let uniqueness id op vf =
     (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
 
+    (* TODO uniqueness singleton *)
+(* let uniqueness id op vf = *) 
+(* (1* (uni-i) Uniqueness of V_i *1) *)
+(* (1* for the each mapping φ_i → V_i *1) *) 
+(* (1* where V_i = B_i^1 | .. | B_i^n  and non-empty *1) *)
+(* (1*     For all traces: φ_i ⇒ Corrupt(union over  B_i^j for all j) *1) *)
+(*     let unique i (f,v) = *) 
+(*         let label = Printf.sprintf "%s_uniq_%n" id i in *)
+(*         let union = List.fold_left (VarSet.union) VarSet.empty v in *)
+(*         ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements union))) *)
+(*     in *)
+(*     (1* TODO I think this filter does not work *1) *)
+(*     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf) *)
+
 let rec make_list n l = if n = 0 then l else make_list (n - 1) (n-1 :: l);;
 let rec listn n = make_list n []
 let rec reflexive n = map (fun i -> (i,i)) (listn n)

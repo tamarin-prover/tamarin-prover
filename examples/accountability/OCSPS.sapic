@@ -161,13 +161,13 @@ verdictfunction v1:
 restriction no_corrupt_ca:
     "not (Ex #i. Corrupted('CA')@i)"
 
-/* lemma acc_S: */
-/*     v1 accounts [coarse] */ 
-/*     for "not ( Ex cert sk t #i #j #k #l. */
-/*     Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l) */
-/*      | (Ex #i. Corrupted('OCSP')@i) */
-/*            " */
-/*     for parties <'S'> */
+lemma acc_S:
+    v1 accounts [coarse] 
+    for "not ( Ex cert sk t #i #j #k #l.
+    Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l)
+     | (Ex #i. Corrupted('OCSP')@i)
+           "
+    for parties <'S'>
 
 
   /* sanity_logA_not_misbehaving (exists-trace): verified (14 steps) */
@@ -182,7 +182,7 @@ lemma acc_SOCSP:
     v1 accounts [coarse] 
     for "not ( Ex cert sk t #i #j #k #l.
     Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l)
-     | (Ex #i. Corrupted('OCSP')@i)
+     /* | (Ex #i. Corrupted('OCSP')@i) */
            "
     for parties <'S','OCSP'>
 
