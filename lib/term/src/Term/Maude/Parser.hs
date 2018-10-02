@@ -15,6 +15,7 @@ module Term.Maude.Parser (
   -- * parsing of Maude replies
   , parseUnifyReply
   , parseMatchReply
+  , parseVariantsReply
   , parseReduceReply
   ) where
 
@@ -192,7 +193,7 @@ ppTheory msig = BC.unlines $
     theoryFunSym (s,(ar,priv)) =
         theoryOpNoEq priv (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
-        "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " ."
+        "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
                         `evalFresh` nothingUsed
 
@@ -214,6 +215,22 @@ parseMatchReply msig reply = flip parseOnly reply $
     choice [ string "No match." *> endOfLine *> pure []
            , many1 (parseSubstitution msig) ]
         <* endOfInput
+
+-- | @parseVariantsReply reply@ takes a @reply@ to a variants query
+--   returned by Maude and extracts the unifiers.
+parseVariantsReply :: MaudeSig -> ByteString -> Either String [MSubst]
+parseVariantsReply msig reply = flip parseOnly reply $ do
+    endOfLine *> many1 parseVariant <* (string "No more variants.")
+    <* endOfLine <* string "rewrites: "
+    <* takeWhile1 isDigit <* endOfLine <* endOfInput
+  where
+    parseVariant = string "Variant #" *> takeWhile1 isDigit *> endOfLine *>
+                   string "rewrites: " *> takeWhile1 isDigit *> endOfLine *>
+                   parseReprintedTerm *> many1 parseEntry <* endOfLine
+    parseReprintedTerm = choice [ string "TOP" *> pure LSortMsg, parseSort ]
+                         *> string ": " *> parseTerm msig <* endOfLine
+    parseEntry = (,) <$> (flip (,) <$> (string "x" *> decimal <* string ":") <*> parseSort)
+                     <*> (string " --> " *> parseTerm msig <* endOfLine)
 
 -- | @parseSubstitution l@ parses a single substitution returned by Maude.
 parseSubstitution :: MaudeSig -> Parser MSubst
@@ -243,6 +260,7 @@ parseSort =  string "Pub"      *> return LSortPub
 parseTerm :: MaudeSig -> Parser MTerm
 parseTerm msig = choice
    [ string "#" *> (lit <$> (FreshVar <$> (decimal <* string ":") <*> parseSort))
+   , string "%" *> (lit <$> (FreshVar <$> (decimal <* string ":") <*> parseSort))
    , do ident <- takeWhile1 (`BC.notElem` (":(,)\n " :: B.ByteString))
         choice [ do _ <- string "("
                     case parseLSortSym ident of

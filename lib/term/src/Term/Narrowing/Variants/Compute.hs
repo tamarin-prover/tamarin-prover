@@ -27,6 +27,10 @@ import Control.Arrow
 -- import Control.Applicative
 import Control.Monad.Reader
 
+
+import           System.IO.Unsafe (unsafePerformIO)
+import qualified Term.Maude.Process as UM
+
 import Debug.Trace.Ignore
 
 ----------------------------------------------------------------------
@@ -139,6 +143,6 @@ computeVariantsBound t d = reader $ \hnd -> (\res -> trace (show ("ComputeVarian
 --   The rewriting rules are taken from the Maude context.
 computeVariants :: LNTerm -> WithMaude [LNSubstVFresh]
 computeVariants t =
-    fromMaybe err <$> computeVariantsBound t Nothing
-  where
-    err = error "impossible: Variant computation failed without giving a bound"
+    reader $ \hnd -> do
+    subst <- unsafePerformIO $ UM.variantsViaMaude hnd sortOfName t
+    return $ restrictVFresh (frees t) subst
