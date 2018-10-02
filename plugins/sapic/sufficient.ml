@@ -224,8 +224,30 @@ let uniqueness id op vf =
         let union = List.fold_left (VarSet.union) VarSet.empty v in
         ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements union)))
     in
-    (* TODO I think this filter does not work *)
     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
+
+let completeness id vf = 
+(* (compl-i) Completeness of V_i *)
+(* for the each mapping φ_i → V_i *) 
+(* where V_i = B_i^1 | .. | B_i^n  and non-empty *)
+(* there should not be V_j = {B} with B subset of union over all B_i^{1..n}
+ * and B not in V_i *)
+    let compl (_,v) = 
+        let union = List.fold_left (VarSet.union) VarSet.empty v in
+        let filt = function (_,[b]) -> VarSet.subset b union
+                                 | _ -> false
+        in
+        let candidates = List.filter filt vf in
+        let criterion = function (_,[b]) ->  List.exists (VarSet.equal b) v 
+                                | _      -> raise (ImplementationError "filter should exclude other cases...")
+        in
+        List.for_all criterion candidates
+    in
+        if List.for_all compl (filter (function (f,[]) -> false | _ -> true ) vf)
+        then []
+        else raise (VerdictNotWellFormed ("Completeness does not hold in "^id^"."))
+
+    
 
     (* TODO uniqueness singleton *)
 (* let uniqueness id op vf = *) 
@@ -409,7 +431,7 @@ let sufficient_conditions kind (id,op) parties vf' phi =
     let vf = wellformed vf'
     and rel = compute_R vf'
     in
-    let cases_axioms =
+    let cases_axioms id op parties vf phi =
         (exclusiveness id op vf )
         @
         [exhaustiveness id op vf]
@@ -425,7 +447,6 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (minimalitySingleton id op rel parties vf phi)
         (* @ TODO
         (completenessComposite id op rel vf) *)
-
     in
     match kind with
     (* (id,op) -> (1* TODO ignore options for now *1) *)
@@ -443,8 +464,10 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (minimality id op parties vf phi)
         @
         (uniqueness id op vf)
+        @
+        (completeness id vf)
    | Cases ->
-        cases_axioms
+        (cases_axioms id op parties vf phi)
         @
         (minimalityComposite id rel vf)
         @
@@ -452,13 +475,15 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (* @ Not sure if needed. TODO check in the end. *)
         (* [ManualLemma (id, "r is transitive") ] *)
    | ControlEquivalence ->
-        (map (add_antecedent Restrictions.single_session_id) cases_axioms)
+        (map (add_antecedent Restrictions.single_session_id) 
+            (cases_axioms id op parties vf phi))
         @
         (minimalityComposite id rel vf)
         @
         (relationLifting controlf_equivalence id op vf rel)
    | ControlSubset ->
-        (map (add_antecedent Restrictions.single_session_id) cases_axioms)
+        (map (add_antecedent Restrictions.single_session_id) 
+            (cases_axioms id op parties vf phi))
         @
         (minimalityComposite id rel vf)
         @

@@ -492,7 +492,7 @@ account_attr_col:
 account_attr:
 	|     COARSE			{Coarse}
 	|     CASES			{Cases}
-	|     CONTROL			{ControlEquivalence} // (* Default *)
+	|     CONTROL			{ControlEquivalence}
 	|     CONTROLEQUIVALENCE	{ControlEquivalence}
 	|     CONTROLSUBSET		{ControlSubset}
 ;
