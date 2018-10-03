@@ -226,7 +226,7 @@ parseVariantsReply msig reply = flip parseOnly reply $ do
   where
     parseVariant = string "Variant #" *> takeWhile1 isDigit *> endOfLine *>
                    string "rewrites: " *> takeWhile1 isDigit *> endOfLine *>
-                   parseReprintedTerm *> many1 parseEntry <* endOfLine
+                   parseReprintedTerm *> manyTill parseEntry endOfLine
     parseReprintedTerm = choice [ string "TOP" *> pure LSortMsg, parseSort ]
                          *> string ": " *> parseTerm msig <* endOfLine
     parseEntry = (,) <$> (flip (,) <$> (string "x" *> decimal <* string ":") <*> parseSort)
