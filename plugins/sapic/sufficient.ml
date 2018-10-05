@@ -224,7 +224,7 @@ let uniqueness id op vf =
         let union = List.fold_left (VarSet.union) VarSet.empty v in
         ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements union)))
     in
-    mapi unique (filter (function (f,[]) -> false | _ -> true ) vf)
+    mapi unique (filter (function (f,[v]) -> true | _ -> false ) vf)
 
 let completeness id vf = 
 (* (compl-i) Completeness of V_i *)
@@ -249,19 +249,17 @@ let completeness id vf =
 
     
 
-    (* TODO uniqueness singleton *)
-(* let uniqueness id op vf = *) 
-(* (1* (uni-i) Uniqueness of V_i *1) *)
-(* (1* for the each mapping φ_i → V_i *1) *) 
-(* (1* where V_i = B_i^1 | .. | B_i^n  and non-empty *1) *)
-(* (1*     For all traces: φ_i ⇒ Corrupt(union over  B_i^j for all j) *1) *)
-(*     let unique i (f,v) = *) 
-(*         let label = Printf.sprintf "%s_uniq_%n" id i in *)
-(*         let union = List.fold_left (VarSet.union) VarSet.empty v in *)
-(*         ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements union))) *)
-(*     in *)
-(*     (1* TODO I think this filter does not work *1) *)
-(*     mapi unique (filter (function (f,[]) -> false | _ -> true ) vf) *)
+let uniquenessSingleton id op vf = 
+    (* (uni-i) Uniqueness of V_i = {B} *)
+    (* for the each mapping φ_i → V_i = {B} *) 
+(*     For all traces: φ_i ⇒ Corrupt(B) *)
+    let unique i = function
+        (f,[v]) -> (
+            let label = Printf.sprintf "%s_uniq_sing_%n" id i in
+            Some (ForallLemma ((label,op), Imp(f,corrupted_conj (VarSet.elements v)))))
+        | _ ->   None 
+    in
+    mapi_opt unique vf
 
 let rec make_list n l = if n = 0 then l else make_list (n - 1) (n-1 :: l);;
 let rec listn n = make_list n []
@@ -445,6 +443,10 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (verifiability_nonempty id op vf phi)
         @
         (minimalitySingleton id op rel parties vf phi)
+        @
+        (minimalityComposite id rel vf)
+        @
+        (uniquenessSingleton id op vf)
         (* @ TODO
         (completenessComposite id op rel vf) *)
     in
@@ -469,8 +471,6 @@ let sufficient_conditions kind (id,op) parties vf' phi =
    | Cases ->
         (cases_axioms id op parties vf phi)
         @
-        (minimalityComposite id rel vf)
-        @
         (relationLifting manualf id op vf rel)
         (* @ Not sure if needed. TODO check in the end. *)
         (* [ManualLemma (id, "r is transitive") ] *)
@@ -478,14 +478,10 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (map (add_antecedent Restrictions.single_session_id) 
             (cases_axioms id op parties vf phi))
         @
-        (minimalityComposite id rel vf)
-        @
         (relationLifting controlf_equivalence id op vf rel)
    | ControlSubset ->
         (map (add_antecedent Restrictions.single_session_id) 
             (cases_axioms id op parties vf phi))
-        @
-        (minimalityComposite id rel vf)
         @
         (relationLifting controlf_subset id op vf rel)
 
