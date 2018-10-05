@@ -476,7 +476,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         @
         (uniquenessSingleton id op vf)
         @ 
-        (completenessComposite id rel vf)
+        (completenessComposite id rel vf) (*Not actually needed, parser takes care of that *)
+        (* Reflexivity and termination are guaranteed by parser, too. *)
     in
     match kind with
     (* (id,op) -> (1* TODO ignore options for now *1) *)
@@ -500,8 +501,6 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (cases_axioms id op parties vf phi)
         @
         (relationLifting manualf id op vf rel)
-        (* @ Not sure if needed. TODO check in the end. *)
-        (* [ManualLemma (id, "r is transitive") ] *)
    | ControlEquivalence ->
         (map (add_antecedent Restrictions.single_session_id) 
             (cases_axioms id op parties vf phi))
