@@ -247,8 +247,6 @@ let completeness id vf =
         then []
         else raise (VerdictNotWellFormed ("Completeness does not hold in "^id^"."))
 
-    
-
 let uniquenessSingleton id op vf = 
     (* (uni-i) Uniqueness of V_i = {B} *)
     (* for the each mapping φ_i → V_i = {B} *) 
@@ -260,6 +258,36 @@ let uniquenessSingleton id op vf =
         | _ ->   None 
     in
     mapi_opt unique vf
+
+let completenessComposite id rel vf  = 
+    (* (compl-i) Completeness of V_i *)
+    (* for each
+     * V_i = B_i^1 | .. | B_i^n, n>2
+     * and each related
+     * V_j = {B} 
+     * there should be B_i^j subset of B *)
+    (* Note that we don't need to check this atm because the relation is implicitely specified by referring to declared verdicts ... I leave it here nonetheless in case we want it in the future... *)
+    let compl i = function
+        (_,[]) |  (_,[_]) -> true
+      | (_,v) ->
+        let bigV j = match List.nth vf j with (_,bigV)-> bigV in
+        let related_and_singleton = (* list of V_j such that (i,j) in rel (note (i,i) never in rel) and singleton *)
+            function (i',j) -> 
+                if i'=i then
+                    match (bigV j) with
+                    [s] -> Some(s)
+                   | _ -> None
+                else None
+        in
+        let candidates = map_opt related_and_singleton rel 
+        and criterion s =  List.exists (fun sp -> VarSet.subset sp s) v 
+        in
+        List.for_all criterion candidates
+    in
+        if List.for_all (fun x -> x) (mapi compl vf)
+        then []
+        else raise (VerdictNotWellFormed ("Completeness does not hold in "^id^"."))
+
 
 let rec make_list n l = if n = 0 then l else make_list (n - 1) (n-1 :: l);;
 let rec listn n = make_list n []
@@ -447,8 +475,8 @@ let sufficient_conditions kind (id,op) parties vf' phi =
         (minimalityComposite id rel vf)
         @
         (uniquenessSingleton id op vf)
-        (* @ TODO
-        (completenessComposite id op rel vf) *)
+        @ 
+        (completenessComposite id rel vf)
     in
     match kind with
     (* (id,op) -> (1* TODO ignore options for now *1) *)
