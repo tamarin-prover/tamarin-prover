@@ -54,6 +54,9 @@ let S =
       lookup 'time' as ~t in
           event Corrupted('S');
           insert <'ocspstatus',cert>,'revoked';
+        new ~tn; out(~tn);
+        event Time(~tn);
+        insert 'time', ~tn;
           out(sk);
           unlock 'time';
           unlock 'ocspstatus'
@@ -155,6 +158,10 @@ lemma time_and_secet_distinct[reuse]:
     /* "All cert sk #i #j t. Secret(cert,sk)@i & Time(t)@j ==> not(t = sk)" */
     "not (Ex cert sk #i #j. Secret(cert,sk)@i & Time(sk)@j)"
 
+lemma time_and_secet_distinct_two[reuse]:
+    /* "All cert sk #i #j t. Secret(cert,sk)@i & Time(t)@j ==> not(t = sk)" */
+    "not (Ex cert sk #i #j. Secret(cert,sk)@i & Insert('time',sk)@j)"
+
 
 verdictfunction v1:
     "Ex #i #j t cert. Judged(t,cert)@i & BlameS()@j " -> <'S'>,
@@ -164,14 +171,17 @@ verdictfunction v1:
 // then: acc_SOCSP, assume OCSP is not trusted, show lack of accountability
 // future: make the protocol accountable. (Ilkan?)
 
+restriction no_corrupt_ocsp: //TODO deactivate fir acc_SOCSP
+    "not (Ex #i. Corrupted('OCSP')@i)"
+
 restriction no_corrupt_ca:
     "not (Ex #i. Corrupted('CA')@i)"
 
 lemma acc_S:
     v1 accounts [coarse] 
     for "not ( Ex cert sk t #i #j #k #l.
-    Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l)
-     | (Ex #i. Corrupted('OCSP')@i)
+    Judged(t,cert)@i & Secret(cert,sk)@j & KU(sk)@k & Time(t)@l & k < l)
+     /* | (Ex #i. Corrupted('OCSP')@i) */ //not the same as having the restriction... weird.
            "
     for parties <'S'>
 
@@ -183,13 +193,13 @@ lemma acc_S:
   /* acc_S_min_0_0_0 (all-traces): verified (82 steps) */
   /* acc_S_uniq_0 (all-traces): verified (1003 steps) */
 
-lemma acc_SOCSP:
-    v1 accounts [coarse] 
-    for "not ( Ex cert sk t #i #j #k #l.
-    Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l)
-     /* | (Ex #i. Corrupted('OCSP')@i) */
-           "
-    for parties <'S','OCSP'>
+/* lemma acc_SOCSP: */
+/*     v1 accounts [coarse] */ 
+/*     for "not ( Ex cert sk t #i #j #k #l. */
+/*     Judged(t,cert)@i & Secret(cert,sk)@j & K(sk)@k & Time(t)@l & k < l) */
+/*      /1* | (Ex #i. Corrupted('OCSP')@i) *1/ */
+/*            " */
+/*     for parties <'S','OCSP'> */
 
   /* sanity_logA_not_misbehaving (exists-trace): verified (14 steps) */
   /* acc_SOCSP_excl_0_1 (all-traces): verified (2 steps) */
