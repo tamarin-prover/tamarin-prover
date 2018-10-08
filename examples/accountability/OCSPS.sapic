@@ -15,23 +15,24 @@ functions:
     pk/1,sk/1[private],
     /* aenc/2, adec/2, */
     sign/2, verify/3,
-    cert/1, // cert contains secret...
+    tlssign/2, tlsverify/3, //we model the authentication provides by TLS handshake + record protocol as a signature -> huge simplification
     true/0,
     S/1,
     NormalAct/0, UnusualAct/0
 
 equations: 
-    verify(sign(m, sk(i)),m, pk(sk(i))) = true
-
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    tlsverify(tlssign (m,sk),m, pk(sk)) = true
 let S = 
     let 
-        cert = sign(sk,sk('CA'))
+        cert = sign(pk(sk),sk('CA'))
         m1   = cert
         /* m1   = sign(cert,sk('S')) */
         m1t  = <cert,~t,'good'>
         m1f  = <cert,~t,'revoked'>
         m2t   = <m1t,sign(m1t,sk('OCSP'))>
         m2f   = <m1f,sign(m1f,sk('OCSP'))>
+        m3  = <m2t,tlssign(<content,~t>,sk)> // ~t -> part of the handshake (OCSCP extension) thus bound to TLS connection, modelled as signature
     in
     new sk; // nevermind certification, just the date
     insert <'ocspstatus',cert>,'good';
@@ -40,8 +41,9 @@ let S =
     (!(
     lock 'unhacked';
         out (m1); // S, OCSP and Judge have preshared signature keys
-        in (m2);
-        out (m2);
+        new content; // website content TODO could make it adversarial generated
+        in (m2t);
+        out (m3);
         unlock 'unhacked'
     )
     || // only server can be corrupted
@@ -72,7 +74,7 @@ let Clock =
     )
         
 let OCSP = // Trusted responder
-    let cert = sign(sk,sk('CA'))
+    let cert = sign(pk(sk),sk('CA'))
         m1   = cert
         /* m1   = sign(cert,sk('S')) */
         m1t  = <cert,~t,'good'>
@@ -103,15 +105,16 @@ let OCSP = // Trusted responder
     )
 
 let Judge =
-    let cert = sign(sk,sk('CA'))
+    let cert = sign(pk(sk),sk('CA'))
         m1t  = <cert,~t,'good'>
         m1f  = <cert,~t,'revoked'>
         m2t   = <m1t,sign(m1t,sk('OCSP'))>
         m2f   = <m1f,sign(m1f,sk('OCSP'))>
         m1g  = <cert,~t,status>
         m2g   = <m1g,sign(m1g,sk('OCSP'))>
+        m4  = <m2g,pk(sk),tlssign(<content,~t>,sk)>  //TODO should get rid of the pattern matching...
     in
-    in(m2g);
+    in(m4);
     lookup 'time' as ~tc in
         if status = 'good' then
             event BlameEmpty();
@@ -147,16 +150,14 @@ lemma sanity_logA_not_misbehaving:
     & not (Ex #i a. Corrupted(a)@i)
     "
 
-// first: assume OCSP is trusted, should hold
-// then: assume OCSP is not trusted, show lack of accountability
-// then: make the protocol accountable. (Ilkan?)
 
 verdictfunction v1:
     "Ex #i #j t cert. Judged(t,cert)@i & BlameS()@j " -> <'S'>,
     otherwise -> empty 
 
-/* restriction no_corrupt_ocsp: */
-/*     "not (Ex #i. Corrupted('OCSP')@i)" */
+// first: acc_S, assume OCSP is trusted, should hold
+// then: acc_SOCSP, assume OCSP is not trusted, show lack of accountability
+// future: make the protocol accountable. (Ilkan?)
 
 restriction no_corrupt_ca:
     "not (Ex #i. Corrupted('CA')@i)"
@@ -168,7 +169,6 @@ lemma acc_S:
      | (Ex #i. Corrupted('OCSP')@i)
            "
     for parties <'S'>
-
 
   /* sanity_logA_not_misbehaving (exists-trace): verified (14 steps) */
   /* acc_S_excl_0_1 (all-traces): verified (2 steps) */
