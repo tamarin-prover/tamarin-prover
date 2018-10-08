@@ -38,6 +38,7 @@ let S =
     insert <'ocspstatus',cert>,'good';
     event Secret(cert,sk);
     out (cert);
+    out (pk(sk));
     (!(
     lock 'unhacked';
         out (m1); // S, OCSP and Judge have preshared signature keys
@@ -149,6 +150,10 @@ lemma sanity_logA_not_misbehaving:
     "(Ex #i t cert. Judged(t,cert)@i )
     & not (Ex #i a. Corrupted(a)@i)
     "
+
+lemma time_and_secet_distinct[reuse]:
+    /* "All cert sk #i #j t. Secret(cert,sk)@i & Time(t)@j ==> not(t = sk)" */
+    "not (Ex cert sk #i #j. Secret(cert,sk)@i & Time(sk)@j)"
 
 
 verdictfunction v1:
