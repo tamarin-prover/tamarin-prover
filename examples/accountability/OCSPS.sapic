@@ -115,27 +115,27 @@ let OCSP = // Trusted responder
 
 let Judge =
     let cert = sign(pk(sk),sk('CA'))
-        m1t  = <cert,~t,'good'>
-        m1f  = <cert,~t,'revoked'>
+        m1t  = <cert,~L_t,'good'>
+        m1f  = <cert,~L_t,'revoked'>
         m2t   = <m1t,sign(m1t,sk('OCSP'))>
         m2f   = <m1f,sign(m1f,sk('OCSP'))>
-        m1g  = <cert,~t,status>
+        m1g  = <cert,~L_t,status>
         m2g   = <m1g,sign(m1g,sk('OCSP'))>
-        /* m4  = <m2g,pk(sk),tlssign(<content,~t>,sk)>  //TODO should get rid of the pattern matching... */
+        /* m4  = <m2g,pk(sk),tlssign(<content,~L_t>,sk)>  //TODO should get rid of the pattern matching... */
     in
     /* in(m4); */
     in(m2g);
     lock 'time';
-    lookup 'time' as ~tc in
+    lookup 'time' as ~L_tc in
         if status = 'good' then
             event BlameEmpty();
-            /* event Judged(~tc,cert) */
-            event Judged(~t,cert)
+            /* event Judged(~L_tc,cert) */
+            event Judged(~L_t,cert)
         else
             (if status = 'revoked' then
                 event BlameS();
-                /* event Judged(~tc,cert) */
-                event Judged(~t,cert)
+                /* event Judged(~L_tc,cert) */
+                event Judged(~L_t,cert)
             else
                 0 //only judge if response actually contains information
                 )
@@ -216,6 +216,7 @@ lemma acc_S:
   /* acc_S_min_0_0_0 (all-traces): verified (82 steps) */
   /* acc_S_uniq_0 (all-traces): verified (1003 steps) */
 
+/* TODO need to put into separate file where restriction is removed */
 /* lemma acc_SOCSP: */
 /*     v1 accounts [coarse] */ 
 /*     for "not ( Ex cert sk t #i #j #k #l. */
