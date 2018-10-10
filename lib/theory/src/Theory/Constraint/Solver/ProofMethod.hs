@@ -130,8 +130,8 @@ isLastName lv = isPrefixOf "L_" (lvarName lv)
 isFirstName lv = isPrefixOf "F_" (lvarName lv)
 
 isKnowsLastNameGoal goal = case msgPremise goal of
-    Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
-    _                                                           -> True
+    Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> True
+    _                                                           -> False
 
 isKnowsFirstNameGoal goal = case msgPremise goal of
     Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
@@ -617,7 +617,7 @@ isFirstInsertAction _ = False
 
 isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _)  (t:_)) ) = 
     case t of
-        (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
+        (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "L_" (show a)
         _ -> False
 isLastInsertAction _ = False
 
