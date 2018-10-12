@@ -525,13 +525,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/KCL07.spthy
+analyzing: examples/csf18-xor/KCL07.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/KCL07.spthy
+analyzed: examples/csf18-xor/KCL07.spthy
 
-  output:          examples/features/xor/KCL07.spthy.tmp
-  processing time: 0.996618434s
+  output:          examples/csf18-xor/KCL07.spthy.tmp
+  processing time: 1.112705633s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -540,10 +540,10 @@ analyzed: examples/features/xor/KCL07.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/KCL07.spthy
+analyzed: examples/csf18-xor/KCL07.spthy
 
-  output:          examples/features/xor/KCL07.spthy.tmp
-  processing time: 0.996618434s
+  output:          examples/csf18-xor/KCL07.spthy.tmp
+  processing time: 1.112705633s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 

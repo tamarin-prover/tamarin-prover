@@ -252,7 +252,7 @@ XOR_DIFF_PRECOMPUTED_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addpr
 xor-trace-case-studies: $(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/basicfunctionality/*.spthy case-studies/csf18-xor/*.spthy
 
-xor-diff-case-studies:	$(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_NOPROVE_TARGETS)
+xor-diff-case-studies:	$(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/csf18-xor/diff-models/*.spthy
 
 XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS) $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_NOPROVE_TARGETS)

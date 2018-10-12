@@ -181,7 +181,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.057627062s
+  processing time: 0.053077801s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -199,7 +199,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.057627062s
+  processing time: 0.053077801s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

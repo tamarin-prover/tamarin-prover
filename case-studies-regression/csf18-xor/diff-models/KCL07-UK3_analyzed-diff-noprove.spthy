@@ -1,0 +1,190 @@
+theory KCL07_UK3 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
+  --[ OnlyOnce( ) ]->
+   [
+   Reader( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   ),
+   Tag( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>))) )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( (z+<~k, ~id>) ) ]
+  --[ Tag( (z+<~k, ~id>) ) ]->
+   [ TagRun( ~k, ~id ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( (z+<~k, ~id>) ) ]
+  --[ Reader( (z+<~k, ~id>) ) ]->
+   [ ReaderRun( ~k, ~id ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), TagRun( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ) ]->
+   [ Out( <(~id⊕~r2), (~r2⊕h(<r1, ~k>))> ) ]
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), ReaderRun( ~k, ~id ), In( xoredhash ) ]
+  --[ Alive( ~k, 'Tag' ), Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
+   [ ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+lemma recentalive_tag [right]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_tag [left]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable [right]:
+  exists-trace
+  "∃ x #i #j.
+    (((Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ (#i = #k))) ∧
+    (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ #i = #k) ∧
+  (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace
+  "∃ x #i #j.
+    (((Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ (#i = #k))) ∧
+    (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ #i = #k) ∧
+  (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k)"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+by sorry
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/csf18-xor/diff-models/KCL07-UK3.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf18-xor/diff-models/KCL07-UK3.spthy
+
+  output:          examples/csf18-xor/diff-models/KCL07-UK3.spthy.tmp
+  processing time: 0.041600041s
+  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  RHS :  executable (exists-trace): analysis incomplete (1 steps)
+  LHS :  executable (exists-trace): analysis incomplete (1 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (1 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf18-xor/diff-models/KCL07-UK3.spthy
+
+  output:          examples/csf18-xor/diff-models/KCL07-UK3.spthy.tmp
+  processing time: 0.041600041s
+  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  RHS :  executable (exists-trace): analysis incomplete (1 steps)
+  LHS :  executable (exists-trace): analysis incomplete (1 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (1 steps)
+
+==============================================================================
+*/
