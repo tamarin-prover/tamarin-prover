@@ -245,7 +245,7 @@ XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/cs
 XOR_DIFF_OBSEQONLY_CASE_STUDIES= CH07-UK3.spthy
 XOR_DIFF_OBSEQONLY_TARGETS=$(subst .spthy,_analyzed-diff-obseqonly.spthy,$(addprefix case-studies/csf18-xor/diff-models/,$(XOR_DIFF_OBSEQONLY_CASE_STUDIES)))
 
-XOR_DIFF_PRECOMPUTED_CASE_STUDIES= KCL07-UK3.spthy
+XOR_DIFF_PRECOMPUTED_CASE_STUDIES= KCL07-UK3_attack.spthy
 XOR_DIFF_PRECOMPUTED_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addprefix case-studies/csf18-xor/diff-models/,$(XOR_DIFF_PRECOMPUTED_CASE_STUDIES)))
 
 # XOR case studies
