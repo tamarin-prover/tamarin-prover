@@ -31,7 +31,7 @@ module Text.PrettyPrint.Html (
 
 import Data.Char (isSpace)
 -- import Data.Traversable (sequenceA)
-import Data.Monoid
+-- import Data.Monoid
 
 import Control.Arrow (first)
 import Control.Applicative

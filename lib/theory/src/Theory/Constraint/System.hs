@@ -920,9 +920,9 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
                                               
     unifyInstances :: [M.Map NodeId RuleACInst] -> [System]
     unifyInstances newrules =
-      foldl f [] newrules
+      foldl jumpNotUnifiable [] newrules
         where
-          f ret x = if (null foundUnifiers)
+          jumpNotUnifiable ret x = if (null foundUnifiers)
                       then ret
                       else (L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret
             where
@@ -932,13 +932,13 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
               finalSubst subst = map replaceConstants subst
                 where
                   replaceConstants :: LNSubst -> LNSubst
-                  replaceConstants s = mapRange f s
+                  replaceConstants s = mapRange applyInverseSubst s
                     where
-                      f :: LNTerm -> LNTerm
-                      f x = case viewTerm x of
-                              (Lit l) | x `M.member` inversSubst -> varTerm $ inversSubst M.! x
-                                      | otherwise                -> x
-                              (FApp s ts)                        -> fApp s $ map f ts
+                      applyInverseSubst :: LNTerm -> LNTerm
+                      applyInverseSubst t = case viewTerm t of
+                              (Lit _) | t `M.member` inversSubst -> varTerm $ inversSubst M.! t
+                                      | otherwise                -> t
+                              (FApp s' ts)                       -> fApp s' $ map applyInverseSubst ts
                       
                       inversSubst = M.fromList $ map swap constSubsts
               
@@ -1368,7 +1368,7 @@ prettyGoals solved sys = vsep $ do
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact [t] <- L.get rConcs ru] <|>
+                [ t | Fact OutFact _ [t] <- L.get rConcs ru] <|>
                 [ t | Just (DnK, t)    <- kFactView <$> L.get rConcs ru]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does

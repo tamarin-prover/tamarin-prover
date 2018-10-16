@@ -103,7 +103,7 @@ import           Data.List
 import qualified Data.Label                       as L
 import qualified Data.Map                         as M
 import           Data.Maybe
-import           Data.Monoid
+-- import           Data.Monoid
 
 import           Debug.Trace
 

@@ -18,7 +18,7 @@ module Extension.Data.Monoid (
   ) where
 
 import Data.Monoid
-import Data.Semigroup
+-- import Data.Semigroup
 
 #if __GLASGOW_HASKELL__ < 704
 

@@ -45,7 +45,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest4.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest4.spthy.tmp
-  processing time: 0.148688s
+  processing time: 0.062952412s
   DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
 
 ------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest4.spthy.tmp
-  processing time: 0.148688s
+  processing time: 0.062952412s
   DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
 
 ==============================================================================

@@ -24,7 +24,7 @@ module Term.Rewriting.Definitions (
 import Control.Arrow        ( (***) )
 -- import Control.Applicative
 
-import Extension.Data.Monoid
+-- import Extension.Data.Monoid
 -- import Data.Foldable
 -- import Data.Traversable
 

@@ -408,9 +408,19 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ## All case studies
 ###################
 
+
+UNAME_S := $(shell uname -s)
 case-studies/system.info:
-	top | head > $@
-	hostname >> $@
+	mkdir -p case-studies
+	hostname > $@
+ifeq ($(UNAME_S),Linux)
+	cat /proc/cpuinfo  | grep 'name'| uniq >> $@
+	cat /proc/cpuinfo  | grep process| wc -l >> $@
+	cat /proc/meminfo  | grep 'MemTotal'| uniq >> $@
+else 	# ($(UNAME_S),Darwin)
+	sysctl hw >> $@
+endif
+#	top -b | head >> $@
 
 CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
