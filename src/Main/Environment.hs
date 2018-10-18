@@ -178,7 +178,8 @@ ensureMaude as = do
   where
     maude = maudePath as
     checkVersion out _
-      | filter (not . isSpace) out == "2.6"   = Right "2.6. OK."
+--        Maude 2.6 is no longer supported, as the 'get variants' command is incompatible.
+--      | filter (not . isSpace) out == "2.6"   = Right "2.6. OK."
       | filter (not . isSpace) out == "2.7"   = Right "2.7. OK."
       | filter (not . isSpace) out == "2.7.1" = Right "2.7.1. OK."
       | otherwise                           = Left  $ errMsg $
