@@ -171,12 +171,6 @@ unmarkPremiseG :: (Goal, (a, Usefulness))
 unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
 unmarkPremiseG annGoal                        = annGoal
 
-tagUsefulness :: Usefulness -> Int
-tagUsefulness Useful                = 0 :: Int
-tagUsefulness ProbablyConstructible = 1
-tagUsefulness LoopBreaker           = 0
-tagUsefulness CurrentlyDeducible    = 2
-
 
 ------------------------------------------------------------------------------
 -- Proof Methods
@@ -672,8 +666,13 @@ sapicRanking ctxt sys =
       _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
-
     unmark = map unmarkPremiseG
+
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 0
+    tagUsefulness CurrentlyDeducible    = 2
+
     solveLast = 
         [ 
         -- isNotInsertAction . fst 
@@ -742,17 +741,14 @@ sapicLivenessRanking ctxt sys =
         | length (getDisj (L.get cdCases cd)) == 1 -> Just o
       _                                            -> Nothing
 
+    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+
     unmark = map unmarkPremiseG
 
-    -- Be conservative on splits that don't exist.
-    isSplitGoalSmall (SplitG sid) =
-        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
-    isSplitGoalSmall _            = False
-
-    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
-    isNoLargeSplitGoal _               = True
-
-    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 0
+    tagUsefulness CurrentlyDeducible    = 2
 
     solveLast = 
         [ 
@@ -796,17 +792,6 @@ sapicLivenessRanking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    -- isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" name
-    -- isProgressFact _ = False
-
-    -- isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
-    --         GGuarded Ex [(_,LSortNode)] [Action _ f' ] _ -> isProgressFact f'
-    --         _                                            -> False
-    --         )) disj
-    
-    -- isProgressDisj _ = False
-
-    -- isDisjGoalButNotProgress g = (isDisjGoal g) && not (isProgressDisj g)
 
 --  Problematic when using handles.
 --    isFreshKnowsGoal goal = case msgPremise goal of
@@ -818,6 +803,13 @@ sapicLivenessRanking ctxt sys =
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
+    -- Be conservative on splits that don't exist.
+    isSplitGoalSmall (SplitG sid) =
+        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
+    isSplitGoalSmall _            = False
+
+    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
+    isNoLargeSplitGoal _               = True
 
 
 -- | A ranking function tuned for a specific model of the
@@ -830,6 +822,7 @@ sapicPKCS11Ranking ctxt sys =
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
+
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
         | length (getDisj (L.get cdCases cd)) == 1 -> Just o
@@ -838,6 +831,11 @@ sapicPKCS11Ranking ctxt sys =
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
     unmark = map unmarkPremiseG
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 0
+    tagUsefulness CurrentlyDeducible    = 2
+
     solveLast = 
         [ 
         -- isNotInsertAction . fst 
@@ -921,6 +919,11 @@ injRanking ctxt allowLoopBreakers sys =
       _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 1
+    tagUsefulness CurrentlyDeducible    = 2
 
     unmark | allowLoopBreakers = map unmarkPremiseG
            | otherwise         = id
@@ -1023,6 +1026,11 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
       _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+
+    tagUsefulness Useful                = 0 :: Int
+    tagUsefulness ProbablyConstructible = 1
+    tagUsefulness LoopBreaker           = 1
+    tagUsefulness CurrentlyDeducible    = 2
 
     unmark | allowPremiseGLoopBreakers = map unmarkPremiseG
            | otherwise                 = id
