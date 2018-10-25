@@ -59,6 +59,22 @@ restriction locking:
 
 "
 
+ let res_locking_l pos = " 
+ restriction locking_" ^ string_of_int pos ^ ": 
+ \"All p pp l x lp #t1 #t3 . Lock_" ^ string_of_int pos ^ "(p,l,x)@t1 & Lock(pp,lp,x)@t3 
+         ==> 
+         ( #t1<#t3 
+                  & (Ex #t2. Unlock_" ^ string_of_int pos ^ "(p,l,x)@t2 & #t1<#t2 & #t2<#t3  
+                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
+                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) 
+                 )) 
+         | #t3<#t1 | #t1=#t3 \" 
+
+ " 
+
+
+
 let res_single_session = "
 restriction single_session: // for a single session
     \"All #i #j. Init()@i & Init()@j ==> #i=#j\"

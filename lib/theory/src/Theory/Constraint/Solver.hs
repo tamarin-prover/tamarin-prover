@@ -52,6 +52,7 @@ module Theory.Constraint.Solver (
   -- small step execution. This module also provides the heuristics for
   -- selecting the best proof method to apply to a constraint system.
   , module Theory.Constraint.Solver.ProofMethod
+  , module Theory.Constraint.Solver.Heuristics
 
   -- ** Convenience export
   , module Logic.Connectives
@@ -62,7 +63,7 @@ import           Logic.Connectives
 import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.ProofMethod
--- import           Theory.Constraint.Solver.Types
+import           Theory.Constraint.Solver.Heuristics
 import           Theory.Constraint.System
 
 

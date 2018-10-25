@@ -5,6 +5,7 @@ open Annotatedrule
 open Annotatedsapicaction
 open Annotatedsapictree
 open Atomformulaaction
+open Restrictions
 open Btree
 
 let rec print_lemmas lem_list =
@@ -38,6 +39,18 @@ let rec contains_eq t =
     |   Node(Cond(Action("eq",_)), _, _) -> true
     |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)
 
+let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | Node(_, l, r) -> ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> []
+
+let rec remove_duplicates lst= match lst with
+      [] -> []
+    | h::hs -> h :: (remove_duplicates (List.filter (fun x -> x<>h) hs))
+
+let rec print_lock_restrictions x = match x with
+      [] -> ""
+    | h::t -> res_locking_l h ^ print_lock_restrictions t
 
 
 

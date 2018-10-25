@@ -1,0 +1,39 @@
+theory issue198_2
+begin
+
+builtins: multiset
+
+rule Setup: 
+  [ Fr(~v1) ] 
+--[ Setup(), Roles($H1, $H2, $D1, $D2) ]->
+  [ AgSt_H1v(diff($H2,$H1),diff($D2,$D1), ~v1)
+  , ShuffleAgents( <$H1,$D1> + <$H2,$D2> ) 
+  ]
+
+rule shuffleVoters:
+  [ ShuffleAgents(x+y) ]
+--[ ]->
+  [ AgSt_S0(x),AgSt_S0(y) ]
+
+rule H_vote:
+  [ AgSt_H1v($H,$D,vote )  ]
+--[ Comm($H,vote), MyVote($H,vote) ]->
+  [ AgSt_H2($H,$D, vote ), Channel($H,vote)]
+
+rule S_1: 
+  [ AgSt_S0(<$Hvoter,$Dvoter>), AgSt_S0(<$Hempty,$Dempty>)
+  , Channel($Hvoter,vote) ]
+--[  LearnS($Hvoter,vote), LearnS($Hempty,'empty')]->  
+  [ ]
+
+axiom OneSetup: // try with one setup
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+axiom notSameRole:
+	"All H1 H2 D1 D2 #i. Roles(H1,H2,D1,D2) @i ==>
+		  not H1 = H2 & not H1 = D1 & not H1 = D2
+		& not H2 = D1 & not H2 = D2
+		& not D1 = D2
+		"
+
+end

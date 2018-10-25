@@ -136,7 +136,7 @@ dotNode v = dotOnce dsNodes v $ do
         nameAndActs =
             ruleInfo (prettyProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
             brackets (vcat $ punctuate comma $ map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
-        isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
+        isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
 -- | An edge from a rule node to its premises or conclusions.
 dotIntraRuleEdge :: D.NodeId -> D.NodeId -> SeDot ()
@@ -372,7 +372,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             (brackets $ vcat $ punctuate comma $
                 map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
 
-        isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
+        isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
