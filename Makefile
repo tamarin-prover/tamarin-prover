@@ -12,19 +12,19 @@ default: tamarin sapic
 .PHONY: tamarin
 tamarin:
 	stack setup
-	stack install --flag tamarin-prover:threaded
+	stack install
 
 # Single-threaded Tamarin
 .PHONY: single
 single: 
 	stack setup
-	stack install
+	stack install --flag tamarin-prover:-threaded
 
 # Tamarin with profiling options, single-threaded
 .PHONY: profiling
 profiling:
 	stack setup
-	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts"
+	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
 # SAPIC
 .PHONY: sapic
