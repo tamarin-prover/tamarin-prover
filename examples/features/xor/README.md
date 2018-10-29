@@ -1,3 +1,8 @@
+# OBSOLETE!
+
+Everything in this folder (except 'basicfunctionality') is obsolete,
+for current versions see the folder examples/csf18-xor instead!
+
 # Summary of case studies
 
 Build of Tamarin:

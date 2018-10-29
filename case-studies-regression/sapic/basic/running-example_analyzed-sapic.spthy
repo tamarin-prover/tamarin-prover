@@ -755,7 +755,7 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 1.473584676s
+  processing time: 1.677968293s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -773,7 +773,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 1.473584676s
+  processing time: 1.677968293s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
