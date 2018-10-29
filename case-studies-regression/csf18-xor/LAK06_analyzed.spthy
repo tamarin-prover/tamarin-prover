@@ -6762,13 +6762,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/LAK06.spthy
+analyzing: examples/csf18-xor/LAK06.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/LAK06.spthy
+analyzed: examples/csf18-xor/LAK06.spthy
 
-  output:          examples/features/xor/LAK06.spthy.tmp
-  processing time: 10.009487447s
+  output:          examples/csf18-xor/LAK06.spthy.tmp
+  processing time: 11.060633064s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2148 steps)
@@ -6779,10 +6779,10 @@ analyzed: examples/features/xor/LAK06.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/LAK06.spthy
+analyzed: examples/csf18-xor/LAK06.spthy
 
-  output:          examples/features/xor/LAK06.spthy.tmp
-  processing time: 10.009487447s
+  output:          examples/csf18-xor/LAK06.spthy.tmp
+  processing time: 11.060633064s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2148 steps)

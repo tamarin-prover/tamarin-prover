@@ -520,13 +520,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/CRxor.spthy
+analyzing: examples/csf18-xor/CRxor.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/CRxor.spthy
+analyzed: examples/csf18-xor/CRxor.spthy
 
-  output:          examples/features/xor/CRxor.spthy.tmp
-  processing time: 0.782985619s
+  output:          examples/csf18-xor/CRxor.spthy.tmp
+  processing time: 0.9014287s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
@@ -536,10 +536,10 @@ analyzed: examples/features/xor/CRxor.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/CRxor.spthy
+analyzed: examples/csf18-xor/CRxor.spthy
 
-  output:          examples/features/xor/CRxor.spthy.tmp
-  processing time: 0.782985619s
+  output:          examples/csf18-xor/CRxor.spthy.tmp
+  processing time: 0.9014287s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)

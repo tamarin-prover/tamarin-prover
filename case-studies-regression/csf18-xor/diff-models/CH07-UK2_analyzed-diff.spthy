@@ -1,4 +1,4 @@
-theory CH07_untrac_weak begin
+theory CH07_UK2 begin
 
 // Function signature and definition of the equational theory E
 
@@ -18420,13 +18420,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/diff-models/CH07-UK2.spthy
+analyzing: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/diff-models/CH07-UK2.spthy
+analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
-  output:          examples/features/xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 308.757464879s
+  output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
+  processing time: 308.261426288s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (6116 steps)
@@ -18436,10 +18436,10 @@ analyzed: examples/features/xor/diff-models/CH07-UK2.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/diff-models/CH07-UK2.spthy
+analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
-  output:          examples/features/xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 308.757464879s
+  output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
+  processing time: 308.261426288s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (6116 steps)

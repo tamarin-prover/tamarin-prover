@@ -736,13 +736,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/CH07.spthy
+analyzing: examples/csf18-xor/CH07.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/CH07.spthy
+analyzed: examples/csf18-xor/CH07.spthy
 
-  output:          examples/features/xor/CH07.spthy.tmp
-  processing time: 1.051934229s
+  output:          examples/csf18-xor/CH07.spthy.tmp
+  processing time: 1.201866407s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
@@ -754,10 +754,10 @@ analyzed: examples/features/xor/CH07.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/CH07.spthy
+analyzed: examples/csf18-xor/CH07.spthy
 
-  output:          examples/features/xor/CH07.spthy.tmp
-  processing time: 1.051934229s
+  output:          examples/csf18-xor/CH07.spthy.tmp
+  processing time: 1.201866407s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
