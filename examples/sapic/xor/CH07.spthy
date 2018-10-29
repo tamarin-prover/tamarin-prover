@@ -1,0 +1,130 @@
+theory CH07
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+builtins: xor, hashing
+
+functions: rot/2, lh/1, rh/1
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
+
+rule Rep_0_: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_1()]
+
+rule Rep_1_: //Rep, 1 
+ [ !Semistate_1()] --[]-> [State_1()]
+
+rule new_k_1: //new ~k 
+ [ State_1(), Fr(~k)] --[]-> [State_11(~k)]
+
+rule new_id_11: //new ~id 
+ [ State_11(~k), Fr(~id)] --[]-> [State_111(~id, ~k)]
+
+rule Rep_0_111: //Rep, 0 
+ [ State_111(~id, ~k)] --[]-> [!Semistate_1111(~id, ~k)]
+
+rule Rep_1_111: //Rep, 1 
+ [ !Semistate_1111(~id, ~k)] --[]-> [State_1111(~id, ~k)]
+
+rule Par_1111: //Par 
+ [ State_1111(~id, ~k)] --[]-> [State_11111(~id, ~k), State_11112(~id, ~k)]
+
+rule new_r1_11111: //new ~r1 
+ [ State_11111(~id, ~k), Fr(~r1)] --[]-> [State_111111(~id, ~k, ~r1)]
+
+rule event_Challenger1_Reader__111111: //event Challenge(~r1, 'Reader') 
+ [ State_111111(~id, ~k, ~r1)] --[Event(), Challenge(~r1, 'Reader')]-> [State_1111111(~id, ~k, ~r1)]
+
+rule out_r1_1111111: //out ~r1 
+ [ State_1111111(~id, ~k, ~r1)] --[]-> [State_11111111(~id, ~k, ~r1), Out(~r1)]
+
+rule in_r2_x__11111111: //in <r2, x> 
+ [ State_11111111(~id, ~k, ~r1), In(<r2, x>)] --[]-> [State_111111111(~id, ~k, ~r1, r2, x)]
+
+rule if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111: //if eq(x, lh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k))), 0 
+ [ State_111111111(~id, ~k, ~r1, r2, x)] --[Pred_eq(x, lh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k)))]-> [State_1111111111(~id, ~k, ~r1, r2, x)]
+
+rule if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111: //if eq(x, lh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k))), 1 
+ [ State_111111111(~id, ~k, ~r1, r2, x)] --[Pred_not_eq(x, lh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k)))]-> [State_1111111112(~id, ~k, ~r1, r2, x)]
+
+rule event_Alivek_Tag__1111111111: //event Alive(~k, 'Tag') 
+ [ State_1111111111(~id, ~k, ~r1, r2, x)] --[Event(), Alive(~k, 'Tag')]-> [State_11111111111(~id, ~k, ~r1, r2, x)]
+
+rule event_Responsek_Reader__11111111111: //event Response(~k, 'Reader') 
+ [ State_11111111111(~id, ~k, ~r1, r2, x)] --[Event(), Response(~k, 'Reader')]-> [State_111111111111(~id, ~k, ~r1, r2, x)]
+
+rule event_Running_T_R_k_XOR_r1_XOR_r2__111111111111: //event Running(<'T', 'R', <~k XOR ~r1 XOR r2>>) 
+ [ State_111111111111(~id, ~k, ~r1, r2, x)] --[Event(), Running(<'T', 'R', <~k XOR ~r1 XOR r2>>)]-> [State_1111111111111(~id, ~k, ~r1, r2, x)]
+
+rule event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111: //event Commit(<'R', 'T', <~k XOR ~r1 XOR r2>>) 
+ [ State_1111111111111(~id, ~k, ~r1, r2, x)] --[Event(), Commit(<'R', 'T', <~k XOR ~r1 XOR r2>>)]-> [State_11111111111111(~id, ~k, ~r1, r2, x)]
+
+rule out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111: //out rh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k)) 
+ [ State_11111111111111(~id, ~k, ~r1, r2, x)] --[]-> [State_111111111111111(~id, ~k, ~r1, r2, x), Out(rh(rot(~id, h(~r1 XOR r2 XOR ~k)) XOR h(~r1 XOR r2 XOR ~k)))]
+
+rule Zero_111111111111111: //Zero 
+ [ State_111111111111111(~id, ~k, ~r1, r2, x)] --[]-> []
+
+rule Zero_1111111112: //Zero 
+ [ State_1111111112(~id, ~k, ~r1, r2, x)] --[]-> []
+
+rule in_r1_11112: //in r1 
+ [ State_11112(~id, ~k), In(r1)] --[]-> [State_111121(~id, ~k, r1)]
+
+rule new_r2_111121: //new ~r2 
+ [ State_111121(~id, ~k, r1), Fr(~r2)] --[]-> [State_1111211(~id, ~k, ~r2, r1)]
+
+rule event_Responsek_Tag__1111211: //event Response(~k, 'Tag') 
+ [ State_1111211(~id, ~k, ~r2, r1)] --[Event(), Response(~k, 'Tag')]-> [State_11112111(~id, ~k, ~r2, r1)]
+
+rule event_Challenger2_Tag__11112111: //event Challenge(~r2, 'Tag') 
+ [ State_11112111(~id, ~k, ~r2, r1)] --[Event(), Challenge(~r2, 'Tag')]-> [State_111121111(~id, ~k, ~r2, r1)]
+
+rule event_Running_R_T_k_XOR_r1_XOR_r2__111121111: //event Running(<'R', 'T', <~k XOR r1 XOR ~r2>>) 
+ [ State_111121111(~id, ~k, ~r2, r1)] --[Event(), Running(<'R', 'T', <~k XOR r1 XOR ~r2>>)]-> [State_1111211111(~id, ~k, ~r2, r1)]
+
+rule out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111: //out <~r2, lh(rot(~id, h(r1 XOR ~r2 XOR ~k)) XOR h(r1 XOR ~r2 XOR ~k))> 
+ [ State_1111211111(~id, ~k, ~r2, r1)] --[]-> [State_11112111111(~id, ~k, ~r2, r1), Out(<~r2, lh(rot(~id, h(r1 XOR ~r2 XOR ~k)) XOR h(r1 XOR ~r2 XOR ~k))>)]
+
+rule in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111: //in rh(rot(~id, h(r1 XOR ~r2 XOR ~k)) XOR h(r1 XOR ~r2 XOR ~k)) 
+ [ State_11112111111(~id, ~k, ~r2, r1), In(rh(rot(~id, h(r1 XOR ~r2 XOR ~k)) XOR h(r1 XOR ~r2 XOR ~k)))] --[]-> [State_111121111111(~id, ~k, ~r2, r1)]
+
+rule event_Alivek_Reader__111121111111: //event Alive(~k, 'Reader') 
+ [ State_111121111111(~id, ~k, ~r2, r1)] --[Event(), Alive(~k, 'Reader')]-> [State_1111211111111(~id, ~k, ~r2, r1)]
+
+rule event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111: //event Commit(<'T', 'R', <~k XOR r1 XOR ~r2>>) 
+ [ State_1111211111111(~id, ~k, ~r2, r1)] --[Event(), Commit(<'T', 'R', <~k XOR r1 XOR ~r2>>)]-> [State_11112111111111(~id, ~k, ~r2, r1)]
+
+rule Zero_11112111111111: //Zero 
+ [ State_11112111111111(~id, ~k, ~r2, r1)] --[]-> []
+
+
+restriction predicate_eq:
+"All #i a b. Pred_eq(a,b)@i ==> a = b"
+
+
+restriction predicate_not_eq:
+"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
+
+
+restriction single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+lemma recentalive_tag : all-traces
+"	All x #i. ( Alive(x, 'Tag') @ #i ) ==> ( Ex y #j #k. Challenge(y, 'Reader') @ k & Response(x, 'Tag') @ #j & k < j & j < i )"
+
+lemma recentalive_reader : all-traces
+"	All x #i. ( Alive(x, 'Reader') @ #i ) ==> ( Ex y #j #k. Challenge(y, 'Tag') @ k & Response(x, 'Reader') @ #j & k < j & j < i )"
+
+lemma noninjectiveagreement_tag :
+"	All t #i. Commit(<'T', 'R', t>) @ i ==> ( Ex #j. Running(<'T', 'R', t>) @ j )"
+
+lemma noninjectiveagreement_reader :
+"	All t #i. Commit(<'R', 'T', t>) @ i ==> ( Ex #j. Running(<'R', 'T', t>) @ j )"
+
+lemma executable : exists-trace
+"	Ex x #i #j. ( Alive(x, 'Reader') @ #i ) & ( Response(x, 'Tag') @ #j ) & ( notEx #k. Response(x, 'Tag') @ #k & ( not( #j = #k ) ) )"
+
+end
