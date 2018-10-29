@@ -83,7 +83,8 @@ in a round-robin fashion depending on the proof-depth. For example, a flag
 'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
 in this way.
 
-### Fact Annotations
+Fact annotations {#sec:fact-annotations}
+-------------------
 
 Facts can be annotated with `+` or `-` to influence their priority in heuristics.
 Annotating a fact with `+` causes the tool to solve instances of that fact
