@@ -2180,7 +2180,7 @@ analyzing: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_righ
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 10.858143336s
+  processing time: 10.060268214s
   WARNING: 4 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -2197,7 +2197,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          case-studies-sapic-regression/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 10.858143336s
+  processing time: 10.060268214s
   WARNING: 4 wellformedness check failed!
            The analysis results might be wrong!
   

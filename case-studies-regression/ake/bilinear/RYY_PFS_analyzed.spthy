@@ -117,38 +117,38 @@ rule (modulo E) Init_2:
     
      8. $B    = $B.54
         ~ex   = ~ex.55
-        Y     = x.102^x.104
-        skA   = pmult(x.103, x.105)
-        z     = x.102^(~ex.55*x.104)
-        z.1   = em(x.105, hp($B.54))^x.103
+        Y     = x.102^x.103
+        skA   = pmult(x.104, x.105)
+        z     = x.102^(~ex.55*x.103)
+        z.1   = em(x.105, hp($B.54))^x.104
     
      9. $B    = $B.54
         ~ex   = ~ex.55
-        Y     = x.103^(x.105*inv((~ex.55*x.104)))
+        Y     = x.103^(x.104*inv((~ex.55*x.105)))
         skA   = skA.57
-        z     = x.103^(x.105*inv(x.104))
+        z     = x.103^(x.104*inv(x.105))
         z.1   = em(skA.57, hp($B.54))
     
     10. $B    = $B.55
         ~ex   = ~ex.56
-        Y     = x.104^inv((~ex.56*x.107))
-        skA   = pmult(x.105, x.106)
-        z     = x.104^inv(x.107)
-        z.1   = em(x.106, hp($B.55))^x.105
+        Y     = x.104^inv((~ex.56*x.105))
+        skA   = pmult(x.106, x.107)
+        z     = x.104^inv(x.105)
+        z.1   = em(x.107, hp($B.55))^x.106
     
     11. $B    = $B.55
         ~ex   = ~ex.56
-        Y     = x.104^(x.107*inv(~ex.56))
-        skA   = pmult(x.105, x.106)
-        z     = x.104^x.107
-        z.1   = em(x.106, hp($B.55))^x.105
+        Y     = x.104^(x.105*inv(~ex.56))
+        skA   = pmult(x.106, x.107)
+        z     = x.104^x.105
+        z.1   = em(x.107, hp($B.55))^x.106
     
     12. $B    = $B.56
         ~ex   = ~ex.57
-        Y     = x.105^(x.109*inv((~ex.57*x.108)))
-        skA   = pmult(x.106, x.107)
-        z     = x.105^(x.109*inv(x.108))
-        z.1   = em(x.107, hp($B.56))^x.106
+        Y     = x.105^(x.106*inv((~ex.57*x.107)))
+        skA   = pmult(x.108, x.109)
+        z     = x.105^(x.106*inv(x.107))
+        z.1   = em(x.109, hp($B.56))^x.108
   */
 
 rule (modulo E) Resp_1:
@@ -222,38 +222,38 @@ rule (modulo E) Resp_1:
     
      8. $A    = $A.59
         ~ey   = ~ey.61
-        X     = x.113^x.115
-        skB   = pmult(x.114, x.116)
-        z     = x.113^(~ey.61*x.115)
-        z.1   = em(x.116, hp($A.59))^x.114
+        X     = x.113^x.114
+        skB   = pmult(x.115, x.116)
+        z     = x.113^(~ey.61*x.114)
+        z.1   = em(x.116, hp($A.59))^x.115
     
      9. $A    = $A.59
         ~ey   = ~ey.61
-        X     = x.114^(x.116*inv((~ey.61*x.115)))
+        X     = x.114^(x.115*inv((~ey.61*x.116)))
         skB   = skB.63
-        z     = x.114^(x.116*inv(x.115))
+        z     = x.114^(x.115*inv(x.116))
         z.1   = em(skB.63, hp($A.59))
     
     10. $A    = $A.60
         ~ey   = ~ey.62
-        X     = x.115^inv((~ey.62*x.118))
-        skB   = pmult(x.116, x.117)
-        z     = x.115^inv(x.118)
-        z.1   = em(x.117, hp($A.60))^x.116
+        X     = x.115^inv((~ey.62*x.116))
+        skB   = pmult(x.117, x.118)
+        z     = x.115^inv(x.116)
+        z.1   = em(x.118, hp($A.60))^x.117
     
     11. $A    = $A.60
         ~ey   = ~ey.62
-        X     = x.115^(x.118*inv(~ey.62))
-        skB   = pmult(x.116, x.117)
-        z     = x.115^x.118
-        z.1   = em(x.117, hp($A.60))^x.116
+        X     = x.115^(x.116*inv(~ey.62))
+        skB   = pmult(x.117, x.118)
+        z     = x.115^x.116
+        z.1   = em(x.118, hp($A.60))^x.117
     
     12. $A    = $A.61
         ~ey   = ~ey.63
-        X     = x.116^(x.120*inv((~ey.63*x.119)))
-        skB   = pmult(x.117, x.118)
-        z     = x.116^(x.120*inv(x.119))
-        z.1   = em(x.118, hp($A.61))^x.117
+        X     = x.116^(x.117*inv((~ey.63*x.118)))
+        skB   = pmult(x.119, x.120)
+        z     = x.116^(x.117*inv(x.118))
+        z.1   = em(x.120, hp($A.61))^x.119
   */
 
 lemma key_agreement_reachable:
@@ -397,7 +397,7 @@ analyzing: examples/ake/bilinear/RYY_PFS.spthy
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
-  processing time: 4.986953018s
+  processing time: 4.590554849s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 
@@ -409,7 +409,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
-  processing time: 4.986953018s
+  processing time: 4.590554849s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
 

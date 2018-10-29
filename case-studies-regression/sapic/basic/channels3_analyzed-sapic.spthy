@@ -114,7 +114,7 @@ analyzing: case-studies-sapic-regression/basic/channels3.spthy
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies-sapic-regression/basic/channels3.spthy.tmp
-  processing time: 0.057666852s
+  processing time: 0.059072949s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 
@@ -126,7 +126,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies-sapic-regression/basic/channels3.spthy.tmp
-  processing time: 0.057666852s
+  processing time: 0.059072949s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 

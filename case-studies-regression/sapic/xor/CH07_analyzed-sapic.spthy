@@ -129,13 +129,13 @@ rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111
     
     8. ~k    = ~k.80
        ~r1   = ~r1.81
-       r2    = (~k.80⊕x.157)
-       x     = (~r1.81⊕x.157)
-    
-    9. ~k    = ~k.80
-       ~r1   = ~r1.81
        r2    = (~r1.81⊕x.157)
        x     = (~k.80⊕x.157)
+    
+    9. ~k    = ~k.81
+       ~r1   = ~r1.82
+       r2    = (~k.81⊕x.159)
+       x     = (~r1.82⊕x.159)
   */
 
 rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111:
@@ -186,13 +186,13 @@ rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111
     
     8. ~k    = ~k.80
        ~r1   = ~r1.81
-       r2    = (~k.80⊕x.157)
-       x     = (~r1.81⊕x.157)
-    
-    9. ~k    = ~k.80
-       ~r1   = ~r1.81
        r2    = (~r1.81⊕x.157)
        x     = (~k.80⊕x.157)
+    
+    9. ~k    = ~k.81
+       ~r1   = ~r1.82
+       r2    = (~k.81⊕x.159)
+       x     = (~r1.82⊕x.159)
   */
 
 rule (modulo E) event_Alivek_Tag__1111111111:
@@ -257,13 +257,13 @@ rule (modulo E) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111:
     
     8. ~k    = ~k.18
        ~r1   = ~r1.19
-       r2    = (~k.18⊕x.33)
-       z     = (~r1.19⊕x.33)
-    
-    9. ~k    = ~k.18
-       ~r1   = ~r1.19
        r2    = (~r1.19⊕x.33)
        z     = (~k.18⊕x.33)
+    
+    9. ~k    = ~k.19
+       ~r1   = ~r1.20
+       r2    = (~k.19⊕x.35)
+       z     = (~r1.20⊕x.35)
   */
 
 rule (modulo E) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111:
@@ -314,13 +314,13 @@ rule (modulo E) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111:
     
     8. ~k    = ~k.18
        ~r1   = ~r1.19
-       r2    = (~k.18⊕x.33)
-       z     = (~r1.19⊕x.33)
-    
-    9. ~k    = ~k.18
-       ~r1   = ~r1.19
        r2    = (~r1.19⊕x.33)
        z     = (~k.18⊕x.33)
+    
+    9. ~k    = ~k.19
+       ~r1   = ~r1.20
+       r2    = (~k.19⊕x.35)
+       z     = (~r1.20⊕x.35)
   */
 
 rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111:
@@ -377,13 +377,13 @@ rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
     
     8. ~k    = ~k.80
        ~r1   = ~r1.81
-       r2    = (~k.80⊕x.157)
-       x     = (~r1.81⊕x.157)
-    
-    9. ~k    = ~k.80
-       ~r1   = ~r1.81
        r2    = (~r1.81⊕x.157)
        x     = (~k.80⊕x.157)
+    
+    9. ~k    = ~k.81
+       ~r1   = ~r1.82
+       r2    = (~k.81⊕x.159)
+       x     = (~r1.82⊕x.159)
   */
 
 rule (modulo E) Zero_111111111111111:
@@ -470,13 +470,13 @@ rule (modulo E) event_Running_R_T_k_XOR_r1_XOR_r2__111121111:
     
     8. ~k    = ~k.16
        ~r2   = ~r2.17
-       r1    = (~k.16⊕x.29)
-       z     = (~r2.17⊕x.29)
-    
-    9. ~k    = ~k.16
-       ~r2   = ~r2.17
        r1    = (~r2.17⊕x.29)
        z     = (~k.16⊕x.29)
+    
+    9. ~k    = ~k.17
+       ~r2   = ~r2.18
+       r1    = (~k.17⊕x.31)
+       z     = (~r2.18⊕x.31)
   */
 
 rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111:
@@ -533,13 +533,13 @@ rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
     
     8. ~k    = ~k.73
        ~r2   = ~r2.74
-       r1    = (~k.73⊕x.143)
-       x     = (~r2.74⊕x.143)
-    
-    9. ~k    = ~k.73
-       ~r2   = ~r2.74
        r1    = (~r2.74⊕x.143)
        x     = (~k.73⊕x.143)
+    
+    9. ~k    = ~k.74
+       ~r2   = ~r2.75
+       r1    = (~k.74⊕x.145)
+       x     = (~r2.75⊕x.145)
   */
 
 rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
@@ -594,13 +594,13 @@ rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
     
     8. ~k    = ~k.73
        ~r2   = ~r2.74
-       r1    = (~k.73⊕x.143)
-       x     = (~r2.74⊕x.143)
-    
-    9. ~k    = ~k.73
-       ~r2   = ~r2.74
        r1    = (~r2.74⊕x.143)
        x     = (~k.73⊕x.143)
+    
+    9. ~k    = ~k.74
+       ~r2   = ~r2.75
+       r1    = (~k.74⊕x.145)
+       x     = (~r2.75⊕x.145)
   */
 
 rule (modulo E) event_Alivek_Reader__111121111111:
@@ -658,13 +658,13 @@ rule (modulo E) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111:
     
     8. ~k    = ~k.16
        ~r2   = ~r2.17
-       r1    = (~k.16⊕x.29)
-       z     = (~r2.17⊕x.29)
-    
-    9. ~k    = ~k.16
-       ~r2   = ~r2.17
        r1    = (~r2.17⊕x.29)
        z     = (~k.16⊕x.29)
+    
+    9. ~k    = ~k.17
+       ~r2   = ~r2.18
+       r1    = (~k.17⊕x.31)
+       z     = (~r2.18⊕x.31)
   */
 
 rule (modulo E) Zero_11112111111111:
@@ -710,7 +710,7 @@ solve( Alive( x, 'Tag' ) @ #i )
     solve( !KU( lh((h(x)⊕rot(~id, h(x)))) ) @ #vk.2 )
       case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
       solve( splitEqs(1) )
-        case split_case_8
+        case split_case_7
         solve( !KU( (~r1⊕x) ) @ #vk.2 )
           case c_xor
           solve( splitEqs(2) )
@@ -984,12 +984,15 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_7
           solve( splitEqs(3) )
             case split
-            solve( !KU( (~k⊕x) ) @ #vk.3 )
+            solve( !KU( (~r2⊕x) ) @ #vk.3 )
               case c_xor
-              by solve( !KU( ~k ) @ #vk.7 )
+              solve( !KU( ~r2 ) @ #vk.7 )
+                case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
+                by contradiction /* cyclic */
+              qed
             next
               case coerce
-              solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              solve( !KD( (~r2⊕x) ) ▶₀ #vk.2 )
                 case out_r1_1111111
                 by contradiction /* impossible chain */
               next
@@ -1011,15 +1014,12 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_8
           solve( splitEqs(3) )
             case split
-            solve( !KU( (~r2⊕x) ) @ #vk.3 )
+            solve( !KU( (~k⊕x) ) @ #vk.3 )
               case c_xor
-              solve( !KU( ~r2 ) @ #vk.7 )
-                case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
-                by contradiction /* cyclic */
-              qed
+              by solve( !KU( ~k ) @ #vk.7 )
             next
               case coerce
-              solve( !KD( (~r2⊕x) ) ▶₀ #vk.2 )
+              solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
                 case out_r1_1111111
                 by contradiction /* impossible chain */
               next
@@ -1197,12 +1197,21 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case split_case_7
         solve( splitEqs(2) )
           case split
-          solve( !KU( (~k⊕x) ) @ #vk.2 )
+          solve( !KU( (~r1⊕x) ) @ #vk.2 )
             case c_xor
-            by solve( !KU( ~k ) @ #vk.5 )
+            solve( splitEqs(3) )
+              case split_case_1
+              by contradiction /* from formulas */
+            next
+              case split_case_2
+              by contradiction /* from formulas */
+            next
+              case split_case_3
+              by contradiction /* from formulas */
+            qed
           next
             case coerce
-            solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+            solve( !KD( (~r1⊕x) ) ▶₀ #vk.1 )
               case out_r1_1111111
               by contradiction /* impossible chain */
             next
@@ -1224,21 +1233,12 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case split_case_8
         solve( splitEqs(2) )
           case split
-          solve( !KU( (~r1⊕x) ) @ #vk.2 )
+          solve( !KU( (~k⊕x) ) @ #vk.2 )
             case c_xor
-            solve( splitEqs(3) )
-              case split_case_1
-              by contradiction /* from formulas */
-            next
-              case split_case_2
-              by contradiction /* from formulas */
-            next
-              case split_case_3
-              by contradiction /* from formulas */
-            qed
+            by solve( !KU( ~k ) @ #vk.5 )
           next
             case coerce
-            solve( !KD( (~r1⊕x) ) ▶₀ #vk.1 )
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
               case out_r1_1111111
               by contradiction /* impossible chain */
             next
@@ -1320,7 +1320,7 @@ analyzing: case-studies-sapic-regression/xor/CH07.spthy
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 5.896252s
+  processing time: 7.754133411s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (73 steps)
@@ -1335,7 +1335,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 5.896252s
+  processing time: 7.754133411s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (73 steps)

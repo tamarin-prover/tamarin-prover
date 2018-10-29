@@ -72,17 +72,17 @@ rule (modulo E) Init_2:
        Y     = x.73^x.74
        z     = x.73^(~ekI.39*x.74)
     
-    4. ~ekI  = ~ekI.40
-       Y     = x.75^inv((~ekI.40*x.76))
-       z     = x.75^inv(x.76)
+    4. ~ekI  = ~ekI.42
+       Y     = x.79^inv((~ekI.42*x.80))
+       z     = x.79^inv(x.80)
     
-    5. ~ekI  = ~ekI.40
-       Y     = x.75^(x.76*inv(~ekI.40))
-       z     = x.75^x.76
+    5. ~ekI  = ~ekI.42
+       Y     = x.79^(x.80*inv(~ekI.42))
+       z     = x.79^x.80
     
-    6. ~ekI  = ~ekI.41
-       Y     = x.76^(x.78*inv((~ekI.41*x.77)))
-       z     = x.76^(x.78*inv(x.77))
+    6. ~ekI  = ~ekI.43
+       Y     = x.80^(x.81*inv((~ekI.43*x.82)))
+       z     = x.80^(x.81*inv(x.82))
   */
 
 rule (modulo E) Resp_1:
@@ -118,17 +118,17 @@ rule (modulo E) Resp_1:
        X     = x.65^x.66
        z     = x.65^(~ekR.35*x.66)
     
-    4. ~ekR  = ~ekR.36
-       X     = x.67^inv((~ekR.36*x.68))
-       z     = x.67^inv(x.68)
+    4. ~ekR  = ~ekR.37
+       X     = x.69^inv((~ekR.37*x.70))
+       z     = x.69^inv(x.70)
     
-    5. ~ekR  = ~ekR.36
-       X     = x.67^(x.68*inv(~ekR.36))
-       z     = x.67^x.68
+    5. ~ekR  = ~ekR.37
+       X     = x.69^(x.70*inv(~ekR.37))
+       z     = x.69^x.70
     
-    6. ~ekR  = ~ekR.37
-       X     = x.68^(x.70*inv((~ekR.37*x.69)))
-       z     = x.68^(x.70*inv(x.69))
+    6. ~ekR  = ~ekR.38
+       X     = x.70^(x.71*inv((~ekR.38*x.72)))
+       z     = x.70^(x.71*inv(x.72))
   */
 
 rule (modulo E) Resp_2:
@@ -164,17 +164,17 @@ rule (modulo E) Resp_2:
        X     = x.73^x.74
        z     = x.73^(~ekR.39*x.74)
     
-    4. ~ekR  = ~ekR.40
-       X     = x.75^inv((~ekR.40*x.76))
-       z     = x.75^inv(x.76)
+    4. ~ekR  = ~ekR.42
+       X     = x.79^inv((~ekR.42*x.80))
+       z     = x.79^inv(x.80)
     
-    5. ~ekR  = ~ekR.40
-       X     = x.75^(x.76*inv(~ekR.40))
-       z     = x.75^x.76
+    5. ~ekR  = ~ekR.42
+       X     = x.79^(x.80*inv(~ekR.42))
+       z     = x.79^x.80
     
-    6. ~ekR  = ~ekR.41
-       X     = x.76^(x.78*inv((~ekR.41*x.77)))
-       z     = x.76^(x.78*inv(x.77))
+    6. ~ekR  = ~ekR.43
+       X     = x.80^(x.81*inv((~ekR.43*x.82)))
+       z     = x.80^(x.81*inv(x.82))
   */
 
 rule (modulo E) Sessionkey_Reveal:
@@ -319,7 +319,7 @@ analyzing: examples/csf12/STS_MAC.spthy
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          examples/csf12/STS_MAC.spthy.tmp
-  processing time: 1.886299454s
+  processing time: 3.371311445s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 
@@ -331,7 +331,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          examples/csf12/STS_MAC.spthy.tmp
-  processing time: 1.886299454s
+  processing time: 3.371311445s
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)
 
