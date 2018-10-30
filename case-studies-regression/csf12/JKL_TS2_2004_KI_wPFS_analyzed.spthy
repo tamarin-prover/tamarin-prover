@@ -45,17 +45,17 @@ rule (modulo E) Init_2:
        Y     = x.281^x.282
        z     = x.281^(~ekI.143*x.282)
     
-    4. ~ekI  = ~ekI.144
-       Y     = x.283^inv((~ekI.144*x.284))
-       z     = x.283^inv(x.284)
+    4. ~ekI  = ~ekI.146
+       Y     = x.287^inv((~ekI.146*x.288))
+       z     = x.287^inv(x.288)
     
-    5. ~ekI  = ~ekI.144
-       Y     = x.283^(x.284*inv(~ekI.144))
-       z     = x.283^x.284
+    5. ~ekI  = ~ekI.146
+       Y     = x.287^(x.288*inv(~ekI.146))
+       z     = x.287^x.288
     
-    6. ~ekI  = ~ekI.145
-       Y     = x.284^(x.286*inv((~ekI.145*x.285)))
-       z     = x.284^(x.286*inv(x.285))
+    6. ~ekI  = ~ekI.147
+       Y     = x.288^(x.289*inv((~ekI.147*x.290)))
+       z     = x.288^(x.289*inv(x.290))
   */
 
 rule (modulo E) Resp_1:
@@ -93,17 +93,17 @@ rule (modulo E) Resp_1:
        X     = x.431^x.432
        z     = x.431^(~ekR.218*x.432)
     
-    4. ~ekR  = ~ekR.219
-       X     = x.433^inv((~ekR.219*x.434))
-       z     = x.433^inv(x.434)
+    4. ~ekR  = ~ekR.221
+       X     = x.437^inv((~ekR.221*x.438))
+       z     = x.437^inv(x.438)
     
-    5. ~ekR  = ~ekR.219
-       X     = x.433^(x.434*inv(~ekR.219))
-       z     = x.433^x.434
+    5. ~ekR  = ~ekR.221
+       X     = x.437^(x.438*inv(~ekR.221))
+       z     = x.437^x.438
     
-    6. ~ekR  = ~ekR.220
-       X     = x.434^(x.436*inv((~ekR.220*x.435)))
-       z     = x.434^(x.436*inv(x.435))
+    6. ~ekR  = ~ekR.222
+       X     = x.438^(x.439*inv((~ekR.222*x.440)))
+       z     = x.438^(x.439*inv(x.440))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -252,7 +252,7 @@ analyzing: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 analyzed: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2004_KI_wPFS.spthy.tmp
-  processing time: 0.301754625s
+  processing time: 0.290003781s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 
@@ -264,7 +264,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2004_KI_wPFS.spthy.tmp
-  processing time: 0.301754625s
+  processing time: 0.290003781s
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
 

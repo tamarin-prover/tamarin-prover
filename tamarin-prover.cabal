@@ -83,8 +83,8 @@ source-repository head
 --------------
 
 flag threaded
-    default: False
-    manual: True
+    default: True
+    manual: False
     description: Build with support for multithreaded execution
 
 flag test-coverage

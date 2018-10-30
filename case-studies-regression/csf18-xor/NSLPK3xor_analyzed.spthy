@@ -87,13 +87,13 @@ rule (modulo E) I_2:
        x     = x.11
        z     = x.11
     
-    6. R     = (x.13⊕x.14)
-       x     = (x.14⊕x.15)
-       z     = (x.13⊕x.15)
-    
-    7. R     = (x.14⊕z.17)
+    6. R     = (x.14⊕z.17)
        x     = x.14
        z     = z.17
+    
+    7. R     = (x.16⊕x.17)
+       x     = (x.16⊕x.21)
+       z     = (x.17⊕x.21)
   */
 
 rule (modulo E) R_2:
@@ -326,13 +326,13 @@ SAPIC tool: 'sapic'
 Checking availablity ... OK.
 
 
-analyzing: examples/features/xor/NSLPK3xor.spthy
+analyzing: examples/csf18-xor/NSLPK3xor.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/features/xor/NSLPK3xor.spthy
+analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
-  output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 2.638674399s
+  output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
+  processing time: 2.758951953s
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
   injective_agree (all-traces): falsified - found trace (13 steps)
@@ -343,10 +343,10 @@ analyzed: examples/features/xor/NSLPK3xor.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/xor/NSLPK3xor.spthy
+analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
-  output:          examples/features/xor/NSLPK3xor.spthy.tmp
-  processing time: 2.638674399s
+  output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
+  processing time: 2.758951953s
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
   injective_agree (all-traces): falsified - found trace (13 steps)

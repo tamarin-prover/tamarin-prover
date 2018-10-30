@@ -113,7 +113,7 @@ let location_rule=
 %token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE EMPTY ACCOUNTS FOR PARTIES
 %token COARSE CASES CONTROL CONTROLEQUIVALENCE CONTROLSUBSET
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
-%token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
+%token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS XOR ZERO
 
 /* define associativity and operator precedence */
 %left PARALLEL
@@ -413,12 +413,14 @@ expterm:
         
 
 term:
-	|     LEQ termseq GEQ			{ Term.List($2)}
+    |     LEQ termseq GEQ			{ Term.List($2)}
     |     LP multterm RP			{ $2 }
     |     IDENTIFIER LCB termseq RCB term 	{Term.App($1,($3@[$5])) }
     |     IDENTIFIER LP termseq RP		{Term.App($1,$3)}
     |     term PLUS term        {Term.Plus($1,$3)}
-	|     literal				{Term.Var($1)}
+    |     term XOR term        {Term.Xor($1,$3)}
+    |     ZERO                 {Term.App("zero",[])}
+    |     literal				{Term.Var($1)}
 ;
 
 literal:

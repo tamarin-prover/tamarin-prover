@@ -21,7 +21,6 @@ addons:
     - camlp4-extra
     - graphviz
     - libgmp-dev
-    - maude
     - ocaml
     - ocaml-native-compilers
     - opam
@@ -33,6 +32,10 @@ before_install:
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
   - chmod a+x ~/.local/bin/stack
   - stack --no-terminal setup
+  - travis_retry curl -L https://bintray.com/tamarin-prover-org/tamarin-prover/download_file?file_path=Maude-2.7.1-linux.zip > maude.zip
+  - unzip -o maude.zip -d ~/.local/bin/
+  - mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
+  - chmod a+x ~/.local/bin/maude
 
 install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory

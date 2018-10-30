@@ -209,7 +209,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy.tmp
-  processing time: 0.077069346s
+  processing time: 0.069668707s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -226,7 +226,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested-3.spthy.tmp
-  processing time: 0.077069346s
+  processing time: 0.069668707s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
