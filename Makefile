@@ -252,10 +252,10 @@ XOR_DIFF_PRECOMPUTED_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addpr
 xor-trace-case-studies: $(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/basicfunctionality/*.spthy case-studies/csf18-xor/*.spthy
 
-xor-diff-case-studies:	$(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
+xor-diff-case-studies: $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/csf18-xor/diff-models/*.spthy
 
-XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS) $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_NOPROVE_TARGETS)
+XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS) $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
 
 xor-full-case-studies: $(XOR_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/xor/basicfunctionality/*.spthy case-studies/csf18-xor/*.spthy case-studies/csf18-xor/diff-models/*.spthy
@@ -405,6 +405,7 @@ case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAM
 	mkdir -p case-studies/sapic/locations
 	mkdir -p case-studies/sapic/SCADA
 	mkdir -p case-studies/sapic/fairexchange-mini
+	mkdir -p case-studies/sapic/xor
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -422,7 +423,8 @@ NSL/nsl-no_as-untagged.spthy \
 predicates/decwrap_destr.spthy predicates/simple_example.spthy \
 locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 SCADA/opc_ua_secure_conversation.spthy \
-fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy
+fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
+xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy xor/NSLPK3xor.spthy
 
 # currently not working because of wrong heuristic:
 # encWrapDecUnwrap/encwrapdecunwrap.spthy

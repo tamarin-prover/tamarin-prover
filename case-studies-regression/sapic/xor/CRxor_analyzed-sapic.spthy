@@ -98,23 +98,23 @@ rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_0_1111111:
     
     6. ~k    = ~x.6
        ~na   = ~x.7
-       nb    = (~x.6⊕~x.7⊕x.8)
-       z     = x.8
+       nb    = (~x.6⊕~x.7⊕x.9)
+       z     = x.9
     
     7. ~k    = ~x.6
-       ~na   = ~na.8
-       nb    = (~x.6⊕x.7)
-       z     = (x.7⊕~na.8)
+       ~na   = ~na.10
+       nb    = (~x.6⊕x.9)
+       z     = (x.9⊕~na.10)
     
     8. ~k    = ~k.7
        ~na   = ~x.6
        nb    = ~x.6
        z     = ~k.7
     
-    9. ~k    = ~k.8
+    9. ~k    = ~k.9
        ~na   = ~x.6
-       nb    = (~x.6⊕x.7)
-       z     = (x.7⊕~k.8)
+       nb    = (~x.6⊕x.8)
+       z     = (x.8⊕~k.9)
   */
 
 rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_1_1111111:
@@ -155,23 +155,23 @@ rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_1_1111111:
     
     6. ~k    = ~x.6
        ~na   = ~x.7
-       nb    = (~x.6⊕~x.7⊕x.8)
-       z     = x.8
+       nb    = (~x.6⊕~x.7⊕x.9)
+       z     = x.9
     
     7. ~k    = ~x.6
-       ~na   = ~na.8
-       nb    = (~x.6⊕x.7)
-       z     = (x.7⊕~na.8)
+       ~na   = ~na.10
+       nb    = (~x.6⊕x.9)
+       z     = (x.9⊕~na.10)
     
     8. ~k    = ~k.7
        ~na   = ~x.6
        nb    = ~x.6
        z     = ~k.7
     
-    9. ~k    = ~k.8
+    9. ~k    = ~k.9
        ~na   = ~x.6
-       nb    = (~x.6⊕x.7)
-       z     = (x.7⊕~k.8)
+       nb    = (~x.6⊕x.8)
+       z     = (x.8⊕~k.9)
   */
 
 rule (modulo E) event_Alivena_k_11111111:
@@ -276,9 +276,9 @@ rule (modulo E) out_hna_XOR_k_XOR_nb_nb__11211211:
        z     = x.7
     
     7. ~k    = ~x.5
-       ~nb   = ~nb.7
-       na    = (~x.5⊕x.6)
-       z     = (x.6⊕~nb.7)
+       ~nb   = ~nb.8
+       na    = (~x.5⊕x.7)
+       z     = (x.7⊕~nb.8)
     
     8. ~k    = ~k.6
        ~nb   = ~x.5
@@ -511,33 +511,6 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
     qed
   next
     case split_case_7
-    solve( !KU( h((~na⊕x)) ) @ #vk.1 )
-      case c_h
-      solve( !KU( (~k⊕x) ) @ #vk.2 )
-        case c_xor
-        by solve( !KU( ~k ) @ #vk.5 )
-      next
-        case coerce
-        solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
-          case out_hna_XOR_k_XOR_nb_nb__11211211
-          solve( (#vl, 0) ~~> (#vk.1, 0) )
-            case d_0_fst
-            by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        next
-          case out_na_11111
-          by contradiction /* impossible chain */
-        qed
-      qed
-    next
-      case out_hna_XOR_k_XOR_nb_nb__11211211
-      by contradiction /* from formulas */
-    qed
-  next
-    case split_case_8
     solve( !KU( h((~k⊕x)) ) @ #vk.1 )
       case c_h
       solve( !KU( (~na⊕x) ) @ #vk.2 )
@@ -581,6 +554,33 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
       case out_hna_XOR_k_XOR_nb_nb__11211211
       by contradiction /* from formulas */
     qed
+  next
+    case split_case_8
+    solve( !KU( h((~na⊕x)) ) @ #vk.1 )
+      case c_h
+      solve( !KU( (~k⊕x) ) @ #vk.2 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.5 )
+      next
+        case coerce
+        solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+          case out_hna_XOR_k_XOR_nb_nb__11211211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case out_na_11111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case out_hna_XOR_k_XOR_nb_nb__11211211
+      by contradiction /* from formulas */
+    qed
   qed
 qed
 
@@ -605,7 +605,7 @@ simplify
 solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   case if_eqhna_XOR_k_XOR_nb_m_0_1111111
   solve( splitEqs(1) )
-    case split_case_8
+    case split_case_7
     solve( !KU( h((~k⊕x)) ) @ #vk.1 )
       case out_hna_XOR_k_XOR_nb_nb__11211211
       solve( !KU( (~na⊕x) ) @ #vk.2 )
@@ -683,7 +683,7 @@ analyzing: case-studies-sapic-regression/xor/CRxor.spthy
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 1.816542s
+  processing time: 2.50358868s
   alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)
@@ -696,7 +696,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 1.816542s
+  processing time: 2.50358868s
   alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)

@@ -247,9 +247,9 @@ rule (modulo E) event_IN_I_2_nrx_XOR_R_aenc_2_ni_x_pkltkI_1211111111:
        x     = zero
        z     = $R.9
     
-    4. $R    = $R.10
-       x     = ($R.10⊕z.15)
-       z     = z.15
+    4. $R    = $R.13
+       x     = ($R.13⊕z.18)
+       z     = z.18
   */
 
 rule (modulo E) event_Commit_I_R_init_ni_x_XOR_R__12111111111:
@@ -275,9 +275,9 @@ rule (modulo E) event_Commit_I_R_init_ni_x_XOR_R__12111111111:
        x     = zero
        z     = $R.10
     
-    4. $R    = $R.11
-       x     = ($R.11⊕z.17)
-       z     = z.17
+    4. $R    = $R.14
+       x     = ($R.14⊕z.20)
+       z     = z.20
   */
 
 rule (modulo E) event_Running_R_I_resp_ni_x_XOR_R__121111111111:
@@ -303,9 +303,9 @@ rule (modulo E) event_Running_R_I_resp_ni_x_XOR_R__121111111111:
        x     = zero
        z     = $R.10
     
-    4. $R    = $R.11
-       x     = ($R.11⊕z.17)
-       z     = z.17
+    4. $R    = $R.14
+       x     = ($R.14⊕z.20)
+       z     = z.20
   */
 
 rule (modulo E) out_aenc_3_x_XOR_R_pkR_1211111111111:
@@ -337,9 +337,9 @@ rule (modulo E) out_aenc_3_x_XOR_R_pkR_1211111111111:
        x     = zero
        z     = $R.10
     
-    4. $R    = $R.11
-       x     = ($R.11⊕z.17)
-       z     = z.17
+    4. $R    = $R.14
+       x     = ($R.14⊕z.20)
+       z     = z.20
   */
 
 rule (modulo E) event_Secret_I_R_x_XOR_R_12111111111111:
@@ -366,8 +366,8 @@ rule (modulo E) event_Secret_I_R_x_XOR_R_12111111111111:
        z     = zero
     
     4. $R    = $x.8
-       x     = ($x.8⊕x.9)
-       z     = x.9
+       x     = ($x.8⊕x.12)
+       z     = x.12
   */
 
 rule (modulo E) event_Secret_I_R_ni_121111111111111:
@@ -1052,7 +1052,7 @@ analyzing: case-studies-sapic-regression/xor/NSLPK3xor.spthy
 analyzed: case-studies-sapic-regression/xor/NSLPK3xor.spthy
 
   output:          case-studies-sapic-regression/xor/NSLPK3xor.spthy.tmp
-  processing time: 16.678642s
+  processing time: 23.491249083s
   WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1069,7 +1069,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/NSLPK3xor.spthy
 
   output:          case-studies-sapic-regression/xor/NSLPK3xor.spthy.tmp
-  processing time: 16.678642s
+  processing time: 23.491249083s
   WARNING: 7 wellformedness check failed!
            The analysis results might be wrong!
   

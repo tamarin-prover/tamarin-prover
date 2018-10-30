@@ -124,7 +124,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini8.spthy.tmp
-  processing time: 0.04323905s
+  processing time: 0.04382468s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -139,7 +139,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini8.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini8.spthy.tmp
-  processing time: 0.04323905s
+  processing time: 0.04382468s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

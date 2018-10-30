@@ -96,8 +96,8 @@ rule (modulo E) R_Complete:
        z     = x.270^x.271
     
     6. ~eb   = ~eb.139
-       X     = x.271^(x.273*inv((~eb.139*x.272)))
-       z     = x.271^(x.273*inv(x.272))
+       X     = x.271^(x.272*inv((~eb.139*x.273)))
+       z     = x.271^(x.272*inv(x.273))
   */
 
 rule (modulo E) R_Expire:
@@ -790,7 +790,7 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 1.293760303s
+  processing time: 1.228261584s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -802,7 +802,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 1.293760303s
+  processing time: 1.228261584s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

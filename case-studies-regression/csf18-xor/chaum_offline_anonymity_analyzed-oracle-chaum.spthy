@@ -1462,7 +1462,7 @@ analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 13.155380219s
+  processing time: 12.335838117s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (43 steps)
@@ -1476,7 +1476,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 13.155380219s
+  processing time: 12.335838117s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (43 steps)

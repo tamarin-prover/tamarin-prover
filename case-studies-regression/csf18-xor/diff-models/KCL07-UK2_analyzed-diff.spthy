@@ -115,7 +115,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 34.852891875s
+  processing time: 33.716694722s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 34.852891875s
+  processing time: 33.716694722s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

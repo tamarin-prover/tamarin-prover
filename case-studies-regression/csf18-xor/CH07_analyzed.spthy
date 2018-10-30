@@ -75,13 +75,13 @@ rule (modulo E) tag1:
     
     8. ~k    = ~k.150
        ~r2   = ~r2.151
-       r1    = (~k.150⊕x.297)
-       z     = (~r2.151⊕x.297)
-    
-    9. ~k    = ~k.150
-       ~r2   = ~r2.151
        r1    = (~r2.151⊕x.297)
        z     = (~k.150⊕x.297)
+    
+    9. ~k    = ~k.151
+       ~r2   = ~r2.152
+       r1    = (~k.151⊕x.299)
+       z     = (~r2.152⊕x.299)
   */
 
 rule (modulo E) reader2:
@@ -219,34 +219,34 @@ rule (modulo E) reader2:
     15. ~id   = ~id.45
         ~k    = ~k.46
         ~r1   = ~r1.47
-        hash  = hash.48
-        r2    = (~k.46⊕x.88)
-        z     = (hash.48⊕rot(~id.45, hash.48))
-        z.1   = (~r1.47⊕x.88)
-    
-    16. ~id   = ~id.45
-        ~k    = ~k.46
-        ~r1   = ~r1.47
-        hash  = hash.48
-        r2    = (~r1.47⊕x.88)
-        z     = (hash.48⊕rot(~id.45, hash.48))
-        z.1   = (~k.46⊕x.88)
-    
-    17. ~id   = ~id.45
-        ~k    = ~k.46
-        ~r1   = ~r1.47
-        hash  = zero
-        r2    = (~k.46⊕x.88)
-        z     = rot(~id.45, zero)
-        z.1   = (~r1.47⊕x.88)
-    
-    18. ~id   = ~id.45
-        ~k    = ~k.46
-        ~r1   = ~r1.47
         hash  = zero
         r2    = (~r1.47⊕x.88)
         z     = rot(~id.45, zero)
         z.1   = (~k.46⊕x.88)
+    
+    16. ~id   = ~id.46
+        ~k    = ~k.47
+        ~r1   = ~r1.48
+        hash  = hash.49
+        r2    = (~r1.48⊕x.90)
+        z     = (hash.49⊕rot(~id.46, hash.49))
+        z.1   = (~k.47⊕x.90)
+    
+    17. ~id   = ~id.46
+        ~k    = ~k.47
+        ~r1   = ~r1.48
+        hash  = zero
+        r2    = (~k.47⊕x.90)
+        z     = rot(~id.46, zero)
+        z.1   = (~r1.48⊕x.90)
+    
+    18. ~id   = ~id.47
+        ~k    = ~k.48
+        ~r1   = ~r1.49
+        hash  = hash.50
+        r2    = (~k.48⊕x.92)
+        z     = (hash.50⊕rot(~id.47, hash.50))
+        z.1   = (~r1.49⊕x.92)
   */
 
 rule (modulo E) tag2:
@@ -378,34 +378,34 @@ rule (modulo E) tag2:
     15. ~id   = ~id.33
         ~k    = ~k.34
         ~r2   = ~r2.35
-        hash  = hash.36
-        r1    = (~k.34⊕x.64)
-        z     = (hash.36⊕rot(~id.33, hash.36))
-        z.1   = (~r2.35⊕x.64)
-    
-    16. ~id   = ~id.33
-        ~k    = ~k.34
-        ~r2   = ~r2.35
-        hash  = hash.36
-        r1    = (~r2.35⊕x.64)
-        z     = (hash.36⊕rot(~id.33, hash.36))
-        z.1   = (~k.34⊕x.64)
-    
-    17. ~id   = ~id.33
-        ~k    = ~k.34
-        ~r2   = ~r2.35
-        hash  = zero
-        r1    = (~k.34⊕x.64)
-        z     = rot(~id.33, zero)
-        z.1   = (~r2.35⊕x.64)
-    
-    18. ~id   = ~id.33
-        ~k    = ~k.34
-        ~r2   = ~r2.35
         hash  = zero
         r1    = (~r2.35⊕x.64)
         z     = rot(~id.33, zero)
         z.1   = (~k.34⊕x.64)
+    
+    16. ~id   = ~id.34
+        ~k    = ~k.35
+        ~r2   = ~r2.36
+        hash  = hash.37
+        r1    = (~r2.36⊕x.66)
+        z     = (hash.37⊕rot(~id.34, hash.37))
+        z.1   = (~k.35⊕x.66)
+    
+    17. ~id   = ~id.34
+        ~k    = ~k.35
+        ~r2   = ~r2.36
+        hash  = zero
+        r1    = (~k.35⊕x.66)
+        z     = rot(~id.34, zero)
+        z.1   = (~r2.36⊕x.66)
+    
+    18. ~id   = ~id.35
+        ~k    = ~k.36
+        ~r2   = ~r2.37
+        hash  = hash.38
+        r1    = (~k.36⊕x.68)
+        z     = (hash.38⊕rot(~id.35, hash.38))
+        z.1   = (~r2.37⊕x.68)
   */
 
 restriction equality:
@@ -440,7 +440,7 @@ solve( Alive( x, 'Tag' ) @ #i )
       solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 )
         case tag1
         solve( splitEqs(0) )
-          case split_case_8
+          case split_case_7
           solve( !KU( (~r1⊕x) ) @ #vk.2 )
             case c_xor
             solve( splitEqs(1) )
@@ -742,7 +742,7 @@ analyzing: examples/csf18-xor/CH07.spthy
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.201866407s
+  processing time: 0.981041143s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
@@ -757,7 +757,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.201866407s
+  processing time: 0.981041143s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
