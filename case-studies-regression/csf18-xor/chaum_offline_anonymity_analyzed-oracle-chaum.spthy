@@ -1212,16 +1212,16 @@ guarded formula characterizing all satisfying traces:
 "∃ x y r #i. (Spend( x, y, r ) @ #i)"
 */
 simplify
-solve( !KU( sign(blind(x.1, ~r), ~skB) ) @ #vk )
-  case c_sign
-  solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i )
-    case Register_Corrupted_Bank_pk
+solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i )
+  case Register_Corrupted_Bank_pk
+  solve( !KU( sign(blind(x.1, ~r), ~skB) ) @ #vk )
+    case c_sign
     solve( !KU( blind(x.1, ~r) ) @ #vk.1 )
       case C_1_case_1
-      solve( !KU( ~skB ) @ #vk.2 )
-        case Register_Corrupted_Bank_pk
-        solve( splitEqs(1) )
-          case split
+      solve( splitEqs(1) )
+        case split
+        solve( !KU( ~skB ) @ #vk.2 )
+          case Register_Corrupted_Bank_pk
           solve( !St_C_1( x, ~y, ~r ) ▶₀ #i )
             case C_1
             SOLVED // trace found
@@ -1267,15 +1267,15 @@ solve( !KU( ~C ) @ #j )
     case C_2_case_1
     solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.2 )
       case c_sign
-      solve( !KU( blind(~x, ~r) ) @ #vk.3 )
-        case C_1
-        solve( !KU( ~skB ) @ #vk.4 )
-          case Register_Corrupted_Bank_pk
+      solve( !KU( ~skB ) @ #vk.4 )
+        case Register_Corrupted_Bank_pk
+        solve( !KU( blind(~x, ~r) ) @ #vk.4 )
+          case C_1
           by solve( !KU( ~r ) @ #vk.4 )
+        next
+          case c_blind
+          by contradiction /* cyclic */
         qed
-      next
-        case c_blind
-        by contradiction /* cyclic */
       qed
     qed
   next
@@ -1296,39 +1296,48 @@ solve( !KU( ~C ) @ #j )
   qed
 next
   case C_1_case_2
-  solve( !KU( pk(k) ) @ #vk.2 )
-    case c_pk
-    solve( !KU( ~x ) @ #vk.3 )
-      case C_1_case_1
-      by contradiction /* cyclic */
-    next
-      case C_1_case_2
+  solve( !KU( ~x ) @ #vk.3 )
+    case C_1_case_1
+    by contradiction /* cyclic */
+  next
+    case C_1_case_2
+    solve( !KU( pk(k) ) @ #vk.3 )
+      case c_pk
       by solve( !KU( ~r ) @ #vk.2 )
-    next
-      case C_1_case_3
+    qed
+  next
+    case C_1_case_3
+    solve( !KU( pk(k) ) @ #vk.3 )
+      case c_pk
       solve( !KU( pk(k.1) ) @ #vk.5 )
         case c_pk
         by solve( !KU( ~r ) @ #vk.3 )
       qed
-    next
-      case C_2_case_1
-      solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.4 )
-        case c_sign
-        solve( !KU( blind(~x, ~r) ) @ #vk.5 )
-          case C_1
-          solve( !KU( ~skB ) @ #vk.6 )
-            case Register_Corrupted_Bank_pk
+    qed
+  next
+    case C_2_case_1
+    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.4 )
+      case c_sign
+      solve( !KU( pk(k) ) @ #vk.4 )
+        case c_pk
+        solve( !KU( ~skB ) @ #vk.6 )
+          case Register_Corrupted_Bank_pk
+          solve( !KU( blind(~x, ~r) ) @ #vk.6 )
+            case C_1
             by solve( !KU( ~r ) @ #vk.5 )
+          next
+            case c_blind
+            by contradiction /* cyclic */
           qed
-        next
-          case c_blind
-          by contradiction /* cyclic */
         qed
       qed
-    next
-      case C_2_case_2
-      solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.5 )
-        case c_sign
+    qed
+  next
+    case C_2_case_2
+    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.5 )
+      case c_sign
+      solve( !KU( pk(k) ) @ #vk.5 )
+        case c_pk
         solve( !KU( ~skB ) @ #vk.6 )
           case Register_Corrupted_Bank_pk
           solve( !KU( blind(~x, ~r) ) @ #vk.7 )
@@ -1344,33 +1353,57 @@ next
   qed
 next
   case C_2_case_1
-  solve( !KU( ~y ) @ #vk.1 )
-    case C_1_case_1
-    by solve( !KU( ~r ) @ #vk.2 )
-  next
-    case C_1_case_2
-    by solve( !KU( ~r ) @ #vk.2 )
-  next
-    case C_2
-    by contradiction /* cyclic */
+  solve( !KU( sign(blind((~C⊕~y), ~r), ~skB) ) @ #vk )
+    case c_sign
+    solve( !KU( ~skB ) @ #vk.3 )
+      case Register_Corrupted_Bank_pk
+      solve( !KU( blind((~C⊕~y), ~r) ) @ #vk.3 )
+        case C_1
+        solve( !KU( ~y ) @ #vk.3 )
+          case C_1_case_1
+          by solve( !KU( ~r ) @ #vk.4 )
+        next
+          case C_1_case_2
+          solve( !KU( pk(k) ) @ #vk.6 )
+            case c_pk
+            by solve( !KU( ~r ) @ #vk.5 )
+          qed
+        next
+          case C_2
+          by contradiction /* cyclic */
+        qed
+      next
+        case c_blind
+        by contradiction /* cyclic */
+      qed
+    qed
   qed
 next
   case C_2_case_2
-  solve( !KU( ~y ) @ #vk.2 )
-    case C_1_case_1
+  solve( !KU( sign(blind((~C⊕~y), ~r), ~skB) ) @ #vk.1 )
+    case c_sign
     solve( !KU( ~skB ) @ #vk.3 )
       case Register_Corrupted_Bank_pk
-      by solve( !KU( ~r ) @ #vk.4 )
+      solve( !KU( blind((~C⊕~y), ~r) ) @ #vk.4 )
+        case C_1
+        solve( !KU( ~y ) @ #vk.4 )
+          case C_1_case_1
+          by solve( !KU( ~r ) @ #vk.5 )
+        next
+          case C_1_case_2
+          solve( !KU( pk(k) ) @ #vk.7 )
+            case c_pk
+            by solve( !KU( ~r ) @ #vk.6 )
+          qed
+        next
+          case C_2
+          by contradiction /* cyclic */
+        qed
+      next
+        case c_blind
+        by contradiction /* cyclic */
+      qed
     qed
-  next
-    case C_1_case_2
-    solve( !KU( ~skB ) @ #vk.3 )
-      case Register_Corrupted_Bank_pk
-      by solve( !KU( ~r ) @ #vk.4 )
-    qed
-  next
-    case C_2
-    by contradiction /* cyclic */
   qed
 qed
 
@@ -1394,34 +1427,34 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
   case C_1
-  solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
-    case c_sign
-    solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i1 )
-      case Register_Corrupted_Bank_pk
-      solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i2 )
-        case C_1
-        solve( !KU( sign(blind(x.1, ~r), ~skB.1) ) @ #vk.1 )
-          case c_sign
-          solve( !Bank_Pk( $B.1, pk(~skB.1) ) ▶₂ #i2 )
-            case Register_Corrupted_Bank_pk
-            solve( !KU( ~C ) @ #k )
-              case C_2_case_1
-              solve( splitEqs(3) )
-                case split
-                solve( !KU( blind(x, ~r) ) @ #vk.2 )
-                  case C_1_case_1
-                  solve( !KU( ~skB ) @ #vk.3 )
-                    case Register_Corrupted_Bank_pk
-                    solve( !KU( blind(x, ~r) ) @ #vk.4 )
-                      case C_1_case_1
-                      solve( !KU( sign(blind((~C⊕~y.1), ~r.1), ~skB) ) @ #vk.3 )
-                        case c_sign
-                        solve( !KU( ~y.1 ) @ #vk.4 )
-                          case C_2_case_2
-                          solve( !KU( blind((~C⊕~y.1), ~r.1) ) @ #vk.5 )
-                            case C_1
-                            solve( !KU( sign(blind(~y.1, ~r.1), ~skB) ) @ #vk.6 )
-                              case c_sign
+  solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i1 )
+    case Register_Corrupted_Bank_pk
+    solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i2 )
+      case C_1
+      solve( !Bank_Pk( $B.1, pk(~skB.1) ) ▶₂ #i2 )
+        case Register_Corrupted_Bank_pk
+        solve( !KU( ~C ) @ #k )
+          case C_2_case_1
+          solve( !KU( ~y.1 ) @ #vk.3 )
+            case C_2_case_2
+            solve( splitEqs(3) )
+              case split
+              solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk.1 )
+                case c_sign
+                solve( !KU( sign(blind(x.1, ~r), ~skB) ) @ #vk.2 )
+                  case c_sign
+                  solve( !KU( sign(blind((~C⊕~y.1), ~r.1), ~skB) ) @ #vk.3 )
+                    case c_sign
+                    solve( !KU( sign(blind(~y.1, ~r.1), ~skB) ) @ #vk.4 )
+                      case c_sign
+                      solve( !KU( blind(x, ~r) ) @ #vk.5 )
+                        case C_1_case_1
+                        solve( !KU( blind(x, ~r) ) @ #vk.7 )
+                          case C_1_case_1
+                          solve( !KU( ~skB ) @ #vk.5 )
+                            case Register_Corrupted_Bank_pk
+                            solve( !KU( blind((~C⊕~y.1), ~r.1) ) @ #vk.6 )
+                              case C_1
                               solve( !KU( blind(~y.1, ~r.1) ) @ #vk.7 )
                                 case C_1
                                 solve( (#i1 < #i2)  ∥ (#i2 < #i1) )
@@ -1462,10 +1495,10 @@ analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 12.335838117s
+  processing time: 9.582830952s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
-  anonymity (all-traces): verified (43 steps)
+  anonymity (all-traces): verified (54 steps)
   caught (exists-trace): verified (19 steps)
 
 ------------------------------------------------------------------------------
@@ -1476,10 +1509,10 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 12.335838117s
+  processing time: 9.582830952s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
-  anonymity (all-traces): verified (43 steps)
+  anonymity (all-traces): verified (54 steps)
   caught (exists-trace): verified (19 steps)
 
 ==============================================================================
