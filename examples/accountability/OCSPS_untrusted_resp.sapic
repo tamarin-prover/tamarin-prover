@@ -180,13 +180,6 @@ verdictfunction v1:
     "Ex #i #j t cert. Judged(t,cert)@i & BlameS()@j " -> <'S'>,
     otherwise -> empty 
 
-// first: acc_S, assume OCSP is trusted, should hold
-// then: acc_SOCSP, assume OCSP is not trusted, show lack of accountability
-// future: make the protocol accountable. (Ilkan?)
-
-/* restriction no_corrupt_ocsp: 
-/*     "not (Ex #i. Corrupted('OCSP')@i)" */
-
 restriction no_corrupt_ca:
     "not (Ex #i. Corrupted('CA')@i)"
 
