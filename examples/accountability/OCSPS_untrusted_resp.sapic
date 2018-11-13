@@ -1,5 +1,5 @@
 /*
- * Protocol:   OCSP Stapling
+ * Protocol:   OCSP Stapling, untrusted responder
  * Modeler:   Robert Künnemann
  * Date:  
  * Source:  https://tools.ietf.org/html/rfc6960
@@ -7,7 +7,7 @@
  * Note:  execute with --heuristic=p 
  * */
 
-theory OCSPS
+theory OCSPS_untrusted_resp
 begin
 
 /* builtins: signing */
