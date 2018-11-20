@@ -1,0 +1,575 @@
+theory 5G_AKA_priv
+
+begin
+
+/*  An active, but not compromising attacker is sufficient to break untraceability 
+    All compromise rules have been commented out.
+
+   Modeler:     David Basin, Jannik Dreier, Lucca Hirschi, Sasa Radomirovic, Ralf Sasse, Vincent Stettler
+*/
+
+builtins:
+	asymmetric-encryption, multiset, xor
+
+functions:
+	// AKA functions (TS 33.102)
+	f1/2, 	   // MAC-function --> MAC  
+	f2/2, 	   // MAC-function --> RES
+	f3/2, 	   // KDF 	   --> CK
+	f4/2, 	   // KDF          --> IK
+	f5/2, 	   // KDF          --> AK (Hide Sqn)
+	f1_star/2, // MAC-function --> MAC-S
+	f5_star/2, // KGF	   --> AKS (Hide Sqn)
+
+	// 3GPP KDFs (TS 33.501)
+	KDF/2,	 // KDF		 --> K_ausf, K_seaf, XRES*
+	SHA256/2 // KDF		 --> HXRES*
+
+
+/************************************/
+/*    Channel: SEAF .<->. HSS       */
+/************************************/
+
+rule send_secure:
+	[SndS(A,B,m)]
+	-->
+	[Sec(A,B,m)]
+
+rule receive_secure:
+	[Sec(A,B,m)]
+	-->
+	[RcvS(A,B,m)]
+
+/*  
+rule secureChannel_compromised_in:
+	[In(<A,B,x>)]
+	--[
+		Rev(A,'secureChannel'),
+		Injected(x)
+	]->
+	[Sec(A,B,x)]
+
+rule secureChannel_compromised_out:
+	[Sec(A,B,m)]
+	--[Rev(B,'secureChannel')]->
+	[Out(m)]
+*/
+
+/************************************/
+/*     Initialization Rules         */
+/************************************/
+
+// Initialize a serving network
+// [5G] clause 6.1
+rule init_servNet:
+	let 
+		SNID = <'5G', ~idSN>
+	in
+	[ Fr(~idSN) ] 
+	--[ ServNet(~idSN) ]->
+	[!SEAF(~idSN, SNID)
+	, Out(SNID)]
+
+// Initialize a home network
+rule init_homeNet:
+	[Fr(~sk_HN),
+	  Fr(~idHN)]
+	--[ HomeNet(~idHN) ]->
+	[!HSS(~idHN, ~sk_HN),
+	 !Pk(~idHN, pk(~sk_HN)),
+	 Out(<~idHN, pk(~sk_HN)>)]
+
+// Generate 2 SUPIs. Allow all to be initialized.
+// But allow only one to be used in the left system
+// while both may be used in the right system
+rule supi_supply:
+        [Fr(~a), Fr(~b)]
+	--[ Once() ]->
+	[!SUPI_Init(~a+~b),
+         SUPI(~a), 
+         SUPI(diff(~a,~b))
+        ]
+
+// Initialize the subscription
+rule add_subscription:
+	[!SUPI_Init(~supi+z),
+	 Fr(~k),
+	 Fr(~sqn_root),
+	 !HSS(~idHN, ~sk_HN)]
+	--[
+		// Restriction
+		Subscribe(~supi, ~idHN),
+
+		// Helper lemmas
+		Sqn_Create(~supi, ~idHN, ~sqn_root)
+	]->
+	[!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
+	 Sqn_UE(~supi, ~idHN, ~sqn_root+'1', ~sqn_root, '1'),
+	 Sqn_HSS(~supi, ~idHN, ~sqn_root+'1', ~sqn_root, '1')]
+// Counter(HSS) starts at SQN(UE)+1
+
+
+/************************************/
+/*         Key Leakage              */
+/************************************/
+
+// NOTE: Rules for compromised channel between SEAF and HSS are defined above.
+
+/*
+
+// Compromised subscriptions (symmetric key k)  
+rule reveal_Ltk_Sym:
+	[!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root)]
+	--[
+		// Security properties
+		Rev(~supi, <'k', ~k>),
+		Rev(~idHN, <'k', ~k>)
+	]->
+	[Out(~k)]
+
+// Compromised subscriptions ("initial" counter sqn_root) 
+rule reveal_Ltk_Sqn:
+	[!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root)]
+	--[
+		// Security properties
+		Rev(~supi, <'sqn', ~sqn_root>),
+		Rev(~idHN, <'sqn', ~sqn_root>)
+	]->
+	[Out(~sqn_root)]
+
+// Compromised subscriptions (identifier supi) 
+rule reveal_Ltk_supi:
+	[!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root)]
+	--[
+		// Security properties
+		Rev(~supi, <'supi', ~supi>),
+		Rev(~idHN, <'supi', ~supi>)
+	]->
+	[Out(~supi)]
+
+// Compromised home network (private asymmetric key sqn_HN)
+rule reveal_sk_HN:
+	[!HSS(~idHN, ~sk_HN)]
+	--[
+		// Security properties
+		Rev(~idHN, <'skHN', ~sk_HN>)
+	]->
+	[Out(~sk_HN)]
+*/
+
+/************************************/
+/*       Sync. Failure              */
+/************************************/
+// We only allow the Sqn to increase, as a decrease would
+// trivially violate injectivity
+/*
+rule ue_increase_sqn:
+	[Sqn_UE(~supi, ~idHN, Sqn, ~sqn_root, count),
+	 In(m)]
+	--[
+		// Open chains
+		Sqn_UE_Invariance(~supi, ~idHN, Sqn+m, ~sqn_root, count+m),
+
+		// Helper lemmas
+		Sqn_UE_Change(~supi, ~idHN, Sqn+m),
+
+		// Executability
+		Sqn_UE_Desync()
+	]->
+	[Sqn_UE(~supi, ~idHN, Sqn+m, ~sqn_root, count+m)]
+*/
+
+/************************************/
+/*       Protocol Rules             */
+/************************************/
+
+// Attach Request
+rule ue_send_attachReq:
+	let
+		suci = < aenc{<~supi, ~R>}pk_HN, ~idHN>
+		msg = suci
+	in
+	[!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
+	 !Pk(~idHN, pk_HN),
+	 Fr(~R),
+	 Fr(~tid)]
+	--[
+		// Executability
+		Start_UE_Session(~supi)
+	]->
+	[St_1_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root),
+	 Out(msg)]
+
+// Attach Request + Authentication Initiation Request (AIR)
+rule seaf_receive_attachReq_send_air:
+	let
+		suci = <conc_supi,  idHN>
+		msg = <suci, SNID >
+
+	in
+	[!SEAF(~idSN, SNID),
+	 Fr(~tid),
+	 In(suci)]
+	--[
+		// Executability
+		Start_SEAF_Session(~idSN)
+	]->
+	[St_1_SEAF(~tid, ~idSN, SNID, conc_supi, idHN),
+	 SndS(~idSN, idHN, <'air', msg>)]
+
+// Authentication Initiation Request (AIR) + 5G Authentication Initiation Answer (5G-AIA)
+rule hss_receive_air_send_aia:
+	let
+	        // 1. Receive
+		conc_supi = aenc{<~supi, ~R>}pk(~sk_HN)
+		suci = <conc_supi, ~idHN>
+		SNID = <'5G', idSN> // HSS checks that the received SNID matches the authenticated channel with idSN
+		msgIn = <suci, SNID >
+		SqnNext = SqnHSS + '1'
+		
+		// 2. Send
+                //     a. ARPF part
+		MAC = f1(~k, <SqnNext, ~RAND>)
+	 	XRES = f2(~k, ~RAND)
+		CK = f3(~k, ~RAND)
+		IK = f4(~k, ~RAND)
+		AK = f5(~k, ~RAND)
+		AUTN = <SqnNext XOR AK, MAC>
+		K_seaf = KDF(KDF(<CK, IK>, <SNID, SqnNext XOR AK>), SNID)
+		XRES_star = KDF(<CK, IK>, <SNID, XRES, ~RAND>)
+
+		//     b. AUSF part
+                HXRES_star = SHA256(XRES_star, ~RAND)
+		5G_AV = < ~RAND, HXRES_star, K_seaf, AUTN >
+
+		msgOut = 5G_AV
+        in
+	[!HSS(~idHN, ~sk_HN),
+	 RcvS(idSN, ~idHN, <'air', msgIn>),
+	 !Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
+	 Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count),
+	 Fr(~RAND),
+	 Fr(~tid),
+	 In(count)]
+	--[
+		// Open chains
+		Sqn_HSS_Invariance(~idHN, ~supi, SqnNext, ~sqn_root, count+'1'),
+		Src(~RAND, AUTN),
+
+		// Executability
+		Start_HSS_Session(~idHN),
+		HSS_Send_Aia()
+
+	]->
+	[St_1_HSS(~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, SqnNext, XRES_star, ~RAND, ~sqn_root, ~sk_HN),
+         Sqn_HSS(~supi, ~idHN, SqnNext, ~sqn_root, count+'1'),
+         SndS(~idHN, idSN, <'aia', msgOut>)]
+
+
+// 5G Authentication Initiation Answer (5G-AIA) + Authentication Request (Auth-Req)
+rule seaf_receive_aia_send_authReq:
+	let
+		5G_AV = < RAND, HXRES_star, K_seaf, AUTN >
+		msgIn = 5G_AV
+                msgOut = < RAND, AUTN, SNID >
+        in
+	[St_1_SEAF(~tid, ~idSN, SNID, conc_supi, idHN),
+	 RcvS(idHN, ~idSN, <'aia', msgIn>)]
+	--[
+		// Open chains
+		Out_Src(RAND, AUTN)
+
+	]->
+	[St_2_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star, K_seaf)
+	, Out(msgOut)]
+
+
+// Authentication Request (Auth-Req) + Authentication Response (Auth-Resp)
+// The UE accepts a Sqn iff it is greater than SqnMax (delta = infinity).
+// The UE stores the greatest Sqn accepted.
+rule ue_receive_authReq_freshness_success_send_authResp:
+	let
+		// Input, checks
+		SqnHSS = SqnUE + dif // check freshness
+		AK = f5(~k, RAND)
+		MAC = f1(~k, <SqnHSS, RAND>) // check on the MAC
+                AUTN = <SqnHSS XOR AK, MAC>
+		SNID = <'5G', idSN>
+		msgIn = < RAND, AUTN, SNID >
+		// Output
+		RES = f2(~k, RAND)
+		IK = f4(~k, RAND)
+		CK = f3(~k, RAND)
+		RES_star = KDF(<CK, IK>, <SNID, RES, RAND>)
+		K_seaf = KDF(KDF(<CK, IK>, <SNID, SqnHSS XOR AK>), SNID)
+		msgOut = RES_star
+	in
+	[St_1_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root),
+	 Sqn_UE(~supi, ~idHN, SqnUE, ~sqn_root, count),
+         SUPI(~supi),
+	 In(msgIn)]
+	--[
+	Original(AUTN),
+		// Open chains
+		Sqn_UE_Invariance(~supi, ~idHN, SqnHSS, ~sqn_root, count+dif),
+
+		// Helper lemmas
+		Sqn_UE_Change(~supi, ~idHN, SqnHSS),
+		Sqn_UE_Use(~supi, ~idHN, SqnHSS)
+
+	]->
+	[St_2_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root, idSN, K_seaf),
+	 Out(msgOut),
+	 Sqn_UE(~supi, ~idHN, SqnHSS, ~sqn_root, count+dif)] 
+
+
+// Authentication Request (Auth-Req) and Sync Failure
+rule ue_receive_authReq_fail_freshness_send_sync_failure:
+	let
+		// Input, checks
+		AK = f5(~k, RAND)
+		MAC = f1(~k, <SqnHSS, RAND>) // check on the MAC
+                AUTN = <SqnHSS XOR AK, MAC>
+		SNID = <'5G', idSN>
+		msgIn = < RAND, AUTN, SNID >
+		// Output
+		AKS = f5_star(~k, RAND)
+		MACS = f1_star(~k, <SqnUE, RAND>)
+		AUTS = <SqnUE XOR AKS, MACS >
+		out_msg = AUTS
+	in
+	[St_1_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root),
+	 Sqn_UE(~supi, ~idHN, SqnUE, ~sqn_root, count),
+         SUPI(~supi),
+	 In(msgIn),
+	 In(count)]		// necessary to avoid open chains
+	--[
+         	UE_Sync_Failure(),
+	        Replayed(AUTN),
+		// Restriction
+		Greater_Or_Equal_Than(SqnUE, SqnHSS), // Check freshness (FAIL)
+
+		// Open chains
+                Sqn_UE_Invariance(~supi, ~idHN, SqnUE, ~sqn_root, count),
+
+	        // Helper lemmas
+		Sqn_UE_Nochange(~supi, ~idHN, SqnUE)
+	]->
+	[Out(out_msg),
+	 Sqn_UE(~supi, ~idHN, SqnUE, ~sqn_root, count)]
+
+// Authentication Response (Auth-Resp) + 5G Authentication Confirmation (5G-AC)
+rule seaf_receive_authResp_send_ac:
+	let
+		HXRES_star = SHA256(RES_star, RAND)
+		suci = <conc_supi,  idHN>
+		msgOut = < RES_star, suci, SNID >
+	in
+	[St_2_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star, K_seaf),
+	 In(RES_star)]
+	--[
+		// Security properties
+		Running(~idSN, idHN, <'HSS','SEAF', <'RES_star', RES_star>>)
+	]->
+	[St_3_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, RES_star, K_seaf),
+	SndS(~idSN, idHN, <'ac', msgOut>)]
+
+
+// Synchronization Failure and 5G Authentication Synchronization message
+rule seaf_receive_syncFailure_send_authSync:
+	let
+		AUTS = < SqnUEXorAKS, MACS >
+		out_msg = < RAND, AUTS >
+	in
+	[St_2_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star, K_seaf),
+	 In(AUTS)]
+	-->
+	[SndS(~idSN, idHN, <'resync', out_msg>)]
+
+// 5G Authentication Confirmation (5G-AC) + Authentication Confirmation Answer (5G-ACA)
+rule hss_receive_ac_send_aca:
+	let
+		SNID = <'5G', idSN>
+		CK = f3(~k, ~RAND)
+		IK = f4(~k, ~RAND)
+		AK = f5(~k, ~RAND)
+		K_seaf = KDF(KDF(<CK, IK>, <SNID, Sqn XOR AK>), SNID)
+		msgIn = < XRES_star, suci, SNID >
+
+		msgOut = <'confirm', ~supi>
+	in
+	[St_1_HSS(~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, Sqn, XRES_star, ~RAND, ~sqn_root, ~sk_HN),
+	 RcvS(idSN, ~idHN, <'ac',msgIn>)]
+	--[
+		// Executability
+		HSS_End(),
+
+		// Security properties
+		Secret(<'HSS', ~idHN>, 'key', K_seaf),
+		Commit(~idHN, idSN, <'HSS','SEAF', <'K_seaf', K_seaf>>),
+		Commit(~idHN, idSN, <'HSS','SEAF', <'RES_star', XRES_star>>),
+		Commit(~idHN, ~supi, <'HSS','UE', <'K_seaf', K_seaf>>),
+		Commit(~idHN, ~supi, <'HSS','UE', <'RAND', ~RAND>>),
+		Honest(~idHN),
+		Honest(~supi),
+		Honest(idSN)
+	]->
+	[SndS(~idHN, idSN, <'aca', msgOut>)]
+
+// Authentication Confirmation Answer (5G-ACA)
+rule seaf_receive_aca:
+        let
+		SNID = <'5G', ~idSN>
+		msgIn = <'confirm', supi>
+	in
+        [St_3_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, ~RAND, RES_star, K_seaf),
+	 RcvS(idHN, ~idSN, <'aca', msgIn>)]
+	--[
+		// Executability
+		SEAF_End()
+
+	]->
+	[St_4_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, ~RAND, RES_star, K_seaf,supi),
+	 Out(f1(K_seaf, 'SEAF'))] // Key confimration message with UE
+
+// 5G Authentication Synchronization message
+rule hss_receive_authSync:
+	let
+		SqnUE = dif + SqnHSS // check that SqnUE > SqnHSS
+		AKS = f5_star(~k, ~RAND)
+		MACS = f1_star(~k, <SqnUE, ~RAND>)
+		AUTS = <SqnUE XOR AKS, MACS >
+		msg = < ~RAND, AUTS >
+
+	in
+	[St_1_HSS(~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, SqnHSS, XRES_star, ~RAND, ~sqn_root, ~sk_HN),
+	 Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count),
+	 RcvS(idSN, ~idHN, <'resync', msg>),
+	 In(count+dif)]
+	--[
+		// Open chains
+		Sqn_HSS_Invariance(~idHN, ~supi, SqnUE, ~sqn_root, count+dif),
+
+		// Executability
+		HSS_Resync_End(count+dif)
+	]->
+	[Sqn_HSS(~supi, ~idHN, SqnUE, ~sqn_root, count+dif)]
+
+/************************************/
+/*     Restrictions / Axioms        */
+/************************************/
+
+restriction subscribe_once:
+	" All HN1 HN2 supi #i #j. Subscribe(supi, HN1)@i & Subscribe(supi, HN2)@j ==> (#i = #j & HN1 = HN2)"
+
+restriction greater_or_equal_than:
+  	" All x y #i. Greater_Or_Equal_Than(x,y)@i ==> not (Ex z. x + z = y) "
+
+restriction once:
+        " All #i #j. Once()@i & Once()@j ==> #i = #j "
+
+// Dummy lemma for timing info only.
+lemma dummy: "not(F)"
+
+/************************************/
+/*         Sources lemmas           */
+/************************************/
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma rand_autn_src [sources]:
+  	" All RAND AUTN #i. Out_Src(RAND, AUTN)@i
+		==> (Ex #j. Src(RAND, AUTN)@j & j < i)
+//		    | (Ex #j x1 x2. Injected(<'aia', <RAND, x1, x2, AUTN>>)@j & j < i) 
+"
+
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_ue_invariance [use_induction, sources]:
+	" All supi HN Sqn sqn_root count #i.
+		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
+			==> sqn_root + count = Sqn"
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_hss_invariance [use_induction, sources]:
+	" All HN supi Sqn sqn_root count #i.
+		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
+			==> sqn_root + count = Sqn "
+
+/************************************/
+/*          Helper lemmas           */
+/************************************/
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_ue_src [use_induction, reuse]:
+	" All supi HN Sqn sqn_root count #i.
+		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
+			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
+
+// holds (autoproof with oracle)
+// 2 sec
+lemma sqn_hss_src [reuse]:
+	" All HN supi Sqn sqn_root count #i.
+		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
+			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
+
+// holds (autoproof with oracle)
+// 2 min
+lemma sqn_ue_nodecrease [use_induction, reuse]:
+	" (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Change(supi, HN, Sqnj)@j &
+		 Sqn_UE_Change(supi, HN, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Change(supi, HN, Sqnj)@j &
+		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
+		 Sqn_UE_Change(supi, HN, Sqni)@i &
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni + dif))) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
+		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni + dif))) "
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_ue_unique [reuse, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+	" All supi HN Sqn #i #j.
+		Sqn_UE_Use(supi, HN, Sqn)@i & Sqn_UE_Use(supi, HN, Sqn)@j
+			==> #i = #j "
+
+
+/************************************/
+/*     Executability lemmas         */
+/************************************/
+
+lemma original_replayed_autn:
+        exists-trace
+"Ex #i #j autn. Original(autn)@i & Replayed(autn)@j
+"
+
+// holds (autoproof with oracle)
+// This lemma shows a normal execution without resync.
+// ~15s
+lemma executability_honest:
+	exists-trace
+	" Ex #i. SEAF_End()@i
+		& (All supi HN sqn_root #i. Sqn_Create(supi, HN, sqn_root)@i
+				==> not (Ex #j. K(sqn_root)@j))
+		& (All HN1 HN2 #j #k. HomeNet(HN1)@j &
+				      HomeNet(HN2)@k ==> #j = #k)
+		& (All S1 S2 HN1 HN2 #j #k. Subscribe(S1, HN1)@j &
+					    Subscribe(S2, HN2)@k ==> #j = #k)
+		& (All SNID1 SNID2 #j #k. Start_SEAF_Session(SNID1)@j &
+				          Start_SEAF_Session(SNID2)@k ==> #j = #k) 
+		& (All UE1 UE2 #j #k. Start_UE_Session(UE1)@j &
+				          Start_UE_Session(UE2)@k ==> #j = #k) 
+		& (All HN1 HN2 #j #k. Start_HSS_Session(HN1)@j &
+				      Start_HSS_Session(HN2)@k ==> #j = #k)"
+
+end

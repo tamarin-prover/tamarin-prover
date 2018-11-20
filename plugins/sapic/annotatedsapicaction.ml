@@ -17,8 +17,8 @@ type annotated_sapic_action = Null
                          | Ch_Out of sapic_term * sapic_term
                          | Insert of sapic_term * sapic_term
                          | Delete of sapic_term 
-                         | AnnotatedLock of sapic_term * sapic_var
-                         | AnnotatedUnlock of sapic_term * sapic_var
+                         | AnnotatedLock of sapic_term * int
+                         | AnnotatedUnlock of sapic_term * int
                          | Lock of sapic_term 
                          | Unlock of sapic_term 
                          | Lookup of sapic_term * sapic_term
@@ -26,6 +26,7 @@ type annotated_sapic_action = Null
                          | Cond of action
                          | MSR of msr 
                          | Comment of string
+                         | Let of string
 
 let annotated_sapic_action2string = function
         Null -> "Zero"
@@ -46,5 +47,6 @@ let annotated_sapic_action2string = function
         | Cond(s) -> "if "^action2string(s)
         | MSR(prem,ac,conl) -> "MSR"   
         | Comment(s) -> s
+        | Let(s) -> "let "^s^" = "
         | Lock(_) | Unlock(_)  -> raise (UnAnnotatedLock "There is an unannotated lock in the
              * proces description") 

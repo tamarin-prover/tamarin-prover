@@ -20,6 +20,9 @@ module Term.Maude.Process (
   -- * Matching using Maude
   , matchViaMaude
 
+  -- * Variants using Maude
+  , variantsViaMaude
+
   -- * Normalization using Maude
   , normViaMaude
 
@@ -54,7 +57,7 @@ import System.Process
 import System.IO
 
 import Utils.Misc
-import Extension.Data.Monoid
+-- import Extension.Data.Monoid
 
 -- import Debug.Trace
 
@@ -86,6 +89,7 @@ data MaudeProcess = MP {
     , unifCount  :: !Int
     , matchCount :: !Int
     , normCount  :: !Int
+    , varCount   :: !Int
     }
 
 -- | @startMaude@ starts a new instance of Maude and returns a Handle to it.
@@ -109,7 +113,7 @@ startMaudeProcess maudePath maudeSig = do
     mapM_ (executeMaudeCommand hin hout) setupCmds
     -- input the maude theory
     executeMaudeCommand hin hout (ppTheory maudeSig)
-    return (MP hin hout herr hproc 0 0 0)
+    return (MP hin hout herr hproc 0 0 0 0)
   where
     maudeCmd
       | dEBUGMAUDE = "sh -c \"tee /tmp/maude.input | "
@@ -248,6 +252,27 @@ matchViaMaude hnd sortOf matchProblem =
         map (msubstToLSubstVFree bindings) <$> parseMatchReply msig reply
     incMatchCount mp = mp { matchCount = 1 + matchCount mp }
 
+
+
+------------------------------------------------------------------------------
+-- Getting variants
+------------------------------------------------------------------------------
+variantsCmd :: MTerm -> ByteString
+variantsCmd tm = "get variants in MSG : " <> ppMaude tm <> " .\n"
+
+variantsViaMaude :: (IsConst c)
+                 => MaudeHandle
+                 -> (c -> LSort)
+                 -> VTerm c LVar
+                 -> IO [SubstVFresh c LVar]
+variantsViaMaude hnd sortOf t =
+    computeViaMaude hnd incVarCount toMaude fromMaude t
+  where
+    msig = mhMaudeSig hnd
+    toMaude = fmap variantsCmd . (lTermToMTerm sortOf)
+    fromMaude bindings reply =
+        map (msubstToLSubstVFresh bindings) <$> parseVariantsReply msig reply
+    incVarCount mp = mp {varCount = 1 + varCount mp }
 
 ------------------------------------------------------------------------------
 -- Normalization of terms

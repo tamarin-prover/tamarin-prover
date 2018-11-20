@@ -1,0 +1,281 @@
+theory 5G_AKA_simplified_privacy_active
+
+/*
+   Modeler:     David Basin, Jannik Dreier, Lucca Hirschi, Sasa Radomirovic, Ralf Sasse, Vincent Stettler
+*/
+
+begin
+
+builtins:
+	asymmetric-encryption, multiset, xor
+
+functions:
+	// AKA functions (TS 33.102)
+	f1/2,
+	f2/2,
+	f5/2,
+	f1_star/2,
+	f5_star/2,
+
+	// 3GPP KDFs (TS 33.501)
+	KDF/2
+
+/************************************/
+/*     Initialization Rules         */
+/************************************/
+
+// Initialize a home network
+rule init_homeNet:
+	[ Fr(~sk_HN) ]
+	--[ Once('homeNet') ]->
+	[!HSS(~sk_HN),
+	 !Pk(pk(~sk_HN)),
+	 Out(pk(~sk_HN))]
+
+// Generate 2 SUPIs. Allow all to be initialized.
+// But allow only one to be used in the left system
+// while both may be used in the right system
+rule supi_supply:
+        [Fr(~a), Fr(~b)]
+	--[ Once('supiSupply') ]->
+	[!SUPI_Init(~a+~b),
+         SUPI(~a), 
+         SUPI(diff(~a,~b))
+        ]
+
+// Initialize the subscription
+rule add_subscription:
+	[ !SUPI_Init(~supi+z)
+	, Fr(~k)
+	, Fr(~sqn_root)
+	, Fr(~sqn_root_)
+	, !HSS(~sk_HN)
+        ]
+	--[
+		// Restriction
+		Subscribe(~supi),
+
+		// Helper lemmas
+		Sqn_Create(~supi, ~sqn_root)
+	]->
+	[ !Ltk_Sym(~supi, ~k, ~sqn_root)
+        , Sqn_UE(~supi, ~sqn_root+'1', ~sqn_root, '1')
+        , Sqn_HSS(~supi, ~sqn_root+'1', ~sqn_root, '1')
+        , Sqn_UE(~supi, ~sqn_root_+'1', ~sqn_root_, '1')
+        , Sqn_HSS(~supi, ~sqn_root_+'1', ~sqn_root_, '1')
+        ]
+// Counter(HSS) starts at SQN(UE)+1
+
+
+/************************************/
+/*       Sync. Failure              */
+/************************************/
+// We only allow the Sqn to increase, as a decrease would
+// trivially violate injectivity
+
+rule ue_increase_sqn:
+     let m = '1' in 
+	[Sqn_UE(~supi, Sqn, ~sqn_root, count),
+	 In(m)]
+	--[
+	        // Restriction
+		Once('incr'),
+
+		// Open chains
+		Sqn_UE_Invariance(~supi, Sqn+m, ~sqn_root, count+m),
+
+		// Helper lemmas
+		Sqn_UE_Change(~supi, Sqn+m),
+
+		// Executability
+		Sqn_UE_Desync()
+	]->
+	[Sqn_UE(~supi, Sqn+m, ~sqn_root, count+m)]
+
+
+/************************************/
+/*       Protocol Rules             */
+/************************************/
+
+// Attach Request
+rule ue_1_send_attachReq:
+	let
+		suci = aenc{<~supi, ~R>}pk_HN
+		msg = suci
+	in
+	[ !Ltk_Sym(~supi, ~k, ~sqn_root)
+	, !Pk(pk_HN)
+	, Fr(~R)
+	, Fr(~tid)
+	, Fr(~cid)
+        ]
+	--[
+		// Executability
+		Start_UE_Session(~supi)
+	]->
+	[ St_1_UE(~tid, ~supi, ~k, ~sqn_root, suci, ~cid)
+	, Out(msg)             
+        ]
+
+// Attach Request + Authentication Initiation Request (AIR)
+rule seaf_1_receive_attachReq:
+	let
+		conc_supi = aenc{<~supi, ~R>}pk(~sk_HN)
+		suci = conc_supi
+		msg = suci
+
+		SqnNext = SqnHSS + '1'
+
+		// HN Send
+                //     a. ARPF part
+		MAC = f1(~k, <SqnNext, ~RAND>)
+		AK = f5(~k, ~RAND)
+		AUTN = <SqnNext XOR AK, MAC>
+
+		// SN Recv/Send
+                msgOut = < ~RAND, AUTN >
+	in
+	[
+	  In(suci) 
+	  // HN
+ 	, !HSS(~sk_HN)
+	, !Ltk_Sym(~supi, ~k, ~sqn_root)
+	, Sqn_HSS(~supi, SqnHSS, ~sqn_root, count)
+	, Fr(~RAND)
+	, In(count) // necessary to avoid open chains
+        ]
+      --[
+	// Executability
+	   Start_SEAF_Session('seaf')
+
+	// Open chains
+         , Sqn_HSS_Invariance(~supi, SqnNext, ~sqn_root, count+'1')
+         , Src(~RAND, AUTN)
+
+	]->
+        [ 
+         Out(msgOut)
+        ]
+
+
+// Authentication Request (Auth-Req) + Authentication Response (Auth-Resp)
+// The UE accepts a Sqn iff it is greater than SqnMax (delta = infinity).
+// The UE stores the greatest Sqn accepted.
+rule ue_2_receive_authReq_freshness_success_send_authResp:
+	let
+		// Input, checks
+		SqnHSS = SqnUE + dif // check freshness
+		AK = f5(~k, RAND)
+		MAC = f1(~k, <SqnHSS, RAND>) // check on the MAC
+                AUTN = <SqnHSS XOR AK, MAC>
+		msgIn = < RAND, AUTN >
+		// Output
+		RES = f2(~k, RAND)
+		RES_star = KDF(RES, RAND)
+		msgOut = RES_star
+	in
+	[St_1_UE(~tid, ~supi, ~k, ~sqn_root, suci, ~cid),
+	 Sqn_UE(~supi, SqnUE, ~sqn_root, count),
+         SUPI(~supi),
+	 In(msgIn) 
+        ]
+      --[ Original(AUTN)
+        , UE_End()
+	// Open chains
+	, Sqn_UE_Invariance(~supi, SqnHSS, ~sqn_root, count+dif)
+
+	// Helper lemmas
+	, Sqn_UE_Change(~supi, SqnHSS)
+	, Sqn_UE_Use(~supi, SqnHSS)
+	]->
+	[ St_2_UE(~tid, ~supi, ~k, ~sqn_root, ~cid),
+	 Out(msgOut),
+	 Sqn_UE(~supi, SqnHSS, ~sqn_root, count+dif)
+        ] // new SQN = sqn_HSS + 1
+
+
+// Authentication Request (Auth-Req) and Sync Failure
+// [3G] Clauses C.2.1, C.2.2
+// The UE reports sync failure if:
+// 	- Received Sqn is bigger but too big (e.g., jumpsize can be at most delta),
+//	- or Received Sqn is not bigger.
+// [3G] Clauses 6.3.3, 6.3.5
+rule ue_2_receive_authReq_fail_freshness_send_sync_failure:
+	let
+		// Input, checks
+		AK = f5(~k, RAND)
+		MAC = f1(~k, <SqnHSS, RAND>) // check on the MAC
+                AUTN = <SqnHSS XOR AK, MAC>
+		msgIn = < RAND, AUTN >
+		// Output
+		AKS = f5_star(~k, RAND)
+		MACS = f1_star(~k, <SqnUE, RAND>)
+		AUTS = <SqnUE XOR AKS, MACS >
+		out_msg = AUTS
+	in
+	[ St_1_UE(~tid, ~supi, ~k, ~sqn_root, suci,~cid)
+	, Sqn_UE(~supi, SqnUE, ~sqn_root, count)
+        , SUPI(~supi)
+	, In(msgIn) 
+	, In(count)	// necessary to avoid open chains
+        ]
+      --[ UE_Sync_Failure()
+        , Replayed(AUTN)
+	, UE_End()
+	// Restriction
+	, Greater_Or_Equal_Than(SqnUE, SqnHSS) // Check freshness (FAIL)
+        , Once('fail')
+
+	// Open chains
+        , Sqn_UE_Invariance(~supi, SqnUE, ~sqn_root, count)
+
+        // Helper lemmas
+	, Sqn_UE_Nochange(~supi, SqnUE)
+	]->
+	[Out(out_msg) ]
+
+
+/************************************/
+/*     Restrictions / Axioms        */
+/************************************/
+
+restriction phases:
+    " All UE1 UE2 #i #j. Start_UE_Session(UE1)@i & Start_UE_Session(UE2)@j ==> 
+    (  #i = #j 
+    |  (Ex #k. UE_End()@k & i < k & k < j)
+    |  (Ex #k. UE_End()@k & j < k & k < i)
+    )"
+
+restriction subscribe_once:
+	" All supi #i #j. Subscribe(supi)@i & Subscribe(supi)@j ==> (#i = #j)"
+
+
+restriction greater_or_equal_than:
+  	" All x y #i. Greater_Or_Equal_Than(x,y)@i ==> not (Ex z. x + z = y) "
+
+restriction once:
+        " All a #i #j. Once(a)@i & Once(a)@j ==> #i = #j "
+
+// Dummy lemma for timing info only.
+lemma dummy: "not(F)"
+
+/************************************/
+/*         Sources lemmas           */
+/************************************/
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_ue_invariance [use_induction, sources]:
+	" All supi Sqn sqn_root count #i.
+		Sqn_UE_Invariance(supi, Sqn, sqn_root, count)@i
+			==> sqn_root + count = Sqn"
+
+// holds (autoproof with oracle)
+// 1 sec
+lemma sqn_hss_invariance [use_induction, sources]:
+	" All supi Sqn sqn_root count #i.
+		Sqn_HSS_Invariance(supi, Sqn, sqn_root, count)@i
+			==> sqn_root + count = Sqn "
+
+
+end

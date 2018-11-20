@@ -24,7 +24,7 @@ module Term.Rewriting.Definitions (
 import Control.Arrow        ( (***) )
 -- import Control.Applicative
 
-import Extension.Data.Monoid
+-- import Extension.Data.Monoid
 -- import Data.Foldable
 -- import Data.Traversable
 
@@ -44,10 +44,12 @@ evalEqual (Equal l r) = l == r
 instance Functor Equal where
     fmap f (Equal lhs rhs) = Equal (f lhs) (f rhs)
 
+instance Semigroup a => Semigroup (Equal a) where
+    (Equal l1 r1) <> (Equal l2 r2) =
+        Equal (l1 <> l2) (r1 <> r2)
+
 instance Monoid a => Monoid (Equal a) where
     mempty                                = Equal mempty mempty
-    (Equal l1 r1) `mappend` (Equal l2 r2) =
-        Equal (l1 `mappend` l2) (r1 `mappend` r2)
 
 instance Foldable Equal where
     foldMap f (Equal l r) = f l `mappend` f r
@@ -104,13 +106,14 @@ instance Functor Match where
     fmap _ NoMatch             = NoMatch
     fmap f (DelayedMatches ms) = DelayedMatches (fmap (f *** f) ms)
 
+instance Semigroup (Match a) where
+    NoMatch            <> _                  = NoMatch
+    _                  <> NoMatch            = NoMatch
+    DelayedMatches ms1 <> DelayedMatches ms2 =
+        DelayedMatches (ms1 <> ms2)
+
 instance Monoid (Match a) where
     mempty = DelayedMatches []
-
-    NoMatch            `mappend` _                  = NoMatch
-    _                  `mappend` NoMatch            = NoMatch
-    DelayedMatches ms1 `mappend` DelayedMatches ms2 =
-        DelayedMatches (ms1 `mappend` ms2)
 
 
 instance Foldable Match where
@@ -136,10 +139,12 @@ data RRule a = RRule a a
 instance Functor RRule where
     fmap f (RRule lhs rhs) = RRule (f lhs) (f rhs)
 
+instance Monoid a => Semigroup (RRule a) where
+    (RRule l1 r1) <> (RRule l2 r2) =
+        RRule (l1 <> l2) (r1 <> r2)
+
 instance Monoid a => Monoid (RRule a) where
     mempty                                = RRule mempty mempty
-    (RRule l1 r1) `mappend` (RRule l2 r2) =
-        RRule (l1 `mappend` l2) (r1 `mappend` r2)
 
 instance Foldable RRule where
     foldMap f (RRule l r) = f l `mappend` f r

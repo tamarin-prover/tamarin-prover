@@ -114,8 +114,8 @@ rule (modulo E) if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__0_11111111111:
        z     = check_getmsg(ysig.7, pk1.7)
     
     2. pk1   = pk(x.7)
-       ysig  = sign(x.8, x.7)
-       z     = x.8
+       ysig  = sign(x.10, x.7)
+       z     = x.10
   */
 
 rule (modulo E) if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__1_11111111111:
@@ -134,8 +134,8 @@ rule (modulo E) if_eqcheck_getmsgysig_pk1_ct_pk1_pk2__1_11111111111:
        z     = check_getmsg(ysig.7, pk1.7)
     
     2. pk1   = pk(x.7)
-       ysig  = sign(x.8, x.7)
-       z     = x.8
+       ysig  = sign(x.10, x.7)
+       z     = x.10
   */
 
 rule (modulo E) lock_ct_111111111111:
@@ -248,8 +248,8 @@ rule (modulo E) if_eqcheck_getmsgysig2_pk2_ct_0_11111111211:
        z     = check_getmsg(ysig2.8, pk2.8)
     
     2. pk2   = pk(x.8)
-       ysig2 = sign(x.9, x.8)
-       z     = x.9
+       ysig2 = sign(x.11, x.8)
+       z     = x.11
   */
 
 rule (modulo E) if_eqcheck_getmsgysig2_pk2_ct_1_11111111211:
@@ -268,8 +268,8 @@ rule (modulo E) if_eqcheck_getmsgysig2_pk2_ct_1_11111111211:
        z     = check_getmsg(ysig2.8, pk2.8)
     
     2. pk2   = pk(x.8)
-       ysig2 = sign(x.9, x.8)
-       z     = x.9
+       ysig2 = sign(x.11, x.8)
+       z     = x.11
   */
 
 rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_0_111111112111:
@@ -290,13 +290,13 @@ rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_0_111111112111:
     
     2. pk1   = pk1.12
        skT   = x.8
-       ypcs1 = pcs(sign(x.9, x.11), x.10, pk(x.8))
-       z     = check_getmsg(sign(x.9, x.11), pk1.12)
+       ypcs1 = pcs(sign(x.9, x.10), x.11, pk(x.8))
+       z     = check_getmsg(sign(x.9, x.10), pk1.12)
     
     3. pk1   = pk(x.8)
-       skT   = x.9
-       ypcs1 = pcs(sign(x.10, x.8), x.11, pk(x.9))
-       z     = x.10
+       skT   = x.10
+       ypcs1 = pcs(sign(x.11, x.8), x.12, pk(x.10))
+       z     = x.11
   */
 
 rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_1_111111112111:
@@ -317,13 +317,13 @@ rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs1_pk1_ct_1_111111112111:
     
     2. pk1   = pk1.12
        skT   = x.8
-       ypcs1 = pcs(sign(x.9, x.11), x.10, pk(x.8))
-       z     = check_getmsg(sign(x.9, x.11), pk1.12)
+       ypcs1 = pcs(sign(x.9, x.10), x.11, pk(x.8))
+       z     = check_getmsg(sign(x.9, x.10), pk1.12)
     
     3. pk1   = pk(x.8)
-       skT   = x.9
-       ypcs1 = pcs(sign(x.10, x.8), x.11, pk(x.9))
-       z     = x.10
+       skT   = x.10
+       ypcs1 = pcs(sign(x.11, x.8), x.12, pk(x.10))
+       z     = x.11
   */
 
 rule (modulo E) if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_0_1111111121111:
@@ -353,9 +353,9 @@ rule (modulo E) if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_0_1111111121111:
     
     3. ct    = x.8
        pk1   = pk(x.9)
-       pk2   = x.11
-       skT   = x.10
-       ypcs1 = pcs(sign(x.8, x.9), x.11, pk(x.10))
+       pk2   = x.10
+       skT   = x.11
+       ypcs1 = pcs(sign(x.8, x.9), x.10, pk(x.11))
        z     = true
   */
 
@@ -386,9 +386,9 @@ rule (modulo E) if_eqcheckpcsct_pk1_pk2_pkskT_ypcs1_true_1_1111111121111:
     
     3. ct    = x.8
        pk1   = pk(x.9)
-       pk2   = x.11
-       skT   = x.10
-       ypcs1 = pcs(sign(x.8, x.9), x.11, pk(x.10))
+       pk2   = x.10
+       skT   = x.11
+       ypcs1 = pcs(sign(x.8, x.9), x.10, pk(x.11))
        z     = true
   */
 
@@ -480,8 +480,8 @@ rule (modulo E) out_sign_convertpcsskT_ypcs1_ysig2_skT_1111111121111112111:
        z     = convertpcs(skT.9, ypcs1.9)
     
     2. skT   = x.9
-       ypcs1 = pcs(sign(x.10, x.12), x.11, pk(x.9))
-       z     = sign(x.10, x.12)
+       ypcs1 = pcs(sign(x.10, x.11), x.12, pk(x.9))
+       z     = sign(x.10, x.11)
   */
 
 rule (modulo E) Zero_11111111211111121111:
@@ -540,8 +540,8 @@ rule (modulo E) if_eqcheck_getmsgysig1_pk1_ct_0_1111111211:
        z     = check_getmsg(ysig1.8, pk1.8)
     
     2. pk1   = pk(x.8)
-       ysig1 = sign(x.9, x.8)
-       z     = x.9
+       ysig1 = sign(x.12, x.8)
+       z     = x.12
   */
 
 rule (modulo E) if_eqcheck_getmsgysig1_pk1_ct_1_1111111211:
@@ -560,8 +560,8 @@ rule (modulo E) if_eqcheck_getmsgysig1_pk1_ct_1_1111111211:
        z     = check_getmsg(ysig1.8, pk1.8)
     
     2. pk1   = pk(x.8)
-       ysig1 = sign(x.9, x.8)
-       z     = x.9
+       ysig1 = sign(x.12, x.8)
+       z     = x.12
   */
 
 rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_0_11111112111:
@@ -582,8 +582,8 @@ rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_0_11111112111:
     
     2. pk2   = pk2.12
        skT   = x.8
-       ypcs2 = pcs(sign(x.9, x.11), x.10, pk(x.8))
-       z     = check_getmsg(sign(x.9, x.11), pk2.12)
+       ypcs2 = pcs(sign(x.9, x.10), x.11, pk(x.8))
+       z     = check_getmsg(sign(x.9, x.10), pk2.12)
     
     3. pk2   = pk(x.8)
        skT   = x.9
@@ -609,8 +609,8 @@ rule (modulo E) if_eqcheck_getmsgconvertpcsskT_ypcs2_pk2_ct_1_11111112111:
     
     2. pk2   = pk2.12
        skT   = x.8
-       ypcs2 = pcs(sign(x.9, x.11), x.10, pk(x.8))
-       z     = check_getmsg(sign(x.9, x.11), pk2.12)
+       ypcs2 = pcs(sign(x.9, x.10), x.11, pk(x.8))
+       z     = check_getmsg(sign(x.9, x.10), pk2.12)
     
     3. pk2   = pk(x.8)
        skT   = x.9
@@ -637,17 +637,17 @@ rule (modulo E) if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_0_111111121111:
        z     = checkpcs(ct.8, pk2.8, pk1.8, pk(skT.8), ypcs2.8)
     
     2. ct    = x.8
-       pk1   = x.11
-       pk2   = pk(x.9)
-       skT   = x.10
-       ypcs2 = pcs(sign(x.8, x.9), x.11, pk(x.10))
+       pk1   = x.9
+       pk2   = pk(x.10)
+       skT   = x.11
+       ypcs2 = pcs(sign(x.8, x.10), x.9, pk(x.11))
        z     = true
     
     3. ct    = x.8
-       pk1   = pk(x.10)
-       pk2   = x.9
+       pk1   = pk(x.9)
+       pk2   = x.10
        skT   = x.11
-       ypcs2 = fakepcs(x.9, x.10, pk(x.11), x.8)
+       ypcs2 = fakepcs(x.10, x.9, pk(x.11), x.8)
        z     = true
   */
 
@@ -670,17 +670,17 @@ rule (modulo E) if_eqcheckpcsct_pk2_pk1_pkskT_ypcs2_true_1_111111121111:
        z     = checkpcs(ct.8, pk2.8, pk1.8, pk(skT.8), ypcs2.8)
     
     2. ct    = x.8
-       pk1   = x.11
-       pk2   = pk(x.9)
-       skT   = x.10
-       ypcs2 = pcs(sign(x.8, x.9), x.11, pk(x.10))
+       pk1   = x.9
+       pk2   = pk(x.10)
+       skT   = x.11
+       ypcs2 = pcs(sign(x.8, x.10), x.9, pk(x.11))
        z     = true
     
     3. ct    = x.8
-       pk1   = pk(x.10)
-       pk2   = x.9
+       pk1   = pk(x.9)
+       pk2   = x.10
        skT   = x.11
-       ypcs2 = fakepcs(x.9, x.10, pk(x.11), x.8)
+       ypcs2 = fakepcs(x.10, x.9, pk(x.11), x.8)
        z     = true
   */
 
@@ -770,8 +770,8 @@ rule (modulo E) out_sign_ysig1_convertpcsskT_ypcs2_skT_111111121111112111:
        z     = convertpcs(skT.9, ypcs2.9)
     
     2. skT   = x.9
-       ypcs2 = pcs(sign(x.10, x.12), x.11, pk(x.9))
-       z     = sign(x.10, x.12)
+       ypcs2 = pcs(sign(x.10, x.11), x.12, pk(x.9))
+       z     = sign(x.10, x.11)
   */
 
 rule (modulo E) Zero_1111111211111121111:
@@ -1174,7 +1174,7 @@ analyzing: case-studies-sapic-regression/GJM-contract/contract.spthy
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 32.69049s
+  processing time: 23.306713914s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1190,7 +1190,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 32.69049s
+  processing time: 23.306713914s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   

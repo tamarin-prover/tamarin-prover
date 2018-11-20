@@ -335,7 +335,7 @@ factReports thy = concat
 
     freshFactArguments = do
        ru                      <- thyProtoRules thy
-       fa@(Fact FreshFact [m]) <- get rPrems ru
+       fa@(Fact FreshFact _ [m]) <- get rPrems ru
        guard (not (isMsgVar m || isFreshVar m))
        return $ (,) "Fr facts must only use a fresh- or a msg-variable" $
            text ("rule " ++ quote (showRuleCaseName ru)) <->
@@ -475,7 +475,7 @@ factReportsDiff thy = concat
 
     freshFactArguments = do
        ru                      <- diffThyProtoRules thy
-       fa@(Fact FreshFact [m]) <- get rPrems ru
+       fa@(Fact FreshFact _ [m]) <- get rPrems ru
        guard (not (isMsgVar m || isFreshVar m))
        return $ (,) "Fr facts must only use a fresh- or a msg-variable" $
            text ("rule " ++ quote (showRuleCaseName ru)) <->
@@ -519,11 +519,11 @@ factReportsDiff thy = concat
         : dedLogFact undefined
         : kuFact undefined
         : (do DiffRuleItem ru <- get diffThyItems thy; get rActs ru)
-        ++ (do DiffRuleItem ru <- get diffThyItems thy; [Fact {factTag = ProtoFact Linear ("DiffProto" ++ (getRuleName ru)) 0, factTerms = []}])
-        ++ (do ru <- get diffThyCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
-        ++ (do ru <- get diffThyDiffCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
-        ++ (do ru <- get diffThyCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
-        ++ (do ru <- get diffThyDiffCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factTerms = []}]) 
+        ++ (do DiffRuleItem ru <- get diffThyItems thy; [Fact {factTag = ProtoFact Linear ("DiffProto" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
+        ++ (do ru <- get diffThyCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}]) 
+        ++ (do ru <- get diffThyDiffCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}]) 
+        ++ (do ru <- get diffThyCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}]) 
+        ++ (do ru <- get diffThyDiffCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}]) 
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy
@@ -781,7 +781,7 @@ multRestrictedReport thy = do
       where
         ruAbstr = abstractRule ru
 
-        mults = [ mt | Fact _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
+        mults = [ mt | Fact _ _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
 
         multTerms t@(viewTerm -> FApp (AC Mult) _)  = [t]
         multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as
@@ -847,7 +847,7 @@ multRestrictedReportDiff thy = do
       where
         ruAbstr = abstractRule ru
 
-        mults = [ mt | Fact _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
+        mults = [ mt | Fact _ _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
 
         multTerms t@(viewTerm -> FApp (AC Mult) _)  = [t]
         multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as

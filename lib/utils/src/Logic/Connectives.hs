@@ -23,12 +23,12 @@ import Control.DeepSeq
 
 -- | A conjunction of atoms of type a.
 newtype Conj a = Conj { getConj :: [a] }
-  deriving (Monoid, Foldable, Traversable, Eq, Ord, Show, Binary,
+  deriving (Monoid, Semigroup, Foldable, Traversable, Eq, Ord, Show, Binary,
             Functor, Applicative, Monad, Alternative, MonadPlus, Typeable, Data, NFData)
 
 -- | A disjunction of atoms of type a.
 newtype Disj a = Disj { getDisj :: [a] }
-  deriving (Monoid, Foldable, Traversable, Eq, Ord, Show, Binary,
+  deriving (Monoid, Semigroup, Foldable, Traversable, Eq, Ord, Show, Binary,
             Functor, Applicative, Monad, Alternative, MonadPlus, Typeable, Data, NFData)
 
 instance MonadDisj Disj where

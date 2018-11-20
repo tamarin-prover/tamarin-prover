@@ -29,20 +29,20 @@ rule (modulo E) Step2:
        z     = Y.7^~x.7
     
     2. ~x    = ~x.7
-       Y     = x.8^inv(~x.7)
-       z     = x.8
+       Y     = x.10^inv(~x.7)
+       z     = x.10
     
     3. ~x    = ~x.7
-       Y     = x.8^inv((~x.7*x.9))
-       z     = x.8^inv(x.9)
+       Y     = x.10^inv((~x.7*x.11))
+       z     = x.10^inv(x.11)
     
     4. ~x    = ~x.7
-       Y     = x.8^(x.9*inv(~x.7))
-       z     = x.8^x.9
+       Y     = x.10^(x.11*inv(~x.7))
+       z     = x.10^x.11
     
     5. ~x    = ~x.7
-       Y     = x.8^(x.10*inv((~x.7*x.9)))
-       z     = x.8^(x.10*inv(x.9))
+       Y     = x.10^(x.11*inv((~x.7*x.12)))
+       z     = x.10^(x.11*inv(x.12))
     
     6. ~x    = ~x.9
        Y     = x.7^x.8
@@ -132,7 +132,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.160937s
+  processing time: 0.096807924s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -144,7 +144,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.160937s
+  processing time: 0.096807924s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

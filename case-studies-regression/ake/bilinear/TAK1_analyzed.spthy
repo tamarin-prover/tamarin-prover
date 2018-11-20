@@ -63,184 +63,184 @@ rule (modulo E) Proto2:
         z     = em(x.9, XC.10)^x.8
     
      4. XB    = pmult(x.8, x.9)
+        XC    = pmult(x.10, x.11)
+        z     = em(x.9, x.11)^(x.8*x.10)
+    
+     5. XB    = pmult(x.8, x.9)
         XC    = pmult(inv(x.8), x.10)
         z     = em(x.9, x.10)
     
-     5. XB    = pmult(x.8, x.9)
-        XC    = pmult(inv((x.8*x.11)), x.10)
-        z     = em(x.9, x.10)^inv(x.11)
-    
      6. XB    = pmult(x.8, x.9)
-        XC    = pmult((x.11*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^x.11
+        XC    = pmult(inv((x.8*x.10)), x.11)
+        z     = em(x.9, x.11)^inv(x.10)
     
      7. XB    = pmult(x.8, x.9)
-        XC    = pmult((x.12*inv((x.8*x.11))), x.10)
-        z     = em(x.9, x.10)^(x.12*inv(x.11))
+        XC    = pmult((x.10*inv(x.8)), x.11)
+        z     = em(x.9, x.11)^x.10
     
-     8. XB    = pmult(x.8, x.10)
-        XC    = pmult(x.9, x.11)
-        z     = em(x.10, x.11)^(x.8*x.9)
+     8. XB    = pmult(x.8, x.9)
+        XC    = pmult((x.10*inv((x.8*x.11))), x.12)
+        z     = em(x.9, x.12)^(x.10*inv(x.11))
     
      9. XB    = pmult(inv(x.8), x.9)
         XC    = pmult(x.8, x.10)
         z     = em(x.9, x.10)
     
     10. XB    = pmult(inv(x.8), x.9)
-        XC    = pmult((x.8*x.11), x.10)
-        z     = em(x.9, x.10)^x.11
+        XC    = pmult(inv(x.10), x.11)
+        z     = em(x.9, x.11)^inv((x.8*x.10))
     
-    11. XB    = pmult(inv(x.8), x.10)
-        XC    = pmult(inv(x.9), x.11)
-        z     = em(x.10, x.11)^inv((x.8*x.9))
+    11. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult((x.8*x.10), x.11)
+        z     = em(x.9, x.11)^x.10
     
-    12. XB    = pmult(inv(x.8), x.10)
-        XC    = pmult((x.12*inv(x.9)), x.11)
-        z     = em(x.10, x.11)^(x.12*inv((x.8*x.9)))
+    12. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult((x.10*inv(x.11)), x.12)
+        z     = em(x.9, x.12)^(x.10*inv((x.8*x.11)))
     
-    13. XB    = pmult(inv((x.8*x.11)), x.9)
-        XC    = pmult(x.8, x.10)
-        z     = em(x.9, x.10)^inv(x.11)
+    13. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult(x.8, x.11)
+        z     = em(x.10, x.11)^inv(x.9)
     
-    14. XB    = pmult(inv((x.10*x.11)), x.8)
-        XC    = pmult((x.11*x.12), x.9)
-        z     = em(x.8, x.9)^(x.12*inv(x.10))
+    14. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*x.11), x.12)
+        z     = em(x.10, x.12)^(x.11*inv(x.9))
     
-    15. XB    = pmult(inv((x.11*x.12)), x.9)
-        XC    = pmult((x.12*x.13*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*inv((x.8*x.11)))
+    15. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*x.11*inv(x.12)), x.13)
+        z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
     
-    16. XB    = pmult(inv((x.11*x.12)), x.9)
-        XC    = pmult((x.12*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^inv((x.8*x.11))
+    16. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*inv(x.11)), x.12)
+        z     = em(x.10, x.12)^inv((x.9*x.11))
     
-    17. XB    = pmult((x.8*x.11), x.9)
-        XC    = pmult(inv(x.8), x.10)
-        z     = em(x.9, x.10)^x.11
+    17. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult(inv(x.8), x.11)
+        z     = em(x.10, x.11)^x.9
     
-    18. XB    = pmult((x.8*x.11), x.9)
-        XC    = pmult((x.12*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.11*x.12)
+    18. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult(inv((x.8*x.11)), x.12)
+        z     = em(x.10, x.12)^(x.9*inv(x.11))
     
-    19. XB    = pmult((x.8*x.13*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*x.14*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*x.14*inv(x.11))
+    19. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult((x.11*inv(x.8)), x.12)
+        z     = em(x.10, x.12)^(x.9*x.11)
     
-    20. XB    = pmult((x.8*x.13*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*inv(x.11))
+    20. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult((x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.9*x.11*inv(x.12))
     
-    21. XB    = pmult((x.8*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*x.13*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*inv(x.11))
+    21. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult(inv((x.8*x.12)), x.13)
+        z     = em(x.11, x.13)^(x.9*inv((x.10*x.12)))
     
-    22. XB    = pmult((x.8*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^inv(x.11)
+    22. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*x.12*inv(x.8)), x.13)
+        z     = em(x.11, x.13)^(x.9*x.12)
     
-    23. XB    = pmult((x.9*x.12*inv(x.8)), x.10)
-        XC    = pmult((x.8*x.13*inv(x.9)), x.11)
-        z     = em(x.10, x.11)^(x.12*x.13)
+    23. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.9*x.12*inv(x.13))
     
-    24. XB    = pmult((x.9*x.12*inv(x.8)), x.10)
-        XC    = pmult((x.8*inv(x.9)), x.11)
-        z     = em(x.10, x.11)^x.12
+    24. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^x.9
     
-    25. XB    = pmult((x.9*inv(x.8)), x.10)
-        XC    = pmult((x.8*x.12*inv(x.9)), x.11)
-        z     = em(x.10, x.11)^x.12
+    25. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*inv((x.8*x.12))), x.13)
+        z     = em(x.11, x.13)^(x.9*inv(x.12))
     
-    26. XB    = pmult((x.9*inv(x.8)), x.10)
-        XC    = pmult((x.8*inv(x.9)), x.11)
+    26. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.9*x.12*inv((x.10*x.13)))
+    
+    27. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*x.13*inv(x.8)), x.14)
+        z     = em(x.12, x.14)^(x.9*x.13*inv(x.11))
+    
+    28. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*x.13*inv((x.8*x.14))), x.15)
+        z     = em(x.12, x.15)^(x.9*x.13*inv((x.11*x.14)))
+    
+    29. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*inv(x.8)), x.13)
+        z     = em(x.12, x.13)^(x.9*inv(x.11))
+    
+    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*inv((x.8*x.13))), x.14)
+        z     = em(x.12, x.14)^(x.9*inv((x.11*x.13)))
+    
+    31. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(x.9, x.11)
+        z     = em(x.10, x.11)^x.8
+    
+    32. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(inv(x.11), x.12)
+        z     = em(x.10, x.12)^(x.8*inv((x.9*x.11)))
+    
+    33. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(inv((x.8*x.11)), x.12)
+        z     = em(x.10, x.12)^inv((x.9*x.11))
+    
+    34. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11), x.12)
+        z     = em(x.10, x.12)^(x.8*x.11)
+    
+    35. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11*inv(x.8)), x.12)
+        z     = em(x.10, x.12)^x.11
+    
+    36. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.11*inv(x.12))
+    
+    37. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*inv(x.8)), x.11)
         z     = em(x.10, x.11)
     
-    27. XB    = pmult((x.11*x.12), x.8)
-        XC    = pmult(inv((x.10*x.11)), x.9)
-        z     = em(x.8, x.9)^(x.12*inv(x.10))
+    38. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*inv((x.8*x.11))), x.12)
+        z     = em(x.10, x.12)^inv(x.11)
     
-    28. XB    = pmult((x.11*x.12), x.8)
-        XC    = pmult((x.13*inv((x.10*x.11))), x.9)
-        z     = em(x.8, x.9)^(x.12*x.13*inv(x.10))
+    39. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.11*inv(x.12)), x.13)
+        z     = em(x.10, x.13)^(x.8*x.11*inv((x.9*x.12)))
     
-    29. XB    = pmult((x.11*inv(x.8)), x.9)
-        XC    = pmult(x.8, x.10)
-        z     = em(x.9, x.10)^x.11
+    40. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
     
-    30. XB    = pmult((x.11*inv(x.8)), x.9)
-        XC    = pmult((x.8*x.12), x.10)
-        z     = em(x.9, x.10)^(x.11*x.12)
+    41. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult(x.9, x.12)
+        z     = em(x.11, x.12)^(x.8*inv(x.10))
     
-    31. XB    = pmult((x.12*x.13*inv(x.8)), x.9)
-        XC    = pmult(inv((x.11*x.12)), x.10)
-        z     = em(x.9, x.10)^(x.13*inv((x.8*x.11)))
+    42. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12), x.13)
+        z     = em(x.11, x.13)^(x.8*x.12*inv(x.10))
     
-    32. XB    = pmult((x.12*x.13*inv(x.8)), x.9)
-        XC    = pmult((x.8*x.14*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^(x.13*x.14*inv(x.11))
+    43. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv(x.8)), x.13)
+        z     = em(x.11, x.13)^(x.12*inv(x.10))
     
-    33. XB    = pmult((x.12*x.13*inv(x.8)), x.9)
-        XC    = pmult((x.8*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^(x.13*inv(x.11))
+    44. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv(x.13)), x.14)
+        z     = em(x.11, x.14)^(x.8*x.12*inv((x.10*x.13)))
     
-    34. XB    = pmult((x.12*x.13*inv(x.8)), x.9)
-        XC    = pmult((x.14*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^(x.13*x.14*inv((x.8*x.11)))
+    45. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.12*inv((x.10*x.13)))
     
-    35. XB    = pmult((x.12*inv(x.8)), x.9)
-        XC    = pmult(inv((x.11*x.12)), x.10)
-        z     = em(x.9, x.10)^inv((x.8*x.11))
+    46. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^inv(x.10)
     
-    36. XB    = pmult((x.12*inv(x.8)), x.9)
-        XC    = pmult((x.8*x.13*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^(x.13*inv(x.11))
+    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv(x.12)), x.13)
+        z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
-    37. XB    = pmult((x.12*inv(x.8)), x.9)
-        XC    = pmult((x.8*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^inv(x.11)
-    
-    38. XB    = pmult((x.12*inv(x.8)), x.9)
-        XC    = pmult((x.13*inv((x.11*x.12))), x.10)
-        z     = em(x.9, x.10)^(x.13*inv((x.8*x.11)))
-    
-    39. XB    = pmult((x.12*inv(x.8)), x.10)
-        XC    = pmult((x.13*inv(x.9)), x.11)
-        z     = em(x.10, x.11)^(x.12*x.13*inv((x.8*x.9)))
-    
-    40. XB    = pmult((x.12*inv(x.9)), x.10)
-        XC    = pmult(inv(x.8), x.11)
-        z     = em(x.10, x.11)^(x.12*inv((x.8*x.9)))
-    
-    41. XB    = pmult((x.12*inv((x.8*x.11))), x.9)
-        XC    = pmult(x.8, x.10)
-        z     = em(x.9, x.10)^(x.12*inv(x.11))
-    
-    42. XB    = pmult((x.12*inv((x.10*x.11))), x.8)
-        XC    = pmult((x.11*x.13), x.9)
-        z     = em(x.8, x.9)^(x.12*x.13*inv(x.10))
-    
-    43. XB    = pmult((x.13*x.14*inv((x.10*x.11))), x.8)
-        XC    = pmult((x.11*x.15*inv((x.12*x.13))), x.9)
-        z     = em(x.8, x.9)^(x.14*x.15*inv((x.10*x.12)))
-    
-    44. XB    = pmult((x.13*x.14*inv((x.10*x.11))), x.8)
-        XC    = pmult((x.11*inv((x.12*x.13))), x.9)
-        z     = em(x.8, x.9)^(x.14*inv((x.10*x.12)))
-    
-    45. XB    = pmult((x.13*inv((x.10*x.11))), x.8)
-        XC    = pmult((x.11*x.14*inv((x.12*x.13))), x.9)
-        z     = em(x.8, x.9)^(x.14*inv((x.10*x.12)))
-    
-    46. XB    = pmult((x.13*inv((x.10*x.11))), x.8)
-        XC    = pmult((x.11*inv((x.12*x.13))), x.9)
-        z     = em(x.8, x.9)^inv((x.10*x.12))
-    
-    47. XB    = pmult((x.13*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*x.14*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*x.14*inv((x.8*x.11)))
-    
-    48. XB    = pmult((x.13*inv((x.11*x.12))), x.9)
-        XC    = pmult((x.12*inv(x.8)), x.10)
-        z     = em(x.9, x.10)^(x.13*inv((x.8*x.11)))
+    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv((x.8*x.12))), x.13)
+        z     = em(x.11, x.13)^inv((x.10*x.12))
   */
 
 rule (modulo E) Proto3:
@@ -299,20 +299,20 @@ rule (modulo E) Proto3:
              = x.955^x.956
        z     = x.955^(~ex.482*x.956)
     
-    4. ~ex   = ~ex.483
+    4. ~ex   = ~ex.485
        emXBXC
-             = x.957^inv((~ex.483*x.958))
-       z     = x.957^inv(x.958)
+             = x.961^inv((~ex.485*x.962))
+       z     = x.961^inv(x.962)
     
-    5. ~ex   = ~ex.483
+    5. ~ex   = ~ex.485
        emXBXC
-             = x.957^(x.958*inv(~ex.483))
-       z     = x.957^x.958
+             = x.961^(x.962*inv(~ex.485))
+       z     = x.961^x.962
     
-    6. ~ex   = ~ex.484
+    6. ~ex   = ~ex.486
        emXBXC
-             = x.958^(x.960*inv((~ex.484*x.959)))
-       z     = x.958^(x.960*inv(x.959))
+             = x.962^(x.963*inv((~ex.486*x.964)))
+       z     = x.962^(x.963*inv(x.964))
   */
 
 lemma session_key_establish:
@@ -2650,7 +2650,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 52.413975s
+  processing time: 31.403218324s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2662,7 +2662,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 52.413975s
+  processing time: 31.403218324s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

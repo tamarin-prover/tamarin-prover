@@ -1,0 +1,117 @@
+theory 5G_AKA_passive_privacy_game
+
+/*
+   A model of the untraceability game for 5G AKA against a passive adversary. 
+   The adversary must not be able to distinguish two sessions of the same UE from 
+   two sessions involving different UEs. 
+
+   Modeler:     David Basin, Jannik Dreier, Lucca Hirschi, Sasa Radomirovic, Ralf Sasse, Vincent Stettler
+*/
+
+begin
+
+builtins:
+	asymmetric-encryption, multiset, xor
+
+functions:
+	// AKA functions (TS 33.102)
+	f1/2, 	   // MAC-function --> MAC  
+	f2/2, 	   // MAC-function --> RES
+//	f3/2, 	   // KDF 	   --> CK
+//	f4/2, 	   // KDF          --> IK
+	f5/2, 	   // KDF          --> AK (Hide Sqn)
+	f1_star/2, // MAC-function --> MAC-S
+	f5_star/2, // KGF	   --> AKS (Hide Sqn)
+
+	// 3GPP KDFs (TS 33.501)
+	KDF/2	 // KDF		 --> K_ausf, K_seaf, XRES*
+//	SHA256/2 // KDF		 --> HXRES*
+
+
+/************************************/
+/*     Initialization Rules         */
+/************************************/
+
+// Initialize a home network
+rule init_homeNet:
+	[ Fr(~sk_HN) ]
+      --[ Once('homeNet') ]->
+	[
+	  !Pk(pk(~sk_HN)),
+	  Out(pk(~sk_HN))
+        ]
+
+// Generate 2 SUPI, initial sqns, and keys k. 
+// Allow only one to be used in the left system
+// while both may be used in the right system
+rule supi_supply:
+     let 
+     UE1 = <~supi1, ~sqn1, ~k1 >
+     UE2 = <~supi2, ~sqn2, ~k2 >
+     in
+     [ Fr(~supi1)
+     , Fr(~supi2)
+     , Fr(~sqn1)
+     , Fr(~sqn2)
+     , Fr(~k1)
+     , Fr(~k2)
+     ]
+   --[ Once('supiSupply') ]->
+     [ !SUPI_Init(~supi1+~supi2)
+     ,  UE(UE1)
+     ,  UE(diff(UE1,UE2))
+     ]
+
+rule session:
+	let
+   	  suci = aenc{<~supi, ~R>}pk_HN
+          AK = f5(~k, ~RAND)
+	  MAC = f1(~k, <~sqn, ~RAND>) // check on the MAC
+          AUTN = <~sqn XOR AK, MAC>
+	  RES = f2(~k, ~RAND)
+	  RES_star = KDF(RES, ~RAND)
+	in
+	[ 
+          UE(<~supi, ~sqn, ~k>)
+	, !Pk(pk_HN)
+	, Fr(~R)
+	, Fr(~RAND)
+        ]
+      --[ Executable(~supi),
+          Secret(AK),
+	  Secret(~k),
+	  Secret(~sqn),
+	  Secret(~supi)
+	  ]->
+	[ 
+           Out(suci), Out(< ~RAND, AUTN >), Out(RES_star)
+        ]
+
+/************************************/
+/*     Restrictions / Axioms        */
+/************************************/
+
+restriction once:
+        " All a #i #j. Once(a)@i & Once(a)@j ==> #i = #j "
+
+// Dummy lemma for timing info only.
+lemma dummy: "not(F)"
+
+/************************************/
+/*     Source Lemmas                */
+/************************************/
+// Remove all open chains
+// Autoproven in reasonable time
+lemma mainSourceLemma [use_induction, sources]:
+"  (All t #i. Secret(t)@i ==> not (Ex #k. KU(t) @k))
+"
+
+/************************************/
+/*     Executability lemma          */
+/************************************/
+
+lemma executable:
+   exists-trace
+   "Ex s1 s2 #i1 #i2. Executable(s1)@i1 & Executable(s2)@i2 & i1 < i2"
+
+end

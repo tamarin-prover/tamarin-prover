@@ -145,7 +145,7 @@ import qualified Data.ByteString.Char8 as BC
 -- import           Data.Foldable        (foldMap)
 import           Data.Data
 import           Data.List
--- import qualified Data.Set              as S
+import qualified Data.Set              as S
 import qualified Data.Map              as M
 import           Data.Monoid
 -- import           Data.Maybe            (fromMaybe)
@@ -490,7 +490,7 @@ destrRuleToConstrRule f l (Rule (IntrInfo (DestrRule name _ _ _)) ps cs _ _)
 
         conclusions [] = []
         -- KD and KU facts only have one term
-        conclusions ((Fact KDFact (m:ms)):cs') = (Fact KUFact ((addTerms m):ms)):(conclusions cs')
+        conclusions ((Fact KDFact ann (m:ms)):cs') = (Fact KUFact ann ((addTerms m):ms)):(conclusions cs')
         conclusions                    (c:cs') =                               c:(conclusions cs')
 
         addTerms (FAPP f' t) | f'==f = fApp f (t ++ newvars)
@@ -778,37 +778,37 @@ getSubstitutionsFixingNewVars _ _
 multRuleInstance :: Int -> RuleAC
 multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map xifact [1..n]) [prod] [prod] [])
   where
-    prod = Fact KUFact [(FAPP (AC Mult) (map xi [1..n]))]
+    prod = kuFact (FAPP (AC Mult) (map xi [1..n]))
     
     xi :: Int -> LNTerm
     xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
     
     xifact :: Int -> LNFact
-    xifact k = Fact KUFact [(xi k)]
+    xifact k = kuFact (xi k)
 
 -- | Returns a union rule instance of the given size.
 unionRuleInstance :: Int -> RuleAC
 unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map xifact [1..n]) [prod] [prod] [])
   where
-    prod = Fact KUFact [(FAPP (AC Union) (map xi [1..n]))]
+    prod = kuFact (FAPP (AC Union) (map xi [1..n]))
     
     xi :: Int -> LNTerm
     xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
     
     xifact :: Int -> LNFact
-    xifact k = Fact KUFact [(xi k)]
+    xifact k = kuFact (xi k)
 
 -- | Returns a xor rule instance of the given size.
 xorRuleInstance :: Int -> RuleAC
 xorRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map xifact [1..n]) [prod] [prod] [])
   where
-    prod = Fact KUFact [(FAPP (AC Xor) (map xi [1..n]))]
+    prod = Fact KUFact S.empty [(FAPP (AC Xor) (map xi [1..n]))]
     
     xi :: Int -> LNTerm
     xi k = (LIT $ Var $ LVar "x" LSortMsg (toInteger k))
     
     xifact :: Int -> LNFact
-    xifact k = Fact KUFact [(xi k)]
+    xifact k = Fact KUFact S.empty [(xi k)]
 
 type RuleACConstrs = Disj LNSubstVFresh
 
@@ -894,13 +894,13 @@ someRuleACInstAvoidingFixing r s subst =
       
 -- | Add the diff label to a rule
 addDiffLabel :: Rule a -> String -> Rule a
-addDiffLabel (Rule info prems concs acts nvs) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factTerms = []}]) nvs
+addDiffLabel (Rule info prems concs acts nvs) name = Rule info prems concs (acts ++ [Fact {factTag = ProtoFact Linear name 0, factAnnotations = S.empty, factTerms = []}]) nvs
 
 -- | Remove the diff label from a rule
 removeDiffLabel :: Rule a -> String -> Rule a
 removeDiffLabel (Rule info prems concs acts nvs) name = Rule info prems concs (filter isNotDiffAnnotation acts) nvs
   where
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear name 0, factTerms = []})
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear name 0, factAnnotations = S.empty, factTerms = []})
 
 -- Unification
 --------------
@@ -937,7 +937,7 @@ equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nv
        unifs eq hnd = unifyLNTerm eq `runReader` hnd
        eqs = foldl matchFacts (Just $ zipWith Equal nvs1 nvs2) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
        matchFacts Nothing  _                                    = Nothing
-       matchFacts (Just l) (Fact f1 t1, Fact f2 t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l) 
+       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
                                                     | otherwise = Nothing
 
 ------------------------------------------------------------------------------
@@ -1055,7 +1055,7 @@ prettyNamedRule prefix ppInfo ru =
     ppFacts' list    = ppList prettyLNFact list
     ppFacts proj     = ppList prettyLNFact $ L.get proj ru
     ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factTerms = []})
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     ppAttributes = case ruleAttributes ru of
         []    -> text ""
         attrs -> hcat $ [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]

@@ -30,21 +30,21 @@ let rec gen trans tree p tildex  = match (process_at tree p) with
  * substituion necessary for NDC 
  *)
     Empty -> [] 
-  | Node(y, _, _) -> 
+  | Node(y, left, right) ->
     let sapic_terms=[y] in
     (* TODO a warning when embedded  msrs are used would be nice *)
     let basemsrs = trans y p tildex in
     let msrs = (* subst_by_pstate_where_needed tree p *) basemsrs in
     let tildex'1 = (try next_tildex (1::p) msrs with
         NoNextState -> match y with
-          Null ->  VarSet.empty 
-        | NDC -> tildex
+          Null -> VarSet.empty 
+        | NDC | Let(_) -> tildex
         | _ -> raise ProgrammingError)
     and tildex'2 = try next_tildex (2::p) msrs with
         NoNextState -> 
             (* If we don't get a new tildex because there is no next state, y should be one of the following *)
          (   match y with
-          Null | MSR(_) | Rep | NDC | New (_) | Msg_In(_) 
+          Null | Let(_) | MSR(_) | Rep | NDC | New (_) | Msg_In(_) 
         | Msg_Out(_) | Ch_In(_) | Ch_Out(_) 
         |  Insert(_) | Delete (_) | Event(_) 
         | Lock _ | Unlock _
@@ -54,19 +54,31 @@ let rec gen trans tree p tildex  = match (process_at tree p) with
          )
     in
     if y=NDC then
-       let  l = gen trans tree (1::p) tildex 
-       and  r = gen trans tree (2::p) tildex
+       let  l = gen trans tree (1::p) tildex in
+       let  r = gen trans tree (2::p) tildex
        and  s1 = annotated_rules_subst_state tree p (1::p)
        and  s2 = annotated_rules_subst_state tree p (2::p) 
        in 
           s1(l)@s2(r)
     else
-      msrs2annotated_rules sapic_terms p msrs
-      @  (gen trans tree (1::p) tildex'1)
-      @  (gen trans tree (2::p) tildex'2)
+       let (l, r) = match (left, right) with
+                      (Node(Let(r), ll, Empty), Node(Let(s), rr, Empty)) ->
+                        (let new_tree = replace_process_at tree (Node(y, ll, rr)) p in
+                        (annotated_rules_update (Some r) (gen trans new_tree (1::p) tildex'1), annotated_rules_update (Some s) (gen trans new_tree (2::p) tildex'2)))
+                    | (Node(Let(r), ll, Empty), rr) ->
+                        (let new_tree = replace_process_at tree (Node(y, ll, rr)) p in
+                        (annotated_rules_update (Some r) (gen trans new_tree (1::p) tildex'1), gen trans new_tree (2::p) tildex'2))
+                    | (ll, Node(Let(s), rr, Empty)) ->
+                        (let new_tree = replace_process_at tree (Node(y, ll, rr)) p in
+                        (gen trans new_tree (1::p) tildex'1, annotated_rules_update (Some s) (gen trans new_tree (2::p) tildex'2)))
+                    | (ll, rr) ->
+                        (gen trans tree (1::p) tildex'1, gen trans tree (2::p) tildex'2)
+       in
+       msrs2annotated_rules sapic_terms p msrs @ l @ r
 
 let noprogresstrans anP = 
   let initrule = { 
+    process_name = None;
     sapic_terms = [Comment "Init"];
     position=[];
     left= [];
@@ -161,6 +173,7 @@ let progresstrans anP = (* translation for processes with progress *)
     step3 (child1 p) ( step2 (child2 p) ( step2 (child1 p) (step1msrs)))
   and messsageidrule = 
     { 
+      process_name = None;
       sapic_terms = [Comment "MessageID-rule"];
       position=[];
       left=[Fr(Fresh("x"))];
@@ -173,6 +186,7 @@ let progresstrans anP = (* translation for processes with progress *)
   in
   let initrule =
     { 
+      process_name = None;
       sapic_terms = [Comment "Init"];
       position=[];
       left= if (Progressfunction.is_from pf []) then [Fr(Fresh("prog_"))] else [];
@@ -185,24 +199,26 @@ let progresstrans anP = (* translation for processes with progress *)
     }
   in
   initrule::messsageidrule::(gen trans anP [] varset )
-    
+
     
 let generate_sapic_restrictions annotated_process =
   if (annotated_process = Empty) then ""
   else 
       (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
-    ^ (if contains_locking annotated_process then  res_locking else "")
+    (*^ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])*)
     ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
     ^ (* Stuff that's always there *)
     res_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
 
 let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
+  (* Printf.printf "%s\n" (annotatedtree2string annotated_process); *)
   let msr =  
       if input.op.progress 
       then progresstrans annotated_process
-      else noprogresstrans annotated_process 
-  and lemmas_tamarin = print_lemmas input.lem
+      else noprogresstrans annotated_process
+  in
+  let lemmas_tamarin = print_lemmas input.lem
   and users_restrictions = print_restrictions input.ax
   and predicate_restrictions = print_predicates input.pred
   and sapic_restrictions = 
@@ -212,7 +228,15 @@ let translation input =
       ^ res_resilient 
     else 
       generate_sapic_restrictions annotated_process
+  (*and sapic_restrictions = List.map print_lemmas (generate_sapic_restrictions annotated_process)*)
+  and sapic_restrictions_locks = 
+    if contains_locking annotated_process
+    then  
+      let lock_list = get_lock_positions annotated_process  
+      in
+      print_lock_restrictions  (remove_duplicates lock_list)
+    else ""
   in
-  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^
+  input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^  sapic_restrictions_locks ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

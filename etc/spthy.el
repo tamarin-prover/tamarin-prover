@@ -54,7 +54,7 @@
   ;; Fontify keywords
   (setq font-lock-defaults spthy-font-lock-defaults)
 
-  ;; ;; Double quotes are for lemmas not strings
+  ;; Double quotes are for lemmas not strings
   (modify-syntax-entry ?\" "w" spthy-mode-syntax-table)
   (modify-syntax-entry ?' "\"" spthy-mode-syntax-table)
 

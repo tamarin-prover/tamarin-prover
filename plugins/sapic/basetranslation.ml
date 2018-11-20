@@ -62,14 +62,19 @@ let basetrans act p tildex = match act with
       ([State(p,tildex)], [Action("IsIn",[t1; t2])], [State(1::p, tildex @@ (vars_t t2))]);
       ([State(p,tildex)], [Action("IsNotSet",[t1])], [State(2::p,tildex)]) ]
   | AnnotatedUnlock(t,a)  ->
+    let str = "lock"^(string_of_int a) in
+    let unlock_str = "Unlock_"^(string_of_int a) in
     let nonce=a in
-    [([ State(p,tildex)], [Action("Unlock",[Var(nonce); t])], [State(1::p, tildex) ])] 
+    [([ State(p,tildex)], [Action("Unlock",[Var (Pub (string_of_int nonce));  Var (Fresh str); t ]); Action(unlock_str,[Var (Pub (string_of_int nonce));  Var (Fresh str); t ])], [State(1::p, tildex) ])]
   | AnnotatedLock(t,a)  ->
-    let nonce=a in
-    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var nonce; t ])], [State(1::p, nonce @:: tildex)])]
+    let str = "lock"^(string_of_int a) in
+    let lock_str = "Lock_"^(string_of_int a) in
+    let nonce=(Fresh str) in
+    [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
   | Delete(t)  -> [
       ( [ State(p,tildex)], [Action("Delete",[ t ])], [State(1::p, tildex) ])]
   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))
+  | Let(s) -> raise (TranslationError "'Let' should not be present at this point")
   | Comment(s) -> raise (TranslationError "Comments should not be present at this point")
 
 
@@ -124,9 +129,10 @@ let annotated_rules_subst_state tree p' p msrs=
     | x ->  x 
   in
   List.map (fun  ar -> 
-      {  sapic_terms = ar.sapic_terms ;
-         position=ar.position; 
-         left=(List.map subst ar.left); 
+      {  process_name = ar.process_name;
+         sapic_terms = ar.sapic_terms;
+         position=ar.position;
+         left=(List.map subst ar.left);
          actions=ar.actions;
          right=ar.right;}  ) msrs
     
