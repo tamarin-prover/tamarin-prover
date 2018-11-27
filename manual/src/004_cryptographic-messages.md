@@ -139,10 +139,10 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 `revealing-signing`:
 
 : This theory models a message-revealing signature scheme. It defines the function
-  symbols `revealingSign/2`, `revealingVerify/3`, `getMessage/1`, `pk/1`, and 
+  symbols `revealSign/2`, `revealVerify/3`, `getMessage/1`, `pk/1`, and 
   `true`, which are related by the equations
-  `revealingVerify(revealingSign(m,sk),m,pk(sk)) = true`
-  and `getMessage(revealingSign(m,sk)) = m`.
+  `revealVerify(revealSign(m,sk),m,pk(sk)) = true`
+  and `getMessage(revealSign(m,sk)) = m`.
 
 `symmetric-encryption`:
 
