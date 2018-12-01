@@ -20,7 +20,7 @@ import           Main.Console
 import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
--- import qualified Test.ParserTests                as Parser
+import qualified Test.ParserTests                as Parser
 
 
 -- | Self-test mode.
@@ -53,10 +53,10 @@ run _thisMode as = do
 #else
     let successGraphVizDot = True
 #endif
-    {- FIXME (SM): move test-suite into its own .cabal section.
-     - I've disabled this part when I've moved to embedding all data files to
-     - simplify packaging.
-     - (2015-04-13)
+    {-- FIXME (SM): move test-suite into its own .cabal section.
+     -- I've disabled this part when I've moved to embedding all data files to
+     -- simplify packaging.
+     -- (2015-04-13)
 
     --------------------------------------------------------------------------
     nextTopic "Testing the parser on our examples"
@@ -82,7 +82,7 @@ run _thisMode as = do
     diffieEx <- mkProverTest "examples/csf12/JKL_TS1_2008_KI.spthy"
 
     successProver <- runUnitTest $ TestList [ nslEx, loopEx, diffieEx ]
-    -}
+    --}
 
     --------------------------------------------------------------------------
     nextTopic "Testing the unification infrastructure"

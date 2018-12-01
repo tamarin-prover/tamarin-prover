@@ -1,0 +1,305 @@
+theory YubikeyHSMmultiset
+begin
+
+section{* The Yubikey-Protocol with a YubiHSM *}
+
+/*
+ * Protocol:    Yubikey Protocol with a YubiHSM
+ * Modeler:     Robert Kunnemann, Graham Steel
+ * Date:    November 2012
+ *
+ * Status:  working
+ */
+
+builtins: symmetric-encryption, multiset
+
+
+/* We to model the Yubikey protocol, described in
+*  http://www.yubico.com/documentation
+*  http://www.yubico.com/developers-intro
+*  In this version, we assume the Authentication Server to be under the
+*  control of the attacker. We investigate the secrecy of keys in case the
+*  Authentication Server can protect the keys by encrypting them using a
+*  Hardware Token called YubiHSM, see:
+*  TODO URL will follow
+*  This is simplified version, in particular:
+*  - timestamps are not modelled
+*  - we do not distinguish the session and token counter. We described them
+*    as one single counter, that represents the pair (session counter, token
+*    counter) with a lexicographical oder on the pair.
+*  - we model encryption in more detail than the Theory Yubikey. However,
+*    we use a very much simplified model of XOR
+*  - we assume the YubiHSM to be in a configuration where only the flags
+*    YSM_AEAD_RANDOM_GENERATE and
+*    YSM_AEAD_YUBIKEY_OTP_DECODE
+*    are activated.
+*/
+
+
+
+/* keystream models the way the keystream used for encryption is computed.
+ * Mac describes the MAC used inside the AEADs, which are computed using
+ * CBC mode, described in RFC 3610.
+ * keystream_kh and keyhandle_n model the adversaries capacity to extract the
+ * used keyhandle and nonce that determined the keystream. (Similar for
+ * demac.)
+*/
+functions: keystream/2,  keystream_kh/1, keystream_n/1,
+            xorc/2, dexor1/2, dexor2/2,
+            mac/2, demac/2
+equations: keystream_kh(keystream(kh,n))=kh,
+            keystream_n(keystream(n,n))=n,
+/* an incomplete way of modelling the algebraic properties of the XOR
+ * operator */
+            dexor1(xorc(a,b),a)=b,
+            dexor2(xorc(a,b),b)=a,
+/* using mac, adv might find out *something* about the message, we
+ * overapproximate */
+            demac(mac(m,k),k)=m
+
+// Rules for intruder's control over Server
+
+/* The attacker can send messages to the HSM, i.e., on behalf of the
+ * authentication server. Likewise, he can receive messages.
+ */
+
+rule isendHSM:
+   [ In( x ) ] --[ HSMWrite(x) ]-> [ InHSM( x ) ]
+rule irecvHSM:
+   [ OutHSM( x ) ] --[ HSMRead(x) ]-> [Out(x)]
+
+/* The attacker can write and read the Authentication Server's database.
+ * This database contains a list of public ideas and corresponding AEADs
+ */
+rule read_AEAD:
+    [ !S_AEAD(pid,aead)  ] --[ AEADRead(aead),HSMRead(aead) ]-> [Out(aead)]
+rule write_AEAD:
+    [ In(aead), In(pid) ] --[ AEADWrite(aead),HSMWrite(aead) ]-> [!S_AEAD(pid,aead) ]
+
+
+/* Initialisation of HSM and Authentication Server. OneTime() Assures that
+ * this can only happen a single time in a trace */
+rule HSMInit:
+    [Fr(~k), Fr(~kh)] --[Protocol(), GenerateRole1(~k),MasterKey(~k), OneTime()]->
+    [ !HSM(~kh,~k), Out(~kh),
+/* If the following line is uncommented, we are able to reproduce the
+ * attack described in
+ * http://static.yubico.com/var/uploads/pdfs/Security%20Advisory.pdf
+ */
+//!YSM_AEAD_GENERATE(~kh), //uncomment to produce attacks
+!YSM_AEAD_YUBIKEY_OTP_DECODE(~kh)
+]
+
+//Some commands on the HSM:
+rule YSM_AEAD_RANDOM_GENERATE:
+    let ks=keystream(kh,N)
+        aead=<xorc(senc(ks,k),~data),mac(~data,k)>
+    in
+    [Fr(~data), InHSM(<N,kh>),!HSM(kh,k),!YSM_AEAD_RANDOM_GENERATE(kh)]
+    --[GenerateRandomAEAD(~data)]->
+    [OutHSM( aead)
+    ]
+
+rule YSM_AEAD_GENERATE:
+    let ks=keystream(kh,N)
+        aead=<xorc(senc(ks,k),data),mac(data,k)>
+    in
+    [InHSM(<N,kh,data>),!HSM(kh,k),!YSM_AEAD_GENERATE(kh)]
+    --[GenerateAEAD(data,aead )]->
+    [OutHSM( aead) ]
+
+rule YSM_AES_ESC_BLOCK_ENCRYPT:
+    [InHSM(<kh,data>), !HSM(kh,k), !YSM_AES_ESC_BLOCK_ENCRYPT(kh)]
+    --[]->
+    [OutHSM(senc(data,k))]
+
+rule YSM_AEAD_YUBIKEY_OTP_DECODE:
+    let ks=keystream(kh,N)
+        aead=<xorc(senc(ks,k),<k2,did>),mac(<k2,did>,k)>
+        otp=senc(<did,sc,rand>,k2)
+    in
+    [InHSM(<did,kh,aead,otp>), !HSM(kh,k), !YSM_AEAD_YUBIKEY_OTP_DECODE(kh)
+    ]
+    --[
+    OtpDecode(k2,k,<did,sc,rand>,sc,xorc(senc(ks,k),<k2,did>),mac(<k2,did>,k)),
+    OtpDecodeMaster(k2,k)
+    ]->
+    [OutHSM(sc)]
+
+//Yubikey operations
+//(see Yubikey.spthy for more detailed comments)
+rule BuyANewYubikey:
+    let ks=keystream(kh,~pid)
+        aead=<xorc(senc(ks,~k),<~k2,~sid>),mac(<~k2,~sid>,~k)>
+    in
+/* This rule implicitly uses YSM_AEAD_GENERATE to produce the AEAD that
+ * stores the secret identity and shared key of a Yubikey. By disabling the
+ * YSM_AEAD_GENERATE flag but nevertheless permitting this operation, we
+ * model a scenario where YSM_AEAD_GENERATE can be safely used to guarantee
+ * the operation, but not by the attacker. This corresponds to a scenario
+ * where Yubikey set-up takes place on a different server, or where the
+ * set-up takes place before the server is plugged into the network.
+ * Uncomment the following line to require the HSM to have the
+ * YSM_AEAD_GENERATE flag set.
+ */
+//!YSM_AEAD_GENERATE(kh),
+    [ Fr(~k2),Fr(~pid),Fr(~sid),
+    !HSM(kh,~k), In('1') ]
+     --[Init(~pid,~k2)]->
+    [Y_counter(~pid,'1'), !Y_Key(~pid,~k2), !Y_sid(~pid,~sid),
+    S_Counter(~pid,'1'), !S_AEAD(~pid,aead), !S_sid(~pid,~sid),
+    Out(~pid) ]
+
+//On plugin, the session counter is increased and the token counter reset
+rule Yubikey_Plugin:
+        [Y_counter(pid,sc),In(Ssc) ]
+        //The old counter value sc is removed
+        --[ Yubi(pid,Ssc),Smaller(sc, Ssc) ]->
+        [Y_counter(pid, Ssc)]
+        //and substituted by a new counter value, larger, Ssc
+
+rule Yubikey_PressButton:
+    [Y_counter(pid,tc),!Y_Key(pid,k2),!Y_sid(pid,sid),
+     Fr(~pr),Fr(~nonce), In(tc+'1')]
+    --[ YubiPress(pid,tc),
+        YubiPressOtp(pid,<sid,tc,~pr>,tc,k2) ]->
+    [Y_counter(pid,tc+'1'), Out(<pid,~nonce,senc(<sid,tc,~pr>,k2)>)]
+
+rule Server_ReceiveOTP_NewSession:
+    let ks=keystream(kh,pid)
+        aead=<xorc(senc(ks,k),<k2,sid>),mac(<k2,sid>,k)>
+    in
+    [In(<pid,nonce,senc(<sid,tc,~pr>,k2)>) ,
+        !HSM(kh,k), !S_AEAD(pid,aead), S_Counter(pid,otc),
+        !S_sid(pid,sid) ]
+     --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k2)),
+LoginCounter(pid,otc,tc), Smaller(otc,tc)
+ ]-> 
+    [ S_Counter(pid,tc) ]
+
+//we model the larger relation using the smaller action and excluding all traces where it is not correct
+restriction smaller:
+	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
+
+lemma transitivity: 
+        "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
+        ==> Ex z . a + z = c"
+
+
+restriction onetime:
+    "All #t3 #t4 . OneTime()@#t3 & OneTime()@t4 ==> #t3=#t4"
+
+//LEMMAS:
+
+// For sanity: Ensure that a successful login is reachable.
+//TODO reactivate
+//lemma Login_reachable:
+//  exists-trace
+//  "Ex #i pid sid x otp1. Login(pid,sid, x, otp1)@i"
+
+/* Every counter produced by a Yubikey could be computed by the adversary
+ * anyway. (This saves a lot of steps in the backwards induction of the
+ * following lemmas).
+*/
+lemma adv_can_guess_counter[reuse,use_induction]:
+    "All pid sc #t2 . YubiPress(pid,sc)@t2
+    ==> (Ex #t1 . K(sc)@#t1 & #t1<#t2)"
+
+/* Everything that can be learned by using OtpDecode is the counter of a
+ * Yubikey, which can be computed according to the previous lemma.
+*/
+lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]:
+    "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3
+    ==> Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3"
+
+/* All keys shared between the YubiHSM and the Authentication Server are
+ * either not known to the adversary, or the adversary learned the key used
+ * to encrypt said keys in form of AEADs.
+ */
+lemma k2_is_secret_use_induction[use_induction,reuse]:
+    "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2
+    ==>
+     (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
+
+/* Neither of those kinds of keys are ever learned by the adversary */
+lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
+    " 
+not( Ex #t1 #t2 k . MasterKey(k)@t1 & KU(k)@t2 )
+& not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & KU(k6)@t6 )
+    "
+
+// Each succesful login with counter value x was preceeded by a PressButton
+// event with the same counter value
+// This lemma cannot be proven at the moment, but it would be a first step
+// to reach the no_replay result present in Yubikey.spthy
+lemma one_count_foreach_login[reuse,use_induction]:
+        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
+
+// If a successful Login happens before a second successful Login, the
+// counter value of the first is smaller than the counter value of the
+// second
+lemma slightly_weaker_invariant[reuse, use_induction]:
+        "(All pid otc1 tc1 otc2 tc2 #t1 #t2 .
+             LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+        ==> ( #t1<#t2 & ( Ex z . tc2=tc1 + z))
+            | #t2<#t1 | #t1=#t2)
+        "
+induction
+  case empty_trace
+  by contradiction // from formulas
+next
+  case non_empty_trace
+  simplify
+  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2+z.1) = (otc1+z+z.2)) ⇒ ⊥) )
+    case case_1
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction // from formulas
+    next
+      case case_2
+      by contradiction // from formulas
+    qed
+  next
+    case case_2
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction // from formulas
+    next
+      case case_2
+      solve( S_Counter( pid, otc2 ) ▶₃ #t2 )
+        case BuyANewYubikey
+        by sorry
+      next
+        case Server_ReceiveOTP_NewSession_case_1
+        by sorry
+      next
+        case Server_ReceiveOTP_NewSession_case_2
+        by sorry
+      qed
+    qed
+  qed
+qed
+
+
+// It is not possible to have to distinct logins with the same counter
+// value
+lemma no_replay:
+        "not (Ex #i #j pid sid x otp1 otp2 .
+         Login(pid,sid,x,otp1)@i &  Login(pid,sid,x,otp2)@j 
+         & not(#i=#j))"
+
+lemma injective_correspondance:
+    "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 
+        & All otp2 #t3 . Login(pid,sid,x,otp2)@t3 ==> #t3=#t2
+        )"
+
+lemma Login_invalidates_smaller_counters:
+        "All pid otc1 tc1 otc2 tc2 #t1 #t2 z .
+             LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+			 & tc2=tc1+z
+         	==>  #t1<#t2 "
+
+end
+

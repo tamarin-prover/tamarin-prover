@@ -50,6 +50,8 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
+import Data.Functor.Identity 
+
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
@@ -788,6 +790,77 @@ equations =
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
+
+ 
+println :: String -> ParsecT String u Identity ()          
+println str = traceShowM str
+
+
+
+-- identifier process 
+processes :: Parser Process
+processes =try (do                                                              -- plus parser
+                            -- println "check plus"         
+                            symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion processes->processes ...
+                            pTest <- processes
+                            -- println "check plus: p1 checked"
+                            symbol_ "+"
+                            -- println "check plus: plus checked"
+                            pTestt <- processes
+                            symbol ")"
+                            -- println "check plus: successfull"
+                            return (ProcessAlternative pTest pTestt))
+                <|>  try (do                                                    -- parallel parser
+                            symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion processes->processes ...
+                            p1 <- processes
+                            opParallel
+                            p2 <- processes
+                            symbol ")"
+                            return (ProcessParallel p1 p2))
+                <|>    try (do                                                     -- parens parser + at multterm
+                            symbol "("
+                            p <- processes
+                            symbol ")"
+                            symbol "at"
+                            -- m <- multterm                                    -- TODO parser: multterm
+                            return p)                                           -- TODO parser: multterm return
+                <|>     (do                                                     -- parens parser
+                            -- println "check parens open"
+                            symbol "("
+                            p <- processes
+                            -- println "check parens: process parsed"
+                            symbol ")"
+                            -- println "check parens successfull"
+                            return p)
+                <|>     (do                                                     -- process repition parser
+                            symbol "!"
+                            p <- processes
+                            return (ProcessRep p))
+                <|>     (do                                                     -- parse null processes
+                            -- println "check terminator"
+                            processTerminator <- symbol_ "0" *> pure ProcessNull 
+                            -- println "check terminator: successfull"
+                            return processTerminator)
+                <|>     (do                                                     -- parse identifier
+                            -- println ("test process identifier parsing Start")
+                            i <- BC.pack <$> identifier
+                            -- return (ProcessIdentifier <$> i)!!0)
+                            -- println ("test" ++ (BC.unpack i))
+                            return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
+
+        -- <|>  (process *> pure ())
+    {--where 
+        let_process = do 
+                        i <- identifier     --sortedLVar [LSortMsg]     -- LSortMsg = Sorte Lvar: kein suffix aber dafür identifier + optionaler index
+                        equalSign                               -- parse gleichheitszeichen und wirf es weg
+                        -- p <- process                    
+                        return NULL
+        -- -}
+            {-case p of 
+                Just str ->
+                  modifyState (addCtxtStRule str)
+                Nothing  ->
+                  fail $ "Not a correct process: " ++ show p-}
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -823,7 +896,7 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< lemma
+      , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
@@ -832,6 +905,8 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
+      , do proc <- processes
+           addItems flags (addProcess proc thy)
       , do ifdef flags thy
       , do define flags thy
       , do return thy
@@ -857,7 +932,9 @@ theory flags0 = do
 
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+
+    liftedAddProcess thy proc = addProcess proc thy     -- since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
 
     liftedAddRestriction thy rstr = case addRestriction rstr thy of
         Just thy' -> return thy'

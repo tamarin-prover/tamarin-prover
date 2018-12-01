@@ -1,0 +1,140 @@
+theory YubikeyMultisets
+begin
+
+section{* The Yubikey-Protocol *}
+
+/*
+ * Protocol:    Yubikey Protocol
+ * Modeler:     Robert Kunnemann, Graham Steel
+ * Date:    November 2012
+ *
+ * Status:  working
+ */
+
+builtins: symmetric-encryption, multiset
+
+/* We to model the Yubikey protocol, described in
+*  http://www.yubico.com/documentation
+*  http://www.yubico.com/developers-intro
+*  This is simplified version, in particular:
+*  - timestamps are not modelled
+*  - We do not distinguish the session and token counter. We describe them
+*    as one single counter, that represents the pair (session counter, token
+*    counter) with a lexicographical order on the pair. This implies that
+*    a) pressing the button on the Yubikey increases this counter by 1, and
+*    b) a plugin of the Yubikey increases it by an arbitrary amount the
+*       adversary gets to choose (giving him more power).
+*/
+
+/* A Yubikey is initialised with a one counter, a key and a public, as well as a
+ * secret identifier, ~pid and ~sid. This information is shared with the
+ * Authentication Server, so we assume a trusted way of installing a
+ * Yubikey
+*/
+rule BuyANewYubikey:
+        [Fr(~k),Fr(~pid),Fr(~sid)] //for fresh k, public and secret id..
+        --[Protocol(), Init(~pid,~k),ExtendedInit(~pid,~sid,~k)]->
+        [!Y(~pid,~sid), Y_counter(~pid,'1'),
+        //..store public and secret id along with the starting counter
+        //(zero) on the Yubikey..
+		 Server(~pid,~sid,'1'),!SharedKey(~pid,~k), //and on the server
+         Out(~pid)] //and make the public id public
+
+//On plugin, the session counter is increased and the token counter reset
+// From counter example file: The In(x) could be nicely prevented by ensuring
+// that x never contains names by using the sort  
+// system. 
+rule Yubikey_Plugin:
+	   [Y_counter(pid,sc), In(sc) ] 
+        //The old counter value sc is removed
+        --[ Yubi(pid,sc + '1') ]-> 
+        [Y_counter(pid, sc + '1')]
+        //and substituted by a new counter value, larger, Ssc
+
+//If the Button is pressed, the token counter is increased
+rule Yubikey_PressButton:
+        [!Y(pid,sid), Y_counter(pid,tc),!SharedKey(pid,k),
+         In(tc),Fr(~npr),Fr(~nonce) ]
+        //The old countervalue tc is removed
+        --[ YubiPress(pid,tc), YubiOTP(pid,senc(<sid,tc,~npr>,k)),
+            YubiSid(pid,sid,k) ]->
+        [Y_counter(pid, tc + '1'), //and substituted by its successor
+         Out(<pid,~nonce,senc(<sid,tc,~npr>,k)>) 
+        //in addition, an encrypted otp is output along with a nonce and
+        //the public id of the Yubikey used.
+        ]
+
+/* Upon receiving an encrypted OTP, the Server compares the (unencrypted)
+ * public id to his data base to identify the key to decrypt the OTP. After
+ * making sure that the secret id is correct, the Server verifies that the
+ * received counter value is larger than the last one stored. If the Login
+ * is successful, i.e., the previous conditions were fulfilled, the counter
+ * value on the Server that is associated to the Yubikey is updated.
+ */
+
+rule Server_ReceiveOTP_NewSession:
+        [Server(pid,sid,otc), In(<pid,nonce,senc(<sid,tc,~pr>,k)>),
+        !SharedKey(pid,k), In(otc) ]
+        //if the Server receives an OTP encrypted with k that belongs to
+        //the (unencrypted) public id, and the OTP has the right format,
+        //contains the correct secret id as well as a counter tc that is
+        //larger than the current counter otc, then...
+         --[ Login(pid,sid,tc,senc(<sid,tc,~pr>,k)),
+             LoginCounter(pid,otc,tc), //..the Login is accepted..
+			 Smaller(otc,tc)
+          ]->
+        [Server(pid,sid,tc)] //..and the counter value updated.
+
+//we model the larger relation using the smaller action and excluding all traces where it is not correct
+restriction smaller:
+	"All #i a b. Smaller(a,b)@i ==> Ex z. a+z=b"
+
+//restriction transitivity: //axiomatic
+//        "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
+//        ==> Ex z . Smaller(a,c)@t3 "
+
+lemma transitivity: //not axiomatic anymore :)
+        "All #t1 #t2 a b c. Smaller(a,b)@t1 & Smaller(b,c)@t2
+        ==> Ex z . a + z = c"
+
+// For sanity: Ensure that a successful login is reachable.
+lemma Login_reachable:
+  exists-trace
+  "Ex #i pid sid x otp1. Login(pid,sid,x,otp1)@i"
+
+// Each succesful login with counter value x was preceeded by a PressButton
+// event with the same counter value
+lemma one_count_foreach_login[reuse,use_induction]:
+        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
+
+// If a succesful Login happens before a second sucesfull Login, the
+// counter value of the first is smaller than the counter value of the
+// second
+lemma slightly_weaker_invariant[reuse, use_induction]:
+        "(All pid otc1 tc1 otc2 tc2 #t1 #t2 .
+             LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+        ==> ( #t1<#t2 & ( Ex z . tc1+z=tc2))
+            | #t2<#t1 | #t1=#t2)
+        "
+
+// It is not possible to have to distinct logins with the same counter
+// value
+lemma no_replay:
+        "not (Ex #i #j pid sid x otp1 otp2 .
+         Login(pid,sid,x,otp1)@i &  Login(pid,sid,x,otp2)@j 
+         & not(#i=#j))"
+
+lemma injective_correspondance:
+    "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
+         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 
+        & All otp2 #t3 . Login(pid,sid,x,otp2)@t3 ==> #t3=#t2
+        )"
+
+lemma Login_invalidates_smaller_counters:
+        "All pid otc1 tc1 otc2 tc2 #t1 #t2 #t3 .
+             LoginCounter(pid,otc1,tc1)@#t1 & LoginCounter(pid,otc2,tc2)@#t2
+			 & Smaller(tc1,tc2)@t3
+         	==>  #t1<#t2 "
+end
+

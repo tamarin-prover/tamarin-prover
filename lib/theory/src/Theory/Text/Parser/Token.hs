@@ -35,6 +35,8 @@ module Theory.Text.Parser.Token (
   , msgvar
   , nodevar
 
+  , letIdentifier
+
   -- * Operators
 --  , opDiff
 
@@ -70,6 +72,8 @@ module Theory.Text.Parser.Token (
   , opRightarrow
   , opLongleftarrow
   , opLongrightarrow
+
+  , opParallel
 
   -- * Parentheses/quoting
   , braced
@@ -124,10 +128,10 @@ spthy =
       , T.nestedComments = True
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
-      , T.reservedNames  = ["in","let","rule","diff"]
+      , T.reservedNames  = ["in","let","rule","diff","if","then","else","lookup","as","new","out","event","insert","lock","unlock","delete","report","end"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-#"
       , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-#"
-      , T.reservedOpNames= []
+      , T.reservedOpNames= ["||"]
       , T.caseSensitive  = True
       }
 
@@ -426,3 +430,13 @@ opLongleftarrow = symbol_ "<--"
 -- | The longrightarrow operator @-->@.
 opLongrightarrow :: Parser ()
 opLongrightarrow = symbol_ "-->"
+
+
+
+-- | The operator for parallel running processes @||@.
+opParallel :: Parser()
+opParallel = symbol_ "||"
+
+-- | The let identifier @let@.
+letIdentifier :: Parser()
+letIdentifier = symbol_ "let"

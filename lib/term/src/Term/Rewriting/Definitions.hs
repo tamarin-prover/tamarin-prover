@@ -10,6 +10,8 @@ module Term.Rewriting.Definitions (
       Equal (..)
     , evalEqual
 
+    {-, Process-}
+
     -- * Matching problems
     , Match(..)
     , flattenMatch
@@ -31,6 +33,14 @@ import Control.Arrow        ( (***) )
 ----------------------------------------------------------------------
 -- Equalities, matching problems, and rewriting rules
 ----------------------------------------------------------------------
+
+
+{--- | A process data structure
+data Process = Process 
+                | Parallel Process Process
+                
+    deriving( Eq, Show )-}
+
 
 -- | An equality.
 data Equal a = Equal { eqLHS :: a, eqRHS :: a }
