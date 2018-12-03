@@ -805,6 +805,33 @@ processDef = do
                 return (ProcessDef (BC.unpack i) p )
                 
 
+literal :: Parser Literal
+literal = try (do
+                        symbol "~" 
+                        s <- BC.pack <$> identifier
+                        return (Tilde (BC.unpack s)))
+           <|>   try (do
+                        symbol "~"
+                        s <- singleQuoted identifier
+                        return (TildeQuote s))
+           <|>   try (do
+                        symbol "'"                        
+                        s <- BC.pack <$> identifier
+                        return (Quote (BC.unpack s)))
+           <|>   try (do
+                        symbol "#"                        
+                        s <- BC.pack <$> identifier
+                        return (Sharp (BC.unpack s)))
+           <|>   try (do                     
+                        s <- BC.pack <$> identifier
+                        return (Identifier (BC.unpack s)))
+           
+        
+sapicAction :: Parser SapicAction
+sapicAction = try (do 
+                        symbol "new"
+                        s <- literal
+                        return (New s))
  
 process :: Parser Process
 process = try (do                                                              -- plus parser
@@ -844,6 +871,14 @@ process = try (do                                                              -
                         symbol "!"
                         p <- process
                         return (ProcessRep p))
+            <|> try ( do 
+                        s <- sapicAction
+                        symbol ","
+                        p <- process
+                        return (ProcessOpt s p))
+            <|>     ( do 
+                        s <- sapicAction
+                        return (PAction s))
             <|>     (do                                                     -- parse null process
                         -- println "check terminator"
                         processTerminator <- symbol_ "0" *> pure ProcessNull 
@@ -855,6 +890,7 @@ process = try (do                                                              -
                         -- return (ProcessIdentifier <$> i)!!0)
                         -- println ("test" ++ (BC.unpack i))
                         return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
+                        
 
         -- <|>  (process *> pure ())
     {--where 

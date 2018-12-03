@@ -26,7 +26,8 @@ module Theory (
   -- * Processes
   , Process(..)
   , ProcessDef(..)
-  
+  , SapicAction(..)
+  , Literal(..)
   -- Datastructure added to Theory Items
   , addProcess
   , addProcessDef
@@ -415,6 +416,8 @@ data Process =
     |   ProcessParallel Process Process
     |   ProcessRep Process
     |   ProcessIdentifier String
+    |   PAction SapicAction
+    |   ProcessOpt SapicAction Process
    -- |   ProcessIfElse IfCondition Process Process
    -- |   ProcessIf IfCondition Process
        
@@ -424,12 +427,25 @@ data Process =
      deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
      
+type Id = String
+
+data SapicAction = New Literal
+        deriving( Show, Eq, Ord, Generic, NFData, Binary )
+     
+data Literal = Quote Id
+    |   Sharp Id
+    |   Identifier Id
+    |   Tilde Id
+    |   TildeQuote Id
+        deriving( Show, Eq, Ord, Generic, NFData, Binary )
+     
 data ProcessDef = ProcessDef
         { _pName            :: String
         , _pBody            :: Process
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
     
+-- generate accessors for ProcessDef data structure records
 $(mkLabels [''ProcessDef])
 
 
@@ -1687,6 +1703,19 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
+
+
+prettySapicAction :: SapicAction  -> String
+prettySapicAction action = case action of 
+        New literal -> case literal of
+                        Quote i -> "'" ++ i
+                        Tilde i -> "~" ++ i
+                        TildeQuote i -> "~'" ++ i ++ "'"                        
+                        Sharp i -> "#" ++ i
+                        Identifier i -> i
+                         
+
+-- help function to generate output string 
 prettyProcessH :: Process -> String
 prettyProcessH p = case p of                                                     -- TODO parser: complete
         ProcessParallel p1 p2 -> "(" ++ (prettyProcessH p1) ++ " || "  ++ (prettyProcessH p2) ++ ")"
@@ -1694,6 +1723,8 @@ prettyProcessH p = case p of                                                    
         ProcessNull -> "0"
         ProcessIdentifier i-> i
         ProcessRep p -> "!" ++ (prettyProcessH p)
+        PAction s -> prettySapicAction s
+        ProcessOpt s p -> (prettySapicAction s) ++ "," ++ (prettyProcessH p)
 
 prettyProcess :: HighlightDocument d => Process -> d
 prettyProcess p = text (prettyProcessH p)
