@@ -796,12 +796,12 @@ println :: String -> ParsecT String u Identity ()
 println str = traceShowM str
 
 -- parse a process definition (let block)
-processDef :: Parser ProcessDef
-processDef = do
+processDef :: OpenTheory -> Parser ProcessDef
+processDef thy= do
                 letIdentifier
                 i <- BC.pack <$> identifier
                 equalSign 
-                p <- process
+                p <- process thy
                 return (ProcessDef (BC.unpack i) p )
                 
 
@@ -833,28 +833,28 @@ sapicAction = try (do
                         s <- literal
                         return (New s))
  
-process :: Parser Process
-process = try (do                                                              -- plus parser
+process :: OpenTheory -> Parser Process
+process thy= try (do                                                              -- plus parser
                         -- println "check plus"         
                         symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
-                        pTest <- process
+                        pTest <- process thy
                         -- println "check plus: p1 checked"
                         symbol_ "+"
                         -- println "check plus: plus checked"
-                        pTestt <- process
+                        pTestt <- process thy
                         symbol ")"
                         -- println "check plus: successfull"
                         return (ProcessAlternative pTest pTestt))
             <|>  try (do                                                    -- parallel parser
                         symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
-                        p1 <- process
+                        p1 <- process thy
                         opParallel
-                        p2 <- process
+                        p2 <- process thy
                         symbol ")"
                         return (ProcessParallel p1 p2))
             <|>    try (do                                                     -- parens parser + at multterm
                         symbol "("
-                        p <- process
+                        p <- process thy
                         symbol ")"
                         symbol "at"
                         -- m <- multterm                                    -- TODO parser: multterm
@@ -862,19 +862,19 @@ process = try (do                                                              -
             <|>     (do                                                     -- parens parser
                         -- println "check parens open"
                         symbol "("
-                        p <- process
+                        p <- process thy
                         -- println "check parens: process parsed"
                         symbol ")"
                         -- println "check parens successfull"
                         return p)
             <|>     (do                                                     -- process repition parser
                         symbol "!"
-                        p <- process
+                        p <- process thy
                         return (ProcessRep p))
             <|> try ( do 
                         s <- sapicAction
                         symbol ","
-                        p <- process
+                        p <- process thy
                         return (ProcessOpt s p))
             <|>     ( do 
                         s <- sapicAction
@@ -884,9 +884,10 @@ process = try (do                                                              -
                         processTerminator <- symbol_ "0" *> pure ProcessNull 
                         -- println "check terminator: successfull"
                         return processTerminator)
-            <|>     (do                                                     -- parse identifier
+            <|> try   (do                                                     -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
+                        thy <- checkProcess (BC.unpack i) thy
                         -- return (ProcessIdentifier <$> i)!!0)
                         -- println ("test" ++ (BC.unpack i))
                         return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
@@ -909,6 +910,12 @@ process = try (do                                                              -
 -- Parsing Theories
 ------------------------------------------------------------------------------
 
+
+
+checkProcess :: String -> OpenTheory -> Parser OpenTheory
+checkProcess i thy= case findProcess i thy of   -- inverted logic here, if find returns a result -> nothing found
+    Nothing -> return thy
+    Just thy' -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
@@ -949,9 +956,9 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
-      , do proc <- process
+      , do proc <- process thy
            addItems flags (addProcess proc thy)
-      , do thy' <- ((liftedAddProcessDef thy) =<<) processDef
+      , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)
            addItems flags thy'
       , do ifdef flags thy
       , do define flags thy
@@ -979,6 +986,7 @@ theory flags0 = do
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+
 
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'

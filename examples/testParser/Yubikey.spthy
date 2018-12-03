@@ -135,19 +135,24 @@ lemma Login_reachable:
   "Ex #i pid sid x otp1. Login(pid,sid,x,otp1)@i"
 
 
+    
+
+let test = 0
+
+let testprocess = 0
+let p2 = (0 || 0)
+
+let p3 = new ~'test',((test||(0+test))||!test)
+
 0
 (0+0)
 (0)
 (0||0 )
 !test
-Robert
-(test||test2) 
-(Robert||Kuennemann)
+(test||test) 
+(p2||p2)
 
-let testprocess = 0
-let p2 = (0 || 0)
 
-let p3 = new ~'test',((test||(0+Apfel))||!Baum)
 
 
 // Each succesful login with counter value x was preceeded by a PressButton

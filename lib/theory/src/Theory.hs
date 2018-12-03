@@ -30,6 +30,7 @@ module Theory (
   , Literal(..)
   -- Datastructure added to Theory Items
   , addProcess
+  , findProcess
   , addProcessDef
   , pName
   , prettyTheory
@@ -805,6 +806,13 @@ addLemma l thy = do
 -- | Add a new process expression. since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
 addProcess :: Process -> Theory sig c r p -> Theory sig c r p
 addProcess l thy = modify thyItems (++ [ProcessItem l]) thy
+
+
+-- search process
+findProcess :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
+findProcess s thy =  do
+                guard (isNothing $ lookupProcessDef s thy)
+                return thy
 
 -- | Add a new process expression. since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
 addProcessDef :: ProcessDef -> Theory sig c r p -> Maybe (Theory sig c r p)
@@ -1722,9 +1730,9 @@ prettyProcessH p = case p of                                                    
         ProcessAlternative p1 p2 -> "(" ++ (prettyProcessH p1) ++ " + "  ++ (prettyProcessH p2) ++ ")"
         ProcessNull -> "0"
         ProcessIdentifier i-> i
-        ProcessRep p -> "!" ++ (prettyProcessH p)
+        ProcessRep pr -> "!" ++ (prettyProcessH pr)
         PAction s -> prettySapicAction s
-        ProcessOpt s p -> (prettySapicAction s) ++ "," ++ (prettyProcessH p)
+        ProcessOpt s pr -> (prettySapicAction s) ++ "," ++ (prettyProcessH pr)
 
 prettyProcess :: HighlightDocument d => Process -> d
 prettyProcess p = text (prettyProcessH p)
