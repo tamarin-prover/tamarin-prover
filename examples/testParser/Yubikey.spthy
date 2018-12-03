@@ -146,7 +146,9 @@ Robert
 
 let testprocess = 0
 let p2 = (0 || 0)
-let p2 = 0
+
+let p3 = ((test||(0+Apfel))||!Baum)
+
 
 // Each succesful login with counter value x was preceeded by a PressButton
 // event with the same counter value

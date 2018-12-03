@@ -1687,16 +1687,19 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
+prettyProcessH :: Process -> String
+prettyProcessH p = case p of                                                     -- TODO parser: complete
+        ProcessParallel p1 p2 -> "(" ++ (prettyProcessH p1) ++ " || "  ++ (prettyProcessH p2) ++ ")"
+        ProcessAlternative p1 p2 -> "(" ++ (prettyProcessH p1) ++ " + "  ++ (prettyProcessH p2) ++ ")"
+        ProcessNull -> "0"
+        ProcessIdentifier i-> i
+        ProcessRep p -> "!" ++ (prettyProcessH p)
+
 prettyProcess :: HighlightDocument d => Process -> d
-prettyProcess p = case p of                                                     -- TODO parser: complete
-        -- ProcessParallel p1 p2 -> (text "(") ++ (prettyProcess p1) ++ (text " || ")  ++ (prettyProcess p2) ++ (text ")") 
-        -- ProcessAlternative p1 p2 -> (text "(") ++ (prettyProcess p1) ++ (text " + ")  ++ (prettyProcess p2) ++ (text ")") 
-        -- ProcessNull -> text "0"
-        ProcessIdentifier i-> text i
-        _-> text "pppppppppppppppppppppppppppppppppppp"
+prettyProcess p = text (prettyProcessH p)
    
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d                            -- TODO parser: complete
-prettyProcessDef p = text ("let ")
+prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettyProcessH (L.get pBody pDef)))
                                                
 
 -- | Pretty print a diff theory.
