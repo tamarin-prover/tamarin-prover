@@ -837,14 +837,14 @@ process :: OpenTheory -> Parser Process
 process thy= try (do                                                              -- plus parser
                         -- println "check plus"         
                         symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
-                        pTest <- process thy
+                        p1 <- process thy
                         -- println "check plus: p1 checked"
                         symbol_ "+"
                         -- println "check plus: plus checked"
-                        pTestt <- process thy
+                        p2 <- process thy
                         symbol ")"
                         -- println "check plus: successfull"
-                        return (ProcessAlternative pTest pTestt))
+                        return (ProcessAlternative p1 p2))
             <|>  try (do                                                    -- parallel parser
                         symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
                         p1 <- process thy
@@ -890,22 +890,9 @@ process thy= try (do                                                            
                         thy <- checkProcess (BC.unpack i) thy
                         -- return (ProcessIdentifier <$> i)!!0)
                         -- println ("test" ++ (BC.unpack i))
-                        return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
+                        return (ProcessIdentifier (BC.unpack i) ))   
                         
 
-        -- <|>  (process *> pure ())
-    {--where 
-        let_process = do 
-                        i <- identifier     --sortedLVar [LSortMsg]     -- LSortMsg = Sorte Lvar: kein suffix aber dafür identifier + optionaler index
-                        equalSign                               -- parse gleichheitszeichen und wirf es weg
-                        -- p <- process                    
-                        return NULL
-        -- -}
-            {-case p of 
-                Just str ->
-                  modifyState (addCtxtStRule str)
-                Nothing  ->
-                  fail $ "Not a correct process: " ++ show p-}
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -913,7 +900,7 @@ process thy= try (do                                                            
 
 
 checkProcess :: String -> OpenTheory -> Parser OpenTheory
-checkProcess i thy= case findProcess i thy of   -- inverted logic here, if find returns a result -> nothing found
+checkProcess i thy= case findProcess i thy of   -- inverted logic here, if find returns a value -> nothing found
     Nothing -> return thy
     Just thy' -> fail $ "process not defined: " ++ i    
 
@@ -956,9 +943,9 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
-      , do proc <- process thy
-           addItems flags (addProcess proc thy)
-      , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)
+      , do proc <- process thy                          -- try parsing a process
+           addItems flags (addProcess proc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
+      , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
       , do ifdef flags thy
       , do define flags thy
@@ -987,7 +974,8 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
 
-
+    -- check process defined only once
+    -- add process to theoryitems
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate process: " ++ get pName pDef 

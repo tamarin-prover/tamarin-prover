@@ -409,7 +409,7 @@ $(mkLabels [''Restriction])
 
 
 
-data IfCondition = CondIdentifier                     --  TODO parser
+data IfCondition = CondIdentifier                   
     deriving( Show, Eq, Ord, Generic, NFData, Binary )
 data Process =  
         ProcessNull
@@ -419,18 +419,16 @@ data Process =
     |   ProcessIdentifier String
     |   PAction SapicAction
     |   ProcessOpt SapicAction Process
-   -- |   ProcessIfElse IfCondition Process Process
-   -- |   ProcessIf IfCondition Process
+   -- |   ProcessIfElse IfCondition Process Process     -- TODO parser: implement
+   -- |   ProcessIf IfCondition Process                 
        
-    -- |   SapicActionNew literal
-    -- |   SapicActionInMultterm Multterm Multterm
-    -- |   SapicActionInMultterms Multterm Multterm
      deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
      
 type Id = String
 
 data SapicAction = New Literal
+    -- |   ...   TODO parser: extend
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
 data Literal = Quote Id
@@ -1713,7 +1711,7 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
 
 
 
-prettySapicAction :: SapicAction  -> String
+prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
 prettySapicAction action = case action of 
         New literal -> case literal of
                         Quote i -> "'" ++ i
@@ -1725,7 +1723,7 @@ prettySapicAction action = case action of
 
 -- help function to generate output string 
 prettyProcessH :: Process -> String
-prettyProcessH p = case p of                                                     -- TODO parser: complete
+prettyProcessH p = case p of                                                     -- TODO parser: extend if changes on process data structure
         ProcessParallel p1 p2 -> "(" ++ (prettyProcessH p1) ++ " || "  ++ (prettyProcessH p2) ++ ")"
         ProcessAlternative p1 p2 -> "(" ++ (prettyProcessH p1) ++ " + "  ++ (prettyProcessH p2) ++ ")"
         ProcessNull -> "0"
@@ -1737,7 +1735,7 @@ prettyProcessH p = case p of                                                    
 prettyProcess :: HighlightDocument d => Process -> d
 prettyProcess p = text (prettyProcessH p)
    
-prettyProcessDef :: HighlightDocument d => ProcessDef -> d                            -- TODO parser: complete
+prettyProcessDef :: HighlightDocument d => ProcessDef -> d                      
 prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettyProcessH (L.get pBody pDef)))
                                                
 
