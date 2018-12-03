@@ -144,6 +144,10 @@ Robert
 (test||test2) 
 (Robert||Kuennemann)
 
+let testprocess = 0
+let p2 = (0 || 0)
+let p2 = 0
+
 // Each succesful login with counter value x was preceeded by a PressButton
 // event with the same counter value
 lemma one_count_foreach_login[reuse,use_induction]:

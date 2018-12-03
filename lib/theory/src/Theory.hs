@@ -25,9 +25,12 @@ module Theory (
 
   -- * Processes
   , Process(..)
+  , ProcessDef(..)
   
   -- Datastructure added to Theory Items
   , addProcess
+  , addProcessDef
+  , pName
   , prettyTheory
   -- * Lemmas
   , LemmaAttribute(..)
@@ -398,11 +401,11 @@ $(mkLabels [''Restriction])
 ------------------------------------------------------------------------------
 -- Processes
 ------------------------------------------------------------------------------
--- type Identifier = String
--- | A process data structure
--- data LetProcess = LetProcess Identifier            --  TODO parser: find +add multterm -> exists already in term 
 
-type ProcessIdentifier = String
+-- | A process data structure
+
+
+
 
 data IfCondition = CondIdentifier                     --  TODO parser
     deriving( Show, Eq, Ord, Generic, NFData, Binary )
@@ -421,7 +424,13 @@ data Process =
      deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
      
-
+data ProcessDef = ProcessDef
+        { _pName            :: String
+        , _pBody            :: Process
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    
+$(mkLabels [''ProcessDef])
 
 
 
@@ -574,7 +583,7 @@ data TheoryItem r p =
      | RestrictionItem Restriction
      | TextItem FormalComment
      | ProcessItem Process
-     -- | ProcessDefItem ProcessDef
+     | ProcessDefItem ProcessDef
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A diff theory item built over the given rule type.
@@ -664,14 +673,17 @@ filterSide s l = case l of
 
 -- | Fold a theory item.
 foldTheoryItem
-    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Process -> a)
+    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Process -> a) -> (ProcessDef -> a)
     -> TheoryItem r p -> a
-foldTheoryItem fRule fRestriction fLemma fText fProcess i = case i of
+foldTheoryItem fRule fRestriction fLemma fText fProcess fProcessDef i = case i of
     RuleItem ru   -> fRule ru
     LemmaItem lem -> fLemma lem
     TextItem txt  -> fText txt
     RestrictionItem rstr  -> fRestriction rstr
-    ProcessItem     proc  -> fProcess proc                        -- TODO parser: array as function parameter
+    ProcessItem     proc  -> fProcess proc                        
+    ProcessDefItem     pDef  -> fProcessDef pDef
+    
+
     
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -688,7 +700,7 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
 mapTheoryItem f g =
-    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem ProcessItem
+    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem ProcessItem ProcessDefItem
 
 -- | Map a diff theory item.
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
@@ -698,7 +710,7 @@ mapDiffTheoryItem f g h i =
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p -> [r]
 theoryRules =
-    foldTheoryItem return (const []) (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem return (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All diff rules of a theory.
 diffTheoryDiffRules :: DiffTheory sig c r r2 p p2 -> [r]
@@ -724,12 +736,17 @@ rightTheoryRules =
 -- | All restrictions of a theory.
 theoryRestrictions :: Theory sig c r p -> [Restriction]
 theoryRestrictions =
-    foldTheoryItem (const []) return (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem (const []) return (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All lemmas of a theory.
 theoryLemmas :: Theory sig c r p -> [Lemma p]
 theoryLemmas =
-    foldTheoryItem (const []) (const []) return (const []) (const []) <=< L.get thyItems
+    foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
+    
+-- | All lemmas of a theory.
+theoryProcessDefs :: Theory sig c r p -> [ProcessDef]
+theoryProcessDefs =
+    foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -773,6 +790,12 @@ addLemma l thy = do
 addProcess :: Process -> Theory sig c r p -> Theory sig c r p
 addProcess l thy = modify thyItems (++ [ProcessItem l]) thy
 
+-- | Add a new process expression. since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
+addProcessDef :: ProcessDef -> Theory sig c r p -> Maybe (Theory sig c r p)
+addProcessDef pDef thy = do
+    guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
+    return $ modify thyItems (++ [ProcessDefItem pDef]) thy
+
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addRestrictionDiff s l thy = do
@@ -802,6 +825,7 @@ removeLemma lemmaName thy = do
                              check
                              (return . TextItem)
                              (return . ProcessItem)
+                             (return . ProcessDefItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -839,6 +863,11 @@ lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
 -- | Find the lemma with the given name.
 lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
+
+-- | Find the lemma with the given name.
+lookupProcessDef :: String -> Theory sig c r p -> Maybe (ProcessDef)
+lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
+
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -990,7 +1019,8 @@ normalizeTheory =
           RuleItem _    -> item
           TextItem _    -> item
           RestrictionItem _   -> item
-          ProcessItem _   -> item)
+          ProcessItem _   -> item
+          ProcessDefItem _   -> item)
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
@@ -1312,6 +1342,7 @@ closeTheoryWithMaude sig thy0 = do
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
        ProcessItem
+       ProcessDefItem
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
@@ -1654,16 +1685,19 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldTheoryItem
-        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
 prettyProcess :: HighlightDocument d => Process -> d
-prettyProcess p = case p of                                                     -- TODO parser: complement print output
+prettyProcess p = case p of                                                     -- TODO parser: complete
         -- ProcessParallel p1 p2 -> (text "(") ++ (prettyProcess p1) ++ (text " || ")  ++ (prettyProcess p2) ++ (text ")") 
         -- ProcessAlternative p1 p2 -> (text "(") ++ (prettyProcess p1) ++ (text " + ")  ++ (prettyProcess p2) ++ (text ")") 
         -- ProcessNull -> text "0"
         ProcessIdentifier i-> text i
         _-> text "pppppppppppppppppppppppppppppppppppp"
-                               
+   
+prettyProcessDef :: HighlightDocument d => ProcessDef -> d                            -- TODO parser: complete
+prettyProcessDef p = text ("let ")
+                                               
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d

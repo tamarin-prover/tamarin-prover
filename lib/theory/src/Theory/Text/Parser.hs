@@ -795,58 +795,66 @@ equations =
 println :: String -> ParsecT String u Identity ()          
 println str = traceShowM str
 
+-- parse a process definition (let block)
+processDef :: Parser ProcessDef
+processDef = do
+                letIdentifier
+                i <- BC.pack <$> identifier
+                equalSign 
+                p <- process
+                return (ProcessDef (BC.unpack i) p )
+                
 
-
--- identifier process 
-processes :: Parser Process
-processes =try (do                                                              -- plus parser
-                            -- println "check plus"         
-                            symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion processes->processes ...
-                            pTest <- processes
-                            -- println "check plus: p1 checked"
-                            symbol_ "+"
-                            -- println "check plus: plus checked"
-                            pTestt <- processes
-                            symbol ")"
-                            -- println "check plus: successfull"
-                            return (ProcessAlternative pTest pTestt))
-                <|>  try (do                                                    -- parallel parser
-                            symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion processes->processes ...
-                            p1 <- processes
-                            opParallel
-                            p2 <- processes
-                            symbol ")"
-                            return (ProcessParallel p1 p2))
-                <|>    try (do                                                     -- parens parser + at multterm
-                            symbol "("
-                            p <- processes
-                            symbol ")"
-                            symbol "at"
-                            -- m <- multterm                                    -- TODO parser: multterm
-                            return p)                                           -- TODO parser: multterm return
-                <|>     (do                                                     -- parens parser
-                            -- println "check parens open"
-                            symbol "("
-                            p <- processes
-                            -- println "check parens: process parsed"
-                            symbol ")"
-                            -- println "check parens successfull"
-                            return p)
-                <|>     (do                                                     -- process repition parser
-                            symbol "!"
-                            p <- processes
-                            return (ProcessRep p))
-                <|>     (do                                                     -- parse null processes
-                            -- println "check terminator"
-                            processTerminator <- symbol_ "0" *> pure ProcessNull 
-                            -- println "check terminator: successfull"
-                            return processTerminator)
-                <|>     (do                                                     -- parse identifier
-                            -- println ("test process identifier parsing Start")
-                            i <- BC.pack <$> identifier
-                            -- return (ProcessIdentifier <$> i)!!0)
-                            -- println ("test" ++ (BC.unpack i))
-                            return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
+ 
+process :: Parser Process
+process = try (do                                                              -- plus parser
+                        -- println "check plus"         
+                        symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
+                        pTest <- process
+                        -- println "check plus: p1 checked"
+                        symbol_ "+"
+                        -- println "check plus: plus checked"
+                        pTestt <- process
+                        symbol ")"
+                        -- println "check plus: successfull"
+                        return (ProcessAlternative pTest pTestt))
+            <|>  try (do                                                    -- parallel parser
+                        symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
+                        p1 <- process
+                        opParallel
+                        p2 <- process
+                        symbol ")"
+                        return (ProcessParallel p1 p2))
+            <|>    try (do                                                     -- parens parser + at multterm
+                        symbol "("
+                        p <- process
+                        symbol ")"
+                        symbol "at"
+                        -- m <- multterm                                    -- TODO parser: multterm
+                        return p)                                           -- TODO parser: multterm return
+            <|>     (do                                                     -- parens parser
+                        -- println "check parens open"
+                        symbol "("
+                        p <- process
+                        -- println "check parens: process parsed"
+                        symbol ")"
+                        -- println "check parens successfull"
+                        return p)
+            <|>     (do                                                     -- process repition parser
+                        symbol "!"
+                        p <- process
+                        return (ProcessRep p))
+            <|>     (do                                                     -- parse null process
+                        -- println "check terminator"
+                        processTerminator <- symbol_ "0" *> pure ProcessNull 
+                        -- println "check terminator: successfull"
+                        return processTerminator)
+            <|>     (do                                                     -- parse identifier
+                        -- println ("test process identifier parsing Start")
+                        i <- BC.pack <$> identifier
+                        -- return (ProcessIdentifier <$> i)!!0)
+                        -- println ("test" ++ (BC.unpack i))
+                        return (ProcessIdentifier (BC.unpack i) ))      -- TODO parser: check if process definition with this identifier exists
 
         -- <|>  (process *> pure ())
     {--where 
@@ -905,8 +913,10 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
-      , do proc <- processes
+      , do proc <- process
            addItems flags (addProcess proc thy)
+      , do thy' <- ((liftedAddProcessDef thy) =<<) processDef
+           addItems flags thy'
       , do ifdef flags thy
       , do define flags thy
       , do return thy
@@ -934,7 +944,9 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
 
-    liftedAddProcess thy proc = addProcess proc thy     -- since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
+    liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate process: " ++ get pName pDef 
 
     liftedAddRestriction thy rstr = case addRestriction rstr thy of
         Just thy' -> return thy'
