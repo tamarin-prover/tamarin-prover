@@ -898,11 +898,11 @@ process thy= try (do                                                            
 ------------------------------------------------------------------------------
 
 
-
+-- checks if process exists, if not -> error
 checkProcess :: String -> OpenTheory -> Parser OpenTheory
-checkProcess i thy= case findProcess i thy of   -- inverted logic here, if find returns a value -> nothing found
-    Nothing -> return thy
-    Just thy' -> fail $ "process not defined: " ++ i    
+checkProcess i thy= case findProcess i thy of
+    Just thy' -> return thy
+    Nothing -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.

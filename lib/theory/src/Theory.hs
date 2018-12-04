@@ -758,7 +758,7 @@ theoryLemmas :: Theory sig c r p -> [Lemma p]
 theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
     
--- | All lemmas of a theory.
+-- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p -> [ProcessDef]
 theoryProcessDefs =
     foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
@@ -809,10 +809,10 @@ addProcess l thy = modify thyItems (++ [ProcessItem l]) thy
 -- search process
 findProcess :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
 findProcess s thy =  do
-                guard (isNothing $ lookupProcessDef s thy)
+                guard (isJust $ lookupProcessDef s thy)
                 return thy
 
--- | Add a new process expression. since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
+-- | Add a new process definition. fails if process with the same name already exists
 addProcessDef :: ProcessDef -> Theory sig c r p -> Maybe (Theory sig c r p)
 addProcessDef pDef thy = do
     guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
@@ -886,7 +886,7 @@ lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
 lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 
--- | Find the lemma with the given name.
+-- | Find the process with the given name.
 lookupProcessDef :: String -> Theory sig c r p -> Maybe (ProcessDef)
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
