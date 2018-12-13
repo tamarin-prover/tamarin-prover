@@ -85,6 +85,18 @@ rule (modulo E) Resolve2:
     
     3. ct    = ct.16
        pcsig1
+             = pcs(sign(x.26, x.27), x.28, pk(skT.21))
+       pk1   = pk1.18
+       pk2   = pk2.19
+       sig2  = sig2.20
+       skT   = skT.21
+       z     = sign(x.26, x.27)
+       z.1   = check_getmsg(pk2.19, sig2.20)
+       z.2   = checkpcs(ct.16, pk1.18, pk2.19, pk(skT.21),
+                        pcs(sign(x.26, x.27), x.28, pk(skT.21)))
+    
+    4. ct    = ct.16
+       pcsig1
              = pcs(sign(x.27, ct.16), pk2.19, pk(skT.21))
        pk1   = pk(x.27)
        pk2   = pk2.19
@@ -94,40 +106,28 @@ rule (modulo E) Resolve2:
        z.1   = check_getmsg(pk2.19, sig2.20)
        z.2   = true
     
-    4. ct    = ct.16
-       pcsig1
-             = pcs(sign(x.27, x.29), x.28, pk(skT.21))
-       pk1   = pk1.18
-       pk2   = pk2.19
-       sig2  = sig2.20
-       skT   = skT.21
-       z     = sign(x.27, x.29)
-       z.1   = check_getmsg(pk2.19, sig2.20)
-       z.2   = checkpcs(ct.16, pk1.18, pk2.19, pk(skT.21),
-                        pcs(sign(x.27, x.29), x.28, pk(skT.21)))
-    
     5. ct    = ct.16
        pcsig1
-             = pcs(sign(x.28, ct.16), pk(x.27), pk(skT.21))
-       pk1   = pk(x.28)
-       pk2   = pk(x.27)
-       sig2  = sign(x.27, z.24)
+             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
+       pk1   = pk(x.27)
+       pk2   = pk(x.28)
+       sig2  = sign(x.28, z.24)
        skT   = skT.21
-       z     = sign(x.28, ct.16)
+       z     = sign(x.27, ct.16)
        z.1   = z.24
        z.2   = true
     
-    6. ct    = ct.18
+    6. ct    = ct.19
        pcsig1
-             = pcs(sign(x.30, x.32), x.31, pk(skT.23))
-       pk1   = pk1.20
-       pk2   = pk(x.28)
-       sig2  = sign(x.28, z.26)
-       skT   = skT.23
-       z     = sign(x.30, x.32)
-       z.1   = z.26
-       z.2   = checkpcs(ct.18, pk1.20, pk(x.28), pk(skT.23),
-                        pcs(sign(x.30, x.32), x.31, pk(skT.23)))
+             = pcs(sign(x.29, x.30), x.31, pk(skT.24))
+       pk1   = pk1.21
+       pk2   = pk(x.34)
+       sig2  = sign(x.34, z.27)
+       skT   = skT.24
+       z     = sign(x.29, x.30)
+       z.1   = z.27
+       z.2   = checkpcs(ct.19, pk1.21, pk(x.34), pk(skT.24),
+                        pcs(sign(x.29, x.30), x.31, pk(skT.24)))
   */
 
 rule (modulo E) Resolve1:
@@ -155,62 +155,62 @@ rule (modulo E) Resolve1:
        z.1   = check_getmsg(pk1.14, sig1.16)
        z.2   = checkpcs(ct.12, pk2.15, pk1.14, pk(skT.17), pcsig2.13)
     
-    2. ct    = ct.14
+    2. ct    = ct.15
        pcsig2
-             = pcsig2.15
-       pk1   = pk(x.24)
-       pk2   = pk2.17
-       sig1  = sign(x.24, z.22)
-       skT   = skT.19
-       z     = convertpcs(skT.19, pcsig2.15)
-       z.1   = z.22
-       z.2   = checkpcs(ct.14, pk2.17, pk(x.24), pk(skT.19), pcsig2.15)
+             = pcsig2.16
+       pk1   = pk(x.25)
+       pk2   = pk2.18
+       sig1  = sign(x.25, z.23)
+       skT   = skT.20
+       z     = convertpcs(skT.20, pcsig2.16)
+       z.1   = z.23
+       z.2   = checkpcs(ct.15, pk2.18, pk(x.25), pk(skT.20), pcsig2.16)
     
     3. ct    = ct.16
        pcsig2
-             = pcs(sign(x.27, x.29), x.28, pk(skT.21))
+             = pcs(sign(x.26, x.27), x.28, pk(skT.21))
        pk1   = pk1.18
        pk2   = pk2.19
        sig1  = sig1.20
        skT   = skT.21
-       z     = sign(x.27, x.29)
+       z     = sign(x.26, x.27)
        z.1   = check_getmsg(pk1.18, sig1.20)
        z.2   = checkpcs(ct.16, pk2.19, pk1.18, pk(skT.21),
-                        pcs(sign(x.27, x.29), x.28, pk(skT.21)))
+                        pcs(sign(x.26, x.27), x.28, pk(skT.21)))
     
     4. ct    = ct.16
        pcsig2
-             = pcs(sign(x.28, ct.16), pk1.18, pk(skT.21))
+             = pcs(sign(x.27, ct.16), pk1.18, pk(skT.21))
        pk1   = pk1.18
-       pk2   = pk(x.28)
+       pk2   = pk(x.27)
        sig1  = sig1.20
        skT   = skT.21
-       z     = sign(x.28, ct.16)
+       z     = sign(x.27, ct.16)
        z.1   = check_getmsg(pk1.18, sig1.20)
        z.2   = true
     
     5. ct    = ct.16
        pcsig2
-             = pcs(sign(x.29, ct.16), pk(x.27), pk(skT.21))
-       pk1   = pk(x.27)
-       pk2   = pk(x.29)
-       sig1  = sign(x.27, z.24)
+             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
+       pk1   = pk(x.28)
+       pk2   = pk(x.27)
+       sig1  = sign(x.28, z.24)
        skT   = skT.21
-       z     = sign(x.29, ct.16)
+       z     = sign(x.27, ct.16)
        z.1   = z.24
        z.2   = true
     
-    6. ct    = ct.18
+    6. ct    = ct.19
        pcsig2
-             = pcs(sign(x.30, x.32), x.31, pk(skT.23))
-       pk1   = pk(x.28)
-       pk2   = pk2.21
-       sig1  = sign(x.28, z.26)
-       skT   = skT.23
-       z     = sign(x.30, x.32)
-       z.1   = z.26
-       z.2   = checkpcs(ct.18, pk2.21, pk(x.28), pk(skT.23),
-                        pcs(sign(x.30, x.32), x.31, pk(skT.23)))
+             = pcs(sign(x.29, x.30), x.31, pk(skT.24))
+       pk1   = pk(x.33)
+       pk2   = pk2.22
+       sig1  = sign(x.33, z.27)
+       skT   = skT.24
+       z     = sign(x.29, x.30)
+       z.1   = z.27
+       z.2   = checkpcs(ct.19, pk2.22, pk(x.33), pk(skT.24),
+                        pcs(sign(x.29, x.30), x.31, pk(skT.24)))
   */
 
 rule (modulo E) Witness_Aborted:
@@ -391,7 +391,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.352156334s
+  processing time: 0.309926073s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -405,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.352156334s
+  processing time: 0.309926073s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

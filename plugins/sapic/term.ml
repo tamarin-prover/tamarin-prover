@@ -12,6 +12,7 @@ type term = Mult of term * term
         | App of funident * term list
         (*| Var of varident *)
         | Plus of term * term
+        | Xor of term * term
         | Var of var
 
 type termlist = term list
@@ -23,7 +24,8 @@ let rec compare s1 s2 =
             (Mult(t1,t2), Mult(t3,t4))
         |   (Exp(t1,t2), Exp(t3,t4)  )
         |   (Plus(t1,t2), Plus(t3,t4))
-        -> if (compare t1 t3)=0 && (compare t2 t3)=0 then 0
+        |   (Xor(t1,t2), Xor(t3,t4))
+          -> if (compare t1 t3)=0 && (compare t2 t3)=0 then 0
         else -1
         | (List(tl1),List(tl2)) 
         -> 
@@ -49,7 +51,8 @@ let rec compare s1 s2 =
 let rec vars_t = function 
           Mult(t1,t2) 
         | Exp(t1,t2) 
-        | Plus(t1,t2) -> VarSet.union (vars_t t1) (vars_t t2)
+        | Plus(t1,t2)
+        | Xor(t1,t2) -> VarSet.union (vars_t t1) (vars_t t2)
         | List(termlist) 
         | App(_,termlist) -> List.fold_left (fun vs t -> VarSet.union t vs)
                                 VarSet.empty (List.map vars_t termlist)
@@ -68,6 +71,7 @@ let rec term2string = function
         | App(ident,termlist) -> ident^"("^( (String.concat ", ") (List.map
         term2string termlist) )^")"
         | Plus(t1,t2) -> "("^(term2string t1) ^") + ("^ (term2string t2)^")"
+        | Xor(t1,t2) -> (term2string t1) ^" XOR "^ (term2string t2)
         | Var(l) -> var2string(l)
 
 let flatten_termlist termlist = (String.concat ", ") (List.map term2string termlist)
@@ -79,6 +83,7 @@ let rec subs_t id t term =
             Mult(t1,t2)         -> Mult (f t1, f t2)
             | Exp(t1,t2)        -> Exp(f t1, f t2)
             | Plus(t1,t2)       -> Plus(f t1, f t2)
+            | Xor(t1,t2)       -> Xor(f t1, f t2)
             | List(termlist)    -> List(List.map f termlist)
             | App(g,termlist)   -> App(g,List.map f termlist)
             | Var(Msg(l))       -> if l=id then t else term

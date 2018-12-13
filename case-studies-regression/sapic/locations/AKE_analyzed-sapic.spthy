@@ -144,9 +144,9 @@ rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111:
        z     = check_rep(signed.6, <'loc', pk(skV.6)>)
     
     2. signed
-             = rep(x.7, <'loc', pk(x.6)>)
-       skV   = x.6
-       z     = x.7
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
   */
 
 rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111:
@@ -167,9 +167,9 @@ rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111:
        z     = check_rep(signed.6, <'loc', pk(skV.6)>)
     
     2. signed
-             = rep(x.7, <'loc', pk(x.6)>)
-       skV   = x.6
-       z     = x.7
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
   */
 
 rule (modulo E) event_Voutput_aenck_pkskV_signed__12111111:
@@ -287,7 +287,7 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
-  processing time: 0.427911141s
+  processing time: 0.40404559s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -302,7 +302,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
-  processing time: 0.427911141s
+  processing time: 0.40404559s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

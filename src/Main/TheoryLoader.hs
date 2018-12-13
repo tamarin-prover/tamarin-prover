@@ -344,7 +344,7 @@ constructAutoProver as =
         _                        -> [SmartRanking False]
 
     setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
@@ -378,7 +378,7 @@ constructAutoDiffProver as =
 
 
     setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of

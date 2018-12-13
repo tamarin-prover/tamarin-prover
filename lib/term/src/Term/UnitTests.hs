@@ -244,15 +244,15 @@ testsVariant hnd =
     TestLabel "Tests for variant computation" $ TestList
       [ testEqual "a" (computeVariantsCheck (sdec(x1, p1)) `runReader` hnd)
                       (toSubsts [ []
-                                , [(lx1, senc(x1, p1))] ])
+                                , [(lx1, senc(x2, p1))] ])
 
       , testEqual "b" (computeVariantsCheck (x1  *:  p1) `runReader` hnd)
                       (toSubsts [ []
-                                , [(lx1, one)]
+                                , [(lx1, x2 *: inv(p1))]
                                 , [(lx1, inv(p1))]
-                                , [(lx1, inv(p1 *: x1))]
-                                , [(lx1, x1 *: inv(p1))]
-                                , [(lx1, x1 *:  inv(p1 *: x2))]
+                                , [(lx1, one)]
+                                , [(lx1, x2 *:  inv(p1 *: x3))]
+                                , [(lx1, inv(p1 *: x2))]
                                 ])
 
       , testTrue "e" $ not (checkComplete (sdec(x1, p1)) (toSubsts [[]]) `runReader` hnd)

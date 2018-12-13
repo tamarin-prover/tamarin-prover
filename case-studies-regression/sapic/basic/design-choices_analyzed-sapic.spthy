@@ -473,7 +473,7 @@ analyzing: case-studies-sapic-regression/basic/design-choices.spthy
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.421333883s
+  processing time: 0.46789434s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -487,7 +487,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.421333883s
+  processing time: 0.46789434s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
