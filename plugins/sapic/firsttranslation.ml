@@ -213,6 +213,11 @@ let generate_sapic_restrictions annotated_process =
 let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
   (* Printf.printf "%s\n" (annotatedtree2string annotated_process); *)
+  let options = 
+      if input.op.progress 
+      then " /* Please call with --heuristic=l (heuristic for SAPIC in liveness mode, i.e., with progress)*/ \n\n"
+      else " /* Please call with --heuristic=p (heuristic for SAPIC)*/\n\n"
+  in
   let msr =  
       if input.op.progress 
       then progresstrans annotated_process
@@ -237,6 +242,7 @@ let translation input =
       print_lock_restrictions  (remove_duplicates lock_list)
     else ""
   in
+  options ^ 
   input.sign ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^  sapic_restrictions_locks ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"
