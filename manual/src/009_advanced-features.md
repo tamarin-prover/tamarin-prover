@@ -7,14 +7,18 @@ We cover custom heuristics, the GUI, channel models, induction, internal
 preprocessor, and how to measure the time needed for proofs.
 <!--manual proofs,encoding tricks,-->
 
-Heuristics
+Heuristics {#sec:heuristics}
 ----------
 
-The commandline option `--heuristic` can be used to select which heuristic for
-goal selection should be used by the automated proof methods. 
-The argument of the `--heuristic` flag is a word built from the
-alphabet `{s,S,c,C,i,o,O}`. Each of these letters describes a different way to rank
-the open goals of a constraint system.
+The default heuristic for the automated proof methods can be set either through
+the inclusion of a heuristic choice in the protocol file, or by using a
+commandline option. A heuristic is specified as a word built from the alphabet
+`{s,S,c,C,i,I,o,O}`, with each letter describing a different way to rank the open
+goals of a constraint system. Specifying a default heuristic within a protocol file
+can be done by including `heuristic:` followed by the heuristic, or by using the
+`--heuristic` command line option with the heuristic as the argument.
+
+The goal rankings are as follows.
 
 `s`:
 : the 'smart' ranking is the ranking described in the extended version of
@@ -55,6 +59,9 @@ the open goals of a constraint system.
   ranking would prioritize this new fact goal ahead of any existing action or
   knowledge goal, although solving the new goal may create yet another 
   earlier fact goal and so on, preventing termination.
+
+`I`:
+: is like 'i' but without delaying loop breakers.
   
 `o`:
 : is the oracle ranking. It allows the user to provide an arbitrary program
@@ -82,6 +89,10 @@ in a round-robin fashion depending on the proof-depth. For example, a flag
 `--heuristic=ssC` always uses two times the smart ranking and then once the
 'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
 in this way.
+
+Individual lemmas may also specify a heuristic to be used when solving them,
+instead of the default heuristic. This is done with the `heuristic=` lemma annotation
+followed by the heuristic.
 
 Fact annotations {#sec:fact-annotations}
 -------------------
