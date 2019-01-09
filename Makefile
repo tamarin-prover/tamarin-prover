@@ -361,6 +361,7 @@ case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
 	mkdir -p case-studies-sapic/predicates
 	mkdir -p case-studies-sapic/SCADA
 	mkdir -p case-studies-sapic/statVerifLeftRight
+	mkdir -p case-studies-sapic/xor
 	mkdir -p case-studies-sapic/Yubikey
 	$(SAPIC) $< $<.tmp > $<.out
 	cat $<.out >>$<.tmp
@@ -382,6 +383,10 @@ PKCS11/pkcs11-templates.sapic PKCS11/pkcs11-dynamic-policy.sapic \
 predicates/decwrap_destr.sapic predicates/simple_example.sapic \
 SCADA/opc_ua_secure_conversation.sapic \
 statVerifLeftRight/stateverif_left_right.sapic \
+xor/CH07.sapic \
+xor/CRxor.sapic \
+xor/KCL07.sapic \
+xor/NSLPK3xor.sapic \
 Yubikey/Yubikey.sapic
 
 SAPIC_CS_TARGETS=$(subst .sapic,.spthy,$(addprefix case-studies-sapic/,$(SAPIC_CASE_STUDIES)))
