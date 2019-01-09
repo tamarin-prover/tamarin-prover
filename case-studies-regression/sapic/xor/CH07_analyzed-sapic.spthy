@@ -11,6 +11,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -53,41 +55,41 @@ rule (modulo E) Par_1111:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_r1_11111:
+rule (modulo E) new_r1_11111[color=#569dc0]:
    [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
   -->
    [ State_111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Challenger1_Reader__111111:
+rule (modulo E) event_Challenger1_Reader__111111[color=#569dc0]:
    [ State_111111( ~id, ~k, ~r1 ) ]
   --[ Event( ), Challenge( ~r1, 'Reader' ) ]->
    [ State_1111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_r1_1111111:
+rule (modulo E) out_r1_1111111[color=#569dc0]:
    [ State_1111111( ~id, ~k, ~r1 ) ]
   -->
    [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_r2_x__11111111:
+rule (modulo E) in_r2_x__11111111[color=#569dc0]:
    [ State_11111111( ~id, ~k, ~r1 ), In( <r2, x> ) ]
   -->
    [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111:
+rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111[color=#569dc0]:
    [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Pred_eq( x, lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))) ) ]->
    [ State_1111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111:
+  rule (modulo AC) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111[color=#569dc0]:
      [ State_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
      [ State_1111111111( ~id, ~k, ~r1, r2, x.1 ) ]
@@ -138,13 +140,13 @@ rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_0_111111111
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111:
+rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111[color=#569dc0]:
    [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Pred_not_eq( x, lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))) ) ]->
    [ State_1111111112( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111:
+  rule (modulo AC) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111[color=#569dc0]:
      [ State_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_not_eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
      [ State_1111111112( ~id, ~k, ~r1, r2, x.1 ) ]
@@ -195,27 +197,27 @@ rule (modulo E) if_eqx_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_1_111111111
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) event_Alivek_Tag__1111111111:
+rule (modulo E) event_Alivek_Tag__1111111111[color=#569dc0]:
    [ State_1111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Event( ), Alive( ~k, 'Tag' ) ]->
    [ State_11111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Responsek_Reader__11111111111:
+rule (modulo E) event_Responsek_Reader__11111111111[color=#569dc0]:
    [ State_11111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Event( ), Response( ~k, 'Reader' ) ]->
    [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111:
+rule (modulo E) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111[color=#569dc0]:
    [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Event( ), Running( <'T', 'R', (~k⊕~r1⊕r2)> ) ]->
    [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111:
+  rule (modulo AC) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111[color=#569dc0]:
      [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Event( ), Running( <'T', 'R', z> ) ]->
      [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
@@ -266,13 +268,13 @@ rule (modulo E) event_Running_T_R_k_XOR_r1_XOR_r2__111111111111:
        z     = (~r1.20⊕x.35)
   */
 
-rule (modulo E) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111:
+rule (modulo E) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111[color=#569dc0]:
    [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Event( ), Commit( <'R', 'T', (~k⊕~r1⊕r2)> ) ]->
    [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111:
+  rule (modulo AC) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111[color=#569dc0]:
      [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Event( ), Commit( <'R', 'T', z> ) ]->
      [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
@@ -323,7 +325,7 @@ rule (modulo E) event_Commit_R_T_k_XOR_r1_XOR_r2__1111111111111:
        z     = (~r1.20⊕x.35)
   */
 
-rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111:
+rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111[color=#569dc0]:
    [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
   -->
    [
@@ -332,7 +334,7 @@ rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
    ]
 
   /*
-  rule (modulo AC) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111:
+  rule (modulo AC) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111[color=#569dc0]:
      [ State_11111111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     -->
      [
@@ -386,49 +388,49 @@ rule (modulo E) out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) Zero_111111111111111:
+rule (modulo E) Zero_111111111111111[color=#569dc0]:
    [ State_111111111111111( ~id, ~k, ~r1, r2, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_1111111112:
+rule (modulo E) Zero_1111111112[color=#569dc0]:
    [ State_1111111112( ~id, ~k, ~r1, r2, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_r1_11112:
+rule (modulo E) in_r1_11112[color=#2cd719]:
    [ State_11112( ~id, ~k ), In( r1 ) ] --> [ State_111121( ~id, ~k, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_r2_111121:
+rule (modulo E) new_r2_111121[color=#2cd719]:
    [ State_111121( ~id, ~k, r1 ), Fr( ~r2 ) ]
   -->
    [ State_1111211( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Responsek_Tag__1111211:
+rule (modulo E) event_Responsek_Tag__1111211[color=#2cd719]:
    [ State_1111211( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Response( ~k, 'Tag' ) ]->
    [ State_11112111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Challenger2_Tag__11112111:
+rule (modulo E) event_Challenger2_Tag__11112111[color=#2cd719]:
    [ State_11112111( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Challenge( ~r2, 'Tag' ) ]->
    [ State_111121111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Running_R_T_k_XOR_r1_XOR_r2__111121111:
+rule (modulo E) event_Running_R_T_k_XOR_r1_XOR_r2__111121111[color=#2cd719]:
    [ State_111121111( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Running( <'R', 'T', (~k⊕~r2⊕r1)> ) ]->
    [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) event_Running_R_T_k_XOR_r1_XOR_r2__111121111:
+  rule (modulo AC) event_Running_R_T_k_XOR_r1_XOR_r2__111121111[color=#2cd719]:
      [ State_111121111( ~id, ~k, ~r2, r1 ) ]
     --[ Event( ), Running( <'R', 'T', z> ) ]->
      [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
@@ -479,7 +481,7 @@ rule (modulo E) event_Running_R_T_k_XOR_r1_XOR_r2__111121111:
        z     = (~r2.18⊕x.31)
   */
 
-rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111:
+rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111[color=#2cd719]:
    [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
   -->
    [
@@ -488,7 +490,7 @@ rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
    ]
 
   /*
-  rule (modulo AC) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111:
+  rule (modulo AC) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111[color=#2cd719]:
      [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
     -->
      [
@@ -542,7 +544,7 @@ rule (modulo E) out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
        x     = (~r2.75⊕x.145)
   */
 
-rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
+rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111[color=#2cd719]:
    [
    State_11112111111( ~id, ~k, ~r2, r1 ),
    In( rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))) )
@@ -551,7 +553,7 @@ rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
    [ State_111121111111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
+  rule (modulo AC) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111[color=#2cd719]:
      [ State_11112111111( ~id, ~k, ~r2, r1 ), In( rh((h(x)⊕rot(~id, h(x)))) )
      ]
     -->
@@ -603,20 +605,20 @@ rule (modulo E) in_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11112111111:
        x     = (~r2.75⊕x.145)
   */
 
-rule (modulo E) event_Alivek_Reader__111121111111:
+rule (modulo E) event_Alivek_Reader__111121111111[color=#2cd719]:
    [ State_111121111111( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Alive( ~k, 'Reader' ) ]->
    [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111:
+rule (modulo E) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111[color=#2cd719]:
    [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Commit( <'T', 'R', (~k⊕~r2⊕r1)> ) ]->
    [ State_11112111111111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111:
+  rule (modulo AC) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111[color=#2cd719]:
      [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
     --[ Event( ), Commit( <'T', 'R', z> ) ]->
      [ State_11112111111111( ~id, ~k, ~r2, r1 ) ]
@@ -667,7 +669,7 @@ rule (modulo E) event_Commit_T_R_k_XOR_r1_XOR_r2__1111211111111:
        z     = (~r2.18⊕x.31)
   */
 
-rule (modulo E) Zero_11112111111111:
+rule (modulo E) Zero_11112111111111[color=#2cd719]:
    [ State_11112111111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -927,13 +929,55 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_6
           solve( !KU( (~k⊕~r2⊕z) ) @ #vk.3 )
             case c_xor_case_1
-            solve( !KU( ~r2 ) @ #vk.7 )
-              case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
-              by contradiction /* cyclic */
+            solve( !KU( (~k⊕z) ) @ #vk.6 )
+              case c_xor
+              solve( !KU( ~r2 ) @ #vk.7 )
+                case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
+                by contradiction /* cyclic */
+              qed
+            next
+              case coerce
+              solve( !KD( (~k⊕z) ) ▶₀ #vk.3 )
+                case out_r1_1111111
+                by contradiction /* impossible chain */
+              next
+                case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
+                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.38, 0) ~~> (#vk.3, 0) )
+                qed
+              next
+                case out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              qed
             qed
           next
             case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.7 )
+            solve( !KU( (~r2⊕z) ) @ #vk.6 )
+              case c_xor
+              by solve( !KU( ~k ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~r2⊕z) ) ▶₀ #vk.3 )
+                case out_r1_1111111
+                by contradiction /* impossible chain */
+              next
+                case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
+                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.38, 0) ~~> (#vk.3, 0) )
+                qed
+              next
+                case out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              qed
+            qed
           next
             case c_xor_case_3
             solve( !KU( (~k⊕~r2) ) @ #vk.7 )
@@ -1149,7 +1193,28 @@ solve( Commit( <'R', 'T', t> ) @ #i )
           qed
         next
           case c_xor_case_2
-          by solve( !KU( ~k ) @ #vk.5 )
+          solve( !KU( (~r1⊕x) ) @ #vk.4 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.5 )
+          next
+            case coerce
+            solve( !KD( (~r1⊕x) ) ▶₀ #vk.2 )
+              case out_r1_1111111
+              by contradiction /* impossible chain */
+            next
+              case out_r2_lhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k__1111211111
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.26, 0) ~~> (#vk.2, 0) )
+              qed
+            next
+              case out_rhrotid_hr1_XOR_r2_XOR_k_XOR_hr1_XOR_r2_XOR_k_11111111111111
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            qed
+          qed
         next
           case c_xor_case_3
           solve( !KU( (~k⊕~r1) ) @ #vk.5 )
@@ -1320,11 +1385,11 @@ analyzing: case-studies-sapic-regression/xor/CH07.spthy
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 7.754133411s
+  processing time: 6.183740953s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (73 steps)
-  noninjectiveagreement_reader (all-traces): verified (70 steps)
+  noninjectiveagreement_tag (all-traces): verified (87 steps)
+  noninjectiveagreement_reader (all-traces): verified (77 steps)
   executable (exists-trace): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -1335,11 +1400,11 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 7.754133411s
+  processing time: 6.183740953s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (73 steps)
-  noninjectiveagreement_reader (all-traces): verified (70 steps)
+  noninjectiveagreement_tag (all-traces): verified (87 steps)
+  noninjectiveagreement_reader (all-traces): verified (77 steps)
   executable (exists-trace): verified (11 steps)
 
 ==============================================================================

@@ -9,6 +9,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -24,65 +26,65 @@ rule (modulo E) Par_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_a_11:
+rule (modulo E) new_a_11[color=#569dc0]:
    [ State_11( c ), Fr( a ) ] --> [ State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Secreta_111:
+rule (modulo E) event_Secreta_111[color=#569dc0]:
    [ State_111( a, c ) ]
   --[ Event( ), Secret( a ) ]->
    [ State_1111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_0_1111:
+rule (modulo E) out_c_a_0_1111[color=#569dc0]:
    [ State_1111( a, c ), In( c ) ]
   --[ ChannelInEvent( c ) ]->
    [ Out( a ), State_11111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_1_1111:
+rule (modulo E) out_c_a_1_1111[color=#569dc0]:
    [ State_1111( a, c ) ] --> [ Semistate_1111( a, c ), Message( c, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_2_1111:
+rule (modulo E) out_c_a_2_1111[color=#569dc0]:
    [ Semistate_1111( a, c ), Ack( c, a ) ] --> [ State_11111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_11111:
+rule (modulo E) out_c_11111[color=#569dc0]:
    [ State_11111( a, c ) ] --> [ State_111111( a, c ), Out( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_111111:
+rule (modulo E) Zero_111111[color=#569dc0]:
    [ State_111111( a, c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_c_x_0_12:
+rule (modulo E) in_c_x_0_12[color=#2cd719]:
    [ State_12( c ), In( <c, x> ) ]
   --[ ChannelInEvent( <c, x> ) ]->
    [ State_121( c, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_c_x_1_12:
+rule (modulo E) in_c_x_1_12[color=#2cd719]:
    [ State_12( c ), Message( c, x ) ] --> [ Ack( c, x ), State_121( c, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Receivedx_121:
+rule (modulo E) event_Receivedx_121[color=#2cd719]:
    [ State_121( c, x ) ]
   --[ Event( ), Received( x ) ]->
    [ State_1211( c, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_1211:
+rule (modulo E) Zero_1211[color=#2cd719]:
    [ State_1211( c, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -135,7 +137,7 @@ analyzing: case-studies-sapic-regression/basic/channels1.spthy
 analyzed: case-studies-sapic-regression/basic/channels1.spthy
 
   output:          case-studies-sapic-regression/basic/channels1.spthy.tmp
-  processing time: 0.148577423s
+  processing time: 0.140043944s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 
@@ -147,7 +149,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels1.spthy
 
   output:          case-studies-sapic-regression/basic/channels1.spthy.tmp
-  processing time: 0.148577423s
+  processing time: 0.140043944s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 

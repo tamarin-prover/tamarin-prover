@@ -9,6 +9,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -26,7 +28,7 @@ rule (modulo E) Rep_1_:
 
 rule (modulo E) lock_s__1:
    [ State_1( ), Fr( ~lock6 ) ]
-  --[ Lock( ~lock6, 's' ) ]->
+  --[ Lock( $6, ~lock6, 's' ), Lock_6( $6, ~lock6, 's' ) ]->
    [ State_11( ~lock6 ) ]
 
   /* has exactly the trivial AC variant */
@@ -47,7 +49,7 @@ rule (modulo E) lookup_visited_as_v_1_11:
 
 rule (modulo E) unlock_s__111:
    [ State_111( ~lock6, v ) ]
-  --[ Unlock( ~lock6, 's' ) ]->
+  --[ Unlock( $6, ~lock6, 's' ), Unlock_6( $6, ~lock6, 's' ) ]->
    [ State_1111( ~lock6, v ) ]
 
   /* has exactly the trivial AC variant */
@@ -73,7 +75,7 @@ rule (modulo E) insert_visited_s__1121:
 
 rule (modulo E) unlock_s__11211:
    [ State_11211( ~lock6 ) ]
-  --[ Unlock( ~lock6, 's' ) ]->
+  --[ Unlock( $6, ~lock6, 's' ), Unlock_6( $6, ~lock6, 's' ) ]->
    [ State_112111( ~lock6 ) ]
 
   /* has exactly the trivial AC variant */
@@ -100,24 +102,25 @@ restriction set_notin:
        ((Delete( x ) @ #t1) ∧ (#t1 < #t3)) ∧
        (∀ #t2 y. ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ⇒ (#t2 < #t1))))"
 
-restriction locking:
-  "∀ l x lp #t1 #t3.
-    ((Lock( l, x ) @ #t1) ∧ (Lock( lp, x ) @ #t3)) ⇒
-    ((((#t1 < #t3) ∧
-       (∃ #t2.
-         (((((Unlock( l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0. (Unlock( l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
-          (∀ lp.1 #t0.
-            (Lock( lp.1, x ) @ #t0) ⇒ (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
-         (∀ lp.1 #t0.
-           (Unlock( lp.1, x ) @ #t0) ⇒
-           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
-      (#t3 < #t1)) ∨
-     (#t1 = #t3))"
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+restriction locking_6:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_6( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_6( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
 
 lemma visit_once:
   all-traces
@@ -143,17 +146,17 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
         case lookup_visited_as_v_1_11
         solve( ((#vr.1 < #vr.6) ∧
                 (∃ #t2.
-                  (Unlock( ~lock6, 's' ) @ #t2)
+                  (Unlock_6( $6, ~lock6, 's' ) @ #t2)
                  ∧
                   (#vr.1 < #t2) ∧
                   (#t2 < #vr.6) ∧
-                  (∀ #t0. (Unlock( ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
-                  (∀ lp #t0.
-                    (Lock( lp, 's' ) @ #t0)
+                  (∀ #t0 pp. (Unlock( pp, ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t0 = #vr.1) ∨ (#t2 < #t0))) ∧
-                  (∀ lp #t0.
-                    (Unlock( lp, 's' ) @ #t0)
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
@@ -166,7 +169,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
                    (∀ #t2 y.
                      (Insert( 'visited', y ) @ #t2) ⇒ ((¬(#t2 < #vr.5)) ∨ (#t2 < #t1)))) )
             case case_1
-            solve( Unlock( ~lock6, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6, ~lock6, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6, v ) ▶₀ #t2.1 )
             next
@@ -178,7 +181,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
             qed
           next
             case case_2
-            solve( Unlock( ~lock6, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6, ~lock6, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6, v ) ▶₀ #t2.1 )
             next
@@ -199,7 +202,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
                    (∀ #t2 y.
                      (Insert( 'visited', y ) @ #t2) ⇒ ((¬(#t2 < #vr.5)) ∨ (#t2 < #t1)))) )
             case case_1
-            solve( Unlock( ~lock6.1, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6.1, ~lock6.1, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6.1, v ) ▶₀ #t2.1 )
             next
@@ -211,7 +214,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
             qed
           next
             case case_2
-            solve( Unlock( ~lock6.1, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6.1, ~lock6.1, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6.1, v ) ▶₀ #t2.1 )
             next
@@ -233,17 +236,17 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
         case lookup_visited_as_v_1_11
         solve( ((#vr.1 < #vr.6) ∧
                 (∃ #t2.
-                  (Unlock( ~lock6, 's' ) @ #t2)
+                  (Unlock_6( $6, ~lock6, 's' ) @ #t2)
                  ∧
                   (#vr.1 < #t2) ∧
                   (#t2 < #vr.6) ∧
-                  (∀ #t0. (Unlock( ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
-                  (∀ lp #t0.
-                    (Lock( lp, 's' ) @ #t0)
+                  (∀ #t0 pp. (Unlock( pp, ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t0 = #vr.1) ∨ (#t2 < #t0))) ∧
-                  (∀ lp #t0.
-                    (Unlock( lp, 's' ) @ #t0)
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
@@ -299,17 +302,17 @@ next
         case lookup_visited_as_v_1_11
         solve( ((#vr.1 < #vr.6) ∧
                 (∃ #t2.
-                  (Unlock( ~lock6, 's' ) @ #t2)
+                  (Unlock_6( $6, ~lock6, 's' ) @ #t2)
                  ∧
                   (#vr.1 < #t2) ∧
                   (#t2 < #vr.6) ∧
-                  (∀ #t0. (Unlock( ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
-                  (∀ lp #t0.
-                    (Lock( lp, 's' ) @ #t0)
+                  (∀ #t0 pp. (Unlock( pp, ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t0 = #vr.1) ∨ (#t2 < #t0))) ∧
-                  (∀ lp #t0.
-                    (Unlock( lp, 's' ) @ #t0)
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
@@ -322,7 +325,7 @@ next
                    (∀ #t2 y.
                      (Insert( 'visited', y ) @ #t2) ⇒ ((¬(#t2 < #vr.5)) ∨ (#t2 < #t1)))) )
             case case_1
-            solve( Unlock( ~lock6, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6, ~lock6, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6, v ) ▶₀ #t2.1 )
             next
@@ -334,7 +337,7 @@ next
             qed
           next
             case case_2
-            solve( Unlock( ~lock6, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6, ~lock6, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6, v ) ▶₀ #t2.1 )
             next
@@ -355,7 +358,7 @@ next
                    (∀ #t2 y.
                      (Insert( 'visited', y ) @ #t2) ⇒ ((¬(#t2 < #vr.5)) ∨ (#t2 < #t1)))) )
             case case_1
-            solve( Unlock( ~lock6.1, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6.1, ~lock6.1, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6.1, v ) ▶₀ #t2.1 )
             next
@@ -367,7 +370,7 @@ next
             qed
           next
             case case_2
-            solve( Unlock( ~lock6.1, 's' ) @ #t2.1 )
+            solve( Unlock_6( $6.1, ~lock6.1, 's' ) @ #t2.1 )
               case unlock_s__111
               by solve( State_111( ~lock6.1, v ) ▶₀ #t2.1 )
             next
@@ -389,17 +392,17 @@ next
         case lookup_visited_as_v_1_11
         solve( ((#vr.1 < #vr.6) ∧
                 (∃ #t2.
-                  (Unlock( ~lock6, 's' ) @ #t2)
+                  (Unlock_6( $6, ~lock6, 's' ) @ #t2)
                  ∧
                   (#vr.1 < #t2) ∧
                   (#t2 < #vr.6) ∧
-                  (∀ #t0. (Unlock( ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
-                  (∀ lp #t0.
-                    (Lock( lp, 's' ) @ #t0)
+                  (∀ #t0 pp. (Unlock( pp, ~lock6, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t0 = #vr.1) ∨ (#t2 < #t0))) ∧
-                  (∀ lp #t0.
-                    (Unlock( lp, 's' ) @ #t0)
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, 's' ) @ #t0)
                    ⇒
                     ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
@@ -473,7 +476,7 @@ analyzing: case-studies-sapic-regression/basic/design-choices.spthy
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.46789434s
+  processing time: 0.549741347s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -487,7 +490,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/design-choices.spthy
 
   output:          case-studies-sapic-regression/basic/design-choices.spthy.tmp
-  processing time: 0.46789434s
+  processing time: 0.549741347s
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
