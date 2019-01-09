@@ -6,29 +6,32 @@ equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
 section{* small example for progression function *}
 
 builtins: signing, hashing
-rule Init_: //Init 
- [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-rule MessageID_rule_: //MessageID-rule 
- [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
 
-rule event_A_1: //event A() 
- [ State_(~prog_)] --[ProgressTo_11(~prog_), Event(), A()]-> [State_11(~prog_)]
+rule Init_: // [process=top-level] Init 
+ [Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-rule Zero_11: //Zero 
- [ State_11(~prog_)] --[]-> []
+rule MessageID_rule_: // [process=top-level] MessageID-rule 
+ [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule event_B_21: //event B() 
- [ State_(~prog_)] --[ProgressTo_211(~prog_), Event(), B()]-> [State_211(~prog_)]
+rule event_A_1: // [process=top-level] event A() 
+ [State_(~prog_)] --[ProgressTo_11(~prog_), Event(), A()]-> [State_11(~prog_)]
 
-rule Zero_211: //Zero 
- [ State_211(~prog_)] --[]-> []
+rule Zero_11: // [process=top-level] Zero 
+ [State_11(~prog_)] --[]-> []
 
-rule event_C_22: //event C() 
- [ State_(~prog_)] --[ProgressTo_221(~prog_), Event(), C()]-> [State_221(~prog_)]
+rule event_B_21: // [process=top-level] event B() 
+ [State_(~prog_)] --[ProgressTo_211(~prog_), Event(), B()]-> [State_211(~prog_)]
 
-rule Zero_221: //Zero 
- [ State_221(~prog_)] --[]-> []
+rule Zero_211: // [process=top-level] Zero 
+ [State_211(~prog_)] --[]-> []
+
+rule event_C_22: // [process=top-level] event C() 
+ [State_(~prog_)] --[ProgressTo_221(~prog_), Event(), C()]-> [State_221(~prog_)]
+
+rule Zero_221: // [process=top-level] Zero 
+ [State_221(~prog_)] --[]-> []
 
 
 restriction single_session: // for a single session
