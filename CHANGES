@@ -1,3 +1,24 @@
+* 1.4.1
+  - Variants are now computed in Maude, for a pre-computation speedup for theories with many variants. Old internal variant computation still accessible by setting the environment variable "TAMARIN_NO_MAUDE_VARIANTS".
+
+  - XOR support added to SAPIC
+
+  - Locking and unlocking in SAPIC improved
+
+  - Input spthy files can declare the heuristic to be used in two ways: globally for all lemmas; and locally each lemma can overwrite that. Note that both take precedence over a heuristic parameter passed on the command-line.
+
+  - Hex color parsing for rules updated
+
+  - 5G-AKA protocol models added, described in the CCS 2018 paper (https://arxiv.org/abs/1806.10360): "A Formal Analysis of 5G Authentication"
+
+  - DNP3 protocol models added, described in ESORICS 2017 paper: "Secure Authentication in the Grid: A Formal Analysis of DNP3: SAv5 ", and extended version in JCS 2018.
+
+  - Numerous bug fixes
+
+  - Syntax highlighting options improved and moved for multiple editors
+
+  - Using stack LTS resolver 13.2 and GHC 8.6.3 now
+
 * 1.4.0
   - Added support for XOR operations in Tamarin as a new built-in, as described in the CSF 2018 paper (https://hal.archives-ouvertes.fr/hal-01780544): "Automated Unbounded Verification of Stateful Cryptographic Protocols with Exclusive OR"
 
