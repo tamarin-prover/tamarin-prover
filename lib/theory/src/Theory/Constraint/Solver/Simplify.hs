@@ -46,7 +46,6 @@ import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
--- import           Theory.Constraint.Solver.Types
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -268,9 +267,9 @@ solveUniqueActions = do
     -- proof-context, e.g., in the 'ClassifiedRules'.
     let uniqueActions = [ x | [x] <- group (sort ruleActions) ]
         ruleActions   = [ (tag, length ts)
-                        | ru <- rules, Fact tag ts <- get rActs ru ]
+                        | ru <- rules, Fact tag _ ts <- get rActs ru ]
 
-        isUnique (Fact tag ts) =
+        isUnique (Fact tag _ ts) =
            (tag, length ts) `elem` uniqueActions
            -- multiset union leads to case-splits because there
            -- are multiple unifiers

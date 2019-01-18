@@ -99,12 +99,12 @@ rule (modulo E) testsend:
     
      9. ~a    = ~x.10
         ~b    = ~x.10
-        ~c    = ~c.12
-        ~d    = ~x.11
-        ~e    = ~x.11
+        ~c    = ~c.13
+        ~d    = ~x.12
+        ~e    = ~x.12
         z     = zero
-        z.1   = (~x.10⊕~c.12)
-        z.2   = ~c.12
+        z.1   = (~x.10⊕~c.13)
+        z.2   = ~c.13
         z.3   = zero
     
     10. ~a    = ~a.11
@@ -235,7 +235,7 @@ analyzing: examples/features/xor/basicfunctionality/xor4.spthy
 analyzed: examples/features/xor/basicfunctionality/xor4.spthy
 
   output:          examples/features/xor/basicfunctionality/xor4.spthy.tmp
-  processing time: 0.924616s
+  processing time: 0.700375568s
   secrecybroken (all-traces): falsified - found trace (11 steps)
 
 ------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor4.spthy
 
   output:          examples/features/xor/basicfunctionality/xor4.spthy.tmp
-  processing time: 0.924616s
+  processing time: 0.700375568s
   secrecybroken (all-traces): falsified - found trace (11 steps)
 
 ==============================================================================

@@ -12,19 +12,19 @@ default: tamarin sapic
 .PHONY: tamarin
 tamarin:
 	stack setup
-	stack install --flag tamarin-prover:threaded
+	stack install
 
 # Single-threaded Tamarin
 .PHONY: single
 single: 
 	stack setup
-	stack install
+	stack install --flag tamarin-prover:-threaded
 
 # Tamarin with profiling options, single-threaded
 .PHONY: profiling
 profiling:
 	stack setup
-	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts"
+	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
 # SAPIC
 .PHONY: sapic
@@ -50,7 +50,7 @@ clean:	tamarin-clean sapic-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.4.0
+VERSION=1.5.0
 
 ###############################################################################
 ## Case Studies
@@ -106,10 +106,23 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
 	mkdir -p case-studies/post17
 	mkdir -p case-studies/regression/trace
-	mkdir -p case-studies/features/xor
+	mkdir -p case-studies/csf18-xor
 	mkdir -p case-studies/features/xor/basicfunctionality
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with oracle
+case-studies/%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf18-xor
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf18-xor/chaum_offline_anonymity.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -128,7 +141,7 @@ case-studies/%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/features/equivalence
 	mkdir -p case-studies/post17
 	mkdir -p case-studies/regression/diff
-	mkdir -p case-studies/features/xor/diff-models
+	mkdir -p case-studies/csf18-xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
 	# For execution on server using -N14 for faster completion!
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N14 -RTS -o$<.tmp >$<.out
@@ -145,9 +158,22 @@ case-studies/%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/ccs15
 	mkdir -p case-studies/features/equivalence
 	mkdir -p case-studies/regression/diff
-	mkdir -p case-studies/features/xor/diff-models
+	mkdir -p case-studies/csf18-xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual diff-based case studies running only on the Observational_equivalence lemma
+case-studies/%_analyzed-diff-obseqonly.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf18-xor/diff-models
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove=Observational_equivalence --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -169,7 +195,7 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
 
-REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
@@ -204,26 +230,35 @@ post17-case-studies:	$(POST17_TARGETS)
 #########################
 
 XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy LAK06.spthy
-XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/,$(XOR_TRACE_CASE_STUDIES)))
+XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/csf18-xor/,$(XOR_TRACE_CASE_STUDIES)))
+
+XOR_TRACE_ORACLE_CASE_STUDIES= chaum_offline_anonymity.spthy
+XOR_TRACE_ORACLE_TARGETS=$(subst .spthy,_analyzed-oracle-chaum.spthy,$(addprefix case-studies/csf18-xor/,$(XOR_TRACE_ORACLE_CASE_STUDIES)))
 
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
 XOR_BASIC_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/features/xor/basicfunctionality/,$(XOR_BASIC_TRACE_CASE_STUDIES)))
 
-XOR_DIFF_CASE_STUDIES= CH07-UK2.spthy 
-# CH07-untrac.spthy LAK06_UK-weak.spthy LAK06_UK.spthy
-XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
+# Includes 6 out of 9 diff-case studies from CSF18, excluding KCL07-UK1, LAK06-UK2, LAK06-UK3 due to runtime!
+XOR_DIFF_CASE_STUDIES= CH07-UK1.spthy CH07-UK2.spthy  KCL07-UK2.spthy LAK06-UK1.spthy
+XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/csf18-xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
+
+XOR_DIFF_OBSEQONLY_CASE_STUDIES= CH07-UK3.spthy
+XOR_DIFF_OBSEQONLY_TARGETS=$(subst .spthy,_analyzed-diff-obseqonly.spthy,$(addprefix case-studies/csf18-xor/diff-models/,$(XOR_DIFF_OBSEQONLY_CASE_STUDIES)))
+
+XOR_DIFF_PRECOMPUTED_CASE_STUDIES= KCL07-UK3_attack.spthy
+XOR_DIFF_PRECOMPUTED_TARGETS=$(subst .spthy,_analyzed-diff-noprove.spthy,$(addprefix case-studies/csf18-xor/diff-models/,$(XOR_DIFF_PRECOMPUTED_CASE_STUDIES)))
 
 # XOR case studies
-xor-trace-case-studies:	$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
+xor-trace-case-studies: $(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/xor/basicfunctionality/*.spthy case-studies/csf18-xor/*.spthy
 
-xor-diff-case-studies:	$(XOR_DIFF_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/xor/diff-models/*.spthy
+xor-diff-case-studies: $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/csf18-xor/diff-models/*.spthy
 
-XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_DIFF_TARGETS)
+XOR_TARGETS=$(XOR_BASIC_TRACE_TARGETS) $(XOR_TRACE_TARGETS) $(XOR_TRACE_ORACLE_TARGETS) $(XOR_DIFF_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(XOR_DIFF_PRECOMPUTED_TARGETS)
 
 xor-full-case-studies: $(XOR_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/features/xor/*.spthy
+	grep "verified\|falsified\|processing time" case-studies/features/xor/basicfunctionality/*.spthy case-studies/csf18-xor/*.spthy case-studies/csf18-xor/diff-models/*.spthy
 
 ## Inductive Strengthening
 ##########################
@@ -370,6 +405,7 @@ case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAM
 	mkdir -p case-studies/sapic/locations
 	mkdir -p case-studies/sapic/SCADA
 	mkdir -p case-studies/sapic/fairexchange-mini
+	mkdir -p case-studies/sapic/xor
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -387,7 +423,10 @@ NSL/nsl-no_as-untagged.spthy \
 predicates/decwrap_destr.spthy predicates/simple_example.spthy \
 locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 SCADA/opc_ua_secure_conversation.spthy \
-fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy
+fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
+xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
+# not working for unknown reason:
+# xor/NSLPK3xor.spthy
 
 # currently not working because of wrong heuristic:
 # encWrapDecUnwrap/encwrapdecunwrap.spthy
@@ -405,9 +444,22 @@ sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
 ###################
 
 
+UNAME_S := $(shell uname -s)
+case-studies/system.info:
+	mkdir -p case-studies
+	hostname > $@
+ifeq ($(UNAME_S),Linux)
+	cat /proc/cpuinfo  | grep 'name'| uniq >> $@
+	cat /proc/cpuinfo  | grep process| wc -l >> $@
+	cat /proc/meminfo  | grep 'MemTotal'| uniq >> $@
+else 	# ($(UNAME_S),Darwin)
+	sysctl hw >> $@
+endif
+#	top -b | head >> $@
+
 CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
-case-studies: 	$(CS_TARGETS)
+case-studies: 	case-studies/system.info $(CS_TARGETS) 
 	grep -R "verified\|falsified\|processing time" case-studies/
 	-grep -iR "warning\|error" case-studies/
 

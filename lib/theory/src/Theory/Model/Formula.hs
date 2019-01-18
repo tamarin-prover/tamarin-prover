@@ -54,7 +54,7 @@ import           GHC.Generics (Generic)
 import           Data.Binary
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.Data
-import           Data.Monoid                      hiding (All)
+-- import           Data.Monoid                      hiding (All)
 -- import           Data.Traversable
 
 import           Control.Basics

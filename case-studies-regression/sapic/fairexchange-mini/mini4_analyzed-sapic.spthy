@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -92,11 +94,11 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_11( ~prog_, m ) ▶₀ #t )
-    case in_r_m_1
+solve( State_11( ~prog_, m ) ▶₀ #t )
+  case in_r_m_1
+  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2)) )
+    case case_1
     solve( State_11( ~prog_, m.1 ) ▶₀ #t2 )
       case in_r_m_1
       SOLVED // trace found
@@ -111,21 +113,11 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_211( ~prog_, n ) ▶₀ #t )
-    case out_r_n_21
-    by solve( State_11( ~prog_, m ) ▶₀ #t2 )
-  qed
-next
-  case case_2
-  solve( State_211( ~prog_, n ) ▶₀ #t )
-    case out_r_n_21
-    solve( State_211( ~prog_, n.1 ) ▶₀ #t2 )
-      case out_r_n_21
-      by solve( State_( ~prog_ ) ▶₀ #j )
-    qed
+solve( State_211( ~prog_, n ) ▶₀ #t )
+  case out_r_n_21
+  solve( MID_Receiver( ~x ) ▶₂ #j )
+    case MessageID_rule_
+    by solve( State_( ~prog_ ) ▶₀ #j )
   qed
 qed
 
@@ -146,9 +138,9 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini4.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini4.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini4.spthy.tmp
-  processing time: 0.106235s
+  processing time: 0.065010659s
   A_possible (exists-trace): verified (5 steps)
-  B_impossible (all-traces): verified (7 steps)
+  B_impossible (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
 
@@ -158,9 +150,9 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini4.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini4.spthy.tmp
-  processing time: 0.106235s
+  processing time: 0.065010659s
   A_possible (exists-trace): verified (5 steps)
-  B_impossible (all-traces): verified (7 steps)
+  B_impossible (all-traces): verified (4 steps)
 
 ==============================================================================
 */

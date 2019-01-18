@@ -1,5 +1,5 @@
 TARGET = sapic
-OBJS=exceptions.cmo btree.cmo position.cmo positionplusinit.cmo var.cmo term.cmo fact.cmo atomformulaaction.cmo action.cmo atom.cmo formula.cmo tamarin.cmo sapicterm.cmo sapicvar.cmo sapicaction.cmo lexer.cmo  sapic.cmo annotatedsapicaction.cmo annotatedsapictree.cmo progressfunction.cmo restrictions.cmo annotatedrule.cmo translationhelper.cmo basetranslation.cmo firsttranslation.cmo main.cmo 
+OBJS= color.cmo exceptions.cmo btree.cmo position.cmo positionplusinit.cmo var.cmo term.cmo fact.cmo atomformulaaction.cmo action.cmo atom.cmo formula.cmo tamarin.cmo sapicterm.cmo sapicvar.cmo sapicaction.cmo lexer.cmo  sapic.cmo annotatedsapicaction.cmo annotatedsapictree.cmo progressfunction.cmo restrictions.cmo annotatedrule.cmo translationhelper.cmo basetranslation.cmo firsttranslation.cmo main.cmo 
 FLAGS=-g
 
 OCAMLC    := $(shell command -v ocamlc    2> /dev/null)

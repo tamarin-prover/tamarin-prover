@@ -69,10 +69,10 @@ rule (modulo E) Receiver0b:
     
     2. commit_k1
              = x.9
-       nR    = x.11
-       pkS   = pk(x.10)
+       nR    = x.10
+       pkS   = pk(x.11)
        signature
-             = sign(<x.9, x.11>, x.10)
+             = sign(<x.9, x.10>, x.11)
        z     = true
   */
 
@@ -783,7 +783,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 3.084872s
+  processing time: 2.348954884s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -795,7 +795,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 3.084872s
+  processing time: 2.348954884s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

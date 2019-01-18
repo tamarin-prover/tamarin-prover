@@ -18,6 +18,7 @@ module Extension.Data.Monoid (
   ) where
 
 import Data.Monoid
+-- import Data.Semigroup
 
 #if __GLASGOW_HASKELL__ < 704
 
@@ -38,10 +39,13 @@ newtype MinMax a = MinMax { getMinMax :: Maybe (a, a) }
 minMaxSingleton :: a -> MinMax a
 minMaxSingleton x = MinMax (Just (x, x))
 
+instance Ord a => Semigroup (MinMax a) where
+    MinMax Nothing             <> y                          = y
+    x                          <> MinMax Nothing             = x
+    MinMax (Just (xMin, xMax)) <> MinMax (Just (yMin, yMax)) =
+       MinMax (Just (min xMin yMin, max xMax yMax))
+
+
 instance Ord a => Monoid (MinMax a) where
     mempty = MinMax Nothing
-
-    MinMax Nothing             `mappend` y                          = y
-    x                          `mappend` MinMax Nothing             = x
-    MinMax (Just (xMin, xMax)) `mappend` MinMax (Just (yMin, yMax)) =
-       MinMax (Just (min xMin yMin, max xMax yMax))
+    mappend = (<>)

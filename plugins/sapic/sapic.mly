@@ -108,7 +108,7 @@ let location_rule=
 %token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA
 
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
-%token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS
+%token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS XOR ZERO
 
 /* define associativity and operator precedence */
 %left PARALLEL
@@ -299,7 +299,7 @@ process:
 							     $2
 							     (Term.App("rep", [$6;Term.Var(Var.Msg("_loc_"))]))
 							     $9 }
-    | IDENTIFIER                                     { try Hashtbl.find proc_table $1
+    | IDENTIFIER                                     { try Node(Let($1), Hashtbl.find proc_table $1, Empty)
             with Not_found -> Printf.eprintf "The process: %s is undefined. \n " $1; raise Parsing.Parse_error }
      |    rule_body optprocess { Node(MSR($1), $2, Empty) }
 ;
@@ -369,12 +369,14 @@ expterm:
         
 
 term:
-	|     LEQ termseq GEQ			{ Term.List($2)}
+    |     LEQ termseq GEQ			{ Term.List($2)}
     |     LP multterm RP			{ $2 }
     |     IDENTIFIER LCB termseq RCB term 	{Term.App($1,($3@[$5])) }
     |     IDENTIFIER LP termseq RP		{Term.App($1,$3)}
     |     term PLUS term        {Term.Plus($1,$3)}
-	|     literal				{Term.Var($1)}
+    |     term XOR term        {Term.Xor($1,$3)}
+    |     ZERO                 {Term.App("zero",[])}
+    |     literal				{Term.Var($1)}
 ;
 
 literal:

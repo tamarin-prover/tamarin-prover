@@ -9,6 +9,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -19,34 +21,34 @@ rule (modulo E) new_c_:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_a_1:
+rule (modulo E) new_a_1[color=#569dc0]:
    [ State_1( c ), Fr( a ) ] --> [ State_11( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_0_11:
+rule (modulo E) out_c_a_0_11[color=#569dc0]:
    [ State_11( a, c ), In( c ) ]
   --[ ChannelInEvent( c ) ]->
    [ Out( a ), State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_1_11:
+rule (modulo E) out_c_a_1_11[color=#569dc0]:
    [ State_11( a, c ) ] --> [ Semistate_11( a, c ), Message( c, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_2_11:
+rule (modulo E) out_c_a_2_11[color=#569dc0]:
    [ Semistate_11( a, c ), Ack( c, a ) ] --> [ State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Reached_111:
+rule (modulo E) event_Reached_111[color=#569dc0]:
    [ State_111( a, c ) ] --[ Event( ), Reached( ) ]-> [ State_1111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_1111:
+rule (modulo E) Zero_1111[color=#569dc0]:
    [ State_1111( a, c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -84,7 +86,7 @@ analyzing: case-studies-sapic-regression/basic/channels2.spthy
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
   output:          case-studies-sapic-regression/basic/channels2.spthy.tmp
-  processing time: 0.064361s
+  processing time: 0.048880173s
   received (all-traces): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -95,7 +97,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels2.spthy
 
   output:          case-studies-sapic-regression/basic/channels2.spthy.tmp
-  processing time: 0.064361s
+  processing time: 0.048880173s
   received (all-traces): verified (3 steps)
 
 ==============================================================================

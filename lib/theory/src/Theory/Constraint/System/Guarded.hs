@@ -107,6 +107,14 @@ import           Text.PrettyPrint.Highlight
 import           Theory.Model
 
 
+-- Control.Monad.Fail import will become redundant in GHC 8.8+
+import qualified Control.Monad.Fail as Fail
+
+import Data.Functor.Identity
+
+instance Fail.MonadFail Identity where
+  fail = Fail.fail
+
 ------------------------------------------------------------------------------
 -- Types
 ------------------------------------------------------------------------------
@@ -163,7 +171,7 @@ guardFactTags =
     foldGuarded mempty (mconcat . getDisj) (mconcat . getConj) getTags
   where
     getTags _qua _ss atos inner =
-        mconcat [ D.singleton tag | Action _ (Fact tag _) <- atos ] <> inner
+        mconcat [ D.singleton tag | Action _ (Fact tag _ _) <- atos ] <> inner
 
 
 -- | Atoms that are allowed as guards.
@@ -435,7 +443,7 @@ gall ss atos gf               = GGuarded All ss atos gf
 
 -- | Local newtype to avoid orphan instance.
 newtype ErrorDoc d = ErrorDoc { unErrorDoc :: d }
-    deriving( Monoid, NFData, Document, HighlightDocument )
+    deriving( Monoid, Semigroup, NFData, Document, HighlightDocument )
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ under the assumption that this is possible.

@@ -86,7 +86,7 @@ module Term.Term (
 
     ) where
 
-import           Data.Monoid
+-- import           Data.Monoid
 -- import           Data.Foldable (foldMap)
 
 import qualified Data.ByteString.Char8 as BC

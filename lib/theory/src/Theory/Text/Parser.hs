@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -61,6 +62,7 @@ data ParseRestriction = ParseRestriction
        , pRstrFormula    :: LNFormula
        }
        deriving( Eq, Ord, Show )
+
 
 -- | True iff the restriction is a LHS restriction.
 isLeftRestriction :: ParseRestriction -> Bool
@@ -240,6 +242,14 @@ msetterm plit = do
 tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
 tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
+-- | Parse a fact annotation
+factAnnotation :: Parser FactAnnotation
+factAnnotation = asum
+  [ opPlus  *> pure SolveFirst
+  , opMinus *> pure SolveLast
+  , symbol "no_precomp" *> pure NoSources
+  ]
+
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
 fact plit = try (
@@ -250,21 +260,22 @@ fact plit = try (
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep (msetterm plit))
-       mkProtoFact multi i ts
+       ann   <- option [] $ list factAnnotation
+       mkProtoFact multi i (S.fromList ann) ts
     <?> "fact" )
   where
     singleTerm _ constr [t] = return $ constr t
     singleTerm f _      ts  = fail $ "fact '" ++ f ++ "' used with arity " ++
                                      show (length ts) ++ " instead of arity one"
 
-    mkProtoFact multi f = case map toUpper f of
+    mkProtoFact multi f ann = case map toUpper f of
       "OUT" -> singleTerm f outFact
-      "IN"  -> singleTerm f inFact
+      "IN"  -> singleTerm f (inFactAnn ann)
       "KU"  -> singleTerm f kuFact
-      "KD"  -> return . Fact KDFact
-      "DED" -> return . Fact DedFact
+      "KD"  -> singleTerm f kdFact
+      "DED" -> singleTerm f dedLogFact
       "FR"  -> singleTerm f freshFact
-      _     -> return . protoFact multi f
+      _     -> return . protoFactAnn multi f ann
 
 
 ------------------------------------------------------------------------------
@@ -305,7 +316,7 @@ ruleAttribute = asum
         hc <- hexColor
         case hexToRGB hc of
             Just rgb  -> return rgb
-            Nothing -> fail $ "Color could not be parsed to RGB"
+            Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -576,18 +587,23 @@ legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation
 ------------------------------------------------------------------------------
 
 -- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Parser LemmaAttribute
-lemmaAttribute = asum
+lemmaAttribute :: Bool -> Parser LemmaAttribute
+lemmaAttribute isDiff = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> many1 letter
+        False -> map charToGoalRanking     <$> many1 letter
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier
@@ -599,7 +615,7 @@ traceQuantifier = asum
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list lemmaAttribute)
+                      <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted standardFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
@@ -607,7 +623,7 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
 diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> (option [] $ list lemmaAttribute)
+                              <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
                       
@@ -776,6 +792,16 @@ equations =
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
+
+
+heuristic :: Bool -> Parser [GoalRanking]
+heuristic isDiff = do
+      symbol "heuristic" *> colon *> parseGoalRanking
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> identifier
+        False -> map charToGoalRanking     <$> identifier
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -795,7 +821,9 @@ theory flags0 = do
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic False)
+           addItems flags thy'
+      , do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions
@@ -851,6 +879,9 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
 
+    liftedAddHeuristic thy h = case addHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
         
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
@@ -866,7 +897,9 @@ diffTheory flags0 = do
   where
     addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
+           addItems flags thy'
+      , do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions
@@ -911,6 +944,10 @@ diffTheory flags0 = do
        if flag `S.member` flags
          then addItems flags thy'
          else addItems flags thy
+
+    liftedAddHeuristic thy h = case addDiffHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
 
     liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'

@@ -5,4 +5,4 @@ packages:
 - lib/term/
 - lib/utils/
 extra-deps: []
-resolver: lts-11.7
+resolver: lts-13.2
