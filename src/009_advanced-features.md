@@ -7,14 +7,18 @@ We cover custom heuristics, the GUI, channel models, induction, internal
 preprocessor, and how to measure the time needed for proofs.
 <!--manual proofs,encoding tricks,-->
 
-Heuristics
+Heuristics {#sec:heuristics}
 ----------
 
-The commandline option `--heuristic` can be used to select which heuristic for
-goal selection should be used by the automated proof methods. 
-The argument of the `--heuristic` flag is a word built from the
-alphabet `{s,S,c,C,i,o,O}`. Each of these letters describes a different way to rank
-the open goals of a constraint system.
+The default heuristic for the automated proof methods can be set either through
+the inclusion of a heuristic choice in the protocol file, or by using a
+commandline option. A heuristic is specified as a word built from the alphabet
+`{s,S,c,C,i,I,o,O}`, with each letter describing a different way to rank the open
+goals of a constraint system. Specifying a default heuristic within a protocol file
+can be done by including `heuristic:` followed by the heuristic, or by using the
+`--heuristic` command line option with the heuristic as the argument.
+
+The goal rankings are as follows.
 
 `s`:
 : the 'smart' ranking is the ranking described in the extended version of
@@ -55,6 +59,9 @@ the open goals of a constraint system.
   ranking would prioritize this new fact goal ahead of any existing action or
   knowledge goal, although solving the new goal may create yet another 
   earlier fact goal and so on, preventing termination.
+
+`I`:
+: is like 'i' but without delaying loop breakers.
   
 `o`:
 : is the oracle ranking. It allows the user to provide an arbitrary program
@@ -83,11 +90,55 @@ in a round-robin fashion depending on the proof-depth. For example, a flag
 'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
 in this way.
 
-### Marking facts to be solved preferentially or delayed
+Individual lemmas may also specify a heuristic to be used when solving them,
+instead of the default heuristic. This is done with the `heuristic=` lemma annotation
+followed by the heuristic.
 
-By starting a fact name with `F_` (for first) the tool will solve instances 
-of that fact earlier than normal, while putting `L_` (for last) as the prefix 
-will delay solving the fact. This can have a performance impact.
+Fact annotations {#sec:fact-annotations}
+-------------------
+
+Facts can be annotated with `+` or `-` to influence their priority in heuristics.
+Annotating a fact with `+` causes the tool to solve instances of that fact
+earlier than normal, while annotating a fact with `-` will delay solving those
+instances.
+A fact can be annotated by suffixing it with the annotation in square
+brackets. For example, a fact `F(x)[+]` will be prioritized, while a fact
+`G(x)[-]` will be delayed.
+
+Fact annotations
+apply only to the instances that are annotated, and are not considered during
+unification. For example, a rule premise containing `A(x)[+]` can unify
+with a rule conclusion containing `A(x)`. This allows multiple instances
+of the same fact to be solved with different priorities by annotating them
+differently.
+
+The `+` and `-` annotations can also be used to prioritize actions.
+For example, A reusable lemma of the form
+```
+    "All x #i #j. A(x) @ i ==> B(x)[+] @ j"
+```
+will cause the `B(x)[+]` actions created when applying this lemma
+to be solved with higher priority.
+
+Heuristic priority can also be influenced by starting a fact name with `F_`
+(for first) or `L_` (for last) corresponding to the `+` and `-` annotations
+respectively. Note however that these prefixes must apply to every instance
+of the fact, as a fact `F_A(x)` cannot unify with a fact `A(x)`.
+
+Facts in rule premises can also be annotated with `no_precomp` to prevent the
+tool from precomputing their sources.
+Use of the `no_precomp` annotation in key places can be very
+useful for reducing the precomputation time required to load large models, however
+it should be used sparingly. Preventing the precomputation of sources for a premise
+that is solved frequently will typically slow down the tool, as it must solve the
+premise each time instead of directly applying precomputed sources. Note also that
+using this annotation may cause partial deconstructions if the source of a premise
+was necessary to compute a full deconstruction.
+
+The `no_precomp` annotation can be used in combination with heuristic annotations
+by including both separated by commas---e.g., a premise
+`A(x)[-,no_precomp]` will be delayed and also will not have its sources precomputed.
+
 
 ### Using an Oracle
 
