@@ -102,7 +102,7 @@ subterm-convergent equations, i.e., if the right-hand-side is either a ground
 term (i.e., it does not contain any variables) or a proper subterm of the
 left-hand-side. These equations are thus preferred if they are sufficient to model
 the required properties. However, for example the equations modeled by the 
-built-in message theories `diffie-hellman`, `bilinear-pairing`, and `multiset` 
+built-in message theories `diffie-hellman`, `bilinear-pairing`, `xor`, and `multiset`
 do not belong to this restricted class since they include for example
 associativity and commutativity. All other built-in message theories can
 be equivalently defined by using `functions: ...` and `equations: ...`
@@ -139,10 +139,10 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 `revealing-signing`:
 
 : This theory models a message-revealing signature scheme. It defines the function
-  symbols `revealingSign/2`, `revealingVerify/3`, `getMessage/1`, `pk/1`, and 
+  symbols `revealSign/2`, `revealVerify/3`, `getMessage/1`, `pk/1`, and 
   `true`, which are related by the equations
-  `revealingVerify(revealingSign(m,sk),m,pk(sk)) = true`
-  and `getMessage(revealingSign(m,sk)) = m`.
+  `revealVerify(revealSign(m,sk),m,pk(sk)) = true`
+  and `getMessage(revealSign(m,sk)) = m`.
 
 `symmetric-encryption`:
 
@@ -179,6 +179,20 @@ pmult(x,(pmult(y,p)) = pmult(x*y,p)
 pmult(1,p)           = p
 em(p,q)              = em(q,p)
 em(pmult(x,p),q)     = pmult(x,em(q,p))
+~~~
+
+`xor`:
+
+: This theory models the exclusive-or operation. It adds the function
+  symbols `⊕/2` (also written as `XOR/2`) and `zero/0`. `⊕` is
+  associative and commutative and satisfies the cancellation
+  equations:
+
+~~~
+x ⊕ y       = y ⊕ x
+(x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)
+x ⊕ zero    = x
+x ⊕ x       = zero
 ~~~
 
 `multiset`:
