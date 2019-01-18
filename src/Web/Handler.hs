@@ -724,6 +724,7 @@ getAutoProverR idx extractor bound =
     (proverName, extractorQualfier) = case extractor of
         CutNothing -> ("characterization", ["dfs"])
         CutDFS     -> ("the autoprover",   []     )
+        CutSingleThreadDFS -> ("the autoprover",   []     )
         CutBFS     -> ("the autoprover",   ["bfs"])
 
 -- | Run an autoprover on a given proof path.
@@ -747,6 +748,7 @@ getAutoProverDiffR idx extractor bound s =
     (proverName, extractorQualfier) = case extractor of
         CutNothing -> ("characterization", ["dfs"])
         CutDFS     -> ("the autoprover",   []     )
+        CutSingleThreadDFS -> ("the autoprover",   []     )
         CutBFS     -> ("the autoprover",   ["bfs"])
 
 -- | Run an autoprover on a given proof path.
@@ -770,6 +772,7 @@ getAutoDiffProverR idx extractor bound =
     (proverName, extractorQualfier) = case extractor of
         CutNothing -> ("characterization", ["dfs"])
         CutDFS     -> ("the autoprover",   []     )
+        CutSingleThreadDFS -> ("the autoprover",   []     )
         CutBFS     -> ("the autoprover",   ["bfs"])
 
 

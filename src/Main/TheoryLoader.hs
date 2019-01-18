@@ -83,7 +83,7 @@ theoryLoadFlags =
   [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
       "Attempt to prove a lemma "
 
-  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
+  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "SEQDFS|DFS|BFS|NONE"
       "How to search for traces (default DFS)"
 
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
@@ -349,6 +349,7 @@ constructAutoProver as =
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing     -> CutDFS
+      Just "seqdfs"  -> CutSingleThreadDFS
       Just "dfs"  -> CutDFS
       Just "none" -> CutNothing
       Just "bfs"  -> CutBFS
@@ -384,6 +385,7 @@ constructAutoDiffProver as =
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing     -> CutDFS
       Just "dfs"  -> CutDFS
+      Just "seqdfs"  -> CutSingleThreadDFS
       Just "none" -> CutNothing
       Just "bfs"  -> CutBFS
       Just other  -> error $ "unknown stop-on-trace method: " ++ other
