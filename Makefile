@@ -131,6 +131,19 @@ case-studies/%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
+# individual case studies, special case with sequential dfs
+case-studies/%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/regression/trace
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=seqdfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
 
 ## Observational Equivalence
 ############################
@@ -337,8 +350,12 @@ REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy
 
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
+SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
+SEQDFS_TARGETS=$(subst .spthy,_analyzed-seqdfs.spthy,$(addprefix case-studies/regression/trace/,$(SEQDFS_CASE_STUDIES)))
+
+
 # case studies
-regression-case-studies:	$(REGRESSION_TARGETS)
+regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/regression/trace/*.spthy
 
 ## SAPIC

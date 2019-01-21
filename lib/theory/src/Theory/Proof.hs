@@ -732,7 +732,7 @@ contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
 -- Automatic Prover's
 ------------------------------------------------------------------------------
 
-data SolutionExtractor = CutSingleThreadDFS | CutDFS | CutBFS | CutNothing
+data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
     deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
@@ -747,10 +747,10 @@ runAutoProver (AutoProver defaultHeuristic bound cut) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
-      CutSingleThreadDFS     -> cutOnSolvedSingleThreadDFS
-      CutDFS     -> cutOnSolvedDFS
-      CutBFS     -> cutOnSolvedBFS
-      CutNothing -> id
+      CutDFS             -> cutOnSolvedDFS
+      CutBFS             -> cutOnSolvedBFS
+      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
+      CutNothing         -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -772,10 +772,10 @@ runAutoDiffProver (AutoProver defaultHeuristic bound cut) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
+      CutDFS             -> cutOnSolvedDFSDiff
+      CutBFS             -> cutOnSolvedBFSDiff
       CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
-      CutDFS     -> cutOnSolvedDFSDiff
-      CutBFS     -> cutOnSolvedBFSDiff
-      CutNothing -> id
+      CutNothing         -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -904,9 +904,12 @@ cutOnSolvedDFS prf0 =
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
 
--- | @cutOnSolvedDFS prf@ removes all other cases if an attack is found. The
+-- | @cutOnSolvedDFSDiff prf@ removes all other cases if an attack is found. The
 -- attack search is performed using a parallel DFS traversal with iterative
 -- deepening.
+-- Note that when an attack is found, other, already started threads will not be
+-- stopped. They will first run to completion, and only afterwards will the proof
+-- complete. If this is undesirable bahavior, use cutOnSolvedSingleThreadDFSDiff.
 --
 -- FIXME: Note that this function may use a lot of space, as it holds onto the
 -- whole proof tree.
