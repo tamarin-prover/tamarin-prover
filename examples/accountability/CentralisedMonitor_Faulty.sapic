@@ -65,6 +65,7 @@ let M =
         /* (  !(in('r',<$x,sid,m>);0) ) */
    )
 
+
 lemma sanity_logD_not_misbehaving:
     exists-trace
     "Ex a #i #j. (a = NormalAct()) & LogD(a)@i & Execute(a)@j"

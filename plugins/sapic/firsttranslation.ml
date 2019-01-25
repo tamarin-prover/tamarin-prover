@@ -292,6 +292,6 @@ let translation input =
              then annotate_eventId msr 
              else msr
   in
-  input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
+  input.sign ^ ( print_msr msr' ) ^( String.concat "\n\n" (List.map print_rule input.rules)) ^ sapic_restrictions ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"
