@@ -351,6 +351,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> if (isSolved s sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
                                                                                                         then return M.empty
+                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys')) && (isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
+                                                                                                        -- here the system is trivial, has no mirror and restrictions do not get in the way.
+                                                                                                        -- If we solve arbitrarily the last remaining trivial goals,
+                                                                                                        -- then there will be an attack.
+                                                                                                        return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
