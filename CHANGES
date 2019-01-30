@@ -1,3 +1,12 @@
+* current develop
+  - Observational equivalence concludes with attack more quickly, without requiring instantiation to public values for free variables.
+
+  - Add a true (sequential) depth-first search (DFS) option: --stop-on-trace=seqdfs
+
+  - SAPIC bug fix
+
+  - nixOS development simplification
+
 * 1.4.1
   - Variants are now computed in Maude, for a pre-computation speedup for theories with many variants. Old internal variant computation still accessible by setting the environment variable "TAMARIN_NO_MAUDE_VARIANTS".
 
