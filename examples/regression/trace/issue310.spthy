@@ -1,0 +1,7 @@
+theory parseColors
+begin
+
+rule foo [color= #f5b7b1 /* some color with spaces around */ ]:
+  [ Fr(~x) ] --[ Event(~x) ]-> [ Out(~x) ]
+
+end
