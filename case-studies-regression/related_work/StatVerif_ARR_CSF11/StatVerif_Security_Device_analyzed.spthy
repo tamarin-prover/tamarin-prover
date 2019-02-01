@@ -8,6 +8,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) NewDevice:
    [ Fr( ~sk ) ]
   -->
@@ -283,7 +285,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.s
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.223500327s
+  processing time: 0.280417s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -297,7 +299,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.223500327s
+  processing time: 0.280417s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

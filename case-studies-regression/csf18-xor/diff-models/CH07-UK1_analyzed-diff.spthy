@@ -6,6 +6,8 @@ builtins: multiset, xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
@@ -9803,7 +9805,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 26.60680863s
+  processing time: 53.035388s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3244 steps)
@@ -9816,7 +9818,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 26.60680863s
+  processing time: 53.035388s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3244 steps)

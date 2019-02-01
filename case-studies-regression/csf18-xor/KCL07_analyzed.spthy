@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k ), Fr( ~id ) ]
   --[ OnlyOnce( ) ]->
@@ -531,7 +533,7 @@ analyzing: examples/csf18-xor/KCL07.spthy
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.036101182s
+  processing time: 1.426343s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -543,7 +545,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.036101182s
+  processing time: 1.426343s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 

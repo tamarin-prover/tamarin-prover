@@ -388,22 +388,19 @@ solve( State_1211111( a1, h1, h2, k1, k2 ) ▶₀ #t )
     case insert_key_h_k_1111111
     solve( State_1111111( h2, k2 ) ▶₀ #t2 )
       case event_NewKeyh_k_111111
-      solve( !KU( ~n ) @ #vk.2 )
-        case out_h_111111111
-        solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
-          case insert_key_h_k_1111111
-          solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
-            case event_NewKeyh_k_111111
-            solve( !KU( ~n ) @ #vk.2 )
-              case out_h_111111111
-              solve( (#vr.26 < #t2.2)  ∥ (#vr.26 = #t2.2) )
-                case case_1
-                solve( Insert( <'att', ~n>, 'wrap' ) @ #t2.2 )
-                  case insert_att_h_wrap__11121
-                  solve( State_11121( ~n ) ▶₀ #t2.2 )
-                    case in_h_1112
-                    SOLVED // trace found
-                  qed
+      solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
+        case insert_key_h_k_1111111
+        solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
+          case event_NewKeyh_k_111111
+          solve( Insert( <'att', ~n>, 'wrap' ) @ #t2.2 )
+            case insert_att_h_wrap__11121
+            solve( State_11121( ~n ) ▶₀ #t2.2 )
+              case in_h_1112
+              solve( !KU( ~n.1 ) @ #vk.2 )
+                case out_h_111111111
+                solve( !KU( ~n ) @ #vk.2 )
+                  case out_h_111111111
+                  SOLVED // trace found
                 qed
               qed
             qed
@@ -502,12 +499,12 @@ induction
             case insert_key_h_k_1111111
             solve( State_1111111( h, k ) ▶₀ #t2 )
               case event_NewKeyh_k_111111
-              solve( !KU( ~n ) @ #vk.1 )
-                case out_h_111111111
-                solve( (#vr.18 < #t2.1)  ∥ (#vr.18 = #t2.1) )
-                  case case_2
-                  solve( Insert( <'att', ~n>, 'dec' ) @ #t2.1 )
-                    case insert_att_h_dec__11111111
+              solve( Insert( <'att', ~n>, 'dec' ) @ #t2.1 )
+                case insert_att_h_dec__11111111
+                solve( State_11111111( ~n, k ) ▶₀ #t2.1 )
+                  case insert_key_h_k_1111111
+                  solve( !KU( ~n ) @ #vk.1 )
+                    case out_h_111111111
                     SOLVED // trace found
                   qed
                 qed
@@ -595,26 +592,11 @@ next
               case event_NewKeyh_k_111111
               solve( (#vr.9, 0) ~~> (#j, 0) )
                 case Var_fresh_3_n
-                solve( !KU( ~n ) @ #vk.3 )
-                  case out_h_111111111
-                  solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
-                    case insert_key_h_k_1111111
-                    solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
-                      case event_NewKeyh_k_111111
-                      by contradiction /* from formulas */
-                    qed
-                  qed
-                next
-                  case out_sdecc_k_112111111
-                  by contradiction /* from formulas */
-                next
-                  case out_senck2_k1_12111111
-                  solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
-                    case insert_key_h_k_1111111
-                    solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
-                      case event_NewKeyh_k_111111
-                      by contradiction /* from formulas */
-                    qed
+                solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
+                  case insert_key_h_k_1111111
+                  solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
+                    case event_NewKeyh_k_111111
+                    by contradiction /* from formulas */
                   qed
                 qed
               qed
@@ -775,14 +757,14 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 2.138847628s
+  processing time: 8.964893s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
-  can_obtain_wrapping (exists-trace): verified (12 steps)
+  can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): falsified - found trace (12 steps)
-  cannot_obtain_key_ind (all-traces): verified (41 steps)
+  cannot_obtain_key_ind (all-traces): verified (36 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -793,14 +775,14 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 2.138847628s
+  processing time: 8.964893s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
-  can_obtain_wrapping (exists-trace): verified (12 steps)
+  can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): falsified - found trace (12 steps)
-  cannot_obtain_key_ind (all-traces): verified (41 steps)
+  cannot_obtain_key_ind (all-traces): verified (36 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 
 ==============================================================================

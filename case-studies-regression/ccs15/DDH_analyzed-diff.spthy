@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, g/0, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) DDH:
    [ Fr( ~x ), Fr( ~y ), Fr( ~z ) ]
   -->
@@ -7566,7 +7568,7 @@ analyzing: examples/ccs15/DDH.spthy
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 8.580684066s
+  processing time: 22.417035s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
@@ -7577,7 +7579,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 8.580684066s
+  processing time: 22.417035s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

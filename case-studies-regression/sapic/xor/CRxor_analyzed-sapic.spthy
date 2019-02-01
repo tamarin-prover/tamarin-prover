@@ -745,7 +745,7 @@ analyzing: case-studies-sapic-regression/xor/CRxor.spthy
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 1.865557546s
+  processing time: 2.815794s
   alive (all-traces): verified (111 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)
@@ -758,7 +758,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 1.865557546s
+  processing time: 2.815794s
   alive (all-traces): verified (111 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)

@@ -73,7 +73,7 @@ analyzing: case-studies-sapic-regression/basic/no-replication.spthy
 analyzed: case-studies-sapic-regression/basic/no-replication.spthy
 
   output:          case-studies-sapic-regression/basic/no-replication.spthy.tmp
-  processing time: 0.040365206s
+  processing time: 0.126352s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/no-replication.spthy
 
   output:          case-studies-sapic-regression/basic/no-replication.spthy.tmp
-  processing time: 0.040365206s
+  processing time: 0.126352s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ==============================================================================

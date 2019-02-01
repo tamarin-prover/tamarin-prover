@@ -29,7 +29,7 @@ analyzing: examples/regression/trace/issue310.spthy
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.0544301s
+  processing time: 0.045307s
 
 
 ------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.0544301s
+  processing time: 0.045307s
 
 
 ==============================================================================

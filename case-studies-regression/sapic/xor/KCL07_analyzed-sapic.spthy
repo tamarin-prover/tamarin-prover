@@ -936,7 +936,7 @@ analyzing: case-studies-sapic-regression/xor/KCL07.spthy
 analyzed: case-studies-sapic-regression/xor/KCL07.spthy
 
   output:          case-studies-sapic-regression/xor/KCL07.spthy.tmp
-  processing time: 2.804766722s
+  processing time: 4.168066s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 
@@ -948,7 +948,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/KCL07.spthy
 
   output:          case-studies-sapic-regression/xor/KCL07.spthy.tmp
-  processing time: 2.804766722s
+  processing time: 4.168066s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 

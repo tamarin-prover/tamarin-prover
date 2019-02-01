@@ -1385,7 +1385,7 @@ analyzing: case-studies-sapic-regression/xor/CH07.spthy
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 6.183740953s
+  processing time: 8.198467s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (87 steps)
@@ -1400,7 +1400,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CH07.spthy
 
   output:          case-studies-sapic-regression/xor/CH07.spthy.tmp
-  processing time: 6.183740953s
+  processing time: 8.198467s
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (87 steps)

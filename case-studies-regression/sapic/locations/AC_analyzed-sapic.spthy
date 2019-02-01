@@ -2246,7 +2246,7 @@ analyzing: case-studies-sapic-regression/locations/AC.spthy
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies-sapic-regression/locations/AC.spthy.tmp
-  processing time: 15.839742445s
+  processing time: 24.970889s
   WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -2260,7 +2260,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AC.spthy
 
   output:          case-studies-sapic-regression/locations/AC.spthy.tmp
-  processing time: 15.839742445s
+  processing time: 24.970889s
   WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   

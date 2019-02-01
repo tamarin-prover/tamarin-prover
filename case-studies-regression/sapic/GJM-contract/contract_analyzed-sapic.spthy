@@ -1239,7 +1239,7 @@ analyzing: case-studies-sapic-regression/GJM-contract/contract.spthy
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 16.622371818s
+  processing time: 25.88934s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -1256,7 +1256,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/GJM-contract/contract.spthy
 
   output:          case-studies-sapic-regression/GJM-contract/contract.spthy.tmp
-  processing time: 16.622371818s
+  processing time: 25.88934s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
