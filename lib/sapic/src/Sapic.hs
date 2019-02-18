@@ -7,9 +7,17 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- Translation from Theories with Processes to mrs 
+-- Translation from Theories with Processes to mrs
+
+
 module Sapic (
     translate
 ) where
-
+import Text.ParserCombinators.Parsec
+import Theory.Text.Parser
+import Theory
 translate x = x
+
+
+-- translate :: Either ParseError OpenTheory -> Either ParseError OpenTheory
+-- translate x = parseOpenTheoryString ["lol","fail"] "fail"
