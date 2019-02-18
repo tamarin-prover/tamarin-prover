@@ -160,6 +160,7 @@ executable tamarin-prover
       , tamarin-prover-utils  == 1.5.0
       , tamarin-prover-term   == 1.5.0
       , tamarin-prover-theory == 1.5.0
+      , tamarin-prover-sapic == 1.5.0
 
     other-modules:
       Paths_tamarin_prover

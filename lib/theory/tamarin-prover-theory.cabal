@@ -22,7 +22,7 @@ description:        This is an internal library of the Tamarin prover for
                     (<hackage.haskell.org/package/tamarin-prover>).
                     .
                     This library provides the types to represent security
-                    protocol, and it implements the constraint solver.
+                    protocols, and it implements the constraint solver.
 
 homepage:           https://tamarin-prover.github.io/
 

@@ -66,6 +66,8 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 
+import           Sapic
+
 import           Main.Console
 import           Main.Environment
 
@@ -204,6 +206,12 @@ loadClosedDiffThyString as input =
 loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
 loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as)
 
+-- | Translate  processes in open theory to msrs and transform lemmas accordingly (former SAPIC)
+loadAndTranslateOpenThyString as input = 
+    Sapic.translate ot
+    where 
+        ot = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as) input
+
 -- | Load an open theory from a string.
 loadOpenDiffThyString :: Arguments -> String -> Either ParseError OpenDiffTheory
 loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ quitOnWarning as)
@@ -211,7 +219,7 @@ loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ q
 -- | Load a close theory and only report on well-formedness errors.
 reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
 reportOnClosedThyStringWellformedness as input = do
-    case loadOpenThyString as input of
+    case loadAndTranslateOpenThyString as input of
       Left  err -> return $ "parse error: " ++ show err
       Right thy ->
         case checkWellformedness thy of
