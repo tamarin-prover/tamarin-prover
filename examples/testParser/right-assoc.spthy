@@ -33,7 +33,7 @@ functions: S/1,myzero/0
 
 0|0|0
 
-new  s
+new  s; new t
 
 
 /* test */

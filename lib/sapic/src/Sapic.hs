@@ -15,6 +15,7 @@ module Sapic (
 ) where
 import Theory
 
+-- translate x = x
 translate (Left x) = x
 translate (Right th) =
     foldr addProtoRule th msrs
@@ -22,4 +23,11 @@ translate (Right th) =
         processes = theoryProcesses th
         msrs = foldr (++) [] (map msrFromProcess processes)
 
-msrFromProcess process = []
+-- translate (Left x) = x
+-- translate (Right th) =
+--     foldr addProtoRule th msrs
+--     where
+--         processes = theoryProcesses th
+--         msrs =  map msrFromProcess processes
+
+-- msrFromProcess process = []
