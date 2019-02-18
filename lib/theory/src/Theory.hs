@@ -417,8 +417,8 @@ data Process =
     |   ProcessParallel Process Process
     |   ProcessRep Process
     |   ProcessIdentifier String
-    |   PAction sapicAction
-    |   ProcessOpt sapicAction Process
+    |   PAction SapicAction
+    |   ProcessOpt SapicAction Process
    -- |   ProcessIfElse IfCondition Process Process     -- TODO parser: implement
    -- |   ProcessIf IfCondition Process                 
        
@@ -1735,7 +1735,7 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
-prettySapicAction :: sapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
+prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
 prettySapicAction action = case action of 
         New literal -> case literal of
                         Quote i -> "'" ++ i
