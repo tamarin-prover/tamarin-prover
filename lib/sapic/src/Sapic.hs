@@ -15,11 +15,13 @@ module Sapic (
 ) where
 import Theory
 
-translate (Left x) = x
-translate (Right th) =
-    foldr addProtoRule th msrs
-    where
-        processes = theoryProcesses th
-        msrs =  map msrFromProcess processes
+translate x = x
 
-msrFromProcess process = []
+-- translate (Left x) = x
+-- translate (Right th) =
+--     foldr addProtoRule th msrs
+--     where
+--         processes = theoryProcesses th
+--         msrs =  map msrFromProcess processes
+
+-- msrFromProcess process = []

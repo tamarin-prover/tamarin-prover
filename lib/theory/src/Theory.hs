@@ -79,6 +79,7 @@ module Theory (
   , theoryRules
   , theoryLemmas
   , theoryRestrictions
+  , theoryProcesses
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
