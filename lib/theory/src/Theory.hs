@@ -417,8 +417,8 @@ data Process =
     |   ProcessParallel Process Process
     |   ProcessRep Process
     |   ProcessIdentifier String
-    |   PAction SapicAction
-    |   ProcessOpt SapicAction Process
+    |   PAction sapicAction
+    |   ProcessOpt sapicAction Process
    -- |   ProcessIfElse IfCondition Process Process     -- TODO parser: implement
    -- |   ProcessIf IfCondition Process                 
        
@@ -778,6 +778,11 @@ theoryRestrictions =
 theoryLemmas :: Theory sig c r p -> [Lemma p]
 theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
+
+-- | All processes of a theory (TODO give warning if there is more than one...)
+theoryProcesses :: Theory sig c r p -> [Process]
+theoryProcesses =
+    foldTheoryItem (const []) (const []) (const []) (const [])  return (const []) <=< L.get thyItems
     
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p -> [ProcessDef]
@@ -1730,9 +1735,7 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
-
-
-prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
+prettySapicAction :: sapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
 prettySapicAction action = case action of 
         New literal -> case literal of
                         Quote i -> "'" ++ i
