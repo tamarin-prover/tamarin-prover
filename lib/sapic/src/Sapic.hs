@@ -13,3 +13,4 @@ module Sapic (
 ) where
 
 translate x = x
+-- translate x = Left (Parsec.ParseError "Lol")

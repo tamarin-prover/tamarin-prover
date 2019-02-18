@@ -826,63 +826,75 @@ literal = try (do
                         s <- BC.pack <$> identifier
                         return (Identifier (BC.unpack s)))
            
-        
 sapicAction :: Parser SapicAction
 sapicAction = try (do 
                         symbol "new"
                         s <- literal
                         return (New s))
+
+-- process:
+--     | LP process RP                                  
+--     | LP process RP AT multterm                      
+--     | actionprocess PARALLEL process      
+--     | actionprocess PLUS process                           
+--     null
+
+-- actionprocess:
+--     | sapic_action optprocess                        
+--     | NULL                                           
+--     | REP process                                    
+--     | IF if_cond THEN process ELSE process           
+--     | IF if_cond THEN process                        
+--     | LOOKUP term AS literal IN process ELSE process 
+--     | LOOKUP term AS literal IN process              
+--     | LET id_eq_termseq IN process          
+--     | LET id_not_res EQ REPORT LP multterm RP IN process 
+--     | IDENTIFIER                                     
+--     | msr
  
 process :: OpenTheory -> Parser Process
-process thy= try (do                                                              -- plus parser
-                        -- println "check plus"         
-                        symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
-                        p1 <- process thy
-                        -- println "check plus: p1 checked"
-                        symbol_ "+"
-                        -- println "check plus: plus checked"
-                        p2 <- process thy
-                        symbol ")"
-                        -- println "check plus: successfull"
-                        return (ProcessAlternative p1 p2))
-            <|>  try (do                                                    -- parallel parser
-                        symbol "("                                          -- erzwinge klammersetzung, andernfalls kommt es zur endlosen rekursion process->process ...
-                        p1 <- process thy
-                        opParallel
-                        p2 <- process thy
-                        symbol ")"
-                        return (ProcessParallel p1 p2))
-            <|>    try (do                                                     -- parens parser + at multterm
-                        symbol "("
-                        p <- process thy
-                        symbol ")"
-                        symbol "at"
-                        -- m <- multterm                                    -- TODO parser: multterm
+process thy= 
+            -- left-associative NDC and parallel
+            -- This roughly encodes the following grammar
+            -- <|>   try   (do                                                     -- parallel
+            --             p1 <- actionprocess thy
+            --             opParallel
+            --             p2 <- process thy
+            --             return (ProcessParallel p1 p2))
+                  try  (chainl1 (actionprocess thy) ((\a b -> ProcessParallel a b) <$ (opParallelDepr <|> opParallel )))
+            <|>   try  (chainl1 (actionprocess thy) ((\a b -> ProcessAlternative a b) <$ opNDC))
+            <|>   try (do                                                  -- parens parser + at multterm
+                        -- symbol "("
+                        p <- actionprocess thy
+                        -- symbol ")"
+                        symbol "@"
+                        m <- multterm llit  -- TODO parser: multterm
                         return p)                                           -- TODO parser: multterm return
-            <|>     (do                                                     -- parens parser
-                        -- println "check parens open"
+            <|>    try  (do                                                     -- parens parser
                         symbol "("
                         p <- process thy
-                        -- println "check parens: process parsed"
                         symbol ")"
-                        -- println "check parens successfull"
                         return p)
-            <|>     (do                                                     -- process repition parser
+            <|>    try (do                                                     -- action at top-level
+                        p <- actionprocess thy
+                        return p)
+
+actionprocess :: OpenTheory -> Parser Process
+actionprocess thy= 
+            try (do                                                    -- parallel parser
                         symbol "!"
                         p <- process thy
                         return (ProcessRep p))
             <|> try ( do 
                         s <- sapicAction
-                        symbol ","
+                        opSeq
                         p <- process thy
                         return (ProcessOpt s p))
-            <|>     ( do 
+            <|> try ( do 
                         s <- sapicAction
                         return (PAction s))
-            <|>     (do                                                     -- parse null process
-                        -- println "check terminator"
-                        processTerminator <- symbol_ "0" *> pure ProcessNull 
-                        -- println "check terminator: successfull"
+            <|> try (do                                                     -- null process
+                        processTerminator <- opNull *> pure ProcessNull 
                         return processTerminator)
             <|> try   (do                                                     -- parse identifier
                         -- println ("test process identifier parsing Start")
@@ -891,6 +903,11 @@ process thy= try (do                                                            
                         -- return (ProcessIdentifier <$> i)!!0)
                         -- println ("test" ++ (BC.unpack i))
                         return (ProcessIdentifier (BC.unpack i) ))   
+            <|> try (do                                                     -- parens parser
+                        symbol "("
+                        p <- process thy
+                        symbol ")"
+                        return p)
                         
 
 ------------------------------------------------------------------------------

@@ -427,7 +427,28 @@ data Process =
      
 type Id = String
 
-data SapicAction = New Literal
+type SapicVar = Literal
+type SapicTerm = LNTerm
+
+data SapicAction = 
+                   Null 
+                 | Par
+                 | Rep
+                 | NDC
+                 | New SapicVar
+                 | Msg_In SapicTerm
+                 | Ch_In SapicTerm SapicTerm
+                 | Msg_Out SapicTerm
+                 | Ch_Out SapicTerm SapicTerm
+                 | Insert SapicTerm SapicTerm
+                 | Delete SapicTerm 
+                 | Lock SapicTerm 
+                 | Unlock SapicTerm 
+                 | Lookup SapicTerm SapicTerm
+                 -- | Event of action
+                 -- | Cond of action
+                 -- | MSR of msr 
+                 -- | Let of string
     -- |   ...   TODO parser: extend
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
@@ -975,7 +996,7 @@ lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProt
 lookupOpenDiffProtoDiffRule name =
     find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
--- | Add a new protocol rules. Fails, if a protocol rule with the same name
+-- | Add new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
