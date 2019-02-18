@@ -12,5 +12,10 @@ module Sapic (
     translate
 ) where
 
-translate x = x
+translate (Left x) = x
+translate (Right th) = 
+    fold_left (addProtoRule th) th []
+    where
+        process = theoryProcesses th
+        msrs =  []
 -- translate x = Left (Parsec.ParseError "Lol")
