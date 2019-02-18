@@ -14,14 +14,17 @@ module Sapic (
     translate
 ) where
 import Theory
+import Data.Maybe
+import Data.Foldable
 
--- translate x = x
-translate (Left x) = x
-translate (Right th) =
-    foldr addProtoRule th msrs
-    where
-        processes = theoryProcesses th
-        msrs = foldr (++) [] (map msrFromProcess processes)
+translate x = x
+--translate (Left x) = (Left x)
+--translate (Right th) = new_th
+--    where
+--        processes = theoryProcesses th
+--        msrs = foldr (++) [] (map msrFromProcess processes)
+--        new_th = foldrM addProtoRule th msrs
+
 
 -- translate (Left x) = x
 -- translate (Right th) =
@@ -30,4 +33,4 @@ translate (Right th) =
 --         processes = theoryProcesses th
 --         msrs =  map msrFromProcess processes
 
--- msrFromProcess process = []
+--msrFromProcess process = []
