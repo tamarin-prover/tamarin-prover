@@ -58,6 +58,12 @@ module Theory.Text.Parser.Token (
   , opLFalse
   , opLTrue
 
+  , opParallel
+  , opParallelDepr
+  , opSeq
+  , opNDC
+  , opNull
+
   , opRequires
   , opChain
 
@@ -435,8 +441,24 @@ opLongrightarrow = symbol_ "-->"
 
 -- | The operator for parallel running processes @||@.
 opParallel :: Parser()
-opParallel = symbol_ "||"
+opParallel = symbol_ "|"
+
+-- | The operator for parallel running processes @||@. (deprecated)
+opParallelDepr :: Parser()
+opParallelDepr = symbol_ "||"
 
 -- | The let identifier @let@.
 letIdentifier :: Parser()
 letIdentifier = symbol_ "let"
+
+-- | operator for sequential actions in processes
+opSeq :: Parser()
+opSeq = symbol_ ";"
+
+-- | operator for non-deterministic choice in processes
+opNDC :: Parser()
+opNDC = symbol_ "+"
+
+-- | Operator for 0-process (terminator of sequence)
+opNull :: Parser()
+opNull = symbol_ "0"
