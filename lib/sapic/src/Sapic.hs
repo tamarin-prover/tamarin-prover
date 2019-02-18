@@ -20,6 +20,6 @@ translate (Right th) =
     foldr addProtoRule th msrs
     where
         processes = theoryProcesses th
-        msrs =  map msrFromProcess processes
+        msrs = foldr (++) [] (map msrFromProcess processes)
 
 msrFromProcess process = []
