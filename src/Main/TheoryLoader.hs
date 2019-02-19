@@ -145,7 +145,7 @@ loadClosedDiffThy as inFile = do
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
 
--- | Load a close theory and report on well-formedness errors.
+-- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
     thy <- loadOpenThy as inFile

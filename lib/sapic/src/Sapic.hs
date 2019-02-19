@@ -9,7 +9,6 @@
 --
 -- Translation from Theories with Processes to mrs
 
-
 module Sapic (
     translate
 ) where

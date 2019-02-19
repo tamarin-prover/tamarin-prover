@@ -46,6 +46,7 @@ import           System.Process
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
+import           Theory.Sapic
 import           Theory.Text.Parser.Token
 
 import           Debug.Trace
@@ -804,33 +805,18 @@ processDef thy= do
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p )
                 
-
-literal :: Parser Literal
-literal = try (do
-                        symbol "~" 
-                        s <- BC.pack <$> identifier
-                        return (Tilde (BC.unpack s)))
-           <|>   try (do
-                        symbol "~"
-                        s <- singleQuoted identifier
-                        return (TildeQuote s))
-           <|>   try (do
-                        symbol "'"                        
-                        s <- BC.pack <$> identifier
-                        return (Quote (BC.unpack s)))
-           <|>   try (do
-                        symbol "#"                        
-                        s <- BC.pack <$> identifier
-                        return (Sharp (BC.unpack s)))
-           <|>   try (do                     
-                        s <- BC.pack <$> identifier
-                        return (Identifier (BC.unpack s)))
-           
-sapicAction :: Parser SapicAction
+sapicAction :: Parser SapicAction -- TODO don't parse ! here
 sapicAction = try (do 
                         symbol "new"
-                        s <- literal
-                        return (New s))
+                        s <- (Name FreshName . NameId) <$> freshName 
+                        -- s <- llitNoPub
+                        -- TODO very strict parsing:
+                        -- should introduce strict mode, where
+                        -- all news have to have ~new type
+                        -- and in does take variable
+                        return (New s)
+                   )
+                          
 
 -- process:
 --     | LP process RP                                  
@@ -861,14 +847,14 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  try  (chainl1 (actionprocess thy) ((\a b -> ProcessParallel a b) <$ (opParallelDepr <|> opParallel )))
-            <|>   try  (chainl1 (actionprocess thy) ((\a b -> ProcessAlternative a b) <$ opNDC))
+                  try  (chainl1 (actionprocess thy) ((ProcessComb Parallel Nothing ) <$ (opParallelDepr <|> opParallel )))
+            <|>   try  (chainl1 (actionprocess thy) ((ProcessComb NDC Nothing ) <$ opNDC))
             <|>   try (do                                                  -- parens parser + at multterm
                         -- symbol "("
                         p <- actionprocess thy
                         -- symbol ")"
                         symbol "@"
-                        m <- multterm llit  -- TODO parser: multterm
+                        m <- multterm llit
                         return p)                                           -- TODO parser: multterm return
             <|>    try  (do                                                     -- parens parser
                         symbol "("
@@ -884,25 +870,22 @@ actionprocess thy=
             try (do                                                    -- parallel parser
                         symbol "!"
                         p <- process thy
-                        return (ProcessRep p))
+                        return (ProcessAction Rep Nothing p))
             <|> try ( do 
                         s <- sapicAction
                         opSeq
                         p <- process thy
-                        return (ProcessOpt s p))
-            <|> try ( do 
-                        s <- sapicAction
-                        return (PAction s))
+                        return (ProcessAction Rep Nothing p))
             <|> try (do                                                     -- null process
-                        processTerminator <- opNull *> pure ProcessNull 
-                        return processTerminator)
-            <|> try   (do                                                     -- parse identifier
-                        -- println ("test process identifier parsing Start")
-                        i <- BC.pack <$> identifier
-                        thy <- checkProcess (BC.unpack i) thy
-                        -- return (ProcessIdentifier <$> i)!!0)
-                        -- println ("test" ++ (BC.unpack i))
-                        return (ProcessIdentifier (BC.unpack i) ))   
+                        opNull 
+                        return (ProcessNull Nothing) )
+            -- <|> try   (do                                                     -- parse identifier
+            --             -- println ("test process identifier parsing Start")
+            --             i <- BC.pack <$> identifier
+            --             thy <- checkProcess (BC.unpack i) thy
+            --             -- return (ProcessIdentifier <$> i)!!0)
+            --             -- println ("test" ++ (BC.unpack i))
+            --             return (ProcessIdentifier (BC.unpack i) ))   
             <|> try (do                                                     -- parens parser
                         symbol "("
                         p <- process thy

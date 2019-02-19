@@ -84,12 +84,15 @@ library
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
+      Theory.Sapic
+
       Theory.Model
       Theory.Model.Atom
       Theory.Model.Fact
       Theory.Model.Formula
       Theory.Model.Rule
       Theory.Model.Signature
+
 
       Theory.Text.Pretty
       Theory.Text.Parser

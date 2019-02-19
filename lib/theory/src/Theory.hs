@@ -24,10 +24,7 @@ module Theory (
   , rstrFormula
 
   -- * Processes
-  , Process(..)
   , ProcessDef(..)
-  , SapicAction(..)
-  , Literal(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
@@ -214,6 +211,7 @@ import qualified Extension.Data.Label                as L
 import           Safe                                (headMay)
 
 import           Theory.Model
+import           Theory.Sapic
 import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
@@ -405,71 +403,15 @@ $(mkLabels [''Restriction])
 -- Processes
 ------------------------------------------------------------------------------
 
--- | A process data structure
-
-
-
-
-data IfCondition = CondIdentifier                   
-    deriving( Show, Eq, Ord, Generic, NFData, Binary )
-data Process =  
-        ProcessNull
-    |   ProcessAlternative Process Process
-    |   ProcessParallel Process Process
-    |   ProcessRep Process
-    |   ProcessIdentifier String
-    |   PAction SapicAction
-    |   ProcessOpt SapicAction Process
-   -- |   ProcessIfElse IfCondition Process Process     -- TODO parser: implement
-   -- |   ProcessIf IfCondition Process                 
-       
-     deriving( Show, Eq, Ord, Generic, NFData, Binary )
-     
-     
-type Id = String
-
-type SapicVar = Literal
-type SapicTerm = LNTerm
-
-data SapicAction = 
-                   Null 
-                 | Par
-                 | Rep
-                 | NDC
-                 | New SapicVar
-                 | Msg_In SapicTerm
-                 | Ch_In SapicTerm SapicTerm
-                 | Msg_Out SapicTerm
-                 | Ch_Out SapicTerm SapicTerm
-                 | Insert SapicTerm SapicTerm
-                 | Delete SapicTerm 
-                 | Lock SapicTerm 
-                 | Unlock SapicTerm 
-                 | Lookup SapicTerm SapicTerm
-                 -- | Event of action
-                 -- | Cond of action
-                 -- | MSR of msr 
-                 -- | Let of string
-    -- |   ...   TODO parser: extend
-        deriving( Show, Eq, Ord, Generic, NFData, Binary )
-     
-data Literal = Quote Id
-    |   Sharp Id
-    |   Identifier Id
-    |   Tilde Id
-    |   TildeQuote Id
-        deriving( Show, Eq, Ord, Generic, NFData, Binary )
-     
 data ProcessDef = ProcessDef
         { _pName            :: String
         , _pBody            :: Process
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
     
+
 -- generate accessors for ProcessDef data structure records
 $(mkLabels [''ProcessDef])
-
-
 
 ------------------------------------------------------------------------------
 -- Lemmas
@@ -1736,32 +1678,11 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
 
-prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
-prettySapicAction action = case action of 
-        New literal -> case literal of
-                        Quote i -> "'" ++ i
-                        Tilde i -> "~" ++ i
-                        TildeQuote i -> "~'" ++ i ++ "'"                        
-                        Sharp i -> "#" ++ i
-                        Identifier i -> i
-                         
-
--- help function to generate output string 
-prettyProcessH :: Process -> String
-prettyProcessH p = case p of                                                     -- TODO parser: extend if changes on process data structure
-        ProcessParallel p1 p2 -> "(" ++ (prettyProcessH p1) ++ " || "  ++ (prettyProcessH p2) ++ ")"
-        ProcessAlternative p1 p2 -> "(" ++ (prettyProcessH p1) ++ " + "  ++ (prettyProcessH p2) ++ ")"
-        ProcessNull -> "0"
-        ProcessIdentifier i-> i
-        ProcessRep pr -> "!" ++ (prettyProcessH pr)
-        PAction s -> prettySapicAction s
-        ProcessOpt s pr -> (prettySapicAction s) ++ "," ++ (prettyProcessH pr)
-
 prettyProcess :: HighlightDocument d => Process -> d
-prettyProcess p = text (prettyProcessH p)
+prettyProcess p = text (prettySapic p)
    
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d                      
-prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettyProcessH (L.get pBody pDef)))
+prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
                                                
 
 -- | Pretty print a diff theory.
