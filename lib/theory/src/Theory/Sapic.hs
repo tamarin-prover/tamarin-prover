@@ -62,7 +62,7 @@ data SapicAction =
     -- |   ...   TODO parser: extend
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
-data ProcessCombinator = Parallel | NDC | Cond deriving (Generic, NFData, Binary)
+data ProcessCombinator = Parallel | NDC | Cond LNFact deriving (Generic, NFData, Binary, Show)
 -- data ProcessTag = NullP | Comb | SAction
 
 data AnProcess ann =  
@@ -112,14 +112,19 @@ pfoldMap f (ProcessAction a an p)   =
      
 prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
 prettySapicAction action = case action of 
-        New n -> "new "++ (show n)
-                         
+        New n -> "new "++ show n
+
+prettySapicComb Parallel = "|"
+prettySapicComb NDC = "+"
+prettySapicComb Cond a = "If "
 
 -- help function to generate output string 
 prettySapic :: (AnProcess ann) -> String
 prettySapic = pfoldMap f 
     where f (ProcessNull _) = "0"
-          f _  = "0" -- TODO complete
+          f (ProcessComb c _ _ _)  = prettySapicComb c 
+          f (ProcessAction a _ _)  = prettySapicAction a
+
 
 -- case p of                                                     -- TODO parser: extend if changes on process data structure
 --         ProcessParallel p1 p2 -> "(" ++ (prettySapic p1) ++ " || "  ++ (prettySapic p2) ++ ")"
