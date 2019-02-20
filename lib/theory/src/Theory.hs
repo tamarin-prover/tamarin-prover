@@ -29,6 +29,7 @@ module Theory (
   , addProcess
   , findProcess
   , addProcessDef
+  , lookupProcessDef
   , pName
   , prettyTheory
   -- * Lemmas

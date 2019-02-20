@@ -16,6 +16,7 @@ module Theory.Sapic (
     , ProcessCombinator(..)
     , AnProcess(..)
     , SapicAction(..)
+    , paddAnn
     , prettySapic
     , prettySapicAction
 ) where
@@ -83,7 +84,18 @@ instance (Binary ann) => Binary (AnProcess ann)
 instance (Eq ann) => Eq (AnProcess ann)
 instance (Show ann) => Show (AnProcess ann)
 
-type Process = AnProcess (Maybe String)
+type ProcessName = String -- String used in annotation to identify processes
+type ProcessAnnotation = [String]
+type Process = AnProcess (Maybe ProcessAnnotation)
+
+-- TODO make compatible with maybe type
+paddAnn :: Process -> ProcessAnnotation -> Process
+paddAnn (ProcessNull Nothing) ann' = ProcessNull (Just ann')
+paddAnn (ProcessComb c Nothing pl pr ) ann' = ProcessComb c (Just ann')  pl pr 
+paddAnn (ProcessAction a Nothing p ) ann' = ProcessAction a (Just ann')  p
+paddAnn (ProcessNull (Just ann)) ann' = ProcessNull $ Just $ ann `mappend` ann'
+paddAnn (ProcessComb c (Just ann) pl pr ) ann' = ProcessComb c (Just $ ann `mappend` ann')  pl pr 
+paddAnn (ProcessAction a (Just ann) p ) ann' = ProcessAction a (Just $ ann `mappend` ann')  p
 
 pfoldMap :: Monoid a => (AnProcess ann -> a) -> AnProcess ann -> a
 pfoldMap f (ProcessNull an) = f (ProcessNull an)

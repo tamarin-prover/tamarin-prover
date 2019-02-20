@@ -879,13 +879,13 @@ actionprocess thy=
             <|> try (do                                                     -- null process
                         opNull 
                         return (ProcessNull Nothing) )
-            -- <|> try   (do                                                     -- parse identifier
-            --             -- println ("test process identifier parsing Start")
-            --             i <- BC.pack <$> identifier
-            --             thy <- checkProcess (BC.unpack i) thy
-            --             -- return (ProcessIdentifier <$> i)!!0)
-            --             -- println ("test" ++ (BC.unpack i))
-            --             return (ProcessIdentifier (BC.unpack i) ))   
+            <|> try   (do                                                     -- parse identifier
+                        -- println ("test process identifier parsing Start")
+                        i <- BC.pack <$> identifier
+                        a <- let p = checkProcess (BC.unpack i) thy in
+                            (\x -> paddAnn x [BC.unpack i]) <$> p
+                        return a 
+                        )
             <|> try (do                                                     -- parens parser
                         symbol "("
                         p <- process thy
@@ -899,9 +899,13 @@ actionprocess thy=
 
 
 -- checks if process exists, if not -> error
-checkProcess :: String -> OpenTheory -> Parser OpenTheory
-checkProcess i thy= case findProcess i thy of
-    Just thy' -> return thy
+-- checkProcess :: String -> OpenTheory -> Parser OpenTheory
+-- checkProcess i thy= case findProcess i thy of
+--     Just thy' -> return thy
+--     Nothing -> fail $ "process not defined: " ++ i    
+checkProcess :: String -> OpenTheory -> Parser Process
+checkProcess i thy = case lookupProcessDef i thy of
+    Just p -> return (_pBody p) -- TODO why doesnt this work? (get pBody p)
     Nothing -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.
