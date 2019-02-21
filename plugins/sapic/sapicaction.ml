@@ -59,7 +59,10 @@ let rec substitute  (id:string) (t:term) process =
       | Let(_)
       | NDC -> Node(a, substitute id t left, substitute id t right)
       | Rep -> Node(a, substitute id t left, right)
-      | New (x) -> Node(a, substitute id t left, right)
+      | New (x) ->
+	if VarSet.mem ( Var.Msg(id) ) ( vars_t (Var(x)) ) then (* rebinding variable id, stop substituting *)
+            raise (ProcessNotWellformed ("Let assignment of "^id^ " would capture appearance in new."))
+	else Node(a, substitute id t left, right)
       | Delete (u) -> Node(Delete( (f u) ), substitute id t left, right)
       | Lock(u) -> Node(Lock( (f u) ), substitute id t left, right)
       | Unlock(u) -> Node(Unlock( (f u) ), substitute id t left, right)
@@ -69,11 +72,23 @@ let rec substitute  (id:string) (t:term) process =
       | Event(a) -> Node(Event(substitute_a v t a), substitute id t left, substitute id t right)
       | Cond(a) -> Node(Cond(substitute_a v t a), substitute id t left, substitute id t right)
       | Msg_In(u) ->
-	    Node( Msg_In(f u), substitute id t left, substitute id t right )
+            (* Note for future port: raise warning if variables in message input are bound or pattern matching is used,
+             * at the formal semantics consider only variables. Or maybe introduce strict mode?
+             *)
+	  (* if  VarSet.mem ( Var.Msg(id) ) (vars_t u) then (1* rebinding variable id, stop substituting *1) *)
+	    (* Node( Msg_In(u), left, right ) *)
+	  (* else *)
+	    Node(Msg_In(f u), substitute id t left, substitute id t right)
       | Ch_In(u1, u2) ->
-	    Node( Ch_In(f u1, f u2), substitute id t left, substitute id t right )
+	  (* if  VarSet.mem ( Var.Msg(id) ) (vars_t u2) then (1* rebinding variable id, stop substituting *1) *)
+	  (*   Node( Ch_In(f u1, u2), left, right ) *)
+	  (* else *)
+	    Node(Ch_In(f u1, f u2), substitute id t left, substitute id t right)
       | Lookup(u1,u2) ->
-	    Node( Lookup(f u1, f u2), substitute id t left, substitute id t right )
+	  (* if  VarSet.mem ( Var.Msg(id) ) (vars_t u2) then (1* rebinding variable id, stop substituting *1) *)
+	  (*   Node( Lookup(f u1, u2), left, right ) *)
+	  (* else *)
+	    Node(Lookup(f u1, f u2), substitute id t left, substitute id t right)
       | MSR(prem,ac,conl) -> raise (NotImplementedError "Substitution cannot be used in embedded MSRs")
     end
     

@@ -116,7 +116,7 @@ prettySapicAction action = case action of
 
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb Cond a = "If "
+prettySapicComb (Cond a) = "If "
 
 -- help function to generate output string 
 prettySapic :: (AnProcess ann) -> String
