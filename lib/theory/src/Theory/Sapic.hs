@@ -33,6 +33,7 @@ import           Control.Parallel.Strategies
 
 import           Theory.Model
 import           Term.LTerm
+import           Theory.Text.Pretty
 
 -- | A process data structure
 data IfCondition = CondIdentifier                   
@@ -106,16 +107,18 @@ pfoldMap f (ProcessAction a an p)   =
      
 prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
 prettySapicAction (New n) = "new "++ show n
-prettySapicAction (Null)  = "0"
-prettySapicAction (Rep)  = "!"
--- prettySapicAction (Ch_In (Just t1) t2 )  = "in(" ++ prettyLNTerm t1 ++ "," ++ prettyLNTerm t2 ++ ")"
-                 -- | Ch_In (Maybe SapicTerm) SapicTerm
-                 -- | Ch_Out (Maybe SapicTerm) SapicTerm
-                 -- | Insert SapicTerm SapicTerm
-                 -- | Delete SapicTerm 
-                 -- | Lock SapicTerm 
-                 -- | Unlock SapicTerm 
+prettySapicAction Null  = "0"
+prettySapicAction Rep  = "!"
+prettySapicAction (Ch_In (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
+prettySapicAction (Ch_In Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (Ch_Out (Just t1) t2 )  = "out(" ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (Ch_Out Nothing t2 )  = "out(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (Insert t1 t2)  = "insert " ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2)
+prettySapicAction (Delete t )  = "delete " ++ render (prettyLNTerm t)
+prettySapicAction (Lock t )  = "lock " ++ render (prettyLNTerm t)
+prettySapicAction (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
                  -- | Event LNFact 
+-- prettySapicAction (MSR rule) = prettyRule $ uncurry rule
                  -- | MSR ([LNFact], [LNFact], [LNFact])
 
 prettySapicComb Parallel = "|"

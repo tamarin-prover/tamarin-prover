@@ -122,6 +122,7 @@ module Theory.Model.Rule (
   -- * Pretty-Printing
   , reservedRuleNames
   , showRuleCaseName
+  , prettyRule
   , prettyProtoRuleName
   , prettyRuleName
   , prettyRuleAttribute
@@ -1035,30 +1036,35 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
+prettyRule prems acts concls=
+    (sep [ nest 1 $ ppFactsList prems
+                , if null acts
+                    then operator_ "-->"
+                    else fsep [operator_ "--[", ppFacts' acts, operator_ "]->"]
+                , nest 1 $ ppFactsList concls])
+-- Debug:
+--     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
+  where
+    ppList pp        = fsep . punctuate comma . map pp
+    ppFacts'         = ppList prettyLNFact
+    ppFactsList list = fsep [operator_ "[", ppFacts' list, operator_ "]"]
+
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
                 => d           -- ^ Prefix.
                 -> (i -> d)    -- ^ Rule info pretty printing.
                 -> Rule i -> d
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> ppAttributes <> colon $-$
-    nest 2 (sep [ nest 1 $ ppFactsList rPrems
-                , if null acts
-                    then operator_ "-->"
-                    else fsep [operator_ "--[", ppFacts' acts, operator_ "]->"]
-                , nest 1 $ ppFactsList rConcs]) $-$
+    nest 2 
+    (prettyRule (facts rPrems) acts (facts rConcs))  $-$
     nest 2 (ppInfo $ L.get rInfo ru) -- $-$
--- Debug:
---     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
-  where
+    where 
     acts             = filter isNotDiffAnnotation (L.get rActs ru)
-    ppList pp        = fsep . punctuate comma . map pp
-    ppFacts' list    = ppList prettyLNFact list
-    ppFacts proj     = ppList prettyLNFact $ L.get proj ru
-    ppFactsList proj = fsep [operator_ "[", ppFacts proj, operator_ "]"]
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    facts proj     = L.get proj ru
     ppAttributes = case ruleAttributes ru of
         []    -> text ""
-        attrs -> hcat $ [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
+        attrs -> hcat [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =

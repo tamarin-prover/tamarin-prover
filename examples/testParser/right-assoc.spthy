@@ -48,6 +48,8 @@ new  s; new t; 0
 
 in(<a,b>); 0
 
+insert x,y
+
 /* test */
 /* test || test */
 
