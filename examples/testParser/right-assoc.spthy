@@ -17,15 +17,20 @@ functions: S/1,myzero/0
 
 let test = 0|0|0
 
-/* let testprocess = 0 */
-/* let p2 = (0 || 0) */
+let testprocess = 0
+let p2 = 0||0
 
-/* let p3 = new ~'test',((test||(0+test))||!test) */
+let p3 = new test;((test||(0+test))||!test)
 
-/* 0+(0+0) */
-/* (0+0)+0 */
 
-0||0
+!0
+
+0+(0+0)
+
+(0+0)+0
+
+0+!(0|0)
+0+!(0|0)
 0||0
 0||(0||0)
 (0||0) || 0
@@ -35,13 +40,13 @@ let test = 0|0|0
 
 test
 
-/* new  ~s; new ~t */
+new  ~s; new ~t; 0
 
 /* (new  ~s; new ~t) */
 
-
 /* test */
 /* test || test */
+
 
 end
 

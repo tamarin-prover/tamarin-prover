@@ -807,8 +807,8 @@ processDef thy= do
                 
 sapicAction :: Parser SapicAction -- TODO don't parse ! here
 sapicAction = try (do 
-                        symbol "new"
-                        s <- (Name FreshName . NameId) <$> freshName 
+                        _ <- symbol "new"
+                        s <- msgvar 
                         -- s <- llitNoPub
                         -- TODO very strict parsing:
                         -- should introduce strict mode, where
@@ -837,7 +837,7 @@ sapicAction = try (do
 --     | LET id_not_res EQ REPORT LP multterm RP IN process 
 --     | IDENTIFIER                                     
 --     | msr
- 
+
 process :: OpenTheory -> Parser Process
 process thy= 
             -- left-associative NDC and parallel
@@ -847,19 +847,23 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  try  (chainl1 (actionprocess thy) ((ProcessComb Parallel Nothing ) <$ (opParallelDepr <|> opParallel )))
-            <|>   try  (chainl1 (actionprocess thy) ((ProcessComb NDC Nothing ) <$ opNDC))
+                  try  (chainl1 (actionprocess thy) (
+                             do { _ <- opNDC; return (ProcessComb NDC Nothing)}
+                         <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel Nothing)}
+                         <|> do { _ <- try opParallel; return (ProcessComb Parallel Nothing)}
+                  ))
+            -- <|>   try  (chainl1 ($actionprocess thy) (ProcessComb Parallel Nothing  <$ (opParallelDepr <|> opParallel )))
             <|>   try (do                                                  -- parens parser + at multterm
-                        -- symbol "("
+                        _ <- symbol "("
                         p <- actionprocess thy
-                        -- symbol ")"
-                        symbol "@"
+                        _ <- symbol ")"
+                        _ <- symbol "@"
                         m <- multterm llit
                         return p)                                           -- TODO parser: multterm return
             <|>    try  (do                                                     -- parens parser
-                        symbol "("
+                        _ <- symbol "("
                         p <- process thy
-                        symbol ")"
+                        _ <- symbol ")"
                         return p)
             <|>    try (do                                                     -- action at top-level
                         p <- actionprocess thy
@@ -868,16 +872,16 @@ process thy=
 actionprocess :: OpenTheory -> Parser Process
 actionprocess thy= 
             try (do                                                    -- parallel parser
-                        symbol "!"
+                        _ <- symbol "!"
                         p <- process thy
                         return (ProcessAction Rep Nothing p))
             <|> try ( do 
                         s <- sapicAction
-                        opSeq
+                        _ <- opSeq
                         p <- process thy
-                        return (ProcessAction Rep Nothing p))
+                        return (ProcessAction s Nothing p))
             <|> try (do                                                     -- null process
-                        opNull 
+                        _ <- opNull 
                         return (ProcessNull Nothing) )
             <|> try   (do                                                     -- parse identifier
                         -- println ("test process identifier parsing Start")
@@ -887,9 +891,9 @@ actionprocess thy=
                         return a 
                         )
             <|> try (do                                                     -- parens parser
-                        symbol "("
+                        _ <- symbol "("
                         p <- process thy
-                        symbol ")"
+                        _ <- symbol ")"
                         return p)
                         
 
@@ -947,8 +951,8 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
-      , do proc <- process thy                          -- try parsing a process
-           addItems flags (addProcess proc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
+      , do procc <- process thy                          -- try parsing a process
+           addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
       , do ifdef flags thy

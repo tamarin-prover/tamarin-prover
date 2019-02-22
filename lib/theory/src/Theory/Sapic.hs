@@ -46,7 +46,7 @@ data SapicAction =
                    Null 
                  | Par
                  | Rep
-                 | New Name
+                 | New LVar
                  | Ch_In_Pattern (Maybe SapicTerm) SapicTerm
                  | Ch_In (Maybe SapicTerm) SapicTerm
                  | Ch_Out (Maybe SapicTerm) SapicTerm
@@ -88,7 +88,6 @@ type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [String]
 type Process = AnProcess (Maybe ProcessAnnotation)
 
--- TODO make compatible with maybe type
 paddAnn :: Process -> ProcessAnnotation -> Process
 paddAnn (ProcessNull Nothing) ann' = ProcessNull (Just ann')
 paddAnn (ProcessComb c Nothing pl pr ) ann' = ProcessComb c (Just ann')  pl pr 
@@ -106,32 +105,33 @@ pfoldMap f (ProcessComb c an pl pr)  =
         `mappend` 
         pfoldMap f pr
 pfoldMap f (ProcessAction a an p)   = 
-        pfoldMap f p
-        `mappend` 
         f (ProcessAction a an p)
+        `mappend` 
+        pfoldMap f p
      
 prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
-prettySapicAction action = case action of 
-        New n -> "new "++ show n
+prettySapicAction (New n) = "new "++ show n
+prettySapicAction (Null)  = "0"
+prettySapicAction (Rep)  = "!"
+-- prettySapicAction (Rep)  = "!"
+--                  | Ch_In_Pattern (Maybe SapicTerm) SapicTerm
+--                  | Ch_In (Maybe SapicTerm) SapicTerm
+--                  | Ch_Out (Maybe SapicTerm) SapicTerm
+--                  | Insert SapicTerm SapicTerm
+--                  | Delete SapicTerm 
+--                  | Lock SapicTerm 
+--                  | Unlock SapicTerm 
+--                  | Lookup SapicTerm SapicTerm
 
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
 prettySapicComb (Cond a) = "If "
 
 -- help function to generate output string 
-prettySapic :: (AnProcess ann) -> String
+prettySapic :: AnProcess ann -> String
 prettySapic = pfoldMap f 
     where f (ProcessNull _) = "0"
           f (ProcessComb c _ _ _)  = prettySapicComb c 
-          f (ProcessAction a _ _)  = prettySapicAction a
+          f (ProcessAction Rep _ _)  = prettySapicAction Rep 
+          f (ProcessAction a _ _)  = prettySapicAction a ++ ";"
 
-
--- case p of                                                     -- TODO parser: extend if changes on process data structure
---         ProcessParallel p1 p2 -> "(" ++ (prettySapic p1) ++ " || "  ++ (prettySapic p2) ++ ")"
---         ProcessAlternative p1 p2 -> "(" ++ (prettySapic p1) ++ " + "  ++ (prettySapic p2) ++ ")"
---         ProcessNull -> "0"
---         ProcessIdentifier i-> i
---         ProcessRep pr -> "!" ++ (prettySapic pr)
---         PAction s -> prettySapicAction s
---         ProcessOpt s pr -> (prettySapicAction s) ++ "," ++ (prettySapic pr)
-     

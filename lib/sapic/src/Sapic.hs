@@ -12,7 +12,6 @@
 module Sapic (
     translate
 ) where
-import Theory
 import Data.Maybe
 import Data.Foldable
 
