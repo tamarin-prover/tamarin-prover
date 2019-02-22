@@ -42,11 +42,14 @@ test
 
 new  ~s; new ~t; 0
 
-/* (new  ~s; new ~t) */
+new  s; new t; 0
+
+(new  ~s; new ~t)
+
+in(<a,b>); 0
 
 /* test */
 /* test || test */
-
 
 end
 

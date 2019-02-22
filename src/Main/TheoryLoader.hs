@@ -207,6 +207,7 @@ loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
 loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as)
 
 -- | Translate  processes in open theory to msrs and transform lemmas accordingly (former SAPIC)
+loadAndTranslateOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
 loadAndTranslateOpenThyString as input = 
     Sapic.translate ot
     where 

@@ -809,14 +809,62 @@ sapicAction :: Parser SapicAction -- TODO don't parse ! here
 sapicAction = try (do 
                         _ <- symbol "new"
                         s <- msgvar 
-                        -- s <- llitNoPub
-                        -- TODO very strict parsing:
-                        -- should introduce strict mode, where
-                        -- all news have to have ~new type
-                        -- and in does take variable
                         return (New s)
                    )
-                          
+               <|> try (do 
+                        _ <- symbol "in"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- symbol ")"
+                        return (Ch_In Nothing t)
+                   )
+               <|> try (do 
+                        _ <- symbol "in"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        _ <- symbol ")"
+                        return (Ch_In (Just t) t')
+                   )
+               <|> try (do 
+                        _ <- symbol "out"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- symbol ")"
+                        return (Ch_Out Nothing t)
+                   )
+               <|> try (do 
+                        _ <- symbol "out"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        _ <- symbol ")"
+                        return (Ch_Out (Just t) t')
+                   )
+               <|> try (do 
+                        _ <- symbol "insert"
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        return (Insert t t')
+                   )
+               <|> try (do 
+                        _ <- symbol "delete"
+                        t <- msetterm llit
+                        return (Delete t)
+                   )
+               <|> try (do 
+                        _ <- symbol "lock"
+                        t <- msetterm llit
+                        return (Lock t)
+                   )
+               <|> try (do 
+                        _ <- symbol "unlock"
+                        t <- msetterm llit
+                        return (Lock t)
+                   )
 
 -- process:
 --     | LP process RP                                  
@@ -858,7 +906,7 @@ process thy=
                         p <- actionprocess thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- multterm llit
+                        m <- msetterm llit
                         return p)                                           -- TODO parser: multterm return
             <|>    try  (do                                                     -- parens parser
                         _ <- symbol "("
@@ -875,11 +923,25 @@ actionprocess thy=
                         _ <- symbol "!"
                         p <- process thy
                         return (ProcessAction Rep Nothing p))
+            <|> try (do 
+                        _ <- symbol "lookup"
+                        t <- msetterm llit
+                        _ <- symbol "as"
+                        v <- msgvar
+                        _ <- symbol "in"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (Lookup t v) Nothing p q)
+                   )
             <|> try ( do 
                         s <- sapicAction
                         _ <- opSeq
                         p <- process thy
                         return (ProcessAction s Nothing p))
+            <|> try ( do 
+                        s <- sapicAction
+                        return (ProcessAction s Nothing (ProcessNull Nothing)))
             <|> try (do                                                     -- null process
                         _ <- opNull 
                         return (ProcessNull Nothing) )

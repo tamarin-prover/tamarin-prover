@@ -38,8 +38,6 @@ import           Term.LTerm
 data IfCondition = CondIdentifier                   
     deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
-type Id = String
-type SapicVar = LNTerm
 type SapicTerm = LNTerm
 
 data SapicAction = 
@@ -47,22 +45,19 @@ data SapicAction =
                  | Par
                  | Rep
                  | New LVar
-                 | Ch_In_Pattern (Maybe SapicTerm) SapicTerm
                  | Ch_In (Maybe SapicTerm) SapicTerm
                  | Ch_Out (Maybe SapicTerm) SapicTerm
                  | Insert SapicTerm SapicTerm
                  | Delete SapicTerm 
                  | Lock SapicTerm 
                  | Unlock SapicTerm 
-                 | Lookup SapicTerm SapicTerm
-                 -- | Event of action
-                 -- | Cond of action
-                 -- | MSR of msr 
+                 | Event LNFact 
+                 | MSR ([LNFact], [LNFact], [LNFact])
                  -- | Let of string
     -- |   ...   TODO parser: extend
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
      
-data ProcessCombinator = Parallel | NDC | Cond LNFact deriving (Generic, NFData, Binary, Show)
+data ProcessCombinator = Parallel | NDC | Cond LNFact | Lookup SapicTerm LVar deriving (Generic, NFData, Binary, Show)
 -- data ProcessTag = NullP | Comb | SAction
 
 data AnProcess ann =  
@@ -113,15 +108,15 @@ prettySapicAction :: SapicAction  -> String                                     
 prettySapicAction (New n) = "new "++ show n
 prettySapicAction (Null)  = "0"
 prettySapicAction (Rep)  = "!"
--- prettySapicAction (Rep)  = "!"
---                  | Ch_In_Pattern (Maybe SapicTerm) SapicTerm
---                  | Ch_In (Maybe SapicTerm) SapicTerm
---                  | Ch_Out (Maybe SapicTerm) SapicTerm
---                  | Insert SapicTerm SapicTerm
---                  | Delete SapicTerm 
---                  | Lock SapicTerm 
---                  | Unlock SapicTerm 
---                  | Lookup SapicTerm SapicTerm
+-- prettySapicAction (Ch_In (Just t1) t2 )  = "in(" ++ prettyLNTerm t1 ++ "," ++ prettyLNTerm t2 ++ ")"
+                 -- | Ch_In (Maybe SapicTerm) SapicTerm
+                 -- | Ch_Out (Maybe SapicTerm) SapicTerm
+                 -- | Insert SapicTerm SapicTerm
+                 -- | Delete SapicTerm 
+                 -- | Lock SapicTerm 
+                 -- | Unlock SapicTerm 
+                 -- | Event LNFact 
+                 -- | MSR ([LNFact], [LNFact], [LNFact])
 
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
