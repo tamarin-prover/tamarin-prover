@@ -79,8 +79,6 @@ module Theory.Text.Parser.Token (
   , opLongleftarrow
   , opLongrightarrow
 
-  , opParallel
-
   -- * Parentheses/quoting
   , braced
   , parens

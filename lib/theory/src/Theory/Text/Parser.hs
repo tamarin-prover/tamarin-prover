@@ -792,9 +792,9 @@ equations =
               fail $ "Not a correct equation: " ++ show rrule
 
 
- 
-println :: String -> ParsecT String u Identity ()          
-println str = traceShowM str
+-- used for debugging 
+-- println :: String -> ParsecT String u Identity ()          
+-- println str = traceShowM str
 
 -- parse a process definition (let block)
 processDef :: OpenTheory -> Parser ProcessDef
@@ -804,8 +804,11 @@ processDef thy= do
                 equalSign 
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p )
-                
-sapicAction :: Parser SapicAction -- TODO don't parse ! here
+
+-- | Parse a single sapic action, i.e., a thing that can appear before the ";"
+-- (This includes almost all items that are followed by one instead of two
+-- processes, the exception is replication)
+sapicAction :: Parser SapicAction
 sapicAction = try (do 
                         _ <- symbol "new"
                         s <- msgvar 
@@ -816,7 +819,7 @@ sapicAction = try (do
                         _ <- symbol "("
                         t <- msetterm llit
                         _ <- symbol ")"
-                        return (Ch_In Nothing t)
+                        return (ChIn Nothing t)
                    )
                <|> try (do 
                         _ <- symbol "in"
@@ -825,14 +828,14 @@ sapicAction = try (do
                         _ <- comma
                         t' <- msetterm llit
                         _ <- symbol ")"
-                        return (Ch_In (Just t) t')
+                        return (ChIn (Just t) t')
                    )
                <|> try (do 
                         _ <- symbol "out"
                         _ <- symbol "("
                         t <- msetterm llit
                         _ <- symbol ")"
-                        return (Ch_Out Nothing t)
+                        return (ChOut Nothing t)
                    )
                <|> try (do 
                         _ <- symbol "out"
@@ -841,7 +844,7 @@ sapicAction = try (do
                         _ <- comma
                         t' <- msetterm llit
                         _ <- symbol ")"
-                        return (Ch_Out (Just t) t')
+                        return (ChOut (Just t) t')
                    )
                <|> try (do 
                         _ <- symbol "insert"
@@ -865,7 +868,20 @@ sapicAction = try (do
                         t <- msetterm llit
                         return (Lock t)
                    )
-
+               <|> try (do 
+                        _ <- symbol "event"
+                        f <- fact llit
+                        return (Event f)
+                   )
+               <|> try (do 
+                        r <- genericRule
+                        return (MSR r)
+                   )
+-- | Parse a process. Process combinators like | are left-associative (not that
+-- it matters), so we had to split the grammar for processes in two, so that
+-- the precedence is expressed in a way that can be directly encoded in Parsec.
+-- This is the grammar, more or less. (Process definition is written down in
+-- a way that you can read of the precise definition from there
 -- process:
 --     | LP process RP                                  
 --     | LP process RP AT multterm                      
@@ -885,7 +901,6 @@ sapicAction = try (do
 --     | LET id_not_res EQ REPORT LP multterm RP IN process 
 --     | IDENTIFIER                                     
 --     | msr
-
 process :: OpenTheory -> Parser Process
 process thy= 
             -- left-associative NDC and parallel
@@ -907,7 +922,9 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
-                        return p)                                           -- TODO parser: multterm return
+                        return p)                                           
+                        -- TODO parser: multterm return
+                        -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
             <|>    try  (do                                                     -- parens parser
                         _ <- symbol "("
                         p <- process thy
@@ -933,6 +950,26 @@ actionprocess thy=
                         _ <- symbol "else"
                         q <- process thy
                         return (ProcessComb (Lookup t v) Nothing p q)
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        t1 <- msetterm llit
+                        _ <- opEqual
+                        t2 <- msetterm llit
+                        _ <- symbol "in"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (CondEq t1 t2  ) Nothing p q)
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        pr <- fact llit
+                        _ <- symbol "in"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (Cond pr) Nothing p q)
                    )
             <|> try ( do 
                         s <- sapicAction

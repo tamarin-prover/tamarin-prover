@@ -12,7 +12,7 @@
 --
 -- Data types for SAPIC processes in theories
 module Theory.Sapic (
-    Process(..)
+    Process
     , ProcessCombinator(..)
     , AnProcess(..)
     , SapicAction(..)
@@ -22,17 +22,15 @@ module Theory.Sapic (
 ) where
 
 import           Data.Binary
-import           Data.List
-import           Data.Maybe
-import           Data.Monoid                         (Sum(..))
-import qualified Data.Set                            as S
+-- import           Data.Monoid                         (Sum(..))
+-- import qualified Data.Set                            as S
 import           GHC.Generics                        (Generic)
-import           Extension.Data.Label                hiding (get)
-import qualified Extension.Data.Label                as L
+-- import           Extension.Data.Label                
+-- import qualified Extension.Data.Label                as L
 import           Control.Parallel.Strategies
 
 import           Theory.Model
-import           Term.LTerm
+-- import           Term.LTerm
 import           Theory.Text.Pretty
 
 -- | A process data structure
@@ -43,7 +41,6 @@ type SapicTerm = LNTerm
 -- | Actions are parts of the process that maybe connected with ";"
 data SapicAction = 
                    Null 
-                 | Par
                  | Rep
                  | New LVar
                  | ChIn (Maybe SapicTerm) SapicTerm
@@ -57,7 +54,9 @@ data SapicAction =
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | When the process tree splits, it is connected with one of these connectives
-data ProcessCombinator = Parallel | NDC | Cond LNFact | Lookup SapicTerm LVar deriving (Generic, NFData, Binary, Show)
+data ProcessCombinator = Parallel | NDC | Cond LNFact 
+        | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
+    deriving (Generic, NFData, Binary, Show, Eq)
 
 -- | The process tree is terminated with null processes, and either splits
 -- (parallel and other combinators) or describes a sequence of actions with
@@ -70,16 +69,16 @@ data AnProcess ann =
      deriving(Generic )
 instance (Ord ann) => Ord (AnProcess ann)
 deriving instance (NFData ann) => NFData (AnProcess ann)
-instance (Binary ann) => Binary (AnProcess ann)
-instance (Eq ann) => Eq (AnProcess ann)
-instance (Show ann) => Show (AnProcess ann)
+deriving instance (Binary ann) => Binary (AnProcess ann)
+deriving instance (Eq ann) => Eq (AnProcess ann)
+deriving instance (Show ann) => Show (AnProcess ann)
 
 -- | After parsing, the process is already annotated wth a list of process
 -- identifiers, describing the sequence of let P = ... constructs that were
 -- used to describe this. This will be helpful to recognise protocols roles and
 -- visualise them.
 type ProcessName = String -- String used in annotation to identify processes
-type ProcessAnnotation = [String]
+type ProcessAnnotation = [ProcessName]
 type Process = AnProcess (Maybe ProcessAnnotation)
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
@@ -120,9 +119,14 @@ prettySapicAction (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
 prettySapicAction (Event a )  = "unlock " ++ render (prettyLNFact a)
 prettySapicAction (MSR (p,a,c)) = render $ prettyRule p a c
 
+prettySapicComb :: ProcessCombinator -> [Char]
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb (Cond a) = "If "++ render (prettyLNFact a)
+prettySapicComb (Cond a) = "if "++ render (prettyLNFact a)
+prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
+                                    where p = render . prettyLNTerm
+prettySapicComb (Lookup t v) = "lookup "++ p t ++ "as" ++ show v
+                                    where p = render . prettyLNTerm
 
 -- helper function to generate output string 
 -- TODO At the moment, the process structure is not used to properly print parenthesis. Should do it, but then we cannot use pfoldMap anymore.
