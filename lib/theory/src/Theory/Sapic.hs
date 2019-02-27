@@ -36,54 +36,53 @@ import           Term.LTerm
 import           Theory.Text.Pretty
 
 -- | A process data structure
-data IfCondition = CondIdentifier                   
-    deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
+-- | In general, terms we use in the translation have logical veriables
 type SapicTerm = LNTerm
 
+-- | Actions are parts of the process that maybe connected with ";"
 data SapicAction = 
                    Null 
                  | Par
                  | Rep
                  | New LVar
-                 | Ch_In (Maybe SapicTerm) SapicTerm
-                 | Ch_Out (Maybe SapicTerm) SapicTerm
+                 | ChIn (Maybe SapicTerm) SapicTerm
+                 | ChOut (Maybe SapicTerm) SapicTerm
                  | Insert SapicTerm SapicTerm
                  | Delete SapicTerm 
                  | Lock SapicTerm 
                  | Unlock SapicTerm 
                  | Event LNFact 
                  | MSR ([LNFact], [LNFact], [LNFact])
-                 -- | Let of string
-    -- |   ...   TODO parser: extend
         deriving( Show, Eq, Ord, Generic, NFData, Binary )
-     
-data ProcessCombinator = Parallel | NDC | Cond LNFact | Lookup SapicTerm LVar deriving (Generic, NFData, Binary, Show)
--- data ProcessTag = NullP | Comb | SAction
 
+-- | When the process tree splits, it is connected with one of these connectives
+data ProcessCombinator = Parallel | NDC | Cond LNFact | Lookup SapicTerm LVar deriving (Generic, NFData, Binary, Show)
+
+-- | The process tree is terminated with null processes, and either splits
+-- (parallel and other combinators) or describes a sequence of actions with
+-- only one daughter
 data AnProcess ann =  
         ProcessNull ann
     |   ProcessComb ProcessCombinator ann (AnProcess ann) (AnProcess ann)
     -- |   ProcessIdentifier String ann 
     |   ProcessAction SapicAction ann (AnProcess ann)
      deriving(Generic )
-     -- deriving (Generic, Binary, NFData, Ord, Eq, Show)
--- deriving instance Generic (AnProcess ann)
--- deriving instance Binary ann => Binary (AnProcess ann)
--- deriving instance NFData ann => NFData (AnProcess ann)
--- deriving instance Ord ann => Ord (AnProcess ann)
--- deriving instance Eq ann => Eq (AnProcess ann)
--- deriving instance Show ann => Show (AnProcess ann)
 instance (Ord ann) => Ord (AnProcess ann)
 deriving instance (NFData ann) => NFData (AnProcess ann)
 instance (Binary ann) => Binary (AnProcess ann)
 instance (Eq ann) => Eq (AnProcess ann)
 instance (Show ann) => Show (AnProcess ann)
 
+-- | After parsing, the process is already annotated wth a list of process
+-- identifiers, describing the sequence of let P = ... constructs that were
+-- used to describe this. This will be helpful to recognise protocols roles and
+-- visualise them.
 type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [String]
 type Process = AnProcess (Maybe ProcessAnnotation)
 
+-- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process
 paddAnn (ProcessNull Nothing) ann' = ProcessNull (Just ann')
 paddAnn (ProcessComb c Nothing pl pr ) ann' = ProcessComb c (Just ann')  pl pr 
@@ -92,6 +91,7 @@ paddAnn (ProcessNull (Just ann)) ann' = ProcessNull $ Just $ ann `mappend` ann'
 paddAnn (ProcessComb c (Just ann) pl pr ) ann' = ProcessComb c (Just $ ann `mappend` ann')  pl pr 
 paddAnn (ProcessAction a (Just ann) p ) ann' = ProcessAction a (Just $ ann `mappend` ann')  p
 
+-- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (AnProcess ann -> a) -> AnProcess ann -> a
 pfoldMap f (ProcessNull an) = f (ProcessNull an)
 pfoldMap f (ProcessComb c an pl pr)  = 
@@ -105,27 +105,27 @@ pfoldMap f (ProcessAction a an p)   =
         `mappend` 
         pfoldMap f p
      
-prettySapicAction :: SapicAction  -> String                                     -- TODO parser: extend if changes on SapicAction data structure
+prettySapicAction :: SapicAction  -> String
 prettySapicAction (New n) = "new "++ show n
 prettySapicAction Null  = "0"
 prettySapicAction Rep  = "!"
-prettySapicAction (Ch_In (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
-prettySapicAction (Ch_In Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"
-prettySapicAction (Ch_Out (Just t1) t2 )  = "out(" ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2) ++ ")"
-prettySapicAction (Ch_Out Nothing t2 )  = "out(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (ChIn (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
+prettySapicAction (ChIn Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (ChOut (Just t1) t2 )  = "out(" ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction (ChOut Nothing t2 )  = "out(" ++ render (prettyLNTerm t2) ++ ")"
 prettySapicAction (Insert t1 t2)  = "insert " ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2)
 prettySapicAction (Delete t )  = "delete " ++ render (prettyLNTerm t)
 prettySapicAction (Lock t )  = "lock " ++ render (prettyLNTerm t)
 prettySapicAction (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
-                 -- | Event LNFact 
--- prettySapicAction (MSR rule) = prettyRule $ uncurry rule
-                 -- | MSR ([LNFact], [LNFact], [LNFact])
+prettySapicAction (Event a )  = "unlock " ++ render (prettyLNFact a)
+prettySapicAction (MSR (p,a,c)) = render $ prettyRule p a c
 
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb (Cond a) = "If "
+prettySapicComb (Cond a) = "If "++ render (prettyLNFact a)
 
--- help function to generate output string 
+-- helper function to generate output string 
+-- TODO At the moment, the process structure is not used to properly print parenthesis. Should do it, but then we cannot use pfoldMap anymore.
 prettySapic :: AnProcess ann -> String
 prettySapic = pfoldMap f 
     where f (ProcessNull _) = "0"

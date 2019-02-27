@@ -1036,6 +1036,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
+prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
 prettyRule prems acts concls=
     (sep [ nest 1 $ ppFactsList prems
                 , if null acts
