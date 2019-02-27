@@ -956,7 +956,7 @@ actionprocess thy=
                         t1 <- msetterm llit
                         _ <- opEqual
                         t2 <- msetterm llit
-                        _ <- symbol "in"
+                        _ <- symbol "then"
                         p <- process thy
                         _ <- symbol "else"
                         q <- process thy
@@ -965,7 +965,7 @@ actionprocess thy=
             <|> try (do 
                         _ <- symbol "if"
                         pr <- fact llit
-                        _ <- symbol "in"
+                        _ <- symbol "then"
                         p <- process thy
                         _ <- symbol "else"
                         q <- process thy
