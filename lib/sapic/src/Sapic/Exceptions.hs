@@ -10,25 +10,59 @@
 -- Translation from Theories with Processes to mrs
 
 module Sapic.Exceptions (
-    translate
+    SapicException(..)
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
--- import Sapic.Exceptions
+import Control.Exception
+import Data.Typeable
+import Text.Parsec (ParseError)
 
-TODO Lookup exceptions and see how we do this.
+data SapicException = SomethingBad | SapicParseError ParseError 
+    deriving Typeable
+instance Show SapicException where
+    show SomethingBad = "something bad happened"
+    show (SapicParseError err) = "Parser error:" ++ show err
+-- instance Exception SapicException
+instance Exception SapicException 
 
-exception VerdictNotWellFormed of string
+-- newtype SapicException = forall e . Exception e => SapicException e
+-- instance Show SapicException where
+--     show (SapicException e) = show e
 
-exception InternalRepresentationError of string
-exception NotImplementedError of string
+-- instance Exception SapicException
 
-exception TranslationError of string
-exception UnAnnotatedLock of string
-exception ProcessNotWellformed of string
-exception NoNextState
-exception UnassignedTerm
-exception InvalidPosition of string
-exception NotInRange of string
-exception ImplementationError of string
+-- SapicExceptionToException :: Exception e => e -> SomeException
+-- SapicExceptionToException = toException . SapicException
+
+-- SapicExceptionFromException :: Exception e => SomeException -> Maybe e
+-- SapicExceptionFromException x = do
+--     SapicException a <- fromException x
+--     cast a
+
+
+-- data SomethingBad = SomethingBad
+--     deriving Typeable
+-- instance Show SomethingBad where
+--     show SomethingBad = "something bad happened"
+-- -- instance Exception SomethingBad
+-- instance Exception SomethingBad where
+--     toException   = SapicExceptionToException
+--     fromException = SapicExceptionFromException
+
+-- TODO Lookup exceptions and see how we do this.
+
+-- exception VerdictNotWellFormed of string
+
+-- exception InternalRepresentationError of string
+-- exception NotImplementedError of string
+
+-- exception TranslationError of string
+-- exception UnAnnotatedLock of string
+-- exception ProcessNotWellformed of string
+-- exception NoNextState
+-- exception UnassignedTerm
+-- exception InvalidPosition of string
+-- exception NotInRange of string
+-- exception ImplementationError of string
 

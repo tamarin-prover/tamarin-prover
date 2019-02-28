@@ -66,7 +66,9 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 
+import           Control.Exception
 import           Sapic
+import           Sapic.Exceptions
 
 import           Main.Console
 import           Main.Environment
@@ -132,7 +134,10 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as)
+loadOpenThy as inFile =  do
+    thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
+    nthy <- Sapic.translate thy
+    return nthy
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -206,28 +211,27 @@ loadClosedDiffThyString as input =
 loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
 loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as)
 
--- | Translate  processes in open theory to msrs and transform lemmas accordingly (former SAPIC)
-loadAndTranslateOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
-loadAndTranslateOpenThyString as input = 
-    Sapic.translate ot
-    where 
-        ot = parseOpenTheoryString (diff as ++ defines as ++ quitOnWarning as) input
-
 -- | Load an open theory from a string.
 loadOpenDiffThyString :: Arguments -> String -> Either ParseError OpenDiffTheory
 loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ quitOnWarning as)
 
--- | Load a close theory and only report on well-formedness errors.
+-- | Load a close theory and only report on well-formedness errors or translation errors
 reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
 reportOnClosedThyStringWellformedness as input = do
-    case loadAndTranslateOpenThyString as input of
-      Left  err -> return $ "parse error: " ++ show err
-      Right thy ->
-        case checkWellformedness thy of
-          []     -> return ""
-          report -> do
-            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
-            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+    case loadOpenThyString as input of
+      Left  err   -> return $ "parse error: " ++ show err
+      Right thy -> do
+            thy' <- Sapic.translate thy
+            case checkWellformedness thy' of
+                  []     -> return ""
+                  report -> do
+                    if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+                    return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+    -- where
+    --     thy = try () handler 
+    --     out = catch (loadAndTranslateOpenThyString as input) handler 
+    --     handler (SomethingBad) = return $ "Caught exception: " ++ displayException SomethingBad
+    --     handler (SapicParseError) = return $ show err
 
 -- | Load a closed diff theory and report on well-formedness errors.
 reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String

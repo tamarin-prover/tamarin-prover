@@ -94,15 +94,8 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = if ".sapic" `L.isSuffixOf` file 
-    then 
-       do
-          callCommand $ "sapic " ++ file ++ " > " ++ spthyfile
-          parseFile (theory flags) spthyfile
-    else
-          parseFile (theory flags) spthyfile       
-    where
-       spthyfile = (take ((length file) - 6) file) ++ ".spthy"
+parseOpenTheory flags file = do 
+          parseFile (theory flags) file
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
