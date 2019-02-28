@@ -16,14 +16,20 @@ import Data.Maybe
 import Data.Foldable
 import Control.Exception
 import Sapic.Exceptions
+import Theory
 
--- translate x = x
--- translate (Left x) = (Left x)
--- translate (Left err) = throw (SapicParseError err) 
-translate th = throw SomethingBad
--- translate (Right th) = out
---     where
-        -- processes = theoryProcesses th -- TODO give warning if more than one process
+
+translate th = case theoryProcesses th of
+      [] -> do return th
+      [x] -> do return th
+      _ -> throw SomethingBad
+
+-- do
+    -- p <-  onlyOneProcess th
+    -- -- thy' <- annotate_lock 
+    -- return th
+    -- where
+    --     onlyOneProcess thy =            
         -- isprogressset = False -- TODO implement parser for option and get this
         -- an_proc = processes -- TODO annotate locks
         -- -- msrs = foldr (++) [] (map msrFromProcess processes)

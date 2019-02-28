@@ -16,16 +16,28 @@ module Sapic.Exceptions (
 -- import Data.Foldable
 import Control.Exception
 import Data.Typeable
-import Text.Parsec (ParseError)
+-- import Text.Parsec (ParseError)
 
-data SapicException = SomethingBad | SapicParseError ParseError 
+data SapicException = SomethingBad
+                    | VerdictNotWellFormed String
+                    | InternalRepresentationError String
+                    | NotImplementedError String
+                    | TranslationError String
+                    | UnAnnotatedLock String
+                    | ProcessNotWellformed String
+                    | NoNextState
+                    | UnassignedTerm
+                    | InvalidPosition String
+                    | NotInRange String
+                    | ImplementationError String
     deriving Typeable
 instance Show SapicException where
     show SomethingBad = "something bad happened"
-    show (SapicParseError err) = "Parser error:" ++ show err
+    -- show (SapicParseError err) = "Parser error:" ++ show err
 -- instance Exception SapicException
 instance Exception SapicException 
 
+-- TODO notes: this is how to do hierarchical exceptions
 -- newtype SapicException = forall e . Exception e => SapicException e
 -- instance Show SapicException where
 --     show (SapicException e) = show e
@@ -49,20 +61,4 @@ instance Exception SapicException
 -- instance Exception SomethingBad where
 --     toException   = SapicExceptionToException
 --     fromException = SapicExceptionFromException
-
--- TODO Lookup exceptions and see how we do this.
-
--- exception VerdictNotWellFormed of string
-
--- exception InternalRepresentationError of string
--- exception NotImplementedError of string
-
--- exception TranslationError of string
--- exception UnAnnotatedLock of string
--- exception ProcessNotWellformed of string
--- exception NoNextState
--- exception UnassignedTerm
--- exception InvalidPosition of string
--- exception NotInRange of string
--- exception ImplementationError of string
 

@@ -73,7 +73,7 @@ import           Sapic.Exceptions
 import           Main.Console
 import           Main.Environment
 
-import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec                hiding ((<|>),try)
 
 
 ------------------------------------------------------------------------------
@@ -136,8 +136,12 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    nthy <- Sapic.translate thy
+    nthy <- catch (Sapic.translate thy) (handler thy)
     return nthy
+    where
+        handler thy SomethingBad = do 
+            putStrLn $ show SomethingBad
+            return thy
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
