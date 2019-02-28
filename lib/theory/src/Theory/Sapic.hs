@@ -17,6 +17,7 @@ module Theory.Sapic (
     , AnProcess(..)
     , SapicAction(..)
     , paddAnn
+    , pfoldMap
     , prettySapic
     , prettySapicAction
 ) where
@@ -79,16 +80,13 @@ deriving instance (Show ann) => Show (AnProcess ann)
 -- visualise them.
 type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [ProcessName]
-type Process = AnProcess (Maybe ProcessAnnotation)
+type Process = AnProcess ProcessAnnotation
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process
-paddAnn (ProcessNull Nothing) ann' = ProcessNull (Just ann')
-paddAnn (ProcessComb c Nothing pl pr ) ann' = ProcessComb c (Just ann')  pl pr 
-paddAnn (ProcessAction a Nothing p ) ann' = ProcessAction a (Just ann')  p
-paddAnn (ProcessNull (Just ann)) ann' = ProcessNull $ Just $ ann `mappend` ann'
-paddAnn (ProcessComb c (Just ann) pl pr ) ann' = ProcessComb c (Just $ ann `mappend` ann')  pl pr 
-paddAnn (ProcessAction a (Just ann) p ) ann' = ProcessAction a (Just $ ann `mappend` ann')  p
+paddAnn (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
+paddAnn (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr 
+paddAnn (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p
 
 -- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (AnProcess ann -> a) -> AnProcess ann -> a
@@ -103,6 +101,7 @@ pfoldMap f (ProcessAction a an p)   =
         f (ProcessAction a an p)
         `mappend` 
         pfoldMap f p
+
      
 prettySapicAction :: SapicAction  -> String
 prettySapicAction (New n) = "new "++ show n

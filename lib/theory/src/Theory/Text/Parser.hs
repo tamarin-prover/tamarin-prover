@@ -904,11 +904,11 @@ process thy=
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
                   try  (chainl1 (actionprocess thy) (
-                             do { _ <- opNDC; return (ProcessComb NDC Nothing)}
-                         <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel Nothing)}
-                         <|> do { _ <- try opParallel; return (ProcessComb Parallel Nothing)}
+                             do { _ <- opNDC; return (ProcessComb NDC mempty)}
+                         <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
+                         <|> do { _ <- try opParallel; return (ProcessComb Parallel mempty)}
                   ))
-            -- <|>   try  (chainl1 ($actionprocess thy) (ProcessComb Parallel Nothing  <$ (opParallelDepr <|> opParallel )))
+            -- <|>   try  (chainl1 ($actionprocess thy) (ProcessComb Parallel mempty  <$ (opParallelDepr <|> opParallel )))
             <|>   try (do                                                  -- parens parser + at multterm
                         _ <- symbol "("
                         p <- actionprocess thy
@@ -932,7 +932,7 @@ actionprocess thy=
             try (do                                                    -- parallel parser
                         _ <- symbol "!"
                         p <- process thy
-                        return (ProcessAction Rep Nothing p))
+                        return (ProcessAction Rep mempty p))
             <|> try (do 
                         _ <- symbol "lookup"
                         t <- msetterm llit
@@ -942,7 +942,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol "else"
                         q <- process thy
-                        return (ProcessComb (Lookup t v) Nothing p q)
+                        return (ProcessComb (Lookup t v) mempty p q)
                    )
             <|> try (do 
                         _ <- symbol "if"
@@ -953,7 +953,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol "else"
                         q <- process thy
-                        return (ProcessComb (CondEq t1 t2  ) Nothing p q)
+                        return (ProcessComb (CondEq t1 t2  ) mempty p q)
                    )
             <|> try (do 
                         _ <- symbol "if"
@@ -962,19 +962,19 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol "else"
                         q <- process thy
-                        return (ProcessComb (Cond pr) Nothing p q)
+                        return (ProcessComb (Cond pr) mempty p q)
                    )
             <|> try ( do 
                         s <- sapicAction
                         _ <- opSeq
                         p <- process thy
-                        return (ProcessAction s Nothing p))
+                        return (ProcessAction s mempty p))
             <|> try ( do 
                         s <- sapicAction
-                        return (ProcessAction s Nothing (ProcessNull Nothing)))
+                        return (ProcessAction s mempty (ProcessNull mempty)))
             <|> try (do                                                     -- null process
                         _ <- opNull 
-                        return (ProcessNull Nothing) )
+                        return (ProcessNull mempty) )
             <|> try   (do                                                     -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
