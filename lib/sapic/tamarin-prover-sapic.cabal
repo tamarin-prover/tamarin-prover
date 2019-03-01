@@ -52,6 +52,7 @@ library
       , text
       , transformers
       , uniplate
+      , exceptions
 
       , tamarin-prover-utils
       , tamarin-prover-term

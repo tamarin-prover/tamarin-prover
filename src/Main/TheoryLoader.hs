@@ -136,12 +136,9 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    nthy <- catch (Sapic.translate thy) (handler thy)
-    return nthy
+    thy' <-  Sapic.translate thy
+    return thy'
     where
-        handler thy SomethingBad = do 
-            putStrLn $ show SomethingBad
-            return thy
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory

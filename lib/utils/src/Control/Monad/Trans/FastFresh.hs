@@ -40,6 +40,7 @@ import Control.Monad.Identity
 import Control.Monad.State.Strict
 import Control.Monad.Except
 import Control.Monad.Reader
+import Control.Monad.Catch
 
 ------------------------------------------------------------------------------
 -- FreshT monad transformer
@@ -96,6 +97,9 @@ scopeFreshness scoped = do
 instance MonadError e m => MonadError e (FreshT m) where
     throwError     = lift . throwError
     catchError m h = FreshT $ catchError (unFreshT m) (unFreshT . h)
+
+instance MonadThrow m => MonadThrow (FreshT m) where
+    throwM     = lift . throwM
 
 instance MonadReader r m => MonadReader r (FreshT m) where
     ask       = lift ask

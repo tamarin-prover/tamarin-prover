@@ -16,6 +16,7 @@ module Theory.Sapic (
     , ProcessCombinator(..)
     , AnProcess(..)
     , SapicAction(..)
+    , SapicTerm
     , paddAnn
     , pfoldMap
     , prettySapic
@@ -73,6 +74,8 @@ deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
+deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
+deriving instance (Monoid ann) => Monoid (AnProcess ann)
 
 -- | After parsing, the process is already annotated wth a list of process
 -- identifiers, describing the sequence of let P = ... constructs that were

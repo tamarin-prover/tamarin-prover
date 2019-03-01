@@ -10,32 +10,38 @@
 -- Translation from Theories with Processes to mrs
 
 module Sapic.Exceptions (
+    WFLockTag(..),
     SapicException(..)
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
 import Control.Exception
 import Data.Typeable
+import Theory.Sapic
 -- import Text.Parsec (ParseError)
 
-data SapicException = SomethingBad
+data WFLockTag = WFRep | WFPar deriving (Show)
+
+data WFerrror a = WFLock WFLockTag (AnProcess a) | Other String
+
+data SapicException a = SomethingBad
                     | VerdictNotWellFormed String
                     | InternalRepresentationError String
                     | NotImplementedError String
                     | TranslationError String
                     | UnAnnotatedLock String
-                    | ProcessNotWellformed String
+                    | ProcessNotWellformed (WFerrror a)
                     | NoNextState
                     | UnassignedTerm
                     | InvalidPosition String
                     | NotInRange String
                     | ImplementationError String
-    deriving Typeable
-instance Show SapicException where
+    deriving (Typeable)
+instance Show (SapicException a) where
     show SomethingBad = "something bad happened"
     -- show (SapicParseError err) = "Parser error:" ++ show err
 -- instance Exception SapicException
-instance Exception SapicException 
+instance Typeable a => Exception (SapicException a)
 
 -- TODO notes: this is how to do hierarchical exceptions
 -- newtype SapicException = forall e . Exception e => SapicException e
