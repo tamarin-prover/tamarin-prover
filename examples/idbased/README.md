@@ -1,3 +1,8 @@
+Companion of the paper:
+	Symbolic Analysis of Identity-Based Protocols.
+	David Basin, Lucca Hirschi, Ralf Sasse.
+	CathyFest 2019, LNCS volume (TBD). Springer, 2019.
+
 ## Reproducibility
 
 Our analyses can be reproduced. We used Tamarin v1.5.0, compiled from develop@0df3d09fca76fd9d ([https://github.com/tamarin-prover/tamarin-prover/commit/0df3d09fca76fd9d340bd37b0151d71dea6ad106](commit)); latest version as of writing. The commands to use are:
