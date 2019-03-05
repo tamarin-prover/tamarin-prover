@@ -1,0 +1,170 @@
+theory BP_PRECISE_IBE_toyExample
+begin
+
+/*
+ * Source: Toy Example showing our precise IBE modeling in practice (following the Boneh's and Franklin's scheme)
+ * Author: Lucca Hirschi & Ralf Sasse
+ * Date: November 2018
+ *
+ * Status: WIP
+ * Protocol: Alice --{<Alice,Bob,challenge>}_Bob-->    Bob
+ *           Bob   --{<challenge,'response'>}_Alice--> Alice
+ */
+
+
+builtins: bilinear-pairing, hashing, xor
+functions: h1/1, h2/1
+
+/**** Setup Key Escrow [same for IBS] ****/
+// Create the trusted entity holding the master private key (only once)
+rule create_IB_PrivateKeyGenerator:
+  let Master_pk = pmult(~IBMasterPrivateKey, 'P')  // master public key
+  in
+  [ Fr(~IBMasterPrivateKey) ]
+--[ Once('PKG') ]->  // ['PKG' can be replaced by a different name or $PKG in case there are multiple PKGs]
+  [ !IB_MasterPrivateKey('PKG', ~IBMasterPrivateKey)
+  , Out(<'PKG', 'Master_pk'>) // the attacker learns the master pulic key
+  ]
+
+
+/**** Initialization rules for identities [same for IBS] ****/
+rule create_IB_identity:
+ let Master_pk = pmult(~IBMasterPrivateKey, 'P')
+     Qid = h1($A)
+     User_sk = pmult(~IBMasterPrivateKey, Qid)         // 's.Qid'
+  in
+  [ !IB_MasterPrivateKey('PKG', ~IBMasterPrivateKey)
+  , Fr(~id)
+  ]
+--[ CreateId($A, <Master_pk, User_sk>) ]->
+  [ !IB_Identity(~id, $A, Master_pk, User_sk) ]
+
+
+/**** Reveal rules modelling compromise scenarios [same for IBS] ****/
+// Reveals the identity based master private key
+rule Reveal_IB_MasterPrivateKey:
+  [ !IB_MasterPrivateKey(PKG, IBMasterPrivateKey) ] --[ Reveal('MASTER_KEY',PKG) ]-> [ Out(IBMasterPrivateKey) ]
+
+// Reveals the identity based private key of an agent A
+rule Reveal_IB_privkey:
+  [ !IB_Identity(~id, A, Master_pk, User_sk) ] --[ Reveal('USER_KEY',A) ]-> [ Out(User_sk) ]
+
+
+/**** Protocol rules [almost the same for [IBS] ****/
+rule Alice_send:
+let plaintext = <'Alice', 'Bob', ~challenge>
+    Qbob = h1('Bob')
+    U = pmult(~r, 'P')
+    V = h2(em(Qbob, Master_pk)^(~r)) XOR plaintext  // [warning: use '^' here as pmult does not take points from G' as argument]
+    mOut = <U,V>
+  in
+  [ !IB_Identity(~id, 'Alice', Master_pk, User_sk)
+  , Fr(~challenge)
+  , Fr(~r)
+  ]
+  --[ Secret(~challenge)
+    , Step()
+    ]->
+  [ Out(mOut)
+  , St_Alice_0(~id, Master_pk, User_sk, ~challenge)
+  ]
+
+rule Bob_recv:
+  let h2m = h2(em(User_sk, U))
+      plaintext = V XOR h2m
+      sender = fst(plaintext)
+      recipient = fst(snd(plaintext))
+      challenge = snd(snd(plaintext))
+      pOut = <challenge, 'response'>
+      Qalice = h1('Alice')
+      Uout = pmult(~r, 'P')
+      Vout = h2(em(Qalice, Master_pk)^(~r)) XOR pOut  // [warning: use '^' here as pmult does not take points from G' as argument]      
+      mOut = <Uout,Vout>
+  in
+  [ !IB_Identity(~id, 'Bob', Master_pk, User_sk)
+  , In(<U,V>)
+  , Fr(~r)
+  ]
+--[ Eq(<sender,recipient>,<'Alice','Bob'>)
+  , Running('Bob', 'Alice', <'Responder', 'Initiator', challenge>)
+  ]->
+  [ Out(mOut) ]
+
+
+rule Alice_recv:
+  let h2m = h2(em(User_sk, U))
+      plaintext = V XOR h2m
+  in
+  [ St_Alice_0(~id, Master_pk, User_sk, ~challenge)
+  , In(<U,V>)
+  ]
+--[ Eq(plaintext, <~challenge, 'response'>)
+  , Commit('Alice', 'Bob', <'Initiator', 'Responder', ~challenge>)
+  , Full()
+  ]->
+  [ ]
+
+/**** Restrictions ****/
+restriction Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+restriction Once:
+  "All X #i #j. Once(X)@i & Once(X)@j ==> #i = #j"
+
+
+/**** Lemmas ****/
+// [HOLDS] Challenge secrecy
+lemma secrecy_session_key [use_induction]:
+  "All s #i. 
+    Secret(s) @i ==> (
+        not (Ex #j. K(s)@j)
+      | (Ex #l. Reveal('USER_KEY','Alice')@l)
+      | (Ex #l. Reveal('USER_KEY','Bob')@l)
+      | (Ex #l. Reveal('MASTER_KEY','PKG')@l))"
+
+lemma secrecy_session_key_noInd:
+  "All s #i. 
+    Secret(s) @i ==> (
+        not (Ex #j. K(s)@j)
+      | (Ex #l. Reveal('USER_KEY','Alice')@l)
+      | (Ex #l. Reveal('USER_KEY','Bob')@l)
+      | (Ex #l. Reveal('MASTER_KEY','PKG')@l))"
+
+// [HOLDS] Non-injective agreement from Initiator with compromised Alice
+lemma nonInjectiveAgreementChallenge_Initiator_Acompro_noInd:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #r. Reveal('USER_KEY', b)@r)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [FAIL] Non-injective agreement from Initiator with compromised Alice and Bob
+lemma nonInjectiveAgreementChallenge_Initiator_ABcompro_noInd:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [HOLDS] Non-injective agreement from Initiator with compromised Alice
+lemma nonInjectiveAgreementChallenge_Initiator_Acompro [use_induction]:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #r. Reveal('USER_KEY', b)@r)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [FAIL] Non-injective agreement from Initiator with compromised Alice and Bob
+lemma nonInjectiveAgreementChallenge_Initiator_ABcompro [use_induction]:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+
+// [HOLDS] Sanity check
+lemma executability_lemma:
+  exists-trace
+  " Ex #i. Full()@i
+  & not(Ex X Y #r. Reveal(X, Y)@r)"
+
+end

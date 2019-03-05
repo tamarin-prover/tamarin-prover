@@ -1,0 +1,139 @@
+theory BP_ABSTRACT_IBS_toyExample
+begin
+
+/*
+ * Source: Toy Example showing our abstract IBS modeling in practice
+ * Author: Lucca Hirschi & Ralf Sasse
+ * Date: November 2018
+ *
+ * Status: Automatic proofs/attacks of non-injective agreement from initiator/responder + compromised scenarios.
+ * Protocol: Alice --{<Alice,Bob,challenge>}_Alice-->    Bob
+ *           Bob   --{challenge}_Bob--> Alice
+ */
+
+
+functions: IBPriv/2, IBPub/2, GetIBMasterPublicKey/1,  // [same for IBE]
+           idsign/2, idverify/3, true/0                // [almost the same for IBE]
+equations: idverify(idsign(m,IBPriv(A, IBMasterPrivateKey)),  // [almost the same for IBE]
+                    m,
+		    IBPub(A, GetIBMasterPublicKey(IBMasterPrivateKey)))
+           = true
+
+/**** Setup Key Escrow [same for IBE] ****/
+// Create the trusted entity holding the master private key (only once)
+rule create_IB_PrivateKeyGenerator:
+  [ Fr(~IBMasterPrivateKey) ]
+  --[ Once('PKG') ]->  // ['PKG' can be replaced by a different name or $PKG in case there are multiple PKGs]
+  [ !IB_MasterPrivateKey('PKG', ~IBMasterPrivateKey)
+  , Out(<'PKG', GetIBMasterPublicKey(~IBMasterPrivateKey)>) // the attacker learns the master pulic key
+  ]
+
+
+/**** Initialization rules for identities [same for IBE] ****/
+rule create_IB_identity:
+  let Master_pk = GetIBMasterPublicKey(IBMasterPrivateKey)  // master public key
+      User_sk = IBPriv($A, IBMasterPrivateKey)              // user secret key
+  in
+  [ !IB_MasterPrivateKey('PKG', IBMasterPrivateKey)
+  , Fr(~id)
+  ]
+  --[ CreateId($A, <Master_pk, User_sk>) ]->
+  [ !IB_Identity(~id, $A, Master_pk, User_sk) ]
+
+
+/**** Reveal rules modelling compromise scenarios [same for IBE] ****/
+// Reveals the identity based master private key
+rule Reveal_IB_MasterPrivateKey:
+  [ !IB_MasterPrivateKey(PKG, IBMasterPrivateKey) ] --[ Reveal('MASTER_KEY',PKG) ]-> [ Out(IBMasterPrivateKey) ]
+
+// Reveals the identity based private key of an agent A
+rule Reveal_IB_privkey:
+  [ !IB_Identity(~id, A, Master_pk, User_sk) ] --[ Reveal('USER_KEY',A) ]-> [ Out(User_sk) ]
+
+
+/**** Protocol rules [almost the same for [IBE] ****/
+rule Alice_send:
+let m = <'Alice', 'Bob', ~challenge>
+    mOut = <idsign(m, User_sk),m>
+  in
+  [ !IB_Identity(~id, 'Alice', Master_pk, User_sk)
+  , Fr(~challenge)
+  ]
+--[ Running('Alice', 'Bob', <'Initiator', 'Responder', ~challenge>)
+  ]->
+  [ Out(mOut)
+  , St_Alice_0(~id, Master_pk, User_sk, ~challenge)
+  ]
+
+rule Bob_recv:
+  let aliceKey = IBPub('Alice', Master_pk)
+      m = <'Alice','Bob',challenge>
+      mOut = <idsign(challenge, User_sk), challenge>
+  in
+  [ !IB_Identity(~id, 'Bob', Master_pk, User_sk)
+  , In(<s, <'Alice','Bob',challenge>>)
+  ]
+--[ Eq(true, idverify(s,m,aliceKey))
+  , Running('Bob', 'Alice', <'Responder', 'Initiator', challenge>)
+  , Commit('Bob', 'Alice', <'Responder', 'Initiator', challenge>)
+  ]->
+  [ Out(mOut) ]
+
+rule Alice_recv:
+  let bobKey = IBPub('Bob', Master_pk)
+  in
+  [ St_Alice_0(~id, Master_pk, User_sk, ~challenge)
+  , In(<s,~challenge>)
+  ]
+--[ Eq(true, idverify(s,~challenge,bobKey))
+  , Commit('Alice', 'Bob', <'Initiator', 'Responder', ~challenge>)
+  , Full()
+  ]->
+  [ ]
+
+/**** Restrictions ****/
+restriction Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+restriction Once:
+  "All X #i #j. Once(X)@i & Once(X)@j ==> #i = #j"
+
+
+/**** Lemmas ****/
+// [HOLDS] Non-injective agreement from Initiator with compromised Alice
+lemma nonInjectiveAgreementChallenge_Initiator_Acompro:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #r. Reveal('USER_KEY', b)@r)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [FAIL] Non-injective agreement from Initiator with compromised Alice and Bob
+lemma nonInjectiveAgreementChallenge_Initiator_ABcompro:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [HOLDS] Non-injective agreement from Responder with compromised Bob
+lemma nonInjectiveAgreementChallenge_Responder_Bcompro:
+  "All a b t #i. 
+    Commit(b,a,<'Responder','Initiator',t>) @i
+    ==> (Ex t #j. Running(a,b,<'Initiator','Responder',t>) @j)
+        | (Ex #r. Reveal('USER_KEY', a)@r)
+        | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [FAIL] Non-injective agreement from Responder with compromised Alice and Bob
+lemma nonInjectiveAgreementChallenge_Responder_BAcompro:
+  "All a b t #i. 
+    Commit(b,a,<'Responder','Initiator',t>) @i
+    ==> (Ex #j. Running(a,b,<'Initiator','Responder',t>) @j)
+      | (Ex #j. Reveal('MASTER_KEY', 'PKG')@j)"
+
+// [HOLDS] Sanity check
+lemma executability_lemma:
+  exists-trace
+  " Ex #i. Full()@i
+  & not(Ex X Y #r. Reveal(X, Y)@r)"
+
+end
