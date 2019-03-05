@@ -83,7 +83,7 @@ theoryLoadFlags =
   [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
       "Attempt to prove a lemma "
 
-  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
+  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
 
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
@@ -348,11 +348,12 @@ constructAutoProver as =
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
-      Nothing     -> CutDFS
-      Just "dfs"  -> CutDFS
-      Just "none" -> CutNothing
-      Just "bfs"  -> CutBFS
-      Just other  -> error $ "unknown stop-on-trace method: " ++ other
+      Nothing       -> CutDFS
+      Just "dfs"    -> CutDFS
+      Just "none"   -> CutNothing
+      Just "bfs"    -> CutBFS
+      Just "seqdfs" -> CutSingleThreadDFS
+      Just other    -> error $ "unknown stop-on-trace method: " ++ other
 
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).
@@ -382,11 +383,12 @@ constructAutoDiffProver as =
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
-      Nothing     -> CutDFS
-      Just "dfs"  -> CutDFS
-      Just "none" -> CutNothing
-      Just "bfs"  -> CutBFS
-      Just other  -> error $ "unknown stop-on-trace method: " ++ other
+      Nothing       -> CutDFS
+      Just "dfs"    -> CutDFS
+      Just "none"   -> CutNothing
+      Just "bfs"    -> CutBFS
+      Just "seqdfs" -> CutSingleThreadDFS
+      Just other    -> error $ "unknown stop-on-trace method: " ++ other
 
 
 ------------------------------------------------------------------------------
