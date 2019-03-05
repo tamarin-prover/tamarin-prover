@@ -5,8 +5,6 @@ theory injectivity begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 /* looping facts with injective instances: Inj/1 */
 
 rule (modulo E) Init:
@@ -80,7 +78,7 @@ analyzing: examples/features//injectivity/injectivity.spthy
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.076326s
+  processing time: 0.040382912s
   injectivity_check (all-traces): verified (9 steps)
 
 ------------------------------------------------------------------------------
@@ -91,7 +89,7 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.076326s
+  processing time: 0.040382912s
   injectivity_check (all-traces): verified (9 steps)
 
 ==============================================================================

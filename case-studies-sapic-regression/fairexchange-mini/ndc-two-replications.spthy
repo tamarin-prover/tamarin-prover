@@ -6,38 +6,35 @@ equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
 section{* small example for progression function *}
 
 builtins: signing, hashing
+rule Init_: //Init 
+ [ ] --[Init()]-> [State_()]
 
-heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
+rule MessageID_rule_: //MessageID-rule 
+ [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule Init_: // [process=top-level] Init 
- [] --[Init()]-> [State_()]
+rule Rep_0_1: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_11()]
 
-rule MessageID_rule_: // [process=top-level] MessageID-rule 
- [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+rule Rep_1_1: //Rep, 1 
+ [ Fr(~prog_11), !Semistate_11()] --[ProgressFrom_11(~prog_11)]-> [State_11(~prog_11)]
 
-rule Rep_0_1: // [process=top-level] Rep, 0 
- [State_()] --[]-> [!Semistate_11()]
+rule event_A_11: //event A() 
+ [ State_11(~prog_11)] --[ProgressTo_111(~prog_11), Event(), A()]-> [State_111(~prog_11)]
 
-rule Rep_1_1: // [process=top-level] Rep, 1 
- [Fr(~prog_11), !Semistate_11()] --[ProgressFrom_11(~prog_11)]-> [State_11(~prog_11)]
+rule Zero_111: //Zero 
+ [ State_111(~prog_11)] --[]-> []
 
-rule event_A_11: // [process=top-level] event A() 
- [State_11(~prog_11)] --[ProgressTo_111(~prog_11), Event(), A()]-> [State_111(~prog_11)]
+rule Rep_0_2: //Rep, 0 
+ [ State_()] --[]-> [!Semistate_21()]
 
-rule Zero_111: // [process=top-level] Zero 
- [State_111(~prog_11)] --[]-> []
+rule Rep_1_2: //Rep, 1 
+ [ Fr(~prog_21), !Semistate_21()] --[ProgressFrom_21(~prog_21)]-> [State_21(~prog_21)]
 
-rule Rep_0_2: // [process=top-level] Rep, 0 
- [State_()] --[]-> [!Semistate_21()]
+rule event_B_21: //event B() 
+ [ State_21(~prog_21)] --[ProgressTo_211(~prog_21), Event(), B()]-> [State_211(~prog_21)]
 
-rule Rep_1_2: // [process=top-level] Rep, 1 
- [Fr(~prog_21), !Semistate_21()] --[ProgressFrom_21(~prog_21)]-> [State_21(~prog_21)]
-
-rule event_B_21: // [process=top-level] event B() 
- [State_21(~prog_21)] --[ProgressTo_211(~prog_21), Event(), B()]-> [State_211(~prog_21)]
-
-rule Zero_211: // [process=top-level] Zero 
- [State_211(~prog_21)] --[]-> []
+rule Zero_211: //Zero 
+ [ State_211(~prog_21)] --[]-> []
 
 
 restriction single_session: // for a single session

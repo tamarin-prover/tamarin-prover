@@ -592,15 +592,13 @@ mkYesodData "WebUI" [parseRoutes|
 
 
 instance PathPiece SolutionExtractor where
-  toPathPiece CutNothing         = "characterize"
-  toPathPiece CutDFS             = "idfs"
-  toPathPiece CutBFS             = "bfs"
-  toPathPiece CutSingleThreadDFS = "seqdfs"
+  toPathPiece CutNothing = "characterize"
+  toPathPiece CutDFS     = "idfs"
+  toPathPiece CutBFS     = "bfs"
 
   fromPathPiece "characterize" = Just CutNothing
   fromPathPiece "idfs"         = Just CutDFS
   fromPathPiece "bfs"          = Just CutBFS
-  fromPathPiece "seqdfs"       = Just CutSingleThreadDFS
   fromPathPiece _              = Nothing
 
 instance PathPiece Side where

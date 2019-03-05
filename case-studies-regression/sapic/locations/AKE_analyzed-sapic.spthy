@@ -12,8 +12,6 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-heuristic: p
-
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -39,36 +37,36 @@ rule (modulo E) Rep_1_11:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_pkskV_111[color=#569dc0]:
+rule (modulo E) in_pkskV_111:
    [ State_111( init ), In( pk(skV) ) ] --> [ State_1111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Rep_0_1111[color=#569dc0]:
+rule (modulo E) Rep_0_1111:
    [ State_1111( init, skV ) ] --> [ !Semistate_11111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Rep_1_1111[color=#569dc0]:
+rule (modulo E) Rep_1_1111:
    [ !Semistate_11111( init, skV ) ] --> [ State_11111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_k_11111[color=#569dc0]:
+rule (modulo E) new_k_11111:
    [ State_11111( init, skV ), Fr( k ) ]
   -->
    [ State_111111( init, k, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_SessionPpkskV_k_111111[color=#569dc0]:
+rule (modulo E) event_SessionPpkskV_k_111111:
    [ State_111111( init, k, skV ) ]
   --[ Event( ), SessionP( pk(skV), k ) ]->
    [ State_1111111( init, k, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Poutput_aenck_pkskV_repaenck_pkskV_loc_pkskV___1111111[color=#569dc0]:
+rule (modulo E) event_Poutput_aenck_pkskV_repaenck_pkskV_loc_pkskV___1111111:
    [ State_1111111( init, k, skV ) ]
   --[
   Event( ),
@@ -78,7 +76,7 @@ rule (modulo E) event_Poutput_aenck_pkskV_repaenck_pkskV_loc_pkskV___1111111[col
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_aenck_pkskV_repaenck_pkskV_loc_pkskV___11111111[color=#569dc0]:
+rule (modulo E) out_aenck_pkskV_repaenck_pkskV_loc_pkskV___11111111:
    [ State_11111111( init, k, skV ) ]
   -->
    [
@@ -88,7 +86,7 @@ rule (modulo E) out_aenck_pkskV_repaenck_pkskV_loc_pkskV___11111111[color=#569dc
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_111111111[color=#569dc0]:
+rule (modulo E) Zero_111111111:
    [ State_111111111( init, k, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -103,39 +101,39 @@ rule (modulo E) Rep_1_12:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_skV_121[color=#2cd719]:
+rule (modulo E) new_skV_121:
    [ State_121( init ), Fr( skV ) ] --> [ State_1211( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_HonestPpkskV_1211[color=#2cd719]:
+rule (modulo E) event_HonestPpkskV_1211:
    [ State_1211( init, skV ) ]
   --[ Event( ), HonestP( pk(skV) ) ]->
    [ State_12111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_pkskV_12111[color=#2cd719]:
+rule (modulo E) out_pkskV_12111:
    [ State_12111( init, skV ) ]
   -->
    [ State_121111( init, skV ), Out( pk(skV) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_aenck_pkskV_signed__121111[color=#2cd719]:
+rule (modulo E) in_aenck_pkskV_signed__121111:
    [ State_121111( init, skV ), In( <aenc(k, pk(skV)), signed> ) ]
   -->
    [ State_1211111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111[color=#2cd719]:
+rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111:
    [ State_1211111( init, k, signed, skV ) ]
   --[ Pred_eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) ) ]->
    [ State_12111111( init, k, signed, skV ) ]
 
   /*
-  rule (modulo AC) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111[color=#2cd719]:
+  rule (modulo AC) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111:
      [ State_1211111( init, k, signed, skV ) ]
     --[ Pred_eq( aenc(k, pk(skV)), z ) ]->
      [ State_12111111( init, k, signed, skV ) ]
@@ -151,14 +149,14 @@ rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__0_1211111[color=#2cd
        z     = x.6
   */
 
-rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111[color=#2cd719]:
+rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111:
    [ State_1211111( init, k, signed, skV ) ]
   --[ Pred_not_eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) )
   ]->
    [ State_12111112( init, k, signed, skV ) ]
 
   /*
-  rule (modulo AC) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111[color=#2cd719]:
+  rule (modulo AC) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111:
      [ State_1211111( init, k, signed, skV ) ]
     --[ Pred_not_eq( aenc(k, pk(skV)), z ) ]->
      [ State_12111112( init, k, signed, skV ) ]
@@ -174,26 +172,26 @@ rule (modulo E) if_eqaenck_pkskV_check_repsigned_loc_pkskV__1_1211111[color=#2cd
        z     = x.6
   */
 
-rule (modulo E) event_Voutput_aenck_pkskV_signed__12111111[color=#2cd719]:
+rule (modulo E) event_Voutput_aenck_pkskV_signed__12111111:
    [ State_12111111( init, k, signed, skV ) ]
   --[ Event( ), Voutput( <aenc(k, pk(skV)), signed> ) ]->
    [ State_121111111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_SessionVpkskV_k_121111111[color=#2cd719]:
+rule (modulo E) event_SessionVpkskV_k_121111111:
    [ State_121111111( init, k, signed, skV ) ]
   --[ Event( ), SessionV( pk(skV), k ) ]->
    [ State_1211111111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_1211111111[color=#2cd719]:
+rule (modulo E) Zero_1211111111:
    [ State_1211111111( init, k, signed, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_12111112[color=#2cd719]:
+rule (modulo E) Zero_12111112:
    [ State_12111112( init, k, signed, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -289,7 +287,7 @@ analyzing: case-studies-sapic-regression/locations/AKE.spthy
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
-  processing time: 0.612965s
+  processing time: 0.40404559s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -304,7 +302,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/locations/AKE.spthy
 
   output:          case-studies-sapic-regression/locations/AKE.spthy.tmp
-  processing time: 0.612965s
+  processing time: 0.40404559s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

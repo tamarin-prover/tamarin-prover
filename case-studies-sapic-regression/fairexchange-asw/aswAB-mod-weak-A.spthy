@@ -10,371 +10,368 @@ builtins: hashing
 functions: pk/1, sk/1[private], sign/2, verify/2, extrmsg/1, true/0
 
 equations: verify(sign(m, sk(i)), pk(i))=true,extrmsg(sign(m, x))=m
+rule Init_: //Init 
+ [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
+rule MessageID_rule_: //MessageID-rule 
+ [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule Init_: // [process=top-level] Init 
- [Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
+rule Par_: //Par 
+ [ State_(~prog_)] --[ProgressTo_2(~prog_), ProgressTo_1(~prog_)]-> [State_1(~prog_), State_2(~prog_)]
 
-rule MessageID_rule_: // [process=top-level] MessageID-rule 
- [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+rule Rep_0_1: //Rep, 0 
+ [ State_1(~prog_)] --[]-> [!Semistate_11(~prog_)]
 
-rule Par_: // [process=top-level] Par 
- [State_(~prog_)] --[ProgressTo_2(~prog_), ProgressTo_1(~prog_)]-> [State_1(~prog_), State_2(~prog_)]
+rule Rep_1_1: //Rep, 1 
+ [ !Semistate_11(~prog_)] --[]-> [State_11(~prog_)]
 
-rule Rep_0_1: // [process=top-level] Rep, 0 
- [State_1(~prog_)] --[]-> [!Semistate_11(~prog_)]
+rule in_c_A_B_TTPID__11: //in 'c',<$A, $B, TTPID> 
+ [ Fr(~prog_111), State_11(~prog_), In(<'c', <$A, $B, TTPID>>)] --[ProgressFrom_111(~prog_111), ChannelInEvent(<'c', <$A, $B, TTPID>>)]-> [State_111($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Rep_1_1: // [process=top-level] Rep, 1 
- [!Semistate_11(~prog_)] --[]-> [State_11(~prog_)]
+rule Par_111: //Par 
+ [ State_111($A, $B, ~prog_, ~prog_111, TTPID)] --[]-> [State_1111($A, $B, ~prog_, ~prog_111, TTPID), State_1112($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule in_c_A_B_TTP_TTP__11: // [process=top-level] in 'c',<$A, $B, <'TTP', $TTP>> 
- [Fr(~prog_111), State_11(~prog_), In(<'c', <$A, $B, <'TTP', $TTP>>>)] --[ProgressFrom_111(~prog_111), ChannelInEvent(<'c', <$A, $B, <'TTP', $TTP>>>)]-> [State_111($A, $B, $TTP, ~prog_, ~prog_111)]
+rule Par_1111: //Par 
+ [ State_1111($A, $B, ~prog_, ~prog_111, TTPID)] --[]-> [State_11111($A, $B, ~prog_, ~prog_111, TTPID), State_11112($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Par_111: // [process=top-level] Par 
- [State_111($A, $B, $TTP, ~prog_, ~prog_111)] --[]-> [State_1111($A, $B, $TTP, ~prog_, ~prog_111), State_1112($A, $B, $TTP, ~prog_, ~prog_111)]
+rule Par_11111: //Par 
+ [ State_11111($A, $B, ~prog_, ~prog_111, TTPID)] --[ProgressTo_111112(~prog_111), ProgressTo_111111(~prog_111)]-> [State_111111($A, $B, ~prog_, ~prog_111, TTPID), State_111112($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Par_1111: // [process=top-level] Par 
- [State_1111($A, $B, $TTP, ~prog_, ~prog_111)] --[]-> [State_11111($A, $B, $TTP, ~prog_, ~prog_111), State_11112($A, $B, $TTP, ~prog_, ~prog_111)]
+rule in_c_TEXT_111111: //in 'c',$TEXT 
+ [ Fr(~prog_1111111), State_111111($A, $B, ~prog_, ~prog_111, TTPID), In(<'c', $TEXT>)] --[ProgressFrom_1111111(~prog_1111111), ChannelInEvent(<'c', $TEXT>)]-> [State_1111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID)]
 
-rule Par_11111: // [process=top-level] Par 
- [State_11111($A, $B, $TTP, ~prog_, ~prog_111)] --[]-> [State_111111($A, $B, $TTP, ~prog_, ~prog_111), State_111112($A, $B, $TTP, ~prog_, ~prog_111)]
+rule new_na_1111111: //new na 
+ [ State_1111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID), Fr(na)] --[]-> [State_11111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)]
 
-rule in_c_TEXT_111111 [color=#569DC0]: // [process=A] in 'c',$TEXT 
- [State_111111($A, $B, $TTP, ~prog_, ~prog_111), In(<'c', $TEXT>)] --[ProgressTo_1111111(~prog_111), ChannelInEvent(<'c', $TEXT>)]-> [State_1111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111)]
+rule event_StartA_A_B_TEXT_na_11111111: //event StartA($A, $B, $TEXT, na) 
+ [ State_11111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)] --[Event(), StartA($A, $B, $TEXT, na)]-> [State_111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)]
 
-rule new_na_1111111 [color=#569DC0]: // [process=A] new na 
- [Fr(~prog_11111111), State_1111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111), Fr(na)] --[ProgressFrom_11111111(~prog_11111111)]-> [State_11111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule event_StartAm1sign_A_B_TTPID_TEXT_hna_sk_A_111111111: //event StartAm1(sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))) 
+ [ State_111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)] --[Event(), StartAm1(sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)))]-> [State_1111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)]
 
-rule event_StartA_A_B_TEXT_na_11111111 [color=#569DC0]: // [process=A] event StartA($A, $B, $TEXT, na) 
- [State_11111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[Event(), StartA($A, $B, $TEXT, na)]-> [State_111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule out_c_sign_A_B_TTPID_TEXT_hna_sk_A_1111111111: //out 'c',sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)) 
+ [ State_1111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na), In('c')] --[ChannelInEvent('c')]-> [State_11111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na), Out(sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)))]
 
-rule event_StartAm1sign_A_B_TTP_TTP_TEXT_hna_sk_A_111111111 [color=#569DC0]: // [process=A] event StartAm1(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))) 
- [State_111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[Event(), StartAm1(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_1111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule in_c_m2_111111111111: //in 'c',m2 
+ [ State_11111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na), In(<'c', m2>)] --[ChannelInEvent(<'c', m2>)]-> [State_1111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na)]
 
-rule out_c_sign_A_B_TTP_TTP_TEXT_hna_sk_A_1111111111 [color=#569DC0]: // [process=A] out 'c',sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_1111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na), In('c')] --[ChannelInEvent('c')]-> [State_11111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na), Out(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]
+rule out_c_sign_na_hnb_sk_A_1111111111111: //out 'c',sign(<na, h(nb)>, sk($A)) 
+ [ State_1111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na), In('c')] --[ChannelInEvent('c')]-> [State_11111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na, nb), Out(sign(<na, h(nb)>, sk($A)))]
 
-rule in_c_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_111111111111 [color=#569DC0]: // [process=A] in 'c',sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)) 
- [State_11111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na), In(<'c', sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>)] --[ChannelInEvent(<'c', sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>)]-> [State_1111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule in_c_m4_111111111111111: //in 'c',m4 
+ [ State_11111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na, nb), In(<'c', m4>)] --[ChannelInEvent(<'c', m4>)]-> [State_1111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)]
 
-rule out_c_sign_na_hnb_sk_A_1111111111111 [color=#569DC0]: // [process=A] out 'c',sign(<na, h(nb)>, sk($A)) 
- [State_1111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb), In('c')] --[ChannelInEvent('c')]-> [State_11111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb), Out(sign(<na, h(nb)>, sk($A)))]
+rule event_ContractA_A_B_TEXT_na_1111111111111111: //event ContractA($A, $B, $TEXT, na) 
+ [ State_1111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_11111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)]
 
-rule in_c_sign_nb_hna_sk_B_111111111111111 [color=#569DC0]: // [process=A] in 'c',sign(<nb, h(na)>, sk($B)) 
- [State_11111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb), In(<'c', sign(<nb, h(na)>, sk($B))>)] --[ChannelInEvent(<'c', sign(<nb, h(na)>, sk($B))>)]-> [State_1111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule event_EndA1_A_B_TEXT_na_11111111111111111: //event EndA1($A, $B, $TEXT, na) 
+ [ State_11111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)] --[ProgressTo_111111111111111111(~prog_1111111), Event(), EndA1($A, $B, $TEXT, na)]-> [State_111111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)]
 
-rule event_ContractA_A_B_TEXT_na_1111111111111111 [color=#569DC0]: // [process=A] event ContractA($A, $B, $TEXT, na) 
- [State_1111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_11111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule Zero_111111111111111111: //Zero 
+ [ State_111111111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, m4, na, nb)] --[]-> []
 
-rule event_EndA1_A_B_TEXT_na_11111111111111111 [color=#569DC0]: // [process=A] event EndA1($A, $B, $TEXT, na) 
- [State_11111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), EndA1($A, $B, $TEXT, na)]-> [State_111111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule out_r_originator_A_TTPID_sign_A_B_TTPID_TEXT_hna_sk_A_m2__111111111111112: //out 'r',<'originator', $A, TTPID, <sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), m2>> 
+ [ MID_Sender(mid_111111111111112), State_11111111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na, nb)] --[ProgressTo_1111111111111121(~prog_1111111), Send(mid_111111111111112,<'originator', $A, TTPID, <sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), m2>>)]-> [Out(<'originator', $A, TTPID, <sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), m2>>), State_1111111111111121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na, nb)]
 
-rule Zero_111111111111111111 [color=#569DC0]: // [process=A] Zero 
- [State_111111111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[ProgressTo_1111111111111111111(~prog_11111111)]-> []
+rule in_r_originator_TTPID_A_sign_m1_m2_skTTPID__1111111111111121: //in 'r',<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))> 
+ [ Fr(~prog_11111111111111211), State_1111111111111121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, m2, na, nb), In(<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>), MID_Receiver(mid_1111111111111121)] --[ProgressFrom_11111111111111211(~prog_11111111111111211), Receive(mid_1111111111111121,<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>)]-> [State_11111111111111211($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)]
 
-rule out_r_originator_A_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B__111111111111112 [color=#569DC0]: // [process=A] out 'r',<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>> 
- [MID_Sender(mid_111111111111112), State_11111111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Send(mid_111111111111112,<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>)]-> [Out(<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>), State_1111111111111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule event_ContractA_A_B_TEXT_na_11111111111111211: //event ContractA($A, $B, $TEXT, na) 
+ [ State_11111111111111211($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_111111111111112111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)]
 
-rule in_r_originator_TTP_TTP_A_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP___1111111111111121 [color=#569DC0]: // [process=A] in 'r',<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))> 
- [State_1111111111111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb), In(<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>), MID_Receiver(mid_1111111111111121)] --[Receive(mid_1111111111111121,<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [State_11111111111111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule event_EndA2_A_B_TEXT_na_111111111111112111: //event EndA2($A, $B, $TEXT, na) 
+ [ State_111111111111112111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)] --[ProgressTo_1111111111111121111(~prog_11111111111111211), Event(), EndA2($A, $B, $TEXT, na)]-> [State_1111111111111121111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)]
 
-rule event_ContractA_A_B_TEXT_na_11111111111111211 [color=#569DC0]: // [process=A] event ContractA($A, $B, $TEXT, na) 
- [State_11111111111111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_111111111111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule Zero_1111111111111121111: //Zero 
+ [ State_1111111111111121111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_11111111111111211, TTPID, m1, m2, na, nb)] --[]-> []
 
-rule event_EndA2_A_B_TEXT_na_111111111111112111 [color=#569DC0]: // [process=A] event EndA2($A, $B, $TEXT, na) 
- [State_111111111111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), EndA2($A, $B, $TEXT, na)]-> [State_1111111111111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule out_r_originator_A_TTPID_sign_Abort_sign_A_B_TTPID_TEXT_hna_sk_A_sk_A__111111111112: //out 'r',<'originator', $A, TTPID, sign(<'Abort', sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>, sk($A))> 
+ [ MID_Sender(mid_111111111112), State_11111111111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)] --[ProgressTo_1111111111121(~prog_1111111), Send(mid_111111111112,<'originator', $A, TTPID, sign(<'Abort', sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>, sk($A))>)]-> [Out(<'originator', $A, TTPID, sign(<'Abort', sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>, sk($A))>), State_1111111111121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na)]
 
-rule Zero_1111111111111121111 [color=#569DC0]: // [process=A] Zero 
- [State_1111111111111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[]-> []
+rule in_r_originator_TTPID_A_sign_Aborted_a1_skTTPID__11111111111211: //in 'r',<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))> 
+ [ Fr(~prog_111111111112111), State_1111111111121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na), In(<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))>), MID_Receiver(mid_11111111111211)] --[ProgressFrom_111111111112111(~prog_111111111112111), Receive(mid_11111111111211,<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))>)]-> [State_111111111112111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)]
 
-rule out_r_originator_A_TTP_TTP_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A__111111111112 [color=#569DC0]: // [process=A] out 'r',<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))> 
- [MID_Sender(mid_111111111112), State_11111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[Send(mid_111111111112,<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>)]-> [Out(<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>), State_1111111111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule event_AbortA_A_B_TEXT_na_111111111112111: //event AbortA($A, $B, $TEXT, na) 
+ [ State_111111111112111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)] --[Event(), AbortA($A, $B, $TEXT, na)]-> [State_1111111111121111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)]
 
-rule in_r_originator_TTP_TTP_A_sign_Aborted_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A_sk_TTP_TTP___11111111111211 [color=#569DC0]: // [process=A] in 'r',<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))> 
- [State_1111111111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na), In(<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>), MID_Receiver(mid_11111111111211)] --[Receive(mid_11111111111211,<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>)]-> [State_111111111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule event_EndA3_A_B_TEXT_na_1111111111121111: //event EndA3($A, $B, $TEXT, na) 
+ [ State_1111111111121111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)] --[ProgressTo_11111111111211111(~prog_111111111112111), Event(), EndA3($A, $B, $TEXT, na)]-> [State_11111111111211111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)]
 
-rule event_AbortA_A_B_TEXT_na_111111111112111 [color=#569DC0]: // [process=A] event AbortA($A, $B, $TEXT, na) 
- [State_111111111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[Event(), AbortA($A, $B, $TEXT, na)]-> [State_1111111111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule Zero_11111111111211111: //Zero 
+ [ State_11111111111211111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112111, TTPID, a1, na)] --[]-> []
 
-rule event_EndA3_A_B_TEXT_na_1111111111121111 [color=#569DC0]: // [process=A] event EndA3($A, $B, $TEXT, na) 
- [State_1111111111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[Event(), EndA3($A, $B, $TEXT, na)]-> [State_11111111111211111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)]
+rule in_r_originator_TTPID_A_sign_m1_m2_skTTPID__11111111111212: //in 'r',<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))> 
+ [ Fr(~prog_111111111112121), State_1111111111121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, TTPID, na), In(<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>), MID_Receiver(mid_11111111111212)] --[ProgressFrom_111111111112121(~prog_111111111112121), Receive(mid_11111111111212,<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>)]-> [State_111111111112121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)]
 
-rule Zero_11111111111211111 [color=#569DC0]: // [process=A] Zero 
- [State_11111111111211111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na)] --[]-> []
+rule event_ContractA_A_B_TEXT_na_111111111112121: //event ContractA($A, $B, $TEXT, na) 
+ [ State_111111111112121($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_1111111111121211($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)]
 
-rule in_r_originator_TTP_TTP_A_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP___11111111111212 [color=#569DC0]: // [process=A] in 'r',<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))> 
- [State_1111111111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na), In(<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>), MID_Receiver(mid_11111111111212)] --[Receive(mid_11111111111212,<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [State_111111111112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule event_EndA4_A_B_TEXT_na_1111111111121211: //event EndA4($A, $B, $TEXT, na) 
+ [ State_1111111111121211($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)] --[ProgressTo_11111111111212111(~prog_111111111112121), Event(), EndA4($A, $B, $TEXT, na)]-> [State_11111111111212111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)]
 
-rule event_ContractA_A_B_TEXT_na_111111111112121 [color=#569DC0]: // [process=A] event ContractA($A, $B, $TEXT, na) 
- [State_111111111112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), ContractA($A, $B, $TEXT, na)]-> [State_1111111111121211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule Zero_11111111111212111: //Zero 
+ [ State_11111111111212111($A, $B, $TEXT, ~prog_, ~prog_111, ~prog_1111111, ~prog_111111111112121, TTPID, m1, m2, na)] --[]-> []
 
-rule event_EndA4_A_B_TEXT_na_1111111111121211 [color=#569DC0]: // [process=A] event EndA4($A, $B, $TEXT, na) 
- [State_1111111111121211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[Event(), EndA4($A, $B, $TEXT, na)]-> [State_11111111111212111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)]
+rule in_c_m1_111112: //in 'c',m1 
+ [ Fr(~prog_1111121), State_111112($A, $B, ~prog_, ~prog_111, TTPID), In(<'c', m1>)] --[ProgressFrom_1111121(~prog_1111121), ChannelInEvent(<'c', m1>)]-> [State_1111121($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1)]
 
-rule Zero_11111111111212111 [color=#569DC0]: // [process=A] Zero 
- [State_11111111111212111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111111, na, nb)] --[]-> []
+rule new_nb_1111121: //new nb 
+ [ State_1111121($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1), Fr(nb)] --[]-> [State_11111211($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb)]
 
-rule in_c_sign_A_B_TTP_TTP_TEXT_hna_sk_A_111112 [color=#2CD719]: // [process=B] in 'c',sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_111112($A, $B, $TTP, ~prog_, ~prog_111), In(<'c', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>)] --[ProgressTo_1111121(~prog_111), ChannelInEvent(<'c', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>)]-> [State_1111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na)]
+rule event_StartB_A_B_m1_sign_hm1_hnb_sk_B_na_nb_11111211: //event StartB($A, $B, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb) 
+ [ State_11111211($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb)] --[Event(), StartB($A, $B, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb)]-> [State_111112111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb)]
 
-rule new_nb_1111121 [color=#2CD719]: // [process=B] new nb 
- [Fr(~prog_11111211), State_1111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na), Fr(nb)] --[ProgressFrom_11111211(~prog_11111211)]-> [State_11111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule out_c_sign_hm1_hnb_sk_B_111112111: //out 'c',sign(<h(m1), h(nb)>, sk($B)) 
+ [ State_111112111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb), In('c')] --[ChannelInEvent('c')]-> [State_1111121111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb), Out(sign(<h(m1), h(nb)>, sk($B)))]
 
-rule event_StartB_A_B_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_na_nb_11111211 [color=#2CD719]: // [process=B] event StartB($A, $B, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb) 
- [State_11111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), StartB($A, $B, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb)]-> [State_111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule in_c_m3_11111211111: //in 'c',m3 
+ [ State_1111121111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb), In(<'c', m3>)] --[ChannelInEvent(<'c', m3>)]-> [State_111112111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb)]
 
-rule out_c_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_111112111 [color=#2CD719]: // [process=B] out 'c',sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)) 
- [State_111112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), In('c')] --[ChannelInEvent('c')]-> [State_1111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), Out(sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)))]
+rule event_ContractB_A_B_TEXT_m1_sign_hm1_hnb_sk_B_na_nb_111112111111: //event ContractB($A, $B, $TEXT, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb) 
+ [ State_111112111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb)] --[Event(), ContractB($A, $B, $TEXT, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb)]-> [State_1111121111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb)]
 
-rule in_c_sign_na_hnb_sk_A_11111211111 [color=#2CD719]: // [process=B] in 'c',sign(<na, h(nb)>, sk($A)) 
- [State_1111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), In(<'c', sign(<na, h(nb)>, sk($A))>)] --[ChannelInEvent(<'c', sign(<na, h(nb)>, sk($A))>)]-> [State_111112111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule event_EndB1_A_B_TEXT_na_1111121111111: //event EndB1($A, $B, $TEXT, na) 
+ [ State_1111121111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb)] --[Event(), EndB1($A, $B, $TEXT, na)]-> [State_11111211111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb)]
 
-rule event_ContractB_A_B_TEXT_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_na_nb_111112111111 [color=#2CD719]: // [process=B] event ContractB($A, $B, $TEXT, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb) 
- [State_111112111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), ContractB($A, $B, $TEXT, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb)]-> [State_1111121111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule out_c_sign_nb_hna_sk_B_11111211111111: //out 'c',sign(<nb, h(na)>, sk($B)) 
+ [ State_11111211111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, nb), In('c')] --[ProgressTo_111112111111111(~prog_1111121), ChannelInEvent('c')]-> [State_111112111111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, na, nb), Out(sign(<nb, h(na)>, sk($B)))]
 
-rule event_EndB1_A_B_TEXT_na_1111121111111 [color=#2CD719]: // [process=B] event EndB1($A, $B, $TEXT, na) 
- [State_1111121111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), EndB1($A, $B, $TEXT, na)]-> [State_11111211111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule Zero_111112111111111: //Zero 
+ [ State_111112111111111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, m3, na, nb)] --[]-> []
 
-rule out_c_sign_nb_hna_sk_B_11111211111111 [color=#2CD719]: // [process=B] out 'c',sign(<nb, h(na)>, sk($B)) 
- [State_11111211111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), In('c')] --[ChannelInEvent('c')]-> [State_111112111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), Out(sign(<nb, h(na)>, sk($B)))]
+rule out_r_responder_B_TTPID_m1_sign_hm1_hnb_sk_B__11111211112: //out 'r',<'responder', $B, TTPID, <m1, sign(<h(m1), h(nb)>, sk($B))>> 
+ [ MID_Sender(mid_11111211112), State_1111121111($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb)] --[ProgressTo_111112111121(~prog_1111121), Send(mid_11111211112,<'responder', $B, TTPID, <m1, sign(<h(m1), h(nb)>, sk($B))>>)]-> [Out(<'responder', $B, TTPID, <m1, sign(<h(m1), h(nb)>, sk($B))>>), State_111112111121($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb)]
 
-rule Zero_111112111111111 [color=#2CD719]: // [process=B] Zero 
- [State_111112111111111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[ProgressTo_1111121111111111(~prog_11111211)]-> []
+rule in_r_responder_TTPID_B_sign_Aborted_a1_hnb_skTTPID__1111121111211: //in 'r',<'responder', TTPID, $B, sign(<'Aborted', a1, h(nb)>, sk(TTPID))> 
+ [ Fr(~prog_11111211112111), State_111112111121($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb), In(<'responder', TTPID, $B, sign(<'Aborted', a1, h(nb)>, sk(TTPID))>), MID_Receiver(mid_1111121111211)] --[ProgressFrom_11111211112111(~prog_11111211112111), Receive(mid_1111121111211,<'responder', TTPID, $B, sign(<'Aborted', a1, h(nb)>, sk(TTPID))>)]-> [State_11111211112111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)]
 
-rule out_r_responder_B_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B__11111211112 [color=#2CD719]: // [process=B] out 'r',<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>> 
- [MID_Sender(mid_11111211112), State_1111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Send(mid_11111211112,<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>)]-> [Out(<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>), State_111112111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule event_AbortB_A_B_m1_sign_hm1_hnb_sk_B_na_nb_11111211112111: //event AbortB($A, $B, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb) 
+ [ State_11111211112111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)] --[Event(), AbortB($A, $B, m1, sign(<h(m1), h(nb)>, sk($B)), na, nb)]-> [State_111112111121111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)]
 
-rule in_r_responder_TTP_TTP_B_sign_Aborted_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A_hnb_sk_TTP_TTP___1111121111211 [color=#2CD719]: // [process=B] in 'r',<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))> 
- [State_111112111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), In(<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))>), MID_Receiver(mid_1111121111211)] --[Receive(mid_1111121111211,<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))>)]-> [State_11111211112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule event_EndB2_A_B_TEXT_na_111112111121111: //event EndB2($A, $B, $TEXT, na) 
+ [ State_111112111121111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)] --[ProgressTo_1111121111211111(~prog_11111211112111), Event(), EndB2($A, $B, $TEXT, na)]-> [State_1111121111211111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)]
 
-rule event_AbortB_A_B_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_na_nb_11111211112111 [color=#2CD719]: // [process=B] event AbortB($A, $B, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb) 
- [State_11111211112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), AbortB($A, $B, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb)]-> [State_111112111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule Zero_1111121111211111: //Zero 
+ [ State_1111121111211111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112111, TTPID, a1, m1, nb)] --[]-> []
 
-rule event_EndB2_A_B_TEXT_na_111112111121111 [color=#2CD719]: // [process=B] event EndB2($A, $B, $TEXT, na) 
- [State_111112111121111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), EndB2($A, $B, $TEXT, na)]-> [State_1111121111211111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule in_r_responder_TTPID_B_sign_m1_m2_skTTPID__1111121111212: //in 'r',<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))> 
+ [ Fr(~prog_11111211112121), State_111112111121($A, $B, ~prog_, ~prog_111, ~prog_1111121, TTPID, m1, nb), In(<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))>), MID_Receiver(mid_1111121111212)] --[ProgressFrom_11111211112121(~prog_11111211112121), Receive(mid_1111121111212,<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))>)]-> [State_11111211112121($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)]
 
-rule Zero_1111121111211111 [color=#2CD719]: // [process=B] Zero 
- [State_1111121111211111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[]-> []
+rule event_ContractB_A_B_TEXT_m1_m2_na_nb_11111211112121: //event ContractB($A, $B, $TEXT, m1, m2, na, nb) 
+ [ State_11111211112121($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)] --[Event(), ContractB($A, $B, $TEXT, m1, m2, na, nb)]-> [State_111112111121211($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)]
 
-rule in_r_responder_TTP_TTP_B_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP___1111121111212 [color=#2CD719]: // [process=B] in 'r',<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))> 
- [State_111112111121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb), In(<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>), MID_Receiver(mid_1111121111212)] --[Receive(mid_1111121111212,<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [State_11111211112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule event_EndB3_A_B_TEXT_na_111112111121211: //event EndB3($A, $B, $TEXT, na) 
+ [ State_111112111121211($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)] --[ProgressTo_1111121111212111(~prog_11111211112121), Event(), EndB3($A, $B, $TEXT, na)]-> [State_1111121111212111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)]
 
-rule event_ContractB_A_B_TEXT_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_na_nb_11111211112121 [color=#2CD719]: // [process=B] event ContractB($A, $B, $TEXT, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb) 
- [State_11111211112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), ContractB($A, $B, $TEXT, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), na, nb)]-> [State_111112111121211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule Zero_1111121111212111: //Zero 
+ [ State_1111121111212111($A, $B, ~prog_, ~prog_111, ~prog_1111121, ~prog_11111211112121, TTPID, m1, m2, nb)] --[]-> []
 
-rule event_EndB3_A_B_TEXT_na_111112111121211 [color=#2CD719]: // [process=B] event EndB3($A, $B, $TEXT, na) 
- [State_111112111121211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[Event(), EndB3($A, $B, $TEXT, na)]-> [State_1111121111212111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)]
+rule Par_11112: //Par 
+ [ State_11112($A, $B, ~prog_, ~prog_111, TTPID)] --[ProgressTo_111122(~prog_111)]-> [State_111121($A, $B, ~prog_, ~prog_111, TTPID), State_111122($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Zero_1111121111212111 [color=#2CD719]: // [process=B] Zero 
- [State_1111121111212111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11111211, na, nb)] --[]-> []
+rule Par_111121: //Par 
+ [ State_111121($A, $B, ~prog_, ~prog_111, TTPID)] --[ProgressTo_1111212(~prog_111), ProgressTo_1111211(~prog_111)]-> [State_1111211($A, $B, ~prog_, ~prog_111, TTPID), State_1111212($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Par_11112 [color=#11EC28]: // [process=TTP] Par 
- [State_11112($A, $B, $TTP, ~prog_, ~prog_111)] --[]-> [State_111121($A, $B, $TTP, ~prog_, ~prog_111), State_111122($A, $B, $TTP, ~prog_, ~prog_111)]
+rule in_r_originator_A_TTPID_a1__1111211: //in 'r',<'originator', $A, TTPID, a1> 
+ [ Fr(~prog_11112111), State_1111211($A, $B, ~prog_, ~prog_111, TTPID), In(<'originator', $A, TTPID, a1>), MID_Receiver(mid_1111211)] --[ProgressFrom_11112111(~prog_11112111), Receive(mid_1111211,<'originator', $A, TTPID, a1>)]-> [State_11112111($A, $B, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule Par_111121 [color=#11EC28]: // [process=TTP] Par 
- [State_111121($A, $B, $TTP, ~prog_, ~prog_111)] --[ProgressTo_1111212(~prog_111)]-> [State_1111211($A, $B, $TTP, ~prog_, ~prog_111), State_1111212($A, $B, $TTP, ~prog_, ~prog_111)]
+rule lock_sign_A_B_TTPID_TEXT_hna_sk_A_11112111: //lock sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)) 
+ [ State_11112111($A, $B, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1), Fr(~lock7)] --[Lock(~lock7, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)))]-> [State_111121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule in_r_originator_A_TTP_TTP_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A__1111211 [color=#11EC28]: // [process=TTP] in 'r',<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))> 
- [State_1111211($A, $B, $TTP, ~prog_, ~prog_111), In(<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>), MID_Receiver(mid_1111211)] --[ProgressTo_11112112(~prog_111), ProgressTo_11112111(~prog_111), Receive(mid_1111211,<'originator', $A, <'TTP', $TTP>, sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>)]-> [State_11112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na)]
+rule lookup_F_Resolved_TTPID_sign_A_B_TTPID_TEXT_hna_sk_A_as_y_0_111121111: //lookup <'F_Resolved', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))> as y, 0 
+ [ State_111121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[IsIn(<'F_Resolved', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>, y)]-> [State_1111211111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)]
 
-rule lock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_11112111 [color=#11EC28]: // [process=TTP] lock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [Fr(~prog_111121111), State_11112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na), Fr(~lock7)] --[ProgressFrom_111121111(~prog_111121111), Lock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Lock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_111121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule lookup_F_Resolved_TTPID_sign_A_B_TTPID_TEXT_hna_sk_A_as_y_1_111121111: //lookup <'F_Resolved', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))> as y, 1 
+ [ State_111121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[IsNotSet(<'F_Resolved', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>)]-> [State_1111211112($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule lookup_F_Resolved_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_y_0_111121111 [color=#11EC28]: // [process=TTP] lookup <'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as y, 0 
- [State_111121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[IsIn(<'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, y)]-> [State_1111211111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)]
+rule out_r_originator_TTPID_A_sign_sign_A_B_TTPID_TEXT_hna_sk_A_y_skTTPID__1111211111: //out 'r',<'originator', TTPID, $A, sign(<sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), y>, sk(TTPID))> 
+ [ MID_Sender(mid_1111211111), State_1111211111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)] --[Send(mid_1111211111,<'originator', TTPID, $A, sign(<sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), y>, sk(TTPID))>)]-> [Out(<'originator', TTPID, $A, sign(<sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)), y>, sk(TTPID))>), State_11112111111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)]
 
-rule lookup_F_Resolved_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_y_1_111121111 [color=#11EC28]: // [process=TTP] lookup <'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as y, 1 
- [State_111121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[IsNotSet(<'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>)]-> [State_1111211112($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule unlock_sign_A_B_TTPID_TEXT_hna_sk_A_11112111111: //unlock sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)) 
+ [ State_11112111111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)] --[ProgressTo_111121111111(~prog_11112111), Unlock(~lock7, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)))]-> [State_111121111111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)]
 
-rule out_r_originator_TTP_TTP_A_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_y_sk_TTP_TTP___1111211111 [color=#11EC28]: // [process=TTP] out 'r',<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), y>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_1111211111), State_1111211111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)] --[Send(mid_1111211111,<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), y>, sk(<'TTP', $TTP>))>)]-> [Out(<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), y>, sk(<'TTP', $TTP>))>), State_11112111111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)]
+rule Zero_111121111111: //Zero 
+ [ State_111121111111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1, y)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_11112111111 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_11112111111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)] --[Unlock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_111121111111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)]
+rule insert_Aborted_TTPID_sign_A_B_TTPID_TEXT_hna_sk_A_Aborted__1111211112: //insert <'Aborted', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>,'Aborted' 
+ [ State_1111211112($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[Insert(<'Aborted', TTPID, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A))>, 'Aborted')]-> [State_11112111121($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule Zero_111121111111 [color=#11EC28]: // [process=TTP] Zero 
- [State_111121111111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na, y)] --[ProgressTo_1111211111111(~prog_111121111)]-> []
+rule event_TTPAbortTTPID_A_B_TEXT_na_11112111121: //event TTPAbort(TTPID, $A, $B, $TEXT, na) 
+ [ State_11112111121($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[Event(), TTPAbort(TTPID, $A, $B, $TEXT, na)]-> [State_111121111211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule insert_Aborted_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_Aborted__1111211112 [color=#11EC28]: // [process=TTP] insert <'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>,'Aborted' 
- [State_1111211112($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[Insert(<'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, 'Aborted')]-> [State_11112111121($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule out_r_originator_TTPID_A_sign_Aborted_a1_skTTPID__111121111211: //out 'r',<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))> 
+ [ MID_Sender(mid_111121111211), State_111121111211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[Send(mid_111121111211,<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))>)]-> [Out(<'originator', TTPID, $A, sign(<'Aborted', a1>, sk(TTPID))>), State_1111211112111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule event_TTPAbort_TTP_TTP_A_B_TEXT_na_11112111121 [color=#11EC28]: // [process=TTP] event TTPAbort(<'TTP', $TTP>, $A, $B, $TEXT, na) 
- [State_11112111121($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[Event(), TTPAbort(<'TTP', $TTP>, $A, $B, $TEXT, na)]-> [State_111121111211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule unlock_sign_A_B_TTPID_TEXT_hna_sk_A_1111211112111: //unlock sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)) 
+ [ State_1111211112111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[ProgressTo_11112111121111(~prog_11112111), Unlock(~lock7, sign(<$A, $B, TTPID, $TEXT, h(na)>, sk($A)))]-> [State_11112111121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)]
 
-rule out_r_originator_TTP_TTP_A_sign_Aborted_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A_sk_TTP_TTP___111121111211 [color=#11EC28]: // [process=TTP] out 'r',<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_111121111211), State_111121111211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[Send(mid_111121111211,<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>)]-> [Out(<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>), State_1111211112111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule Zero_11112111121111: //Zero 
+ [ State_11112111121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_11112111, TTPID, a1)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_1111211112111 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_1111211112111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[Unlock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_11112111121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)]
+rule in_r_originator_A_TTPID_m1_m2__1111212: //in 'r',<'originator', $A, TTPID, <m1, m2>> 
+ [ Fr(~prog_11112121), State_1111212($A, $B, ~prog_, ~prog_111, TTPID), In(<'originator', $A, TTPID, <m1, m2>>), MID_Receiver(mid_1111212)] --[ProgressFrom_11112121(~prog_11112121), Receive(mid_1111212,<'originator', $A, TTPID, <m1, m2>>)]-> [State_11112121($A, $B, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule Zero_11112111121111 [color=#11EC28]: // [process=TTP] Zero 
- [State_11112111121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, ~prog_111121111, na)] --[]-> []
+rule lock_m1_11112121: //lock m1 
+ [ State_11112121($A, $B, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2), Fr(~lock6)] --[Lock(~lock6, m1)]-> [State_111121211($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule in_r_originator_A_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B__1111212 [color=#11EC28]: // [process=TTP] in 'r',<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>> 
- [Fr(~prog_11112121), State_1111212($A, $B, $TTP, ~prog_, ~prog_111), In(<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>), MID_Receiver(mid_1111212)] --[ProgressFrom_11112121(~prog_11112121), Receive(mid_1111212,<'originator', $A, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>)]-> [State_11112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule lookup_Aborted_TTPID_m1_as_x_0_111121211: //lookup <'Aborted', TTPID, m1> as x, 0 
+ [ State_111121211($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[IsIn(<'Aborted', TTPID, m1>, x)]-> [State_1111212111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)]
 
-rule lock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_11112121 [color=#11EC28]: // [process=TTP] lock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_11112121($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_11112121, na, nb), Fr(~lock6)] --[Lock($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Lock_6($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_111121211($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule lookup_Aborted_TTPID_m1_as_x_1_111121211: //lookup <'Aborted', TTPID, m1> as x, 1 
+ [ State_111121211($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[IsNotSet(<'Aborted', TTPID, m1>)]-> [State_1111212112($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule lookup_Aborted_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_x_0_111121211 [color=#11EC28]: // [process=TTP] lookup <'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as x, 0 
- [State_111121211($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[IsIn(<'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, x)]-> [State_1111212111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)]
+rule event_TTPAbortTTPID_A_B_TEXT_na_1111212111: //event TTPAbort(TTPID, $A, $B, $TEXT, na) 
+ [ State_1111212111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)] --[Event(), TTPAbort(TTPID, $A, $B, $TEXT, na)]-> [State_11112121111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)]
 
-rule lookup_Aborted_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_x_1_111121211 [color=#11EC28]: // [process=TTP] lookup <'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as x, 1 
- [State_111121211($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[IsNotSet(<'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>)]-> [State_1111212112($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule out_r_originator_TTPID_A_sign_Aborted_sign_Abort_m1_sk_A_skTTPID__11112121111: //out 'r',<'originator', TTPID, $A, sign(<'Aborted', sign(<'Abort', m1>, sk($A))>, sk(TTPID))> 
+ [ MID_Sender(mid_11112121111), State_11112121111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)] --[Send(mid_11112121111,<'originator', TTPID, $A, sign(<'Aborted', sign(<'Abort', m1>, sk($A))>, sk(TTPID))>)]-> [Out(<'originator', TTPID, $A, sign(<'Aborted', sign(<'Abort', m1>, sk($A))>, sk(TTPID))>), State_111121211111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)]
 
-rule event_TTPAbort_TTP_TTP_A_B_TEXT_na_1111212111 [color=#11EC28]: // [process=TTP] event TTPAbort(<'TTP', $TTP>, $A, $B, $TEXT, na) 
- [State_1111212111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)] --[Event(), TTPAbort(<'TTP', $TTP>, $A, $B, $TEXT, na)]-> [State_11112121111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)]
+rule unlock_m1_111121211111: //unlock m1 
+ [ State_111121211111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)] --[ProgressTo_1111212111111(~prog_11112121), Unlock(~lock6, m1)]-> [State_1111212111111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)]
 
-rule out_r_originator_TTP_TTP_A_sign_Aborted_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A_sk_TTP_TTP___11112121111 [color=#11EC28]: // [process=TTP] out 'r',<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_11112121111), State_11112121111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)] --[ProgressTo_111121211111(~prog_11112121), Send(mid_11112121111,<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>)]-> [Out(<'originator', <'TTP', $TTP>, $A, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A))>, sk(<'TTP', $TTP>))>), State_111121211111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)]
+rule Zero_1111212111111: //Zero 
+ [ State_1111212111111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2, x)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_111121211111 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_111121211111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)] --[Unlock($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_6($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_1111212111111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)]
+rule insert_F_Resolved_TTPID_m1_m2_1111212112: //insert <'F_Resolved', TTPID, m1>,m2 
+ [ State_1111212112($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[Insert(<'F_Resolved', TTPID, m1>, m2)]-> [State_11112121121($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule Zero_1111212111111 [color=#11EC28]: // [process=TTP] Zero 
- [State_1111212111111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb, x)] --[]-> []
+rule out_r_originator_TTPID_A_sign_m1_m2_skTTPID__11112121121: //out 'r',<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))> 
+ [ MID_Sender(mid_11112121121), State_11112121121($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[Send(mid_11112121121,<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>)]-> [Out(<'originator', TTPID, $A, sign(<m1, m2>, sk(TTPID))>), State_111121211211($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule insert_F_Resolved_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_1111212112 [color=#11EC28]: // [process=TTP] insert <'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>,sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)) 
- [State_1111212112($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[Insert(<'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)))]-> [State_11112121121($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule unlock_m1_111121211211: //unlock m1 
+ [ State_111121211211($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[ProgressTo_1111212112111(~prog_11112121), Unlock(~lock6, m1)]-> [State_1111212112111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)]
 
-rule out_r_originator_TTP_TTP_A_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP___11112121121 [color=#11EC28]: // [process=TTP] out 'r',<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_11112121121), State_11112121121($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[Send(mid_11112121121,<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [Out(<'originator', <'TTP', $TTP>, $A, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>), State_111121211211($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule Zero_1111212112111: //Zero 
+ [ State_1111212112111($A, $B, ~lock6, ~prog_, ~prog_111, ~prog_11112121, TTPID, m1, m2)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_111121211211 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_111121211211($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[Unlock($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_6($6, ~lock6, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_1111212112111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)]
+rule in_r_responder_B_TTPID_m1_m2__111122: //in 'r',<'responder', $B, TTPID, <m1, m2>> 
+ [ Fr(~prog_1111221), State_111122($A, $B, ~prog_, ~prog_111, TTPID), In(<'responder', $B, TTPID, <m1, m2>>), MID_Receiver(mid_111122)] --[ProgressFrom_1111221(~prog_1111221), Receive(mid_111122,<'responder', $B, TTPID, <m1, m2>>)]-> [State_1111221($A, $B, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule Zero_1111212112111 [color=#11EC28]: // [process=TTP] Zero 
- [State_1111212112111($A, $B, $TEXT, $TTP, ~lock6, ~prog_, ~prog_111, ~prog_11112121, na, nb)] --[ProgressTo_11112121121111(~prog_11112121)]-> []
+rule lock_m1_1111221: //lock m1 
+ [ State_1111221($A, $B, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2), Fr(~lock7)] --[Lock(~lock7, m1)]-> [State_11112211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule in_r_responder_B_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B__111122 [color=#11EC28]: // [process=TTP] in 'r',<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>> 
- [State_111122($A, $B, $TTP, ~prog_, ~prog_111), In(<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>), MID_Receiver(mid_111122)] --[Receive(mid_111122,<'responder', $B, <'TTP', $TTP>, <sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>>)]-> [State_1111221($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)]
+rule lookup_Aborted_TTPID_m1_as_x_0_11112211: //lookup <'Aborted', TTPID, m1> as x, 0 
+ [ State_11112211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[IsIn(<'Aborted', TTPID, m1>, x)]-> [State_111122111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)]
 
-rule lock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_1111221 [color=#11EC28]: // [process=TTP] lock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_1111221($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb), Fr(~lock7)] --[Lock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Lock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_11112211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule lookup_Aborted_TTPID_m1_as_x_1_11112211: //lookup <'Aborted', TTPID, m1> as x, 1 
+ [ State_11112211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[IsNotSet(<'Aborted', TTPID, m1>)]-> [State_111122112($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule lookup_Aborted_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_x_0_11112211 [color=#11EC28]: // [process=TTP] lookup <'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as x, 0 
- [State_11112211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[IsIn(<'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, x)]-> [State_111122111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)]
+rule out_r_responder_TTPID_B_sign_Aborted_sign_Abort_m1_sk_A_hnb_skTTPID__111122111: //out 'r',<'responder', TTPID, $B, sign(<'Aborted', sign(<'Abort', m1>, sk($A)), h(nb)>, sk(TTPID))> 
+ [ MID_Sender(mid_111122111), State_111122111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)] --[Send(mid_111122111,<'responder', TTPID, $B, sign(<'Aborted', sign(<'Abort', m1>, sk($A)), h(nb)>, sk(TTPID))>)]-> [Out(<'responder', TTPID, $B, sign(<'Aborted', sign(<'Abort', m1>, sk($A)), h(nb)>, sk(TTPID))>), State_1111221111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)]
 
-rule lookup_Aborted_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_as_x_1_11112211 [color=#11EC28]: // [process=TTP] lookup <'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))> as x, 1 
- [State_11112211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[IsNotSet(<'Aborted', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>)]-> [State_111122112($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule unlock_m1_1111221111: //unlock m1 
+ [ State_1111221111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)] --[ProgressTo_11112211111(~prog_1111221), Unlock(~lock7, m1)]-> [State_11112211111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)]
 
-rule out_r_responder_TTP_TTP_B_sign_Aborted_sign_Abort_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sk_A_hnb_sk_TTP_TTP___111122111 [color=#11EC28]: // [process=TTP] out 'r',<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_111122111), State_111122111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)] --[Send(mid_111122111,<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))>)]-> [Out(<'responder', <'TTP', $TTP>, $B, sign(<'Aborted', sign(<'Abort', sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sk($A)), h(nb)>, sk(<'TTP', $TTP>))>), State_1111221111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)]
+rule Zero_11112211111: //Zero 
+ [ State_11112211111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2, x)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_1111221111 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_1111221111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)] --[Unlock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_11112211111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)]
+rule insert_F_Resolved_TTPID_m1_m2_111122112: //insert <'F_Resolved', TTPID, m1>,m2 
+ [ State_111122112($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[Insert(<'F_Resolved', TTPID, m1>, m2)]-> [State_1111221121($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule Zero_11112211111 [color=#11EC28]: // [process=TTP] Zero 
- [State_11112211111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb, x)] --[]-> []
+rule event_ResponderResolvedTTPID_A_B_TEXT_na_1111221121: //event ResponderResolved(TTPID, $A, $B, $TEXT, na) 
+ [ State_1111221121($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[Event(), ResponderResolved(TTPID, $A, $B, $TEXT, na)]-> [State_11112211211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule insert_F_Resolved_TTP_TTP_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_111122112 [color=#11EC28]: // [process=TTP] insert <'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>,sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)) 
- [State_111122112($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[Insert(<'F_Resolved', <'TTP', $TTP>, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))>, sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)))]-> [State_1111221121($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule out_r_responder_TTPID_B_sign_m1_m2_skTTPID__11112211211: //out 'r',<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))> 
+ [ MID_Sender(mid_11112211211), State_11112211211($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[Send(mid_11112211211,<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))>)]-> [Out(<'responder', TTPID, $B, sign(<m1, m2>, sk(TTPID))>), State_111122112111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule event_ResponderResolved_TTP_TTP_A_B_TEXT_na_1111221121 [color=#11EC28]: // [process=TTP] event ResponderResolved(<'TTP', $TTP>, $A, $B, $TEXT, na) 
- [State_1111221121($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[Event(), ResponderResolved(<'TTP', $TTP>, $A, $B, $TEXT, na)]-> [State_11112211211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule unlock_m1_111122112111: //unlock m1 
+ [ State_111122112111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[ProgressTo_1111221121111(~prog_1111221), Unlock(~lock7, m1)]-> [State_1111221121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)]
 
-rule out_r_responder_TTP_TTP_B_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP___11112211211 [color=#11EC28]: // [process=TTP] out 'r',<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))> 
- [MID_Sender(mid_11112211211), State_11112211211($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[Send(mid_11112211211,<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [Out(<'responder', <'TTP', $TTP>, $B, sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>), State_111122112111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule Zero_1111221121111: //Zero 
+ [ State_1111221121111($A, $B, ~lock7, ~prog_, ~prog_111, ~prog_1111221, TTPID, m1, m2)] --[]-> []
 
-rule unlock_sign_A_B_TTP_TTP_TEXT_hna_sk_A_111122112111 [color=#11EC28]: // [process=TTP] unlock sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)) 
- [State_111122112111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[Unlock($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), Unlock_7($7, ~lock7, sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)))]-> [State_1111221121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)]
+rule Par_1112: //Par 
+ [ State_1112($A, $B, ~prog_, ~prog_111, TTPID)] --[ProgressTo_11122(~prog_111), ProgressTo_11121(~prog_111)]-> [State_11121($A, $B, ~prog_, ~prog_111, TTPID), State_11122($A, $B, ~prog_, ~prog_111, TTPID)]
 
-rule Zero_1111221121111 [color=#11EC28]: // [process=TTP] Zero 
- [State_1111221121111($A, $B, $TEXT, $TTP, ~lock7, ~prog_, ~prog_111, na, nb)] --[]-> []
+rule in_c_m3_m1_m2_m4__11121: //in 'c',<m3, m1, m2, m4> 
+ [ Fr(~prog_111211), State_11121($A, $B, ~prog_, ~prog_111, TTPID), In(<'c', <m3, m1, m2, m4>>)] --[ProgressFrom_111211(~prog_111211), ChannelInEvent(<'c', <m3, m1, m2, m4>>)]-> [State_111211($A, $B, ~prog_, ~prog_111, ~prog_111211, TTPID, m1, m2, m3, m4)]
 
-rule Par_1112 [color=#45D1E2]: // [process=Judge] Par 
- [State_1112($A, $B, $TTP, ~prog_, ~prog_111)] --[]-> [State_11121($A, $B, $TTP, ~prog_, ~prog_111), State_11122($A, $B, $TTP, ~prog_, ~prog_111)]
+rule event_ContractJudge_A_B_TEXT_111211: //event ContractJudge($A, $B, $TEXT) 
+ [ State_111211($A, $B, ~prog_, ~prog_111, ~prog_111211, TTPID, m1, m2, m3, m4)] --[ProgressTo_1112111(~prog_111211), Event(), ContractJudge($A, $B, $TEXT)]-> [State_1112111($A, $B, ~prog_, ~prog_111, ~prog_111211, TTPID, m1, m2, m3, m4)]
 
-rule in_c_sign_na_hnb_sk_A_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sign_nb_hna_sk_B__11121 [color=#45D1E2]: // [process=Judge] in 'c',<sign(<na, h(nb)>, sk($A)), sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), sign(<nb, h(na)>, sk($B))> 
- [State_11121($A, $B, $TTP, ~prog_, ~prog_111), In(<'c', <sign(<na, h(nb)>, sk($A)), sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), sign(<nb, h(na)>, sk($B))>>)] --[ProgressTo_111212(~prog_111), ProgressTo_111211(~prog_111), ChannelInEvent(<'c', <sign(<na, h(nb)>, sk($A)), sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B)), sign(<nb, h(na)>, sk($B))>>)]-> [State_111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)]
+rule Zero_1112111: //Zero 
+ [ State_1112111($A, $B, ~prog_, ~prog_111, ~prog_111211, TTPID, m1, m2, m3, m4)] --[]-> []
 
-rule event_ContractJudge_A_B_TEXT_111211 [color=#45D1E2]: // [process=Judge] event ContractJudge($A, $B, $TEXT) 
- [Fr(~prog_1112111), State_111211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)] --[ProgressFrom_1112111(~prog_1112111), Event(), ContractJudge($A, $B, $TEXT)]-> [State_1112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_1112111, na, nb)]
+rule in_c_sign_m1_m2_skTTPID_11122: //in 'c',sign(<m1, m2>, sk(TTPID)) 
+ [ Fr(~prog_111221), State_11122($A, $B, ~prog_, ~prog_111, TTPID), In(<'c', sign(<m1, m2>, sk(TTPID))>)] --[ProgressFrom_111221(~prog_111221), ChannelInEvent(<'c', sign(<m1, m2>, sk(TTPID))>)]-> [State_111221($A, $B, ~prog_, ~prog_111, ~prog_111221, TTPID, m1, m2)]
 
-rule Zero_1112111 [color=#45D1E2]: // [process=Judge] Zero 
- [State_1112111($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, ~prog_1112111, na, nb)] --[ProgressTo_11121111(~prog_1112111)]-> []
+rule event_ContractJudge_A_B_TEXT_111221: //event ContractJudge($A, $B, $TEXT) 
+ [ State_111221($A, $B, ~prog_, ~prog_111, ~prog_111221, TTPID, m1, m2)] --[ProgressTo_1112211(~prog_111221), Event(), ContractJudge($A, $B, $TEXT)]-> [State_1112211($A, $B, ~prog_, ~prog_111, ~prog_111221, TTPID, m1, m2)]
 
-rule in_c_sign_sign_A_B_TTP_TTP_TEXT_hna_sk_A_sign_hsign_A_B_TTP_TTP_TEXT_hna_sk_A_hnb_sk_B_sk_TTP_TTP__11122 [color=#45D1E2]: // [process=Judge] in 'c',sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>)) 
- [State_11122($A, $B, $TTP, ~prog_, ~prog_111), In(<'c', sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)] --[ChannelInEvent(<'c', sign(<sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A)), sign(<h(sign(<$A, $B, <'TTP', $TTP>, $TEXT, h(na)>, sk($A))), h(nb)>, sk($B))>, sk(<'TTP', $TTP>))>)]-> [State_111221($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)]
+rule Zero_1112211: //Zero 
+ [ State_1112211($A, $B, ~prog_, ~prog_111, ~prog_111221, TTPID, m1, m2)] --[]-> []
 
-rule event_ContractJudge_A_B_TEXT_111221 [color=#45D1E2]: // [process=Judge] event ContractJudge($A, $B, $TEXT) 
- [State_111221($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)] --[Event(), ContractJudge($A, $B, $TEXT)]-> [State_1112211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)]
+rule Rep_0_2: //Rep, 0 
+ [ State_2(~prog_)] --[]-> [!Semistate_21(~prog_)]
 
-rule Zero_1112211 [color=#45D1E2]: // [process=Judge] Zero 
- [State_1112211($A, $B, $TEXT, $TTP, ~prog_, ~prog_111, na, nb)] --[]-> []
+rule Rep_1_2: //Rep, 1 
+ [ !Semistate_21(~prog_)] --[]-> [State_21(~prog_)]
 
-rule Rep_0_2: // [process=top-level] Rep, 0 
- [State_2(~prog_)] --[]-> [!Semistate_21(~prog_)]
+rule in_c_corrupt_x__21: //in 'c',<'corrupt', $x> 
+ [ Fr(~prog_211), State_21(~prog_), In(<'c', <'corrupt', $x>>)] --[ProgressFrom_211(~prog_211), ChannelInEvent(<'c', <'corrupt', $x>>)]-> [State_211($x, ~prog_, ~prog_211)]
 
-rule Rep_1_2: // [process=top-level] Rep, 1 
- [!Semistate_21(~prog_)] --[]-> [State_21(~prog_)]
+rule event_Corrupt_x_211: //event Corrupt($x) 
+ [ State_211($x, ~prog_, ~prog_211)] --[Event(), Corrupt($x)]-> [State_2111($x, ~prog_, ~prog_211)]
 
-rule in_c_corrupt_x__21: // [process=top-level] in 'c',<'corrupt', $x> 
- [Fr(~prog_211), State_21(~prog_), In(<'c', <'corrupt', $x>>)] --[ProgressFrom_211(~prog_211), ChannelInEvent(<'c', <'corrupt', $x>>)]-> [State_211($x, ~prog_, ~prog_211)]
+rule out_c_sk_x_2111: //out 'c',sk($x) 
+ [ State_2111($x, ~prog_, ~prog_211), In('c')] --[ChannelInEvent('c')]-> [State_21111($x, ~prog_, ~prog_211), Out(sk($x))]
 
-rule event_Corrupt_x_211: // [process=top-level] event Corrupt($x) 
- [State_211($x, ~prog_, ~prog_211)] --[Event(), Corrupt($x)]-> [State_2111($x, ~prog_, ~prog_211)]
+rule Par_21111: //Par 
+ [ State_21111($x, ~prog_, ~prog_211)] --[ProgressTo_211112(~prog_211)]-> [State_211111($x, ~prog_, ~prog_211), State_211112($x, ~prog_, ~prog_211)]
 
-rule out_c_sk_x_2111: // [process=top-level] out 'c',sk($x) 
- [State_2111($x, ~prog_, ~prog_211), In('c')] --[ChannelInEvent('c')]-> [State_21111($x, ~prog_, ~prog_211), Out(sk($x))]
+rule Par_211111: //Par 
+ [ State_211111($x, ~prog_, ~prog_211)] --[ProgressTo_2111112(~prog_211)]-> [State_2111111($x, ~prog_, ~prog_211), State_2111112($x, ~prog_, ~prog_211)]
 
-rule Par_21111: // [process=top-level] Par 
- [State_21111($x, ~prog_, ~prog_211)] --[ProgressTo_211112(~prog_211)]-> [State_211111($x, ~prog_, ~prog_211), State_211112($x, ~prog_, ~prog_211)]
+rule Par_2111111: //Par 
+ [ State_2111111($x, ~prog_, ~prog_211)] --[ProgressTo_21111112(~prog_211), ProgressTo_21111111(~prog_211)]-> [State_21111111($x, ~prog_, ~prog_211), State_21111112($x, ~prog_, ~prog_211)]
 
-rule Par_211111: // [process=top-level] Par 
- [State_211111($x, ~prog_, ~prog_211)] --[ProgressTo_2111112(~prog_211)]-> [State_2111111($x, ~prog_, ~prog_211), State_2111112($x, ~prog_, ~prog_211)]
+rule Rep_0_21111111: //Rep, 0 
+ [ State_21111111($x, ~prog_, ~prog_211)] --[]-> [!Semistate_211111111($x, ~prog_, ~prog_211)]
 
-rule Par_2111111: // [process=top-level] Par 
- [State_2111111($x, ~prog_, ~prog_211)] --[ProgressTo_21111112(~prog_211), ProgressTo_21111111(~prog_211)]-> [State_21111111($x, ~prog_, ~prog_211), State_21111112($x, ~prog_, ~prog_211)]
+rule Rep_1_21111111: //Rep, 1 
+ [ !Semistate_211111111($x, ~prog_, ~prog_211)] --[]-> [State_211111111($x, ~prog_, ~prog_211)]
 
-rule Rep_0_21111111: // [process=top-level] Rep, 0 
- [State_21111111($x, ~prog_, ~prog_211)] --[]-> [!Semistate_211111111($x, ~prog_, ~prog_211)]
+rule in_r_responder_x_TTPID_m__211111111: //in 'r',<'responder', $x, TTPID, m> 
+ [ State_211111111($x, ~prog_, ~prog_211), In(<'responder', $x, TTPID, m>), MID_Receiver(mid_211111111)] --[Receive(mid_211111111,<'responder', $x, TTPID, m>)]-> [State_2111111111($x, ~prog_, ~prog_211, TTPID, m)]
 
-rule Rep_1_21111111: // [process=top-level] Rep, 1 
- [!Semistate_211111111($x, ~prog_, ~prog_211)] --[]-> [State_211111111($x, ~prog_, ~prog_211)]
+rule Zero_2111111111: //Zero 
+ [ State_2111111111($x, ~prog_, ~prog_211, TTPID, m)] --[]-> []
 
-rule in_r_responder_x_TTP_TTP_m__211111111: // [process=top-level] in 'r',<'responder', $x, <'TTP', $TTP>, m> 
- [State_211111111($x, ~prog_, ~prog_211), In(<'responder', $x, <'TTP', $TTP>, m>), MID_Receiver(mid_211111111)] --[Receive(mid_211111111,<'responder', $x, <'TTP', $TTP>, m>)]-> [State_2111111111($TTP, $x, ~prog_, ~prog_211, m)]
+rule Rep_0_21111112: //Rep, 0 
+ [ State_21111112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_211111121($x, ~prog_, ~prog_211)]
 
-rule Zero_2111111111: // [process=top-level] Zero 
- [State_2111111111($TTP, $x, ~prog_, ~prog_211, m)] --[]-> []
+rule Rep_1_21111112: //Rep, 1 
+ [ !Semistate_211111121($x, ~prog_, ~prog_211)] --[]-> [State_211111121($x, ~prog_, ~prog_211)]
 
-rule Rep_0_21111112: // [process=top-level] Rep, 0 
- [State_21111112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_211111121($x, ~prog_, ~prog_211)]
+rule in_r_originator_x_TTPID_m__211111121: //in 'r',<'originator', $x, TTPID, m> 
+ [ State_211111121($x, ~prog_, ~prog_211), In(<'originator', $x, TTPID, m>), MID_Receiver(mid_211111121)] --[Receive(mid_211111121,<'originator', $x, TTPID, m>)]-> [State_2111111211($x, ~prog_, ~prog_211, TTPID, m)]
 
-rule Rep_1_21111112: // [process=top-level] Rep, 1 
- [!Semistate_211111121($x, ~prog_, ~prog_211)] --[]-> [State_211111121($x, ~prog_, ~prog_211)]
+rule Zero_2111111211: //Zero 
+ [ State_2111111211($x, ~prog_, ~prog_211, TTPID, m)] --[]-> []
 
-rule in_r_originator_x_TTP_TTP_m__211111121: // [process=top-level] in 'r',<'originator', $x, <'TTP', $TTP>, m> 
- [State_211111121($x, ~prog_, ~prog_211), In(<'originator', $x, <'TTP', $TTP>, m>), MID_Receiver(mid_211111121)] --[Receive(mid_211111121,<'originator', $x, <'TTP', $TTP>, m>)]-> [State_2111111211($TTP, $x, ~prog_, ~prog_211, m)]
+rule Rep_0_2111112: //Rep, 0 
+ [ State_2111112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_21111121($x, ~prog_, ~prog_211)]
 
-rule Zero_2111111211: // [process=top-level] Zero 
- [State_2111111211($TTP, $x, ~prog_, ~prog_211, m)] --[]-> []
+rule Rep_1_2111112: //Rep, 1 
+ [ !Semistate_21111121($x, ~prog_, ~prog_211)] --[]-> [State_21111121($x, ~prog_, ~prog_211)]
 
-rule Rep_0_2111112: // [process=top-level] Rep, 0 
- [State_2111112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_21111121($x, ~prog_, ~prog_211)]
+rule in_r_responder_TTPID_x_m__21111121: //in 'r',<'responder', TTPID, $x, m> 
+ [ State_21111121($x, ~prog_, ~prog_211), In(<'responder', TTPID, $x, m>), MID_Receiver(mid_21111121)] --[Receive(mid_21111121,<'responder', TTPID, $x, m>)]-> [State_211111211($x, ~prog_, ~prog_211, TTPID, m)]
 
-rule Rep_1_2111112: // [process=top-level] Rep, 1 
- [!Semistate_21111121($x, ~prog_, ~prog_211)] --[]-> [State_21111121($x, ~prog_, ~prog_211)]
+rule Zero_211111211: //Zero 
+ [ State_211111211($x, ~prog_, ~prog_211, TTPID, m)] --[]-> []
 
-rule in_r_responder_TTP_TTP_x_m__21111121: // [process=top-level] in 'r',<'responder', <'TTP', $TTP>, $x, m> 
- [State_21111121($x, ~prog_, ~prog_211), In(<'responder', <'TTP', $TTP>, $x, m>), MID_Receiver(mid_21111121)] --[Receive(mid_21111121,<'responder', <'TTP', $TTP>, $x, m>)]-> [State_211111211($TTP, $x, ~prog_, ~prog_211, m)]
+rule Rep_0_211112: //Rep, 0 
+ [ State_211112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_2111121($x, ~prog_, ~prog_211)]
 
-rule Zero_211111211: // [process=top-level] Zero 
- [State_211111211($TTP, $x, ~prog_, ~prog_211, m)] --[]-> []
+rule Rep_1_211112: //Rep, 1 
+ [ !Semistate_2111121($x, ~prog_, ~prog_211)] --[]-> [State_2111121($x, ~prog_, ~prog_211)]
 
-rule Rep_0_211112: // [process=top-level] Rep, 0 
- [State_211112($x, ~prog_, ~prog_211)] --[]-> [!Semistate_2111121($x, ~prog_, ~prog_211)]
+rule in_r_originator_TTPID_x_m__2111121: //in 'r',<'originator', TTPID, $x, m> 
+ [ State_2111121($x, ~prog_, ~prog_211), In(<'originator', TTPID, $x, m>), MID_Receiver(mid_2111121)] --[Receive(mid_2111121,<'originator', TTPID, $x, m>)]-> [State_21111211($x, ~prog_, ~prog_211, TTPID, m)]
 
-rule Rep_1_211112: // [process=top-level] Rep, 1 
- [!Semistate_2111121($x, ~prog_, ~prog_211)] --[]-> [State_2111121($x, ~prog_, ~prog_211)]
-
-rule in_r_originator_TTP_TTP_x_m__2111121: // [process=top-level] in 'r',<'originator', <'TTP', $TTP>, $x, m> 
- [State_2111121($x, ~prog_, ~prog_211), In(<'originator', <'TTP', $TTP>, $x, m>), MID_Receiver(mid_2111121)] --[Receive(mid_2111121,<'originator', <'TTP', $TTP>, $x, m>)]-> [State_21111211($TTP, $x, ~prog_, ~prog_211, m)]
-
-rule Zero_21111211: // [process=top-level] Zero 
- [State_21111211($TTP, $x, ~prog_, ~prog_211, m)] --[]-> []
+rule Zero_21111211: //Zero 
+ [ State_21111211($x, ~prog_, ~prog_211, TTPID, m)] --[]-> []
 
  restriction set_in:
 "All x y #t3 . IsIn(x,y)@t3 ==>
@@ -390,46 +387,63 @@ restriction set_notin:
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 
 
+restriction locking:
+"All l x lp #t1 #t3 . Lock(l,x)@t1 & Lock(lp,x)@t3 
+        ==> 
+        ( #t1<#t3 
+                & (Ex #t2. Unlock(l,x)@t2 & #t1<#t2 & #t2<#t3 
+                 & (All  #t0 . Unlock(l,x)@t0 ==> #t0=#t2) 
+                 & (All lp #t0 . Lock(lp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                 & (All lp #t0 . Unlock(lp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
+                ))
+        | #t3<#t1 | #t1=#t3 "
+
+
 restriction single_session: // for a single session
     "All #i #j. Init()@i & Init()@j ==> #i=#j"
 
 
-restriction progress_111112111112121_to_11111211111212111:
-    "All p #t1. ProgressFrom_111112111112121(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11111211111212111(p )@t2)
+restriction progress_1111221_to_11112211111_or_1111221121111:
+    "All p #t1. ProgressFrom_1111221(p )@t1 ==> 
+       (Ex #t2. ProgressTo_11112211111(p )@t2)
+	 | (Ex #t2. ProgressTo_1111221121111(p )@t2)
     "
 
-restriction progress_1111111111112121_to_111111111111212111:
-    "All p #t1. ProgressFrom_1111111111112121(p )@t1 ==> 
-       (Ex #t2. ProgressTo_111111111111212111(p )@t2)
+restriction progress_111221_to_1112211:
+    "All p #t1. ProgressFrom_111221(p )@t1 ==> 
+       (Ex #t2. ProgressTo_1112211(p )@t2)
     "
 
-restriction progress_11112121_to_111121211111_or_11112121121111:
+restriction progress_11111211112121_to_1111121111212111:
+    "All p #t1. ProgressFrom_11111211112121(p )@t1 ==> 
+       (Ex #t2. ProgressTo_1111121111212111(p )@t2)
+    "
+
+restriction progress_111111111112121_to_11111111111212111:
+    "All p #t1. ProgressFrom_111111111112121(p )@t1 ==> 
+       (Ex #t2. ProgressTo_11111111111212111(p )@t2)
+    "
+
+restriction progress_11112121_to_1111212111111_or_1111212112111:
     "All p #t1. ProgressFrom_11112121(p )@t1 ==> 
-       (Ex #t2. ProgressTo_111121211111(p )@t2)
-	 | (Ex #t2. ProgressTo_11112121121111(p )@t2)
+       (Ex #t2. ProgressTo_1111212111111(p )@t2)
+	 | (Ex #t2. ProgressTo_1111212112111(p )@t2)
     "
 
-restriction progress_1112121_to_11121211:
-    "All p #t1. ProgressFrom_1112121(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11121211(p )@t2)
+restriction progress_1111121_to_111112111111111_or_111112111121:
+    "All p #t1. ProgressFrom_1111121(p )@t1 ==> 
+       (Ex #t2. ProgressTo_111112111111111(p )@t2)
+	 | (Ex #t2. ProgressTo_111112111121(p )@t2)
     "
 
-restriction progress_111121121_to_11112112111111_or_11112112112111:
-    "All p #t1. ProgressFrom_111121121(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11112112111111(p )@t2)
-	 | (Ex #t2. ProgressTo_11112112112111(p )@t2)
+restriction progress_11111111111111211_to_1111111111111121111:
+    "All p #t1. ProgressFrom_11111111111111211(p )@t1 ==> 
+       (Ex #t2. ProgressTo_1111111111111121111(p )@t2)
     "
 
-restriction progress_111111111111111211_to_11111111111111121111:
-    "All p #t1. ProgressFrom_111111111111111211(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11111111111111121111(p )@t2)
-    "
-
-restriction progress_11111211_to_1111121111111111_or_1111121111121:
-    "All p #t1. ProgressFrom_11111211(p )@t1 ==> 
-       (Ex #t2. ProgressTo_1111121111111111(p )@t2)
-	 | (Ex #t2. ProgressTo_1111121111121(p )@t2)
+restriction progress_111211_to_1112111:
+    "All p #t1. ProgressFrom_111211(p )@t1 ==> 
+       (Ex #t2. ProgressTo_1112111(p )@t2)
     "
 
 restriction progress_211_to_211112:
@@ -452,32 +466,37 @@ restriction progress_211_to_21111111:
        (Ex #t2. ProgressTo_21111111(p )@t2)
     "
 
-restriction progress_111112111112111_to_11111211111211111:
-    "All p #t1. ProgressFrom_111112111112111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11111211111211111(p )@t2)
+restriction progress_11111211112111_to_1111121111211111:
+    "All p #t1. ProgressFrom_11111211112111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_1111121111211111(p )@t2)
     "
 
-restriction progress_1111111111112111_to_111111111111211111:
-    "All p #t1. ProgressFrom_1111111111112111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_111111111111211111(p )@t2)
+restriction progress_111111111112111_to_11111111111211111:
+    "All p #t1. ProgressFrom_111111111112111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_11111111111211111(p )@t2)
     "
 
-restriction progress_1112111_to_11121111:
-    "All p #t1. ProgressFrom_1112111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11121111(p )@t2)
+restriction progress_11112111_to_111121111111_or_11112111121111:
+    "All p #t1. ProgressFrom_11112111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_111121111111(p )@t2)
+	 | (Ex #t2. ProgressTo_11112111121111(p )@t2)
     "
 
-restriction progress_111121111_to_1111211111111_or_111121111121111:
-    "All p #t1. ProgressFrom_111121111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_1111211111111(p )@t2)
-	 | (Ex #t2. ProgressTo_111121111121111(p )@t2)
+restriction progress_1111111_to_111111111111111111_or_1111111111121_or_1111111111111121:
+    "All p #t1. ProgressFrom_1111111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_111111111111111111(p )@t2)
+	 | (Ex #t2. ProgressTo_1111111111121(p )@t2)
+	 | (Ex #t2. ProgressTo_1111111111111121(p )@t2)
     "
 
-restriction progress_11111111_to_1111111111111111111_or_11111111111121_or_11111111111111121:
-    "All p #t1. ProgressFrom_11111111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_1111111111111111111(p )@t2)
-	 | (Ex #t2. ProgressTo_11111111111121(p )@t2)
-	 | (Ex #t2. ProgressTo_11111111111111121(p )@t2)
+restriction progress_111_to_111122:
+    "All p #t1. ProgressFrom_111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_111122(p )@t2)
+    "
+
+restriction progress_111_to_11122:
+    "All p #t1. ProgressFrom_111(p )@t1 ==> 
+       (Ex #t2. ProgressTo_11122(p )@t2)
     "
 
 restriction progress_111_to_1111212:
@@ -485,34 +504,24 @@ restriction progress_111_to_1111212:
        (Ex #t2. ProgressTo_1111212(p )@t2)
     "
 
-restriction progress_111_to_111212:
+restriction progress_111_to_111112:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_111212(p )@t2)
+       (Ex #t2. ProgressTo_111112(p )@t2)
     "
 
-restriction progress_111_to_11112112:
+restriction progress_111_to_11121:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11112112(p )@t2)
+       (Ex #t2. ProgressTo_11121(p )@t2)
     "
 
-restriction progress_111_to_1111121:
+restriction progress_111_to_1111211:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_1111121(p )@t2)
+       (Ex #t2. ProgressTo_1111211(p )@t2)
     "
 
-restriction progress_111_to_111211:
+restriction progress_111_to_111111:
     "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_111211(p )@t2)
-    "
-
-restriction progress_111_to_11112111:
-    "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_11112111(p )@t2)
-    "
-
-restriction progress_111_to_1111111:
-    "All p #t1. ProgressFrom_111(p )@t1 ==> 
-       (Ex #t2. ProgressTo_1111111(p )@t2)
+       (Ex #t2. ProgressTo_111111(p )@t2)
     "
 
 restriction progress__to_2:
@@ -532,31 +541,7 @@ restriction progress_init:
 restriction resilient: 
     "All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
 
- 
- restriction locking_7: 
- "All p pp l x lp #t1 #t3 . Lock_7(p,l,x)@t1 & Lock(pp,lp,x)@t3 
-         ==> 
-         ( #t1<#t3 
-                  & (Ex #t2. Unlock_7(p,l,x)@t2 & #t1<#t2 & #t2<#t3  
-                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
-                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
-                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) 
-                 )) 
-         | #t3<#t1 | #t1=#t3 " 
-
-  
- restriction locking_6: 
- "All p pp l x lp #t1 #t3 . Lock_6(p,l,x)@t1 & Lock(pp,lp,x)@t3 
-         ==> 
-         ( #t1<#t3 
-                  & (Ex #t2. Unlock_6(p,l,x)@t2 & #t1<#t2 & #t2<#t3  
-                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
-                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
-                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) 
-                 )) 
-         | #t3<#t1 | #t1=#t3 " 
-
- lemma sanity_a1b1 : exists-trace
+lemma sanity_a1b1 : exists-trace
 "	Ex #i #j a b t na. EndA1(a, b, t, na) @ i & EndB1(a, b, t, na) @ j & not( Ex #k. Corrupt(a) @ k ) & not( Ex #k. Corrupt(b) @ k )"
 
 lemma sanity_a2b1 : exists-trace

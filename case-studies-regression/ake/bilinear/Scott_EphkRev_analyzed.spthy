@@ -6,8 +6,6 @@ builtins: diffie-hellman, bilinear-pairing
 functions: fst/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 section{* Scott: MTI-C0 like identity based key exchange protocol *}
 
 rule (modulo E) KGC_Setup:
@@ -309,7 +307,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 19.559522s
+  processing time: 16.096276254s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -321,7 +319,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 19.559522s
+  processing time: 16.096276254s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

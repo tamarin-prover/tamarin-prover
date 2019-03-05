@@ -732,7 +732,7 @@ contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
 -- Automatic Prover's
 ------------------------------------------------------------------------------
 
-data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
+data SolutionExtractor = CutDFS | CutBFS | CutNothing
     deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
@@ -747,10 +747,9 @@ runAutoProver (AutoProver defaultHeuristic bound cut) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFS
-      CutBFS             -> cutOnSolvedBFS
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
-      CutNothing         -> id
+      CutDFS     -> cutOnSolvedDFS
+      CutBFS     -> cutOnSolvedBFS
+      CutNothing -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -772,10 +771,9 @@ runAutoDiffProver (AutoProver defaultHeuristic bound cut) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFSDiff
-      CutBFS             -> cutOnSolvedBFSDiff
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
-      CutNothing         -> id
+      CutDFS     -> cutOnSolvedDFSDiff
+      CutBFS     -> cutOnSolvedBFSDiff
+      CutNothing -> id
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -806,69 +804,9 @@ instance Semigroup IterDeepRes where
 instance Monoid IterDeepRes where
     mempty = NoSolution
 
--- | @cutOnSolvedSingleThreadDFS prf@ removes all other cases if an attack is
--- found. The attack search is performed using a single-thread DFS traversal.
---
--- FIXME: Note that this function may use a lot of space, as it holds onto the
--- whole proof tree.
-cutOnSolvedSingleThreadDFS :: Proof (Maybe a) -> Proof (Maybe a)
-cutOnSolvedSingleThreadDFS prf0 =
-    go $ insertPaths prf0
-  where
-    go prf = case findSolved prf of
-        NoSolution      -> prf0
-        Solution path   -> extractSolved path prf0
-        MaybeNoSolution -> error "Theory.Constraint.cutOnSolvedSingleThreadDFS: impossible, MaybeNoSolution in single thread dfs"
-      where
-        findSolved node = case node of
-              -- do not search in nodes that are not annotated
-              LNode (ProofStep _      (Nothing, _   )) _  -> NoSolution
-              LNode (ProofStep Solved (Just _ , path)) _  -> Solution path
-              LNode (ProofStep _      (Just _ , _   )) cs ->
-                  foldMap findSolved cs
-
-    extractSolved []         p               = p
-    extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
-        Just subprf ->
-          LNode pstep (M.fromList [(label, extractSolved ps subprf)])
-        Nothing     ->
-          error "Theory.Constraint.cutOnSolvedSingleThreadDFS: impossible, extractSolved failed, invalid path"
-
--- | @cutOnSolvedSingleThreadDFSDiffDFS prf@ removes all other cases if an
--- attack is found. The attack search is performed using a single-thread DFS
--- traversal.
---
--- FIXME: Note that this function may use a lot of space, as it holds onto the
--- whole proof tree.
-cutOnSolvedSingleThreadDFSDiff :: DiffProof (Maybe a) -> DiffProof (Maybe a)
-cutOnSolvedSingleThreadDFSDiff prf0 =
-    go $ insertPathsDiff prf0
-  where
-    go prf = case findSolved prf of
-        NoSolution      -> prf0
-        Solution path   -> extractSolved path prf0
-        MaybeNoSolution -> error "Theory.Constraint.cutOnSolvedSingleThreadDFSDiff: impossible, MaybeNoSolution in single thread dfs"
-      where
-        findSolved node = case node of
-              -- do not search in nodes that are not annotated
-              LNode (DiffProofStep _      (Nothing, _   )) _  -> NoSolution
-              LNode (DiffProofStep DiffAttack (Just _ , path)) _  -> Solution path
-              LNode (DiffProofStep _      (Just _ , _   )) cs ->
-                  foldMap findSolved cs
-
-    extractSolved []         p               = p
-    extractSolved (label:ps) (LNode pstep m) = case M.lookup label m of
-        Just subprf ->
-          LNode pstep (M.fromList [(label, extractSolved ps subprf)])
-        Nothing     ->
-          error "Theory.Constraint.cutOnSolvedSingleThreadDFSDiff: impossible, extractSolved failed, invalid path"
-
 -- | @cutOnSolvedDFS prf@ removes all other cases if an attack is found. The
 -- attack search is performed using a parallel DFS traversal with iterative
 -- deepening.
--- Note that when an attack is found, other, already started threads will not be
--- stopped. They will first run to completion, and only afterwards will the proof
--- complete. If this is undesirable bahavior, use cutOnSolvedSingleThreadDFS.
 --
 -- FIXME: Note that this function may use a lot of space, as it holds onto the
 -- whole proof tree.
@@ -904,12 +842,9 @@ cutOnSolvedDFS prf0 =
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFS: impossible, extractSolved failed, invalid path"
 
--- | @cutOnSolvedDFSDiff prf@ removes all other cases if an attack is found. The
+-- | @cutOnSolvedDFS prf@ removes all other cases if an attack is found. The
 -- attack search is performed using a parallel DFS traversal with iterative
 -- deepening.
--- Note that when an attack is found, other, already started threads will not be
--- stopped. They will first run to completion, and only afterwards will the proof
--- complete. If this is undesirable bahavior, use cutOnSolvedSingleThreadDFSDiff.
 --
 -- FIXME: Note that this function may use a lot of space, as it holds onto the
 -- whole proof tree.

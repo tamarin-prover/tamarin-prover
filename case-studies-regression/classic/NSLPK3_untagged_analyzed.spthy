@@ -8,8 +8,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 rule (modulo E) Register_pk:
    [ Fr( ~ltkA ) ]
   -->
@@ -709,7 +707,7 @@ analyzing: examples/classic/NSLPK3_untagged.spthy
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 2.696976s
+  processing time: 2.026706168s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
@@ -722,7 +720,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 2.696976s
+  processing time: 2.026706168s
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

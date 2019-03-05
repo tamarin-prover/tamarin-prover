@@ -75,8 +75,6 @@ module Theory (
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
-  , addHeuristic
-  , addDiffHeuristic
   , removeLemma
   , removeLemmaDiff
   , removeDiffLemma
@@ -402,7 +400,7 @@ data LemmaAttribute =
        | HideLemma String
        | LHSLemma
        | RHSLemma
-       | LemmaHeuristic [GoalRanking]
+       | LemmaHeuristic String
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -557,7 +555,6 @@ data DiffTheoryItem r r2 p p2 =
 -- and the lemmas that
 data Theory sig c r p = Theory {
          _thyName      :: String
-       , _thyHeuristic :: [GoalRanking]
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p]
@@ -570,7 +567,6 @@ $(mkLabels [''Theory])
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
          _diffThyName           :: String
-       , _diffThyHeuristic      :: [GoalRanking]
        , _diffThySignature      :: sig
        , _diffThyCacheLeft      :: c
        , _diffThyCacheRight     :: c
@@ -747,16 +743,7 @@ addDiffLemma :: DiffLemma p -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory s
 addDiffLemma l thy = do
     guard (isNothing $ lookupDiffLemma (L.get lDiffName l) thy)
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
-
--- | Add a new default heuristic. Fails if a heuristic is already defined.
-addHeuristic :: [GoalRanking] -> Theory sig c r p -> Maybe (Theory sig c r p)
-addHeuristic h (Theory n [] sig c i) = Just (Theory n h sig c i)
-addHeuristic _ _ = Nothing
-
-addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
-addDiffHeuristic _ _ = Nothing
-
+    
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
 removeLemma lemmaName thy = do
@@ -842,11 +829,11 @@ addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
-defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] []
+defaultOpenTheory flag = Theory "default" (emptySignaturePure flag) [] []
 
 -- | Default diff theory
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
-defaultOpenDiffTheory flag = DiffTheory "default" [] (emptySignaturePure flag) [] [] [] [] []
+defaultOpenDiffTheory flag = DiffTheory "default" (emptySignaturePure flag) [] [] [] [] []
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
@@ -867,15 +854,15 @@ addIntrRuleLabels thy =
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
-openTheory  (Theory n h sig c items) =
-    Theory n h (toSignaturePure sig) (openRuleCache c)
+openTheory  (Theory n sig c items) =
+    Theory n (toSignaturePure sig) (openRuleCache c)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items) =
-    DiffTheory n h (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
+openDiffTheory  (DiffTheory n sig c1 c2 c3 c4 items) =
+    DiffTheory n (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
       (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
       
@@ -1014,7 +1001,7 @@ getProofContext l thy = ProofContext
     kind
     ( L.get (cases . thyCache)                 thy)
     inductionHint
-    specifiedHeuristic
+    (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
@@ -1029,16 +1016,6 @@ getProofContext l thy = ProofContext
       | any (`elem` [SourceLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
 
-    -- Heuristic specified for the lemma > globally specified heuristic > default heuristic
-    specifiedHeuristic = case lattr of
-        Just lh -> Just lh
-        Nothing  -> case L.get thyHeuristic thy of
-                    [] -> Nothing
-                    gh -> Just (Heuristic gh)
-      where
-        lattr = (headMay [Heuristic gr
-                    | LemmaHeuristic gr <- L.get lAttributes l])
-
 -- | Get the proof context for a lemma of the closed theory.
 getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
 getProofContextDiff s l thy = case s of
@@ -1049,7 +1026,7 @@ getProofContextDiff s l thy = case s of
             kind
             ( L.get (cases . diffThyCacheLeft)                 thy)
             inductionHint
-            specifiedHeuristic
+            (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1063,7 +1040,7 @@ getProofContextDiff s l thy = case s of
             kind
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
-            specifiedHeuristic
+            (headMay [Heuristic (charToGoalRanking <$> grs) | LemmaHeuristic grs <- L.get lAttributes l])
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1077,15 +1054,6 @@ getProofContextDiff s l thy = case s of
     inductionHint
       | any (`elem` [SourceLemma, InvariantLemma]) (L.get lAttributes l) = UseInduction
       | otherwise                                                        = AvoidInduction
-    -- Heuristic specified for the lemma > globally specified heuristic > default heuristic
-    specifiedHeuristic = case lattr of
-        Just lh -> Just lh
-        Nothing  -> case L.get diffThyHeuristic thy of
-                    [] -> Nothing
-                    gh -> Just (Heuristic gh)
-      where
-        lattr = (headMay [Heuristic gr
-                    | LemmaHeuristic gr <- L.get lAttributes l])
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
@@ -1104,7 +1072,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
-            specifiedHeuristic
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1118,22 +1086,13 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             RefinedSource
             ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
-            specifiedHeuristic
+            (headMay [Heuristic (charToGoalRankingDiff <$> grs) | LemmaHeuristic grs <- L.get lDiffAttributes l])
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
-
-    specifiedHeuristic = case lattr of
-        Just lh -> Just lh
-        Nothing  -> case L.get diffThyHeuristic thy of
-                    [] -> Nothing
-                    gh -> Just (Heuristic gh)
-      where
-        lattr = (headMay [Heuristic gr
-                    | LemmaHeuristic gr <- L.get lDiffAttributes l])
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
@@ -1217,9 +1176,8 @@ closeDiffTheory maudePath thy0 = do
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
 closeDiffTheoryWithMaude sig thy0 = do
-    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) h sig cacheLeft cacheRight diffCacheLeft diffCacheRight items)
+    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) sig cacheLeft cacheRight diffCacheLeft diffCacheRight items)
   where
-    h              = L.get diffThyHeuristic thy0
     diffCacheLeft  = closeRuleCache restrictionsLeft  typAsms sig leftClosedRules  (L.get diffThyDiffCacheLeft  thy0) True
     diffCacheRight = closeRuleCache restrictionsRight typAsms sig rightClosedRules (L.get diffThyDiffCacheRight thy0) True
     cacheLeft  = closeRuleCache restrictionsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0) False
@@ -1260,9 +1218,9 @@ closeDiffTheoryWithMaude sig thy0 = do
 
     -- extract protocol rules
     leftClosedRules  :: [ClosedProtoRule]
-    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose items)
+    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose items)
     rightClosedRules :: [ClosedProtoRule]
-    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose items)
+    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose items)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1285,9 +1243,8 @@ closeDiffTheoryWithMaude sig thy0 = do
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
       proveTheory (const True) checkProof
-    $ Theory (L.get thyName thy0) h sig cache items
+    $ Theory (L.get thyName thy0) sig cache items
   where
-    h          = L.get thyHeuristic thy0
     cache      = closeRuleCache restrictions typAsms sig rules (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
@@ -1315,7 +1272,7 @@ closeTheoryWithMaude sig thy0 = do
 
     -- extract protocol rules
     rules :: [ClosedProtoRule]
-    rules = theoryRules (Theory errClose errClose errClose errClose items)
+    rules = theoryRules (Theory errClose errClose errClose items)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1641,7 +1598,6 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
-    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
     parMap rdeepseq ppItem (L.get thyItems thy) ++
@@ -1649,7 +1605,6 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
   where
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment)
-    thyH = L.get thyHeuristic thy
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
@@ -1659,7 +1614,6 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get diffThySignature thy
-    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get diffThyCacheLeft thy
     , ppCache $ L.get diffThyCacheRight thy
     , ppCache $ L.get diffThyDiffCacheLeft thy
@@ -1670,7 +1624,6 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
   where
     ppItem = foldDiffTheoryItem
         prettyDiffRule ppRule (prettyDiffLemma ppDiffPrf) (prettyEitherLemma ppPrf) prettyEitherRestriction (uncurry prettyFormalComment)
-    thyH = L.get diffThyHeuristic thy
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
@@ -1683,7 +1636,7 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute ReuseLemma         = text "reuse"
     prettyLemmaAttribute InvariantLemma     = text "use_induction"
     prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
-    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ h)
     prettyLemmaAttribute LHSLemma           = text "left"
     prettyLemmaAttribute RHSLemma           = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"

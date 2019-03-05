@@ -722,10 +722,9 @@ getAutoProverR idx extractor bound =
         | otherwise = (Nothing,    []                               )
 
     (proverName, extractorQualfier) = case extractor of
-        CutNothing         -> ("characterization", ["dfs"]   )
-        CutDFS             -> ("the autoprover",   []        )
-        CutBFS             -> ("the autoprover",   ["bfs"]   )
-        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutNothing -> ("characterization", ["dfs"])
+        CutDFS     -> ("the autoprover",   []     )
+        CutBFS     -> ("the autoprover",   ["bfs"])
 
 -- | Run an autoprover on a given proof path.
 getAutoProverDiffR :: TheoryIdx
@@ -746,10 +745,9 @@ getAutoProverDiffR idx extractor bound s =
         | otherwise = (Nothing,    []                               )
 
     (proverName, extractorQualfier) = case extractor of
-        CutNothing         -> ("characterization", ["dfs"]   )
-        CutDFS             -> ("the autoprover",   []        )
-        CutBFS             -> ("the autoprover",   ["bfs"]   )
-        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutNothing -> ("characterization", ["dfs"])
+        CutDFS     -> ("the autoprover",   []     )
+        CutBFS     -> ("the autoprover",   ["bfs"])
 
 -- | Run an autoprover on a given proof path.
 getAutoDiffProverR :: TheoryIdx
@@ -772,7 +770,6 @@ getAutoDiffProverR idx extractor bound =
     (proverName, extractorQualfier) = case extractor of
         CutNothing -> ("characterization", ["dfs"])
         CutDFS     -> ("the autoprover",   []     )
-        CutSingleThreadDFS -> ("the autoprover",   []     )
         CutBFS     -> ("the autoprover",   ["bfs"])
 
 

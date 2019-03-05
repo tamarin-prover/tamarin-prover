@@ -6,8 +6,6 @@ builtins: diffie-hellman, bilinear-pairing
 functions: fst/1, h/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 section{* A variant of the Chen-Kudla protocol that uses ordered concatenation instead 
           addition of points *}
 
@@ -520,7 +518,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 38.471097s
+  processing time: 30.18953555s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ------------------------------------------------------------------------------
@@ -531,7 +529,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 38.471097s
+  processing time: 30.18953555s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

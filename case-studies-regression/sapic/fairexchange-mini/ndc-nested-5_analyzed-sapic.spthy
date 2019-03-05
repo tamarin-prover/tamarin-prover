@@ -11,8 +11,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-heuristic: l
-
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -154,14 +152,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( State_( ~prog_ ) ▶₀ #t )
-  case Init_
-  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_22111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1211( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221211( ~prog_ ) @ #t2)) )
-    case case_1
+solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_22111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_1211( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_221211( ~prog_.1 ) @ #t2)) )
+  case case_1
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
     solve( State_( ~prog_ ) ▶₀ #t2 )
       case Init_
       SOLVED // trace found
@@ -176,14 +174,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( State_121( ~prog_ ) ▶₀ #t )
-  case Rep_1_12
-  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_22111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1211( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221211( ~prog_ ) @ #t2)) )
-    case case_4
+solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_22111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_1211( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_221211( ~prog_.1 ) @ #t2)) )
+  case case_4
+  solve( State_121( ~prog_ ) ▶₀ #t )
+    case Rep_1_12
     solve( State_121( ~prog_ ) ▶₀ #t2 )
       case Rep_1_12
       SOLVED // trace found
@@ -198,14 +196,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (C( ) @ #t)"
 */
 simplify
-solve( State_211( ~prog_ ) ▶₀ #t )
-  case Rep_1_21
-  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_22111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1211( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221211( ~prog_ ) @ #t2)) )
-    case case_2
+solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_22111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_1211( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_221211( ~prog_.1 ) @ #t2)) )
+  case case_2
+  solve( State_211( ~prog_ ) ▶₀ #t )
+    case Rep_1_21
     solve( State_211( ~prog_ ) ▶₀ #t2 )
       case Rep_1_21
       SOLVED // trace found
@@ -220,14 +218,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (D( ) @ #t)"
 */
 simplify
-solve( State_221( ~prog_ ) ▶₀ #t )
-  case Rep_1_22
-  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_22111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1211( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221211( ~prog_ ) @ #t2)) )
-    case case_3
+solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_22111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_1211( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_221211( ~prog_.1 ) @ #t2)) )
+  case case_3
+  solve( State_221( ~prog_ ) ▶₀ #t )
+    case Rep_1_22
     solve( State_221( ~prog_ ) ▶₀ #t2 )
       case Rep_1_22
       SOLVED // trace found
@@ -242,14 +240,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (D( ) @ #t)"
 */
 simplify
-solve( State_221( ~prog_ ) ▶₀ #t )
-  case Rep_1_22
-  solve( (∃ #t2. (ProgressTo_111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_2111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_22111( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1211( ~prog_ ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221211( ~prog_ ) @ #t2)) )
-    case case_3
+solve( (∃ #t2. (ProgressTo_111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_2111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_22111( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_1211( ~prog_.1 ) @ #t2))  ∥
+       (∃ #t2. (ProgressTo_221211( ~prog_.1 ) @ #t2)) )
+  case case_3
+  solve( State_221( ~prog_ ) ▶₀ #t )
+    case Rep_1_22
     solve( State_221( ~prog_ ) ▶₀ #t2 )
       case Rep_1_22
       SOLVED // trace found
@@ -320,7 +318,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested-5.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested-5.spthy.tmp
-  processing time: 0.168211s
+  processing time: 0.139294331s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -339,7 +337,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested-5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested-5.spthy.tmp
-  processing time: 0.168211s
+  processing time: 0.139294331s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   

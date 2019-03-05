@@ -15,8 +15,6 @@ equations:
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
 
-
-
 rule (modulo E) Register_Voter_pk:
    [ Fr( ~ltkV ) ]
   -->
@@ -216,7 +214,7 @@ analyzing: examples/post17/okamoto_eligibility.spthy
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.941324s
+  processing time: 0.455271146s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)
@@ -229,7 +227,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.941324s
+  processing time: 0.455271146s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)

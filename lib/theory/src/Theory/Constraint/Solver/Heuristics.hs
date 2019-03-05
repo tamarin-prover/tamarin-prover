@@ -29,8 +29,6 @@ module Theory.Constraint.Solver.Heuristics (
   , listGoalRankingsDiff
 
   , goalRankingName
-  , prettyGoalRankings
-  , prettyGoalRanking
 ) where
 
 import           GHC.Generics       (Generic)
@@ -38,7 +36,6 @@ import           Data.Binary
 import           Control.DeepSeq
 import           Data.Maybe         (fromMaybe)
 import qualified Data.Map as M
-import           Data.List          (find)
 
 import           Theory.Text.Pretty
 
@@ -126,15 +123,3 @@ goalRankingName ranking =
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
-
-prettyGoalRankings :: [GoalRanking] -> String
-prettyGoalRankings rs = map prettyGoalRanking rs
-
-prettyGoalRanking :: GoalRanking -> Char
-prettyGoalRanking ranking = case find (\(_,v) -> v == ranking) $ combinedIdentifiers of
-    Just (k,_) -> k
-    Nothing    -> error "Goal ranking does not have a defined identifier"
-  where
-    -- Note because find works left first this will look at non-diff identifiers first. Thus,
-    -- this assumes the diff rankings don't use a different character for the same goal ranking.
-    combinedIdentifiers = (M.toList goalRankingIdentifiers) ++ (M.toList goalRankingIdentifiersDiff)

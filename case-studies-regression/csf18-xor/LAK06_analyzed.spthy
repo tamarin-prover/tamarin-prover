@@ -6,8 +6,6 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 rule (modulo E) setup:
    [ Fr( ~k ) ]
   --[ OnlyOnce( 'setup' ), Create( ~k ) ]->
@@ -6770,7 +6768,7 @@ analyzing: examples/csf18-xor/LAK06.spthy
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 14.287742s
+  processing time: 10.262999363s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2148 steps)
@@ -6784,7 +6782,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 14.287742s
+  processing time: 10.262999363s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2148 steps)

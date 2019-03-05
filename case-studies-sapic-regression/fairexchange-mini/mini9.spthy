@@ -6,44 +6,41 @@ equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
 section{* small example for progression function *}
 
 builtins: signing, hashing
+rule Init_: //Init 
+ [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
+rule MessageID_rule_: //MessageID-rule 
+ [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule Init_: // [process=top-level] Init 
- [Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
+rule event_Start_: //event Start() 
+ [ State_(~prog_)] --[Event(), Start()]-> [State_1(~prog_)]
 
-rule MessageID_rule_: // [process=top-level] MessageID-rule 
- [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+rule Par_1: //Par 
+ [ State_1(~prog_)] --[ProgressTo_12(~prog_)]-> [State_11(~prog_), State_12(~prog_)]
 
-rule event_Start_: // [process=top-level] event Start() 
- [State_(~prog_)] --[Event(), Start()]-> [State_1(~prog_)]
+rule out_r_Help__111: //out 'r','Help' 
+ [ MID_Sender(mid_111), State_11(~prog_)] --[ProgressTo_1111(~prog_), Send(mid_111,'Help')]-> [Out('Help'), State_1111(~prog_)]
 
-rule Par_1: // [process=top-level] Par 
- [State_1(~prog_)] --[ProgressTo_12(~prog_)]-> [State_11(~prog_), State_12(~prog_)]
+rule Zero_1111: //Zero 
+ [ State_1111(~prog_)] --[]-> []
 
-rule out_r_Help__111: // [process=top-level] out 'r','Help' 
- [MID_Sender(mid_111), State_11(~prog_)] --[ProgressTo_1111(~prog_), Send(mid_111,'Help')]-> [Out('Help'), State_1111(~prog_)]
+rule in_c_m_112: //in 'c',m 
+ [ State_11(~prog_), In(<'c', m>)] --[ChannelInEvent(<'c', m>)]-> [State_1121(~prog_, m)]
 
-rule Zero_1111: // [process=top-level] Zero 
- [State_1111(~prog_)] --[]-> []
+rule event_B_1121: //event B() 
+ [ State_1121(~prog_, m)] --[ProgressTo_11211(~prog_), Event(), B()]-> [State_11211(~prog_, m)]
 
-rule in_c_m_112: // [process=top-level] in 'c',m 
- [State_11(~prog_), In(<'c', m>)] --[ChannelInEvent(<'c', m>)]-> [State_1121(~prog_, m)]
+rule Zero_11211: //Zero 
+ [ State_11211(~prog_, m)] --[]-> []
 
-rule event_B_1121: // [process=top-level] event B() 
- [State_1121(~prog_, m)] --[ProgressTo_11211(~prog_), Event(), B()]-> [State_11211(~prog_, m)]
+rule in_r_Help__12: //in 'r','Help' 
+ [ Fr(~prog_121), State_12(~prog_), In('Help'), MID_Receiver(mid_12)] --[ProgressFrom_121(~prog_121), Receive(mid_12,'Help')]-> [State_121(~prog_, ~prog_121)]
 
-rule Zero_11211: // [process=top-level] Zero 
- [State_11211(~prog_, m)] --[]-> []
+rule event_A_121: //event A() 
+ [ State_121(~prog_, ~prog_121)] --[ProgressTo_1211(~prog_121), Event(), A()]-> [State_1211(~prog_, ~prog_121)]
 
-rule in_r_Help__12: // [process=top-level] in 'r','Help' 
- [Fr(~prog_121), State_12(~prog_), In('Help'), MID_Receiver(mid_12)] --[ProgressFrom_121(~prog_121), Receive(mid_12,'Help')]-> [State_121(~prog_, ~prog_121)]
-
-rule event_A_121: // [process=top-level] event A() 
- [State_121(~prog_, ~prog_121)] --[ProgressTo_1211(~prog_121), Event(), A()]-> [State_1211(~prog_, ~prog_121)]
-
-rule Zero_1211: // [process=top-level] Zero 
- [State_1211(~prog_, ~prog_121)] --[]-> []
+rule Zero_1211: //Zero 
+ [ State_1211(~prog_, ~prog_121)] --[]-> []
 
 
 restriction single_session: // for a single session

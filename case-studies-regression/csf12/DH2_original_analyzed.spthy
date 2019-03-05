@@ -6,8 +6,6 @@ builtins: diffie-hellman
 functions: KDF/1, MAC/2, fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 section{* DH2 *}
 
 rule (modulo E) Register_pk:
@@ -1830,7 +1828,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
+  processing time: 13.837541327s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1841,7 +1839,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
+  processing time: 13.837541327s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

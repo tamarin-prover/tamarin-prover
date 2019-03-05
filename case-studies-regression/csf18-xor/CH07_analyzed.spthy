@@ -6,8 +6,6 @@ builtins: xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 rule (modulo E) Setup:
    [ Fr( ~k ), Fr( ~id ) ] --> [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
 
@@ -744,7 +742,7 @@ analyzing: examples/csf18-xor/CH07.spthy
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.620686s
+  processing time: 0.981041143s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
@@ -759,7 +757,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.620686s
+  processing time: 0.981041143s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)

@@ -12,8 +12,6 @@ equations:
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), k), r) = sign(m, k)
 
-
-
 rule (modulo E) Register_Corrupted_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -1497,7 +1495,7 @@ analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 21.733668s
+  processing time: 9.582830952s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)
@@ -1511,7 +1509,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 21.733668s
+  processing time: 9.582830952s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)

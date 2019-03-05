@@ -11,8 +11,6 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
-heuristic: p
-
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -45,59 +43,59 @@ rule (modulo E) Rep_1_111:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_r1_1111[color=#569dc0]:
+rule (modulo E) new_r1_1111:
    [ State_1111( ~id, ~k ), Fr( ~r1 ) ] --> [ State_11111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Challenger1_Reader__11111[color=#569dc0]:
+rule (modulo E) event_Challenger1_Reader__11111:
    [ State_11111( ~id, ~k, ~r1 ) ]
   --[ Event( ), Challenge( ~r1, 'Reader' ) ]->
    [ State_111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_r1_111111[color=#569dc0]:
+rule (modulo E) out_r1_111111:
    [ State_111111( ~id, ~k, ~r1 ) ]
   -->
    [ State_1111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_xoredhash_1111111[color=#569dc0]:
+rule (modulo E) in_xoredhash_1111111:
    [ State_1111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
   -->
    [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqxoredhash_id_XOR_h_r1_k__0_11111111[color=#569dc0]:
+rule (modulo E) if_eqxoredhash_id_XOR_h_r1_k__0_11111111:
    [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Pred_eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
    [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqxoredhash_id_XOR_h_r1_k__1_11111111[color=#569dc0]:
+rule (modulo E) if_eqxoredhash_id_XOR_h_r1_k__1_11111111:
    [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Pred_not_eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
    [ State_111111112( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Alivek_Tag__111111111[color=#569dc0]:
+rule (modulo E) event_Alivek_Tag__111111111:
    [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Event( ), Alive( ~k, 'Tag' ) ]->
    [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_1111111111[color=#569dc0]:
+rule (modulo E) Zero_1111111111:
    [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_111111112[color=#569dc0]:
+rule (modulo E) Zero_111111112:
    [ State_111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -112,26 +110,26 @@ rule (modulo E) Rep_1_112:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_r1_1121[color=#2cd719]:
+rule (modulo E) in_r1_1121:
    [ State_1121( ~id, ~k ), In( r1 ) ] --> [ State_11211( ~id, ~k, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_r2_11211[color=#2cd719]:
+rule (modulo E) new_r2_11211:
    [ State_11211( ~id, ~k, r1 ), Fr( ~r2 ) ]
   -->
    [ State_112111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Responsek_Tag__112111[color=#2cd719]:
+rule (modulo E) event_Responsek_Tag__112111:
    [ State_112111( ~id, ~k, ~r2, r1 ) ]
   --[ Event( ), Response( ~k, 'Tag' ) ]->
    [ State_1121111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_id_XOR_r2_h_r1_k__XOR_r2__1121111[color=#2cd719]:
+rule (modulo E) out_id_XOR_r2_h_r1_k__XOR_r2__1121111:
    [ State_1121111( ~id, ~k, ~r2, r1 ) ]
   -->
    [
@@ -139,7 +137,7 @@ rule (modulo E) out_id_XOR_r2_h_r1_k__XOR_r2__1121111[color=#2cd719]:
    ]
 
   /*
-  rule (modulo AC) out_id_XOR_r2_h_r1_k__XOR_r2__1121111[color=#2cd719]:
+  rule (modulo AC) out_id_XOR_r2_h_r1_k__XOR_r2__1121111:
      [ State_1121111( ~id, ~k, ~r2, r1 ) ]
     -->
      [ State_11211111( ~id, ~k, ~r2, r1 ), Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
@@ -153,7 +151,7 @@ rule (modulo E) out_id_XOR_r2_h_r1_k__XOR_r2__1121111[color=#2cd719]:
        z     = (~id.16⊕~r2.18)
   */
 
-rule (modulo E) Zero_11211111[color=#2cd719]:
+rule (modulo E) Zero_11211111:
    [ State_11211111( ~id, ~k, ~r2, r1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -193,21 +191,21 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   case if_eqxoredhash_id_XOR_h_r1_k__0_11111111
   solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk )
     case c_xor
-    solve( !KU( h(<~r1, ~k>) ) @ #vk.1 )
-      case c_h
-      solve( !KU( ~id ) @ #vk.2 )
-        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-        by solve( !KU( ~k ) @ #vk.5 )
-      qed
-    next
+    solve( !KU( ~id ) @ #vk.2 )
       case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-      solve( splitEqs(1) )
-        case split
-        solve( !KU( ~id ) @ #vk.2 )
+      solve( !KU( ~r2 ) @ #vk.4 )
+        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+        by contradiction /* cyclic */
+      next
+        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+        solve( !KU( h(<~r1, ~k>) ) @ #vk.3 )
+          case c_h
+          by solve( !KU( ~k ) @ #vk.8 )
+        next
           case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-          solve( !KU( ~r2 ) @ #vk.3 )
+          solve( !KU( ~r2.1 ) @ #vk.6 )
             case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-            solve( !KU( ~r1 ) @ #vk.4 )
+            solve( !KU( ~r1 ) @ #vk.7 )
               case out_r1_111111
               by contradiction /* cyclic */
             qed
@@ -234,43 +232,49 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                 case Xor
                 solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
                   case c_xor
-                  solve( !KU( h(<~r1, ~k>) ) @ #vk.3 )
-                    case c_h
-                    solve( !KU( ~r2 ) @ #vk.4 )
-                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                      by solve( !KU( ~k ) @ #vk.7 )
-                    next
-                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                      by solve( !KU( ~k ) @ #vk.7 )
-                    qed
-                  next
-                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                    solve( splitEqs(7) )
-                      case split
-                      solve( !KU( ~r2 ) @ #vk.4 )
+                  solve( !KU( ~r2 ) @ #vk.4 )
+                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                    solve( !KU( ~id ) @ #vk.5 )
+                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                      solve( !KU( ~r2.1 ) @ #vk.7 )
                         case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                        solve( !KU( ~r2.1 ) @ #vk.5 )
-                          case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                          solve( !KU( ~r1 ) @ #vk.6 )
-                            case out_r1_111111
+                        by contradiction /* cyclic */
+                      next
+                        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                        solve( !KU( h(<~r1, ~k>) ) @ #vk.6 )
+                          case c_h
+                          by solve( !KU( ~k ) @ #vk.11 )
+                        next
+                          case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                          solve( !KU( ~r2.2 ) @ #vk.9 )
+                            case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                            solve( !KU( ~r1 ) @ #vk.10 )
+                              case out_r1_111111
+                              by contradiction /* cyclic */
+                            qed
+                          next
+                            case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
                             by contradiction /* cyclic */
                           qed
-                        next
-                          case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                        qed
+                      qed
+                    qed
+                  next
+                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                    solve( !KU( h(<~r1, ~k>) ) @ #vk.4 )
+                      case c_h
+                      by solve( !KU( ~k ) @ #vk.8 )
+                    next
+                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                      solve( !KU( ~r2.1 ) @ #vk.6 )
+                        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                        solve( !KU( ~r1 ) @ #vk.7 )
+                          case out_r1_111111
                           by contradiction /* cyclic */
                         qed
                       next
                         case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                        solve( !KU( ~r2.1 ) @ #vk.5 )
-                          case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                          solve( !KU( ~r1 ) @ #vk.6 )
-                            case out_r1_111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                          by contradiction /* cyclic */
-                        qed
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -323,38 +327,26 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                               case c_xor
                               solve( !KU( h(<r1.1, ~k>) ) @ #vk.4 )
                                 case c_h
-                                solve( !KU( h(<~r1, ~k>) ) @ #vk.6 )
-                                  case c_h
-                                  by solve( !KU( ~k ) @ #vk.7 )
-                                next
-                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                  solve( splitEqs(12) )
-                                    case split
-                                    by solve( !KU( ~k ) @ #vk.7 )
-                                  qed
-                                qed
+                                by solve( !KU( ~k ) @ #vk.7 )
                               next
                                 case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                solve( splitEqs(12) )
-                                  case split
-                                  solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
-                                    case c_h
-                                    solve( !KU( ~r2.1 ) @ #vk.6 )
+                                solve( !KU( ~r2.1 ) @ #vk.6 )
+                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                                  solve( !KU( ~id ) @ #vk.7 )
+                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                                    solve( !KU( ~r2.2 ) @ #vk.9 )
                                       case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                      by solve( !KU( ~k ) @ #vk.9 )
+                                      by contradiction /* cyclic */
                                     next
                                       case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                                      by contradiction /* cyclic */
-                                    qed
-                                  next
-                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                    solve( splitEqs(14) )
-                                      case split
-                                      solve( !KU( ~r2.1 ) @ #vk.6 )
-                                        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                        solve( !KU( ~r2.2 ) @ #vk.7 )
+                                      solve( !KU( h(<~r1, ~k>) ) @ #vk.8 )
+                                        case c_h
+                                        by solve( !KU( ~k ) @ #vk.13 )
+                                      next
+                                        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                                        solve( !KU( ~r2.3 ) @ #vk.11 )
                                           case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                          solve( !KU( ~r1 ) @ #vk.8 )
+                                          solve( !KU( ~r1 ) @ #vk.12 )
                                             case out_r1_111111
                                             by contradiction /* cyclic */
                                           qed
@@ -362,12 +354,12 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                           case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
                                           by contradiction /* cyclic */
                                         qed
-                                      next
-                                        case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                                        by contradiction /* cyclic */
                                       qed
                                     qed
                                   qed
+                                next
+                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                                  by contradiction /* cyclic */
                                 qed
                               qed
                             next
@@ -410,43 +402,49 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                           case split
                                           solve( !KU( (~r2.1⊕h(<~r1, ~k>)) ) @ #vk.4 )
                                             case c_xor
-                                            solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
-                                              case c_h
-                                              solve( !KU( ~r2.1 ) @ #vk.6 )
-                                                case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                                by solve( !KU( ~k ) @ #vk.9 )
-                                              next
-                                                case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                                                by solve( !KU( ~k ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                              solve( splitEqs(18) )
-                                                case split
-                                                solve( !KU( ~r2.1 ) @ #vk.6 )
+                                            solve( !KU( ~r2.1 ) @ #vk.6 )
+                                              case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                                              solve( !KU( ~id ) @ #vk.7 )
+                                                case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                                                solve( !KU( ~r2.2 ) @ #vk.9 )
                                                   case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                                  solve( !KU( ~r2.2 ) @ #vk.7 )
-                                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                                    solve( !KU( ~r1 ) @ #vk.8 )
-                                                      case out_r1_111111
+                                                  by contradiction /* cyclic */
+                                                next
+                                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                                                  solve( !KU( h(<~r1, ~k>) ) @ #vk.8 )
+                                                    case c_h
+                                                    by solve( !KU( ~k ) @ #vk.13 )
+                                                  next
+                                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                                                    solve( !KU( ~r2.3 ) @ #vk.11 )
+                                                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                                                      solve( !KU( ~r1 ) @ #vk.12 )
+                                                        case out_r1_111111
+                                                        by contradiction /* cyclic */
+                                                      qed
+                                                    next
+                                                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
                                                       by contradiction /* cyclic */
                                                     qed
-                                                  next
-                                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                                                  qed
+                                                qed
+                                              qed
+                                            next
+                                              case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
+                                              solve( !KU( h(<~r1, ~k>) ) @ #vk.6 )
+                                                case c_h
+                                                by solve( !KU( ~k ) @ #vk.10 )
+                                              next
+                                                case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                                                solve( !KU( ~r2.2 ) @ #vk.8 )
+                                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
+                                                  solve( !KU( ~r1 ) @ #vk.9 )
+                                                    case out_r1_111111
                                                     by contradiction /* cyclic */
                                                   qed
                                                 next
                                                   case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                                                  solve( !KU( ~r2.2 ) @ #vk.7 )
-                                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_1
-                                                    solve( !KU( ~r1 ) @ #vk.8 )
-                                                      case out_r1_111111
-                                                      by contradiction /* cyclic */
-                                                    qed
-                                                  next
-                                                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111_case_2
-                                                    by contradiction /* cyclic */
-                                                  qed
+                                                  by contradiction /* cyclic */
                                                 qed
                                               qed
                                             qed
@@ -499,92 +497,9 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                     case Xor
                                                     solve( State_1121111( ~id.1, ~k, ~r2.2, ~r1 ) ▶₀ #vr.28 )
                                                       case event_Responsek_Tag__112111
-                                                      solve( splitEqs(18) )
-                                                        case split
-                                                        solve( !KU( (~r2.1⊕~r2.2) ) @ #vk.5 )
-                                                          case c_xor
-                                                          solve( !KU( ~r1 ) @ #vk.6 )
-                                                            case out_r1_111111
-                                                            by contradiction /* cyclic */
-                                                          qed
-                                                        next
-                                                          case coerce
-                                                          solve( !KD( (~r2.1⊕~r2.2) ) ▶₀ #vk.4 )
-                                                            case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                                            solve( (#vl.3, 0) ~~> (#vk.4, 0) )
-                                                              case d_0_fst
-                                                              solve( State_1121111( ~id.1, ~k.1, ~r2.3, r1.2
-                                                                     ) ▶₀ #vr.35 )
-                                                                case event_Responsek_Tag__112111
-                                                                solve( splitEqs(24) )
-                                                                  case split
-                                                                  solve( (#vr.36, 0) ~~> (#vk.4, 0) )
-                                                                    case d_xor_case_1
-                                                                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
-                                                                  next
-                                                                    case d_xor_case_2
-                                                                    solve( (#vr.41, 0) ~~> (#vk.4, 0) )
-                                                                      case Xor_case_1
-                                                                      solve( !KU( ~r1 ) @ #vk.6 )
-                                                                        case out_r1_111111
-                                                                        by contradiction /* cyclic */
-                                                                      qed
-                                                                    next
-                                                                      case Xor_case_2
-                                                                      solve( !KU( ~r1 ) @ #vk.6 )
-                                                                        case out_r1_111111
-                                                                        by contradiction /* cyclic */
-                                                                      qed
-                                                                    qed
-                                                                  next
-                                                                    case d_xor_case_3
-                                                                    by contradiction /* impossible chain */
-                                                                  next
-                                                                    case d_xor_case_4
-                                                                    by contradiction /* impossible chain */
-                                                                  qed
-                                                                qed
-                                                              qed
-                                                            next
-                                                              case d_0_snd
-                                                              solve( (#vr.36, 0) ~~> (#vk.4, 0) )
-                                                                case d_xor_case_1
-                                                                solve( (#vr.37, 0) ~~> (#vk.4, 0) )
-                                                                  case Xor_case_1
-                                                                  solve( State_1121111( ~id.1, ~k.1, ~r2.2,
-                                                                                        r1.2
-                                                                         ) ▶₀ #vr.35 )
-                                                                    case event_Responsek_Tag__112111
-                                                                    by contradiction /* cyclic */
-                                                                  qed
-                                                                next
-                                                                  case Xor_case_2
-                                                                  solve( State_1121111( ~id.1, ~k.1, ~r2.1,
-                                                                                        r1.2
-                                                                         ) ▶₀ #vr.35 )
-                                                                    case event_Responsek_Tag__112111
-                                                                    solve( !KU( ~r1 ) @ #vk.6 )
-                                                                      case out_r1_111111
-                                                                      by contradiction /* cyclic */
-                                                                    qed
-                                                                  qed
-                                                                qed
-                                                              next
-                                                                case d_xor_case_2
-                                                                by solve( (#vr.37, 0) ~~> (#vk.4, 0) )
-                                                              next
-                                                                case d_xor_case_3
-                                                                by contradiction /* impossible chain */
-                                                              next
-                                                                case d_xor_case_4
-                                                                by solve( (#vr.37, 0) ~~> (#vk.4, 0) )
-                                                              qed
-                                                            qed
-                                                          next
-                                                            case out_r1_111111
-                                                            by contradiction /* impossible chain */
-                                                          qed
-                                                        qed
+                                                      solve( !KU( ~r1 ) @ #vk.6 )
+                                                        case out_r1_111111
+                                                        by contradiction /* cyclic */
                                                       qed
                                                     qed
                                                   qed
@@ -607,89 +522,9 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                       case Xor_case_2
                                       solve( State_1121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.21 )
                                         case event_Responsek_Tag__112111
-                                        solve( splitEqs(12) )
-                                          case split
-                                          solve( !KU( (~r2.1⊕h(<r1.1, ~k>)) ) @ #vk.4 )
-                                            case c_xor
-                                            solve( !KU( ~r1 ) @ #vk.5 )
-                                              case out_r1_111111
-                                              by contradiction /* cyclic */
-                                            qed
-                                          next
-                                            case coerce
-                                            solve( !KD( (~r2.1⊕h(<r1.1, ~k>)) ) ▶₀ #vk.3 )
-                                              case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                              solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-                                                case d_0_fst
-                                                solve( State_1121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.28 )
-                                                  case event_Responsek_Tag__112111
-                                                  solve( splitEqs(18) )
-                                                    case split
-                                                    solve( (#vr.29, 0) ~~> (#vk.3, 0) )
-                                                      case d_xor_case_1
-                                                      by solve( (#vr.34, 0) ~~> (#vk.3, 0) )
-                                                    next
-                                                      case d_xor_case_2
-                                                      solve( (#vr.34, 0) ~~> (#vk.3, 0) )
-                                                        case Xor
-                                                        solve( !KU( ~r1 ) @ #vk.5 )
-                                                          case out_r1_111111
-                                                          by contradiction /* cyclic */
-                                                        qed
-                                                      qed
-                                                    next
-                                                      case d_xor_case_3
-                                                      by contradiction /* impossible chain */
-                                                    next
-                                                      case d_xor_case_4
-                                                      by contradiction /* impossible chain */
-                                                    qed
-                                                  qed
-                                                qed
-                                              next
-                                                case d_0_snd
-                                                solve( (#vr.29, 0) ~~> (#vk.3, 0) )
-                                                  case Xor
-                                                  by solve( State_1121111( ~id.1, ~k, ~r2.1, r1.1
-                                                            ) ▶₀ #vr.28 )
-                                                next
-                                                  case d_xor_case_1
-                                                  solve( (#vr.30, 0) ~~> (#vk.3, 0) )
-                                                    case Xor
-                                                    solve( State_1121111( ~id.1, ~k.1, ~r2.1, r1.2
-                                                           ) ▶₀ #vr.28 )
-                                                      case event_Responsek_Tag__112111
-                                                      by contradiction /* cyclic */
-                                                    qed
-                                                  qed
-                                                next
-                                                  case d_xor_case_2
-                                                  solve( (#vr.30, 0) ~~> (#vk.3, 0) )
-                                                    case Xor
-                                                    solve( State_1121111( ~id.1, ~k, ~r2.2, r1.1 ) ▶₀ #vr.28 )
-                                                      case event_Responsek_Tag__112111
-                                                      solve( splitEqs(18) )
-                                                        case split
-                                                        solve( !KU( ~r1 ) @ #vk.5 )
-                                                          case out_r1_111111
-                                                          by contradiction /* cyclic */
-                                                        qed
-                                                      qed
-                                                    qed
-                                                  qed
-                                                next
-                                                  case d_xor_case_3
-                                                  by contradiction /* impossible chain */
-                                                next
-                                                  case d_xor_case_4
-                                                  by solve( (#vr.30, 0) ~~> (#vk.3, 0) )
-                                                qed
-                                              qed
-                                            next
-                                              case out_r1_111111
-                                              by contradiction /* impossible chain */
-                                            qed
-                                          qed
+                                        solve( !KU( ~r1 ) @ #vk.5 )
+                                          case out_r1_111111
+                                          by contradiction /* cyclic */
                                         qed
                                       qed
                                     qed
@@ -714,87 +549,9 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                           case Xor
                           solve( State_1121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.19 )
                             case event_Responsek_Tag__112111
-                            solve( splitEqs(7) )
-                              case split
-                              solve( !KU( (~r2⊕~r2.1) ) @ #vk.3 )
-                                case c_xor
-                                solve( !KU( ~r1 ) @ #vk.4 )
-                                  case out_r1_111111
-                                  by contradiction /* cyclic */
-                                qed
-                              next
-                                case coerce
-                                solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.2 )
-                                  case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                                  solve( (#vl.2, 0) ~~> (#vk.2, 0) )
-                                    case d_0_fst
-                                    solve( State_1121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.26 )
-                                      case event_Responsek_Tag__112111
-                                      solve( splitEqs(13) )
-                                        case split
-                                        solve( (#vr.27, 0) ~~> (#vk.2, 0) )
-                                          case d_xor_case_1
-                                          by solve( (#vr.32, 0) ~~> (#vk.2, 0) )
-                                        next
-                                          case d_xor_case_2
-                                          solve( (#vr.32, 0) ~~> (#vk.2, 0) )
-                                            case Xor_case_1
-                                            solve( !KU( ~r1 ) @ #vk.4 )
-                                              case out_r1_111111
-                                              by contradiction /* cyclic */
-                                            qed
-                                          next
-                                            case Xor_case_2
-                                            solve( !KU( ~r1 ) @ #vk.4 )
-                                              case out_r1_111111
-                                              by contradiction /* cyclic */
-                                            qed
-                                          qed
-                                        next
-                                          case d_xor_case_3
-                                          by contradiction /* impossible chain */
-                                        next
-                                          case d_xor_case_4
-                                          by contradiction /* impossible chain */
-                                        qed
-                                      qed
-                                    qed
-                                  next
-                                    case d_0_snd
-                                    solve( (#vr.27, 0) ~~> (#vk.2, 0) )
-                                      case d_xor_case_1
-                                      solve( (#vr.28, 0) ~~> (#vk.2, 0) )
-                                        case Xor_case_1
-                                        solve( State_1121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.26 )
-                                          case event_Responsek_Tag__112111
-                                          by contradiction /* cyclic */
-                                        qed
-                                      next
-                                        case Xor_case_2
-                                        solve( State_1121111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.26 )
-                                          case event_Responsek_Tag__112111
-                                          solve( !KU( ~r1 ) @ #vk.4 )
-                                            case out_r1_111111
-                                            by contradiction /* cyclic */
-                                          qed
-                                        qed
-                                      qed
-                                    next
-                                      case d_xor_case_2
-                                      by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
-                                    next
-                                      case d_xor_case_3
-                                      by contradiction /* impossible chain */
-                                    next
-                                      case d_xor_case_4
-                                      by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
-                                    qed
-                                  qed
-                                next
-                                  case out_r1_111111
-                                  by contradiction /* impossible chain */
-                                qed
-                              qed
+                            solve( !KU( ~r1 ) @ #vk.4 )
+                              case out_r1_111111
+                              by contradiction /* cyclic */
                             qed
                           qed
                         qed
@@ -891,18 +648,18 @@ solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
               case Xor
               solve( State_1121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.15 )
                 case event_Responsek_Tag__112111
-                solve( !KU( (~id⊕~r2) ) @ #vk.2 )
-                  case coerce
-                  solve( !KD( (~id⊕~r2) ) ▶₀ #vk.1 )
-                    case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
-                    solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-                      case d_0_fst
-                      solve( State_1121111( ~id.1, ~k.1, ~r2.1, r1.1 ) ▶₀ #vr.18 )
-                        case event_Responsek_Tag__112111
-                        solve( (#vr.18, 0) ~~> (#vk.1, 0) )
-                          case Xor
-                          solve( !KU( ~r1 ) @ #vk.2 )
-                            case out_r1_111111
+                solve( !KU( ~r1 ) @ #vk.1 )
+                  case out_r1_111111
+                  solve( !KU( (~id⊕~r2) ) @ #vk.2 )
+                    case coerce
+                    solve( !KD( (~id⊕~r2) ) ▶₀ #vk.2 )
+                      case out_id_XOR_r2_h_r1_k__XOR_r2__1121111
+                      solve( (#vl.2, 0) ~~> (#vk.2, 0) )
+                        case d_0_fst
+                        solve( State_1121111( ~id.1, ~k.1, ~r2.1, r1.1 ) ▶₀ #vr.18 )
+                          case event_Responsek_Tag__112111
+                          solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                            case Xor
                             SOLVED // trace found
                           qed
                         qed
@@ -936,8 +693,8 @@ analyzing: case-studies-sapic-regression/xor/KCL07.spthy
 analyzed: case-studies-sapic-regression/xor/KCL07.spthy
 
   output:          case-studies-sapic-regression/xor/KCL07.spthy.tmp
-  processing time: 4.168066s
-  recentalive_tag (all-traces): verified (223 steps)
+  processing time: 3.303348921s
+  recentalive_tag (all-traces): verified (145 steps)
   executable (exists-trace): verified (16 steps)
 
 ------------------------------------------------------------------------------
@@ -948,8 +705,8 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/KCL07.spthy
 
   output:          case-studies-sapic-regression/xor/KCL07.spthy.tmp
-  processing time: 4.168066s
-  recentalive_tag (all-traces): verified (223 steps)
+  processing time: 3.303348921s
+  recentalive_tag (all-traces): verified (145 steps)
   executable (exists-trace): verified (16 steps)
 
 ==============================================================================

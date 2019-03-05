@@ -255,7 +255,7 @@ indexedIdentifier = do
 
 -- | Parse a hex RGB color code
 hexColor :: Parser String
-hexColor = T.lexeme spthy (singleQuoted hexCode <|> hexCode)
+hexColor = singleQuoted hexCode <|> hexCode
   where
     hexCode = optional (symbol "#") *> many1 hexDigit
 

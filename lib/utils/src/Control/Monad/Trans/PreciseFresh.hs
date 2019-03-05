@@ -45,9 +45,6 @@ import Control.Monad.Reader
 
 import qualified Data.Map as M
 
--- Control.Monad.Fail import will become redundant in GHC 8.8+
-import qualified Control.Monad.Fail as Fail
-
 ------------------------------------------------------------------------------
 -- FreshT monad transformer
 ------------------------------------------------------------------------------
@@ -121,9 +118,6 @@ instance MonadReader r m => MonadReader r (FreshT m) where
 instance MonadState s m => MonadState s (FreshT m) where
     get   = lift get
     put s = lift $ put s
-
-instance Fail.MonadFail m => Fail.MonadFail (FreshT m) where
-  fail = Fail.fail
 
 ------------------------------------------------------------------------------
 -- Fresh monad

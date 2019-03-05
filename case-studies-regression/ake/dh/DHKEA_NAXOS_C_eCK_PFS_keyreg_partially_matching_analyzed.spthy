@@ -10,8 +10,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 rule (modulo E) generate_ltk:
    [ Fr( ~ea ) ]
   --[ RegKey( $A ), Honest( $A ) ]->
@@ -4910,7 +4908,7 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 96.913721s
+  processing time: 74.943852629s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)
 
@@ -4922,7 +4920,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 96.913721s
+  processing time: 74.943852629s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)
 

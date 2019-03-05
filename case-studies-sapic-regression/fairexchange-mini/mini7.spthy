@@ -6,41 +6,38 @@ equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
 section{* small example for progression function *}
 
 builtins: signing, hashing
+rule Init_: //Init 
+ [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
+rule MessageID_rule_: //MessageID-rule 
+ [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule Init_: // [process=top-level] Init 
- [Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
+rule event_A_: //event A() 
+ [ State_(~prog_)] --[ProgressTo_1(~prog_), Event(), A()]-> [State_1(~prog_)]
 
-rule MessageID_rule_: // [process=top-level] MessageID-rule 
- [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+rule Rep_0_1: //Rep, 0 
+ [ State_1(~prog_)] --[]-> [!Semistate_11(~prog_)]
 
-rule event_A_: // [process=top-level] event A() 
- [State_(~prog_)] --[ProgressTo_1(~prog_), Event(), A()]-> [State_1(~prog_)]
+rule Rep_1_1: //Rep, 1 
+ [ Fr(~prog_11), !Semistate_11(~prog_)] --[ProgressFrom_11(~prog_11)]-> [State_11(~prog_, ~prog_11)]
 
-rule Rep_0_1: // [process=top-level] Rep, 0 
- [State_1(~prog_)] --[]-> [!Semistate_11(~prog_)]
+rule event_B_111: //event B() 
+ [ State_11(~prog_, ~prog_11)] --[ProgressTo_1111(~prog_11), Event(), B()]-> [State_1111(~prog_, ~prog_11)]
 
-rule Rep_1_1: // [process=top-level] Rep, 1 
- [Fr(~prog_11), !Semistate_11(~prog_)] --[ProgressFrom_11(~prog_11)]-> [State_11(~prog_, ~prog_11)]
+rule Zero_1111: //Zero 
+ [ State_1111(~prog_, ~prog_11)] --[]-> []
 
-rule event_B_111: // [process=top-level] event B() 
- [State_11(~prog_, ~prog_11)] --[ProgressTo_1111(~prog_11), Event(), B()]-> [State_1111(~prog_, ~prog_11)]
+rule Rep_0_112: //Rep, 0 
+ [ State_11(~prog_, ~prog_11)] --[]-> [!Semistate_1121(~prog_, ~prog_11)]
 
-rule Zero_1111: // [process=top-level] Zero 
- [State_1111(~prog_, ~prog_11)] --[]-> []
+rule Rep_1_112: //Rep, 1 
+ [ !Semistate_1121(~prog_, ~prog_11)] --[]-> [State_1121(~prog_, ~prog_11)]
 
-rule Rep_0_112: // [process=top-level] Rep, 0 
- [State_11(~prog_, ~prog_11)] --[]-> [!Semistate_1121(~prog_, ~prog_11)]
+rule event_C_1121: //event C() 
+ [ State_1121(~prog_, ~prog_11)] --[ProgressTo_11211(~prog_11), Event(), C()]-> [State_11211(~prog_, ~prog_11)]
 
-rule Rep_1_112: // [process=top-level] Rep, 1 
- [!Semistate_1121(~prog_, ~prog_11)] --[]-> [State_1121(~prog_, ~prog_11)]
-
-rule event_C_1121: // [process=top-level] event C() 
- [State_1121(~prog_, ~prog_11)] --[ProgressTo_11211(~prog_11), Event(), C()]-> [State_11211(~prog_, ~prog_11)]
-
-rule Zero_11211: // [process=top-level] Zero 
- [State_11211(~prog_, ~prog_11)] --[]-> []
+rule Zero_11211: //Zero 
+ [ State_11211(~prog_, ~prog_11)] --[]-> []
 
 
 restriction single_session: // for a single session

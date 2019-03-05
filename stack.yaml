@@ -5,6 +5,4 @@ packages:
 - lib/term/
 - lib/utils/
 extra-deps: []
-resolver: lts-13.2
-nix:
-  packages: [ zlib ]
+resolver: lts-12.4
