@@ -21,6 +21,7 @@ module Theory.Sapic (
     , pfoldMap
     , prettySapic
     , prettySapicAction
+    , Position
 ) where
 
 import           Data.Binary
@@ -42,8 +43,7 @@ type SapicTerm = LNTerm
 
 -- | Actions are parts of the process that maybe connected with ";"
 data SapicAction = 
-                   Null 
-                 | Rep
+                   Rep
                  | New LVar
                  | ChIn (Maybe SapicTerm) SapicTerm
                  | ChOut (Maybe SapicTerm) SapicTerm
@@ -76,6 +76,11 @@ deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
 deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
 deriving instance (Monoid ann) => Monoid (AnProcess ann)
+instance Functor AnProcess where
+    fmap f (ProcessNull an) = ProcessNull (f an)
+    fmap f (ProcessComb c an pl pr)  = ProcessComb c (f an) (fmap f pl) (fmap f pr)
+    fmap f (ProcessAction a an p)   =  ProcessAction a (f an) (fmap f p)
+
 
 -- | After parsing, the process is already annotated wth a list of process
 -- identifiers, describing the sequence of let P = ... constructs that were
@@ -84,6 +89,7 @@ deriving instance (Monoid ann) => Monoid (AnProcess ann)
 type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [ProcessName]
 type Process = AnProcess ProcessAnnotation
+type Position = [Int]
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process
@@ -108,7 +114,6 @@ pfoldMap f (ProcessAction a an p)   =
      
 prettySapicAction :: SapicAction  -> String
 prettySapicAction (New n) = "new "++ show n
-prettySapicAction Null  = "0"
 prettySapicAction Rep  = "!"
 prettySapicAction (ChIn (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
 prettySapicAction (ChIn Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"

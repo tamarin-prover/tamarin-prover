@@ -11,18 +11,29 @@
 
 module Sapic.Exceptions (
     WFLockTag(..),
+    WFerrror(..),
     SapicException(..)
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
 import Control.Exception
 import Data.Typeable
+import Data.Set
+import Theory
 import Theory.Sapic
+import Theory.Model.Rule
 -- import Text.Parsec (ParseError)
 
-data WFLockTag = WFRep | WFPar deriving (Show)
+data WFLockTag = WFRep | WFPar  deriving (Show)
 
-data WFerrror a = WFLock WFLockTag (AnProcess a) | Other String
+data WFerrror a = WFLock WFLockTag (AnProcess a) 
+                | WFUnboundProto (Set LVar) 
+                | WFUnbound (Set LVar) (AnProcess a) 
+--                ("Condition contains unbound variables: "^(String.concat ", "
+--                                                             ( List.map var2string (VarSet.elements (VarSet.diff cond_vars tildex))))
+--                 ^" (the bound variables are: "
+--                 ^ (String.concat ", " ( List.map var2string (VarSet.elements ( tildex))))^")" )
+                | Other String
 
 data SapicException a = SomethingBad
                     | VerdictNotWellFormed String
@@ -30,10 +41,10 @@ data SapicException a = SomethingBad
                     | NotImplementedError String
                     | TranslationError String
                     | UnAnnotatedLock String
-                    | ProcessNotWellformed (WFerrror a)
+                    | ProcessNotWellformed (WFerrror a) 
                     | NoNextState
                     | UnassignedTerm
-                    | InvalidPosition String
+                    | InvalidPosition Position
                     | NotInRange String
                     | ImplementationError String
     deriving (Typeable)

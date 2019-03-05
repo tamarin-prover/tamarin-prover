@@ -62,7 +62,12 @@ library
     hs-source-dirs: src
 
     exposed-modules:
-        Sapic
+        Sapic.Annotation
       , Sapic.Exceptions
+      , Sapic.ProcessUtils
+      , Sapic.Locks
+      , Sapic.Facts
+      , Sapic.Basetranslation
+      , Sapic
 
     other-modules:
