@@ -4,7 +4,7 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE TypeSynonymInstances #-}
--- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
+-- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -17,7 +17,7 @@ module Sapic.Annotation (
     , annLock
     , annUnlock
     , toAnProcess
-    , AnLVar
+    , AnLVar (..)
 ) where
 import           Data.Data
 -- import Data.Maybe
@@ -37,11 +37,11 @@ import           Data.Binary
 import Control.Monad.Trans.FastFresh
 import Term.LTerm
 
-type AnLVar = LVar
-     -- deriving( Typeable, Data, Generic, Binary, Show )
+newtype AnLVar = AnLVar LVar
+     deriving( Typeable, Data, Generic, Binary, Show )
      -- original definition: deriving( Typeable, Data, Generic, NFData, Binary )
 
-instance Semigroup (AnLVar) where  -- override annotations if necessary
+instance Semigroup AnLVar where  -- override annotations if necessary
     (<>) _ b = b
 
 data ProcessAnnotation = ProcessAnnotation {

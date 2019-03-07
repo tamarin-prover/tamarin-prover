@@ -30,6 +30,8 @@ import Sapic.Annotation
 import Sapic.Facts
 import Sapic.Locks
 import Sapic.Exceptions
+import Sapic.ProcessUtils
+import qualified Sapic.Basetranslation as BT
 
 translate :: (Monad m, MonadThrow m) =>
              Monoid (m (AnProcess ProcessAnnotation)) => 
@@ -66,40 +68,58 @@ translate th = case theoryProcesses th of
   -- ^ "end"
 
 noprogresstrans anP = 
-    initrule : 
-    initrule::(gen basetrans anP [] empty)
+    return $ initrule : ( map toRule (gen BT.baseTrans anP [] S.empty))
     where 
           initrule = Rule (ProtoRuleEInfo (StandRule "Init") []) l a r
           l = []
-          a = [toFact InitEmpty ] 
-          r = [toFact State([],empty)]
+          a = [actionToFact InitEmpty ] 
+          r = [factToFact (State LState [] S.empty)]
 
-gen (trans_null, trans_action, trans_comb) process p tildex  = 
+gen :: (Typeable ann, MonadCatch m ) =>
+        (AnProcess ann
+         -> Position -> t -> [([TransFact], [TransAction], [TransFact])],
+         SapicAction
+         -> AnProcess ann
+         -> Position
+         -> t
+         -> ([([TransFact], [TransAction], [TransFact])], t),
+         ProcessCombinator
+         -> AnProcess ann
+         -> Position
+         -> t
+         -> ([([TransFact], [TransAction], [TransFact])], t, t))
+        -> AnProcess ann -> Position -> t -> m ( [AnnotatedRule ann])
+gen (trans_null, trans_action, trans_comb) process p tildex  =
 -- Processes through an annotated process and translates every single action
 -- according to trans. It substitutes states by pstates for replication and
 -- makes sure that tildex, list of variables in state is updated for the next
 -- call. It also performs the substituion necessary for NDC 
 -- Input: 
-    case process_at tree p of
-    ProcessNull ann -> trans_null ann 
-    (ProcessComb NDC ann pl pr) -> 
-       let  l = gen trans tree (1::p) tildex in
-       let  r = gen trans tree (2::p) tildex in
-       let  subst p_new = map_prems (subststatepos p p_new) in
-            subst (1:p) l ++ subst (2:p) r
-    (ProcessComb c ann pl pr) -> 
-        let (msrs, tildex'1, tildex'2) = trans_comb c ann p tildex in
-        msrs 
-        ++ gen trans tree (1::p) tildex'1
-        ++ gen trans tree (2::p) tildex'2
-    (ProcessAction  ac ann pr') ->
-        let (msrs, tildex') = trans_action ac ann p tildex in
-        msrs 
-        ++ gen trans tree (1::p) tildex'
+    do
+        proc' <- processAt process p
+        return $ f proc' 
     where
-        map_prems f = map (\r -> r { prems = f (prems r) })
+        map_prems f = map (\r -> r { prems = map f (prems r) })
         --  Substitute every occurence of  State(p_old,v) with State(p_new,v)
         substStatePos p_old p_new fact
-                | (State p_old vs) <- fact = State p_new vs
+                | (State LState p_old vs) <- fact = State LState p_new vs
+                | (State PState p_old vs) <- fact = State PState p_new vs
                 | otherwise = fact
         -- substStatePos p_old p_new (x) = x
+        trans = (trans_null, trans_action, trans_comb)
+        toAnnotatedRule (l,a,r) = AnnotatedRule Nothing process p l a r
+        f proc' = case proc' of
+            ProcessNull ann -> map toAnnotatedRule ( trans_null ann p tildex )
+            (ProcessComb NDC _ _ _) -> 
+               let  l = gen trans process (1::p) tildex in
+               let  r = gen trans process (2::p) tildex in
+               let  subst p_new = map_prems (substStatePos p p_new) in
+                    subst (1:p) l ++ subst (2:p) r
+            (ProcessComb c ann pl pr) -> 
+                let (msrs, tildex'1, tildex'2) = trans_comb c ann p tildex in
+                (map toAnnotatedRule msrs )
+                        ++ gen trans process (1::p) tildex'1
+                        ++ gen trans process (2::p) tildex'2
+            (ProcessAction  ac ann pr') ->
+                let (msrs, tildex') = trans_action ac ann p tildex in
+                map toAnnotatedRule msrs ++ gen trans process (1::p) tildex' 

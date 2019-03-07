@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- |
--- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
+-- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>

@@ -1,5 +1,5 @@
 -- |
--- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
+-- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -28,7 +28,7 @@ instance Exception LocalException
 
 annotateEachClosestUnlock :: MonadThrow m => 
                             Theory.Sapic.SapicTerm
-                             -> LVar
+                             -> AnLVar
                              -> AnProcess ProcessAnnotation
                              -> m( AnProcess ProcessAnnotation)
 annotateEachClosestUnlock t v (ProcessNull a') = return $ ProcessNull a'
@@ -38,8 +38,8 @@ annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) =
             else do
                 p' <- annotateEachClosestUnlock t v p
                 return $ProcessAction (Unlock t') a' p'
-annotateEachClosestUnlock t v (ProcessAction Rep a' p) = throwM $ LocalException WFRep
-annotateEachClosestUnlock t a (ProcessComb Parallel a' pl pr ) = throwM $ LocalException WFPar
+annotateEachClosestUnlock t v (ProcessAction Rep _ _) = throwM $ LocalException WFRep
+annotateEachClosestUnlock t a (ProcessComb Parallel _ _ _) = throwM $ LocalException WFPar
 annotateEachClosestUnlock t v (ProcessAction ac a' p) = do p' <- annotateEachClosestUnlock t v p
                                                            return $ ProcessAction ac a' p'
 annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEachClosestUnlock t v pl
@@ -66,8 +66,8 @@ annotateLocks = pfoldMap f
             -- case annotateEachClosestUnlock t v p of
             --     Right p' -> return (ProcessAction (Lock t) (a `mappend` annLock v) p' ) 
             --     Left tag -> throw (ProcessNotWellformed $ WFLock tag p)
-            p' <- annotateEachClosestUnlock t v p
-            return (ProcessAction (Lock t) (a `mappend` annLock v) p')
+            p' <- annotateEachClosestUnlock t (AnLVar v) p
+            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
         f p = return p
 -- annotateLocks (ProcessAction (Lock t) a p) = do 
 --                                             v <- freshLVar "lock" LSortMsg

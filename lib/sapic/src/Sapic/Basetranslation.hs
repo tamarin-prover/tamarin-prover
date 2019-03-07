@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
+-- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -10,6 +10,7 @@ module Sapic.Basetranslation (
     baseTransNull
    ,baseTransComb
    ,baseTransAction
+   , baseTrans
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -30,34 +31,11 @@ import Data.Set
 --- TODO rewrite
 --  should output rule and new tilde x
 
+baseTrans = (baseTransNull, baseTransAction, baseTransComb)
+
+
 baseTransNull :: p -> Position -> Set LVar -> [([TransFact], [a1], [a2])]
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
-
-baseTransComb :: ProcessCombinator -> p -> Position -> Set LVar
-    -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
-baseTransComb c _ p tildex 
-    | Parallel <- c = (
-               [([State LState p tildex], [], [State LState ( 1:p ) tildex,State LState ( 2:p ) tildex])]
-             , tildex, tildex )
-    | NDC <- c = (
-               []
-             , tildex, tildex )
-    | Cond f <- c = 
-                let vars_f = fromList $ getFactVariables f in
-                if vars_f `isSubsetOf` tildex then 
-                (
-       [ ([State LState p tildex], [Predicate f], [State LState (1:p) tildex]),
-         ([State LState p tildex ], [NegPredicate f], [State LState (2:p) tildex])]
-             , tildex, tildex )
-                else 
-                    throw $ 
-                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) -- TODO Catch and add substitute process in calling function.
- :: SapicException AnnotatedProcess)
-    | CondEq _ _ <- c = throw (ImplementationError "Cond node should contain Action constructor" :: SapicException AnnotatedProcess) 
-    | otherwise = throw (SomethingBad :: SapicException AnnotatedProcess)
-
--- data ProcessCombinator = Parallel | NDC | Cond LNFact 
---         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
 
 baseTransAction ac _ p tildex 
     |  Rep <- ac = ([
@@ -104,4 +82,30 @@ baseTransAction ac _ p tildex
 --   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))
 --   | Let(s) -> raise (TranslationError "'Let' should not be present at this point")
 --   | Comment(s) -> raise (TranslationError "Comments should not be present at this point")
+
+baseTransComb :: ProcessCombinator -> p -> Position -> Set LVar
+    -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
+baseTransComb c _ p tildex 
+    | Parallel <- c = (
+               [([State LState p tildex], [], [State LState ( 1:p ) tildex,State LState ( 2:p ) tildex])]
+             , tildex, tildex )
+    | NDC <- c = (
+               []
+             , tildex, tildex )
+    | Cond f <- c = 
+                let vars_f = fromList $ getFactVariables f in
+                if vars_f `isSubsetOf` tildex then 
+                (
+       [ ([State LState p tildex], [Predicate f], [State LState (1:p) tildex]),
+         ([State LState p tildex ], [NegPredicate f], [State LState (2:p) tildex])]
+             , tildex, tildex )
+                else 
+                    throw $ 
+                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) -- TODO Catch and add substitute process in calling function.
+ :: SapicException AnnotatedProcess)
+    | CondEq _ _ <- c = throw (ImplementationError "Cond node should contain Action constructor" :: SapicException AnnotatedProcess) 
+    | otherwise = throw (SomethingBad :: SapicException AnnotatedProcess)
+
+-- data ProcessCombinator = Parallel | NDC | Cond LNFact 
+--         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
 

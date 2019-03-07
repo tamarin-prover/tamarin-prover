@@ -4,7 +4,7 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
 -- |
--- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
+-- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -21,7 +21,10 @@ module Theory.Sapic (
     , pfoldMap
     , prettySapic
     , prettySapicAction
+    , prettySapicComb
+    , prettySapicTopLevel
     , Position
+    , prettyPosition
 ) where
 
 import           Data.Binary
@@ -91,6 +94,9 @@ type ProcessAnnotation = [ProcessName]
 type Process = AnProcess ProcessAnnotation
 type Position = [Int]
 
+prettyPosition:: Position -> String
+prettyPosition = foldl (\ s n -> show n ++ s) ""
+
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process
 paddAnn (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
@@ -143,4 +149,10 @@ prettySapic = pfoldMap f
           f (ProcessComb c _ _ _)  = prettySapicComb c 
           f (ProcessAction Rep _ _)  = prettySapicAction Rep 
           f (ProcessAction a _ _)  = prettySapicAction a ++ ";"
+
+prettySapicTopLevel :: AnProcess ann -> String
+prettySapicTopLevel (ProcessNull _) = "0"
+prettySapicTopLevel (ProcessComb c _ _ _)  = prettySapicComb c 
+prettySapicTopLevel (ProcessAction Rep _ _)  = prettySapicAction Rep 
+prettySapicTopLevel (ProcessAction a _ _)  = prettySapicAction a ++ ";"
 
