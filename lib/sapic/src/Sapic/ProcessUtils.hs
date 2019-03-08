@@ -25,7 +25,7 @@ import Sapic.Exceptions
 -- import qualified Data.Set                   as S
 -- import Control.Monad.Trans.FastFresh
 
-processAt :: forall m ann. (MonadThrow m, MonadCatch m, Typeable ann) =>  AnProcess ann -> Position -> m (AnProcess ann)
+processAt :: forall m ann. (MonadThrow m, MonadCatch m, Typeable ann) =>  AnProcess ann -> ProcessPosition -> m (AnProcess ann)
 processAt p [] = return p
 processAt (ProcessNull _) (x:xs) = throwM (InvalidPosition (x:xs) :: SapicException (AnProcess ann))
 processAt pro pos 
@@ -33,7 +33,7 @@ processAt pro pos
     | (ProcessComb _ _ pl _) <- pro,  1:xl <- pos =  catch (processAt pl xl) (h pos)
     | (ProcessComb _ _ _ pr) <- pro,  2:xr <- pos =  catch (processAt pr xr) (h pos)
     where --- report original position by catching exception at each level in error case.
-        h:: Position -> SapicException (AnProcess ann) -> m (AnProcess ann)
+        h:: ProcessPosition -> SapicException (AnProcess ann) -> m (AnProcess ann)
         h p (InvalidPosition _) = throwM ( InvalidPosition p :: SapicException (AnProcess ann))
         h _ e = throwM e
 processAt _ p = throwM (InvalidPosition p :: SapicException (AnProcess ann))

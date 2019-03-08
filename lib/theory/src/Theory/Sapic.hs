@@ -23,8 +23,10 @@ module Theory.Sapic (
     , prettySapicAction
     , prettySapicComb
     , prettySapicTopLevel
-    , Position
+    , ProcessPosition
     , prettyPosition
+    , lhs
+    , rhs
 ) where
 
 import           Data.Binary
@@ -92,9 +94,13 @@ instance Functor AnProcess where
 type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [ProcessName]
 type Process = AnProcess ProcessAnnotation
-type Position = [Int]
+type ProcessPosition = [Int]
 
-prettyPosition:: Position -> String
+lhs  = [1] :: ProcessPosition
+rhs  = [2] :: ProcessPosition
+-- rhs :: ProcessPosition = 2
+
+prettyPosition:: ProcessPosition -> String
 prettyPosition = foldl (\ s n -> show n ++ s) ""
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.

@@ -8,7 +8,9 @@
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Positions and replacement in terms.
-module Term.Positions where
+module Term.Positions 
+
+where
 
 import Term.VTerm
 import Safe

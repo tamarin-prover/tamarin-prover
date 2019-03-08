@@ -34,7 +34,7 @@ import Data.Set
 baseTrans = (baseTransNull, baseTransAction, baseTransComb)
 
 
-baseTransNull :: p -> Position -> Set LVar -> [([TransFact], [a1], [a2])]
+baseTransNull :: p -> ProcessPosition -> Set LVar -> [([TransFact], [a1], [a2])]
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
 
 baseTransAction ac _ p tildex 
@@ -83,7 +83,7 @@ baseTransAction ac _ p tildex
 --   | Let(s) -> raise (TranslationError "'Let' should not be present at this point")
 --   | Comment(s) -> raise (TranslationError "Comments should not be present at this point")
 
-baseTransComb :: ProcessCombinator -> p -> Position -> Set LVar
+baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
 baseTransComb c _ p tildex 
     | Parallel <- c = (

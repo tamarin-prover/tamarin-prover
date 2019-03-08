@@ -44,7 +44,7 @@ data SapicException a = SomethingBad
                     | ProcessNotWellformed (WFerrror a) 
                     | NoNextState
                     | UnassignedTerm
-                    | InvalidPosition Position
+                    | InvalidPosition ProcessPosition
                     | NotInRange String
                     | ImplementationError String
     deriving (Typeable)

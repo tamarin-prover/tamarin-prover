@@ -11,6 +11,7 @@ module Sapic.Facts (
    , TransFact(..)
    , AnnotatedRule(..)
    , StateKind(..)
+   , isSemiState
    , factToFact
    , actionToFact
    , toRule
@@ -40,11 +41,11 @@ data TransAction =  InitEmpty
   | EventId
   | Predicate LNFact
   | NegPredicate LNFact
-  | ProgressFrom Position 
-  | ProgressTo Position Position
-  | Listen Position LVar 
-  | Receive Position SapicTerm
-  | Send Position SapicTerm
+  | ProgressFrom ProcessPosition 
+  | ProgressTo ProcessPosition ProcessPosition
+  | Listen ProcessPosition LVar 
+  | Receive ProcessPosition SapicTerm
+  | Send ProcessPosition SapicTerm
   | TamarinAct LNFact
 
 data StateKind  = LState | PState | LSemiState | PSemiState
@@ -53,15 +54,15 @@ data TransFact = K SapicTerm | Fr LVar | In SapicTerm
             | Out SapicTerm
             | Message SapicTerm SapicTerm
             | Ack SapicTerm SapicTerm
-            | State StateKind Position (S.Set LVar)
-            | MessageIDSender Position
-            | MessageIDReceiver Position
+            | State StateKind ProcessPosition (S.Set LVar)
+            | MessageIDSender ProcessPosition
+            | MessageIDReceiver ProcessPosition
             | TamarinFact LNFact
 
 data AnnotatedRule ann = AnnotatedRule { 
       processName  :: Maybe String
     , process      :: AnProcess ann
-    , position     :: Position
+    , position     :: ProcessPosition
     , prems        :: [TransFact]
     , acts         :: [TransAction]  
     , concs        :: [TransFact]
@@ -76,6 +77,11 @@ data AnnotatedRule ann = AnnotatedRule {
 -- protoFact :: Multiplicity -> String -> [t] -> Fact t
 -- protoFact multi name ts = Fact (ProtoFact multi name (length ts)) S.empty ts
 
+isSemiState LState = False
+isSemiState PState = False
+isSemiState LSemiState = True
+isSemiState PSemiState = True
+
 actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
   -- | InitId
@@ -84,11 +90,11 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | EventId
   -- | Predicate LNFact
   -- | NegPredicate LNFact
-  -- | ProgressFrom Position 
-  -- | ProgressTo Position Position
-  -- | Listen Position LVar 
-  -- | Receive Position SapicTerm
-  -- | Send Position SapicTerm
+  -- | ProgressFrom ProcessPosition 
+  -- | ProgressTo ProcessPosition ProcessPosition
+  -- | Listen ProcessPosition LVar 
+  -- | Receive ProcessPosition SapicTerm
+  -- | Send ProcessPosition SapicTerm
   -- | TamarinAct LNFact
 
 -- factToFact :: TransFact -> Fact t
@@ -97,9 +103,9 @@ factToFact (K t) = protoFact Linear "K" [t]
 --             | Out SapicTerm
 --             | Message SapicTerm SapicTerm
 --             | Ack SapicTerm SapicTerm
---             | State StateKind Position (S.Set LVar)
---             | MessageIDSender Position
---             | MessageIDReceiver Position
+--             | State StateKind ProcessPosition (S.Set LVar)
+--             | MessageIDSender ProcessPosition
+--             | MessageIDReceiver ProcessPosition
 --             | TamarinFact LNFact
 
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
