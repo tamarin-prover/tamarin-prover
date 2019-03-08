@@ -39,15 +39,45 @@ baseTransNull _ p tildex =  [([State LState p tildex ], [], [])]
 
 baseTransAction ac _ p tildex 
     |  Rep <- ac = ([
-          ([State LState p tildex], [], [State PSemiState (p++[1]) tildex ]),
-          ([State PSemiState (p++[1]) tildex], [], [State LState (p++[1]) tildex])
+          ([def_state], [], [State PSemiState (p++[1]) tildex ]),
+          ([State PSemiState (p++[1]) tildex], [], [def_state' tildex])
           ], tildex)
     | (New v) <- ac = let tx' = v `insert` tildex in
         ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
+    | (ChIn (Just tc) t) <- ac = 
+          let tx' = (freeset tc) `union` (freeset t) `union` tildex in 
+          let ts  = fAppPair (tc,t) in
+          ([
+          ([def_state, In ts], [ ChannelIn ts], [def_state' tx']),
+          ([def_state, Message tc t], [], [Ack tc t, def_state' tx'])], tx')
+    | (ChIn Nothing t) <- ac = 
+          let tx' = freeset t `union` tildex in 
+          ([ ([def_state, (In t) ], [ ], [def_state' tx']) ], tx')
+    | (ChOut (Just tc) t) <- ac = 
+          let semistate = State LSemiState (p++[1]) tildex in
+          ([
+          ([def_state, In tc], [ ChannelIn tc], [Out t, def_state' tildex]),
+          ([def_state], [], [Message tc t,semistate]),
+          ([semistate, Ack tc t], [], [def_state' tildex])], tildex)
+    | (ChOut Nothing t) <- ac = 
+          ([
+          ([def_state], [], [def_state' tildex, Out t])], tildex)
+    | (Insert t1 t2 ) <- ac = 
+          ([
+          ([def_state], [InsertA t1 t2], [def_state' tildex])], tildex)
+    | (Delete t ) <- ac = 
+          ([
+          ([def_state], [DeleteA t ], [def_state' tildex])], tildex)
+    -- | Lock SapicTerm 
+    -- | Unlock SapicTerm 
+    -- | Event LNFact 
+--   | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
+    -- | MSR ([LNFact], [LNFact], [LNFact])
     | otherwise = throw ((NotImplementedError "baseTransAction") :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state' tx = State LState (p++[1]) tx
+        freeset = fromList . frees
     
 
 -- baseTrans_action 
@@ -56,21 +86,6 @@ baseTransAction ac _ p tildex
 --   | MSR(prems,acts,concls) ->
 --     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
 --     [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
---   | Msg_In(t) -> [([State(p,tildex);In(t)],[],[State(1::p,(vars_t t) @@ tildex)])]
---   | Msg_Out(t) -> [([State(p,tildex)],[],[State(1::p,(vars_t t) @@ tildex);Out(t)])]
---   | Ch_In(t1,t2) -> let tildex' = tildex @@ (vars_t t1) @@ (vars_t t2) in
---     [ ( [State(p,tildex);In(List([t1;t2]))], [Action("ChannelInEvent",[List([t1;t2])])], [State(1::p,tildex')]);
---       ( [State(p,tildex);Message(t1, t2)], [], [Ack(t1,t2);State(1::p,tildex')])]
---   | Ch_Out(t1,t2) -> [
---       ( [State(p,tildex);In(t1)], [Action("ChannelInEvent",[t1])], [Out(t2);State(1::p,tildex)]);
---       ( [State(p,tildex) ], [], [Semistate(p,tildex); Message(t1, t2)] );
---       ( [Semistate(p, tildex);Ack(t1,t2)], [], [State(1::p,tildex)])]
---   | Insert(t1,t2) -> [([State(p,tildex)], [Action("Insert",[t1 ; t2])], [State(1::p,tildex)])]
---   | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
---   | Lookup(t1,t2) -> 
---     [
---       ([State(p,tildex)], [Action("IsIn",[t1; t2])], [State(1::p, tildex @@ (vars_t t2))]);
---       ([State(p,tildex)], [Action("IsNotSet",[t1])], [State(2::p,tildex)]) ]
 --   | AnnotatedUnlock(t,a)  ->
 --     let str = "lock"^(string_of_int a) in
 --     let unlock_str = "Unlock_"^(string_of_int a) in
@@ -81,8 +96,6 @@ baseTransAction ac _ p tildex
 --     let lock_str = "Lock_"^(string_of_int a) in
 --     let nonce=(Fresh str) in
 --     [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
---   | Delete(t)  -> [
---       ( [ State(p,tildex)], [Action("Delete",[ t ])], [State(1::p, tildex) ])]
 --   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))
 --   | Let(s) -> raise (TranslationError "'Let' should not be present at this point")
 --   | Comment(s) -> raise (TranslationError "Comments should not be present at this point")
@@ -91,7 +104,7 @@ baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
 baseTransComb c _ p tildex 
     | Parallel <- c = (
-               [([State LState p tildex], [], [State LState ( 1:p ) tildex,State LState ( 2:p ) tildex])]
+               [([def_state], [], [def_state1 tildex,def_state2 tildex])]
              , tildex, tildex )
     | NDC <- c = (
                []
@@ -100,16 +113,24 @@ baseTransComb c _ p tildex
                 let vars_f = fromList $ getFactVariables f in
                 if vars_f `isSubsetOf` tildex then 
                 (
-       [ ([State LState p tildex], [Predicate f], [State LState (1:p) tildex]),
-         ([State LState p tildex ], [NegPredicate f], [State LState (2:p) tildex])]
+       [ ([def_state], [Predicate f], [def_state1 tildex]),
+         ([def_state], [NegPredicate f], [def_state2 tildex])]
              , tildex, tildex )
                 else 
                     throw $ 
-                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) -- TODO Catch and add substitute process in calling function.
- :: SapicException AnnotatedProcess)
+                    -- TODO Catch and add substitute process in calling function.
+                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
+                        :: SapicException AnnotatedProcess)
     | CondEq _ _ <- c = throw (ImplementationError "Cond node should contain Action constructor" :: SapicException AnnotatedProcess) 
+    | Lookup t v <- c = 
+           let tx' = v `insert` tildex in
+                (
+       [ ([def_state], [IsIn t v], [def_state1 tx' ]),
+         ([def_state], [IsNotSet t], [def_state2 tildex])]
+             , tx', tildex )
     | otherwise = throw ((NotImplementedError "baseTransComb"):: SapicException AnnotatedProcess)
-
--- data ProcessCombinator = Parallel | NDC | Cond LNFact 
---         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
+    where
+        def_state = State LState p tildex
+        def_state1 tx = State LState (p++[1]) tx
+        def_state2 tx = State LState (p++[2]) tx
 

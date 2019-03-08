@@ -43,7 +43,8 @@ let p3 = new test;((test||(0+test))||!test)
 
 /* test */
 
-new  ~s; new ~t; 0
+new  ~s; new ~t;
+/* insert x,y */
 
 /* new  s; new t; 0 */
 
@@ -51,7 +52,6 @@ new  ~s; new ~t; 0
 
 /* in(<a,b>); 0 */
 
-/* insert x,y */
 
 /* event Oi(); 0 */
 

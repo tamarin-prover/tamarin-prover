@@ -46,6 +46,11 @@ data TransAction =  InitEmpty
   | ProgressTo ProcessPosition ProcessPosition
   | Listen ProcessPosition LVar 
   | Receive ProcessPosition SapicTerm
+  | IsIn SapicTerm LVar
+  | IsNotSet SapicTerm
+  | InsertA SapicTerm SapicTerm
+  | DeleteA SapicTerm 
+  | ChannelIn SapicTerm
   | Send ProcessPosition SapicTerm
   | TamarinAct LNFact
 
