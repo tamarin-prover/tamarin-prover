@@ -23,9 +23,10 @@ module Sapic.Facts (
 -- import Control.Monad.Catch
 -- import Sapic.Exceptions
 import Theory
+import Theory.Text.Parser
 import Theory.Sapic
-import Sapic.Annotation
-import Theory.Model.Rule
+import Sapic.Annotation ()
+-- import Theory.Model.Rule
 -- import Theory.Model.Rule
 -- import Data.Typeable
 -- import Data.Text
@@ -50,7 +51,7 @@ data TransAction =  InitEmpty
 
 data StateKind  = LState | PState | LSemiState | PSemiState
 
-data TransFact = K SapicTerm | Fr LVar | In SapicTerm 
+data TransFact =  Fr LVar | In SapicTerm 
             | Out SapicTerm
             | Message SapicTerm SapicTerm
             | Ack SapicTerm SapicTerm
@@ -66,6 +67,7 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]
     , acts         :: [TransAction]  
     , concs        :: [TransFact]
+    , index        :: Int
 }
 
 -- data Fact t = Fact
@@ -77,10 +79,17 @@ data AnnotatedRule ann = AnnotatedRule {
 -- protoFact :: Multiplicity -> String -> [t] -> Fact t
 -- protoFact multi name ts = Fact (ProtoFact multi name (length ts)) S.empty ts
 
+isSemiState :: StateKind -> Bool
 isSemiState LState = False
 isSemiState PState = False
 isSemiState LSemiState = True
 isSemiState PSemiState = True
+
+multiplicity :: StateKind -> Multiplicity
+multiplicity LState = Linear
+multiplicity LSemiState = Linear
+multiplicity PState = Persistent
+multiplicity PSemiState = Persistent
 
 actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
@@ -97,24 +106,38 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Send ProcessPosition SapicTerm
   -- | TamarinAct LNFact
 
--- factToFact :: TransFact -> Fact t
-factToFact (K t) = protoFact Linear "K" [t]
--- data TransFact = K SapicTerm | Fr LVar | In SapicTerm 
---             | Out SapicTerm
---             | Message SapicTerm SapicTerm
---             | Ack SapicTerm SapicTerm
---             | State StateKind ProcessPosition (S.Set LVar)
---             | MessageIDSender ProcessPosition
---             | MessageIDReceiver ProcessPosition
---             | TamarinFact LNFact
+varTermMID :: ProcessPosition -> VTerm c LVar
+varTermMID p = varTerm $ LVar n s i
+    where n = "mid_" ++ prettyPosition p
+          s = LSortFresh
+          i = 0 -- This is the message indexx. We could compute it from the position, but not sure if this makes things simpler.
 
+factToFact :: TransFact -> Fact SapicTerm
+factToFact (Fr v) = freshFact $ varTerm (v)
+factToFact (In t) = inFact t
+factToFact (Out t) = outFact t
+factToFact (Message t t') = protoFact Linear "Message" [t, t']
+factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
+factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTermMID p ]
+factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTermMID p ]
+factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind) ts
+    where
+        name k = if isSemiState k then "semistate" else "state"
+        ts = map varTerm (S.toList vars)
+factToFact (TamarinFact f) = f
+
+
+toRule :: AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name) attr) l a r
+          Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
           where
-            name = stripNonAlphanumerical (prettySapicTopLevel process) ++ "_" ++ prettyPosition position
+            name = case processName of 
+                Just s -> s
+                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process) ++ "_" ++ show index ++ "_" ++ prettyPosition position
             attr = [RuleColor $ RGB 0.3 0.3 0.3] -- TODO compute color from
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
 
+stripNonAlphanumerical :: String -> String
 stripNonAlphanumerical = filter (\x -> isLower x || isSpace x || isDigit x )

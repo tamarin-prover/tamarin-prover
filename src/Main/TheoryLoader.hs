@@ -228,11 +228,6 @@ reportOnClosedThyStringWellformedness as input = do
                   report -> do
                     if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
                     return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
-    -- where
-    --     thy = try () handler 
-    --     out = catch (loadAndTranslateOpenThyString as input) handler 
-    --     handler (SomethingBad) = return $ "Caught exception: " ++ displayException SomethingBad
-    --     handler (SapicParseError) = return $ show err
 
 -- | Load a closed diff theory and report on well-formedness errors.
 reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String

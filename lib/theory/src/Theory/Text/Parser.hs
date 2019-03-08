@@ -16,6 +16,7 @@ module Theory.Text.Parser (
   , parseOpenDiffTheoryString
   , parseLemma
   , parseIntruderRules
+  , newVariables
   ) where
 
 import           Prelude                    hiding (id, (.))

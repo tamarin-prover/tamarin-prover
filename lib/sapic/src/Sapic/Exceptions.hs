@@ -34,6 +34,7 @@ data WFerrror a = WFLock WFLockTag (AnProcess a)
 --                 ^" (the bound variables are: "
 --                 ^ (String.concat ", " ( List.map var2string (VarSet.elements ( tildex))))^")" )
                 | Other String
+    deriving (Typeable, Show)
 
 data SapicException a = SomethingBad
                     | VerdictNotWellFormed String
@@ -48,13 +49,17 @@ data SapicException a = SomethingBad
                     | NotInRange String
                     | ImplementationError String
                     | MoreThanOneProcess
-    deriving (Typeable)
-instance Show (SapicException a) where
-    show SomethingBad = "something bad happened"
+                    | RuleNameExists String
+    deriving (Typeable) -- Show)
+
+-- TODO add nicer error messages later
+instance Show (SapicException a) where 
+    show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
-    -- show (SapicParseError err) = "Parser error:" ++ show err
+    show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
 -- instance Exception SapicException
-instance Typeable a => Exception (SapicException a)
+instance (Typeable a, Show a) => Exception (SapicException a)
 
 -- TODO notes: this is how to do hierarchical exceptions
 -- newtype SapicException = forall e . Exception e => SapicException e

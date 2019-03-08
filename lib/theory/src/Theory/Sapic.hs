@@ -105,7 +105,7 @@ rhs  = [2] :: ProcessPosition
 -- rhs :: ProcessPosition = 2
 
 prettyPosition:: ProcessPosition -> String
-prettyPosition = foldl (\ s n -> show n ++ s) ""
+prettyPosition = foldl (\ s n -> s ++ show n ) ""
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process

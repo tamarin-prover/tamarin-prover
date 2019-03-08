@@ -42,7 +42,7 @@ baseTransAction ac _ p tildex
           ([State LState p tildex], [], [State PSemiState (1:p) tildex ]),
           ([State PSemiState (1:p) tildex], [], [State LState ( 1:p ) tildex])
           ], tildex)
-    | otherwise = throw (SomethingBad :: SapicException AnnotatedProcess)
+    | otherwise = throw ((NotImplementedError "baseTransAction") :: SapicException AnnotatedProcess)
     
 
 -- baseTrans_action 
@@ -104,7 +104,7 @@ baseTransComb c _ p tildex
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) -- TODO Catch and add substitute process in calling function.
  :: SapicException AnnotatedProcess)
     | CondEq _ _ <- c = throw (ImplementationError "Cond node should contain Action constructor" :: SapicException AnnotatedProcess) 
-    | otherwise = throw (SomethingBad :: SapicException AnnotatedProcess)
+    | otherwise = throw ((NotImplementedError "baseTransComb"):: SapicException AnnotatedProcess)
 
 -- data ProcessCombinator = Parallel | NDC | Cond LNFact 
 --         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar

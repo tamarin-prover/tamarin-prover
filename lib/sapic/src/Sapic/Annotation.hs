@@ -66,7 +66,7 @@ instance Semigroup ProcessAnnotation where
 
 
 newtype AnnotatedProcess = AnProcess ProcessAnnotation
-    deriving (Typeable, Monoid,Semigroup)
+    deriving (Typeable, Monoid,Semigroup,Show)
 
 -- deriving instance (Monoid a,Semigroup a) => Monoid (AnProcess a)
 
