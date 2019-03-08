@@ -50,14 +50,14 @@ data SapicException a = SomethingBad
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
-    deriving (Typeable) -- Show)
+    deriving (Typeable, Show)
 
 -- TODO add nicer error messages later
-instance Show (SapicException a) where 
-    show SomethingBad = "Something bad happened"
-    show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
-    show (RuleNameExists s) = "Rule name already exists:" ++ s
-    show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
+-- instance Show (SapicException a) where 
+--     show SomethingBad = "Something bad happened"
+--     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
+--     show (RuleNameExists s) = "Rule name already exists:" ++ s
+--     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
 -- instance Exception SapicException
 instance (Typeable a, Show a) => Exception (SapicException a)
 

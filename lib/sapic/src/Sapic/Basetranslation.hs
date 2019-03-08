@@ -39,10 +39,15 @@ baseTransNull _ p tildex =  [([State LState p tildex ], [], [])]
 
 baseTransAction ac _ p tildex 
     |  Rep <- ac = ([
-          ([State LState p tildex], [], [State PSemiState (1:p) tildex ]),
-          ([State PSemiState (1:p) tildex], [], [State LState ( 1:p ) tildex])
+          ([State LState p tildex], [], [State PSemiState (p++[1]) tildex ]),
+          ([State PSemiState (p++[1]) tildex], [], [State LState (p++[1]) tildex])
           ], tildex)
+    | (New v) <- ac = let tx' = v `insert` tildex in
+        ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
     | otherwise = throw ((NotImplementedError "baseTransAction") :: SapicException AnnotatedProcess)
+    where
+        def_state = State LState p tildex
+        def_state' tx = State LState (p++[1]) tx
     
 
 -- baseTrans_action 
@@ -51,7 +56,6 @@ baseTransAction ac _ p tildex
 --   | MSR(prems,acts,concls) ->
 --     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
 --     [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
---   | New(v) -> [([State(p,tildex);Fr(v)], [], [State(1::p, v@::tildex)])]
 --   | Msg_In(t) -> [([State(p,tildex);In(t)],[],[State(1::p,(vars_t t) @@ tildex)])]
 --   | Msg_Out(t) -> [([State(p,tildex)],[],[State(1::p,(vars_t t) @@ tildex);Out(t)])]
 --   | Ch_In(t1,t2) -> let tildex' = tildex @@ (vars_t t1) @@ (vars_t t2) in

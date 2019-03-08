@@ -30,7 +30,7 @@ let p3 = new test;((test||(0+test))||!test)
 
 /* 0+(0+0) */
 
-(0+0)+0
+/* (0+0)+0 */
 
 /* 0+!(0|0) */
 /* 0+!(0|0) */
@@ -43,7 +43,7 @@ let p3 = new test;((test||(0+test))||!test)
 
 /* test */
 
-/* new  ~s; new ~t; 0 */
+new  ~s; new ~t; 0
 
 /* new  s; new t; 0 */
 

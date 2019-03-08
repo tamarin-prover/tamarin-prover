@@ -124,7 +124,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
                 let (msrs, tildex') = trans_action ac ann p tildex in
                 do 
                     msr' <-  gen trans anP (p++[1]) tildex' 
-                    return $ msr' ++ mapToAnnotatedRule proc' msrs
+                    return $ mapToAnnotatedRule proc' msrs ++ msr'
     where
         map_prems f = map (\r -> r { prems = map f (prems r) })
         --  Substitute every occurence of  State(p_old,v) with State(p_new,v)

@@ -120,7 +120,7 @@ factToFact (Message t t') = protoFact Linear "Message" [t, t']
 factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
 factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTermMID p ]
 factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTermMID p ]
-factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind) ts
+factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
         name k = if isSemiState k then "semistate" else "state"
         ts = map varTerm (S.toList vars)
