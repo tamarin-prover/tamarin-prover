@@ -45,7 +45,7 @@ translate th = case theoryProcesses th of
             msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
             th' <- liftedAddProtoRule th testrule
             return th'
-      _ -> throw (SomethingBad :: SapicException AnnotatedProcess)
+      _ -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'

@@ -56,18 +56,19 @@ annotateLocks :: ( MonadThrow m
                 -- , Monoid (m' (m (AnProcess ProcessAnnotation))))
                 )
                     => AnProcess ProcessAnnotation -> (FreshT m (AnProcess ProcessAnnotation))
-annotateLocks = pfoldMap f 
+annotateLocks = 
+    mapM f 
     where
-        f (ProcessAction (Lock t) a p) = do 
-            v <- freshLVar "lock" LSortMsg
-            -- v <- LVar ("lock") LSortMsg -- TODO make sure that names are fresh here. Checkout our MonadFresh, but requires us to
-            -- p'  <-  p
-            -- return (ProcessAction (Lock t) (a `paddAnn` a') p')
-            -- case annotateEachClosestUnlock t v p of
-            --     Right p' -> return (ProcessAction (Lock t) (a `mappend` annLock v) p' ) 
-            --     Left tag -> throw (ProcessNotWellformed $ WFLock tag p)
-            p' <- annotateEachClosestUnlock t (AnLVar v) p
-            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
+        -- f (ProcessAction (Lock t) a p) = do 
+        --     v <- freshLVar "lock" LSortMsg
+        --     -- v <- LVar ("lock") LSortMsg -- TODO make sure that names are fresh here. Checkout our MonadFresh, but requires us to
+        --     -- p'  <-  p
+        --     -- return (ProcessAction (Lock t) (a `paddAnn` a') p')
+        --     -- case annotateEachClosestUnlock t v p of
+        --     --     Right p' -> return (ProcessAction (Lock t) (a `mappend` annLock v) p' ) 
+        --     --     Left tag -> throw (ProcessNotWellformed $ WFLock tag p)
+        --     p' <- annotateEachClosestUnlock t (AnLVar v) p
+        --     return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
         f p = return p
 -- annotateLocks (ProcessAction (Lock t) a p) = do 
 --                                             v <- freshLVar "lock" LSortMsg

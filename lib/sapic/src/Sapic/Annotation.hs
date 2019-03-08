@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+-- {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -48,7 +49,6 @@ data ProcessAnnotation = ProcessAnnotation {
     processnames :: [String]
   , lock :: Maybe AnLVar 
   , unlock :: Maybe AnLVar  } deriving (Show, Typeable)
-deriving instance Semigroup ProcessAnnotation
   
 instance Monoid ProcessAnnotation where
     mempty = ProcessAnnotation [] Nothing Nothing
@@ -57,21 +57,21 @@ instance Monoid ProcessAnnotation where
         (lock p1 `mappend` lock p2)
         (unlock p1 `mappend` unlock p2)
 
+instance Semigroup ProcessAnnotation where
+    (<>)  p1 p2 =  p2
+    -- ProcessAnnotation 
+    --     (processnames p1 `mappend` processnames p2)
+    --     (lock p1 `mappend` lock p2)
+    --     (unlock p1 `mappend` unlock p2)
+
 
 newtype AnnotatedProcess = AnProcess ProcessAnnotation
     deriving (Typeable, Monoid,Semigroup)
 
--- instance Monoid ProcessAnnotation where
---     mempty = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing }
---     mappend a b = ProcessAnnotation {
---                    processnames = (processnames a) `mappend` (processnames b)
---                 ,  lock = (lock a) `mappend` (lock b)
---                 ,  unlock = (unlock a) `mappend` (unlock b)
---     }
-
 -- deriving instance (Monoid a,Semigroup a) => Monoid (AnProcess a)
-deriving instance (Monad m, Monoid m') => Semigroup (FreshT m m')
-deriving instance (Monad m, Monoid m') => Monoid (FreshT m m')
+
+-- deriving instance (Monad m, Monoid m') => Semigroup (FreshT m m')
+-- deriving instance (Monad m, Monoid m') => Monoid (FreshT m m')
 
 annLock :: AnLVar -> ProcessAnnotation
 annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing }

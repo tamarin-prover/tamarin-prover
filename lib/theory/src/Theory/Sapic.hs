@@ -2,6 +2,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveTraversable       #-}
 {-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
@@ -36,6 +37,7 @@ import           GHC.Generics                        (Generic)
 -- import           Extension.Data.Label                
 -- import qualified Extension.Data.Label                as L
 import           Control.Parallel.Strategies
+import Data.Foldable
 
 import           Theory.Model
 -- import           Term.LTerm
@@ -81,6 +83,8 @@ deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
 deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
 deriving instance (Monoid ann) => Monoid (AnProcess ann)
+deriving instance Foldable (AnProcess)
+deriving instance Traversable (AnProcess)
 instance Functor AnProcess where
     fmap f (ProcessNull an) = ProcessNull (f an)
     fmap f (ProcessComb c an pl pr)  = ProcessComb c (f an) (fmap f pl) (fmap f pr)

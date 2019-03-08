@@ -771,7 +771,8 @@ addLemma l thy = do
     return $ modify thyItems (++ [LemmaItem l]) thy
     
 
--- | Add a new process expression. since expression (and not definitions) could appear several times, checking for doubled occurrence isn't necessary
+-- | Add a new process expression.  since expression (and not definitions)
+-- could appear several times, checking for doubled occurrence isn't necessary
 addProcess :: Process -> Theory sig c r p -> Theory sig c r p
 addProcess l thy = modify thyItems (++ [ProcessItem l]) thy
 

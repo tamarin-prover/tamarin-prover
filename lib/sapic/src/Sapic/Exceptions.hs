@@ -47,9 +47,11 @@ data SapicException a = SomethingBad
                     | InvalidPosition ProcessPosition
                     | NotInRange String
                     | ImplementationError String
+                    | MoreThanOneProcess
     deriving (Typeable)
 instance Show (SapicException a) where
     show SomethingBad = "something bad happened"
+    show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     -- show (SapicParseError err) = "Parser error:" ++ show err
 -- instance Exception SapicException
 instance Typeable a => Exception (SapicException a)
