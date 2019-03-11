@@ -969,7 +969,7 @@ actionprocess thy=
             <|> try ( do 
                         s <- sapicAction
                         _ <- opSeq
-                        p <- process thy
+                        p <- actionprocess thy
                         return (ProcessAction s mempty p))
             <|> try ( do 
                         s <- sapicAction
