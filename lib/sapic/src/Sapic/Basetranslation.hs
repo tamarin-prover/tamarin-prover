@@ -87,7 +87,7 @@ baseTransAction ac an p tildex
         def_state = State LState p tildex
         def_state' tx = State LState (p++[1]) tx
         freeset = fromList . frees
-        freeset' = fromList . concat . (map getFactVariables)
+        freeset' = fromList . concatMap getFactVariables
     
 
 -- baseTrans_action 

@@ -44,8 +44,8 @@ translate th = case theoryProcesses th of
       [p] -> do 
             an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
             msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
-            -- th' <- liftedAddProtoRule th testrule
             th' <- foldM liftedAddProtoRule th msr
+            -- sapic_restrictions <- 
             return th'
       _ -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
