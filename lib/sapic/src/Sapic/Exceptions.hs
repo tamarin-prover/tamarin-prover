@@ -50,6 +50,7 @@ data SapicException a = SomethingBad
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
+                    | RestrictionNameExists String
     deriving (Typeable, Show)
 
 -- TODO add nicer error messages later

@@ -33,6 +33,7 @@ import Sapic.Locks
 -- import Sapic.Exceptions
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
+import Sapic.Restrictions
 import           Theory.Text.Pretty
 
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
@@ -45,13 +46,19 @@ translate th = case theoryProcesses th of
             an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
             msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
             th' <- foldM liftedAddProtoRule th msr
-            -- sapic_restrictions <- 
-            return th'
+            sapic_restrictions <- generateSapicRestrictions option an_proc
+            th'' <- foldM liftedAddRestriction th' sapic_restrictions
+            return th''
       _ -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
         Nothing   -> throwM ((RuleNameExists (render (prettyRuleName ru) ) )  :: SapicException AnnotatedProcess)
+    liftedAddRestriction thy rest = case addRestriction rest thy of
+        Just thy' -> return thy'
+        Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
+    -- :: Restriction -> Theory sig c r p -> Maybe (Theory sig c r p)
+    option = True
         -- fail $ "duplicate rule: " -- ++ render (prettyRuleName ru)
   -- let msr =  
   --     if input.op.progress 

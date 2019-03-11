@@ -71,11 +71,11 @@ baseTransAction ac an p tildex
     | (Lock t ) <- ac, (Just (AnLVar v)) <- lock an = 
           let tx' = v `insert` tildex in 
       ([
-      ([def_state, Fr v], [LockA t v ], [def_state' tx'])], tx')
+      ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'])], tx')
     | (Lock t ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
 
     | (Unlock t ) <- ac, (Just (AnLVar v)) <- unlock an = 
-          ([([def_state], [UnlockANamed t v, UnlockAUnnamed t v ], [def_state' tildex])], tildex)
+          ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex])], tildex)
     | (Unlock t ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
           ([([def_state], [TamarinAct f], [def_state' tildex])], tildex)

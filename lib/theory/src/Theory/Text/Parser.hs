@@ -15,6 +15,7 @@ module Theory.Text.Parser (
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
   , parseLemma
+  , parseRestriction
   , parseIntruderRules
   , newVariables
   ) where
@@ -126,6 +127,10 @@ parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory fla
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
 parseLemma = parseString "<unknown source>" lemma
+
+-- | Parse a lemma for an open theory from a string.
+parseRestriction :: String -> Either ParseError Restriction
+parseRestriction = parseString "<unknown source>" restriction
 
 ------------------------------------------------------------------------------
 -- Parsing Terms

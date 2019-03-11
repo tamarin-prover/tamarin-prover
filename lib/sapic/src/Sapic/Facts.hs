@@ -52,9 +52,10 @@ data TransAction =  InitEmpty
   | DeleteA SapicTerm 
   | ChannelIn SapicTerm
   | Send ProcessPosition SapicTerm
-  | LockA SapicTerm LVar
-  | UnlockAUnnamed SapicTerm LVar
-  | UnlockANamed SapicTerm LVar
+  | LockUnnamed SapicTerm LVar
+  | LockNamed SapicTerm LVar
+  | UnlockUnnamed SapicTerm LVar
+  | UnlockNamed SapicTerm LVar
   | TamarinAct LNFact
 
 data StateKind  = LState | PState | LSemiState | PSemiState
@@ -102,7 +103,7 @@ multiplicity PSemiState = Persistent
 -- Optimisation: have a diffeent Fact name for every (unique) locking variable 
 lockFactName v = "Lock_"++ (show $ lvarIdx v)
 unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
-
+lockPubTerm = pubTerm . show . lvarIdx
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
   -- | InitId
@@ -116,9 +117,10 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Listen ProcessPosition LVar 
   -- | Receive ProcessPosition SapicTerm
   -- | Send ProcessPosition SapicTerm
-actionToFact (LockA t v)   = protoFact Linear (lockFactName v) [varTerm v ]
-actionToFact (UnlockANamed t v) = protoFact Linear (unlockFactName v) [varTerm v]
-actionToFact (UnlockAUnnamed t v) = protoFact Linear "Unlock" [pubTerm (lockFactName v) ,varTerm v]
+actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,t, varTerm v ]
+actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, t, varTerm v ]
+actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,t, varTerm v]
+actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varTerm v]
 actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.

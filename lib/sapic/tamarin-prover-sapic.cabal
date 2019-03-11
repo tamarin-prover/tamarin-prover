@@ -53,7 +53,7 @@ library
       , transformers
       , uniplate
       , exceptions
-
+      , raw-strings-qq
       , tamarin-prover-utils
       , tamarin-prover-term
       , tamarin-prover-theory
@@ -68,6 +68,7 @@ library
       , Sapic.Locks
       , Sapic.Facts
       , Sapic.Basetranslation
+      , Sapic.Restrictions
       , Sapic
 
     other-modules:
