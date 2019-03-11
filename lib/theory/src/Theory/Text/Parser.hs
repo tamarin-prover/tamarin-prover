@@ -861,7 +861,7 @@ sapicAction = try (do
                <|> try (do 
                         _ <- symbol "unlock"
                         t <- msetterm llit
-                        return (Lock t)
+                        return (Unlock t)
                    )
                <|> try (do 
                         _ <- symbol "event"

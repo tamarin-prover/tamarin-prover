@@ -25,7 +25,7 @@ import Sapic.Facts
 import Sapic.Annotation
 -- import Theory.Model.Rule
 -- import Data.Typeable
-import Data.Set            
+import Data.Set            hiding (map)
 -- import Control.Monad.Trans.FastFresh
 
 --- TODO rewrite
@@ -68,25 +68,26 @@ baseTransAction ac an p tildex
     | (Delete t ) <- ac = 
           ([
           ([def_state], [DeleteA t ], [def_state' tildex])], tildex)
-    | (Lock t ) <- ac, (Just (AnLVar v)) <-lock an = 
+    | (Lock t ) <- ac, (Just (AnLVar v)) <- lock an = 
           let tx' = v `insert` tildex in 
       ([
       ([def_state, Fr v], [LockA t v ], [def_state' tx'])], tx')
--- | Lock SapicTerm 
---   | AnnotatedLock(t,a)  ->
---     let str = "lock"^(string_of_int a) in
---     let lock_str = "Lock_"^(string_of_int a) in
---     let nonce=(Fresh str) in
---     [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
-    -- | Unlock SapicTerm 
-    -- | Event LNFact 
---   | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
-    -- | MSR ([LNFact], [LNFact], [LNFact])
+    | (Lock t ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
+
+    | (Unlock t ) <- ac, (Just (AnLVar v)) <- unlock an = 
+          ([([def_state], [UnlockANamed t v, UnlockAUnnamed t v ], [def_state' tildex])], tildex)
+    | (Unlock t ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
+    | (Event f ) <- ac =
+          ([([def_state], [TamarinAct f], [def_state' tildex])], tildex)
+    | (MSR (l,a,r)) <- ac = 
+          let tx' = (freeset' r) `union` tildex in 
+          ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state' tx = State LState (p++[1]) tx
         freeset = fromList . frees
+        freeset' = fromList . concat . (map getFactVariables)
     
 
 -- baseTrans_action 
@@ -95,19 +96,6 @@ baseTransAction ac an p tildex
 --   | MSR(prems,acts,concls) ->
 --     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
 --     [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
---   | AnnotatedUnlock(t,a)  ->
---     let str = "lock"^(string_of_int a) in
---     let unlock_str = "Unlock_"^(string_of_int a) in
---     let nonce=a in
---     [([ State(p,tildex)], [Action("Unlock",[Var (Pub (string_of_int nonce));  Var (Fresh str); t ]); Action(unlock_str,[Var (Pub (string_of_int nonce));  Var (Fresh str); t ])], [State(1::p, tildex) ])] 
---   | AnnotatedLock(t,a)  ->
---     let str = "lock"^(string_of_int a) in
---     let lock_str = "Lock_"^(string_of_int a) in
---     let nonce=(Fresh str) in
---     [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
---   | Lock(_) | Unlock(_) -> raise (UnAnnotatedLock ("There is an unannotated lock (or unlock) in the proces description, at position:"^pos2string p))
---   | Let(s) -> raise (TranslationError "'Let' should not be present at this point")
---   | Comment(s) -> raise (TranslationError "Comments should not be present at this point")
 
 baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)

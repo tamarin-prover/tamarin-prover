@@ -53,6 +53,8 @@ data TransAction =  InitEmpty
   | ChannelIn SapicTerm
   | Send ProcessPosition SapicTerm
   | LockA SapicTerm LVar
+  | UnlockAUnnamed SapicTerm LVar
+  | UnlockANamed SapicTerm LVar
   | TamarinAct LNFact
 
 data StateKind  = LState | PState | LSemiState | PSemiState
@@ -97,6 +99,10 @@ multiplicity LSemiState = Linear
 multiplicity PState = Persistent
 multiplicity PSemiState = Persistent
 
+-- Optimisation: have a diffeent Fact name for every (unique) locking variable 
+lockFactName v = "Lock_"++ (show $ lvarIdx v)
+unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
+
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
   -- | InitId
@@ -110,8 +116,10 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Listen ProcessPosition LVar 
   -- | Receive ProcessPosition SapicTerm
   -- | Send ProcessPosition SapicTerm
-actionToFact (LockA t v) = protoFact Linear (lockFactName v) [varTerm v ]
-  -- | TamarinAct LNFact
+actionToFact (LockA t v)   = protoFact Linear (lockFactName v) [varTerm v ]
+actionToFact (UnlockANamed t v) = protoFact Linear (unlockFactName v) [varTerm v]
+actionToFact (UnlockAUnnamed t v) = protoFact Linear "Unlock" [pubTerm (lockFactName v) ,varTerm v]
+actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
 varTermMID :: ProcessPosition -> VTerm c LVar
@@ -119,9 +127,6 @@ varTermMID p = varTerm $ LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh
           i = 0 -- This is the message indexx. We could compute it from the position, but not sure if this makes things simpler.
-
--- Optimisation: have a diffeent Fact name for every (unique) locking variable 
-lockFactName v = "Lock"++ (show $ lvarIdx v)
 
 factToFact :: TransFact -> Fact SapicTerm
 factToFact (Fr v) = freshFact $ varTerm (v)
