@@ -69,7 +69,7 @@ translate th = case theoryProcesses th of
   -- predicate_restrictions ^ lemmas_tamarin 
   -- ^ "end"
 
-noprogresstrans :: (Monad m, MonadCatch m, Typeable ann, Show ann) => AnProcess ann -> m ( [Rule ProtoRuleEInfo])
+-- noprogresstrans :: (Monad m, MonadCatch m, Typeable ann, Show ann) => AnProcess ann -> m ( [Rule ProtoRuleEInfo])
 noprogresstrans anP = do
     msrs <- gen BT.baseTrans anP [] S.empty
     return $ map toRule (initrule:msrs)

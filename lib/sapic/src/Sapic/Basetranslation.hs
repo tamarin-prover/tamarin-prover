@@ -37,7 +37,7 @@ baseTrans = (baseTransNull, baseTransAction, baseTransComb)
 baseTransNull :: p -> ProcessPosition -> Set LVar -> [([TransFact], [a1], [a2])]
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
 
-baseTransAction ac _ p tildex 
+baseTransAction ac an p tildex 
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ]),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex])
@@ -68,12 +68,21 @@ baseTransAction ac _ p tildex
     | (Delete t ) <- ac = 
           ([
           ([def_state], [DeleteA t ], [def_state' tildex])], tildex)
-    -- | Lock SapicTerm 
+    | (Lock t ) <- ac, (Just (AnLVar v)) <-lock an = 
+          let tx' = v `insert` tildex in 
+      ([
+      ([def_state, Fr v], [LockA t v ], [def_state' tx'])], tx')
+-- | Lock SapicTerm 
+--   | AnnotatedLock(t,a)  ->
+--     let str = "lock"^(string_of_int a) in
+--     let lock_str = "Lock_"^(string_of_int a) in
+--     let nonce=(Fresh str) in
+--     [([ State(p,tildex); Fr(nonce)], [Action("Lock",[Var (Pub (string_of_int a)); Var (nonce); t ]);Action(lock_str,[Var (Pub (string_of_int a)); Var (nonce); t ])], [State(1::p, nonce @:: tildex)])]
     -- | Unlock SapicTerm 
     -- | Event LNFact 
 --   | Event(a) -> [([State(p,tildex)], [(* EventEmpty;*) a], [State(1::p,tildex)])]
     -- | MSR ([LNFact], [LNFact], [LNFact])
-    | otherwise = throw ((NotImplementedError "baseTransAction") :: SapicException AnnotatedProcess)
+    | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state' tx = State LState (p++[1]) tx

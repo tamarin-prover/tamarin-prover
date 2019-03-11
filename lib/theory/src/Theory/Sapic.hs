@@ -90,7 +90,6 @@ instance Functor AnProcess where
     fmap f (ProcessComb c an pl pr)  = ProcessComb c (f an) (fmap f pl) (fmap f pr)
     fmap f (ProcessAction a an p)   =  ProcessAction a (f an) (fmap f p)
 
-
 -- | After parsing, the process is already annotated wth a list of process
 -- identifiers, describing the sequence of let P = ... constructs that were
 -- used to describe this. This will be helpful to recognise protocols roles and

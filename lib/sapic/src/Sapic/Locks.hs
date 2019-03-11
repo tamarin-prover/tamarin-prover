@@ -14,6 +14,7 @@ module Sapic.Locks (
 import Control.Exception
 import Control.Monad.Fresh
 import Control.Monad.Catch
+import qualified Data.Traversable as T
 import Sapic.Exceptions
 import Theory
 import Theory.Sapic
@@ -46,49 +47,24 @@ annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEach
                                                              pr' <- annotateEachClosestUnlock t v pr
                                                              return $ ProcessComb c a' pl' pr'
 
--- annotateLocks :: MonadFresh m =>
---                  Monoid (FreshT m (AnProcess ProcessAnnotation)) => 
---                  MonadThrow m =>
-                    -- AnProcess ProcessAnnotation -> (FreshT m (AnProcess ProcessAnnotation))
-annotateLocks :: ( MonadThrow m
-                 , Monoid (m (AnProcess ProcessAnnotation))
-                -- , MonadFresh m'
-                -- , Monoid (m' (m (AnProcess ProcessAnnotation))))
+annotateLocks :: ( MonadThrow m,
+                   MonadFresh m
+                 -- , Monoid (m (AnProcess ProcessAnnotation))
+                  -- ,Foldable (AnProcess ProcessAnnotation)
                 )
-                    => AnProcess ProcessAnnotation -> (FreshT m (AnProcess ProcessAnnotation))
-annotateLocks = 
-    mapM f 
-    where
-        -- f (ProcessAction (Lock t) a p) = do 
-        --     v <- freshLVar "lock" LSortMsg
-        --     -- v <- LVar ("lock") LSortMsg -- TODO make sure that names are fresh here. Checkout our MonadFresh, but requires us to
-        --     -- p'  <-  p
-        --     -- return (ProcessAction (Lock t) (a `paddAnn` a') p')
-        --     -- case annotateEachClosestUnlock t v p of
-        --     --     Right p' -> return (ProcessAction (Lock t) (a `mappend` annLock v) p' ) 
-        --     --     Left tag -> throw (ProcessNotWellformed $ WFLock tag p)
-        --     p' <- annotateEachClosestUnlock t (AnLVar v) p
-        --     return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
-        f p = return p
--- annotateLocks (ProcessAction (Lock t) a p) = do 
---                                             v <- freshLVar "lock" LSortMsg
---                                             -- p'  <-  p
---                                             -- return (ProcessAction (Lock t) (a `paddAnn` a') p')
---                                             return (ProcessAction (Lock t) (a `mappend` (annLock v)) (annotateEachClosestUnlock t v p)) 
--- annotateLocks (ProcessAction ac a p) = return (ProcessAction ac a (annotateLocks p))
--- annotateLocks (ProcessAction ac a p) = return (ProcessAction ac a (annotateLocks p))
-    
-    
--- in
--- let (result,_) = fold_bottom (fun (l,p_l) (r,p_r) a->
---              let p=(max p_l p_r)+1 in
---              let annotation= p (* Fresh("lock"^string_of_int p) *) in
---                match (a:annotated_sapic_action) with
---                 Lock(t) -> (Node(AnnotatedLock(t,annotation),
---                               annotateEachClosestUnlock t annotation l,
---                               annotateEachClosestUnlock t annotation r), p)
---                | _ -> (Node(a,l,r),p)
---     ) (Empty,0) (tree:annotated_btree)
---  in
---     result
-
+                    => AnProcess ProcessAnnotation -> m (AnProcess ProcessAnnotation)
+annotateLocks (ProcessAction (Lock t) a p) = do 
+            v <- freshLVar "lock" LSortMsg
+            p' <- annotateEachClosestUnlock t (AnLVar v) p
+            p'' <- annotateLocks p'
+            -- return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
+            return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
+annotateLocks (ProcessAction ac an p) = do
+            p' <- annotateLocks p
+            return (ProcessAction ac an p')
+annotateLocks (ProcessNull an ) = 
+            return (ProcessNull an)
+annotateLocks (ProcessComb comb an pl pr ) = do
+            pl' <- annotateLocks pl
+            pr' <- annotateLocks pr
+            return (ProcessComb comb an pl' pr')
