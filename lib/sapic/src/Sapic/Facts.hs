@@ -120,7 +120,7 @@ actionToFact InitEmpty = protoFact Linear "Init" []
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,t, varTerm v ]
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, t, varTerm v ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,t, varTerm v]
-actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varTerm v]
+actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,t,varTerm v]
 actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
