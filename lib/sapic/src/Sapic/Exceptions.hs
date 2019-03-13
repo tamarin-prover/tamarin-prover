@@ -19,6 +19,7 @@ module Sapic.Exceptions (
 import Control.Exception
 import Data.Typeable
 import Data.Set
+import qualified Data.List as List
 import Theory
 import Theory.Sapic
 import Theory.Model.Rule
@@ -51,14 +52,31 @@ data SapicException a = SomethingBad
                     | MoreThanOneProcess
                     | RuleNameExists String
                     | RestrictionNameExists String
-    deriving (Typeable, Show)
+    -- deriving (Typeable, Show)
+    deriving (Typeable)
+
+prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
 
 -- TODO add nicer error messages later
--- instance Show (SapicException a) where 
---     show SomethingBad = "Something bad happened"
---     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
---     show (RuleNameExists s) = "Rule name already exists:" ++ s
---     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
+instance Show (SapicException a) where 
+    show SomethingBad = "Something bad happened"
+    show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
+    show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
+    show (ProcessNotWellformed (WFUnboundProto varset)) =
+                   "The variable or variables "
+                   ++
+                   prettyVarSet varset
+                   ++
+                   " are not bound."
+    show (ProcessNotWellformed (WFUnbound varset pr)) =
+                   "The variable or variables"
+                   ++
+                   prettyVarSet  varset
+                   ++
+                   " are not bound in the process:"
+                   ++
+                   prettySapic pr
 -- instance Exception SapicException
 instance (Typeable a, Show a) => Exception (SapicException a)
 

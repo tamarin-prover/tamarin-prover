@@ -142,4 +142,4 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         trans = (trans_null, trans_action, trans_comb)
         toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc p l a r 
         mapToAnnotatedRule proc l = -- distinguish rues by  adding the index of each element to it, as its processName
-            snd $ foldl (\(i,l) r -> (i+1,l ++ [toAnnotatedRule proc r i] )) (0,[]) l
+            snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l

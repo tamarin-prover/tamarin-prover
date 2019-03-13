@@ -72,11 +72,11 @@ baseTransAction ac an p tildex
           let tx' = v `insert` tildex in 
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'])], tx')
-    | (Lock t ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
+    | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
 
     | (Unlock t ) <- ac, (Just (AnLVar v)) <- unlock an = 
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex])], tildex)
-    | (Unlock t ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
+    | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
           ([([def_state], [TamarinAct f], [def_state' tildex])], tildex)
     | (MSR (l,a,r)) <- ac = 
@@ -106,19 +106,8 @@ baseTransComb c _ p tildex
     | NDC <- c = (
                []
              , tildex, tildex )
-    | Cond f <- c = 
-                let vars_f = fromList $ getFactVariables f in
-                if vars_f `isSubsetOf` tildex then 
-                (
-       [ ([def_state], [Predicate f], [def_state1 tildex]),
-         ([def_state], [NegPredicate f], [def_state2 tildex])]
-             , tildex, tildex )
-                else 
-                    throw $ 
-                    -- TODO Catch and add substitute process in calling function.
-                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
-                        :: SapicException AnnotatedProcess)
-    | CondEq _ _ <- c = throw (ImplementationError "Cond node should contain Action constructor" :: SapicException AnnotatedProcess) 
+    | Cond f <- c = condition f
+    | CondEq t1 t2 <- c = condition (protoFact Linear "Eq" [t1,t2]) 
     | Lookup t v <- c = 
            let tx' = v `insert` tildex in
                 (
@@ -130,4 +119,15 @@ baseTransComb c _ p tildex
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
+        condition f = 
+                let vars_f = fromList $ getFactVariables f in
+                if vars_f `isSubsetOf` tildex then 
+                ( [ ([def_state], [Predicate f], [def_state1 tildex]),
+                    ([def_state], [NegPredicate f], [def_state2 tildex])]
+                     , tildex, tildex )
+                else 
+                    throw $ 
+                    -- TODO Catch and add substitute process in calling function.
+                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
+                        :: SapicException AnnotatedProcess)
 

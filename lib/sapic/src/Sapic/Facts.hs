@@ -100,6 +100,11 @@ multiplicity LSemiState = Linear
 multiplicity PState = Persistent
 multiplicity PSemiState = Persistent
 
+mapFactName f fact =  fact { factTag = f' (factTag fact) } 
+    where f' (ProtoFact m s i) = ProtoFact m (f s) i
+          f' ft = ft
+
+
 -- Optimisation: have a diffeent Fact name for every (unique) locking variable 
 lockFactName v = "Lock_"++ (show $ lvarIdx v)
 unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
@@ -117,6 +122,8 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Listen ProcessPosition LVar 
   -- | Receive ProcessPosition SapicTerm
   -- | Send ProcessPosition SapicTerm
+actionToFact (Predicate f)   =  mapFactName (\s -> "Pred_" ++ s) f
+actionToFact (NegPredicate f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,t, varTerm v ]
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, t, varTerm v ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,t, varTerm v]

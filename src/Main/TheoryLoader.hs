@@ -138,7 +138,6 @@ loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
     thy' <-  Sapic.translate thy
     return thy'
-    where
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -195,10 +194,13 @@ loadClosedDiffThyWfReport as inFile = do
     closeDiffThy as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
-loadClosedThyString as input =
+loadClosedThyString as input = 
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeThy as thy
+        Right thy -> do
+            thy' <- Sapic.translate thy
+            Right <$> closeThy as thy' -- No "return" because closeThy gives IO (ClosedTheory)
+
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
 loadClosedDiffThyString as input =
@@ -218,7 +220,7 @@ loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ q
 
 -- | Load a close theory and only report on well-formedness errors or translation errors
 reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
-reportOnClosedThyStringWellformedness as input = do
+reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy -> do
