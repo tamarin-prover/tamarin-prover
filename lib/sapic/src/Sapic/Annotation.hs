@@ -18,6 +18,7 @@ module Sapic.Annotation (
     , annLock
     , annUnlock
     , toAnProcess
+    , toProcess
     , AnLVar (..)
 ) where
 import           Data.Data
@@ -82,3 +83,12 @@ toAnProcess :: Process -> AnProcess ProcessAnnotation
 toAnProcess = fmap f
     where
         f l = ProcessAnnotation { processnames = l, lock = Nothing, unlock = Nothing }
+
+toProcess :: AnProcess ProcessAnnotation -> Process
+toProcess = fmap f
+    where
+        f l = processnames l
+-- toProcess (ProcessNull ann) = ProcessNull (
+-- toProcess (ProcessComb c ann pl pr) = ProcessComb c () pl pr 
+-- toProcess (ProcessAction a ann p) = ProcessAction a () p
+

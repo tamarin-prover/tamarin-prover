@@ -88,6 +88,7 @@ import           Term.LTerm
 import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
+import           Theory.Sapic
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -258,7 +259,7 @@ publicNamesReportDiff thy =
 
         
 -- | Check whether a rule has unbound variables.
-unboundCheck :: HasFrees i => String -> Rule i -> WfErrorReport
+-- unboundCheck :: HasFrees i => String -> Rule i -> WfErrorReport
 unboundCheck info ru
     | null unboundVars = []
     | otherwise        = return $
@@ -266,9 +267,12 @@ unboundCheck info ru
         , text info $-$ (nest 2 $ prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
+    originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru 
+    match v (Process (ProcessComb (Lookup t v') _ _ _))  = v == v'
+    match v _ = False
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
-        guard $ not (lvarSort v == LSortPub || v `S.member` boundVars)
+        guard $ not (lvarSort v == LSortPub || v `S.member` boundVars || originatesFromLookup v)
         return v
 
 -- | Report on sort clashes.

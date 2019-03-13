@@ -22,6 +22,7 @@ import Data.Set
 import qualified Data.List as List
 import Theory
 import Theory.Sapic
+import Theory.Sapic.Print
 import Theory.Model.Rule
 -- import Text.Parsec (ParseError)
 

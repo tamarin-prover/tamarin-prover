@@ -215,6 +215,7 @@ import           Safe                                (headMay)
 
 import           Theory.Model
 import           Theory.Sapic
+import           Theory.Sapic.Print
 import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation

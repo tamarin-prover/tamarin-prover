@@ -20,6 +20,7 @@ import Control.Exception
 -- import Sapic.Exceptions
 import Theory
 import Theory.Sapic
+import Theory.Sapic.Print
 import Sapic.Exceptions
 import Sapic.Facts
 import Sapic.Annotation

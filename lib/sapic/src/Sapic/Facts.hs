@@ -25,7 +25,8 @@ module Sapic.Facts (
 import Theory
 import Theory.Text.Parser
 import Theory.Sapic
-import Sapic.Annotation ()
+import Theory.Sapic.Print
+import Sapic.Annotation
 -- import Theory.Model.Rule
 -- import Theory.Model.Rule
 -- import Data.Typeable
@@ -152,7 +153,6 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
-
 toRule :: AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
           Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
@@ -160,7 +160,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             name = case processName of 
                 Just s -> s
                 Nothing -> stripNonAlphanumerical (prettySapicTopLevel process) ++ "_" ++ show index ++ "_" ++ prettyPosition position
-            attr = [RuleColor $ RGB 0.3 0.3 0.3] -- TODO compute color from
+            attr = [RuleColor $ RGB 0.3 0.3 0.3, Process $ toProcess process] -- TODO compute color from
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs

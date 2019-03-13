@@ -85,6 +85,7 @@ library
       Theory.Constraint.System.Guarded
 
       Theory.Sapic
+      Theory.Sapic.Print
 
       Theory.Model
       Theory.Model.Atom
