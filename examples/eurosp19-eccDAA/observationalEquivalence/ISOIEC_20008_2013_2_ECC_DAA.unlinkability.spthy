@@ -1,0 +1,224 @@
+theory ISOIEC_20008_2013_2_ECC_DAA_UNLINKABILITY
+begin
+
+/*
+  Protocol:	ISOIEC_20008_2013_2_ECC_DAA_ANON_SIMPLE
+  Author: 	Jorden Whitefield and Ralf Sasse
+  Date: 	  October 2018
+
+  Status:   development
+
+  Version: TAMARIN Prover 1.4.0 commit 7ced07a69f8e93178f9a95797479277a736ae572
+           https://github.com/tamarin-prover/tamarin-prover/releases/tag/1.4.0
+
+  Citations -
+      Title:   Simplified security notions of direct anonymous attestation and a concrete scheme from pairings
+      Journal: Int. J. Inf. Sec.
+      Authors: Ernie Brickell and Liqun Chen and Jiangtao Li
+      Year:    2009
+
+      
+      Title:    On the Design and Implementation of an Efficient DAA Scheme
+      Book:     Smart Card Research and Advanced Application, Springer Berlin Heidelberg
+      Authors:  Chen, Liqun and Page, Dan and Smart, Nigel P.
+      Year:     2013
+      ISBN:     978-3-642-12510-2
+
+
+      Title:    Information technology - Security techniques - Anonymous digital Signatures
+                Part 2: Mechanisms using a group public key
+                Mechanism 4
+      Year:     2013
+      ISO:      ISO/IEC 20008-2:2013
+      URL:      https://www.iso.org/standard/56916.html
+
+      --------------------------------------------
+*/
+
+
+builtins:   multiset, asymmetric-encryption
+
+functions:  accept/0,
+            H1/1, H2/6, H3/5, H4/8, PRF/3,
+            multp/2, plus/2, minus/2,
+            s/2                               // s is compute_s in the paper
+
+
+// Protocol Restrictions (Axioms)
+restriction issuer_init:	   "All #i #j        . IssuerInit( ) @ i & IssuerInit( ) @ j ==> #i = #j"
+restriction signA:           "All #i #j x      . UniqueExecSign( x ) @ #i & UniqueExecSign( x ) @ #j ==> #i = #j"
+
+
+// ********************************* PROTOCOL START *****************************************
+
+
+/*
+Setup operation
+===============
+
+The following rules captures the 'Key generation process' from section
+6.5.2 in the standards document (page 20). These rules capture the
+setup of an Issuer.
+*/
+
+
+// The rule models 6.5.2
+rule ISSUER_SETUP:
+  let
+    ipk	= pk( ~isk ) // g). X = [x]P2 Y = [y]P2
+  in
+    [
+        Fr( ~Ki )    // a). Representation of t := ( G1, P1, q )
+      , Fr( ~P1 )    // c). Choose random generator P1
+      , Fr( ~isk )   // f). x, y <- Zp  
+      , Fr( ~bottom )   // ??
+    ]
+  --[
+        IssuerInit(  )
+      , UniqueExecJoin( 'ISSUER_SETUP' )    // Action label used in restriction two_joins
+      , Create( $I )
+    ]->
+    [
+        !F_IssuerSK( $I, ~isk )         // Store Issuer secret key (x,y)
+      , !F_IssuerPK( $I, ipk )          // Store Issuer secret key (X,Y)
+      , !F_IssuerKi( $I, ~Ki )          // Store Issuer security parameters
+      , !F_IssuerGenerator( $I, ~P1 )   // Store Issuer generator P1
+      , !F_BSN( $I, ~bottom )              // Store group basname
+      , Out( < ipk, ~Ki, ~P1, ~bottom > )  // Output all public values to adversary
+    ]
+
+
+/*
+Adversary Rules
+===============
+*/
+
+/**********************************************
+ * ISSUER_KEY_REVEAL
+ * Rule models the Issuer being corrupt and
+ * leaking its secret key to the adversary.
+ **********************************************/
+rule ISSUER_KEY_REVEAL:
+     [ !F_IssuerSK( $I, isk ) ]   // Recall the Issuer secret key (x,y)
+   --[ IssuerKeyReveal( $I ) ]->
+     [ Out( isk ) ]               // Output Issuer secret key to adversary.
+
+
+// DIFF Stuff
+rule DIFF_DAA_SIGN:
+  let
+      tsk     = PRF( ~DAASeed, Ki, ~cnt )                                       // Step c) PS derives f from its secret seed value DAASeed, Issuer params and a counter value.
+      Q2      = multp( P1, tsk )                                                // Step d) compute Q2 <- [f]P1 
+      A       = multp( ~creRandom, P1 )                                         // Step m) generate A <- [r]P1
+      B       = multp( isk, A )                                                 // Step m) generate B <- [y]A
+      C       = plus( multp( isk, A ), multp( multp( ~creRandom, isk ), Q2 ) )  // Step m) generate C <- [x]A + [rxy]Q2
+      D       = multp( tsk, B )                                                 // Step o) PS computes D <- [f]B
+      R       = multp( ~l, A )                                                  // Step d) R <- [l]A
+      S       = multp( ~l, B )                                                  // Step d) S <- [l]B
+      T       = multp( ~l, C )                                                  // Step d) T <- [l]C
+      W       = multp( ~l, D )                                                  // Step d) W <- [l]D
+      c       = H3( R, S, T, W, ~nv )                                            // Step e) compute c <- H3( R || S || T || W || nv )
+      K       = multp( tsk, ~J )                                                // Step g) compute K <- [f]J
+      R1      = multp( ~randS1, ~J )                                            // Step j) compute R1 <- [r]J
+      R2      = multp( ~randS1, S )                                             // Step j) compute R2 <- [r]S
+      h       = H4( c, ~m, ~J, K, bsn, R1, R2, ~nt )                             // Step k) compute h <- H4( c || m || J || K || bsn || R1 || R2 || nt )
+      s       = s( ~randS1, tsk )                                               // Step l) compute s <- (r + h . f ) mod p (s is compute_s in the paper)
+      sigma   = < 'sigma', R, S, T, W, ~J, K, h, s, ~nv, ~nt >                   // Step n) signer puts together the signature σ
+
+      RR2      = multp( ~l2, A )                                                // Step d) R <- [l]A
+      S2       = multp( ~l2, B )                                                // Step d) S <- [l]B
+      T2       = multp( ~l2, C )                                                // Step d) T <- [l]C
+      W2       = multp( ~l2, D )                                                // Step d) W <- [l]D
+      c2       = H3( RR2, S2, T2, W2, ~nv )                                      // Step e) compute c <- H3( R || S || T || W || nv )
+      K2       = multp( tsk, ~J2 )                                              // Step g) compute K <- [f]J
+      R12      = multp( ~randS12, ~J2 )                                         // Step j) compute R1 <- [r]J
+      R22      = multp( ~randS12, S2 )                                          // Step j) compute R2 <- [r]S
+      h2       = H4( c2, ~m, ~J2, K2, bsn, R12, R22, ~nt2 )                      // Step k) compute h <- H4( c || m || J || K || bsn || R1 || R2 || nt )
+      s2       = s( ~randS12, tsk )                                             // Step l) compute s <- (r + h . f ) mod p
+      sigma2   = < 'sigma', RR2, S2, T2, W2, ~J2, K2, h2, s2, ~nv, ~nt2 >        // Step n) signer puts together the signature σ
+
+      // .... Duplicate
+      tskP     = PRF( ~DAASeedP, Ki, ~cntP )                                    // Step c) PS derives f from its secret seed value DAASeed, Issuer params and a counter value.
+      Q2P      = multp( P1, tskP )                                              // Step d) compute Q2 <- [f]P1 
+      AP       = multp( ~creRandomP, P1 )                                       // Step m) generate A <- [r]P1
+      BP       = multp( isk, AP )                                               // Step m) generate B <- [y]A
+      CP       = plus( multp( isk, AP ), multp( multp( ~creRandomP, isk ), Q2P ) )  // Step m) generate C <- [x]A + [rxy]Q2
+      DP       = multp( tskP, BP )                                               // Step o) PS computes D <- [f]B
+      RP       = multp( ~lP, AP )                                               // Step d) R <- [l]A
+      SP       = multp( ~lP, BP )                                               // Step d) S <- [l]B
+      TP       = multp( ~lP, CP )                                               // Step d) T <- [l]C
+      WP       = multp( ~lP, DP )                                               // Step d) W <- [l]D
+      cP       = H3( RP, SP, TP, WP, ~nv )                                       // Step e) compute c <- H3( R || S || T || W || nv )
+      KP       = multp( tskP, ~JP )                                             // Step g) compute K <- [f]J
+      R1P      = multp( ~randS1P, ~JP )                                         // Step j) compute R1 <- [r]J
+      R2P      = multp( ~randS1P, SP )                                          // Step j) compute R2 <- [r]S
+      hP       = H4( cP, ~m, ~JP, KP, bsn, R1P, R2P, ~ntP )                      // Step k) compute h <- H4( c || m || J || K || bsn || R1 || R2 || nt )
+      sP       = s( ~randS1P, tskP )                                            // Step l) compute s <- (r + h . f ) mod p  (s is compute_s in the paper)
+      sigmaP   = < 'sigma', RP, SP, TP, WP, ~JP, KP, hP, sP, ~nv, ~ntP >         // Step n) signer puts together the signature σ
+  in
+        [
+            !F_IssuerSK( $I, isk )
+          , !F_IssuerGenerator( $I, P1 )
+          , !F_IssuerKi( $I, Ki )
+          , !F_BSN( $I, bsn )                                                   // Step b) if bsn = ⊥ then fresh J else J <- H1( bsn )
+
+          // PlatformA
+          , Fr( ~creRandom )
+          , Fr( ~DAASeed )
+          , Fr( ~cnt )
+          
+          // PlatformA - sigma
+          , Fr( ~l )
+          , Fr( ~J )
+          , Fr( ~randS1 )
+          , Fr( ~nt )
+
+          // PlatformA - sigma2
+          , Fr( ~l2 )
+          , Fr( ~J2 )
+          , Fr( ~randS12 )
+          , Fr( ~nt2 )
+
+          // PlatformB
+          , Fr( ~DAASeedP )
+          , Fr( ~cntP )
+          , Fr( ~creRandomP )
+
+          // PlatformB - sigmaP
+          , Fr( ~lP )
+          , Fr( ~JP )
+          , Fr( ~randS1P )
+          , Fr( ~ntP )
+
+          // Messages
+          , Fr( ~nv )
+          , Fr( ~m )
+      ]
+    --[ Finished( ), UniqueExecSign( 'SIGN' ) ]->
+      [
+          Out( < 'diffSigma', sigma, diff( sigma2, sigmaP ) > )
+        , Out( < ~nv, ~m, Q2, Q2P, R1, R2 > )
+        , Shuffle( < R12, R22> + < R1P, R2P > )
+      ]
+
+
+rule SHUFFLE:
+      [ Shuffle( x + y ) ]
+      -->
+      [ Out( < x, y > ) ]
+
+
+
+lemma functional_correctness: exists-trace
+"
+Ex #r .
+
+    /* There does not exist a Issuer key reveal */
+    not( Ex C #k1 . IssuerKeyReveal( C )  @ k1 ) &
+
+    /* JOIN: There exists a successful JOIN operation between a PLATFORM and the Issuer */
+    Finished( ) @ r 
+"
+
+
+end

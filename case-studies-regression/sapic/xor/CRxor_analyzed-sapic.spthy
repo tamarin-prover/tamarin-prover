@@ -11,6 +11,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -36,37 +38,37 @@ rule (modulo E) Par_11:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_na_111:
+rule (modulo E) new_na_111[color=#569dc0]:
    [ State_111( ~k ), Fr( ~na ) ] --> [ State_1111( ~k, ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Challengena_1111:
+rule (modulo E) event_Challengena_1111[color=#569dc0]:
    [ State_1111( ~k, ~na ) ]
   --[ Event( ), Challenge( ~na ) ]->
    [ State_11111( ~k, ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_na_11111:
+rule (modulo E) out_na_11111[color=#569dc0]:
    [ State_11111( ~k, ~na ) ] --> [ State_111111( ~k, ~na ), Out( ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_m_nb__111111:
+rule (modulo E) in_m_nb__111111[color=#569dc0]:
    [ State_111111( ~k, ~na ), In( <m, nb> ) ]
   -->
    [ State_1111111( ~k, ~na, m, nb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_0_1111111:
+rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_0_1111111[color=#569dc0]:
    [ State_1111111( ~k, ~na, m, nb ) ]
   --[ Pred_eq( h((~k⊕~na⊕nb)), m ) ]->
    [ State_11111111( ~k, ~na, m, nb ) ]
 
   /*
-  rule (modulo AC) if_eqhna_XOR_k_XOR_nb_m_0_1111111:
+  rule (modulo AC) if_eqhna_XOR_k_XOR_nb_m_0_1111111[color=#569dc0]:
      [ State_1111111( ~k, ~na, m, nb ) ]
     --[ Pred_eq( h(z), m ) ]->
      [ State_11111111( ~k, ~na, m, nb ) ]
@@ -117,13 +119,13 @@ rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_0_1111111:
        z     = (x.8⊕~k.9)
   */
 
-rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_1_1111111:
+rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_1_1111111[color=#569dc0]:
    [ State_1111111( ~k, ~na, m, nb ) ]
   --[ Pred_not_eq( h((~k⊕~na⊕nb)), m ) ]->
    [ State_11111112( ~k, ~na, m, nb ) ]
 
   /*
-  rule (modulo AC) if_eqhna_XOR_k_XOR_nb_m_1_1111111:
+  rule (modulo AC) if_eqhna_XOR_k_XOR_nb_m_1_1111111[color=#569dc0]:
      [ State_1111111( ~k, ~na, m, nb ) ]
     --[ Pred_not_eq( h(z), m ) ]->
      [ State_11111112( ~k, ~na, m, nb ) ]
@@ -174,73 +176,73 @@ rule (modulo E) if_eqhna_XOR_k_XOR_nb_m_1_1111111:
        z     = (x.8⊕~k.9)
   */
 
-rule (modulo E) event_Alivena_k_11111111:
+rule (modulo E) event_Alivena_k_11111111[color=#569dc0]:
    [ State_11111111( ~k, ~na, m, nb ) ]
   --[ Event( ), Alive( ~na, ~k ) ]->
    [ State_111111111( ~k, ~na, m, nb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_111111111:
+rule (modulo E) Zero_111111111[color=#569dc0]:
    [ State_111111111( ~k, ~na, m, nb ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_11111112:
+rule (modulo E) Zero_11111112[color=#569dc0]:
    [ State_11111112( ~k, ~na, m, nb ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_na_112:
+rule (modulo E) in_na_112[color=#2cd719]:
    [ State_112( ~k ), In( na ) ] --> [ State_1121( ~k, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_nb_1121:
+rule (modulo E) new_nb_1121[color=#2cd719]:
    [ State_1121( ~k, na ), Fr( ~nb ) ] --> [ State_11211( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqna_zero_0_11211:
+rule (modulo E) if_eqna_zero_0_11211[color=#2cd719]:
    [ State_11211( ~k, ~nb, na ) ]
   --[ Pred_eq( na, zero ) ]->
    [ State_112111( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) if_eqna_zero_1_11211:
+rule (modulo E) if_eqna_zero_1_11211[color=#2cd719]:
    [ State_11211( ~k, ~nb, na ) ]
   --[ Pred_not_eq( na, zero ) ]->
    [ State_112112( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_112111:
+rule (modulo E) Zero_112111[color=#2cd719]:
    [ State_112111( ~k, ~nb, na ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_NeqForExecna_zero_112112:
+rule (modulo E) event_NeqForExecna_zero_112112[color=#2cd719]:
    [ State_112112( ~k, ~nb, na ) ]
   --[ Event( ), NeqForExec( na, zero ) ]->
    [ State_1121121( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Responsek_1121121:
+rule (modulo E) event_Responsek_1121121[color=#2cd719]:
    [ State_1121121( ~k, ~nb, na ) ]
   --[ Event( ), Response( ~k ) ]->
    [ State_11211211( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_hna_XOR_k_XOR_nb_nb__11211211:
+rule (modulo E) out_hna_XOR_k_XOR_nb_nb__11211211[color=#2cd719]:
    [ State_11211211( ~k, ~nb, na ) ]
   -->
    [ State_112112111( ~k, ~nb, na ), Out( <h((~k⊕~nb⊕na)), ~nb> ) ]
 
   /*
-  rule (modulo AC) out_hna_XOR_k_XOR_nb_nb__11211211:
+  rule (modulo AC) out_hna_XOR_k_XOR_nb_nb__11211211[color=#2cd719]:
      [ State_11211211( ~k, ~nb, na ) ]
     -->
      [ State_112112111( ~k, ~nb, na ), Out( <h(z), ~nb> ) ]
@@ -291,7 +293,7 @@ rule (modulo E) out_hna_XOR_k_XOR_nb_nb__11211211:
        z     = (x.6⊕~k.7)
   */
 
-rule (modulo E) Zero_112112111:
+rule (modulo E) Zero_112112111[color=#2cd719]:
    [ State_112112111( ~k, ~nb, na ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -319,7 +321,13 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   case if_eqhna_XOR_k_XOR_nb_m_0_1111111
   solve( splitEqs(1) )
     case split_case_1
-    by solve( !KU( ~k ) @ #vk.2 )
+    solve( !KU( h(~na) ) @ #vk.1 )
+      case c_h
+      by solve( !KU( ~k ) @ #vk.2 )
+    next
+      case out_hna_XOR_k_XOR_nb_nb__11211211
+      by contradiction /* from formulas */
+    qed
   next
     case split_case_2
     solve( !KU( h(~k) ) @ #vk.1 )
@@ -356,7 +364,25 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
         qed
       next
         case c_xor_case_2
-        by solve( !KU( ~k ) @ #vk.5 )
+        solve( !KU( (~na⊕nb) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~na⊕nb) ) ▶₀ #vk.2 )
+            case out_hna_XOR_k_XOR_nb_nb__11211211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.11, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case out_na_11111
+            by contradiction /* impossible chain */
+          qed
+        qed
       next
         case c_xor_case_3
         solve( !KU( (~k⊕~na) ) @ #vk.4 )
@@ -471,7 +497,25 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
       qed
     next
       case c_xor_case_2
-      by solve( !KU( ~k ) @ #vk.4 )
+      solve( !KU( (~na⊕z) ) @ #vk.3 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
+        case coerce
+        solve( !KD( (~na⊕z) ) ▶₀ #vk.1 )
+          case out_hna_XOR_k_XOR_nb_nb__11211211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case out_na_11111
+          by contradiction /* impossible chain */
+        qed
+      qed
     next
       case c_xor_case_3
       solve( !KU( (~k⊕~na) ) @ #vk.4 )
@@ -560,7 +604,25 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
       case c_h
       solve( !KU( (~k⊕x) ) @ #vk.2 )
         case c_xor
-        by solve( !KU( ~k ) @ #vk.5 )
+        solve( !KU( (~na⊕x) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~na⊕x) ) ▶₀ #vk.2 )
+            case out_hna_XOR_k_XOR_nb_nb__11211211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.11, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case out_na_11111
+            by contradiction /* impossible chain */
+          qed
+        qed
       next
         case coerce
         solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
@@ -683,8 +745,8 @@ analyzing: case-studies-sapic-regression/xor/CRxor.spthy
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 2.50358868s
-  alive (all-traces): verified (91 steps)
+  processing time: 2.815794s
+  alive (all-traces): verified (111 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)
 
@@ -696,8 +758,8 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/xor/CRxor.spthy
 
   output:          case-studies-sapic-regression/xor/CRxor.spthy.tmp
-  processing time: 2.50358868s
-  alive (all-traces): verified (91 steps)
+  processing time: 2.815794s
+  alive (all-traces): verified (111 steps)
   recentalive_tag (all-traces): falsified - found trace (10 steps)
   executable (exists-trace): verified (9 steps)
 

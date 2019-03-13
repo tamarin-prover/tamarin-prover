@@ -6,4 +6,6 @@ packages:
 - lib/utils/
 - lib/sapic/
 extra-deps: []
-resolver: lts-12.4
+resolver: lts-13.2
+nix:
+  packages: [ zlib ]

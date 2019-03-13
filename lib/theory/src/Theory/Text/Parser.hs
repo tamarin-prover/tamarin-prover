@@ -590,19 +590,23 @@ legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation
 ------------------------------------------------------------------------------
 
 -- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Parser LemmaAttribute
-lemmaAttribute = asum
+lemmaAttribute :: Bool -> Parser LemmaAttribute
+lemmaAttribute isDiff = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> identifier)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> many1 letter
+        False -> map charToGoalRanking     <$> many1 letter
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier
@@ -614,7 +618,7 @@ traceQuantifier = asum
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list lemmaAttribute)
+                      <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted standardFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
@@ -622,7 +626,7 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
 diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> (option [] $ list lemmaAttribute)
+                              <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
                       
@@ -996,6 +1000,14 @@ actionprocess thy=
                         return p)
                         
 
+heuristic :: Bool -> Parser [GoalRanking]
+heuristic isDiff = do
+      symbol "heuristic" *> colon *> parseGoalRanking
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> identifier
+        False -> map charToGoalRanking     <$> identifier
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -1025,7 +1037,9 @@ theory flags0 = do
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic False)
+           addItems flags thy'
+      , do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions
@@ -1091,6 +1105,9 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
 
+    liftedAddHeuristic thy h = case addHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
         
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
@@ -1106,7 +1123,9 @@ diffTheory flags0 = do
   where
     addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
+           addItems flags thy'
+      , do builtins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions
@@ -1151,6 +1170,10 @@ diffTheory flags0 = do
        if flag `S.member` flags
          then addItems flags thy'
          else addItems flags thy
+
+    liftedAddHeuristic thy h = case addDiffHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
 
     liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'

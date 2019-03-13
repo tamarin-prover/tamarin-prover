@@ -9,6 +9,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -81,7 +83,7 @@ analyzing: case-studies-sapic-regression/basic/replication.spthy
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies-sapic-regression/basic/replication.spthy.tmp
-  processing time: 0.043740744s
+  processing time: 0.12572s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +94,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/replication.spthy
 
   output:          case-studies-sapic-regression/basic/replication.spthy.tmp
-  processing time: 0.043740744s
+  processing time: 0.12572s
   onlyOneSecret (all-traces): falsified - found trace (4 steps)
 
 ==============================================================================

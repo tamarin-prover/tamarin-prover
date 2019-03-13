@@ -1,0 +1,47 @@
+theory parseColors begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) foo[color=#f5b7b1]:
+   [ Fr( ~x ) ] --[ Event( ~x ) ]-> [ Out( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/regression/trace/issue310.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/regression/trace/issue310.spthy
+
+  output:          examples/regression/trace/issue310.spthy.tmp
+  processing time: 0.045307s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue310.spthy
+
+  output:          examples/regression/trace/issue310.spthy.tmp
+  processing time: 0.045307s
+
+
+==============================================================================
+*/

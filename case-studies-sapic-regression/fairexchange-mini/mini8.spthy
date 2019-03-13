@@ -6,23 +6,26 @@ equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
 section{* small example for progression function *}
 
 builtins: signing, hashing
-rule Init_: //Init 
- [ Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-rule MessageID_rule_: //MessageID-rule 
- [ Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
+heuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ 
 
-rule event_A_: //event A() 
- [ State_(~prog_)] --[ProgressTo_1(~prog_), Event(), A()]-> [State_1(~prog_)]
+rule Init_: // [process=top-level] Init 
+ [Fr(~prog_)] --[Init(), ProgressFrom_(~prog_)]-> [State_(~prog_)]
 
-rule in_c_m_1: //in 'c',m 
- [ Fr(~prog_11), State_1(~prog_), In(<'c', m>)] --[ProgressFrom_11(~prog_11), ChannelInEvent(<'c', m>)]-> [State_11(~prog_, ~prog_11, m)]
+rule MessageID_rule_: // [process=top-level] MessageID-rule 
+ [Fr(~x)] --[]-> [MID_Sender(~x), MID_Receiver(~x)]
 
-rule event_B_11: //event B() 
- [ State_11(~prog_, ~prog_11, m)] --[ProgressTo_111(~prog_11), Event(), B()]-> [State_111(~prog_, ~prog_11, m)]
+rule event_A_: // [process=top-level] event A() 
+ [State_(~prog_)] --[ProgressTo_1(~prog_), Event(), A()]-> [State_1(~prog_)]
 
-rule Zero_111: //Zero 
- [ State_111(~prog_, ~prog_11, m)] --[]-> []
+rule in_c_m_1: // [process=top-level] in 'c',m 
+ [Fr(~prog_11), State_1(~prog_), In(<'c', m>)] --[ProgressFrom_11(~prog_11), ChannelInEvent(<'c', m>)]-> [State_11(~prog_, ~prog_11, m)]
+
+rule event_B_11: // [process=top-level] event B() 
+ [State_11(~prog_, ~prog_11, m)] --[ProgressTo_111(~prog_11), Event(), B()]-> [State_111(~prog_, ~prog_11, m)]
+
+rule Zero_111: // [process=top-level] Zero 
+ [State_111(~prog_, ~prog_11, m)] --[]-> []
 
 
 restriction single_session: // for a single session

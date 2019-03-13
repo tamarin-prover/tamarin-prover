@@ -280,18 +280,25 @@ let annotate_eventId msr =
 
 let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
+  (* Printf.printf "%s\n" (annotatedtree2string annotated_process); *)
+  let options = 
+      if input.op.progress 
+      then "\nheuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ \n\n"
+      else "\nheuristic: p /* heuristic for SAPIC */\n\n"
+  in
   let msr =  
       if input.op.progress 
       then progresstrans annotated_process
       else noprogresstrans annotated_process 
   and lemmas_tamarin = print_lemmas input.lem
   and predicate_restrictions = print_predicates input.pred
+  and users_restrictions = print_restrictions input.ax
   and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   in
   let msr' = if Lemma.contains_control input.lem (* equivalent to op.accountability *)
              then annotate_eventId msr 
              else msr
   in
-  input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
+  input.sign ^ options ^ ( print_msr msr' ) ^ users_restrictions ^ sapic_restrictions ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

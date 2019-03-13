@@ -50,7 +50,7 @@ clean:	tamarin-clean sapic-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.5.0
+VERSION=1.5.1
 
 ###############################################################################
 ## Case Studies
@@ -123,6 +123,19 @@ case-studies/%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/csf18-xor
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf18-xor/chaum_offline_anonymity.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with sequential dfs
+case-studies/%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/regression/trace
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=seqdfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -333,12 +346,16 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy
+REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy
 
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
+SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
+SEQDFS_TARGETS=$(subst .spthy,_analyzed-seqdfs.spthy,$(addprefix case-studies/regression/trace/,$(SEQDFS_CASE_STUDIES)))
+
+
 # case studies
-regression-case-studies:	$(REGRESSION_TARGETS)
+regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/regression/trace/*.spthy
 
 ## SAPIC
@@ -361,6 +378,7 @@ case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
 	mkdir -p case-studies-sapic/predicates
 	mkdir -p case-studies-sapic/SCADA
 	mkdir -p case-studies-sapic/statVerifLeftRight
+	mkdir -p case-studies-sapic/xor
 	mkdir -p case-studies-sapic/Yubikey
 	$(SAPIC) $< $<.tmp > $<.out
 	cat $<.out >>$<.tmp
@@ -382,7 +400,12 @@ PKCS11/pkcs11-templates.sapic PKCS11/pkcs11-dynamic-policy.sapic \
 predicates/decwrap_destr.sapic predicates/simple_example.sapic \
 SCADA/opc_ua_secure_conversation.sapic \
 statVerifLeftRight/stateverif_left_right.sapic \
+xor/CH07.sapic \
+xor/CRxor.sapic \
+xor/KCL07.sapic \
+xor/NSLPK3xor.sapic \
 Yubikey/Yubikey.sapic
+
 
 SAPIC_CS_TARGETS=$(subst .sapic,.spthy,$(addprefix case-studies-sapic/,$(SAPIC_CASE_STUDIES)))
 
@@ -424,7 +447,9 @@ predicates/decwrap_destr.spthy predicates/simple_example.spthy \
 locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 SCADA/opc_ua_secure_conversation.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
-xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy xor/NSLPK3xor.spthy
+xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
+# not working for unknown reason:
+# xor/NSLPK3xor.spthy
 
 # currently not working because of wrong heuristic:
 # encWrapDecUnwrap/encwrapdecunwrap.spthy

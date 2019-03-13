@@ -1,0 +1,308 @@
+theory BP_IBS_0
+begin
+
+/*
+ * Source: Invention "Bilinear-Pairing IBS" (symmetric pairing)
+ * Author: Lucca Hirschi & Ralf Sasse
+ * Date: January 2018
+ *
+ * Model: Key escrow, authentication protocol. Properties: weak/strong forward secrecy, session escrow, authentication properties.
+ * Status: Automatic proofs/attacks.
+ * Comments: We model two independent KGCs (Key Generation Centers) providing two Key Escrows Setups.
+ *           The first one 'AUTH' is in charge of the escrow of authentication sessions. The master public key MUST be pmult(master_secret_key, 'P').
+ *           The second one 'SIGN' provides an identity-based PKI that will be used to verify signatures. No constraint on the master public key.
+ *           Note that the same identities will be used for both KGCs. However, security properties are conditioned by the compromise of 'AUTH' and
+ *           'SIGN'.
+ * Results: First, everythink is broken if responder/initator does not check that ini_share/resp_share != 'P'. (Fix 1)
+ *          Then we get secrecy and authentication attacks based on a possible confusion between the two signed messages.
+ *          This can be addressed by adding tags in signed mesages. (Fix 2)
+ *          There is another attack on weak agreement of the Responder because the Initiator's signed message does not contain the Responder's ID.
+ *          This can be fixed by adding the Responder identity in the messages signed by the Initiator. (Fix 3)
+ *          There is another attack on weak agreement of the Initiator because the Responder's signed message does not contain the Initiator's ID.
+ *          This can be fixed by adding the Initiator's identity in the messages signed by the Responder. (Fix 4)
+ *       
+ *          This model implements the original protocol (no fix).
+ */
+
+
+builtins: bilinear-pairing
+functions: idsign/2, idverify/3, IBPriv/2, IBPub/2, GetIBMasterPublicKey/1, true/0, KDF/1
+equations: idverify(idsign(m,IBPriv(A, IBMasterPrivateKey)),m,IBPub(A, GetIBMasterPublicKey(IBMasterPrivateKey))) = true
+
+
+/**** Setup Key Escrow ****/
+// Reveals the identity based private key of an agent A
+rule Reveal_IB_SIGN_privkey:
+  [ !IB_Identity(~id, A, Auth_pk, Auth_sk, Sign_pk, Sign_sk) ] --[ Reveal('ID_SIGN',A) ]-> [ Out(Sign_sk) ]
+rule Reveal_IB_AUTH_privkey:
+  [ !IB_Identity(~id, A, Auth_pk, Auth_sk, Sign_pk, Sign_sk) ] --[ Reveal('ID_AUTH',A) ]-> [ Out(Auth_sk) ]
+rule Reveal_IB_MasterPrivateKey:
+  [ !IB_MasterPrivateKey(PKG, IBMasterPrivateKey) ] --[ Reveal('PKG',PKG) ]-> [ Out(IBMasterPrivateKey) ]
+
+// Create the trusted entity holding the master private key for authentication escrow (only once)
+rule create_IB_AUTH_PrivateKeyGenerator:
+ let pk_master_secret = pmult(~IBMasterPrivateKey, 'P')
+ in
+ [ Fr(~IBMasterPrivateKey) ]
+  --[ Once('AUTH') ]->
+  [ !IB_MasterPrivateKey('AUTH', ~IBMasterPrivateKey)
+  , Out(<'AUTH', pk_master_secret>) // the attacker learns the master pulic key
+  ]
+// Create the trusted entity holding the master private key for signature PKI (only once)
+rule create_IB_SIGN_PrivateKeyGenerator:
+  [ Fr(~IBMasterPrivateKey) ]
+  --[ Once('SIGN') ]->
+  [ !IB_MasterPrivateKey('SIGN', ~IBMasterPrivateKey)
+  , Out(<'SIGN', GetIBMasterPublicKey(~IBMasterPrivateKey)>) // the attacker learns the master pulic key
+  ]
+
+/**** Initialization rules for identities ****/
+rule create_IB_identity:
+  let Auth_pk = pmult(Auth_IBMasterPrivateKey, 'P')
+      Auth_sk = IBPriv($A, Auth_IBMasterPrivateKey)
+      Sign_pk = GetIBMasterPublicKey(Sign_IBMasterPrivateKey)
+      Sign_sk = IBPriv($A, Sign_IBMasterPrivateKey)      
+  in
+  [ !IB_MasterPrivateKey('AUTH', Auth_IBMasterPrivateKey)
+  , !IB_MasterPrivateKey('SIGN', Sign_IBMasterPrivateKey)
+  , Fr(~id)
+  ]
+  --[ CreateId($A, <Auth_pk, Auth_sk, Sign_pk, Sign_sk>), User() ]->
+  [ !IB_Identity(~id, $A, Auth_pk, Auth_sk, Sign_pk, Sign_sk) ]
+
+/**** Protocol rules ****/
+rule Initiator_1send:
+  let ini_share = pmult(~a, 'P')
+      m = <ini_share, Ini>
+  in
+  [ Fr(~a)
+  , !IB_Identity(~id, Ini, Auth_pk, Auth_sk, Sign_pk, Sign_sk)
+  ]
+  --[ OUT_Ini_1send(m),
+      Secret('R', Ini, ~a)
+    ]->
+  [ Out(m)
+  , St_Ini_1(~id, Ini, Auth_pk, Auth_sk, Sign_pk, Sign_sk, ini_share, ~a)
+  ]
+
+rule Responder_1recv_send:
+  let mIn = <ini_share, Ini>
+      resp_share = pmult(~b, 'P')
+      signature = idsign(<ini_share, resp_share>, Sign_sk)
+      mOut = <Resp, resp_share, signature>
+      kgc_share = Auth_pk
+      key_seed = em(pmult(~b, kgc_share),ini_share) // = pmult(~IBMasterPrivateKey, em(ini_share,resp_share))
+      key = KDF(key_seed)
+  in
+  [ !IB_Identity(~id, Resp, Auth_pk, Auth_sk, Sign_pk, Sign_sk)
+  , Fr(~b)
+  , In(mIn)
+  ]
+  --[ Receive(Resp, mIn)
+    , IN_RESP_1recv(mIn)
+    , OUT_RESP_1recv(mOut)
+    , Honest(Resp)    
+    , Secret('R', Resp, ~b)
+    , Running(Resp, Ini, <'Responder', 'Initiator', key>)
+    ]->
+  [ Out(mOut)
+  , St_Resp_1(~id, Resp, Auth_pk, Auth_sk, Sign_pk, Sign_sk, resp_share, Ini, ini_share, key)
+  ]
+
+
+rule Initiator_2recv_send:
+  let mIn = <Resp, resp_share, signature>
+      kgc_share = Auth_pk
+      key_seed = em(pmult(~a, kgc_share),resp_share) // = pmult(~IBMasterPrivateKey, em(ini_share,resp_share))
+      key = KDF(key_seed)
+      pkResp = IBPub(Resp, Sign_pk)
+      mOut = idsign(resp_share, Sign_sk)
+  in
+  [ St_Ini_1(~id, Ini, Auth_pk, Auth_sk, Sign_pk, Sign_sk, ini_share, ~a)
+  , In(mIn)
+  ]
+--[ Eq(true, idverify(signature,<ini_share, resp_share>, pkResp))
+  , IN_INI_1recv(mIn)
+  , OUT_INI_2send(mOut)
+  , Secret('KEY', Ini, key)  
+  , Honest(Ini)
+  , Running(Ini, Resp, <'Initiator', 'Responder', key>)
+  , Commit(Ini, Resp, <'Initiator', 'Responder', key>)
+  ]->
+  [ Out(mOut) ]
+
+rule Responder_2recv:
+  let pkIni = IBPub(Ini, Sign_pk)
+  in
+  [ St_Resp_1(~id, Resp, Auth_pk, Auth_sk, Sign_pk, Sign_sk, resp_share, Ini, ini_share, key)
+  , In(mIn)
+  ]
+  --[ Eq(true, idverify(mIn, resp_share, pkIni))
+    , Secret('KEY', Resp, key)
+    , IN_RESP_2recv(mIn)
+    , Commit(Resp, Ini, <'Responder', 'Initiator', key>)
+    , Full()
+    ]-> []
+
+
+/**** Restrictions ****/
+restriction Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+restriction Once:
+  "All tag #i #j. Once(tag)@i & Once(tag)@j ==> #i = #j"
+
+/**** Lemmas ****/
+
+// WEAK SECRECY
+lemma secrecy_session_key [use_induction, reuse]:
+  "All A s #i. 
+    Secret('KEY',A,s) @i ==> 
+        not (Ex #j. K(s)@j)
+      | (Ex K X #l. Reveal(K,X)@l)"
+
+// SESSION ESCROW
+// Quick autoproof with the oracle on the server (<2 minutes)
+lemma session_escrow[hide_lemma=secrecy_session_key]:
+  exists-trace
+  "Ex A B key #i #j #k.
+     KU(key)@i
+   & Commit(A, B, <'Responder', 'Initiator', key>)@j
+   & Reveal('PKG', 'AUTH') @k
+   & (All #i #j #k. User()@i & User()@j & User()@k ==> (#i=#j | #j=#k | #i=#k))
+   & not(Ex Y #r. Reveal('ID_SIGN', Y)@r)
+   & not(Ex #r. Reveal('PKG', 'SIGN')@r)"   
+
+// WEAK FORWARD SECRECY
+lemma Weak_Forward_Secrecy_key [use_induction]:
+  "All A B X Y key #i. 
+    Commit(A,B,<X,Y,key>) @i ==> 
+    // Secret
+    not (Ex #j. K(key)@j)
+    // Or BOTH agents'long term keys (sign or auth) have been compromised (=WEAK PS)
+      | (   (Ex K #l. Reveal(K,A)@l)
+         &  (Ex K #l. Reveal(K,B)@l))
+    // Or one of the long-term key has been revealed before the commit
+      | (Ex K #l. Reveal(K,A)@l & #l < #i)
+      | (Ex K #l. Reveal(K,B)@l & #l < #i)
+    // Or one of the KGC master key has been revelead
+      | (Ex K #j. Reveal('PKG', K)@j)"
+
+// STRONG FORWARD SECRECY
+lemma Strong_Forward_Secrecy_key [use_induction]:
+  "All A B X Y key #i. 
+    Commit(A,B,<X,Y,key>) @i ==> 
+    // Secret
+    not (Ex #j. K(key)@j)
+    // Or one of the long-term key has been revealed before the commit
+      | (Ex K #l. Reveal(K,A)@l & #l < #i)
+      | (Ex K #l. Reveal(K,B)@l & #l < #i)
+    // Or one of the KGC master key has been revelead
+      | (Ex K #j. Reveal('PKG', K)@j)"
+
+// ALIVENESS FROM INITIATOR with SIGN reveal, without AUTH reveal
+lemma alivenessInitiatorNoAuthReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t2 a2 #j. Running(b,a2,<'Responder','Initiator',t2>) @j)
+        | (Ex #r. Reveal('ID_AUTH', a)@r)
+        | (Ex #r. Reveal('ID_AUTH', b)@r)
+        | (Ex #j. Reveal('PKG', 'AUTH')@j)"
+
+// ALIVENESS FROM INITIATOR with AUTH reveal, without SIGN reveal
+lemma alivenessInitiatorNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex a2 t2 #j. Running(b,a2,<'Responder','Initiator',t2>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// WEAK AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
+lemma weakagreementInitiatorNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex t2 #j. Running(b,a,<'Responder','Initiator',t2>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// NON-INJECTIVE AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
+lemma noninjectiveagreemenInitiatorNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (Ex #j. Running(b,a,<'Responder','Initiator',t>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// INJECTIVE AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
+lemma injectiveagreementInitiatorNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Initiator','Responder',t>) @i
+    ==> (   Ex #j. Running(b,a,<'Responder','Initiator',t>) @j 
+          & j < i
+          & not (Ex a2 b2 #i2. Commit(a2,b2,<'Initiator','Responder',t>) @i2
+                           & not (#i2 = #i)))
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+
+// ALIVENESS FROM RESPONDER with SIGN reveal, without AUTH reveal
+lemma alivenessResponderNoAuthReveal [use_induction]:
+  "All a b t #i. 
+    Commit(a,b,<'Responder','Initiator',t>) @i
+    ==> (Ex t2 #j. Running(b,a,<'Initiator', 'Responder', t2>) @j)
+        | (Ex #r. Reveal('ID_AUTH', a)@r)
+        | (Ex #r. Reveal('ID_AUTH', b)@r)
+        | (Ex #j. Reveal('PKG', 'AUTH')@j)"
+
+// ALIVENESS FROM RESPONDER with AUTH reveal, without SIGN reveal
+lemma alivenessResponderNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Responder','Initiator',t>) @i
+    ==> (Ex a2 t2 #j. Running(b,a2,<'Initiator', 'Responder', t2>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// WEAK AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
+lemma weakagreementResponderNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Responder','Initiator',t>) @i
+    ==> (Ex t2 #j. Running(b,a,<'Initiator', 'Responder', t2>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// NON-INJECTIVE AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
+lemma noninjectiveagreemenResponderNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Responder','Initiator',t>) @i
+    ==> (Ex #j. Running(b,a,<'Initiator','Responder',t>) @j)
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// INJECTIVE AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
+lemma injectiveagreementResponderNoSignReveal:
+  "All a b t #i. 
+    Commit(a,b,<'Responder','Initiator',t>) @i
+    ==> (  Ex #j. Running(b,a,<'Initiator','Responder',t>) @j 
+         & j < i
+         & not (Ex a2 b2 #i2. Commit(a2,b2,<'Responder','Initiator',t>) @i2
+                            & not (#i2 = #i)))
+        | (Ex #r. Reveal('ID_SIGN', a)@r)
+        | (Ex #r. Reveal('ID_SIGN', b)@r)
+        | (Ex #j. Reveal('PKG', 'SIGN')@j)"
+
+// SANITY CHECK
+lemma executability_lemma:
+  exists-trace
+  " Ex #i. Full()@i
+  & (All #i #j #k. User()@i & User()@j & User()@k ==> (#i=#j | #j=#k | #i=#k))
+  & not(Ex X Y #r. Reveal(X, Y)@r)"
+
+
+end

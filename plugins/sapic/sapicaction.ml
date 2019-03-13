@@ -73,7 +73,7 @@ let rec substitute  (id:string) (t:term) process =
       | Cond(a) -> Node(Cond(substitute_a v t a), substitute id t left, substitute id t right)
       | Msg_In(u) ->
             (* Note for future port: raise warning if variables in message input are bound or pattern matching is used,
-             * at the formal semantics consider only variables. Or maybe introduce strict mode?
+             * as the formal semantics consider only variables. Or maybe introduce strict mode?
              *)
 	  (* if  VarSet.mem ( Var.Msg(id) ) (vars_t u) then (1* rebinding variable id, stop substituting *1) *)
 	    (* Node( Msg_In(u), left, right ) *)

@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -120,32 +122,35 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_1111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_11211( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_121( ~prog_, ~prog_121 ) ▶₀ #t )
-    case in_r_Help__12
-    solve( State_1( ~prog_.1 ) ▶₀ #t2 )
+solve( State_121( ~prog_, ~prog_121 ) ▶₀ #t )
+  case in_r_Help__12
+  solve( State_1( ~prog_ ) ▶₀ #t2 )
+    case event_Start_
+    solve( State_1( ~prog_ ) ▶₀ #t2.1 )
       case event_Start_
-      solve( MID_Sender( mid_111 ) ▶₀ #t2.1 )
-        case MessageID_rule_
-        solve( State_11( ~prog_.1 ) ▶₁ #t2.1 )
-          case Par_1
-          solve( State_12( ~prog_ ) ▶₁ #j )
-            case Par_1
-            solve( State_121( ~prog_.1, ~prog_121 ) ▶₀ #t2.2 )
-              case in_r_Help__12
-              solve( State_1( ~prog_ ) ▶₀ #t2.2 )
-                case event_Start_
-                solve( State_121( ~prog_.1, ~prog_121 ) ▶₀ #t2.2 )
-                  case in_r_Help__12
-                  solve( State_1( ~prog_ ) ▶₀ #t2.2 )
-                    case event_Start_
-                    solve( State_1( ~prog_ ) ▶₀ #t2.2 )
-                      case event_Start_
+      solve( State_121( ~prog_.1, ~prog_121 ) ▶₀ #t2.1 )
+        case in_r_Help__12
+        solve( State_1( ~prog_ ) ▶₀ #t2.1 )
+          case event_Start_
+          solve( (∃ #t2. (ProgressTo_1111( ~prog_ ) @ #t2))  ∥
+                 (∃ #t2. (ProgressTo_11211( ~prog_ ) @ #t2)) )
+            case case_1
+            solve( MID_Receiver( mid_111 ) ▶₃ #j )
+              case MessageID_rule_
+              solve( MID_Sender( ~x ) ▶₀ #t2.1 )
+                case MessageID_rule_
+                solve( State_11( ~prog_.1 ) ▶₁ #t2.1 )
+                  case Par_1
+                  solve( State_12( ~prog_ ) ▶₁ #j )
+                    case Par_1
+                    solve( State_121( ~prog_.1, ~prog_121 ) ▶₀ #t2.2 )
+                      case in_r_Help__12
                       solve( State_1( ~prog_ ) ▶₀ #t2.2 )
                         case event_Start_
-                        SOLVED // trace found
+                        solve( State_1( ~prog_ ) ▶₀ #t2.2 )
+                          case event_Start_
+                          SOLVED // trace found
+                        qed
                       qed
                     qed
                   qed
@@ -166,17 +171,17 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_1111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_11211( ~prog_.1 ) @ #t2)) )
-  case case_2
-  solve( State_1121( ~prog_, m ) ▶₀ #t )
-    case in_c_m_112
-    solve( State_1( ~prog_ ) ▶₀ #t2 )
+solve( State_1121( ~prog_, m ) ▶₀ #t )
+  case in_c_m_112
+  solve( State_1( ~prog_ ) ▶₀ #t2 )
+    case event_Start_
+    solve( State_1( ~prog_ ) ▶₀ #t2.1 )
       case event_Start_
-      solve( State_1121( ~prog_, m.1 ) ▶₀ #t2.1 )
-        case in_c_m_112
-        solve( State_1( ~prog_ ) ▶₀ #t2.1 )
-          case event_Start_
+      solve( (∃ #t2. (ProgressTo_1111( ~prog_ ) @ #t2))  ∥
+             (∃ #t2. (ProgressTo_11211( ~prog_ ) @ #t2)) )
+        case case_2
+        solve( State_1121( ~prog_, m.1 ) ▶₀ #t2.1 )
+          case in_c_m_112
           SOLVED // trace found
         qed
       qed
@@ -193,13 +198,22 @@ guarded formula characterizing all counter-examples:
   (Start( ) @ #t1) ∧ (∀ #t2. (A( ) @ #t2) ⇒ ⊥) ∧ (∀ #t2. (B( ) @ #t2) ⇒ ⊥)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_1111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_11211( ~prog_.1 ) @ #t2)) )
-  case case_1
-  by contradiction /* from formulas */
-next
-  case case_2
-  by contradiction /* from formulas */
+solve( State_( ~prog_ ) ▶₀ #t1 )
+  case Init_
+  solve( State_1( ~prog_ ) ▶₀ #t2 )
+    case event_Start_
+    solve( State_1( ~prog_ ) ▶₀ #t2.1 )
+      case event_Start_
+      solve( (∃ #t2. (ProgressTo_1111( ~prog_ ) @ #t2))  ∥
+             (∃ #t2. (ProgressTo_11211( ~prog_ ) @ #t2)) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
 qed
 
 /* All well-formedness checks were successful. */
@@ -219,10 +233,10 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini9.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini9.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini9.spthy.tmp
-  processing time: 0.149741187s
-  A_possible (exists-trace): verified (14 steps)
+  processing time: 0.189057s
+  A_possible (exists-trace): verified (15 steps)
   B_possible (exists-trace): verified (7 steps)
-  A_or_B (all-traces): verified (4 steps)
+  A_or_B (all-traces): verified (7 steps)
 
 ------------------------------------------------------------------------------
 
@@ -232,10 +246,10 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini9.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini9.spthy.tmp
-  processing time: 0.149741187s
-  A_possible (exists-trace): verified (14 steps)
+  processing time: 0.189057s
+  A_possible (exists-trace): verified (15 steps)
   B_possible (exists-trace): verified (7 steps)
-  A_or_B (all-traces): verified (4 steps)
+  A_or_B (all-traces): verified (7 steps)
 
 ==============================================================================
 */
