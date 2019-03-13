@@ -36,6 +36,8 @@ import qualified Sapic.Basetranslation as BT
 import Sapic.Restrictions
 import           Theory.Text.Pretty
 
+
+-- Translates the process (singular) into a set of rules and adds them to the theory 
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              Monoid (m (AnProcess ProcessAnnotation)) => 
              OpenTheory
@@ -57,14 +59,11 @@ translate th = case theoryProcesses th of
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
-    -- :: Restriction -> Theory sig c r p -> Maybe (Theory sig c r p)
     option = True
-        -- fail $ "duplicate rule: " -- ++ render (prettyRuleName ru)
   -- let msr =  
   --     if input.op.progress 
   --     then progresstrans annotated_process
   --     else noprogresstrans annotated_process 
-  -- and lemmas_tamarin = print_lemmas input.lem
   -- and predicate_restrictions = print_predicates input.pred
   -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   -- in

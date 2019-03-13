@@ -111,17 +111,18 @@ unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
 lockPubTerm = pubTerm . show . lvarIdx
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | InitId
   -- | StopId
   -- | EventEmpty
   -- | EventId
-  -- | Predicate LNFact
-  -- | NegPredicate LNFact
   -- | ProgressFrom ProcessPosition 
   -- | ProgressTo ProcessPosition ProcessPosition
   -- | Listen ProcessPosition LVar 
   -- | Receive ProcessPosition SapicTerm
-  -- | Send ProcessPosition SapicTerm
+actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
+actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
+actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
+actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
+actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
 actionToFact (Predicate f)   =  mapFactName (\s -> "Pred_" ++ s) f
 actionToFact (NegPredicate f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,t, varTerm v ]
@@ -165,4 +166,4 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             r = map factToFact concs
 
 stripNonAlphanumerical :: String -> String
-stripNonAlphanumerical = filter (\x -> isLower x || isSpace x || isDigit x )
+stripNonAlphanumerical = filter (\x -> isAlpha x)
