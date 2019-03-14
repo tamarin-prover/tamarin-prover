@@ -46,7 +46,6 @@ run _thisMode as = do
     putStrLn $ "Self-testing the " ++ programName ++ " installation."
     nextTopic "Testing the availability of the required tools"
     successMaude <- ensureMaude as
-    _ <- ensureSapic as
 #ifndef NO_GUI
     putStrLn ""
     successGraphVizDot <- ensureGraphVizDot as

@@ -72,7 +72,6 @@ run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | otherwise    = do
       _ <- ensureMaude as
-      _ <- ensureSapic as
       putStrLn $ ""
       summaries <- mapM processThy $ inFiles
       putStrLn $ ""
