@@ -956,6 +956,15 @@ actionprocess thy=
                         return (ProcessComb (Lookup t v) mempty p q)
                    )
             <|> try (do 
+                        _ <- symbol "lookup"
+                        t <- msetterm llit
+                        _ <- symbol "as"
+                        v <- msgvar
+                        _ <- symbol "in"
+                        p <- process thy
+                        return (ProcessComb (Lookup t v) mempty p (ProcessNull mempty))
+                   )
+            <|> try (do 
                         _ <- symbol "if"
                         t1 <- msetterm llit
                         _ <- opEqual

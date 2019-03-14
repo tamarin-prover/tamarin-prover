@@ -148,7 +148,7 @@ prettySapicAction' _ (Insert t1 t2)  = "insert " ++ render (prettyLNTerm t1) ++ 
 prettySapicAction' _ (Delete t )  = "delete " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Lock t )  = "lock " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
-prettySapicAction' _ (Event a )  = "unlock " ++ render (prettyLNFact a)
+prettySapicAction' _ (Event a )  = "event " ++ render (prettyLNFact a)
 prettySapicAction' prettyRule' (MSR (p,a,c)) = prettyRule' p a c
 
 prettySapicComb :: ProcessCombinator -> [Char]
@@ -157,7 +157,7 @@ prettySapicComb NDC = "+"
 prettySapicComb (Cond a) = "if "++ render (prettyLNFact a)
 prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
                                     where p = render . prettyLNTerm
-prettySapicComb (Lookup t v) = "lookup "++ p t ++ "as" ++ show v
+prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettyLNTerm
 
 -- helper function to generate output string 
