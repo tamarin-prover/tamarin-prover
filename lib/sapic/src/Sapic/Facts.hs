@@ -126,9 +126,9 @@ actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
 actionToFact (Predicate f)   =  mapFactName (\s -> "Pred_" ++ s) f
 actionToFact (NegPredicate f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
-actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,t, varTerm v ]
-actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, t, varTerm v ]
-actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,t, varTerm v]
+actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
+actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
+actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,t,varTerm v]
 actionToFact (TamarinAct f) = f
 
