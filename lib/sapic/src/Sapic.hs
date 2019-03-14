@@ -34,7 +34,7 @@ import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import Sapic.Restrictions
-import           Theory.Text.Pretty
+import Theory.Text.Pretty
 
 
 -- Translates the process (singular) into a set of rules and adds them to the theory 
@@ -59,7 +59,8 @@ translate th = case theoryProcesses th of
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
-    option = True
+        -- option = RestrictionOptions { hasAccountabilityLemmaWithControl = False, hasProgress = False }
+    option = RestrictionOptions False False
   -- let msr =  
   --     if input.op.progress 
   --     then progresstrans annotated_process

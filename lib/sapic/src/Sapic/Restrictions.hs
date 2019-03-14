@@ -8,12 +8,14 @@
 --
 -- TODO
 module Sapic.Restrictions (
-    generateSapicRestrictions
+      generateSapicRestrictions
+    , RestrictionOptions(..)
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
 import qualified  Data.Monoid as M
 import Data.Maybe
+import Data.Typeable
 import Control.Exception
 import Control.Monad.Fresh
 import Control.Monad.Catch
@@ -30,6 +32,11 @@ import Text.RawString.QQ
 -- import qualified Data.Set                   as S
 -- import Control.Monad.Trans.FastFresh
 
+
+data RestrictionOptions = RestrictionOptions {
+    hasAccountabilityLemmaWithControl :: Bool
+  , hasProgress :: Bool
+  } deriving (Show, Typeable)
 
 toEx (Left  err) = throwM ( ImplementationError ( "Error parsing hard-coded restrictions: " ++ show err )::SapicException AnnotatedProcess)
 toEx (Right res ) = return res
@@ -57,6 +64,10 @@ resSetInNoDelete = parseRestriction [r|restriction set_in:
 resSetNotInNoDelete = parseRestriction [r|restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
+|]
+
+resSingleSession = parseRestriction [r|restrictionsingle_session: // for a single session
+"All #i #j. Init()@i & Init()@j ==> #i=#j"
 |]
 
 resLocking_l  = parseRestriction [r|restriction locking:
@@ -109,8 +120,8 @@ resNotEq = parseRestriction [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
-generateSapicRestrictions :: MonadThrow m => p -> AnProcess ProcessAnnotation -> m [Restriction]
-generateSapicRestrictions _ anP = 
+generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction]
+generateSapicRestrictions op anP = 
   let rest = 
        (if contains isLookup then
         if contains isDelete then
@@ -123,6 +134,8 @@ generateSapicRestrictions _ anP =
           -- @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
         ++ 
         addIf (contains isEq) [resEq, resNotEq] 
+        ++ 
+        addIf (not $ hasAccountabilityLemmaWithControl op) [resSingleSession] 
     in
     do
         rest' <- mapM toEx rest
