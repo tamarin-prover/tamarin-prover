@@ -1025,6 +1025,8 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
     RuleColor c -> text "color=" <> text (rgbToHex c)
+    Process   p -> text "process=" <> text (prettySapicTopLevel' f p)
+        where f l a r = render $ prettyRule l a r
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String

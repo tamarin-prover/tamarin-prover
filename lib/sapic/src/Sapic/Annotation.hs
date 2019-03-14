@@ -20,6 +20,7 @@ module Sapic.Annotation (
     , toAnProcess
     , toProcess
     , AnLVar (..)
+    , GoodAnnotation
 ) where
 import           Data.Data
 -- import Data.Maybe
@@ -36,7 +37,7 @@ import           Data.Binary
 -- import Data.Typeable
 -- import qualified Data.Set                   as S
 -- import Control.Monad.Trans.FastFresh
-import Control.Monad.Trans.FastFresh
+-- import Control.Monad.Trans.FastFresh
 import Term.LTerm
 
 newtype AnLVar = AnLVar LVar
@@ -46,10 +47,20 @@ newtype AnLVar = AnLVar LVar
 instance Semigroup AnLVar where  -- override annotations if necessary
     (<>) _ b = b
 
+class GoodAnnotation a where
+    getProcessNames :: a ->  [String]
+
 data ProcessAnnotation = ProcessAnnotation {
     processnames :: [String]
   , lock :: Maybe AnLVar 
   , unlock :: Maybe AnLVar  } deriving (Show, Typeable)
+
+-- Minimum requirement for process annotations: carry enough information to
+-- annotate the multiset rewrite rules with:
+--      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
+instance GoodAnnotation ProcessAnnotation
+    where
+        getProcessNames = processnames
   
 instance Monoid ProcessAnnotation where
     mempty = ProcessAnnotation [] Nothing Nothing
@@ -59,7 +70,7 @@ instance Monoid ProcessAnnotation where
         (unlock p1 `mappend` unlock p2)
 
 instance Semigroup ProcessAnnotation where
-    (<>)  p1 p2 =  p2
+    (<>)  _ p2 =  p2
     -- ProcessAnnotation 
     --     (processnames p1 `mappend` processnames p2)
     --     (lock p1 `mappend` lock p2)
@@ -84,11 +95,8 @@ toAnProcess = fmap f
     where
         f l = ProcessAnnotation { processnames = l, lock = Nothing, unlock = Nothing }
 
-toProcess :: AnProcess ProcessAnnotation -> Process
+toProcess :: GoodAnnotation an => AnProcess an -> Process
 toProcess = fmap f
     where
-        f l = processnames l
--- toProcess (ProcessNull ann) = ProcessNull (
--- toProcess (ProcessComb c ann pl pr) = ProcessComb c () pl pr 
--- toProcess (ProcessAction a ann p) = ProcessAction a () p
+        f l = getProcessNames l
 

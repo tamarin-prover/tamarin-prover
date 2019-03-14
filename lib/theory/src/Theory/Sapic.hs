@@ -23,6 +23,12 @@ module Theory.Sapic (
     , ProcessPosition
     , lhs
     , rhs
+    , prettySapic'
+    , prettySapicAction'
+    , prettySapicComb
+    , prettySapicTopLevel'
+    , ProcessPosition
+    , prettyPosition
 ) where
 
 import           Data.Binary
@@ -121,4 +127,52 @@ pfoldMap f (ProcessAction a an p)   =
         f (ProcessAction a an p)
         `mappend` 
         pfoldMap f p
+
+
+prettyPosition:: ProcessPosition -> String
+prettyPosition = foldl (\ s n -> s ++ show n ) ""
+
+
+-- Need to give pretty printer for rules as a parameter to avoid circular dependencies.
+-- Instantiated in Theory.Sapic.Print later
+prettySapicAction' :: 
+                   ( [LNFact] -> [LNFact] -> [LNFact] -> String)
+                    -> SapicAction  -> String
+prettySapicAction' _ (New n) = "new "++ show n
+prettySapicAction' _ Rep  = "!"
+prettySapicAction' _ (ChIn (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
+prettySapicAction' _ (ChIn Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction' _ (ChOut (Just t1) t2 )  = "out(" ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction' _ (ChOut Nothing t2 )  = "out(" ++ render (prettyLNTerm t2) ++ ")"
+prettySapicAction' _ (Insert t1 t2)  = "insert " ++ render (prettyLNTerm t1) ++ "," ++ render (prettyLNTerm t2)
+prettySapicAction' _ (Delete t )  = "delete " ++ render (prettyLNTerm t)
+prettySapicAction' _ (Lock t )  = "lock " ++ render (prettyLNTerm t)
+prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
+prettySapicAction' _ (Event a )  = "unlock " ++ render (prettyLNFact a)
+prettySapicAction' prettyRule' (MSR (p,a,c)) = prettyRule' p a c
+
+prettySapicComb :: ProcessCombinator -> [Char]
+prettySapicComb Parallel = "|"
+prettySapicComb NDC = "+"
+prettySapicComb (Cond a) = "if "++ render (prettyLNFact a)
+prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
+                                    where p = render . prettyLNTerm
+prettySapicComb (Lookup t v) = "lookup "++ p t ++ "as" ++ show v
+                                    where p = render . prettyLNTerm
+
+-- helper function to generate output string 
+-- TODO At the moment, the process structure is not used to properly print
+-- parenthesises. Should do it, but then we cannot use pfoldMap anymore.
+prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapic' prettyRule = pfoldMap f 
+    where f (ProcessNull _) = "0"
+          f (ProcessComb c _ _ _)  = prettySapicComb c 
+          f (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
+          f (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
+
+prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapicTopLevel' _ (ProcessNull _) = "0"
+prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 
+prettySapicTopLevel' prettyRule (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
+prettySapicTopLevel' prettyRule (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
 

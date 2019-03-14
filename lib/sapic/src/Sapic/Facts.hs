@@ -153,7 +153,7 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
-toRule :: AnnotatedRule ann -> Rule ProtoRuleEInfo
+toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
           Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
           where
