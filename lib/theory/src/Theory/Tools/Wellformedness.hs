@@ -259,7 +259,7 @@ publicNamesReportDiff thy =
 
         
 -- | Check whether a rule has unbound variables.
--- unboundCheck :: HasFrees i => String -> Rule i -> WfErrorReport
+unboundCheck :: Document b => String -> Rule ProtoRuleEInfo -> [([Char], b)]
 unboundCheck info ru
     | null unboundVars = []
     | otherwise        = return $
@@ -268,8 +268,8 @@ unboundCheck info ru
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
     originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru 
-    match v (Process (ProcessComb (Lookup t v') _ _ _))  = v == v'
-    match v _ = False
+    match v (Process (ProcessComb (Lookup _ v') _ _ _))  = v == v'
+    match _ _ = False
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
         guard $ not (lvarSort v == LSortPub || v `S.member` boundVars || originatesFromLookup v)
@@ -348,17 +348,17 @@ factReports thy = concat
     -- Check for the usage of special facts at wrong positions
     specialFactsUsage = do
        ru <- thyProtoRules thy
-       let lhs = [ fa | fa <- get rPrems ru
+       let lhsf = [ fa | fa <- get rPrems ru
                       , factTag fa `elem` [KUFact, KDFact, OutFact] ]
-           rhs = [ fa | fa <- get rConcs ru
+           rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
            check msg fas = return $ (,) "Special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
-       msum [ check "uses disallowed facts on left-hand-side:"  lhs
-            , check "uses disallowed facts on right-hand-side:" rhs ]
+       msum [ check "uses disallowed facts on left-hand-side:"  lhsf
+            , check "uses disallowed facts on right-hand-side:" rhsf ]
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
@@ -488,17 +488,17 @@ factReportsDiff thy = concat
     -- Check for the usage of special facts at wrong positions
     specialFactsUsage = do
        ru <- diffThyProtoRules thy
-       let lhs = [ fa | fa <- get rPrems ru
+       let lhsf = [ fa | fa <- get rPrems ru
                       , factTag fa `elem` [KUFact, KDFact, OutFact] ]
-           rhs = [ fa | fa <- get rConcs ru
+           rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
            check msg fas = return $ (,) "Special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
-       msum [ check "uses disallowed facts on left-hand-side of rule:"  lhs
-            , check "uses disallowed facts on right-hand-side of rule:" rhs ]
+       msum [ check "uses disallowed facts on left-hand-side of rule:"  lhsf
+            , check "uses disallowed facts on right-hand-side of rule:" rhsf ]
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.

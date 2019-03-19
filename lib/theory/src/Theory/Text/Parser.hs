@@ -738,8 +738,44 @@ diffProofSkeleton =
 ------------------------------------------------------------------------------
 
 -- | Builtin signatures.
-builtins :: Parser ()
-builtins =
+builtins :: OpenTheory -> Parser OpenTheory
+builtins thy0 =do
+            _  <- symbol "builtins"
+            _  <- colon 
+            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
+                                         -- builtinTheory modifies signature in state.
+            return $ foldl setOption' thy0 l
+  where
+    setOption' thy Nothing  = thy
+    setOption' thy (Just l) = setOption l thy
+    extendSig msig = do
+        modifyState (`mappend` msig)
+        return Nothing
+    builtinTheory = asum
+      [ try (symbol "diffie-hellman")
+          *> extendSig dhMaudeSig
+      , try (symbol "bilinear-pairing")
+          *> extendSig bpMaudeSig
+      , try (symbol "multiset")
+          *> extendSig msetMaudeSig
+      , try (symbol "xor")
+          *> extendSig xorMaudeSig
+      , try (symbol "symmetric-encryption")
+          *> extendSig symEncMaudeSig
+      , try (symbol "asymmetric-encryption")
+          *> extendSig asymEncMaudeSig
+      , try (symbol "signing")
+          *> extendSig signatureMaudeSig
+      , try (symbol "revealing-signing")
+          *> extendSig revealSignatureMaudeSig
+      , try ( symbol "reliable-channel")
+             *> return (Just transReliable)
+      , symbol "hashing"
+          *> extendSig hashMaudeSig
+      ]
+
+diffbuiltins :: Parser ()
+diffbuiltins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
     extendSig msig = modifyState (`mappend` msig)
@@ -763,6 +799,7 @@ builtins =
       , symbol "hashing"
           *> extendSig hashMaudeSig
       ]
+
 
 functions :: Parser ()
 functions =
@@ -795,6 +832,44 @@ equations =
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
+-- | options
+options :: OpenTheory -> Parser OpenTheory
+options thy0 =do
+            _  <- symbol "options"
+            _  <- colon 
+            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
+                                         -- builtinTheory modifies signature in state.
+            return $ foldl setOption' thy0 l
+  where
+    setOption' thy Nothing  = thy
+    setOption' thy (Just l) = setOption l thy
+    builtinTheory = asum
+      [  try (symbol "translation-progress")
+             *> return (Just transProgress)
+        , symbol "translation-allow-pattern-lookups"
+             *> return (Just transAllowPatternMatchinginLookup)
+      ]
+
+
+predicate :: Parser Predicate
+predicate = do
+           f <- fact llit
+           _ <- symbol "<=>"
+           form <- standardFormula
+           return $ Predicate f form
+
+preddeclaration :: OpenTheory -> Parser OpenTheory
+preddeclaration thy = do
+                    _          <- symbol "predicates"
+                    _          <- colon
+                    predicates <- commaSep1 predicate
+                    thy'       <-  foldM liftedAddPredicate thy predicates
+                    return thy'
+                where 
+                liftedAddPredicate thy pr  = 
+                    case addPredicate pr thy of 
+                        (Just thy') -> return (thy'::OpenTheory)
+                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
 
 -- used for debugging 
 -- println :: String -> ParsecT String u Identity ()          
@@ -1048,9 +1123,11 @@ theory flags0 = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< (heuristic False)
            addItems flags thy'
-      , do builtins
+      , do thy' <- builtins thy
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
+      , do thy' <- options thy
+           addItems flags thy'
       , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
@@ -1069,6 +1146,9 @@ theory flags0 = do
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
+      , do ru <- protoRule
+           thy' <- liftedAddProtoRule thy ru
+           addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
@@ -1077,6 +1157,8 @@ theory flags0 = do
            addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
+      , do thy' <- preddeclaration thy             
+           addItems flags (thy')    
       , do ifdef flags thy
       , do define flags thy
       , do return thy
@@ -1134,7 +1216,8 @@ diffTheory flags0 = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
            addItems flags thy'
-      , do builtins
+      , do 
+           diffbuiltins 
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions

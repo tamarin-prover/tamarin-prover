@@ -4,10 +4,10 @@ begin
 builtins: symmetric-encryption
 
 predicates:
-sencSucc (c,k) <=> Ex m . senc(m,k)=c
+SencSucc (c,k) <=> Ex m . senc(m,k)=c
 
 !(
-	(  new h; new k; event NewKey(h,k); 
+      (  new h; new k; event NewKey(h,k); 
 		insert <'key',h>,k; 
 	 	insert <'att',h>, 'dec'; out(h) )
   || //allow wrap

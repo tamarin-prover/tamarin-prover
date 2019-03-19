@@ -31,7 +31,18 @@ module Theory (
   , addProcessDef
   , lookupProcessDef
   , pName
-  , prettyTheory
+
+  -- * Options
+  , transAllowPatternMatchinginLookup
+  , transProgress
+  , transReliable
+  , setOption
+
+  -- * Predicates
+  , Predicate(..)
+  , pFact
+  , addPredicate
+
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
@@ -165,6 +176,7 @@ module Theory (
   , modifyDiffLemmaProof
   
   -- * Pretty printing
+  , prettyTheory
   , prettyFormalComment
   , prettyLemmaName
   , prettyRestriction
@@ -418,6 +430,37 @@ data ProcessDef = ProcessDef
 $(mkLabels [''ProcessDef])
 
 ------------------------------------------------------------------------------
+-- Predicates
+------------------------------------------------------------------------------
+
+data Predicate = Predicate
+        { _pFact            :: LNFact
+        , _pFormula         :: LNFormula
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    
+
+-- generate accessors for Predicate data structure records
+$(mkLabels [''Predicate])
+
+------------------------------------------------------------------------------
+-- Options
+------------------------------------------------------------------------------
+-- | Options for translation and, maybe in the future, also msrs itself.
+-- | Note: setOption below assumes all values to be boolean
+data Option = Option
+        { 
+          _transAllowPatternMatchinginLookup   :: Bool
+        , _transProgress            :: Bool
+        , _transReliable            :: Bool
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- generate accessors for Option data structure records
+$(mkLabels [''Option])
+
+
+------------------------------------------------------------------------------
 -- Lemmas
 ------------------------------------------------------------------------------
 
@@ -567,6 +610,7 @@ data TheoryItem r p =
      | TextItem FormalComment
      | ProcessItem Process
      | ProcessDefItem ProcessDef
+     | PredicateItem Predicate
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A diff theory item built over the given rule type.
@@ -592,6 +636,7 @@ data Theory sig c r p = Theory {
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p]
+       , _thyOptions   :: Option
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -658,15 +703,16 @@ filterSide s l = case l of
 
 -- | Fold a theory item.
 foldTheoryItem
-    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Process -> a) -> (ProcessDef -> a)
+    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Process -> a) -> (ProcessDef -> a) -> (Predicate -> a)
     -> TheoryItem r p -> a
-foldTheoryItem fRule fRestriction fLemma fText fProcess fProcessDef i = case i of
+foldTheoryItem fRule fRestriction fLemma fText fProcess fProcessDef fPredicate i = case i of
     RuleItem ru   -> fRule ru
     LemmaItem lem -> fLemma lem
     TextItem txt  -> fText txt
     RestrictionItem rstr  -> fRestriction rstr
     ProcessItem     proc  -> fProcess proc                        
     ProcessDefItem     pDef  -> fProcessDef pDef
+    PredicateItem     p  -> fPredicate p
     
 
     
@@ -685,7 +731,7 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
 mapTheoryItem f g =
-    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem ProcessItem ProcessDefItem
+    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem ProcessItem ProcessDefItem PredicateItem
 
 -- | Map a diff theory item.
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
@@ -695,7 +741,7 @@ mapDiffTheoryItem f g h i =
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p -> [r]
 theoryRules =
-    foldTheoryItem return (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem return (const []) (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All diff rules of a theory.
 diffTheoryDiffRules :: DiffTheory sig c r r2 p p2 -> [r]
@@ -721,22 +767,27 @@ rightTheoryRules =
 -- | All restrictions of a theory.
 theoryRestrictions :: Theory sig c r p -> [Restriction]
 theoryRestrictions =
-    foldTheoryItem (const []) return (const []) (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem (const []) return (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All lemmas of a theory.
 theoryLemmas :: Theory sig c r p -> [Lemma p]
 theoryLemmas =
-    foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem (const []) (const []) return (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p -> [Process]
 theoryProcesses =
-    foldTheoryItem (const []) (const []) (const []) (const [])  return (const []) <=< L.get thyItems
+    foldTheoryItem (const []) (const []) (const []) (const [])  return (const []) (const []) <=< L.get thyItems
     
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p -> [ProcessDef]
 theoryProcessDefs =
-    foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
+    foldTheoryItem (const []) (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
+
+-- | All process definitions of a theory.
+theoryPredicates :: Theory sig c r p -> [Predicate]
+theoryPredicates =
+    foldTheoryItem (const []) (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -794,6 +845,20 @@ addProcessDef pDef thy = do
     guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
     return $ modify thyItems (++ [ProcessDefItem pDef]) thy
 
+-- | Add a new process definition. fails if process with the same name already exists
+addPredicate :: Predicate -> Theory sig c r p -> Maybe (Theory sig c r p)
+addPredicate pDef thy = do
+    guard (isNothing $ lookupPredicate (L.get pFact pDef) thy)
+    return $ modify thyItems (++ [PredicateItem pDef]) thy
+
+-- | Add a new option. Overwrite previous settings
+-- setOption :: Option -> Theory sig c r p -> Theory sig c r p
+-- setOption o thy = L.modify thyOptions (overwrite' o) thy
+--     where
+--         overwrite op op' f = (L.modify f (\v -> v || (L.get f op')) op  :: Option)
+--         overwrite' op op' = foldl (overwrite op) op' [transAllowPatternMatchinginLookup, transProgress, transReliable]
+setOption l thy = L.set (l . thyOptions) True thy
+
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addRestrictionDiff s l thy = do
@@ -814,7 +879,7 @@ addDiffLemma l thy = do
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
 addHeuristic :: [GoalRanking] -> Theory sig c r p -> Maybe (Theory sig c r p)
-addHeuristic h (Theory n [] sig c i) = Just (Theory n h sig c i)
+addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
@@ -833,6 +898,7 @@ removeLemma lemmaName thy = do
                              (return . TextItem)
                              (return . ProcessItem)
                              (return . ProcessDefItem)
+                             (return . PredicateItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -875,6 +941,9 @@ lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 lookupProcessDef :: String -> Theory sig c r p -> Maybe (ProcessDef)
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
+-- | Find the predicate with the fact name.
+lookupPredicate :: LNFact -> Theory sig c r p -> Maybe (Predicate)
+lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -910,10 +979,12 @@ addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 ------------------------------------------------------------------------------
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
+defaultOption :: Option
+defaultOption = Option False False False
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
-defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] []
+defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] [] defaultOption
 
 -- | Default diff theory
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
@@ -938,9 +1009,10 @@ addIntrRuleLabels thy =
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
-openTheory  (Theory n h sig c items) =
+openTheory  (Theory n h sig c items opts) =
     Theory n h (toSignaturePure sig) (openRuleCache c)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
+      opts
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
@@ -1358,7 +1430,7 @@ closeDiffTheoryWithMaude sig thy0 = do
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
       proveTheory (const True) checkProof
-    $ Theory (L.get thyName thy0) h sig cache items
+    $ Theory (L.get thyName thy0) h sig cache items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
     cache      = closeRuleCache restrictions typAsms sig rules (L.get thyCache thy0) False
@@ -1380,6 +1452,7 @@ closeTheoryWithMaude sig thy0 = do
        TextItem
        ProcessItem
        ProcessDefItem
+       PredicateItem
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
@@ -1390,7 +1463,7 @@ closeTheoryWithMaude sig thy0 = do
 
     -- extract protocol rules
     rules :: [ClosedProtoRule]
-    rules = theoryRules (Theory errClose errClose errClose errClose items)
+    rules = theoryRules (Theory errClose errClose errClose errClose items errClose)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1723,8 +1796,14 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldTheoryItem
-        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyProcess prettyProcessDef prettyPredicate
     thyH = L.get thyHeuristic thy
+
+prettyPredicate :: HighlightDocument d => Predicate -> d
+prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
+    where 
+        factstr = render $ prettyLNFact $ L.get pFact p
+        formulastr = render $ prettyLNFormula $ L.get pFormula p 
 
 prettyProcess :: HighlightDocument d => Process -> d
 prettyProcess p = text (prettySapic p)

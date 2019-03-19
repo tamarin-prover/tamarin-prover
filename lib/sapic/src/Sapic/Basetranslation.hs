@@ -123,8 +123,8 @@ baseTransComb c _ p tildex
         condition f = 
                 let vars_f = fromList $ getFactVariables f in
                 if vars_f `isSubsetOf` tildex then 
-                ( [ ([def_state], [Predicate f], [def_state1 tildex]),
-                    ([def_state], [NegPredicate f], [def_state2 tildex])]
+                ( [ ([def_state], [PredicateA f], [def_state1 tildex]),
+                    ([def_state], [NegPredicateA f], [def_state2 tildex])]
                      , tildex, tildex )
                 else 
                     throw $ 

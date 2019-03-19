@@ -41,8 +41,8 @@ data TransAction =  InitEmpty
   | StopId
   | EventEmpty
   | EventId
-  | Predicate LNFact
-  | NegPredicate LNFact
+  | PredicateA LNFact
+  | NegPredicateA LNFact
   | ProgressFrom ProcessPosition 
   | ProgressTo ProcessPosition ProcessPosition
   | Listen ProcessPosition LVar 
@@ -124,8 +124,8 @@ actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
 actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
-actionToFact (Predicate f)   =  mapFactName (\s -> "Pred_" ++ s) f
-actionToFact (NegPredicate f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
+actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
+actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
