@@ -1009,9 +1009,13 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         return p)
-            <|>    try (do                                                     -- action at top-level
+            <|>    try  (do                                                     -- let expression parser
+                        subst <- letBlock
+                        p <- process thy
+                        return  $ apply subst p)
+            <|>    do                                                     -- action at top-level
                         p <- actionprocess thy
-                        return p)
+                        return p
 
 actionprocess :: OpenTheory -> Parser Process
 actionprocess thy= 
@@ -1093,11 +1097,11 @@ actionprocess thy=
                             (\x -> paddAnn x [BC.unpack i]) <$> p
                         return a 
                         )
-            <|> try (do                                                     -- parens parser
+            <|> do                                                     -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
-                        return p)
+                        return p
                         
 
 heuristic :: Bool -> Parser [GoalRanking]

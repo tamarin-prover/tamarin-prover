@@ -21,18 +21,18 @@ SencSucc (c,k) <=> Ex m . senc(m,k)=c
                 event DecUsing(k,sdec(c,k));
                 out(sdec(c,k)) 
 	)
-  /* || //Wrap */
-	/* ( */ 
-  /*        let */ 
-  /*        k = k1 */ 
-  /*        m2 = senc(k2,k) */ 
-  /*        in */
-  /*        in(<h1,h2>); lookup <'att',h1> as a1 in */ 
-			/* if a1='wrap' then lookup <'key',h1> as k1 in */
-			/* lookup <'key',h2> as k2 in */
-				/* event Wrap(k1,k2); */
-				/* out(m2) */
-	/* ) */
+  || //Wrap
+	( 
+         let 
+         k = k1 
+         m2 = senc(k2,k) 
+         in
+         (in(<h1,h2>); lookup <'att',h1> as a1 in 
+			if a1='wrap' then lookup <'key',h1> as k1 in
+			lookup <'key',h2> as k2 in
+				event Wrap(k1,k2);
+				out(m2))
+	)
 )
 
 lemma can_create_key: //sanity check

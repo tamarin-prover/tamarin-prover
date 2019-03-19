@@ -44,6 +44,7 @@ import Data.Foldable
 import           Theory.Model.Fact
 import           Term.LTerm
 import           Theory.Text.Pretty
+import Term.Substitution
 
 -- | A process data structure
 
@@ -67,7 +68,7 @@ data SapicAction =
 -- | When the process tree splits, it is connected with one of these connectives
 data ProcessCombinator = Parallel | NDC | Cond LNFact 
         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
-    deriving (Generic, NFData, Binary, Show, Eq, Data)
+    deriving (Generic, NFData, Binary, Show, Eq, Data )
 
 -- | The process tree is terminated with null processes, and either splits
 -- (parallel and other combinators) or describes a sequence of actions with
@@ -91,6 +92,36 @@ instance Functor AnProcess where
     fmap f (ProcessNull an) = ProcessNull (f an)
     fmap f (ProcessComb c an pl pr)  = ProcessComb c (f an) (fmap f pl) (fmap f pr)
     fmap f (ProcessAction a an p)   =  ProcessAction a (f an) (fmap f p)
+
+instance Apply ProcessCombinator where
+    apply subst c 
+        | (Cond f) <- c = (Cond $ apply subst f )
+        | (CondEq t1 t2) <- c = (CondEq (apply subst t1) (apply subst t2))
+        | (Lookup t v) <- c = (Lookup (apply subst t) (apply subst v))
+        | otherwise = c 
+
+instance Apply SapicAction where
+    apply subst ac 
+        | (New v) <- ac = (New $ apply subst v)
+        | (ChIn  mt v) <- ac = (ChIn (apply subst mt) (apply subst v))
+        | (ChOut mt t) <- ac = (ChOut (apply subst mt) (apply subst t))
+        | (Insert t1 t2) <- ac = (Insert (apply subst t1) (apply subst t2))
+        | (Delete t) <- ac = (Delete (apply subst t))
+        | (Lock t) <- ac = (Lock (apply subst t))
+        | (Unlock t) <- ac = (Unlock (apply subst t))
+        | (Event f) <- ac = (Event (apply subst f))
+        | (MSR (l,a,r)) <- ac = (MSR (apply subst (l,a,r)))
+
+
+instance Apply (AnProcess ann) where
+-- TODO we are totally ignoring capturing here...
+-- see how this is handled in SAPIC currently
+    apply subst (ProcessNull ann) = ProcessNull ann
+    apply subst (ProcessComb c ann pl pr) =
+                ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
+    apply subst (ProcessAction ac ann p') =
+                ProcessAction (apply subst ac) ann (apply subst p')
+
 
 -- | After parsing, the process is already annotated wth a list of process
 -- identifiers, describing the sequence of let P = ... constructs that were
