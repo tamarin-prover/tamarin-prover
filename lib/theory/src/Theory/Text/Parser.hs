@@ -1059,6 +1059,22 @@ actionprocess thy=
                         q <- process thy
                         return (ProcessComb (Cond pr) mempty p q)
                    )
+            <|> try (do 
+                        _ <- symbol "if"
+                        t1 <- msetterm llit
+                        _ <- opEqual
+                        t2 <- msetterm llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        pr <- fact llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
+                   )
             <|> try ( do 
                         s <- sapicAction
                         _ <- opSeq
