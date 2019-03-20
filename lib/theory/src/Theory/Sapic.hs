@@ -47,7 +47,6 @@ import           Theory.Text.Pretty
 import Term.Substitution
 
 -- | A process data structure
-
 -- | In general, terms we use in the translation have logical veriables
 type SapicTerm = LNTerm
 
@@ -88,6 +87,8 @@ deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
 deriving instance (Monoid ann) => Monoid (AnProcess ann)
 deriving instance Foldable (AnProcess)
 deriving instance Traversable (AnProcess)
+
+-- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
     fmap f (ProcessNull an) = ProcessNull (f an)
     fmap f (ProcessComb c an pl pr)  = ProcessComb c (f an) (fmap f pl) (fmap f pr)
@@ -124,14 +125,20 @@ instance Apply (AnProcess ann) where
 
 
 -- | After parsing, the process is already annotated wth a list of process
--- identifiers, describing the sequence of let P = ... constructs that were
--- used to describe this. This will be helpful to recognise protocols roles and
--- visualise them.
+--   identifiers. Any identifier in this in this list was inlined to give this
+--   comment, e.g., 
+--    let A = 0
+--    let B = A | A
+--    !B
+--    has two Null-rules with annotation [A,B].
+--  This will be helpful to recognise protocols roles and visualise them.
+
 type ProcessName = String -- String used in annotation to identify processes
 type ProcessAnnotation = [ProcessName]
 type Process = AnProcess ProcessAnnotation
 type ProcessPosition = [Int]
 
+-- | Positions are to be read left-to-right, 1 is left, 2 is right.
 lhs :: [Int] -> ProcessPosition
 lhs p = (p++[1]) :: ProcessPosition
 
@@ -159,12 +166,12 @@ pfoldMap f (ProcessAction a an p)   =
         `mappend` 
         pfoldMap f p
 
-
 prettyPosition:: ProcessPosition -> String
 prettyPosition = foldl (\ s n -> s ++ show n ) ""
 
-
--- Need to give pretty printer for rules as a parameter to avoid circular dependencies.
+-- | Printer for SAPIC actions. 
+-- Note: Need to give the pretty printer for rules as a parameter as otherwise
+-- we would have circular dependencies.
 -- Instantiated in Theory.Sapic.Print later
 prettySapicAction' :: 
                    ( [LNFact] -> [LNFact] -> [LNFact] -> String)
@@ -191,9 +198,10 @@ prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettyLNTerm
 
--- helper function to generate output string 
--- TODO At the moment, the process structure is not used to properly print
--- parenthesises. Should do it, but then we cannot use pfoldMap anymore.
+-- | Printer for SAPIC processes.. 
+-- TODO At the moment, the process structure is not used to properly print how
+-- elements are associated.
+-- Should do it, but then we cannot use pfoldMap anymore.
 prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
 prettySapic' prettyRule = pfoldMap f 
     where f (ProcessNull _) = "0"
@@ -201,6 +209,7 @@ prettySapic' prettyRule = pfoldMap f
           f (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
           f (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
 
+-- | Printer for the top-level process, used, e.g., for rule names.
 prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
 prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 

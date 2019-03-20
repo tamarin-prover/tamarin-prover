@@ -10,27 +10,23 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- Translation from Theories with Processes to mrs
+-- Translation from Theories with Processes to multiset rewrite rules
 
 module Sapic (
     translate
 ) where
--- import Data.Maybe
--- import Data.Foldable
 import Control.Exception
 import Control.Monad.Fresh
 import Control.Monad.Catch
 import Sapic.Exceptions
 import Theory
 import Theory.Sapic
--- import Theory.Model.Rule
 import Data.Typeable
-import qualified Data.Set                   as S
-import Control.Monad.Trans.FastFresh()
+import qualified Data.Set              as S
+import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
 import Sapic.Facts
 import Sapic.Locks
--- import Sapic.Exceptions
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import Sapic.Restrictions
@@ -41,17 +37,17 @@ import Theory.Text.Pretty
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              Monoid (m (AnProcess ProcessAnnotation)) => 
              OpenTheory
-             -> m (OpenTheory)
+             -> m OpenTheory
 translate th = case theoryProcesses th of
-      [] -> return th
+      []  -> return th
       [p] -> do 
-            an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
-            msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
-            th' <- foldM liftedAddProtoRule th msr
-            sapic_restrictions <- generateSapicRestrictions option an_proc
-            th'' <- foldM liftedAddRestriction th' sapic_restrictions
-            return th''
-      _ -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
+                an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
+                msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
+                th' <- foldM liftedAddProtoRule th msr
+                sapic_restrictions <- generateSapicRestrictions option an_proc
+                th'' <- foldM liftedAddRestriction th' sapic_restrictions
+                return th''
+      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
@@ -61,6 +57,8 @@ translate th = case theoryProcesses th of
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
         -- option = RestrictionOptions { hasAccountabilityLemmaWithControl = False, hasProgress = False }
     option = RestrictionOptions False False
+  -- TODO This function is not yet complete. This is what the ocaml code
+  -- was doing:  
   -- let msr =  
   --     if input.op.progress 
   --     then progresstrans annotated_process
@@ -76,7 +74,8 @@ translate th = case theoryProcesses th of
   -- predicate_restrictions ^ lemmas_tamarin 
   -- ^ "end"
 
--- noprogresstrans :: (Monad m, MonadCatch m, Typeable ann, Show ann) => AnProcess ann -> m ( [Rule ProtoRuleEInfo])
+-- | Standard translation without progress:
+-- | use gen and basetranslation and add a simple Init rule.   
 noprogresstrans anP = do
     msrs <- gen BT.baseTrans anP [] S.empty
     return $ map toRule (initrule:msrs)
@@ -86,6 +85,15 @@ noprogresstrans anP = do
           a = [InitEmpty ] 
           r = [State LState [] S.empty]
 
+-- | Processes through an annotated process and translates every single action
+-- | according to trans. It substitutes states by pstates for replication and
+-- | makes sure that tildex, list of variables in state is updated for the next
+-- | call. It also performs the substituion necessary for NDC 
+-- | Input: 
+-- |      three-tuple of algoriths for translation of null processes, actions and combinators
+-- |      annotated process
+-- |      current position in this process
+-- |      tildex, the set of variables in the state
 gen :: (Typeable ann, Show ann, MonadCatch m ) =>
         (ann
          -> ProcessPosition -> t -> [([TransFact], [TransAction], [TransFact])],
@@ -101,15 +109,6 @@ gen :: (Typeable ann, Show ann, MonadCatch m ) =>
          -> ([([TransFact], [TransAction], [TransFact])], t, t))
         -> AnProcess ann -> ProcessPosition -> t -> m ( [AnnotatedRule ann])
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
--- Processes through an annotated process and translates every single action
--- according to trans. It substitutes states by pstates for replication and
--- makes sure that tildex, list of variables in state is updated for the next
--- call. It also performs the substituion necessary for NDC 
--- Input: 
---      three-tuple of algoriths for translation of null processes, actions and combinators
---      annotated process
---      current position in this process
---      tildex, the set of variables in the state
     do
         proc' <- processAt anP p
         case proc' of
@@ -138,8 +137,9 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         substStatePos p_old p_new fact
              | (State s p' vs) <- fact, p'==p_old, not $ isSemiState s = State LState p_new vs
              | otherwise = fact
-        -- substStatePos p_old p_new (x) = x
         trans = (trans_null, trans_action, trans_comb)
+        -- convert prems, acts and concls generated for current process
+        -- into annotated rule
         toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc p l a r 
-        mapToAnnotatedRule proc l = -- distinguish rues by  adding the index of each element to it, as its processName
+        mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l

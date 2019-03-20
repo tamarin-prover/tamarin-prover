@@ -982,9 +982,9 @@ sapicAction = try (do
 --     | msr
 process :: OpenTheory -> Parser Process
 process thy= 
-            -- left-associative NDC and parallel
-            -- This roughly encodes the following grammar
-            -- <|>   try   (do                                                     -- parallel
+            -- left-associative NDC and parallel using chainl1.
+            -- Note: this roughly encodes the following grammar:
+            -- <|>   try   (do  
             --             p1 <- actionprocess thy
             --             opParallel
             --             p2 <- process thy
@@ -994,36 +994,35 @@ process thy=
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- try opParallel; return (ProcessComb Parallel mempty)}
                   ))
-            -- <|>   try  (chainl1 ($actionprocess thy) (ProcessComb Parallel mempty  <$ (opParallelDepr <|> opParallel )))
-            <|>   try (do                                                  -- parens parser + at multterm
+            <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
                         p <- actionprocess thy
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
                         return p)                                           
-                        -- TODO parser: multterm return
+                        -- TODO SAPIC parser: multterm return
                         -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
-            <|>    try  (do                                                     -- parens parser
+            <|>    try  (do -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
                         return p)
-            <|>    try  (do                                                     -- let expression parser
+            <|>    try  (do -- let expression parser
                         subst <- letBlock
                         p <- process thy
                         return  $ apply subst p)
-            <|>    do                                                     -- action at top-level
+            <|>    do       -- action at top-level
                         p <- actionprocess thy
                         return p
 
 actionprocess :: OpenTheory -> Parser Process
 actionprocess thy= 
-            try (do                                                    -- parallel parser
+            try (do         -- replication parser
                         _ <- symbol "!"
                         p <- process thy
                         return (ProcessAction Rep mempty p))
-            <|> try (do 
+            <|> try (do     -- lookup / if with and w/o else branches
                         _ <- symbol "lookup"
                         t <- msetterm llit
                         _ <- symbol "as"
@@ -1079,25 +1078,25 @@ actionprocess thy=
                         p <- process thy
                         return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
                    )
-            <|> try ( do 
+            <|> try ( do  -- sapic actions are constructs separated by ";"
                         s <- sapicAction
                         _ <- opSeq
                         p <- actionprocess thy
                         return (ProcessAction s mempty p))
-            <|> try ( do 
-                        s <- sapicAction
+            <|> try ( do  -- allow trailing actions (syntactic suguar for action; 0)
+                        s <- sapicAction 
                         return (ProcessAction s mempty (ProcessNull mempty)))
-            <|> try (do                                                     -- null process
+            <|> try (do   -- null process: terminating element
                         _ <- opNull 
                         return (ProcessNull mempty) )
-            <|> try   (do                                                     -- parse identifier
+            <|> try   (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         a <- let p = checkProcess (BC.unpack i) thy in
                             (\x -> paddAnn x [BC.unpack i]) <$> p
                         return a 
                         )
-            <|> do                                                     -- parens parser
+            <|> do        -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
