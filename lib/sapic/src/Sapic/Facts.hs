@@ -78,7 +78,7 @@ data TransFact =  Fr LVar | In SapicTerm
 -- | annotated rules know:
 data AnnotatedRule ann = AnnotatedRule { 
       processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
-    , process      :: AnProcess anna  -- process this rules was generated for
+    , process      :: AnProcess ann   -- process this rules was generated for
     , position     :: ProcessPosition -- position of this process in top-level process 
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]  
@@ -169,3 +169,4 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             a = map actionToFact acts
             r = map factToFact concs
             stripNonAlphanumerical = filter (\x -> isAlpha x)
+                

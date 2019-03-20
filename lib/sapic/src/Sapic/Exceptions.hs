@@ -21,7 +21,6 @@ import qualified Data.List as List
 import Theory
 import Theory.Sapic
 import Theory.Sapic.Print
-import Theory.Model.Rule
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -51,6 +50,7 @@ data SapicException a = SomethingBad
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
+prettyVarSet :: Set LVar -> [Char]
 prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
 
 -- TODO not complete yet, add nicer error messages later

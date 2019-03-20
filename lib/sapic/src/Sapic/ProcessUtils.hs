@@ -6,7 +6,7 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- TODO
+-- Utilities for processes
 module Sapic.ProcessUtils (
    processAt 
 ) where
@@ -25,6 +25,8 @@ import Sapic.Exceptions
 -- import qualified Data.Set                   as S
 -- import Control.Monad.Trans.FastFresh
 
+-- | Return subprocess at position p. Throw exceptions if p is an invalid
+-- positions. 
 processAt :: forall m ann. (Show ann, MonadThrow m, MonadCatch m, Typeable ann) =>  AnProcess ann -> ProcessPosition -> m (AnProcess ann)
 processAt p [] = return p
 processAt (ProcessNull _) (x:xs) = throwM (InvalidPosition (x:xs) :: SapicException (AnProcess ann))

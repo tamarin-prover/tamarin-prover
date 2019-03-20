@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveTraversable       #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE PatternGuards       #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -19,6 +20,7 @@ module Theory.Sapic (
     , SapicAction(..)
     , SapicTerm
     , paddAnn
+    , applyProcess
     , pfoldMap
     , ProcessPosition
     , lhs
@@ -27,24 +29,20 @@ module Theory.Sapic (
     , prettySapicAction'
     , prettySapicComb
     , prettySapicTopLevel'
-    , ProcessPosition
     , prettyPosition
+    , LetExceptions (..)
+    , prettyLetExceptions
 ) where
 
-import           Data.Binary
+import Data.Binary
 import Data.Data
--- import           Data.Monoid                         (Sum(..))
--- import qualified Data.Set                            as S
-import           GHC.Generics                        (Generic)
--- import           Extension.Data.Label                
--- import qualified Extension.Data.Label                as L
-import           Control.Parallel.Strategies
-import Data.Foldable
-
-import           Theory.Model.Fact
-import           Term.LTerm
-import           Theory.Text.Pretty
+import GHC.Generics (Generic)
+import Control.Parallel.Strategies
+import Theory.Model.Fact
+import Term.LTerm
+import Theory.Text.Pretty
 import Term.Substitution
+import Control.Monad.Catch
 
 -- | A process data structure
 -- | In general, terms we use in the translation have logical veriables
@@ -96,33 +94,73 @@ instance Functor AnProcess where
 
 instance Apply ProcessCombinator where
     apply subst c 
-        | (Cond f) <- c = (Cond $ apply subst f )
-        | (CondEq t1 t2) <- c = (CondEq (apply subst t1) (apply subst t2))
-        | (Lookup t v) <- c = (Lookup (apply subst t) (apply subst v))
+        | (Cond f) <- c = Cond $ apply subst f
+        | (CondEq t1 t2) <- c = CondEq (apply subst t1) (apply subst t2)
+        | (Lookup t v) <- c = Lookup (apply subst t) v
         | otherwise = c 
+
+data CapturedTag = CapturedIn | CapturedLookup | CapturedNew
+    deriving (Typeable, Show)
+data LetExceptions = CapturedEx CapturedTag LVar 
+    deriving (Typeable, Show, Exception)
+    -- deriving (Typeable)
+
+prettyLetExceptions (CapturedEx tag v) = "Problem with let expression. Variable "++ show v ++ " captured in " ++ pretty tag ++ ". Please rename." 
+    where pretty CapturedIn = "input"
+          pretty CapturedLookup = "lookup"
+          pretty CapturedNew = "new"
+
+applyProcessCombinatorError subst c 
+        | (Lookup t v) <- c  = if v `elem` dom (subst) then 
+                                  throwM $ CapturedEx CapturedLookup v
+                               else 
+                                  return $ Lookup (apply subst t) v
+        | otherwise = return $ apply subst c
 
 instance Apply SapicAction where
     apply subst ac 
-        | (New v) <- ac = (New $ apply subst v)
-        | (ChIn  mt v) <- ac = (ChIn (apply subst mt) (apply subst v))
-        | (ChOut mt t) <- ac = (ChOut (apply subst mt) (apply subst t))
+        | (New v) <- ac        = (New v)
+        | (ChIn  mt t) <- ac   = (ChIn (apply subst mt) t)
+        | (ChOut mt t) <- ac   = (ChOut (apply subst mt) (apply subst t))
         | (Insert t1 t2) <- ac = (Insert (apply subst t1) (apply subst t2))
-        | (Delete t) <- ac = (Delete (apply subst t))
-        | (Lock t) <- ac = (Lock (apply subst t))
-        | (Unlock t) <- ac = (Unlock (apply subst t))
-        | (Event f) <- ac = (Event (apply subst f))
-        | (MSR (l,a,r)) <- ac = (MSR (apply subst (l,a,r)))
+        | (Delete t) <- ac     = (Delete (apply subst t))
+        | (Lock t) <- ac       = (Lock (apply subst t))
+        | (Unlock t) <- ac     = (Unlock (apply subst t))
+        | (Event f) <- ac      = (Event (apply subst f))
+        | (MSR (l,a,r)) <- ac  = (MSR (apply subst (l,a,r)))
+        | Rep <- ac            = Rep
 
+applySapicActionError subst ac
+        | (New v) <- ac =  if v `elem` dom subst then 
+                                  throwM $ CapturedEx CapturedNew v
+                               else 
+                                  return $ New v
+        | (ChIn mt t) <- ac,  Lit (Var v) <-  viewTerm t =
+                            if v `elem` dom subst then 
+                                  -- t is a single variable that is captured by the let. This is likely unintended, so we warn.
+                                  throwM $ CapturedEx CapturedIn v
+                            else
+                                  return $ ChIn (apply subst mt) t 
+        | otherwise = return $ apply subst ac
 
 instance Apply (AnProcess ann) where
--- TODO we are totally ignoring capturing here...
--- see how this is handled in SAPIC currently
+-- We are ignoring capturing here, use applyProcess below to get warnings.
     apply subst (ProcessNull ann) = ProcessNull ann
     apply subst (ProcessComb c ann pl pr) =
                 ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
     apply subst (ProcessAction ac ann p') =
                 ProcessAction (apply subst ac) ann (apply subst p')
 
+applyProcess subst (ProcessNull ann) = return $ ProcessNull ann
+applyProcess subst (ProcessComb c ann pl pr) = do
+                c' <- applyProcessCombinatorError subst c
+                pl' <- applyProcess subst pl
+                pr' <- applyProcess subst pr
+                return $ ProcessComb c' ann pl' pr'
+applyProcess subst (ProcessAction ac ann p) = do
+                ac' <- applySapicActionError subst ac
+                p' <- applyProcess subst p
+                return $ ProcessAction ac' ann p'
 
 -- | After parsing, the process is already annotated wth a list of process
 --   identifiers. Any identifier in this in this list was inlined to give this

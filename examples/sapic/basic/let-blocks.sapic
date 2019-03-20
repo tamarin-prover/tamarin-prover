@@ -33,6 +33,9 @@ SencSucc (c,k) <=> Ex m . senc(m,k)=c
 				event Wrap(k1,k2);
 				out(m2))
 	)
+||
+( let t = 'x' in new t)
+/* new t */
 )
 
 lemma can_create_key: //sanity check

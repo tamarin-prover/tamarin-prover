@@ -38,6 +38,7 @@ import           Data.Color
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+import qualified Control.Monad.Catch        as Catch
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
@@ -1011,7 +1012,10 @@ process thy=
             <|>    try  (do -- let expression parser
                         subst <- letBlock
                         p <- process thy
-                        return  $ apply subst p)
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
             <|>    do       -- action at top-level
                         p <- actionprocess thy
                         return p
