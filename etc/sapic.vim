@@ -39,7 +39,7 @@ syn match sapicLAtom	        "@"
 syn match sapicLAtom	        "<"
 
 
-syn keyword sapicConstr         aenc sdec senc sdec sign verify hashing signing
+syn keyword sapicConstr         aenc adec senc sdec sign verify hashing signing
 syn match sapicConstr           "\<h("he=e-1
 syn match sapicConstr           "\<sk("he=e-1
 syn match sapicConstr           "\<pk("he=e-1
@@ -53,7 +53,7 @@ syn match sapicConstr           "\<symmetric-encryption"
 syn match sapicConstr           "\<asymmetric-encryption"
 syn match sapicConstr           "\<multiset"
 
-syn keyword sapicDecl           axiom lemma equations functions builtins protocol property in let theory begin end subsection section text predicates options
+syn keyword sapicDecl           axiom lemma equations functions builtins heuristic protocol property in let theory begin end subsection section text predicates options
 syn match sapicDecl             "\<exists-trace"
 syn match sapicDecl             "\<all-traces"
 syn match sapicDecl             "\<enable"
