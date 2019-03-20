@@ -132,10 +132,10 @@ spthy =
       , T.nestedComments = True
       , T.identStart     = alphaNum
       , T.identLetter    = alphaNum <|> oneOf "_"
-      , T.reservedNames  = ["in","let","rule","diff","if","then","else","lookup","as","new","out","event","insert","lock","unlock","delete","report","end"]
+      , T.reservedNames  = ["in","let","rule","diff"]
       , T.opStart        = oneOf ":!$%&*+./<=>?@\\^|-#"
       , T.opLetter       = oneOf ":!$%&*+./<=>?@\\^|-#"
-      , T.reservedOpNames= ["||"]
+      , T.reservedOpNames= []
       , T.caseSensitive  = True
       }
 
