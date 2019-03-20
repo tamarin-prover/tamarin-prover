@@ -5,12 +5,10 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- TODO
+-- Compute annotations for locks.
 module Sapic.Locks (
     annotateLocks
 ) where
--- import Data.Maybe
--- import Data.Foldable
 import Control.Exception
 import Control.Monad.Fresh
 import Control.Monad.Catch
@@ -19,14 +17,16 @@ import Sapic.Exceptions
 import Theory
 import Theory.Sapic
 import Sapic.Annotation
--- import Theory.Model.Rule
--- import Data.Typeable
--- import qualified Data.Set                   as S
--- import Control.Monad.Trans.FastFresh
 
+-- This exceptions is thrown im annotateEachClosestUnlock finds 
+-- a parallel or replications below the locks. The calling function
+-- annotate_locks catches it and outputs the proper exception with the
+-- complete process.
 newtype LocalException = LocalException WFLockTag deriving (Show)
 instance Exception LocalException
 
+-- | Annotate the closes occurence of unlock that has term t with the
+-- variable v output the exception above if we encounter rep or parallel
 annotateEachClosestUnlock :: MonadThrow m => 
                             Theory.Sapic.SapicTerm
                              -> AnLVar
@@ -47,6 +47,8 @@ annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEach
                                                              pr' <- annotateEachClosestUnlock t v pr
                                                              return $ ProcessComb c a' pl' pr'
 
+-- | Annotate locks in a process: chose fresh lock variable and
+-- annotateEachClosestUnlock.
 annotateLocks :: ( MonadThrow m,
                    MonadFresh m
                  -- , Monoid (m (AnProcess ProcessAnnotation))

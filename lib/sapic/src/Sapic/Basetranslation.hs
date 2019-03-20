@@ -5,11 +5,11 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- TODO
+-- Translation rules common for different translation types in SAPIC
 module Sapic.Basetranslation (
-    baseTransNull
-   ,baseTransComb
-   ,baseTransAction
+     baseTransNull
+   , baseTransComb
+   , baseTransAction
    , baseTrans
 ) where
 -- import Data.Maybe
@@ -29,12 +29,14 @@ import Sapic.Annotation
 import Data.Set            hiding (map)
 -- import Control.Monad.Trans.FastFresh
 
---- TODO rewrite
---  should output rule and new tilde x
-
+-- | The basetranslation has three functions, one for translation the Null
+-- Process, one for actions (i.e. constructs with only one child process) and
+-- one for combinators (i.e., constructs with two child processes).
 baseTrans = (baseTransNull, baseTransAction, baseTransComb)
 
 
+--  | Each part of the translation outputs a set of multiset rewrite rules,
+--    and ~x (tildex), the set of variables hitherto bound
 baseTransNull :: p -> ProcessPosition -> Set LVar -> [([TransFact], [a1], [a2])]
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
 
@@ -85,19 +87,21 @@ baseTransAction ac an p tildex
           ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
-        def_state = State LState p tildex
-        def_state' tx = State LState (p++[1]) tx
-        freeset = fromList . frees
+        def_state = State LState p tildex -- default state when entering
+        def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
+        freeset = fromList . frees 
         freeset' = fromList . concatMap getFactVariables
     
 
--- baseTrans_action 
-
--- let basetrans act p tildex = match act with
---   | MSR(prems,acts,concls) ->
---     let tildex' = tildex @@ (vars_factlist prems)  @@ (vars_factlist concls) in
---     [ ( State(p,tildex):: prems, (* EventEmpty::*)acts, State(1::p,tildex')::concls ) ]
-
+-- | The translation for combinators expects:
+--      c - the combinator
+--      _ - annotations (for future use, currently ignored)
+--      p - the current position
+--      tildex - the logical variables bound up to here
+--   It outputs
+--      a set of mrs
+--      the set of bound variables for the lhs process
+--      the set of bound variables for the rhs process
 baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
 baseTransComb c _ p tildex 
@@ -128,7 +132,7 @@ baseTransComb c _ p tildex
                      , tildex, tildex )
                 else 
                     throw $ 
-                    -- TODO Catch and add substitute process in calling function.
+                    -- TODO Catch and add process in calling function.
+                    -- as we cannot tell which process it is here.
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
                         :: SapicException AnnotatedProcess)
-

@@ -6,13 +6,11 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- TODO
+-- Compute translation-specific restrictions
 module Sapic.Restrictions (
       generateSapicRestrictions
     , RestrictionOptions(..)
 ) where
--- import Data.Maybe
--- import Data.Foldable
 import qualified  Data.Monoid as M
 import Data.Maybe
 import Data.Typeable
@@ -27,17 +25,18 @@ import Theory.Sapic
 import Theory.Text.Parser
 import Sapic.Annotation
 import Text.RawString.QQ
--- import Theory.Model.Rule
--- import Data.Typeable
--- import qualified Data.Set                   as S
--- import Control.Monad.Trans.FastFresh
 
-
+-- | Options passed to the restriction generator:
 data RestrictionOptions = RestrictionOptions {
-    hasAccountabilityLemmaWithControl :: Bool
-  , hasProgress :: Bool
+    hasAccountabilityLemmaWithControl :: Bool -- for future use
+  , hasProgress :: Bool                       -- for progress translation
   } deriving (Show, Typeable)
 
+-- | Convert parsing erros into Exceptions. To make restrictions easier to
+-- modify and thus maintain, we use the parser to convert from
+-- a hand-written string. It is possible that there are syntax arrors, in
+-- which case the translation should crash with the following error
+-- message.
 toEx (Left  err) = throwM ( ImplementationError ( "Error parsing hard-coded restrictions: " ++ show err )::SapicException AnnotatedProcess)
 toEx (Right res ) = return res
 
@@ -70,6 +69,8 @@ resSingleSession = parseRestriction [r|restrictionsingle_session: // for a singl
 "All #i #j. Init()@i & Init()@j ==> #i=#j"
 |]
 
+-- | Restriction for Locking. Note that LockPOS hardcodes positions that
+-- should be modified below.
 resLocking_l  = parseRestriction [r|restriction locking:
 "All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
         ==> 
@@ -81,20 +82,10 @@ resLocking_l  = parseRestriction [r|restriction locking:
                 ))
         | #t3<#t1 | #t1=#t3"
 |]
---- We hardcode the variable used in the lemma. Let $i be its index:
--- "All p pp l x lp #t1 #t3 . Lock_$i(p,l,x)@t1 & Lock(pp,lp,x)@t3 
---         ==> 
---         ( #t1<#t3 
---                  & (Ex #t2. Unlock_$i(l,x)@t2 & #t1<#t2 & #t2<#t3 
---                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
---                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
---                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
---                 ))
---         | #t3<#t1 | #t1=#t3"
 
--- resLocking v = Right (Restriction {_rstrName = "locking", _rstrFormula = Qua All ("p",LSortMsg) (Qua All ("pp",LSortMsg) (Qua All ("l",LSortMsg) (Qua All ("x",LSortMsg) (Qua All ("lp",LSortMsg) (Qua All ("t1",LSortNode) (Qua All ("t3",LSortNode) (Conn Imp (Conn And (Ato (Action (Bound 1) (Fact {factTag = ProtoFact Linear (hardcode "Lock") 3, factAnnotations = fromList [], factTerms = [Bound 6,Bound 4,Bound 3]}))) (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Lock" 3, factAnnotations = fromList [], factTerms = [Bound 5,Bound 2,Bound 3]})))) (Conn Or (Conn Or (Conn And (Ato (Less Bound 1 Bound 0)) (Qua Ex ("t2",LSortNode) (Conn And (Conn And (Conn And (Conn And (Conn And (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear (hardcode "Unlock") 3, factAnnotations = fromList [], factTerms = [Bound 7,Bound 5,Bound 4]}))) (Ato (Less Bound 2 Bound 0))) (Ato (Less Bound 0 Bound 1))) (Qua All ("t0",LSortNode) (Qua All ("pp",LSortMsg) (Conn Imp (Ato (Action Bound 1 (Fact {factTag = ProtoFact Linear "Unlock" 3, factAnnotations = fromList [], factTerms = [Bound 0,Bound 7,Bound 6]}))) (Ato (EqE Bound 1 Bound 2)))))) (Qua All ("pp",LSortMsg) (Qua All ("lpp",LSortMsg) (Qua All ("t0",LSortNode) (Conn Imp (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Lock" 3, factAnnotations = fromList [], factTerms = [Bound 2,Bound 1,Bound 7]}))) (Conn Or (Conn Or (Ato (Less Bound 0 Bound 5)) (Ato (EqE Bound 0 Bound 5))) (Ato (Less Bound 3 Bound 0)))))))) (Qua All ("pp",LSortMsg) (Qua All ("lpp",LSortMsg) (Qua All ("t0",LSortNode) (Conn Imp (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Unlock" 3, factAnnotations = fromList [], factTerms = [Bound 2,Bound 1,Bound 7]}))) (Conn Or (Conn Or (Ato (Less Bound 0 Bound 5)) (Ato (Less Bound 3 Bound 0))) (Ato (EqE Bound 3 Bound 0)))))))))) (Ato (Less Bound 0 Bound 1))) (Ato (EqE Bound 1 Bound 0))))))))))})
---     where hardcode s = s -- ++ show $ lvarIdx v
-
+-- | Produce locking lemma for variable v by instantiating resLocking_l 
+--  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
+--  of v.
 resLocking v =  case resLocking_l of
     Left l -> Left l
     Right r -> Right $ mapName hardcode $ mapFormula (mapAtoms subst) r
@@ -120,6 +111,8 @@ resNotEq = parseRestriction [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
+-- | generate restrictions depending on options set (op) and the structure
+-- of the process (anP)
 generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction]
 generateSapicRestrictions op anP = 
   let rest = 
@@ -156,6 +149,8 @@ generateSapicRestrictions op anP =
             | otherwise  = []
         getLockPositions = pfoldMap  getLock
 
+        -- TODO need to incorporate lemma2string_noacc
+        -- TODO add missing features. This is what SAPIC did
           -- @ (if op.progress then generate_progress_restrictions annotated_process else [])
           -- @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
           -- @ (if op.accountability then [] else [res_single_session_l])
@@ -173,4 +168,3 @@ generateSapicRestrictions op anP =
           --   restrs
           --    @ (if op.progress then [progress_init_lemma] else [])
 
--- TODO need to incorporate lemma2string_noacc

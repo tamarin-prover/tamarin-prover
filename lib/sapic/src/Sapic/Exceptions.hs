@@ -7,15 +7,13 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- Translation from Theories with Processes to mrs
+-- Exceptions used during translation
 
 module Sapic.Exceptions (
     WFLockTag(..),
     WFerrror(..),
     SapicException(..)
 ) where
--- import Data.Maybe
--- import Data.Foldable
 import Control.Exception
 import Data.Typeable
 import Data.Set
@@ -24,20 +22,17 @@ import Theory
 import Theory.Sapic
 import Theory.Sapic.Print
 import Theory.Model.Rule
--- import Text.Parsec (ParseError)
 
+-- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
 
+-- | Wellformedness errors, see instance of show below for explanation.
 data WFerrror a = WFLock WFLockTag (AnProcess a) 
                 | WFUnboundProto (Set LVar) 
                 | WFUnbound (Set LVar) (AnProcess a) 
---                ("Condition contains unbound variables: "^(String.concat ", "
---                                                             ( List.map var2string (VarSet.elements (VarSet.diff cond_vars tildex))))
---                 ^" (the bound variables are: "
---                 ^ (String.concat ", " ( List.map var2string (VarSet.elements ( tildex))))^")" )
-                | Other String
     deriving (Typeable, Show)
 
+-- | SapicExceptions see instance of show below for explanation.
 data SapicException a = SomethingBad
                     | VerdictNotWellFormed String
                     | InternalRepresentationError String
@@ -58,7 +53,7 @@ data SapicException a = SomethingBad
 
 prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
 
--- TODO add nicer error messages later
+-- TODO not complete yet, add nicer error messages later
 instance Show (SapicException a) where 
     show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
@@ -78,31 +73,4 @@ instance Show (SapicException a) where
                    " are not bound in the process:"
                    ++
                    prettySapic pr
--- instance Exception SapicException
 instance (Typeable a, Show a) => Exception (SapicException a)
-
--- TODO notes: this is how to do hierarchical exceptions
--- newtype SapicException = forall e . Exception e => SapicException e
--- instance Show SapicException where
---     show (SapicException e) = show e
-
--- instance Exception SapicException
-
--- SapicExceptionToException :: Exception e => e -> SomeException
--- SapicExceptionToException = toException . SapicException
-
--- SapicExceptionFromException :: Exception e => SomeException -> Maybe e
--- SapicExceptionFromException x = do
---     SapicException a <- fromException x
---     cast a
-
-
--- data SomethingBad = SomethingBad
---     deriving Typeable
--- instance Show SomethingBad where
---     show SomethingBad = "something bad happened"
--- -- instance Exception SomethingBad
--- instance Exception SomethingBad where
---     toException   = SapicExceptionToException
---     fromException = SapicExceptionFromException
-
