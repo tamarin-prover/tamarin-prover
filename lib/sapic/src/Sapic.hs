@@ -23,6 +23,7 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import qualified Data.Set              as S
+import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
 import Sapic.Facts
@@ -42,9 +43,10 @@ translate th = case theoryProcesses th of
       []  -> return th
       [p] -> do 
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
-                msr <- noprogresstrans an_proc -- TODO check options to chose progress translation
+                msr <- trans restr_option an_proc 
+                -- msr <- noprogresstrans an_proc 
                 th' <- foldM liftedAddProtoRule th msr
-                sapic_restrictions <- generateSapicRestrictions option an_proc
+                sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th'' <- foldM liftedAddRestriction th' sapic_restrictions
                 return th''
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
@@ -55,8 +57,15 @@ translate th = case theoryProcesses th of
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
-        -- option = RestrictionOptions { hasAccountabilityLemmaWithControl = False, hasProgress = False }
-    option = RestrictionOptions False False
+    ops = L.get  thyOptions th
+    trans = if L.get transProgress ops then
+                noprogresstrans -- TODO add progress translation here
+            else 
+                noprogresstrans 
+    restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to determine, eventually
+                                      , hasProgress = L.get transProgress ops
+                                      , hasReliableChannels = L.get transReliable ops }
+
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:  
   -- let msr =  
@@ -76,14 +85,21 @@ translate th = case theoryProcesses th of
 
 -- | Standard translation without progress:
 -- | use gen and basetranslation and add a simple Init rule.   
-noprogresstrans anP = do
-    msrs <- gen BT.baseTrans anP [] S.empty
+noprogresstrans :: (MonadCatch m, MonadThrow m) =>
+                   RestrictionOptions
+                   -> AnProcess ProcessAnnotation -> m [Rule ProtoRuleEInfo]
+noprogresstrans ops anP = do
+    msrs <- gen trans anP [] S.empty
     return $ map toRule (initrule:msrs)
     where 
           initrule = AnnotatedRule (Just "Init") anP [] l a r 0
           l = []
           a = [InitEmpty ] 
           r = [State LState [] S.empty]
+          trans = if hasReliableChannels ops then
+                    BT.reliableChannelTrans (BT.baseTrans)  
+                  else 
+                    BT.baseTrans
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
@@ -94,25 +110,27 @@ noprogresstrans anP = do
 -- |      annotated process
 -- |      current position in this process
 -- |      tildex, the set of variables in the state
-gen :: (Typeable ann, Show ann, MonadCatch m ) =>
-        (ann
-         -> ProcessPosition -> t -> [([TransFact], [TransAction], [TransFact])],
-         SapicAction
-         -> ann
-         -> ProcessPosition
-         -> t
-         -> ([([TransFact], [TransAction], [TransFact])], t),
-         ProcessCombinator
-         -> ann
-         -> ProcessPosition
-         -> t
-         -> ([([TransFact], [TransAction], [TransFact])], t, t))
-        -> AnProcess ann -> ProcessPosition -> t -> m ( [AnnotatedRule ann])
+-- gen :: (Typeable ann, Show ann, MonadCatch m ) =>
+--         (ann
+--          -> ProcessPosition -> t -> [([TransFact], [TransAction], [TransFact])],
+--          SapicAction
+--          -> ann
+--          -> ProcessPosition
+--          -> t
+--          -> ([([TransFact], [TransAction], [TransFact])], t),
+--          ProcessCombinator
+--          -> ann
+--          -> ProcessPosition
+--          -> t
+--          -> ([([TransFact], [TransAction], [TransFact])], t, t))
+--         -> AnProcess ann -> ProcessPosition -> t -> m ( [AnnotatedRule ann])
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
         case proc' of
-            ProcessNull ann -> return $ mapToAnnotatedRule proc' ( trans_null ann p tildex )
+            ProcessNull ann -> do
+                msrs <- trans_null ann p tildex 
+                return $ mapToAnnotatedRule proc' msrs
             (ProcessComb NDC _ _ _) -> 
                let  subst p_new = map_prems (substStatePos p p_new) in
                do
@@ -120,15 +138,15 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
                    r <- gen trans anP (p++[2]) tildex
                    return $ subst (p++[1]) l ++ subst (p++[2]) r
             (ProcessComb c ann _ _) ->  
-                let (msrs, tildex'1, tildex'2) = trans_comb c ann p tildex in
                 do
+                (msrs, tildex'1, tildex'2) <- trans_comb c ann p tildex 
                 msrs_l <- gen trans anP (p++[1]) tildex'1
                 msrs_r <- gen trans anP (p++[2]) tildex'2
                 return  $
                     mapToAnnotatedRule proc' msrs ++ msrs_l ++ msrs_r
             (ProcessAction  ac ann _) ->
-                let (msrs, tildex') = trans_action ac ann p tildex in
                 do 
+                    (msrs, tildex') <- trans_action ac ann p tildex 
                     msr' <-  gen trans anP (p++[1]) tildex' 
                     return $ mapToAnnotatedRule proc' msrs ++ msr'
     where
@@ -143,3 +161,4 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc p l a r 
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
+

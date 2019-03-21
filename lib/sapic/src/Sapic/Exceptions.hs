@@ -29,15 +29,16 @@ data WFLockTag = WFRep | WFPar  deriving (Show)
 data WFerrror a = WFLock WFLockTag (AnProcess a) 
                 | WFUnboundProto (Set LVar) 
                 | WFUnbound (Set LVar) (AnProcess a) 
+                | WFReliable 
     deriving (Typeable, Show)
 
 -- | SapicExceptions see instance of show below for explanation.
 data SapicException a = SomethingBad
-                    | VerdictNotWellFormed String
-                    | InternalRepresentationError String
+                    -- | VerdictNotWellFormed String
+                    -- | InternalRepresentationError String
                     | NotImplementedError String
                     | TranslationError String
-                    | UnAnnotatedLock String
+                    -- | UnAnnotatedLock String
                     | ProcessNotWellformed (WFerrror a) 
                     | NoNextState
                     | UnassignedTerm
@@ -59,6 +60,8 @@ instance Show (SapicException a) where
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
+    show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
+    show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
     show (ProcessNotWellformed (WFUnboundProto varset)) =
                    "The variable or variables "
                    ++
@@ -73,4 +76,6 @@ instance Show (SapicException a) where
                    " are not bound in the process:"
                    ++
                    prettySapic pr
+    show (ProcessNotWellformed (WFReliable)) =
+                   "If reliable channels are activated, processes should only contain in('r',m), out('r',m), in('c',m) or out('c',m) for communication."
 instance (Typeable a, Show a) => Exception (SapicException a)

@@ -30,6 +30,7 @@ import Text.RawString.QQ
 data RestrictionOptions = RestrictionOptions {
     hasAccountabilityLemmaWithControl :: Bool -- for future use
   , hasProgress :: Bool                       -- for progress translation
+  , hasReliableChannels :: Bool               -- adds restriction for reliable channels
   } deriving (Show, Typeable)
 
 -- | Convert parsing erros into Exceptions. To make restrictions easier to

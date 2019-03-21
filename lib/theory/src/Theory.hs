@@ -36,6 +36,7 @@ module Theory (
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
+  , thyOptions
   , setOption
 
   -- * Predicates

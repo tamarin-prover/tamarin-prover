@@ -32,15 +32,15 @@ annotateEachClosestUnlock :: MonadThrow m =>
                              -> AnLVar
                              -> AnProcess ProcessAnnotation
                              -> m( AnProcess ProcessAnnotation)
-annotateEachClosestUnlock t v (ProcessNull a') = return $ ProcessNull a'
+annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) = 
             if t == t' then -- TODO do we need more precise equality? test this
                 return $ ProcessAction (Unlock t') (a' `mappend` annUnlock v) p
             else do
                 p' <- annotateEachClosestUnlock t v p
                 return $ProcessAction (Unlock t') a' p'
-annotateEachClosestUnlock t v (ProcessAction Rep _ _) = throwM $ LocalException WFRep
-annotateEachClosestUnlock t a (ProcessComb Parallel _ _ _) = throwM $ LocalException WFPar
+annotateEachClosestUnlock _ _ (ProcessAction Rep _ _) = throwM $ LocalException WFRep
+annotateEachClosestUnlock _ _ (ProcessComb Parallel _ _ _) = throwM $ LocalException WFPar
 annotateEachClosestUnlock t v (ProcessAction ac a' p) = do p' <- annotateEachClosestUnlock t v p
                                                            return $ ProcessAction ac a' p'
 annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEachClosestUnlock t v pl
@@ -59,8 +59,8 @@ annotateLocks (ProcessAction (Lock t) a p) = do
             v <- freshLVar "lock" LSortMsg
             p' <- annotateEachClosestUnlock t (AnLVar v) p
             p'' <- annotateLocks p'
-            -- return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
-            return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
+            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
+            -- return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
 annotateLocks (ProcessAction ac an p) = do
             p' <- annotateLocks p
             return (ProcessAction ac an p')

@@ -11,13 +11,13 @@ module Sapic.Basetranslation (
    , baseTransComb
    , baseTransAction
    , baseTrans
+   , reliableChannelTrans
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
 import Control.Exception
 -- import Control.Monad.Fresh
--- import Control.Monad.Catch
--- import Sapic.Exceptions
+import Control.Monad.Catch
 import Theory
 import Theory.Sapic
 import Theory.Sapic.Print
@@ -32,14 +32,34 @@ import Data.Set            hiding (map)
 -- | The basetranslation has three functions, one for translation the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
-baseTrans = (baseTransNull, baseTransAction, baseTransComb)
-
+baseTrans :: MonadThrow m => 
+                          (p
+                          -> ProcessPosition -> Set LVar -> m [([TransFact], [a1], [a2])],
+                          SapicAction
+                          -> ProcessAnnotation
+                          -> [Int]
+                          -> Set LVar
+                          -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
+                          ProcessCombinator
+                          -> p1
+                          -> ProcessPosition
+                          -> Set LVar
+                          -> m ([([TransFact], [TransAction], [TransFact])], Set LVar,
+                                 Set LVar))
+baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction ac an p tx,
+             \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
 --    and ~x (tildex), the set of variables hitherto bound
 baseTransNull :: p -> ProcessPosition -> Set LVar -> [([TransFact], [a1], [a2])]
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
 
+baseTransAction :: SapicAction
+                             -> ProcessAnnotation
+                             -> [Int]
+                             -> Set LVar
+                             -> ([([TransFact], [TransAction], [TransFact])], Set LVar)
 baseTransAction ac an p tildex 
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ]),
@@ -136,3 +156,55 @@ baseTransComb c _ p tildex
                     -- as we cannot tell which process it is here.
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
                         :: SapicException AnnotatedProcess)
+
+reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
+    where
+        tAct' ac an p tx   -- TODO Alex implement the OCaml code below
+            | (ChIn Nothing t) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
+                         -- raising exceptions is done with throwM. Add exceptions to Exceptions.hs
+            | otherwise = tAct ac an p tx -- otherwise case: call tAct
+
+        -- Msg_In(_) | Msg_Out(_) -> 
+        --   raise (ProcessNotWellformed 
+        --            "If progress is activated, the process should not contain in(m) and out(m) actions.")
+      -- (* Actually, we could just allow it and 
+       -- * have in(m) be a synomym for in(c,m) *)
+      -- | Ch_In(Var(PubFixed("c")),t) -> 
+        -- (* [ *)
+        -- (*   ( [State(p,tildex)], [], [Semistate(1::p,tildex)]); *)
+        -- (*   ( [Semistate(1::p,tildex); In(List [Var(PubFixed("c")); t] )], *)
+        -- (*     [Action("ChannelInEvent",[List([Var(PubFixed("c"));t])])], *)
+        -- (*     [ State(1::p,(vars_t t) @@ tildex) ]) *)
+        -- (* ] *)
+        -- [
+        --   ( [State(p,tildex); In(List [Var(PubFixed("c")); t] )],
+        --     [Action("ChannelInEvent",[List([Var(PubFixed("c"));t])])],
+        --     [ State(1::p,(vars_t t) @@ tildex) ])
+        -- ]
+      -- | Ch_Out(Var(PubFixed("c")),t) -> 
+        -- [
+        --   ([State(p,tildex); In(Var(PubFixed("c")))],
+        --    [Action("ChannelInEvent",[Var(PubFixed("c"))])],
+        --    [State(1::p,(vars_t t) @@ tildex);Out(t)])
+        -- ]
+      -- | Ch_In(Var(PubFixed("r")),t) -> 
+        -- (* [ *)
+        -- (*   ( [State(p,tildex)], [], [Semistate(1::p,tildex)]); *)
+        -- (*   ( [Semistate(1::p,tildex); In(t);MessageIDReceiver(p)], *)
+        -- (*     [Receive(p,t)], *)
+        -- (*     [State(1::p,(vars_t t) @@ (tildex))] *)
+        -- (*   ) *)
+        -- (* ] *)
+        -- [
+        --   ( [State(p,tildex); In(t);MessageIDReceiver(p)],
+        --     [Receive(p,t)],
+        --     [State(1::p,(vars_t t) @@ (tildex))]
+        --   )
+        -- ]
+
+      -- | Ch_Out(Var(PubFixed("r")),t) -> 
+        -- [ ([MessageIDSender(p); State(p,tildex)],[Send(p,t)], [Out(t); State(1::p, tildex)])]
+      -- | Ch_In(_) | Ch_Out(_) -> raise (ProcessNotWellformed 
+        --                                  ("If progress is activated, the process should not contain in(a,m) and out(a,m) actions for a different from 'c' or 'r'. See position"^(pos2string p)))
+      -- | _ -> basetrans y p tildex
+    
