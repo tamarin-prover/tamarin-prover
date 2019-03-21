@@ -10,7 +10,8 @@ begin
 // only a single secret can be learned by the attacker
 // lemma falsified by tamarin
 lemma onlyOneSecret:
-      "All #i #j x y.  Secret(x)@i & Secret(y)@j ==> x = y"
+    exists-trace
+      "Ex #i #j x y.  Secret(x)@i & Secret(y)@j & not (x = y)"
 
 end
 
