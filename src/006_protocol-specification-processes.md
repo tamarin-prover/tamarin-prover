@@ -88,8 +88,19 @@ The remaining constructs are used to manipulate state.
   processes may read and update a common memory.
 
 There is a hidden feature for experts: inline multiset-rewrite rules:  `[l]
---[a]-> r; P` is a valid process, which reduces to `P` if the rule applies in
-the current state. We advice for the use 
+--[a]-> r; P` is a valid process. Embedded rules apply if their preconditions
+apply (i.e., the facts on the left-hand-side are present) **and** the process
+is reduced up to this rule.  If the rule applies in the current state, the
+process reduces to `P`.  We advice to avoid these rules whenever possible, as
+they run counter to the aim of SAPIC: to provide clear, provably correct
+high-level abstractions for the modelling of protocols.
+Note also that the state-manipulation constructs `lookup x as v`, `insert x,y`
+and `delete x` manage state by emitting actions `IsIn(x,y')`, `Insert(x,y)` and
+`Delete(x)` and enforcing their proper semantics via restrictions. For example:
+an action `IsIn(x,y)`, which expresses a succesful lookup, requires that
+previously, and action `Insert(x,y)` occurred, and that in between, no other
+action `Insert(x,y')` or `Delete(x)` changed the global store at position `x`. Hence
+the global store is distinct from the set of facts in the current state.
 
 ## Syntactic sugar
 
