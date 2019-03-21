@@ -160,7 +160,7 @@ baseTransComb c _ p tildex
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
         tAct' ac an p tx   -- TODO Alex implement the OCaml code below
-            | (ChIn Nothing t) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
+            | (ChIn Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
                          -- raising exceptions is done with throwM. Add exceptions to Exceptions.hs
             | otherwise = tAct ac an p tx -- otherwise case: call tAct
 

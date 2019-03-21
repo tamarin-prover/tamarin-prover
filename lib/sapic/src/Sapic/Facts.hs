@@ -12,9 +12,13 @@ module Sapic.Facts (
    , AnnotatedRule(..)
    , StateKind(..)
    , isSemiState
+   , isNonSemiState
+   , addVarToState
    , factToFact
    , actionToFact
    , toRule
+   , varMID
+   , varProgress
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -92,6 +96,12 @@ isSemiState PState = False
 isSemiState LSemiState = True
 isSemiState PSemiState = True
 
+isNonSemiState (State kind _ _) = not $ isSemiState kind
+isNonSemiState _ = False
+
+addVarToState v' (State kind pos vs)  = State kind pos (v' `S.insert` vs)
+addVarToState _ x = x
+
 multiplicity :: StateKind -> Multiplicity
 multiplicity LState = Linear
 multiplicity LSemiState = Linear
@@ -103,10 +113,15 @@ mapFactName f fact =  fact { factTag = f' (factTag fact) }
     where f' (ProtoFact m s i) = ProtoFact m (f s) i
           f' ft = ft
 
--- Optimisation: have a diffeent Fact name for every (unique) locking variable 
+-- Optimisation: have a diffent fact name for every (unique) locking variable 
 lockFactName v = "Lock_"++ (show $ lvarIdx v)
 unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
 lockPubTerm = pubTerm . show . lvarIdx
+
+varProgress p = LVar n s i
+    where n = "prog_" ++ prettyPosition p
+          s = LSortFresh
+          i = 0 
 
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
@@ -129,11 +144,12 @@ actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm 
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,t,varTerm v]
+actionToFact (ProgressFrom p) = protoFact Linear "ProgressFrom" [varTerm $ varProgress p]
 actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
-varTermMID :: ProcessPosition -> VTerm c LVar
-varTermMID p = varTerm $ LVar n s i
+varMID :: [Int] -> LVar
+varMID p = LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh
           i = 0 -- This is the message index. 
@@ -146,8 +162,8 @@ factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
 factToFact (Message t t') = protoFact Linear "Message" [t, t']
 factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
-factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTermMID p ]
-factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTermMID p ]
+factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMID p ]
+factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTerm$ varMID p ]
 factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
         name k = if isSemiState k then "semistate" else "state"

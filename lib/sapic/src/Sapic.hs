@@ -43,8 +43,7 @@ translate th = case theoryProcesses th of
       []  -> return th
       [p] -> do 
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
-                msr <- trans restr_option an_proc 
-                -- msr <- noprogresstrans an_proc 
+                msr <- trans basetrans an_proc 
                 th' <- foldM liftedAddProtoRule th msr
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th'' <- foldM liftedAddRestriction th' sapic_restrictions
@@ -62,7 +61,11 @@ translate th = case theoryProcesses th of
                 noprogresstrans -- TODO add progress translation here
             else 
                 noprogresstrans 
-    restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to determine, eventually
+    basetrans = if L.get transReliable ops then
+                    BT.reliableChannelTrans (BT.baseTrans)  
+                  else 
+                    BT.baseTrans
+    restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
                                       , hasProgress = L.get transProgress ops
                                       , hasReliableChannels = L.get transReliable ops }
 
@@ -85,21 +88,86 @@ translate th = case theoryProcesses th of
 
 -- | Standard translation without progress:
 -- | use gen and basetranslation and add a simple Init rule.   
-noprogresstrans :: (MonadCatch m, MonadThrow m) =>
-                   RestrictionOptions
-                   -> AnProcess ProcessAnnotation -> m [Rule ProtoRuleEInfo]
-noprogresstrans ops anP = do
-    msrs <- gen trans anP [] S.empty
+noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
+                    Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
+                   (ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t1 ([TransFact], [TransAction], [TransFact])),
+                    SapicAction
+                    -> ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
+                    ProcessCombinator
+                    -> ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
+                          S.Set a))
+                   -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+noprogresstrans basetrans anP = do
+    msrs <- gen basetrans anP [] S.empty
     return $ map toRule (initrule:msrs)
     where 
           initrule = AnnotatedRule (Just "Init") anP [] l a r 0
           l = []
           a = [InitEmpty ] 
           r = [State LState [] S.empty]
-          trans = if hasReliableChannels ops then
-                    BT.reliableChannelTrans (BT.baseTrans)  
-                  else 
-                    BT.baseTrans
+
+-- | translation with progress:
+-- | use gen and basetranslation, but
+-- | adds ProgressTo actions where a state-fact is in the premise
+-- | adds ProgressFrom actions where a state-fact is in the conclusion
+-- | also adds a message id rule
+progresstrans :: (Show ann, MonadCatch m, Typeable ann,
+                  Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
+                 (ann
+                  -> ProcessPosition
+                  -> S.Set a
+                  -> m (t1 ([TransFact], [TransAction], [TransFact])),
+                  SapicAction
+                  -> ann
+                  -> ProcessPosition
+                  -> S.Set a
+                  -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
+                  ProcessCombinator
+                  -> ann
+                  -> ProcessPosition
+                  -> S.Set a
+                  -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
+                        S.Set a))
+                 -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+progresstrans basetrans anP = do
+    -- pf <- .. generate progress function
+    msrs <- gen basetrans anP [] S.empty
+    return $ map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)
+    where 
+          initrule = AnnotatedRule (Just "Init") anP [] l a r 0
+          l = []
+          a = [InitEmpty ] 
+          r = [State LState [] S.empty]
+          messageidrule = AnnotatedRule (Just "MessageID-rule") anP [] 
+                      [ Fr  $ varMID [] ] -- prem
+                      []                -- act
+                      [ MessageIDReceiver [], MessageIDSender [] ] 
+                      0
+          x =  LVar "x" LSortFresh 0
+          map_act_cond p f anrule = -- applys f to (l,a,r) if p prems concls holds
+                if p (prems anrule) (concs anrule) then
+                    let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
+                    anrule { prems = l', acts = a', concs = r'  }
+                else
+                    anrule
+          stateInPrems prems _ = any isNonSemiState prems  --- TODO need to incorporate progress function
+          stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function
+          addProgressTo x = x -- TODO  corresponds to step2 (child[12] p) in Firsttranslation.ml
+          addProgressFrom = map_act_cond stateInConcls 
+                            (\p l a r -> 
+                            ( Fr(varProgress p):l
+                            , (ProgressFrom p):a
+                            , map (addVarToState $ varProgress p) r
+                            )) 
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
