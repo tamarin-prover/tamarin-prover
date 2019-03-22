@@ -48,14 +48,14 @@ data TransAction =  InitEmpty
   | EventId
   | PredicateA LNFact
   | NegPredicateA LNFact
-  | ProgressFrom ProcessPosition 
+  | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
-  | Listen ProcessPosition LVar 
+  | Listen ProcessPosition LVar
   | Receive ProcessPosition SapicTerm
   | IsIn SapicTerm LVar
   | IsNotSet SapicTerm
   | InsertA SapicTerm SapicTerm
-  | DeleteA SapicTerm 
+  | DeleteA SapicTerm
   | ChannelIn SapicTerm
   | Send ProcessPosition SapicTerm
   | LockUnnamed SapicTerm LVar
@@ -64,13 +64,13 @@ data TransAction =  InitEmpty
   | UnlockNamed SapicTerm LVar
   | TamarinAct LNFact
 
--- | Facts that are used as premises and conclusions. 
+-- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
 -- bound. Persistant variant for replication, and linear for all other
 -- actions. Semistates are used in rules where a SAPIC step might take more
 -- than one MSR step, i.e., messages over private channels.
 data StateKind  = LState | PState | LSemiState | PSemiState
-data TransFact =  Fr LVar | In SapicTerm 
+data TransFact =  Fr LVar | In SapicTerm
             | Out SapicTerm
             | Message SapicTerm SapicTerm
             | Ack SapicTerm SapicTerm
@@ -80,12 +80,12 @@ data TransFact =  Fr LVar | In SapicTerm
             | TamarinFact LNFact
 
 -- | annotated rules know:
-data AnnotatedRule ann = AnnotatedRule { 
+data AnnotatedRule ann = AnnotatedRule {
       processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
     , process      :: AnProcess ann   -- process this rules was generated for
-    , position     :: ProcessPosition -- position of this process in top-level process 
+    , position     :: ProcessPosition -- position of this process in top-level process
     , prems        :: [TransFact]     -- Facts/actions to be translated
-    , acts         :: [TransAction]  
+    , acts         :: [TransAction]
     , concs        :: [TransFact]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
@@ -109,11 +109,11 @@ multiplicity PState = Persistent
 multiplicity PSemiState = Persistent
 
 -- | map f to the name of a fact
-mapFactName f fact =  fact { factTag = f' (factTag fact) } 
+mapFactName f fact =  fact { factTag = f' (factTag fact) }
     where f' (ProtoFact m s i) = ProtoFact m (f s) i
           f' ft = ft
 
--- Optimisation: have a diffent fact name for every (unique) locking variable 
+-- Optimisation: have a diffent fact name for every (unique) locking variable
 lockFactName v = "Lock_"++ (show $ lvarIdx v)
 unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
 lockPubTerm = pubTerm . show . lvarIdx
@@ -121,7 +121,7 @@ lockPubTerm = pubTerm . show . lvarIdx
 varProgress p = LVar n s i
     where n = "prog_" ++ prettyPosition p
           s = LSortFresh
-          i = 0 
+          i = 0
 
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
@@ -129,10 +129,12 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | StopId
   -- | EventEmpty
   -- | EventId
-  -- | ProgressFrom ProcessPosition 
+  -- | ProgressFrom ProcessPosition
   -- | ProgressTo ProcessPosition ProcessPosition
-  -- | Listen ProcessPosition LVar 
+  -- | Listen ProcessPosition LVar
   -- | Receive ProcessPosition SapicTerm
+actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varProgress p ,t]
+actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varProgress p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
 actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
@@ -152,7 +154,7 @@ varMID :: [Int] -> LVar
 varMID p = LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh
-          i = 0 -- This is the message index. 
+          i = 0 -- This is the message index.
                 -- We could also compute it from the position as before,
                 -- but I don't see an advantage (yet)
 
@@ -174,15 +176,14 @@ toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
           Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
           where
-            name = case processName of 
+            name = case processName of
                 Just s -> s
-                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process) 
+                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
                          ++ "_" ++ show index ++ "_"
                          ++ prettyPosition position
             attr = [ RuleColor $ RGB 0.3 0.3 0.3 -- TODO compute color from processnames
-                   , Process $ toProcess process] 
+                   , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
             stripNonAlphanumerical = filter (\x -> isAlpha x)
-                

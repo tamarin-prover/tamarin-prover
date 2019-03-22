@@ -162,21 +162,30 @@ reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
         tAct' ac an p tx   -- TODO test if it does what it should do
             | (ChIn (Just v) t) <- ac
-            , isPubVar v == True
-            , Just c <- getVar v
-            , lvarName c == "c"
+            ,Lit (Con name) <- viewTerm v
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "c"
             = let tx' = (freeset v) `union` (freeset t) `union` tx in
               let ts  = fAppPair (v,t) in
-              ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
-            | (ChOut (Just v) t) <- ac, isPubVar v == True, let Just c = getVar v in lvarName c == "c" = return $ let tx' = (freeset v) `union` (freeset t) `union` tx in
-                                                                              ([
-                                                                               ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
-            | (ChIn (Just r) t) <- ac, isPubVar r == True, let Just c = getVar r in lvarName c =="r" = return $ let tx' = (freeset r) `union` (freeset t) `union` tx in
-                                                                              ([
-                                                                               ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx']) ],tx')
-            | (ChOut (Just r) t) <- ac, isPubVar r == True, let Just c = getVar r in lvarName c =="r" = return $ let tx' = (freeset r) `union` (freeset t) `union` tx in
-                                                                              ([
-                                                                               ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx']) ],tx')
+              return $ ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
+            | (ChOut (Just v) t) <- ac
+            ,Lit (Con name) <- viewTerm v
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "c"
+            = let tx' = (freeset v) `union` (freeset t) `union` tx in
+              return $ ([ ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
+            | (ChIn (Just r) t) <- ac
+            ,Lit (Con name) <- viewTerm r
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "r"
+            = let tx' = (freeset r) `union` (freeset t) `union` tx in
+              return $ ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx']) ],tx')
+            | (ChOut (Just r) t) <- ac
+            ,Lit (Con name) <- viewTerm r
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "r"
+            = let tx' = (freeset r) `union` (freeset t) `union` tx in
+              return $ ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx']) ],tx')
             | (ChOut (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
             | (ChIn (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
             | (ChOut Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)

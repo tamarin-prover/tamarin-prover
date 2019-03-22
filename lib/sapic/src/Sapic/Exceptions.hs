@@ -26,10 +26,10 @@ import Theory.Sapic.Print
 data WFLockTag = WFRep | WFPar  deriving (Show)
 
 -- | Wellformedness errors, see instance of show below for explanation.
-data WFerrror a = WFLock WFLockTag (AnProcess a) 
-                | WFUnboundProto (Set LVar) 
-                | WFUnbound (Set LVar) (AnProcess a) 
-                | WFReliable 
+data WFerrror a = WFLock WFLockTag (AnProcess a)
+                | WFUnboundProto (Set LVar)
+                | WFUnbound (Set LVar) (AnProcess a)
+                | WFReliable
     deriving (Typeable, Show)
 
 -- | SapicExceptions see instance of show below for explanation.
@@ -39,7 +39,7 @@ data SapicException a = SomethingBad
                     | NotImplementedError String
                     | TranslationError String
                     -- | UnAnnotatedLock String
-                    | ProcessNotWellformed (WFerrror a) 
+                    | ProcessNotWellformed (WFerrror a)
                     | NoNextState
                     | UnassignedTerm
                     | InvalidPosition ProcessPosition
@@ -55,7 +55,7 @@ prettyVarSet :: Set LVar -> [Char]
 prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
 
 -- TODO not complete yet, add nicer error messages later
-instance Show (SapicException a) where 
+instance Show (SapicException a) where
     show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
