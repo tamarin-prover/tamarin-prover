@@ -69,6 +69,7 @@ library
       , Sapic.Facts
       , Sapic.Basetranslation
       , Sapic.Restrictions
+      , Sapic.ProgressFunction
       , Sapic
 
     other-modules:

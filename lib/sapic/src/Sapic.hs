@@ -31,6 +31,7 @@ import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import Sapic.Restrictions
+import Sapic.ProgressFunction
 import Theory.Text.Pretty
 
 
@@ -56,7 +57,7 @@ translate th = case theoryProcesses th of
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
-    ops = L.get  thyOptions th
+    ops = L.get thyOptions th
     trans = if L.get transProgress ops then
                 progresstrans (L.get transReliable ops)
             else
@@ -164,12 +165,19 @@ progresstrans msgIDbool basetrans anP = do
                 else
                     anrule
           stateInPrems prems _ = any isNonSemiState prems  --- TODO need to incorporate progress function
-          stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function
-          addProgressTo x = x -- TODO  corresponds to step2 (child[12] p) in Firsttranslation.ml
-          addProgressFrom = map_act_cond stateInConcls
-                            (\p l a r ->
+          stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function, look at children of positon
+          addProgressTo = map_act_cond stateInPrems  -- corresponds to step2 (child[12] p) in Firsttranslation.ml
+                            (\p l a r -> 
+                            let q' = p -- TODO q' should be find_from pf p' for p' direct child of p
+                            in
+                            ( l
+                            , ProgressTo p q':a
+                            , r
+                            ))
+          addProgressFrom = map_act_cond stateInConcls  -- corresponds to step3 p in Firsttranslation.ml
+                            (\p l a r -> 
                             ( Fr(varProgress p):l
-                            , (ProgressFrom p):a
+                            , ProgressFrom p:a
                             , map (addVarToState $ varProgress p) r
                             ))
 
