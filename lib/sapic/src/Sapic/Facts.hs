@@ -138,7 +138,7 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | ProgressTo ProcessPosition ProcessPosition
   -- | Listen ProcessPosition LVar
   -- | Receive ProcessPosition SapicTerm
-actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varProgress p ,t]
+actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
 actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
