@@ -161,10 +161,13 @@ baseTransComb c _ p tildex
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
         tAct' ac an p tx   -- TODO test if it does what it should do
-            | (ChIn (Just v) t) <- ac, isPubVar v == True, let Just c = getVar v in lvarName c == "c" = return $ let tx' = (freeset v) `union` (freeset t) `union` tx in
-                                                                              let ts  = fAppPair (v,t) in
-                                                                              ([
-                                                                               ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
+            | (ChIn (Just v) t) <- ac
+            , isPubVar v == True
+            , Just c <- getVar v
+            , lvarName c == "c"
+            = let tx' = (freeset v) `union` (freeset t) `union` tx in
+              let ts  = fAppPair (v,t) in
+              ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
             | (ChOut (Just v) t) <- ac, isPubVar v == True, let Just c = getVar v in lvarName c == "c" = return $ let tx' = (freeset v) `union` (freeset t) `union` tx in
                                                                               ([
                                                                                ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
