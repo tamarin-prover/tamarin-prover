@@ -32,7 +32,7 @@ import Data.Set            hiding (map)
 -- | The basetranslation has three functions, one for translation the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
-baseTrans :: MonadThrow m => 
+baseTrans :: MonadThrow m =>
                           (p
                           -> ProcessPosition -> Set LVar -> m [([TransFact], [a1], [a2])],
                           SapicAction
@@ -53,65 +53,65 @@ baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
 --  | Each part of the translation outputs a set of multiset rewrite rules,
 --    and ~x (tildex), the set of variables hitherto bound
 baseTransNull :: p -> ProcessPosition -> Set LVar -> [([TransFact], [a1], [a2])]
-baseTransNull _ p tildex =  [([State LState p tildex ], [], [])] 
+baseTransNull _ p tildex =  [([State LState p tildex ], [], [])]
 
 baseTransAction :: SapicAction
                              -> ProcessAnnotation
                              -> [Int]
                              -> Set LVar
                              -> ([([TransFact], [TransAction], [TransFact])], Set LVar)
-baseTransAction ac an p tildex 
+baseTransAction ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ]),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex])
           ], tildex)
     | (New v) <- ac = let tx' = v `insert` tildex in
         ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
-    | (ChIn (Just tc) t) <- ac = 
-          let tx' = (freeset tc) `union` (freeset t) `union` tildex in 
+    | (ChIn (Just tc) t) <- ac =
+          let tx' = (freeset tc) `union` (freeset t) `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
           ([def_state, In ts], [ ChannelIn ts], [def_state' tx']),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'])], tx')
-    | (ChIn Nothing t) <- ac = 
-          let tx' = freeset t `union` tildex in 
+    | (ChIn Nothing t) <- ac =
+          let tx' = freeset t `union` tildex in
           ([ ([def_state, (In t) ], [ ], [def_state' tx']) ], tx')
-    | (ChOut (Just tc) t) <- ac = 
+    | (ChOut (Just tc) t) <- ac =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
           ([def_state, In tc], [ ChannelIn tc], [Out t, def_state' tildex]),
           ([def_state], [], [Message tc t,semistate]),
           ([semistate, Ack tc t], [], [def_state' tildex])], tildex)
-    | (ChOut Nothing t) <- ac = 
+    | (ChOut Nothing t) <- ac =
           ([
           ([def_state], [], [def_state' tildex, Out t])], tildex)
-    | (Insert t1 t2 ) <- ac = 
+    | (Insert t1 t2 ) <- ac =
           ([
           ([def_state], [InsertA t1 t2], [def_state' tildex])], tildex)
-    | (Delete t ) <- ac = 
+    | (Delete t ) <- ac =
           ([
           ([def_state], [DeleteA t ], [def_state' tildex])], tildex)
-    | (Lock t ) <- ac, (Just (AnLVar v)) <- lock an = 
-          let tx' = v `insert` tildex in 
+    | (Lock t ) <- ac, (Just (AnLVar v)) <- lock an =
+          let tx' = v `insert` tildex in
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'])], tx')
     | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
 
-    | (Unlock t ) <- ac, (Just (AnLVar v)) <- unlock an = 
+    | (Unlock t ) <- ac, (Just (AnLVar v)) <- unlock an =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
           ([([def_state], [TamarinAct f], [def_state' tildex])], tildex)
-    | (MSR (l,a,r)) <- ac = 
-          let tx' = (freeset' r) `union` tildex in 
+    | (MSR (l,a,r)) <- ac =
+          let tx' = (freeset' r) `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
-        freeset = fromList . frees 
+        freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
-    
+
 
 -- | The translation for combinators expects:
 --      c - the combinator
@@ -124,7 +124,7 @@ baseTransAction ac an p tildex
 --      the set of bound variables for the rhs process
 baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
-baseTransComb c _ p tildex 
+baseTransComb c _ p tildex
     | Parallel <- c = (
                [([def_state], [], [def_state1 tildex,def_state2 tildex])]
              , tildex, tildex )
@@ -132,8 +132,8 @@ baseTransComb c _ p tildex
                []
              , tildex, tildex )
     | Cond f <- c = condition f
-    | CondEq t1 t2 <- c = condition (protoFact Linear "Eq" [t1,t2]) 
-    | Lookup t v <- c = 
+    | CondEq t1 t2 <- c = condition (protoFact Linear "Eq" [t1,t2])
+    | Lookup t v <- c =
            let tx' = v `insert` tildex in
                 (
        [ ([def_state], [IsIn t v], [def_state1 tx' ]),
@@ -144,67 +144,43 @@ baseTransComb c _ p tildex
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
-        condition f = 
+        condition f =
                 let vars_f = fromList $ getFactVariables f in
-                if vars_f `isSubsetOf` tildex then 
+                if vars_f `isSubsetOf` tildex then
                 ( [ ([def_state], [PredicateA f], [def_state1 tildex]),
                     ([def_state], [NegPredicateA f], [def_state2 tildex])]
                      , tildex, tildex )
-                else 
-                    throw $ 
+                else
+                    throw $
                     -- TODO Catch and add process in calling function.
                     -- as we cannot tell which process it is here.
-                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex) 
+                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
+
 
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
-        tAct' ac an p tx   -- TODO Alex implement the OCaml code below
+        tAct' ac an p tx   -- TODO test if it does what it should do
+            | (ChIn (Just v) t) <- ac, isPubVar v == True, let Just c = getVar v in lvarName c == "c" = return $ let tx' = (freeset v) `union` (freeset t) `union` tx in
+                                                                              let ts  = fAppPair (v,t) in
+                                                                              ([
+                                                                               ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
+            | (ChOut (Just v) t) <- ac, isPubVar v == True, let Just c = getVar v in lvarName c == "c" = return $ let tx' = (freeset v) `union` (freeset t) `union` tx in
+                                                                              ([
+                                                                               ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
+            | (ChIn (Just r) t) <- ac, isPubVar r == True, let Just c = getVar r in lvarName c =="r" = return $ let tx' = (freeset r) `union` (freeset t) `union` tx in
+                                                                              ([
+                                                                               ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx']) ],tx')
+            | (ChOut (Just r) t) <- ac, isPubVar r == True, let Just c = getVar r in lvarName c =="r" = return $ let tx' = (freeset r) `union` (freeset t) `union` tx in
+                                                                              ([
+                                                                               ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx']) ],tx')
+            | (ChOut (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
+            | (ChIn (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
+            | (ChOut Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
             | (ChIn Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
                          -- raising exceptions is done with throwM. Add exceptions to Exceptions.hs
             | otherwise = tAct ac an p tx -- otherwise case: call tAct
-
-        -- Msg_In(_) | Msg_Out(_) -> 
-        --   raise (ProcessNotWellformed 
-        --            "If progress is activated, the process should not contain in(m) and out(m) actions.")
-      -- (* Actually, we could just allow it and 
-       -- * have in(m) be a synomym for in(c,m) *)
-      -- | Ch_In(Var(PubFixed("c")),t) -> 
-        -- (* [ *)
-        -- (*   ( [State(p,tildex)], [], [Semistate(1::p,tildex)]); *)
-        -- (*   ( [Semistate(1::p,tildex); In(List [Var(PubFixed("c")); t] )], *)
-        -- (*     [Action("ChannelInEvent",[List([Var(PubFixed("c"));t])])], *)
-        -- (*     [ State(1::p,(vars_t t) @@ tildex) ]) *)
-        -- (* ] *)
-        -- [
-        --   ( [State(p,tildex); In(List [Var(PubFixed("c")); t] )],
-        --     [Action("ChannelInEvent",[List([Var(PubFixed("c"));t])])],
-        --     [ State(1::p,(vars_t t) @@ tildex) ])
-        -- ]
-      -- | Ch_Out(Var(PubFixed("c")),t) -> 
-        -- [
-        --   ([State(p,tildex); In(Var(PubFixed("c")))],
-        --    [Action("ChannelInEvent",[Var(PubFixed("c"))])],
-        --    [State(1::p,(vars_t t) @@ tildex);Out(t)])
-        -- ]
-      -- | Ch_In(Var(PubFixed("r")),t) -> 
-        -- (* [ *)
-        -- (*   ( [State(p,tildex)], [], [Semistate(1::p,tildex)]); *)
-        -- (*   ( [Semistate(1::p,tildex); In(t);MessageIDReceiver(p)], *)
-        -- (*     [Receive(p,t)], *)
-        -- (*     [State(1::p,(vars_t t) @@ (tildex))] *)
-        -- (*   ) *)
-        -- (* ] *)
-        -- [
-        --   ( [State(p,tildex); In(t);MessageIDReceiver(p)],
-        --     [Receive(p,t)],
-        --     [State(1::p,(vars_t t) @@ (tildex))]
-        --   )
-        -- ]
-
-      -- | Ch_Out(Var(PubFixed("r")),t) -> 
-        -- [ ([MessageIDSender(p); State(p,tildex)],[Send(p,t)], [Out(t); State(1::p, tildex)])]
-      -- | Ch_In(_) | Ch_Out(_) -> raise (ProcessNotWellformed 
-        --                                  ("If progress is activated, the process should not contain in(a,m) and out(a,m) actions for a different from 'c' or 'r'. See position"^(pos2string p)))
-      -- | _ -> basetrans y p tildex
-    
+            where
+                def_state = State LState p tx
+                def_state1 tx = State LState (p++[1]) tx
+                freeset = fromList . frees
