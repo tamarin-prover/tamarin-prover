@@ -9,10 +9,10 @@ The full details of this model can be found
 in [@KK-jcs16] and [@BaDrKr-2016-liveness].
 
 
-Protocol can be modelled in terms of rules or as a (single) process. The
+A Protocol can be modelled in terms of rules or as a (single) process. The
 process is translated into a set of rules that adhere to the semantics of the
 process calculus.  It is even possible to mix a process declaration and a set
-of rules, although this is not recommended, as the interaction between the
+of rules, although this is not recommended, as the interactions between the
 rules and the process depend on how precisely this translation is defined.
 
 Processes{#sec:proc}
@@ -22,7 +22,7 @@ Processes{#sec:proc}
 F a fact and P a predicate.](../images/sapic-overview.png)\
 
 The SAPIC calculus is a dialect of the applied-pi calculus with additional
-features for storing, reading and modifying global state. 
+features for storing, retrieving and modifying global state. 
 
 ### Standard applied-pi features
 
@@ -42,14 +42,14 @@ TODO example here
 If the channel is left out, the public channel `'c'` is assumed, which is the
 case in the majority of our examples. This is exactly what the facts `In(m)` and
 `Out(m)` represent. Processes can also branch: 
-`if Pred then P else Q` will execute `P` or `Q`, depending on whether `Pred` holds.
+`if Pred then P else Q` will execute either `P` or `Q`, depending on whether `Pred` holds.
 As of now, only the equality check is implemented, hence Pred always has the
 form `t = t'` for terms `t` and `t'`.
 
-The construct `new a;P` binds the fresh name a in `P`. Similar to the fact
+The construct `new a;P` binds the fresh name `a` in `P`. Similar to the fact
 `Fr(a)`, it models the generation of a fresh, random value.
 
-The `event` construct is similar to actions in rules, in fact, it is translated
+The `event` construct is similar to actions in rules. In fact, it will be translated
 to actions. Like in rules, events  annotate parts of the processes and are
 useful for stating security properties. Each of these constructs can be thought
 of as "local" computations. They are separated with a semicolon `;` and are terminated with
@@ -60,23 +60,23 @@ We can now come to the operations modelling parallelism.
 `P | Q` is the parallel execution of processes
 P and Q. This is used, e.g., to model two participants in a protocol.
 
-`!P` is the replication of P, which allows an unbounded number of sessions in
+`!P` is the replications of P, which allows an unbounded number of sessions in
 protocol executions. It can be thought of to be an infinite number of processes
 `P | .. | P` running in parallel. If `P` describes a webserver answering
 a single query, then `!P` is the webserver answering queries indefinitely. 
 `P+Q` denotes external non-deterministic choice, which can be used to model
-alternatives. In that sense, it is closer to a conditional than to two
+alternatives. In that sense, it is closer to a condition rather than two
 processes running in parallel: `P+Q` reduces to 
-*either* `P'` or `Q'`, the folow-up processes or `P` or `Q` respectively.
+*either* `P'` or `Q'`, the follow-up processes or `P` or `Q` respectively.
 
 
 ### Manipulation of global state
 
-The remaining constructs are used to manipulate state. 
+The remaining constructs are used to manipulate global state. 
 
-- The construct `insert m,n; P` binds the value `n` to a key `m`. Successive
+- The construct `insert m,n; P` binds the value `n` to the key `m`. Successive
   inserts overwrite this binding. The store is global, but as `m` is a term, it
-  can be used to define name space. E.g., if a webserver is identified by
+  can be used to define name spaces. E.g., if a webserver is identified by
   a name `w_id`, then it could prefix it's store as follows:
   `insert <'webservers',w_id,'store'>, data; P`. 
 - The construct `delete m; P` ‘undefines’ the binding.
@@ -98,8 +98,8 @@ Note also that the state-manipulation constructs `lookup x as v`, `insert x,y`
 and `delete x` manage state by emitting actions `IsIn(x,y')`, `Insert(x,y)` and
 `Delete(x)` and enforcing their proper semantics via restrictions. For example:
 an action `IsIn(x,y)`, which expresses a succesful lookup, requires that
-previously, and action `Insert(x,y)` occurred, and that in between, no other
-action `Insert(x,y')` or `Delete(x)` changed the global store at position `x`. Hence
+an action `Insert(x,y)` has occurred previously, and in between, no other
+`Insert(x,y')` or `Delete(x)` action has changed the global store at the position `x`. Hence,
 the global store is distinct from the set of facts in the current state.
 
 ## Syntactic sugar
