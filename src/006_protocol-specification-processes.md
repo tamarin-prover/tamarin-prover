@@ -60,7 +60,7 @@ We can now come to the operations modelling parallelism.
 `P | Q` is the parallel execution of processes
 P and Q. This is used, e.g., to model two participants in a protocol.
 
-`!P` is the replications of P, which allows an unbounded number of sessions in
+`!P` is the replication of P, which allows an unbounded number of sessions in
 protocol executions. It can be thought of to be an infinite number of processes
 `P | .. | P` running in parallel. If `P` describes a webserver answering
 a single query, then `!P` is the webserver answering queries indefinitely. 
