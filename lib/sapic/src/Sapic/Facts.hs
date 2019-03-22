@@ -123,6 +123,11 @@ varProgress p = LVar n s i
           s = LSortFresh
           i = 0
 
+varMsgId p = LVar n s i
+    where n = "mid_" ++ prettyPosition p
+          s = LSortFresh
+          i = 0
+
 -- actionToFact :: TransAction -> Fact t
 actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Not implemented yet: progress
@@ -134,7 +139,7 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Listen ProcessPosition LVar
   -- | Receive ProcessPosition SapicTerm
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varProgress p ,t]
-actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varProgress p ,t]
+actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
 actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
