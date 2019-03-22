@@ -19,7 +19,7 @@ and formula = Atom of atom
 and action = 
     InitEmpty
   | InitId
-  | InitId
+  | StopId
   | EventEmpty
   | EventId
   | Predicate of position * (VarSet.t) * formula
