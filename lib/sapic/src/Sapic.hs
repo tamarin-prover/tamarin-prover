@@ -58,11 +58,12 @@ translate th = case theoryProcesses th of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
+    reliChannels = L.get transReliable ops
     trans = if L.get transProgress ops then
-                progresstrans (L.get transReliable ops)
+                progresstrans (reliChannels)
             else
-                noprogresstrans
-    basetrans = if L.get transReliable ops then
+                noprogresstrans (reliChannels)
+    basetrans = if reliChannels then
                     BT.reliableChannelTrans (BT.baseTrans)
                   else
                     BT.baseTrans
@@ -86,12 +87,28 @@ translate th = case theoryProcesses th of
   -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
   -- predicate_restrictions ^ lemmas_tamarin
   -- ^ "end"
+getInitRule:: AnProcess ann -> AnnotatedRule ann
+getInitRule anP = initrule
+  where
+        initrule = AnnotatedRule (Just "Init") anP [] l a r 0
+        l = []
+        a = [InitEmpty ]
+        r = [State LState [] S.empty]
 
+getMsgId :: AnProcess ann -> AnnotatedRule ann
+getMsgId anP = messageidrule
+  where
+        messageidrule = AnnotatedRule (Just "MessageID-rule") anP []
+                    [ Fr  $ varMID [] ] -- prem
+                    []                -- act
+                    [ MessageIDReceiver [], MessageIDSender [] ]
+                    0
 -- | Standard translation without progress:
 -- | use gen and basetranslation and add a simple Init rule.
 noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
                     Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                   (ann
+                    Bool
+                    ->(ann
                     -> ProcessPosition
                     -> S.Set a
                     -> m (t1 ([TransFact], [TransAction], [TransFact])),
@@ -107,14 +124,14 @@ noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
                     -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
                           S.Set a))
                    -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-noprogresstrans basetrans anP = do
+noprogresstrans msgIDbool basetrans anP = do
     msrs <- gen basetrans anP [] S.empty
-    return $ map toRule (initrule:msrs)
+    return $ case msgIDbool of
+      True -> map (toRule) (initrule:messageidrule:msrs)
+      _ -> map (toRule) (initrule:msrs)
     where
-          initrule = AnnotatedRule (Just "Init") anP [] l a r 0
-          l = []
-          a = [InitEmpty ]
-          r = [State LState [] S.empty]
+          initrule = getInitRule anP
+          messageidrule = getMsgId anP
 
 -- | translation with progress:
 -- | use gen and basetranslation, but
@@ -146,17 +163,10 @@ progresstrans msgIDbool basetrans anP = do
     return $ case msgIDbool of
       True -> map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)
       _ -> map (toRule . addProgressFrom . addProgressTo) (initrule:msrs)
-      --return $ map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)  
+      --return $ map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)
     where
-          initrule = AnnotatedRule (Just "Init") anP [] l a r 0
-          l = []
-          a = [InitEmpty ]
-          r = [State LState [] S.empty]
-          messageidrule = AnnotatedRule (Just "MessageID-rule") anP []
-                      [ Fr  $ varMID [] ] -- prem
-                      []                -- act
-                      [ MessageIDReceiver [], MessageIDSender [] ]
-                      0
+          initrule = getInitRule anP
+          messageidrule = getMsgId anP
           x =  LVar "x" LSortFresh 0
           map_act_cond p f anrule = -- applys f to (l,a,r) if p prems concls holds
                 if p (prems anrule) (concs anrule) then
@@ -167,7 +177,7 @@ progresstrans msgIDbool basetrans anP = do
           stateInPrems prems _ = any isNonSemiState prems  --- TODO need to incorporate progress function
           stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function, look at children of positon
           addProgressTo = map_act_cond stateInPrems  -- corresponds to step2 (child[12] p) in Firsttranslation.ml
-                            (\p l a r -> 
+                            (\p l a r ->
                             let q' = p -- TODO q' should be find_from pf p' for p' direct child of p
                             in
                             ( l
@@ -175,7 +185,7 @@ progresstrans msgIDbool basetrans anP = do
                             , r
                             ))
           addProgressFrom = map_act_cond stateInConcls  -- corresponds to step3 p in Firsttranslation.ml
-                            (\p l a r -> 
+                            (\p l a r ->
                             ( Fr(varProgress p):l
                             , ProgressFrom p:a
                             , map (addVarToState $ varProgress p) r
