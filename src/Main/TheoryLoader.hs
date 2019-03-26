@@ -30,7 +30,7 @@ module Main.TheoryLoader (
   , loadClosedDiffThyString
   , reportOnClosedDiffThyStringWellformedness
 
-  
+
   -- ** Constructing automatic provers
   , constructAutoProver
   , constructAutoDiffProver
@@ -43,7 +43,7 @@ module Main.TheoryLoader (
   ) where
 
 -- import           Debug.Trace
-  
+
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
@@ -133,7 +133,7 @@ loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
 -- | Load an open theory from a file.
-loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
+loadOpenThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
     thy' <-  Sapic.translate thy
@@ -194,7 +194,7 @@ loadClosedDiffThyWfReport as inFile = do
     closeDiffThy as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
-loadClosedThyString as input = 
+loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
@@ -246,7 +246,7 @@ reportOnClosedDiffThyStringWellformedness as input = do
             return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
 -- | Close a theory according to arguments.
-closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
+closeThy :: Arguments -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as thy0 = do
   thy1 <- addMessageDeductionRuleVariants thy0
   -- FIXME: wf-check is at the wrong position here. Needs to be more
@@ -265,7 +265,7 @@ closeThy as thy0 = do
 
       -- wellformedness check
       -----------------------
-      wfCheck :: OpenTheory -> OpenTheory
+      wfCheck :: OpenTranslatedTheory -> OpenTranslatedTheory
       wfCheck thy =
         noteWellformedness
           (checkWellformedness thy) thy (elem "quit-on-warning" (quitOnWarning as))
@@ -282,7 +282,7 @@ closeThy as thy0 = do
       prover | argExists "prove" as =
                   replaceSorryProver $ runAutoProver $ constructAutoProver as
              | otherwise            = mempty
-             
+
 -- | Close a diff theory according to arguments.
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
@@ -332,7 +332,7 @@ closeDiffThy as thy0 = do
       prover | argExists "prove" as =
                   replaceSorryProver $ runAutoProver $ constructAutoProver as
              | otherwise            = mempty
-             
+
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
@@ -431,7 +431,7 @@ mkBpIntruderVariants msig =
 -- | Add the variants of the message deduction rule. Uses built-in cached
 -- files for the variants of the message deduction rules for Diffie-Hellman
 -- exponentiation and Bilinear-Pairing.
-addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+addMessageDeductionRuleVariants :: OpenTranslatedTheory -> IO OpenTranslatedTheory
                                 -- TODO (SM): drop use of IO here.
 addMessageDeductionRuleVariants thy0
   | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
@@ -443,9 +443,9 @@ addMessageDeductionRuleVariants thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
-    thy          = addIntrRuleACs rules thy0
+    thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = do
-        return $ addIntrRuleACs (concatMap ($ msig) mkRuless) thy
+        return $ addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message

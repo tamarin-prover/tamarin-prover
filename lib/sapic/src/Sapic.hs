@@ -39,16 +39,16 @@ import Theory.Text.Pretty
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              Monoid (m (AnProcess ProcessAnnotation)) =>
              OpenTheory
-             -> m OpenTheory
+             -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
-      []  -> return th
+      []  -> return (removeSapicItems th)
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
                 msr <- trans basetrans an_proc
                 th' <- foldM liftedAddProtoRule th msr
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th'' <- foldM liftedAddRestriction th' sapic_restrictions
-                return th''
+                return (removeSapicItems th'')
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
