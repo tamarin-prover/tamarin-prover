@@ -65,11 +65,7 @@ import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
-
-import           Control.Exception
 import           Sapic
-import           Sapic.Exceptions
-
 import           Main.Console
 import           Main.Environment
 
