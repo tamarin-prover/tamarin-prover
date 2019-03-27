@@ -9,8 +9,9 @@
 -- Compute a functiont hat maps positions in a process to where they will need
 -- to move to ensure local progress whereever possible 
 module Sapic.ProgressFunction (
-    from
-   ,pi
+    pfFrom
+   ,pf
+   -- ,pfRange
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -82,7 +83,7 @@ next0 ProcessComb{} = S.fromList [[1],[2]]
 --     | otherwise = Nothing
 -- blocking0 _ =  Nothing
 
-from proc = from' proc True
+pfFrom proc = from' proc True
     where
     from' proc b 
         | ProcessNull _ <- proc  = return S.empty
@@ -113,9 +114,10 @@ combine_with y x_i set1 = S.fold (\y_i set2 -> (x_i `S.union` y_i) `S.insert` se
 -- | Given a process p, find set of set of positions describing the conjunctive
 -- normal form of the positions that    we need to go to.
 -- For example: {{p1},{p2,p3}} means we need to go to p1 AND to either p2 or p3.
+-- Correspond to f in Def. 15
 -- TODO This is massively refactored code. Remove stuff that's commented out once everything wors.
-pi :: (Show ann, MonadCatch m, Typeable ann) => (AnProcess ann) -> m (S.Set (S.Set ProcessPosition))
-pi  p -- corresponds to f within generate progressfunction.ml
+f :: (Show ann, MonadCatch m, Typeable ann) => (AnProcess ann) -> m (S.Set (S.Set ProcessPosition))
+f  p -- corresponds to f within generate progressfunction.ml
     | blocking p = return $ ss []
     | (ProcessComb Parallel  _ pl pr) <- p =  do
                 ll <- f pl
@@ -155,8 +157,18 @@ pi  p -- corresponds to f within generate progressfunction.ml
     -- | (ProcessAction _ _ p')  <- p = do l' <- f p'
     --                                     return $ [1] <..> l'
     where ss x = S.singleton ( S.singleton x) -- shortcut for singleton set of singleton set
-          f  =  pi  -- shortcut for recursive call
           combineWithRecursive  acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
                         proc'   <- (processAt p pos)
                         lpos <- f proc'
                         return $ combine (pos <..> lpos) acc 
+
+-- | Compute progress function of proc
+pf proc pos = do proc' <- processAt proc pos
+                 res  <- f proc'
+                 return $ pos <..> res
+
+-- pfRange :: forall a ann (m :: * -> *).
+-- (Ord a, Floating (AnProcess ann -> S.Set [Int] -> m (S.Set a)),
+-- Show ann, Typeable ann, Monad m) =>
+-- AnProcess ann -> m (S.Set a)
+-- pfRange proc = foldM (\ acc pos -> (S.union acc) <$> (pi proc pos)) S.empty (pfFrom proc)
