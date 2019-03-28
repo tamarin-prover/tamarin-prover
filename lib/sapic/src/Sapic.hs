@@ -45,7 +45,7 @@ translate th = case theoryProcesses th of
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
                 msr <- trans basetrans an_proc
-                th' <- foldM liftedAddProtoRule th msr
+                th' <- foldM liftedAddProtoRule th (initialRules an_proc ++  msr)
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th'' <- foldM liftedAddRestriction th' sapic_restrictions
                 return (removeSapicItems th'')
@@ -58,12 +58,16 @@ translate th = case theoryProcesses th of
         Just thy' -> return thy'
         Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
-    reliChannels = L.get transReliable ops
+    addIf True l  = l
+    addIf False _ = []
+    initialRules anP  =  map toRule $ 
+                         [getInitRule anP]
+                         ++ addIf (L.get transReliable ops) [getMsgId anP]
     trans = if L.get transProgress ops then
-                progresstrans (reliChannels)
+                progresstrans 
             else
-                noprogresstrans (reliChannels)
-    basetrans = if reliChannels then
+                noprogresstrans 
+    basetrans = if L.get transReliable ops then
                     BT.reliableChannelTrans (BT.baseTrans)
                   else
                     BT.baseTrans
@@ -107,8 +111,7 @@ getMsgId anP = messageidrule
 -- | use gen and basetranslation and add a simple Init rule.
 noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
                     Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                    Bool
-                    ->(ann
+                    (ann
                     -> ProcessPosition
                     -> S.Set a
                     -> m (t1 ([TransFact], [TransAction], [TransFact])),
@@ -124,14 +127,9 @@ noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
                     -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
                           S.Set a))
                    -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-noprogresstrans msgIDbool basetrans anP = do
+noprogresstrans basetrans anP = do
     msrs <- gen basetrans anP [] S.empty
-    return $ case msgIDbool of
-      True -> map (toRule) (initrule:messageidrule:msrs)
-      _ -> map (toRule) (initrule:msrs)
-    where
-          initrule = getInitRule anP
-          messageidrule = getMsgId anP
+    return $ map toRule msrs
 
 -- | translation with progress:
 -- | use gen and basetranslation, but
@@ -140,8 +138,7 @@ noprogresstrans msgIDbool basetrans anP = do
 -- | also adds a message id rule
 progresstrans :: (Show ann, MonadCatch m, Typeable ann,
                   Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                  Bool
-                  ->(ann
+                  (ann
                   -> ProcessPosition
                   -> S.Set a
                   -> m (t1 ([TransFact], [TransAction], [TransFact])),
@@ -157,24 +154,19 @@ progresstrans :: (Show ann, MonadCatch m, Typeable ann,
                   -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
                         S.Set a))
                  -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-progresstrans msgIDbool basetrans anP = do
+progresstrans basetrans anP = do
     -- pf <- .. generate progress function
     msrs <- gen basetrans anP [] S.empty
-    return $ case msgIDbool of
-      True -> map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)
-      _ -> map (toRule . addProgressFrom . addProgressTo) (initrule:msrs)
-      --return $ map (toRule . addProgressFrom . addProgressTo) (initrule:messageidrule:msrs)
+    return $ map (toRule . addProgressFrom . addProgressTo) msrs
     where
-          initrule = getInitRule anP
-          messageidrule = getMsgId anP
-          x =  LVar "x" LSortFresh 0
+          -- x =  LVar "x" LSortFresh 0
           map_act_cond p f anrule = -- applys f to (l,a,r) if p prems concls holds
                 if p (prems anrule) (concs anrule) then
                     let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
                     anrule { prems = l', acts = a', concs = r'  }
                 else
                     anrule
-          stateInPrems prems _ = any isNonSemiState prems  --- TODO need to incorporate progress function
+          stateInPrems prms _ = any isNonSemiState prms  --- TODO need to incorporate progress function
           stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function, look at children of positon
           addProgressTo = map_act_cond stateInPrems  -- corresponds to step2 (child[12] p) in Firsttranslation.ml
                             (\p l a r ->
@@ -200,20 +192,23 @@ progresstrans msgIDbool basetrans anP = do
 -- |      annotated process
 -- |      current position in this process
 -- |      tildex, the set of variables in the state
--- gen :: (Typeable ann, Show ann, MonadCatch m ) =>
---         (ann
---          -> ProcessPosition -> t -> [([TransFact], [TransAction], [TransFact])],
---          SapicAction
---          -> ann
---          -> ProcessPosition
---          -> t
---          -> ([([TransFact], [TransAction], [TransFact])], t),
---          ProcessCombinator
---          -> ann
---          -> ProcessPosition
---          -> t
---          -> ([([TransFact], [TransAction], [TransFact])], t, t))
---         -> AnProcess ann -> ProcessPosition -> t -> m ( [AnnotatedRule ann])
+gen :: (Show ann, MonadCatch m, Typeable ann, Foldable t1,
+        Foldable t2, Foldable t3) =>
+       (ann
+        -> ProcessPosition
+        -> t4
+        -> m (t1 ([TransFact], [TransAction], [TransFact])),
+        SapicAction
+        -> ann
+        -> ProcessPosition
+        -> t4
+        -> m (t3 ([TransFact], [TransAction], [TransFact]), t4),
+        ProcessCombinator
+        -> ann
+        -> ProcessPosition
+        -> t4
+        -> m (t2 ([TransFact], [TransAction], [TransFact]), t4, t4))
+       -> AnProcess ann -> [Int] -> t4 -> m [AnnotatedRule ann]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
