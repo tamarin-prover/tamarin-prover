@@ -158,6 +158,21 @@ baseTransComb c _ p tildex
                         :: SapicException AnnotatedProcess)
 
 
+reliableChannelTrans :: MonadThrow m =>
+                        (a,
+                         SapicAction
+                         -> t
+                         -> ProcessPosition
+                         -> Set LVar
+                         -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
+                         c)
+                        -> (a,
+                            SapicAction
+                            -> t
+                            -> ProcessPosition
+                            -> Set LVar
+                            -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
+                            c)
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
         tAct' ac an p tx   -- TODO test if it does what it should do
@@ -194,5 +209,5 @@ reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
             | otherwise = tAct ac an p tx -- otherwise case: call tAct
             where
                 def_state = State LState p tx
-                def_state1 tx = State LState (p++[1]) tx
+                def_state1 tx' = State LState (p++[1]) tx'
                 freeset = fromList . frees

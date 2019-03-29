@@ -498,11 +498,6 @@ fatom = asum
         f  <- iff
         return $ foldr (hinted q) f vs
 
-    hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-    hinted f v@(LVar n s _) = f (n,s) v
-
-
-
 -- | Parse a negation.
 negation :: Parser LNFormula
 negation = opLNot *> (Not <$> fatom) <|> fatom

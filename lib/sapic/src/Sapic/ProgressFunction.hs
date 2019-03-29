@@ -13,6 +13,7 @@ module Sapic.ProgressFunction (
    ,pf
    ,ProgressFunction
    ,pfRange
+   ,pfInv
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -29,6 +30,7 @@ import Sapic.ProcessUtils
 -- import Theory.Model.Rule
 -- import Data.Typeable
 import qualified Data.Set                   as S
+import qualified Data.List                   as L
 -- import Control.Monad.Trans.FastFresh
 import qualified Data.Map.Strict as M
 
@@ -180,11 +182,21 @@ pf proc pos = do proc' <- processAt proc pos
 flatten :: Ord a =>  S.Set (S.Set a) -> S.Set a
 flatten = S.foldr S.union S.empty 
 
-pfRange :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set [Int])
-pfRange proc = do 
+pfRange' :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set (ProcessPosition, ProcessPosition))
+pfRange' proc = do 
                    froms <- pfFrom proc
                    res   <- foldM  mapFlat S.empty froms
                    return res
                    where
                       mapFlat acc pos = do res <- flatten <$> pf proc pos 
-                                           return (S.union acc res)
+                                           return (acc `S.union` S.map (\r -> (r,pos)) res)
+
+pfRange :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set ProcessPosition)
+pfRange proc = do 
+                  set <- pfRange' proc
+                  return $ S.map fst  set
+
+pfInv :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (ProcessPosition -> Maybe ProcessPosition)
+pfInv proc = do
+                  set <- pfRange' proc
+                  return $ \x -> snd <$> L.find (\(to,_) -> to == x ) (S.toList set)

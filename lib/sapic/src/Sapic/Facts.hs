@@ -96,9 +96,11 @@ isSemiState PState = False
 isSemiState LSemiState = True
 isSemiState PSemiState = True
 
+isNonSemiState :: TransFact -> Bool
 isNonSemiState (State kind _ _) = not $ isSemiState kind
 isNonSemiState _ = False
 
+addVarToState :: LVar -> TransFact -> TransFact
 addVarToState v' (State kind pos vs)  = State kind pos (v' `S.insert` vs)
 addVarToState _ x = x
 
@@ -109,26 +111,36 @@ multiplicity PState = Persistent
 multiplicity PSemiState = Persistent
 
 -- | map f to the name of a fact
+mapFactName :: (String -> String) -> Fact t -> Fact t
 mapFactName f fact =  fact { factTag = f' (factTag fact) }
     where f' (ProtoFact m s i) = ProtoFact m (f s) i
           f' ft = ft
 
 -- Optimisation: have a diffent fact name for every (unique) locking variable
-lockFactName v = "Lock_"++ (show $ lvarIdx v)
-unlockFactName v = "Unlock_"++ (show $ lvarIdx v)
+lockFactName :: LVar -> String
+lockFactName v = "Lock_"++ show (lvarIdx v)
+
+unlockFactName :: LVar -> String
+unlockFactName v = "Unlock_" ++ show (lvarIdx v)
+
+lockPubTerm :: LVar -> NTerm v
 lockPubTerm = pubTerm . show . lvarIdx
 
+
+varProgress :: [Int] -> LVar
 varProgress p = LVar n s i
     where n = "prog_" ++ prettyPosition p
           s = LSortFresh
           i = 0
 
+varMsgId :: [Int] -> LVar
 varMsgId p = LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh
           i = 0
 
 -- actionToFact :: TransAction -> Fact t
+actionToFact :: TransAction -> Fact (VTerm Name LVar)
 actionToFact InitEmpty = protoFact Linear "Init" []
   -- | Not implemented yet: progress
   -- | StopId
@@ -152,6 +164,7 @@ actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTe
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,t,varTerm v]
 actionToFact (ProgressFrom p) = protoFact Linear "ProgressFrom" [varTerm $ varProgress p]
+actionToFact (ProgressTo p q) = protoFact Linear "ProgressTo" $ map (varTerm . varProgress) [p,q]
 actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.

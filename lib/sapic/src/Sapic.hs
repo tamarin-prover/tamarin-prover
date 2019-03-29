@@ -91,6 +91,7 @@ translate th = case theoryProcesses th of
   -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
   -- predicate_restrictions ^ lemmas_tamarin
   -- ^ "end"
+
 getInitRule:: AnProcess ann -> AnnotatedRule ann
 getInitRule anP = initrule
   where
@@ -155,33 +156,39 @@ progresstrans :: (Show ann, MonadCatch m, Typeable ann,
                         S.Set a))
                  -> AnProcess ann -> m [Rule ProtoRuleEInfo]
 progresstrans basetrans anP = do
-    -- pf <- .. generate progress function
     msrs <- gen basetrans anP [] S.empty
-    return $ map (toRule . addProgressFrom . addProgressTo) msrs
+    dom_pf <- pfFrom anP
+    inv_pf <- pfInv anP
+    return $ map (toRule . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) msrs
     where
           -- x =  LVar "x" LSortFresh 0
-          map_act_cond p f anrule = -- applys f to (l,a,r) if p prems concls holds
-                if p (prems anrule) (concs anrule) then
-                    let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
+          map_act f anrule = let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
                     anrule { prems = l', acts = a', concs = r'  }
-                else
-                    anrule
-          stateInPrems prms _ = any isNonSemiState prms  --- TODO need to incorporate progress function
-          stateInConcls _ concls = any isNonSemiState concls --- TODO need to incorporate progress function, look at children of positon
-          addProgressTo = map_act_cond stateInPrems  -- corresponds to step2 (child[12] p) in Firsttranslation.ml
-                            (\p l a r ->
-                            let q' = p -- TODO q' should be find_from pf p' for p' direct child of p
-                            in
+          stateInPrems  = any isNonSemiState . prems
+          addProgressTo' q p l a r  =
                             ( l
-                            , ProgressTo p q':a
-                            , r
-                            ))
-          addProgressFrom = map_act_cond stateInConcls  -- corresponds to step3 p in Firsttranslation.ml
-                            (\p l a r ->
+                            , ProgressTo p q:a
+                            , r)
+          addProgressTo inv anrule -- corresponds to step2 (child[12] p) in Firsttranslation.ml
+                                   -- if one of the direct childen of anrule is in the range of the pf
+                                   --  it has an inverse. We thus add ProgressTo to each such rule
+                                   --  that has the *old* state in the premise (we
+                                   --  don't want to move into Semistates too
+                                   --  early). ProgressTo is annotated with the
+                                   --  inverse of the child's position, for
+                                   --  verification speedup.
+            | stateInPrems anrule, Just q <- inv (rhs (position anrule)) = map_act (addProgressTo' q) anrule
+            | stateInPrems anrule, Just q <- inv (lhs (position anrule)) = map_act (addProgressTo' q) anrule
+            | otherwise                                                  = anrule
+          stateInConcls = any isNonSemiState . prems
+          addProgressFrom dom' anrule
+            | stateInConcls anrule,  (position anrule) `S.member` dom' =
+                    map_act (\p l a r ->
                             ( Fr(varProgress p):l
                             , ProgressFrom p:a
                             , map (addVarToState $ varProgress p) r
-                            ))
+                            )) anrule
+            | otherwise  = anrule
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and

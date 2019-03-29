@@ -11,20 +11,24 @@ module Sapic.Restrictions (
       generateSapicRestrictions
     , RestrictionOptions(..)
 ) where
-import qualified  Data.Monoid as M
-import Data.Maybe
-import Data.Typeable
-import Control.Exception
-import Control.Monad.Fresh
-import Control.Monad.Catch
-import qualified Data.Traversable as T
-import qualified Extension.Data.Label                as L
-import Sapic.Exceptions
-import Theory 
-import Theory.Sapic
-import Theory.Text.Parser
-import Sapic.Annotation
-import Text.RawString.QQ
+import           Control.Exception
+import           Control.Monad.Catch
+import           Control.Monad.Fresh
+import qualified Data.List            as List
+import           Data.Maybe
+import qualified Data.Monoid          as M
+import qualified Data.Set             as S
+import qualified Data.Traversable     as T
+import           Data.Typeable
+import qualified Extension.Data.Label as L
+import           Sapic.Annotation
+import           Sapic.Exceptions
+import           Text.RawString.QQ
+import           Theory
+import           Theory.Sapic
+import           Theory.Text.Parser
+import           Sapic.ProgressFunction
+import           Sapic.Facts
 
 -- | Options passed to the restriction generator:
 data RestrictionOptions = RestrictionOptions {
@@ -112,6 +116,77 @@ resNotEq = parseRestriction [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
+
+flattenList :: Eq a0 => [[a0]] -> [a0]
+flattenList = foldr List.union []
+
+flattenSet :: Ord a =>  S.Set (S.Set a) -> S.Set a
+flattenSet = S.foldr S.union S.empty 
+
+-- generateProgressRestrictions anp = do
+--     dom_pf <- pfFrom anp
+--     pf <- pf anp
+--     return $ (flattenList . S.toList . (S.map (restrictions pf))) dom_pf
+--     where 
+--         restrictions pf pos = -- generate set of restrictions for given "from" position
+--                         -- pf pos gives set of set position in conjunctive normal form
+--                         -- we produce one restriction for each set of positions in it
+--             map (restriction pos) (S.toList $ pf pos)
+--         restriction pos tos =  -- produce restriction to go to one of the tos once pos is reached
+--             Restriction name formula
+--             where
+--                 name = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
+--                 formula = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion
+--                 pvar = Free $ varProgress pos
+--                 -- pvar = ("prog", LSortMsg)
+--                 -- t1var = ("t1", LSortNode)
+--                 -- t2var = ("t2", LSortNode)
+--                 t1var = Free $ LVar "t" LSortNode 1
+--                 t2var = Free $ LVar "t" LSortNode 2
+--                 antecedent = Ato $ Action (varTerm t1var) $ actionToFact' (ProgressFrom pos)
+--                 conclusion = bigOr $ map progressTo $ S.toList tos
+--                 bigOr [to] = to
+--                 bigOr (to:tos) = to .&&. bigOr tos 
+--                 bigOr []   = TF False -- This case should never occur
+--                 progressTo to = hinted exists t2var $ Ato $ Action (varTerm t2var) $ actionToFact' $ ProgressTo pos to
+--                 hint = LSortMsg
+--                 actionToFact' = map (\v -> actionToFact 
+            
+
+-- let generate_progress_restrictions anP =
+--   let pf = Progressfunction.generate anP in
+--   let rec big_or = function 
+--                 | [f] -> f
+--                 | f::fl -> Or(f,big_or fl)
+--                 | [] -> raise (ImplementationError "There should be at least one to position for every from.")
+--   in
+--   let lemma a bset = 
+--     let a'= Position.pos2string a 
+--     in 
+--     let pvar = "p "
+--     in
+--     let blist = (PSet.elements bset)
+--     in
+--     let progress_to =
+--       (* List.map (fun p -> (sprintf "(Ex #t2. ProgressTo_%s(%s)@t2)" (pos2string p) pvar)) blist *)
+--         List.map (fun p -> (Ex ( (VarSet.of_list [Temp "t2"]), 
+--                             Atom ( At (Action("ProgressTo_"^(pos2string p),[Var (Msg pvar)]),Temp "t2")))))
+--                   blist
+--     in
+--     Restriction ( (sprintf "progress_%s_to_%s" a' (rule_name_part)),
+--                  All (VarSet.of_list [Msg pvar; Temp "t1"],
+--                   Imp( Atom ( At (Action("ProgressFrom_"^a',[Var (Msg pvar)]),Temp "t1")),
+--                        (big_or progress_to))))
+--   in
+--   (* let print_tosetset a bsetset = *) 
+
+--   (*   PSetSet.fold (fun bset s -> (print_toset a bset) ^ s) bsetset "" *)
+--   (* in *)
+--   (* (PMap.fold (fun a bsetset s -> (print_tosetset a bsetset) ^ s) pf "") *)
+--   let lemmas a bsetset = List.map (lemma a) (PSetSet.elements bsetset) in
+--         List.flatten (PMap.fold (fun a bsetset s -> (lemmas a bsetset) :: s) pf [])
+
+
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
 generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction]
@@ -130,6 +205,8 @@ generateSapicRestrictions op anP =
         addIf (contains isEq) [resEq, resNotEq] 
         ++ 
         addIf (not $ hasAccountabilityLemmaWithControl op) [resSingleSession] 
+        -- ++ 
+        -- addIf (hasProgress op) [resSingleSession] 
     in
     do
         rest' <- mapM toEx rest
