@@ -297,7 +297,7 @@ nodeColorMap rules =
 -- commented out to remove the redundant pattern compiler warning. If more are added,
 -- the second line can be uncommented.
     colorAttr (RuleColor _) = True
---    colorAttr _             = False
+    colorAttr _             = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational

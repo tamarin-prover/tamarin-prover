@@ -476,6 +476,7 @@ data ProtoCauses = ProtoCauses
         { _VerdictPart    :: S.Set LVar
         , _Ref            :: String
         }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 type Verdict = [Causes]
 
@@ -489,6 +490,7 @@ data ProtoVerdictMapping =
         RefCase String LNFormula ProtoVerdict
         | Case LNFormula ProtoVerdict
         | Otherwise ProtoVerdict
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 type ProtoVerdictf = [ProtoVerdictMapping]
 
@@ -520,6 +522,7 @@ data AccKind =
       | Cases
       | ControlEquivalence
 --      | ControlSubset
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 -- | A lemma describes a property that holds in the context of a theory
