@@ -468,6 +468,32 @@ $(mkLabels [''Option])
 
 
 ------------------------------------------------------------------------------
+-- Verdict
+------------------------------------------------------------------------------
+type Causes = S.Set LVar
+
+data ProtoCauses = ProtoCauses
+        { _VerdictPart    :: S.Set LVar
+        , _Ref            :: String
+        }
+
+type Verdict = [Causes]
+
+type ProtoVerdict = [ProtoCauses]
+
+type VerdictMapping = (LNFormula,Verdict)
+
+type Verdictf = [VerdictMapping]
+
+data ProtoVerdictMapping =
+        RefCase String LNFormula ProtoVerdict
+        | Case LNFormula ProtoVerdict
+        | Otherwise ProtoVerdict
+
+type ProtoVerdictf = [ProtoVerdictMapping]
+
+
+------------------------------------------------------------------------------
 -- Lemmas
 ------------------------------------------------------------------------------
 
@@ -486,6 +512,15 @@ data LemmaAttribute =
 -- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
 data TraceQuantifier = ExistsTrace | AllTraces
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+
+-- | AccKind describe the different types of an accountabilty lemma_attr
+data AccKind =
+        Coarse
+      | Cases
+      | ControlEquivalence
+--      | ControlSubset
+
 
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
@@ -514,18 +549,19 @@ data DiffLemma p = DiffLemma
 $(mkLabels [''DiffLemma])
 
 
--- | An accountability Lemma describes a property that holds in the context
--- of a theory and some parties with a verdict function
---data AccLemma v p par = AccLemma
---       { _acName            :: String
---       , _acTraceQuantifier :: TraceQuantifier
---       , _acFormula         :: LNFormula
---       , _acAttributes      :: [LemmaAttribute]
---       , _acVerdict         :: v
---     , _acProof           :: p
---       , _acParties         :: par
---       }
---       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+-- | An accountability lemma describes an accountabilty property that holds in the context of a theory
+data AccLemma = AccLemma
+       { _aAccKind         :: AccKind
+       , _aName            :: String
+       , _aAttributes      :: [LemmaAttribute]
+       , _aProtoVerdictf   :: ProtoVerdictf
+       , _aFormula         :: LNFormula
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+$(mkLabels [''AccLemma])
+
+
 
 
 -- Instances
@@ -763,7 +799,7 @@ openTranslatedTheory thy =
       createNewThyItems :: [TheoryItem r p ()] -> [TheoryItem r p SapicElement]
       createNewThyItems [] = []
       createNewThyItems (x:xs) = addSapicElement(x) : createNewThyItems(xs)
-      addSapicElement :: TheoryItem r p () -> TheoryItem r p s
+      addSapicElement :: TheoryItem r p () -> TheoryItem r p SapicElement
       addSapicElement (RuleItem r) = (RuleItem r)
       addSapicElement (LemmaItem l) = (LemmaItem l)
       addSapicElement (RestrictionItem rl) = (RestrictionItem rl)
