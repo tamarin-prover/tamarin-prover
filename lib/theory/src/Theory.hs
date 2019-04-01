@@ -555,6 +555,7 @@ $(mkLabels [''DiffLemma])
 -- | An accountability lemma describes an accountabilty property that holds in the context of a theory
 data AccLemma = AccLemma
        { _aAccKind         :: AccKind
+       , _aTraceQuantifier :: TraceQuantifier
        , _aName            :: String
        , _aAttributes      :: [LemmaAttribute]
        , _aProtoVerdictf   :: ProtoVerdictf
@@ -666,6 +667,7 @@ type FormalComment = (String, String)
 data SapicElement=
       ProcessItem Process
       | ProcessDefItem ProcessDef
+      | AccLemmaItem AccLemma
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -833,11 +835,12 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
 
 -- fold a sapic item.
 foldSapicItem
-    :: (Process -> a) -> (ProcessDef -> a)
+    :: (Process -> a) -> (ProcessDef -> a) -> (AccLemma -> a)
     -> SapicElement -> a
-foldSapicItem fProcess fProcessDef i = case i of
-    ProcessItem     proc  -> fProcess proc
-    ProcessDefItem     pDef  -> fProcessDef pDef
+foldSapicItem fProcess fProcessDef fAccLemma i = case i of
+    ProcessItem     proc    -> fProcess proc
+    ProcessDefItem  pDef    -> fProcessDef pDef
+    AccLemmaItem    aLem    -> fAccLemma aLem
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -899,16 +902,21 @@ theoryLemmas =
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [Process]
-theoryProcesses = foldSapicItem return (const []) <=< sapicElements
+theoryProcesses = foldSapicItem return (const []) (const []) <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return <=< sapicElements
+theoryProcessDefs = foldSapicItem (const []) return (const []) <=< sapicElements
+  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
+
+-- | All AccLemmas definitions of a theory.
+theoryAccLemmas :: Theory sig c r p SapicElement -> [AccLemma]
+theoryAccLemmas = foldSapicItem (const []) (const []) return <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All process definitions of a theory.
-theoryPredicates :: Theory sig c r p SapicElement -> [Predicate]
+theoryPredicates :: Theory sig c r p s -> [Predicate]
 theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All restrictions of a theory.
@@ -967,8 +975,14 @@ addProcessDef pDef thy = do
     guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
     return $ modify thyItems (++ [SapicItem (ProcessDefItem pDef)]) thy
 
+-- | Add a new AccLemma  fails if AccLemma with the same name already exists
+addAccLemma :: AccLemma -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addAccLemma aLem thy = do
+    guard (isNothing $ lookupAccLemma (L.get aName aLem) thy)
+    return $ modify thyItems (++ [SapicItem (AccLemmaItem aLem)]) thy
+
 -- | Add a new process definition. fails if process with the same name already exists
-addPredicate :: Predicate -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addPredicate :: Predicate -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addPredicate pDef thy = do
     guard (isNothing $ lookupPredicate (L.get pFact pDef) thy)
     return $ modify thyItems (++ [PredicateItem pDef]) thy
@@ -1063,8 +1077,11 @@ lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the predicate with the fact name.
-lookupPredicate :: LNFact -> Theory sig c r p SapicElement -> Maybe (Predicate)
+lookupPredicate :: LNFact -> Theory sig c r p s -> Maybe (Predicate)
 lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
+
+lookupAccLemma :: String -> Theory sig c r p SapicElement -> Maybe (AccLemma)
+lookupAccLemma name = find ((name ==) . L.get aName) . theoryAccLemmas
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -1944,7 +1961,9 @@ emptyString :: HighlightDocument d => () -> d
 emptyString e = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement a = text ("TODO prettyPrint SapicItems")
+prettySapicElement a = case a of
+  ProcessDefItem pDef -> prettyProcessDef pDef
+  ProcessItem pro     -> prettyProcess pro
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
@@ -1957,6 +1976,44 @@ prettyProcess p = text (prettySapic p)
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
 prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
+
+prettyAccLemmaName :: HighlightDocument d => AccLemma -> d
+prettyAccLemmaName l = case L.get aAttributes l of
+      [] -> text (L.get aName l)
+      as -> text (L.get aName l) <->
+            (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
+  where
+    prettyLemmaAttribute SourceLemma        = text "sources"
+    prettyLemmaAttribute ReuseLemma         = text "reuse"
+    prettyLemmaAttribute InvariantLemma     = text "use_induction"
+    prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
+    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+    prettyLemmaAttribute LHSLemma           = text "left"
+    prettyLemmaAttribute RHSLemma           = text "right"
+
+prettyAccLemma :: HighlightDocument d => AccLemma -> d
+prettyAccLemma alem =
+    kwLemma <-> prettyAccLemmaName alem <> colon $-$
+    (nest 2 $
+      sep [ prettyTraceQuantifier $ L.get aTraceQuantifier alem
+          , doubleQuotes $ prettyLNFormula $ L.get aFormula alem
+          ]
+    )
+    $-$
+    ppLNFormulaGuarded (L.get aFormula alem)
+  where
+    ppLNFormulaGuarded fm = case formulaToGuarded fm of
+        Left err -> multiComment $
+            text "conversion to guarded formula failed:" $$
+            nest 2 err
+        Right gf -> case toSystemTraceQuantifier $ L.get aTraceQuantifier alem of
+          ExistsNoTrace -> multiComment
+            ( text "guarded formula characterizing all counter-examples:" $-$
+              doubleQuotes (prettyGuarded (gnot gf)) )
+          ExistsSomeTrace -> multiComment
+            ( text "guarded formula characterizing all satisfying traces:" $-$
+              doubleQuotes (prettyGuarded gf) )
+
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
