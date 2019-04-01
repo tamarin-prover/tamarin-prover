@@ -177,8 +177,8 @@ progresstrans basetrans anP = do
                                    --  early). ProgressTo is annotated with the
                                    --  inverse of the child's position, for
                                    --  verification speedup.
-            | stateInPrems anrule, Just q <- inv (rhs (position anrule)) = map_act (addProgressTo' q) anrule
-            | stateInPrems anrule, Just q <- inv (lhs (position anrule)) = map_act (addProgressTo' q) anrule
+            | stateInPrems anrule, Just q <- inv (rhsP (position anrule)) = map_act (addProgressTo' q) anrule
+            | stateInPrems anrule, Just q <- inv (lhsP (position anrule)) = map_act (addProgressTo' q) anrule
             | otherwise                                                  = anrule
           stateInConcls = any isNonSemiState . prems
           addProgressFrom dom' anrule

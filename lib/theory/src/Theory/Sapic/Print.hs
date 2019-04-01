@@ -26,8 +26,6 @@ module Theory.Sapic.Print (
     , prettySapicTopLevel
     , ProcessPosition
     , prettyPosition
-    , lhs
-    , rhs
 ) where
 
 import           Data.Binary

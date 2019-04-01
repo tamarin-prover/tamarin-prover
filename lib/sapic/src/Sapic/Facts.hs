@@ -127,13 +127,13 @@ lockPubTerm :: LVar -> NTerm v
 lockPubTerm = pubTerm . show . lvarIdx
 
 
-varProgress :: [Int] -> LVar
+varProgress :: ProcessPosition -> LVar
 varProgress p = LVar n s i
     where n = "prog_" ++ prettyPosition p
           s = LSortFresh
           i = 0
 
-varMsgId :: [Int] -> LVar
+varMsgId :: ProcessPosition -> LVar
 varMsgId p = LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh
@@ -168,7 +168,7 @@ actionToFact (ProgressTo p q) = protoFact Linear "ProgressTo" $ map (varTerm . v
 actionToFact (TamarinAct f) = f
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
-varMID :: [Int] -> LVar
+varMID :: ProcessPosition -> LVar
 varMID p = LVar n s i
     where n = "mid_" ++ prettyPosition p
           s = LSortFresh

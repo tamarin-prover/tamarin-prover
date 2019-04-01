@@ -23,8 +23,8 @@ module Theory.Sapic (
     , applyProcess
     , pfoldMap
     , ProcessPosition
-    , lhs
-    , rhs
+    , lhsP
+    , rhsP
     , prettySapic'
     , prettySapicAction'
     , prettySapicComb
@@ -105,11 +105,14 @@ data LetExceptions = CapturedEx CapturedTag LVar
     deriving (Typeable, Show, Exception)
     -- deriving (Typeable)
 
+prettyLetExceptions :: LetExceptions -> [Char]
 prettyLetExceptions (CapturedEx tag v) = "Problem with let expression. Variable "++ show v ++ " captured in " ++ pretty tag ++ ". Please rename." 
     where pretty CapturedIn = "input"
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
 
+applyProcessCombinatorError :: MonadThrow m => Subst Name LVar 
+            -> ProcessCombinator -> m ProcessCombinator
 applyProcessCombinatorError subst c 
         | (Lookup t v) <- c  = if v `elem` dom (subst) then 
                                   throwM $ CapturedEx CapturedLookup v
@@ -119,17 +122,19 @@ applyProcessCombinatorError subst c
 
 instance Apply SapicAction where
     apply subst ac 
-        | (New v) <- ac        = (New v)
-        | (ChIn  mt t) <- ac   = (ChIn (apply subst mt) t)
-        | (ChOut mt t) <- ac   = (ChOut (apply subst mt) (apply subst t))
-        | (Insert t1 t2) <- ac = (Insert (apply subst t1) (apply subst t2))
-        | (Delete t) <- ac     = (Delete (apply subst t))
-        | (Lock t) <- ac       = (Lock (apply subst t))
-        | (Unlock t) <- ac     = (Unlock (apply subst t))
-        | (Event f) <- ac      = (Event (apply subst f))
-        | (MSR (l,a,r)) <- ac  = (MSR (apply subst (l,a,r)))
+        | (New v) <- ac        = New v
+        | (ChIn  mt t) <- ac   = ChIn (apply subst mt) t
+        | (ChOut mt t) <- ac   = ChOut (apply subst mt) (apply subst t)
+        | (Insert t1 t2) <- ac = Insert (apply subst t1) (apply subst t2)
+        | (Delete t) <- ac     = Delete (apply subst t)
+        | (Lock t) <- ac       = Lock (apply subst t)
+        | (Unlock t) <- ac     = Unlock (apply subst t)
+        | (Event f) <- ac      = Event (apply subst f)
+        | (MSR (l,a,r)) <- ac  = MSR (apply subst (l,a,r))
         | Rep <- ac            = Rep
 
+applySapicActionError :: MonadThrow m =>
+    Subst Name LVar -> SapicAction -> m SapicAction
 applySapicActionError subst ac
         | (New v) <- ac =  if v `elem` dom subst then 
                                   throwM $ CapturedEx CapturedNew v
@@ -145,13 +150,14 @@ applySapicActionError subst ac
 
 instance Apply (AnProcess ann) where
 -- We are ignoring capturing here, use applyProcess below to get warnings.
-    apply subst (ProcessNull ann) = ProcessNull ann
+    apply _ (ProcessNull ann) = ProcessNull ann
     apply subst (ProcessComb c ann pl pr) =
                 ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
     apply subst (ProcessAction ac ann p') =
                 ProcessAction (apply subst ac) ann (apply subst p')
 
-applyProcess subst (ProcessNull ann) = return $ ProcessNull ann
+applyProcess :: MonadThrow m => Subst Name LVar -> AnProcess ann -> m (AnProcess ann)
+applyProcess _ (ProcessNull ann) = return $ ProcessNull ann
 applyProcess subst (ProcessComb c ann pl pr) = do
                 c' <- applyProcessCombinatorError subst c
                 pl' <- applyProcess subst pl
@@ -177,11 +183,11 @@ type Process = AnProcess ProcessAnnotation
 type ProcessPosition = [Int]
 
 -- | Positions are to be read left-to-right, 1 is left, 2 is right.
-lhs :: [Int] -> ProcessPosition
-lhs p = (p++[1]) :: ProcessPosition
+lhsP :: [Int] -> ProcessPosition
+lhsP p = (p++[1]) :: ProcessPosition
 
-rhs :: [Int] -> ProcessPosition
-rhs p = (p++[2]) :: ProcessPosition
+rhsP :: [Int] -> ProcessPosition
+rhsP p = (p++[2]) :: ProcessPosition
 -- rhs :: ProcessPosition = 2
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.

@@ -11,24 +11,21 @@ module Sapic.Restrictions (
       generateSapicRestrictions
     , RestrictionOptions(..)
 ) where
-import           Control.Exception
 import           Control.Monad.Catch
-import           Control.Monad.Fresh
-import qualified Data.List            as List
-import           Data.Maybe
-import qualified Data.Monoid          as M
-import qualified Data.Set             as S
-import qualified Data.Traversable     as T
+import qualified Data.List              as List
+import qualified Data.Monoid            as M
+import qualified Data.Set               as S
 import           Data.Typeable
-import qualified Extension.Data.Label as L
+import qualified Extension.Data.Label   as L
 import           Sapic.Annotation
 import           Sapic.Exceptions
+import           Sapic.Facts
+import           Sapic.ProgressFunction
+import           Text.Parsec.Error           
 import           Text.RawString.QQ
 import           Theory
 import           Theory.Sapic
 import           Theory.Text.Parser
-import           Sapic.ProgressFunction
-import           Sapic.Facts
 
 -- | Options passed to the restriction generator:
 data RestrictionOptions = RestrictionOptions {
@@ -42,9 +39,11 @@ data RestrictionOptions = RestrictionOptions {
 -- a hand-written string. It is possible that there are syntax arrors, in
 -- which case the translation should crash with the following error
 -- message.
+toEx :: (MonadThrow m, Show a1) => Either a1 a2 -> m a2
 toEx (Left  err) = throwM ( ImplementationError ( "Error parsing hard-coded restrictions: " ++ show err )::SapicException AnnotatedProcess)
 toEx (Right res ) = return res
 
+resSetIn :: Either Text.Parsec.Error.ParseError Restriction
 resSetIn = parseRestriction [r|restriction set_in: 
 "All x y #t3 . IsIn(x,y)@t3 ==>  
 (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
@@ -52,6 +51,7 @@ resSetIn = parseRestriction [r|restriction set_in:
 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
 )" |]
 
+resSetNotIn :: Either Text.Parsec.Error.ParseError Restriction
 resSetNotIn = parseRestriction [r|restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
@@ -59,23 +59,27 @@ resSetNotIn = parseRestriction [r|restriction set_notin:
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 |]
 
+resSetInNoDelete :: Either Text.Parsec.Error.ParseError Restriction
 resSetInNoDelete = parseRestriction [r|restriction set_in: 
 "All x y #t3 . IsIn(x,y)@t3 ==>  
 (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
 )" |]
 
+resSetNotInNoDelete :: Either Text.Parsec.Error.ParseError Restriction
 resSetNotInNoDelete = parseRestriction [r|restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
 |]
 
+resSingleSession :: Either Text.Parsec.Error.ParseError Restriction
 resSingleSession = parseRestriction [r|restrictionsingle_session: // for a single session
 "All #i #j. Init()@i & Init()@j ==> #i=#j"
 |]
 
 -- | Restriction for Locking. Note that LockPOS hardcodes positions that
 -- should be modified below.
+resLocking_l :: Either Text.Parsec.Error.ParseError Restriction
 resLocking_l  = parseRestriction [r|restriction locking:
 "All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
         ==> 
@@ -91,9 +95,10 @@ resLocking_l  = parseRestriction [r|restriction locking:
 -- | Produce locking lemma for variable v by instantiating resLocking_l 
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
+resLocking :: LVar -> Either Text.Parsec.Error.ParseError Restriction
 resLocking v =  case resLocking_l of
     Left l -> Left l
-    Right r -> Right $ mapName hardcode $ mapFormula (mapAtoms subst) r
+    Right f -> Right $ mapName hardcode $ mapFormula (mapAtoms subst) f
     where
         subst _ a 
             | (Action t f) <- a,
@@ -108,10 +113,13 @@ resLocking v =  case resLocking_l of
         mapFormula = L.modify rstrFormula
         mapName = L.modify rstrName
 
+resEq :: Either Text.Parsec.Error.ParseError Restriction
 resEq = parseRestriction [r|restriction predicate_eq:
 "All #i a b. Pred_Eq(a,b)@i ==> a = b"
 |]
 
+
+resNotEq :: Either Text.Parsec.Error.ParseError Restriction
 resNotEq = parseRestriction [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
@@ -123,34 +131,36 @@ flattenList = foldr List.union []
 flattenSet :: Ord a =>  S.Set (S.Set a) -> S.Set a
 flattenSet = S.foldr S.union S.empty 
 
--- generateProgressRestrictions anp = do
---     dom_pf <- pfFrom anp
---     pf <- pf anp
---     return $ (flattenList . S.toList . (S.map (restrictions pf))) dom_pf
---     where 
---         restrictions pf pos = -- generate set of restrictions for given "from" position
---                         -- pf pos gives set of set position in conjunctive normal form
---                         -- we produce one restriction for each set of positions in it
---             map (restriction pos) (S.toList $ pf pos)
---         restriction pos tos =  -- produce restriction to go to one of the tos once pos is reached
---             Restriction name formula
---             where
---                 name = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
---                 formula = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion
---                 pvar = Free $ varProgress pos
---                 -- pvar = ("prog", LSortMsg)
---                 -- t1var = ("t1", LSortNode)
---                 -- t2var = ("t2", LSortNode)
---                 t1var = Free $ LVar "t" LSortNode 1
---                 t2var = Free $ LVar "t" LSortNode 2
---                 antecedent = Ato $ Action (varTerm t1var) $ actionToFact' (ProgressFrom pos)
---                 conclusion = bigOr $ map progressTo $ S.toList tos
---                 bigOr [to] = to
---                 bigOr (to:tos) = to .&&. bigOr tos 
---                 bigOr []   = TF False -- This case should never occur
---                 progressTo to = hinted exists t2var $ Ato $ Action (varTerm t2var) $ actionToFact' $ ProgressTo pos to
---                 hint = LSortMsg
---                 actionToFact' = map (\v -> actionToFact 
+-- | Generate set of restrictions:  for a given "from" position
+-- | @pf anP pos@ gives set of set position in conjunctive normal form
+-- | we produce one restriction for each set of positions in it
+generateProgressRestrictions :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m [Restriction]
+generateProgressRestrictions anp = do
+    dom_pf <- pfFrom anp -- set of "from" positions
+    lss_to <- mapM (restriction) (S.toList dom_pf) -- list of set of sets of "to" positions
+    return $ flattenList $ lss_to
+    where 
+        restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
+            toss <- pf anp pos
+            restrL <- mapM (\tos -> return $ Restriction (name tos) (formula tos))  (S.toList toss)
+            -- return $ Restriction (name tos) (formula tos)
+            return restrL
+            where
+                name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
+                formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. (conclusion tos)
+                pvar = varProgress pos
+                -- pvar = ("prog", LSortMsg)
+                -- t1var = ("t1", LSortNode)
+                -- t2var = ("t2", LSortNode)
+                t1var = LVar "t" LSortNode 1
+                t2var = LVar "t" LSortNode 2
+                antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFact' (ProgressFrom pos)
+                conclusion tos = bigOr $ map progressTo $ S.toList tos
+                bigOr [to] = to
+                bigOr (to:tos) = to .&&. bigOr tos 
+                bigOr []   = TF False -- This case should never occur
+                progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFact' $ ProgressTo pos to
+                actionToFact' = fmap (fmap $ fmap (\v -> Free v)) . actionToFact 
             
 
 -- let generate_progress_restrictions anP =
@@ -189,7 +199,7 @@ flattenSet = S.foldr S.union S.empty
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction]
+generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction] 
 generateSapicRestrictions op anP = 
   let rest = 
        (if contains isLookup then

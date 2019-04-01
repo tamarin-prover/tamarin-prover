@@ -91,7 +91,7 @@ next0 ProcessComb{} = S.fromList [[1],[2]]
 --     | otherwise = Nothing
 -- blocking0 _ =  Nothing
 
-pfFrom :: (MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> m (S.Set [Int])
+pfFrom :: (MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> m (S.Set ProcessPosition)
 pfFrom process = from' process True
     where
     from' proc b 
@@ -174,7 +174,7 @@ f  p -- corresponds to f within generate progressfunction.ml
                         return $ combine (pos <..> lpos) acc 
 
 -- | Compute progress function of proc
-pf :: (Show ann, MonadCatch m, Typeable ann) => AnProcess ann -> ProcessPosition -> m (S.Set (S.Set [Int]))
+pf :: (Show ann, MonadCatch m, Typeable ann) => AnProcess ann -> ProcessPosition -> m (S.Set (S.Set ProcessPosition))
 pf proc pos = do proc' <- processAt proc pos
                  res  <- f proc'
                  return $ pos <..> res

@@ -76,6 +76,7 @@ instance Show (SapicException a) where
                    " are not bound in the process:"
                    ++
                    prettySapic pr
-    show (ProcessNotWellformed (WFReliable)) =
+    show (ProcessNotWellformed WFReliable) =
                    "If reliable channels are activated, processes should only contain in('r',m), out('r',m), in('c',m) or out('c',m) for communication."
+    show (TranslationError s) = "Error in the translation: "++ show s
 instance (Typeable a, Show a) => Exception (SapicException a)
