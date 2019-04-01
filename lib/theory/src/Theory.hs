@@ -555,7 +555,6 @@ $(mkLabels [''DiffLemma])
 -- | An accountability lemma describes an accountabilty property that holds in the context of a theory
 data AccLemma = AccLemma
        { _aAccKind         :: AccKind
-       , _aTraceQuantifier :: TraceQuantifier
        , _aName            :: String
        , _aAttributes      :: [LemmaAttribute]
        , _aProtoVerdictf   :: ProtoVerdictf
@@ -1995,24 +1994,9 @@ prettyAccLemma :: HighlightDocument d => AccLemma -> d
 prettyAccLemma alem =
     kwLemma <-> prettyAccLemmaName alem <> colon $-$
     (nest 2 $
-      sep [ prettyTraceQuantifier $ L.get aTraceQuantifier alem
-          , doubleQuotes $ prettyLNFormula $ L.get aFormula alem
+      sep [  doubleQuotes $ prettyLNFormula $ L.get aFormula alem
           ]
     )
-    $-$
-    ppLNFormulaGuarded (L.get aFormula alem)
-  where
-    ppLNFormulaGuarded fm = case formulaToGuarded fm of
-        Left err -> multiComment $
-            text "conversion to guarded formula failed:" $$
-            nest 2 err
-        Right gf -> case toSystemTraceQuantifier $ L.get aTraceQuantifier alem of
-          ExistsNoTrace -> multiComment
-            ( text "guarded formula characterizing all counter-examples:" $-$
-              doubleQuotes (prettyGuarded (gnot gf)) )
-          ExistsSomeTrace -> multiComment
-            ( text "guarded formula characterizing all satisfying traces:" $-$
-              doubleQuotes (prettyGuarded gf) )
 
 
 -- | Pretty print a diff theory.
