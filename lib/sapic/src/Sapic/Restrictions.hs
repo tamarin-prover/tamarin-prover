@@ -128,8 +128,8 @@ resNotEq = parseRestriction [r|restriction predicate_not_eq:
 flattenList :: Eq a0 => [[a0]] -> [a0]
 flattenList = foldr List.union []
 
-flattenSet :: Ord a =>  S.Set (S.Set a) -> S.Set a
-flattenSet = S.foldr S.union S.empty 
+-- flattenSet :: Ord a =>  S.Set (S.Set a) -> S.Set a
+-- flattenSet = S.foldr S.union S.empty 
 
 -- | Generate set of restrictions:  for a given "from" position
 -- | @pf anP pos@ gives set of set position in conjunctive normal form
@@ -199,7 +199,7 @@ generateProgressRestrictions anp = do
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-generateSapicRestrictions :: MonadThrow m => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction] 
+generateSapicRestrictions :: (MonadThrow m, MonadCatch m) => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction] 
 generateSapicRestrictions op anP = 
   let rest = 
        (if contains isLookup then
@@ -220,7 +220,11 @@ generateSapicRestrictions op anP =
     in
     do
         rest' <- mapM toEx rest
-        return rest'
+        list  <- if hasProgress op then
+                    generateProgressRestrictions anP
+                else
+                    return []
+        return $ rest' ++ list
     where
         addIf phi list = if phi then list else []
         contains f = M.getAny $ pfoldMap  (M.Any . f) anP

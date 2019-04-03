@@ -37,7 +37,7 @@ equations:
     /* fakepcs () */
     checkpcs(c, pk(s), pk(v), pk(ttp), fakepcs(pk(s), sk(v), pk(ttp), c)) = true
 
-options: progress
+options: translation-progress
 
 
   /* Taken from tamarin examples, quote:
