@@ -1082,7 +1082,7 @@ actionprocess thy=
                         _ <- opSeq
                         p <- actionprocess thy
                         return (ProcessAction s mempty p))
-            <|> try ( do  -- allow trailing actions (syntactic suguar for action; 0)
+            <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
                         s <- sapicAction 
                         return (ProcessAction s mempty (ProcessNull mempty)))
             <|> try (do   -- null process: terminating element
@@ -1094,6 +1094,13 @@ actionprocess thy=
                         a <- let p = checkProcess (BC.unpack i) thy in
                             (\x -> paddAnn x [BC.unpack i]) <$> p
                         return a 
+                        )
+            <|>    try  (do -- let expression parser
+                        subst <- letBlock
+                        p     <- process thy
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
                         )
             <|> do        -- parens parser
                         _ <- symbol "("
