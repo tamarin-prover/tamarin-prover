@@ -195,10 +195,10 @@ progresstrans basetrans anP = do
 -- | makes sure that tildex, list of variables in state is updated for the next
 -- | call. It also performs the substituion necessary for NDC
 -- | Input:
--- |      three-tuple of algoriths for translation of null processes, actions and combinators
--- |      annotated process
--- |      current position in this process
--- |      tildex, the set of variables in the state
+-- |      - three-tuple of algoriths for translation of null processes, actions and combinators
+-- |      - annotated process
+-- |      - current position in this process
+-- |      - tildex, the set of variables in the state
 gen :: (Show ann, MonadCatch m, Typeable ann, Foldable t1,
         Foldable t2, Foldable t3) =>
        (ann
@@ -224,7 +224,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
                 msrs <- trans_null ann p tildex
                 return $ mapToAnnotatedRule proc' msrs
             (ProcessComb NDC _ _ _) ->
-               let  subst p_new = map_prems (substStatePos p p_new) in
+               let  subst p_old = map_prems (substStatePos p_old p) in
                do
                    l <- gen trans anP ( p++[1] ) tildex
                    r <- gen trans anP (p++[2]) tildex
