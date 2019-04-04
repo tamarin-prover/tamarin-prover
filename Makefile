@@ -91,23 +91,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 
 # individual case studies
 case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies/csf12
-	mkdir -p case-studies/classic
-	mkdir -p case-studies/loops
-	mkdir -p case-studies/ake/bilinear
-	mkdir -p case-studies/ake/dh
-	mkdir -p case-studies/features/private_function_symbols
-	mkdir -p case-studies/features/multiset
-	mkdir -p case-studies/features/injectivity
-	mkdir -p case-studies/cav13
-	mkdir -p case-studies/related_work/AIF_Moedersheim_CCS10
-	mkdir -p case-studies/related_work/StatVerif_ARR_CSF11
-	mkdir -p case-studies/related_work/YubiSecure_KS_STM12
-	mkdir -p case-studies/related_work/TPM_DKRS_CSF11
-	mkdir -p case-studies/post17
-	mkdir -p case-studies/regression/trace
-	mkdir -p case-studies/csf18-xor
-	mkdir -p case-studies/features/xor/basicfunctionality
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -367,6 +351,7 @@ SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/chan
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
+# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
 
 #
 # statVerifLeftRight/stateverif_left_right.spthy \
