@@ -532,8 +532,8 @@ We say that a fact symbol `f` has *injective instances* with respect to a
 multiset rewriting system `R`, if there is no reachable state of
 the multiset rewriting system `R` with more than one instance of an `f`-fact
 with the same term as a first argument. Injective facts typically arise from
-modeling databases using linear facts. An example of an fact with injective
-instances, is the `Store`-fact in the following multiset rewriting system.
+modeling databases using linear facts. An example of a fact with injective
+instances is the `Store`-fact in the following multiset rewriting system.
 
 ```
   rule CreateKey: [ Fr(handle), Fr(key) ] --> [ Store(handle, key) ]
@@ -568,7 +568,7 @@ undecidable in general. We therefore compute an under-approximation to this
 set using the following simple heuristic. A fact tag is guaranteed to have
 injective instance, if
 
-1. the fact-symbol is linear,
+1. the fact-symbol is linear, and
 2. every introduction of such a fact is protected by a `Fr`-fact of the first term, and
 3. every rule has at most one copy of this fact-tag in the conclusion and the first term arguments agree.
 
