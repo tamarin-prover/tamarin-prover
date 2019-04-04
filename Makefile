@@ -354,10 +354,13 @@ MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spt
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
+# Yubikey/Yubikey.spthy NOTE commented out previously need to verify
+# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
 # predicates/decwrap_destr.spthy predicates/simple_example.spthy \
 #
 # not working because of missing support for locations
 # locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
+# locations/SOC.spthy  -> commented out before
 #
 # not working for other reasons (need to investigate!)
 # statVerifLeftRight/stateverif_left_right.spthy - > problem with locks
@@ -372,12 +375,7 @@ MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spt
 # not working for unknown reason:
 # xor/NSLPK3xor.spthy
 
-# currently not working because of wrong heuristic:
-# locations/SOC.spthy 
-#
 # TODO check with complete list.
-# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \
-# Yubikey/Yubikey.spthy
 
 SAPIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES)))
 

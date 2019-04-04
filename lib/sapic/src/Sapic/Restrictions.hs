@@ -151,19 +151,18 @@ generateProgressRestrictions anp = do
             where
                 name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
                 formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. (conclusion tos)
-                pvar = varProgress pos
+                pvar = msgVarProgress pos
                 -- pvar = ("prog", LSortMsg)
                 -- t1var = ("t1", LSortNode)
                 -- t2var = ("t2", LSortNode)
                 t1var = LVar "t" LSortNode 1
                 t2var = LVar "t" LSortNode 2
-                antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFact' (ProgressFrom pos)
+                antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFactFormula (ProgressFrom pos)
                 conclusion tos = bigOr $ map progressTo $ S.toList tos
                 bigOr [to] = to
                 bigOr (to:tos) = to .&&. bigOr tos 
                 bigOr []   = TF False -- This case should never occur
-                progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFact' $ ProgressTo pos to
-                actionToFact' = fmap (fmap $ fmap (\v -> Free v)) . actionToFact 
+                progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFactFormula $ ProgressTo to pos
             
 
 -- let generate_progress_restrictions anP =

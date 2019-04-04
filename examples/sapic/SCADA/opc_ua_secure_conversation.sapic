@@ -9,14 +9,14 @@ section{* The OPC UA Secure Conversation protocol *}
  * Status:      Working
  */
 
-builtins: symmetric-encryption, hashing, multiset
+builtins: symmetric-encryption, hashing, multiset, reliable-channel
 
 /* Equations for MAC, similar to signatures but with symmetric keys */
 functions: mac/2, verifyMac/3, true/0
 
 equations: verifyMac(mac(m, sk), m, sk)=true
 
-options: progress
+options: translation-progress
 
 /* Role of Alice, the sender */
 

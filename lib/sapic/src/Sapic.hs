@@ -24,6 +24,7 @@ import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Set              as S
+import qualified Data.List              as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -165,16 +166,19 @@ progresstrans basetrans anP = do
     msrs <- gen basetrans anP [] S.empty
     dom_pf <- pfFrom anP
     inv_pf <- pfInv anP
-    return $ map (toRule . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) msrs
+    return $ map (toRule . (addProgressVariables dom_pf) . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) msrs
     where
           -- x =  LVar "x" LSortFresh 0
           map_act f anrule = let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
                     anrule { prems = l', acts = a', concs = r'  }
           stateInPrems  = any isNonSemiState . prems
-          addProgressTo' q p l a r  =
+          addProgressTo'' p posFrom _ l a r  =
                             ( l
-                            , ProgressTo p q:a
+                            , ProgressTo p posFrom:a
                             , r)
+          addProgressTo' inv anrule child 
+            | (Just posFrom) <- inv child = map_act (addProgressTo'' child posFrom) anrule
+            | otherwise = anrule 
           addProgressTo inv anrule -- corresponds to step2 (child[12] p) in Firsttranslation.ml
                                    -- if one of the direct childen of anrule is in the range of the pf
                                    --  it has an inverse. We thus add ProgressTo to each such rule
@@ -183,18 +187,26 @@ progresstrans basetrans anP = do
                                    --  early). ProgressTo is annotated with the
                                    --  inverse of the child's position, for
                                    --  verification speedup.
-            | stateInPrems anrule, Just q <- inv (rhsP (position anrule)) = map_act (addProgressTo' q) anrule
-            | stateInPrems anrule, Just q <- inv (lhsP (position anrule)) = map_act (addProgressTo' q) anrule
+            | stateInPrems anrule = foldl (addProgressTo' inv) anrule [lhsP (position anrule), rhsP (position anrule)]
             | otherwise                                                  = anrule
           stateInConcls = any isNonSemiState . prems
           addProgressFrom dom' anrule
-            | stateInConcls anrule,  (position anrule) `S.member` dom' =
+            | stateInConcls anrule,  position anrule `S.member` dom' =
                     map_act (\p l a r ->
                             ( Fr(varProgress p):l
                             , ProgressFrom p:a
-                            , map (addVarToState $ varProgress p) r
+                            ,  r
                             )) anrule
             | otherwise  = anrule
+          addProgressVariables dom' anrule = 
+            let positions_to_add = filter (descendant (position anrule)) (S.toList dom')
+            in
+                    map_act (\_ l a r ->
+                            ( foldl addProgressVariable l (List.delete (position anrule) positions_to_add)
+                            , a
+                            , foldl addProgressVariable r positions_to_add
+                            )) anrule
+          addProgressVariable factlist p' = map (addVarToState $ varProgress p') factlist
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and

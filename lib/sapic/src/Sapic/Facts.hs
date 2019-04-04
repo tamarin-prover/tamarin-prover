@@ -16,9 +16,11 @@ module Sapic.Facts (
    , addVarToState
    , factToFact
    , actionToFact
+   , actionToFactFormula
    , toRule
    , varMID
    , varProgress
+   , msgVarProgress
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -126,11 +128,19 @@ unlockFactName v = "Unlock_" ++ show (lvarIdx v)
 lockPubTerm :: LVar -> NTerm v
 lockPubTerm = pubTerm . show . lvarIdx
 
+varNameProgress :: ProcessPosition -> String
+varNameProgress p = "prog_" ++ prettyPosition p
 
 varProgress :: ProcessPosition -> LVar
 varProgress p = LVar n s i
-    where n = "prog_" ++ prettyPosition p
+    where n = varNameProgress p
           s = LSortFresh
+          i = 0
+
+msgVarProgress :: ProcessPosition -> LVar
+msgVarProgress p = LVar n s i
+    where n = varNameProgress p
+          s = LSortMsg
           i = 0
 
 varMsgId :: ProcessPosition -> LVar
@@ -163,9 +173,16 @@ actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm 
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,t,varTerm v]
-actionToFact (ProgressFrom p) = protoFact Linear "ProgressFrom" [varTerm $ varProgress p]
-actionToFact (ProgressTo p q) = protoFact Linear "ProgressTo" $ map (varTerm . varProgress) [p,q]
+actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
+actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
+
+toFreeMsgVariable :: LVar -> BVar LVar
+toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
+toFreeMsgVariable v = Free $ v
+
+actionToFactFormula :: TransAction -> Fact (Term (Lit Name (BVar LVar)))
+actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact 
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
 varMID :: ProcessPosition -> LVar

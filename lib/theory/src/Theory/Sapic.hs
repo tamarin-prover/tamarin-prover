@@ -32,6 +32,7 @@ module Theory.Sapic (
     , prettyPosition
     , LetExceptions (..)
     , prettyLetExceptions
+    , descendant
 ) where
 
 import Data.Binary
@@ -192,6 +193,8 @@ lhsP p = (p++[1]) :: ProcessPosition
 rhsP :: [Int] -> ProcessPosition
 rhsP p = (p++[2]) :: ProcessPosition
 -- rhs :: ProcessPosition = 2
+
+descendant child parent = parent `isPrefixOf` child 
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: Process -> ProcessAnnotation -> Process
