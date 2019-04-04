@@ -358,96 +358,23 @@ SEQDFS_TARGETS=$(subst .spthy,_analyzed-seqdfs.spthy,$(addprefix case-studies/re
 regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/regression/trace/*.spthy
 
-## SAPIC
-########
-
-# sapic case studies
-case-studies-sapic/%.spthy:	examples/sapic/%.sapic $(SAPIC)
-	mkdir -p case-studies-sapic/basic
-	mkdir -p case-studies-sapic/encWrapDecUnwrap
-	mkdir -p case-studies-sapic/envelope
-	mkdir -p case-studies-sapic/fairexchange-asw
-	mkdir -p case-studies-sapic/fairexchange-gjm
-	mkdir -p case-studies-sapic/fairexchange-km
-	mkdir -p case-studies-sapic/fairexchange-mini
-	mkdir -p case-studies-sapic/GJM-contract
-	mkdir -p case-studies-sapic/locations
-	mkdir -p case-studies-sapic/MoedersheimWebService
-	mkdir -p case-studies-sapic/NSL
-	mkdir -p case-studies-sapic/PKCS11
-	mkdir -p case-studies-sapic/predicates
-	mkdir -p case-studies-sapic/SCADA
-	mkdir -p case-studies-sapic/statVerifLeftRight
-	mkdir -p case-studies-sapic/xor
-	mkdir -p case-studies-sapic/Yubikey
-	$(SAPIC) $< $<.tmp > $<.out
-	cat $<.out >>$<.tmp
-	mv $<.tmp $@
-	\rm -f $<.out
-
-SAPIC_CASE_STUDIES=basic/channels1.sapic basic/channels2.sapic basic/channels3.sapic basic/design-choices.sapic basic/exclusive-secrets.sapic basic/no-replication.sapic basic/replication.sapic  basic/running-example.sapic \
-encWrapDecUnwrap/encwrapdecunwrap-nolocks.sapic encWrapDecUnwrap/encwrapdecunwrap.sapic \
-envelope/envelope_allowsattack.sapic envelope/envelope.sapic envelope/envelope_simpler.sapic \
-fairexchange-asw/aswAB-mod.sapic fairexchange-asw/aswAB-mod-weak-A.sapic fairexchange-asw/aswAB-mod-weak-B.sapic fairexchange-asw/aswAB.sapic fairexchange-asw/asw-mod-weak-locks.sapic \
-fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic fairexchange-gjm/gjm-locks-fakepcsbranch.sapic fairexchange-gjm/gjm-locks-magic.sapic fairexchange-gjm/gjm-locks.sapic fairexchange-gjm/gjm-locks-unfairness-A.sapic fairexchange-gjm/gjm.sapic \
-fairexchange-km/km.sapic fairexchange-km/km-with-comments.sapic \
-fairexchange-mini/mini10.sapic fairexchange-mini/mini2.sapic fairexchange-mini/mini4.sapic fairexchange-mini/mini6.sapic fairexchange-mini/mini8.sapic fairexchange-mini/ndc-nested-2.sapic fairexchange-mini/ndc-nested-4.sapic fairexchange-mini/ndc-nested.sapic fairexchange-mini/mini1.sapic fairexchange-mini/mini3.sapic fairexchange-mini/mini5.sapic fairexchange-mini/mini7.sapic fairexchange-mini/mini9.sapic fairexchange-mini/ndc-nested-3.sapic fairexchange-mini/ndc-nested-5.sapic fairexchange-mini/ndc-two-replications.sapic \
-GJM-contract/contract.sapic \
-locations/AC.sapic locations/AKE.sapic locations/licensing.sapic locations/OTP.sapic locations/SOC.sapic \
-MoedersheimWebService/set-abstr-lookup.sapic MoedersheimWebService/set-abstr.sapic \
-NSL/nsl-no_as-untagged.sapic \
-PKCS11/pkcs11-templates.sapic PKCS11/pkcs11-dynamic-policy.sapic \
-predicates/decwrap_destr.sapic predicates/simple_example.sapic \
-SCADA/opc_ua_secure_conversation.sapic \
-statVerifLeftRight/stateverif_left_right.sapic \
-xor/CH07.sapic \
-xor/CRxor.sapic \
-xor/KCL07.sapic \
-xor/NSLPK3xor.sapic \
-Yubikey/Yubikey.sapic
-
-
-SAPIC_CS_TARGETS=$(subst .sapic,.spthy,$(addprefix case-studies-sapic/,$(SAPIC_CASE_STUDIES)))
-
-# case studies
-sapic-case-studies:	$(SAPIC_CS_TARGETS)
-
 
 ## SAPIC output in Tamarin
 ##########################
 
-# individual case studies
-case-studies/%_analyzed-sapic.spthy:	case-studies-sapic-regression/%.spthy $(TAMARIN)
-	mkdir -p case-studies/sapic/basic
-#	mkdir -p case-studies/sapic/encWrapDecUnwrap
-	mkdir -p case-studies/sapic/statVerifLeftRight
-	mkdir -p case-studies/sapic/GJM-contract
-#	mkdir -p case-studies/sapic/MoedersheimWebService
-	mkdir -p case-studies/sapic/NSL
-	mkdir -p case-studies/sapic/predicates
-	mkdir -p case-studies/sapic/locations
-	mkdir -p case-studies/sapic/SCADA
-	mkdir -p case-studies/sapic/fairexchange-mini
-	mkdir -p case-studies/sapic/xor
-	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
-	# We only produce the target after the run, otherwise aborted
-	# runs already 'finish' the case.
-	printf "\n/* Output\n" >>$<.tmp
-	cat $<.out >>$<.tmp
-	echo "*/" >>$<.tmp
-	mv $<.tmp $(subst case-studies,case-studies/sapic,$@)
-	\rm -f $<.out
 
-SAPIC_TAMARIN_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/running-example.spthy \
-statVerifLeftRight/stateverif_left_right.spthy \
-GJM-contract/contract.spthy \
-NSL/nsl-no_as-untagged.spthy \
-predicates/decwrap_destr.spthy predicates/simple_example.spthy \
-locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
-SCADA/opc_ua_secure_conversation.spthy \
-fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
-xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
+SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy 
+# not working because of missing support for predicates
+# basic/running-example.spthy \
+# basic/let-blocks.spthy \
+# statVerifLeftRight/stateverif_left_right.spthy \
+# GJM-contract/contract.spthy \
+# NSL/nsl-no_as-untagged.spthy \
+# predicates/decwrap_destr.spthy predicates/simple_example.spthy \
+# locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
+# SCADA/opc_ua_secure_conversation.spthy \
+# fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
+# xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
 # not working for unknown reason:
 # xor/NSLPK3xor.spthy
 
@@ -455,13 +382,40 @@ xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
 # encWrapDecUnwrap/encwrapdecunwrap.spthy
 # MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy
 # locations/SOC.spthy 
+#
+# TODO check with complete list.
+# SAPIC_CASE_STUDIES=basic/channels1.spthy\
+		   # basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/no-replication.spthy basic/replication.spthy  basic/running-example.spthy \
+# encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy encWrapDecUnwrap/encwrapdecunwrap.spthy \
+# envelope/envelope_allowsattack.spthy envelope/envelope.spthy envelope/envelope_simpler.spthy \
+# fairexchange-asw/aswAB-mod.spthy fairexchange-asw/aswAB-mod-weak-A.spthy fairexchange-asw/aswAB-mod-weak-B.spthy fairexchange-asw/aswAB.spthy fairexchange-asw/asw-mod-weak-locks.spthy \
+# fairexchange-gjm/gjm-locks-fakepcsbranch-B.spthy fairexchange-gjm/gjm-locks-fakepcsbranch.spthy fairexchange-gjm/gjm-locks-magic.spthy fairexchange-gjm/gjm-locks.spthy fairexchange-gjm/gjm-locks-unfairness-A.spthy fairexchange-gjm/gjm.spthy \
+# fairexchange-km/km.spthy fairexchange-km/km-with-comments.spthy \
+# fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
+# GJM-contract/contract.spthy \
+# locations/AC.spthy locations/AKE.spthy locations/licensing.spthy locations/OTP.spthy locations/SOC.spthy \
+# MoedersheimWebService/set-abstr-lookup.spthy MoedersheimWebService/set-abstr.spthy \
+# NSL/nsl-no_as-untagged.spthy \
+# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \
+# predicates/decwrap_destr.spthy predicates/simple_example.spthy \
+# SCADA/opc_ua_secure_conversation.spthy \
+# statVerifLeftRight/stateverif_left_right.spthy \
+# xor/CH07.spthy \
+# xor/CRxor.spthy \
+# xor/KCL07.spthy \
+# xor/NSLPK3xor.spthy \
+# Yubikey/Yubikey.spthy
 
-SAPIC_TAMARIN_CS_TARGETS=$(subst .spthy,_analyzed-sapic.spthy,$(addprefix case-studies/,$(SAPIC_TAMARIN_CASE_STUDIES)))
+SAPIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES)))
+
+lol:
+	$(info $$var is [${SAPIC_CS_TARGETS}])
 
 # case studies
-sapic-tamarin-case-studies:	$(SAPIC_TAMARIN_CS_TARGETS)
-	grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy case-studies/sapic/GJM-contract/*.spthy case-studies/sapic/NSL/*.spthy case-studies/sapic/predicates/*.spthy case-studies/sapic/locations/*.spthy case-studies/sapic/SCADA/*.spthy case-studies/sapic/fairexchange-mini/*.spthy
-
+sapic-case-studies:	$(SAPIC_CS_TARGETS)
+	# grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy case-studies/sapic/GJM-contract/*.spthy case-studies/sapic/NSL/*.spthy case-studies/sapic/predicates/*.spthy case-studies/sapic/locations/*.spthy case-studies/sapic/SCADA/*.spthy case-studies/sapic/fairexchange-mini/*.spthy
+	grep "verified\|falsified\|processing time" $^
+	# grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
 ## All case studies
 ###################

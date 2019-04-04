@@ -724,7 +724,7 @@ type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 
--- Remove Sapic Items
+-- remove Sapic items and convert other items to identical item but with unit type for sapic elements
 removeSapicItems :: OpenTheory -> OpenTranslatedTheory
 removeSapicItems thy =
   Theory {_thyName=(L.get thyName thy)
@@ -734,17 +734,14 @@ removeSapicItems thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = createNewThyItems (filter isNoSapicItem (L.get thyItems thy))
-      createNewThyItems :: [TheoryItem r p SapicElement] -> [TheoryItem r p ()]
-      createNewThyItems [] = []
-      createNewThyItems (x:xs) = removeSapicElement(x) : createNewThyItems(xs)
+      newThyItems = map removeSapicElement (filter isNoSapicItem (L.get thyItems thy))
       removeSapicElement :: TheoryItem r p SapicElement -> TheoryItem r p ()
-      removeSapicElement (SapicItem s) = (SapicItem ())
-      removeSapicElement (RuleItem r) = (RuleItem r)
-      removeSapicElement (LemmaItem l) = (LemmaItem l)
-      removeSapicElement (RestrictionItem rl) = (RestrictionItem rl)
-      removeSapicElement (TextItem t) = (TextItem t)
-
+      removeSapicElement (SapicItem s) = SapicItem ()
+      removeSapicElement (RuleItem r) = RuleItem r
+      removeSapicElement (LemmaItem l) = LemmaItem l
+      removeSapicElement (RestrictionItem rl) = RestrictionItem rl
+      removeSapicElement (TextItem t) = TextItem t
+      removeSapicElement (PredicateItem pred) = PredicateItem pred
       isNoSapicItem (SapicItem s) = False
       isNoSapicItem _             = True
 
@@ -759,15 +756,13 @@ openTranslatedTheory thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = createNewThyItems (L.get thyItems thy)
-      createNewThyItems :: [TheoryItem r p ()] -> [TheoryItem r p SapicElement]
-      createNewThyItems [] = []
-      createNewThyItems (x:xs) = addSapicElement(x) : createNewThyItems(xs)
+      newThyItems = map addSapicElement (L.get thyItems thy)
       addSapicElement :: TheoryItem r p () -> TheoryItem r p s
-      addSapicElement (RuleItem r) = (RuleItem r)
-      addSapicElement (LemmaItem l) = (LemmaItem l)
-      addSapicElement (RestrictionItem rl) = (RestrictionItem rl)
-      addSapicElement (TextItem t) = (TextItem t)
+      addSapicElement (RuleItem r) = RuleItem r
+      addSapicElement (LemmaItem l) = LemmaItem l
+      addSapicElement (RestrictionItem rl) = RestrictionItem rl
+      addSapicElement (TextItem t) = TextItem t
+      addSapicElement (PredicateItem pred) = PredicateItem pred
 
 -- Shared theory modification functions
 ---------------------------------------
