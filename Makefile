@@ -350,6 +350,7 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 NSL/nsl-no_as-untagged.spthy \
+MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy 
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
@@ -372,31 +373,10 @@ NSL/nsl-no_as-untagged.spthy \
 # xor/NSLPK3xor.spthy
 
 # currently not working because of wrong heuristic:
-# encWrapDecUnwrap/encwrapdecunwrap.spthy
-# MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy
 # locations/SOC.spthy 
 #
 # TODO check with complete list.
-# SAPIC_CASE_STUDIES=basic/channels1.spthy\
-		   # basic/channels2.spthy basic/channels3.spthy basic/design-choices.spthy basic/exclusive-secrets.spthy basic/no-replication.spthy basic/replication.spthy  basic/running-example.spthy \
-# encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy encWrapDecUnwrap/encwrapdecunwrap.spthy \
-# envelope/envelope_allowsattack.spthy envelope/envelope.spthy envelope/envelope_simpler.spthy \
-# fairexchange-asw/aswAB-mod.spthy fairexchange-asw/aswAB-mod-weak-A.spthy fairexchange-asw/aswAB-mod-weak-B.spthy fairexchange-asw/aswAB.spthy fairexchange-asw/asw-mod-weak-locks.spthy \
-# fairexchange-gjm/gjm-locks-fakepcsbranch-B.spthy fairexchange-gjm/gjm-locks-fakepcsbranch.spthy fairexchange-gjm/gjm-locks-magic.spthy fairexchange-gjm/gjm-locks.spthy fairexchange-gjm/gjm-locks-unfairness-A.spthy fairexchange-gjm/gjm.spthy \
-# fairexchange-km/km.spthy fairexchange-km/km-with-comments.spthy \
-# fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
-# GJM-contract/contract.spthy \
-# locations/AC.spthy locations/AKE.spthy locations/licensing.spthy locations/OTP.spthy locations/SOC.spthy \
-# MoedersheimWebService/set-abstr-lookup.spthy MoedersheimWebService/set-abstr.spthy \
-# NSL/nsl-no_as-untagged.spthy \
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \
-# predicates/decwrap_destr.spthy predicates/simple_example.spthy \
-# SCADA/opc_ua_secure_conversation.spthy \
-# statVerifLeftRight/stateverif_left_right.spthy \
-# xor/CH07.spthy \
-# xor/CRxor.spthy \
-# xor/KCL07.spthy \
-# xor/NSLPK3xor.spthy \
 # Yubikey/Yubikey.spthy
 
 SAPIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES)))
