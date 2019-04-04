@@ -21,7 +21,7 @@ import           Sapic.Annotation
 import           Sapic.Exceptions
 import           Sapic.Facts
 import           Sapic.ProgressFunction
-import           Text.Parsec.Error           
+-- import           Text.Parsec.Error           
 import           Text.RawString.QQ
 import           Theory
 import           Theory.Sapic
@@ -39,48 +39,51 @@ data RestrictionOptions = RestrictionOptions {
 -- a hand-written string. It is possible that there are syntax arrors, in
 -- which case the translation should crash with the following error
 -- message.
-toEx :: (MonadThrow m, Show a1) => Either a1 a2 -> m a2
-toEx (Left  err) = throwM ( ImplementationError ( "Error parsing hard-coded restrictions: " ++ show err )::SapicException AnnotatedProcess)
-toEx (Right res ) = return res
+toEx :: MonadThrow m => String -> m Restriction
+toEx s 
+    | (Left  err) <- parseRestriction s =
+        throwM ( ImplementationError ( "Error parsing hard-coded restriction: " ++ s ++ show err )::SapicException AnnotatedProcess)
+    | (Right res) <- parseRestriction s = return res
+    | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
-resSetIn :: Either Text.Parsec.Error.ParseError Restriction
-resSetIn = parseRestriction [r|restriction set_in: 
+resSetIn :: String
+resSetIn = [r|restriction set_in: 
 "All x y #t3 . IsIn(x,y)@t3 ==>  
 (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
 )" |]
 
-resSetNotIn :: Either Text.Parsec.Error.ParseError Restriction
-resSetNotIn = parseRestriction [r|restriction set_notin:
+resSetNotIn :: String
+resSetNotIn = [r|restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
-  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 *) 
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3  
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 |]
 
-resSetInNoDelete :: Either Text.Parsec.Error.ParseError Restriction
-resSetInNoDelete = parseRestriction [r|restriction set_in: 
+resSetInNoDelete :: String
+resSetInNoDelete = [r|restriction set_in: 
 "All x y #t3 . IsIn(x,y)@t3 ==>  
 (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
 & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
 )" |]
 
-resSetNotInNoDelete :: Either Text.Parsec.Error.ParseError Restriction
-resSetNotInNoDelete = parseRestriction [r|restriction set_notin:
+resSetNotInNoDelete :: String
+resSetNotInNoDelete = [r|restriction set_notin:
 "All x #t3 . IsNotSet(x)@t3 ==> 
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
 |]
 
-resSingleSession :: Either Text.Parsec.Error.ParseError Restriction
-resSingleSession = parseRestriction [r|restrictionsingle_session: // for a single session
+resSingleSession :: String
+resSingleSession = [r|restrictionsingle_session: // for a single session
 "All #i #j. Init()@i & Init()@j ==> #i=#j"
 |]
 
 -- | Restriction for Locking. Note that LockPOS hardcodes positions that
 -- should be modified below.
-resLocking_l :: Either Text.Parsec.Error.ParseError Restriction
-resLocking_l  = parseRestriction [r|restriction locking:
+resLocking_l :: String
+resLocking_l  = [r|restriction locking:
 "All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -95,10 +98,10 @@ resLocking_l  = parseRestriction [r|restriction locking:
 -- | Produce locking lemma for variable v by instantiating resLocking_l 
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
-resLocking :: LVar -> Either Text.Parsec.Error.ParseError Restriction
-resLocking v =  case resLocking_l of
-    Left l -> Left l
-    Right f -> Right $ mapName hardcode $ mapFormula (mapAtoms subst) f
+resLocking :: MonadThrow m => LVar -> m Restriction
+resLocking v =  do
+    rest <- toEx resLocking_l
+    return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
     where
         subst _ a 
             | (Action t f) <- a,
@@ -113,14 +116,14 @@ resLocking v =  case resLocking_l of
         mapFormula = L.modify rstrFormula
         mapName = L.modify rstrName
 
-resEq :: Either Text.Parsec.Error.ParseError Restriction
-resEq = parseRestriction [r|restriction predicate_eq:
+resEq :: String
+resEq = [r|restriction predicate_eq:
 "All #i a b. Pred_Eq(a,b)@i ==> a = b"
 |]
 
 
-resNotEq :: Either Text.Parsec.Error.ParseError Restriction
-resNotEq = parseRestriction [r|restriction predicate_not_eq:
+resNotEq :: String
+resNotEq = [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
@@ -201,16 +204,13 @@ generateProgressRestrictions anp = do
 -- of the process (anP)
 generateSapicRestrictions :: (MonadThrow m, MonadCatch m) => RestrictionOptions -> AnProcess ProcessAnnotation -> m [Restriction] 
 generateSapicRestrictions op anP = 
-  let rest = 
+  let hardcoded_l = 
        (if contains isLookup then
         if contains isDelete then
             [resSetIn,  resSetNotIn]
               else 
             [resSetInNoDelete, resSetNotInNoDelete]
          else [])
-        ++ 
-        addIf (contains isLock) (map resLocking $ getLockPositions anP) -- TODO do we need to remove duplicates?
-          -- @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
         ++ 
         addIf (contains isEq) [resEq, resNotEq] 
         ++ 
@@ -219,17 +219,20 @@ generateSapicRestrictions op anP =
         -- addIf (hasProgress op) [resSingleSession] 
     in
     do
-        rest' <- mapM toEx rest
-        list  <- if hasProgress op then
+        hardcoded <- mapM toEx hardcoded_l
+        locking   <- mapM resLocking (getLockPositions anP)
+        -- TODO do we need to remove duplicates?
+          -- @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
+        progress  <- if hasProgress op then
                     generateProgressRestrictions anP
                 else
                     return []
-        return $ rest' ++ list
+        return $ hardcoded ++ locking ++ progress
     where
         addIf phi list = if phi then list else []
         contains f = M.getAny $ pfoldMap  (M.Any . f) anP
-        isLock (ProcessAction (Lock _) _ _) = True
-        isLock _  = False
+        -- isLock (ProcessAction (Lock _) _ _) = True
+        -- isLock _  = False
         isLookup (ProcessComb (Lookup _ _) _ _ _) = True
         isLookup _  = False
         isDelete (ProcessAction (Delete _) _ _) = True

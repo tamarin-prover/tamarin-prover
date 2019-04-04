@@ -363,10 +363,12 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 ##########################
 
 
-SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy
+SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
+encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 # not working because of missing support for predicates
-# basic/running-example.spthy \
-# basic/let-blocks.spthy \
+# basic/running-example.spthy basic/let-blocks.spthy 
+
+#
 # statVerifLeftRight/stateverif_left_right.spthy \
 # GJM-contract/contract.spthy \
 # NSL/nsl-no_as-untagged.spthy \
