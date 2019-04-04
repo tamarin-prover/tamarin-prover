@@ -22,7 +22,7 @@ intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
 the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
-*security protocol theory*). The Tamarin file starts with `theory` followed by 
+*security protocol theory*), which can be found in the folder `code` within the github repository of this tutorial (<https://github.com/tamarin-prover/manual>). The Tamarin file starts with `theory` followed by 
 the theory's name, here `FirstExample`.  
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=12 upper=13}
@@ -319,7 +319,7 @@ value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from
 applying `fst` to the pair and then using the equation 
 `fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
-approximation, both represent they adversary's knowledge and the distinction is 
+approximation, both represent the adversary's knowledge and the distinction is 
 only used to make the tool's reasoning more efficient.
 
 Now click on *Multiset rewriting rules* on the left.
@@ -331,7 +331,7 @@ Rules](../images/tamarin-tutorial-multiset-rules.png
 On the right side of the screen are the protocol's 
 rewriting rules, plus two additional rules:  `isend` and `irecv`^[The 'i'
 historically stems from "intruder", but here we use "adversary".].
-These two extra rules provide an interface between the protocols output and input
+These two extra rules provide an interface between the protocol's output and input
 and the adversary deduction.
 The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the adversary knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 

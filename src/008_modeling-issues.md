@@ -152,7 +152,7 @@ This causes the following warning:
 	  this is unambiguous.
 	*/
 
-The warning indicates that in this lemma the term `m` is occurs free. This
+The warning indicates that in this lemma the term `m` occurs free. This
 means that it is not bound to any quantifier. Often such an error occurs
 when 
 one forgets to list all the variables that are used in the formula after the
