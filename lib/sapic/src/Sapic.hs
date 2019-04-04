@@ -22,6 +22,7 @@ import Sapic.Exceptions
 import Theory
 import Theory.Sapic
 import Data.Typeable
+import Data.Maybe
 import qualified Data.Set              as S
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
@@ -44,36 +45,41 @@ translate th = case theoryProcesses th of
       []  -> return (removeSapicItems th)
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
+                -- add rules
                 msr <- trans basetrans an_proc
-                th' <- foldM liftedAddProtoRule th (initialRules an_proc ++  msr)
+                th1 <- foldM liftedAddProtoRule th (initialRules an_proc ++  msr)
+                -- add restrictions
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
-                th'' <- foldM liftedAddRestriction th' sapic_restrictions
-                return (removeSapicItems th'')
+                th2 <- foldM liftedAddRestriction th1 sapic_restrictions
+                -- add heuristic, if not already defined:
+                th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                return (removeSapicItems th3)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> throwM ((RuleNameExists (render (prettyRuleName ru) ) )  :: SapicException AnnotatedProcess)
+        Nothing   -> throwM (RuleNameExists (render (prettyRuleName ru))  :: SapicException AnnotatedProcess)
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
-        Nothing   -> throwM ((RestrictionNameExists (render (prettyRestriction rest)))  :: SapicException AnnotatedProcess)
+        Nothing   -> throwM (RestrictionNameExists (render (prettyRestriction rest))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
     addIf True l  = l
     addIf False _ = []
     initialRules anP  =  map toRule $ 
-                         [getInitRule anP]
-                         ++ addIf (L.get transReliable ops) [getMsgId anP]
+                         getInitRule anP : addIf (L.get transReliable ops) [getMsgId anP]
     trans = if L.get transProgress ops then
                 progresstrans 
             else
                 noprogresstrans 
     basetrans = if L.get transReliable ops then
-                    BT.reliableChannelTrans (BT.baseTrans)
+                    BT.reliableChannelTrans BT.baseTrans
                   else
                     BT.baseTrans
     restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
                                       , hasProgress = L.get transProgress ops
                                       , hasReliableChannels = L.get transReliable ops }
+    heuristics = [SapicRanking]
+
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:

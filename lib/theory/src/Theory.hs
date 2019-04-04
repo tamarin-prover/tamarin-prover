@@ -736,13 +736,13 @@ removeSapicItems thy =
     where
       newThyItems = map removeSapicElement (filter isNoSapicItem (L.get thyItems thy))
       removeSapicElement :: TheoryItem r p SapicElement -> TheoryItem r p ()
-      removeSapicElement (SapicItem s) = SapicItem ()
+      removeSapicElement (SapicItem _) = SapicItem ()
       removeSapicElement (RuleItem r) = RuleItem r
       removeSapicElement (LemmaItem l) = LemmaItem l
       removeSapicElement (RestrictionItem rl) = RestrictionItem rl
       removeSapicElement (TextItem t) = TextItem t
-      removeSapicElement (PredicateItem pred) = PredicateItem pred
-      isNoSapicItem (SapicItem s) = False
+      removeSapicElement (PredicateItem predi) = PredicateItem predi
+      isNoSapicItem (SapicItem _) = False
       isNoSapicItem _             = True
 
 
@@ -756,13 +756,14 @@ openTranslatedTheory thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = map addSapicElement (L.get thyItems thy)
-      addSapicElement :: TheoryItem r p () -> TheoryItem r p s
-      addSapicElement (RuleItem r) = RuleItem r
-      addSapicElement (LemmaItem l) = LemmaItem l
-      addSapicElement (RestrictionItem rl) = RestrictionItem rl
-      addSapicElement (TextItem t) = TextItem t
-      addSapicElement (PredicateItem pred) = PredicateItem pred
+      newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
+      addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
+      addSapicElement (RuleItem r) = Just $ RuleItem r
+      addSapicElement (LemmaItem l) = Just $ LemmaItem l
+      addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
+      addSapicElement (TextItem t) = Just $ TextItem t
+      addSapicElement (PredicateItem pred) = Just $ PredicateItem pred
+      addSapicElement (SapicItem _) = Nothing
 
 -- Shared theory modification functions
 ---------------------------------------

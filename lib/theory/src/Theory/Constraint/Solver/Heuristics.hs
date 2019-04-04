@@ -49,7 +49,6 @@ data GoalRanking =
   | OracleRanking String
   | OracleSmartRanking String
   | SapicRanking
-  | SapicLivenessRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
   | SmartRanking Bool
@@ -67,7 +66,6 @@ goalRankingIdentifiers = M.fromList
                         , ('o', OracleRanking "./oracle")
                         , ('O', OracleSmartRanking "./oracle")
                         , ('p', SapicRanking)
-                        , ('l', SapicLivenessRanking)
                         , ('P', SapicPKCS11Ranking)
                         , ('c', UsefulGoalNrRanking)
                         , ('C', GoalNrRanking)
@@ -118,9 +116,8 @@ goalRankingName ranking =
         OracleRanking oracleName      -> "an oracle for ranking, located at " ++ oracleName
         OracleSmartRanking oracleName -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oracleName
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
-        SapicRanking                  -> "heuristics adapted to the output of the SAPIC tool"
-        SapicLivenessRanking          -> "heuristics adapted to the output of the SAPIC tool for liveness properties"
-        SapicPKCS11Ranking            -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
+        SapicRanking                  -> "heuristics adapted for processes"
+        SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
