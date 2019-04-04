@@ -78,21 +78,21 @@ options: translation-progress
 
 let A = /* in('c',text); */
         new sida; event StartA($A,$B,text,sida);
-        let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
+        let pat_m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
         /* let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in */
         let m3 = sign(<text,'1'>,sk($A)) in
-        let m4 = sign(<text,'2'>,sk($B)) in
+        let pat_m4 = sign(<text,'2'>,sk($B)) in
         let a1 = sign(<text,$A,$B,'abort'>,sk('A')) in
         let a2 = sign(a1,sk(TTPID)) in
         let r1 = <m3,m2> in
-        out('c',m1);
+        out('c',pat_m1);
         (
           in('c',m2);
           if checkpcs(<text,'2'>,pk($B),pk($A), pk(TTPID), m2)=true() then
           (
               out('c',m3);
               (
-               in('c',m4);
+               in('c',pat_m4);
                event ContractA($A,$B,text,sida);
                event EndA4($A,$B,text,sida)
               )
@@ -108,7 +108,7 @@ let A = /* in('c',text); */
                  in('r',<'originator',TTPID,$A,a2>);
                  event AbortA(text,sida)
                 ) + ( */
-                 in('r',<$A,sida,m4>);
+                 in('r',<$A,sida,pat_m4>);
                  event ContractA($A,$B,text,sida);
                  event EndA3($A,$B,text,sida)
                 /* ) */
@@ -124,7 +124,7 @@ let A = /* in('c',text); */
             event EndA1($A,$B,text,sida)
           )
           + (
-            in('r',<$A,sida,m4>);
+            in('r',<$A,sida,pat_m4>);
             event ContractA($A,$B,text,sida);
             event EndA2($A,$B,text,sida) 
           )
@@ -138,7 +138,7 @@ let A = /* in('c',text); */
 let B = 
         /* let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in */
         let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in
-        let m3 = sign(<text,'1'>,sk($A)) in
+        let pat_m3 = sign(<text,'1'>,sk($A)) in
         let m4 = sign(<text,'2'>,sk($B)) in
         let a1 = sign(<text,$A,$B,'abort'>,sk('A')) in
         let a2 = sign(a1,sk(TTPID)) in
@@ -149,7 +149,7 @@ let B =
             new sidb; event StartB($A,$B,text,sidb);
             out('c',m2);
             (
-              in('c',m3);
+              in('c',pat_m3);
               event ContractB($A,$B,text,sidb);
               event EndB3($A,$B,text,sidb);
               out('c',m4)
@@ -162,7 +162,7 @@ let B =
               event AbortB($A,$B,text,sidb);
               event EndB1($A,$B,text,sidb)
               ) + (
-              in('r',<$B,sidb,m3>);
+              in('r',<$B,sidb,pat_m3>);
               event ContractB($A,$B,text,sidb);
               event EndB2($A,$B,text,sidb)
               )
@@ -173,14 +173,14 @@ let B =
 /* TODO justify pattern matching by explaining each
  * step in the comments, using the equations */
 let TTP = 
-let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
+let pat_m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
 let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in
 let m3 = sign(<text,'1'>,sk($A)) in
 let m4 = sign(<text,'2'>,sk($B)) in
 let a1 = sign(<text,$A,$B,'abort'>,sk($A)) in
 let a2 = sign(a1,sk(TTPID)) in
 let r1 = <m3,m2> in
-let r2 = <m1,m4> in
+let r2 = <pat_m1,m4> in
 ( /* Abort */
   in('r',<TTPID,sida,a1>);
   lock text; /* only possible if neither aborted nor resolved */

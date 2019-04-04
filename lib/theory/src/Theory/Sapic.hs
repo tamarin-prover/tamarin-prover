@@ -36,6 +36,7 @@ module Theory.Sapic (
 
 import Data.Binary
 import Data.Data
+import Data.List
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Theory.Model.Fact
@@ -141,8 +142,10 @@ applySapicActionError subst ac
                                else 
                                   return $ New v
         | (ChIn mt t) <- ac,  Lit (Var v) <-  viewTerm t =
-                            if v `elem` dom subst then 
-                                  -- t is a single variable that is captured by the let. This is likely unintended, so we warn.
+                            if v `elem` dom subst && not ( "pat_" `isPrefixOf` lvarName v) then 
+                                  -- t is a single variable that is captured by the let.
+                                  -- This is likely unintended, so we warn, unless the variable starts with 
+                                  -- pat_
                                   throwM $ CapturedEx CapturedIn v
                             else
                                   return $ ChIn (apply subst mt) t 

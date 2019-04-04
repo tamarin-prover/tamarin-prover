@@ -986,9 +986,9 @@ process thy=
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
                   try  (chainl1 (actionprocess thy) (
-                             do { _ <- opNDC; return (ProcessComb NDC mempty)}
+                             do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
-                         <|> do { _ <- try opParallel; return (ProcessComb Parallel mempty)}
+                         <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   ))
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
