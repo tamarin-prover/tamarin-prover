@@ -118,7 +118,7 @@ the left-hand side of the `=` sign must be a variable and
 the right-hand side is an arbitrary term. The rule will be interpreted after
 substituting all variables occurring in the let by their right-hand
 sides.
-As the above example indicates, macros may use the right-hand sides of
+As the above example indicates, macros may use the left-hand sides of
 earlier defined macros.
 
 

@@ -109,7 +109,7 @@ the following steps:
   4. Depending on the mode, the other (non-sources) lemmas are now considered
      manually or automatically using the refined sources.
 
-For full technical details, we refer the reader to [@meierthesis], where these are called typing lemmas and open chains.
+For full technical details, we refer the reader to [@meierthesis], where these are called type assertions.
 
 In our example, we can add the following lemma:
 
