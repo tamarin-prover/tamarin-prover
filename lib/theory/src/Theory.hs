@@ -213,7 +213,7 @@ import           Prelude                             hiding (id, (.))
 
 import           GHC.Generics                        (Generic)
 
-import           Data.Typeable
+-- import           Data.Typeable
 import           Data.Binary
 import           Data.List
 import           Data.Maybe
@@ -762,7 +762,7 @@ openTranslatedTheory thy =
       addSapicElement (LemmaItem l) = Just $ LemmaItem l
       addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
       addSapicElement (TextItem t) = Just $ TextItem t
-      addSapicElement (PredicateItem pred) = Just $ PredicateItem pred
+      addSapicElement (PredicateItem predi) = Just $ PredicateItem predi
       addSapicElement (SapicItem _) = Nothing
 
 -- Shared theory modification functions
@@ -1180,7 +1180,9 @@ normalizeTheory =
           RuleItem _    -> item
           TextItem _    -> item
           RestrictionItem _   -> item
-          SapicItem _   -> item)
+          SapicItem _   -> item
+          PredicateItem _   -> item
+          )
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
@@ -1898,7 +1900,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     thyH = L.get thyHeuristic thy
 
 emptyString :: HighlightDocument d => () -> d
-emptyString e = text ("")
+emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement a = text ("TODO prettyPrint SapicItems")

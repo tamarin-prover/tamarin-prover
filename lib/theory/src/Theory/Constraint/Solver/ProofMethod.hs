@@ -601,7 +601,7 @@ isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
 isAuthOutFact  _                                 = False
 
 isStateFact :: Goal -> Bool
-isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
+isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "state_" n
 isStateFact  _                                 = False
 
 isUnlockAction :: Goal -> Bool

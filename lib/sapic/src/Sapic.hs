@@ -47,8 +47,8 @@ translate th = case theoryProcesses th of
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
                 -- add rules
-                msr <- trans basetrans an_proc
-                th1 <- foldM liftedAddProtoRule th (initialRules an_proc ++  msr)
+                msr <- trans basetrans (initialRules an_proc) an_proc
+                th1 <- foldM liftedAddProtoRule th (msr)
                 -- add restrictions
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th2 <- foldM liftedAddRestriction th1 sapic_restrictions
@@ -66,7 +66,7 @@ translate th = case theoryProcesses th of
     ops = L.get thyOptions th
     addIf True l  = l
     addIf False _ = []
-    initialRules anP  =  map toRule $ 
+    initialRules anP  =  -- map toRule $ 
                          getInitRule anP : addIf (L.get transReliable ops) [getMsgId anP]
     trans = if L.get transProgress ops then
                 progresstrans 
@@ -117,25 +117,25 @@ getMsgId anP = messageidrule
                     0
 -- | Standard translation without progress:
 -- | use gen and basetranslation and add a simple Init rule.
-noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
-                    Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                    (ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t1 ([TransFact], [TransAction], [TransFact])),
-                    SapicAction
-                    -> ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
-                    ProcessCombinator
-                    -> ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
-                          S.Set a))
-                   -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-noprogresstrans basetrans anP = do
+-- noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
+--                     Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
+--                     (ann
+--                     -> ProcessPosition
+--                     -> S.Set a
+--                     -> m (t1 ([TransFact], [TransAction], [TransFact])),
+--                     SapicAction
+--                     -> ann
+--                     -> ProcessPosition
+--                     -> S.Set a
+--                     -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
+--                     ProcessCombinator
+--                     -> ann
+--                     -> ProcessPosition
+--                     -> S.Set a
+--                     -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
+--                           S.Set a))
+--                    -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+noprogresstrans basetrans _ anP = do
     msrs <- gen basetrans anP [] S.empty
     return $ map toRule msrs
 
@@ -144,29 +144,29 @@ noprogresstrans basetrans anP = do
 -- | adds ProgressTo actions where a state-fact is in the premise
 -- | adds ProgressFrom actions where a state-fact is in the conclusion
 -- | also adds a message id rule
-progresstrans :: (Show ann, MonadCatch m, Typeable ann,
-                  Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                  (ann
-                  -> ProcessPosition
-                  -> S.Set a
-                  -> m (t1 ([TransFact], [TransAction], [TransFact])),
-                  SapicAction
-                  -> ann
-                  -> ProcessPosition
-                  -> S.Set a
-                  -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
-                  ProcessCombinator
-                  -> ann
-                  -> ProcessPosition
-                  -> S.Set a
-                  -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
-                        S.Set a))
-                 -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-progresstrans basetrans anP = do
+-- progresstrans :: (Show ann, MonadCatch m, Typeable ann,
+--                   Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
+--                   (ann
+--                   -> ProcessPosition
+--                   -> S.Set a
+--                   -> m (t1 ([TransFact], [TransAction], [TransFact])),
+--                   SapicAction
+--                   -> ann
+--                   -> ProcessPosition
+--                   -> S.Set a
+--                   -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
+--                   ProcessCombinator
+--                   -> ann
+--                   -> ProcessPosition
+--                   -> S.Set a
+--                   -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
+--                         S.Set a))
+--                  -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+progresstrans basetrans initrules anP = do
     msrs <- gen basetrans anP [] S.empty
     dom_pf <- pfFrom anP
     inv_pf <- pfInv anP
-    return $ map (toRule . (addProgressVariables dom_pf) . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) msrs
+    return $ map (toRule . (addProgressVariables dom_pf) . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) (initrules ++ msrs)
     where
           -- x =  LVar "x" LSortFresh 0
           map_act f anrule = let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
@@ -189,7 +189,7 @@ progresstrans basetrans anP = do
                                    --  verification speedup.
             | stateInPrems anrule = foldl (addProgressTo' inv) anrule [lhsP (position anrule), rhsP (position anrule)]
             | otherwise                                                  = anrule
-          stateInConcls = any isNonSemiState . prems
+          stateInConcls = any isNonSemiState . concs
           addProgressFrom dom' anrule
             | stateInConcls anrule,  position anrule `S.member` dom' =
                     map_act (\p l a r ->

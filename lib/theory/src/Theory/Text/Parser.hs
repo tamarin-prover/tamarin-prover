@@ -32,7 +32,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import qualified Data.List                  as L
+-- import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -43,7 +43,7 @@ import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
-import           System.Process
+-- import           System.Process
 
 -- import qualified Extension.Data.Label       as L
 
