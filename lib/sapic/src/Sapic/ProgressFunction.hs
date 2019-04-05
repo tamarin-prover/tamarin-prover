@@ -75,7 +75,7 @@ next ProcessComb{} = S.fromList $ [[1],[2]]
 
 -- | next position to jump but consider empty position for null process, used in pi 
 next0 :: (Num a, Ord a) => AnProcess ann -> S.Set [a]
-next0 (ProcessNull _) = S.empty
+next0 (ProcessNull _) = S.singleton []
 next0 (ProcessAction _ _ _ ) = S.singleton [1]
 next0 (ProcessComb NDC _ pl pr) = next0OrChild pl [1] `S.union` next0OrChild pr [2]
     where next0OrChild p' pos = if blocking p' then
@@ -116,17 +116,17 @@ pfFrom process = from' process True
 -- | Combine set of sets of position so that they describe alternatives (see comment for progressTo)
 -- combine x y = { union of xi and yi | xi in x and yi in y}
 combine :: Ord a => S.Set (S.Set a) -> S.Set (S.Set a) -> S.Set (S.Set a)
-combine x y = S.fold (combine_with y) x S.empty --
+combine x y = S.foldr  (combine_with y) S.empty x
 
 -- | Take x_i, take union with y_i for all y_i in y and add result to accumulator set1.
 combine_with :: Ord a => S.Set (S.Set a) -> S.Set a -> S.Set (S.Set a) -> S.Set (S.Set a)
-combine_with y x_i set1 = S.fold (\y_i set2 -> (x_i `S.union` y_i) `S.insert` set2) y set1
+combine_with y x_i set1 = S.foldr (\y_i set2 -> (x_i `S.union` y_i) `S.insert` set2) set1 y
 
 -- | Given a process p, find set of set of positions describing the conjunctive
 -- normal form of the positions that    we need to go to.
 -- For example: {{p1},{p2,p3}} means we need to go to p1 AND to either p2 or p3.
 -- Correspond to f in Def. 15
--- TODO This is massively refactored code. Remove stuff that's commented out once everything wors.
+-- TODO This is massively refactored code. Remove stuff that's commented out once everything works.
 f :: (Show ann, MonadCatch m, Typeable ann) => (AnProcess ann) -> m (S.Set (S.Set ProcessPosition))
 f  p -- corresponds to f within generate progressfunction.ml
     | blocking p = return $ ss []
@@ -135,7 +135,10 @@ f  p -- corresponds to f within generate progressfunction.ml
                 lr <- f pr
                 return $ S.union ([1] <..>  ll) ([2] <..>  lr)
     | otherwise = foldM combineWithRecursive
-                            S.empty      -- accumulator, set of sets of position
+                            (S.singleton S.empty) -- accumulator, set of sets of position
+                                                  -- not that the Singleton set of the empty set is
+                                                  -- the neutral element with respect to combine
+                                                  -- the empty set combined with anything gives an emptyset
                             (next0 p) -- list of p∈next^0(proc)
     -- | (ProcessNull _) <- p = return $ ss []
     -- | (ProcessAction Rep _ _ ) <-p = return $ ss []
@@ -168,7 +171,7 @@ f  p -- corresponds to f within generate progressfunction.ml
     -- | (ProcessAction _ _ p')  <- p = do l' <- f p'
     --                                     return $ [1] <..> l'
     where ss x = S.singleton ( S.singleton x) -- shortcut for singleton set of singleton set
-          combineWithRecursive  acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
+          combineWithRecursive acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
                         proc'   <- (processAt p pos)
                         lpos <- f proc'
                         return $ combine (pos <..> lpos) acc 
