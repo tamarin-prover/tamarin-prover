@@ -127,6 +127,10 @@ resNotEq = [r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
+resResilient :: String
+resResilient = [r|restriction resilient: 
+"All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
+|]
 
 flattenList :: Eq a0 => [[a0]] -> [a0]
 flattenList = foldr List.union []
@@ -160,7 +164,7 @@ generateProgressRestrictions anp = do
                 antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFactFormula (ProgressFrom pos)
                 conclusion tos = bigOr $ map progressTo $ S.toList tos
                 bigOr [to] = to
-                bigOr (to:tos) = to .&&. bigOr tos 
+                bigOr (to:tos) = to .||. bigOr tos 
                 bigOr []   = TF False -- This case should never occur
                 progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFactFormula $ ProgressTo to pos
             
@@ -214,8 +218,8 @@ generateSapicRestrictions op anP =
         addIf (contains isEq) [resEq, resNotEq] 
         ++ 
         addIf (not $ hasAccountabilityLemmaWithControl op) [resSingleSession] 
-        -- ++ 
-        -- addIf (hasProgress op) [resSingleSession] 
+        ++
+        addIf (hasReliableChannels op && contains isReliableTrans) [resResilient] 
     in
     do
         hardcoded <- mapM toEx hardcoded_l
@@ -238,6 +242,18 @@ generateSapicRestrictions op anP =
         isDelete _  = False
         isEq (ProcessComb (CondEq _ _) _ _ _) = True
         isEq _  = False
+        isReliableTrans (ProcessAction ac _ _) 
+            -- | (ChIn (Just r) t) <- ac
+            -- ,Lit (Con name) <- viewTerm r
+            -- , sortOfName name == LSortPub
+            -- , getNameId (nId name) == "r" = True
+            | (ChOut (Just tr) _) <- ac -- If there are only receives on the
+                                       -- reliable channel, we do not need the restriction
+            ,Lit (Con name) <- viewTerm tr
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "r" = True
+            | otherwise = False
+        isReliableTrans _ = False 
         getLock p 
             | (ProcessAction (Lock _) an _) <- p, (Just (AnLVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
@@ -245,7 +261,6 @@ generateSapicRestrictions op anP =
 
         -- TODO need to incorporate lemma2string_noacc
         -- TODO add missing features. This is what SAPIC did
-          -- @ (if op.progress then generate_progress_restrictions annotated_process else [])
           -- @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
           -- @ (if op.accountability then [] else [res_single_session_l])
         -- (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper

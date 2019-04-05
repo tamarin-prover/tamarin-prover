@@ -102,7 +102,7 @@ translate th = case theoryProcesses th of
 getInitRule:: AnProcess ann -> AnnotatedRule ann
 getInitRule anP = initrule
   where
-        initrule = AnnotatedRule (Just "Init") anP [] l a r 0
+        initrule = AnnotatedRule (Just "Init") anP (Right InitPosition) l a r 0
         l = []
         a = [InitEmpty ]
         r = [State LState [] S.empty]
@@ -110,7 +110,7 @@ getInitRule anP = initrule
 getMsgId :: AnProcess ann -> AnnotatedRule ann
 getMsgId anP = messageidrule
   where
-        messageidrule = AnnotatedRule (Just "MessageID-rule") anP []
+        messageidrule = AnnotatedRule (Just "MessageID-rule") anP (Right NoPosition)
                     [ Fr  $ varMID [] ] -- prem
                     []                -- act
                     [ MessageIDReceiver [], MessageIDSender [] ]
@@ -169,10 +169,10 @@ progresstrans basetrans initrules anP = do
     return $ map (toRule . (addProgressVariables dom_pf) . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) (initrules ++ msrs)
     where
           -- x =  LVar "x" LSortFresh 0
-          map_act f anrule = let (l',a',r') = f (position anrule) (prems anrule) (acts anrule) (concs anrule) in
+          map_act f anrule = let (l',a',r') = f (prems anrule) (acts anrule) (concs anrule) in
                     anrule { prems = l', acts = a', concs = r'  }
           stateInPrems  = any isNonSemiState . prems
-          addProgressTo'' p posFrom _ l a r  =
+          addProgressTo'' p posFrom l a r  =
                             ( l
                             , ProgressTo p posFrom:a
                             , r)
@@ -187,26 +187,54 @@ progresstrans basetrans initrules anP = do
                                    --  early). ProgressTo is annotated with the
                                    --  inverse of the child's position, for
                                    --  verification speedup.
-            | stateInPrems anrule = foldl (addProgressTo' inv) anrule [lhsP (position anrule), rhsP (position anrule)]
+            | stateInPrems anrule,
+              Left pos <- position anrule
+                = foldl (addProgressTo' inv) anrule [lhsP pos, rhsP pos]
             | otherwise                                                  = anrule
           stateInConcls = any isNonSemiState . concs
           addProgressFrom dom' anrule
-            | stateInConcls anrule,  position anrule `S.member` dom' =
-                    map_act (\p l a r ->
-                            ( Fr(varProgress p):l
-                            , ProgressFrom p:a
+            | stateInConcls anrule
+            ,  (Left pos) <- position anrule
+            , (lhsP pos) `S.member` dom' =
+                    map_act (\l a r ->
+                            ( Fr(varProgress $ lhsP pos):l
+                            , ProgressFrom (lhsP pos):a
+                            ,  r
+                            )) anrule
+            | stateInConcls anrule, 
+              (Right InitPosition) <- position anrule
+            -- , (ProcessComb NDC _ _ _) <- process anrule -- If top-level is NDC, 
+            --                                             -- we need to add profressFrom to
+            --                                             -- Init instead of top-level rule,
+            --                                             -- which does not exist
+            , [] `S.member` dom' =
+                    map_act (\l a r ->
+                            ( Fr(varProgress []):l
+                            , ProgressFrom []:a
                             ,  r
                             )) anrule
             | otherwise  = anrule
-          addProgressVariables dom' anrule = 
-            let positions_to_add = filter (descendant (position anrule)) (S.toList dom')
-            in
-                    map_act (\_ l a r ->
-                            ( foldl addProgressVariable l (List.delete (position anrule) positions_to_add)
+          addProgressVariables dom' anrule 
+            |  (Left pos) <- position anrule = 
+                let positions_to_add = filter (\pf -> (lhsP pos) `descendant` pf) (S.toList dom')
+                in
+                    map_act (\ l a r ->
+                            ( foldl addProgressVariable l (List.delete (lhsP pos) positions_to_add)
                             , a
                             , foldl addProgressVariable r positions_to_add
                             )) anrule
+            |  (Right InitPosition) <- position anrule 
+            -- , (ProcessComb NDC _ _ _) <- process anrule -- If top-level is NDC, 
+            , [] `S.member` dom' =
+                    map_act (\ l a r ->
+                            ( l
+                            , a
+                            , addProgressVariable r []
+                            )) anrule
+            | otherwise          = anrule
           addProgressVariable factlist p' = map (addVarToState $ varProgress p') factlist
+          -- removeUnlessInit (Left pos) list = List.delete pos list
+          -- removeUnlessInit (Right _) list = list
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
@@ -268,6 +296,6 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         trans = (trans_null, trans_action, trans_comb)
         -- convert prems, acts and concls generated for current process
         -- into annotated rule
-        toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc p l a r
+        toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc (Left p) l a r
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l

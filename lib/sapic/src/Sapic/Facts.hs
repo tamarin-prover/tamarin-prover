@@ -9,6 +9,7 @@
 module Sapic.Facts (
      TransAction(..)
    , TransFact(..)
+   , SpecialPosition(..)
    , AnnotatedRule(..)
    , StateKind(..)
    , isSemiState
@@ -81,11 +82,14 @@ data TransFact =  Fr LVar | In SapicTerm
             | MessageIDReceiver ProcessPosition
             | TamarinFact LNFact
 
+data SpecialPosition = InitPosition -- initial position, is logically the predecessor of []
+                     | NoPosition -- no real position, e.g., message id rule
+
 -- | annotated rules know:
 data AnnotatedRule ann = AnnotatedRule {
       processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
     , process      :: AnProcess ann   -- process this rules was generated for
-    , position     :: ProcessPosition -- position of this process in top-level process
+    , position     :: Either ProcessPosition SpecialPosition -- position of this process in top-level process
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
@@ -207,6 +211,12 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
+prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
+prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
+prettyEitherPositionOrSpecial (Right InitPosition) = "Init"
+prettyEitherPositionOrSpecial (Right NoPosition) = ""
+
+
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
           Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
@@ -215,7 +225,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                 Just s -> s
                 Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
                          ++ "_" ++ show index ++ "_"
-                         ++ prettyPosition position
+                         ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ RGB 0.3 0.3 0.3 -- TODO compute color from processnames
                    , Process $ toProcess process]
             l = map factToFact prems
