@@ -129,7 +129,12 @@ resNotEq = [r|restriction predicate_not_eq:
 
 resResilient :: String
 resResilient = [r|restriction resilient: 
-"All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j "
+"All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j"
+|]
+
+resProgressInit :: String
+resProgressInit = [r|restriction progressInit: 
+"Ex #t . Init()@t"
 |]
 
 flattenList :: Eq a0 => [[a0]] -> [a0]
@@ -150,8 +155,9 @@ generateProgressRestrictions anp = do
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anp pos
             restrL <- mapM (\tos -> return $ Restriction (name tos) (formula tos))  (S.toList toss)
+            initL <- toEx resProgressInit
             -- return $ Restriction (name tos) (formula tos)
-            return restrL
+            return $ restrL ++ [initL]
             where
                 name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
                 formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. (conclusion tos)
@@ -261,7 +267,6 @@ generateSapicRestrictions op anP =
 
         -- TODO need to incorporate lemma2string_noacc
         -- TODO add missing features. This is what SAPIC did
-          -- @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
           -- @ (if op.accountability then [] else [res_single_session_l])
         -- (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
          -- *                  TODO it would be better if we would actually check whether each lemma

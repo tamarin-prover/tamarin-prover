@@ -191,9 +191,9 @@ progresstrans basetrans initrules anP = do
               Left pos <- position anrule
                 = foldl (addProgressTo' inv) anrule [lhsP pos, rhsP pos]
             | otherwise                                                  = anrule
-          stateInConcls = any isNonSemiState . concs
+          nonSemiStateInConcls = any isNonSemiState . concs
           addProgressFrom dom' anrule
-            | stateInConcls anrule
+            | nonSemiStateInConcls anrule
             ,  (Left pos) <- position anrule
             , (lhsP pos) `S.member` dom' =
                     map_act (\l a r ->
@@ -201,7 +201,7 @@ progresstrans basetrans initrules anP = do
                             , ProgressFrom (lhsP pos):a
                             ,  r
                             )) anrule
-            | stateInConcls anrule, 
+            | nonSemiStateInConcls anrule, 
               (Right InitPosition) <- position anrule
             -- , (ProcessComb NDC _ _ _) <- process anrule -- If top-level is NDC, 
             --                                             -- we need to add profressFrom to
