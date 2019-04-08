@@ -24,7 +24,7 @@ import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Set              as S
-import qualified Data.List              as List
+-- import qualified Data.List              as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -84,10 +84,6 @@ translate th = case theoryProcesses th of
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
-  -- let msr =
-  --     if input.op.progress
-  --     then progresstrans annotated_process
-  --     else noprogresstrans annotated_process
   -- and predicate_restrictions = print_predicates input.pred
   -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   -- in
@@ -117,124 +113,94 @@ getMsgId anP = messageidrule
                     0
 -- | Standard translation without progress:
 -- | use gen and basetranslation and add a simple Init rule.
--- noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
---                     Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
---                     (ann
---                     -> ProcessPosition
---                     -> S.Set a
---                     -> m (t1 ([TransFact], [TransAction], [TransFact])),
---                     SapicAction
---                     -> ann
---                     -> ProcessPosition
---                     -> S.Set a
---                     -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
---                     ProcessCombinator
---                     -> ann
---                     -> ProcessPosition
---                     -> S.Set a
---                     -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
---                           S.Set a))
---                    -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-noprogresstrans basetrans _ anP = do
+noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
+                    Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
+                   (ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t1 ([TransFact], [TransAction], [TransFact])),
+                    SapicAction
+                    -> ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
+                    ProcessCombinator
+                    -> ann
+                    -> ProcessPosition
+                    -> S.Set a
+                    -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
+                          S.Set a))
+                   -> [AnnotatedRule ann] -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+noprogresstrans basetrans initrules anP = do
     msrs <- gen basetrans anP [] S.empty
-    return $ map toRule msrs
+    return $ map toRule $ initrules ++ msrs
 
 -- | translation with progress:
 -- | use gen and basetranslation, but
 -- | adds ProgressTo actions where a state-fact is in the premise
 -- | adds ProgressFrom actions where a state-fact is in the conclusion
 -- | also adds a message id rule
--- progresstrans :: (Show ann, MonadCatch m, Typeable ann,
---                   Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
---                   (ann
---                   -> ProcessPosition
---                   -> S.Set a
---                   -> m (t1 ([TransFact], [TransAction], [TransFact])),
---                   SapicAction
---                   -> ann
---                   -> ProcessPosition
---                   -> S.Set a
---                   -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
---                   ProcessCombinator
---                   -> ann
---                   -> ProcessPosition
---                   -> S.Set a
---                   -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
---                         S.Set a))
---                  -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-progresstrans basetrans initrules anP = do
-    msrs <- gen basetrans anP [] S.empty
-    dom_pf <- pfFrom anP
-    inv_pf <- pfInv anP
-    return $ map (toRule . (addProgressVariables dom_pf) . (addProgressFrom dom_pf) . (addProgressTo inv_pf)) (initrules ++ msrs)
+progresstrans :: (MonadCatch m, Show ann, Typeable ann,
+                  Foldable t1, GoodAnnotation ann) =>
+                 (ann
+                  -> ProcessPosition
+                  -> S.Set LVar
+                  -> m (t1 ([TransFact], [TransAction], [TransFact])),
+                  SapicAction
+                  -> ann
+                  -> [Int]
+                  -> S.Set LVar
+                  -> m ([([TransFact], [TransAction], [TransFact])], S.Set LVar),
+                  ProcessCombinator
+                  -> ann
+                  -> [Int]
+                  -> S.Set LVar
+                  -> m ([([TransFact], [TransAction], [TransFact])], S.Set LVar,
+                        S.Set LVar))
+                 -> [AnnotatedRule ann] -> AnProcess ann -> m [Rule ProtoRuleEInfo]
+progresstrans (tNull,tAct,tComb) initrules anP = do
+    domPF <- pfFrom anP
+    invPF <- pfInv anP
+    msrs <- gen (t domPF invPF) anP [] (initTx domPF)
+    return $ map toRule $ initrules' domPF ++ msrs
     where
-          -- x =  LVar "x" LSortFresh 0
-          map_act f anrule = let (l',a',r') = f (prems anrule) (acts anrule) (concs anrule) in
-                    anrule { prems = l', acts = a', concs = r'  }
-          stateInPrems  = any isNonSemiState . prems
-          addProgressTo'' p posFrom l a r  =
-                            ( l
-                            , ProgressTo p posFrom:a
-                            , r)
-          addProgressTo' inv anrule child 
-            | (Just posFrom) <- inv child = map_act (addProgressTo'' child posFrom) anrule
-            | otherwise = anrule 
-          addProgressTo inv anrule -- corresponds to step2 (child[12] p) in Firsttranslation.ml
-                                   -- if one of the direct childen of anrule is in the range of the pf
-                                   --  it has an inverse. We thus add ProgressTo to each such rule
-                                   --  that has the *old* state in the premise (we
-                                   --  don't want to move into Semistates too
-                                   --  early). ProgressTo is annotated with the
-                                   --  inverse of the child's position, for
-                                   --  verification speedup.
-            | stateInPrems anrule,
-              Left pos <- position anrule
-                = foldl (addProgressTo' inv) anrule [lhsP pos, rhsP pos]
-            | otherwise                                                  = anrule
-          nonSemiStateInConcls = any isNonSemiState . concs
-          addProgressFrom dom' anrule
-            | nonSemiStateInConcls anrule
-            ,  (Left pos) <- position anrule
-            , (lhsP pos) `S.member` dom' =
-                    map_act (\l a r ->
-                            ( Fr(varProgress $ lhsP pos):l
-                            , ProgressFrom (lhsP pos):a
-                            ,  r
-                            )) anrule
-            | nonSemiStateInConcls anrule, 
-              (Right InitPosition) <- position anrule
-            -- , (ProcessComb NDC _ _ _) <- process anrule -- If top-level is NDC, 
-            --                                             -- we need to add profressFrom to
-            --                                             -- Init instead of top-level rule,
-            --                                             -- which does not exist
-            , [] `S.member` dom' =
-                    map_act (\l a r ->
-                            ( Fr(varProgress []):l
-                            , ProgressFrom []:a
-                            ,  r
-                            )) anrule
-            | otherwise  = anrule
-          addProgressVariables dom' anrule 
-            |  (Left pos) <- position anrule = 
-                let positions_to_add = filter (\pf -> (lhsP pos) `descendant` pf) (S.toList dom')
-                in
-                    map_act (\ l a r ->
-                            ( foldl addProgressVariable l (List.delete (lhsP pos) positions_to_add)
-                            , a
-                            , foldl addProgressVariable r positions_to_add
-                            )) anrule
-            |  (Right InitPosition) <- position anrule 
-            -- , (ProcessComb NDC _ _ _) <- process anrule -- If top-level is NDC, 
-            , [] `S.member` dom' =
-                    map_act (\ l a r ->
-                            ( l
-                            , a
-                            , addProgressVariable r []
-                            )) anrule
-            | otherwise          = anrule
-          addProgressVariable factlist p' = map (addVarToState $ varProgress p') factlist
-          -- removeUnlessInit (Left pos) list = List.delete pos list
-          -- removeUnlessInit (Right _) list = list
+          initrules' domPF =  map (mapAct $ addProgressFrom domPF []) initrules
+          initTx domPF = if [] `S.member` domPF then S.singleton $ varProgress [] else S.empty
+          addProgressFrom domPF child (l,a,r)
+             | any isNonSemiState r
+             , child `S.member` domPF =
+                     (Fr(varProgress child):l
+                     , ProgressFrom child:a
+                     , map (addVarToState $ varProgress child) r)
+             | otherwise = (l,a,r)
+          t domPF invPF = (tNull',tAct',tComb') -- modify translation to add Progress*-events
+            where
+              tNull' = tNull
+              tComb' comb an pos tx =  do
+                (rs0,tx1,tx2) <- tComb comb an pos tx
+                return (map (addProgressItems pos) rs0
+                       ,extendVars pos tx1
+                       ,extendVars pos tx2)
+              tAct' ac an pos tx = do 
+                (rs0,tx1) <- tAct ac an pos tx 
+                return (map (addProgressItems pos) rs0
+                       ,extendVars pos tx1)
+              extendVars pos tx
+                | lhsP pos `S.member` domPF =  varProgress (lhsP pos) `S.insert` tx
+                | otherwise = tx
+              addProgressItems pos =addProgressFrom domPF (lhsP pos) -- can only start from ! or in, which have no rhs position
+                                  . addProgressTo (lhsP pos)
+                                  . addProgressTo (rhsP pos)
+              -- corresponds to step2 (child[12] p) in Firsttranslation.ml if
+              -- one of the direct childen of anrule is in the range of the pf
+              -- it has an inverse. We thus add ProgressTo to each such rule
+              -- that has the *old* state in the premise (we don't want to move
+              -- into Semistates too early). ProgressTo is annotated with the
+              -- inverse of the child's position, for verification speedup.
+              addProgressTo child (l,a,r) 
+                | any isState l
+                , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r)
+                | otherwise                     = (l,a,r)
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and

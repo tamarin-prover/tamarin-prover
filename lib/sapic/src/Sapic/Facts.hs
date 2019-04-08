@@ -11,8 +11,10 @@ module Sapic.Facts (
    , TransFact(..)
    , SpecialPosition(..)
    , AnnotatedRule(..)
+   , mapAct
    , StateKind(..)
    , isSemiState
+   , isState
    , isNonSemiState
    , addVarToState
    , factToFact
@@ -96,6 +98,13 @@ data AnnotatedRule ann = AnnotatedRule {
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
+-- | applies function acting on rule taple on annotated rule.
+mapAct :: (([TransFact], [TransAction], [TransFact])
+           -> ([TransFact], [TransAction], [TransFact]))
+          -> AnnotatedRule ann -> AnnotatedRule ann
+mapAct f anrule = let (l',a',r') = f (prems anrule, acts anrule, concs anrule) in
+                  anrule { prems = l', acts = a', concs = r'  }
+
 isSemiState :: StateKind -> Bool
 isSemiState LState = False
 isSemiState PState = False
@@ -105,6 +114,10 @@ isSemiState PSemiState = True
 isNonSemiState :: TransFact -> Bool
 isNonSemiState (State kind _ _) = not $ isSemiState kind
 isNonSemiState _ = False
+
+isState :: TransFact -> Bool
+isState (State _ _ _) = True
+isState _ = False
 
 addVarToState :: LVar -> TransFact -> TransFact
 addVarToState v' (State kind pos vs)  = State kind pos (v' `S.insert` vs)

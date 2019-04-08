@@ -350,7 +350,8 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 NSL/nsl-no_as-untagged.spthy \
-MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy 
+MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy  \
+fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
@@ -369,7 +370,6 @@ MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spt
 #
 # GJM-contract/contract.spthy \
 # SCADA/opc_ua_secure_conversation.spthy \
-# fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy \
 #
 # xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
 # not working for unknown reason:
