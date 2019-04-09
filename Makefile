@@ -351,9 +351,10 @@ SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/chan
 encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 NSL/nsl-no_as-untagged.spthy \
-MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy  \
+MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
-SCADA/opc_ua_secure_conversation.spthy 
+SCADA/opc_ua_secure_conversation.spthy \
+xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy 
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
@@ -365,12 +366,13 @@ SCADA/opc_ua_secure_conversation.spthy
 # locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 # locations/SOC.spthy  -> commented out before
 #
+# exceptional cases:
+# xor/NSLPK3xor.spthy -> attack finding relies on sources lemma which is untrue. 
+# 			its ok because these are attacks, but negating it would defeat its purpose
+#
 # to be checked 
 # GJM-contract/contract.spthy \
 #
-# xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
-# not working for unknown reason:
-# xor/NSLPK3xor.spthy
 
 # TODO check with complete list.
 
