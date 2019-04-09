@@ -60,12 +60,12 @@ let Device=(
 			if status='init' then
                             (if req='left' then
                                 event InitDevice(s);
-				insert s,req;
+				insert <'F_status',s>,req;
 				unlock s
                             else
                                 if req='right' then
                                 event InitDevice(s);
-				insert s,req;
+				insert <'F_status',s>,req;
 				unlock s)
 	) 
 	||
