@@ -200,6 +200,19 @@ x ⊕ x       = zero
 : This theory introduces the associative-commutative operator `+` which is usually
   used to model multisets.
 
+``reliable-channel`:
+
+: This theory introduces support for reliable channel in the progress calculus.
+Messages on the channel (i.e., public name) `'r'` are guaranteed to arrive
+eventually. There is only one other channel, the public and unreliable channel
+`'c'`. Note that multiple reliable channels can be modelled using pattern matchting:
+```
+  out('r',<'channelA','Hello')              
+| out('r',<'channelB','Bonjour')
+| in('r',<'channelA',x); event PrepareTea()
+| in('r',<'channelB',x); event PrepareCoffee()
+```
+
 
 Reserved function symbol names {#sec:reserved-names}
 ------------------------
