@@ -102,6 +102,47 @@ an action `Insert(x,y)` has occurred previously, and in between, no other
 `Insert(x,y')` or `Delete(x)` action has changed the global store at the position `x`. Hence,
 the global store is distinct from the set of facts in the current state.
 
+### Enforcing local progress (optional)
+
+The translation from processes can be modified so it enforces a different
+semantics. In this semantics, the set of traces consists of only those where
+a process has been reduced **as far as possible**. A process can reduce unless
+it is waiting for some input, it is under replication, or unless it is already
+reduced up to the 0-process. 
+
+```
+options: translation-progress
+```
+
+This can be used to model time-outs. The following process must reduce to either `P` or `out('help');0`:
+
+``
+( in(x); P) + (out('help');0)
+```
+If the input message received, it will produce regulary, in this example: with
+`P`. If the input is not received, there is no other way to progress except for
+the right-hand side. But progress it must, so the right-hand side can model
+a recovery protocol.
+
+In the translated rules, events
+`ProgressFrom_p` and `ProgressTo_p` are added. Here `p` marks a position that,
+one reached, requires the corresponding `ProgressTo` event to appear. This is
+enforced by restrictions. Note that a process may need to process to more than one position, e.g., 
+
+```
+new a; (new b; 0 | new c; 0)
+```
+progresses to both trailing 0-processes.
+
+It may also process to one out of many positions, e.g., here
+```
+in(x); if x='a' then 0 else 0
+```
+More details can be found in the corrsponding paper [@BaDrKr-2016-liveness].
+Note that local progress by itself does not guarantee that messages arrive.
+Recovery protocols often rely on a trusted third party, which is possibly
+offline most of time, but can be reached using [the builtin theory for reliable channels](004_cryptographic-messages.html#sec:builtin-theories).
+
 ## Syntactic sugar
 
 ### Process declarations using `let`
@@ -125,6 +166,18 @@ let B = A | A
 !B
 ```
 
+Other process calculi, e.g., ProVerif's dialect of the applied-pi calculus,
+only allow variables in inputs. While it is sometimes clearer to write
+a pattern in a letblock, it may confuse users that expect the `in` construct to bind a variable:
+```
+let pat_m1 = <x,y> in
+in(pat_m1)
+```
+To avoid unexpected behaviour, we allow a let-expression to apply to
+a single-variable term in an `in` only if the variable is prefixed with `pat_`,
+as in the above example.
+
+
 ### Using 'let' binding in processes
 
 Similar to rules, `let`-bindings are allowed to faciliate writing processes
@@ -140,4 +193,3 @@ let foo1 = h(bar)
 ```
 Let-bindings in processes adhere to the same rules as [let-bindings in
 rules](#sec:let-rules).
-
