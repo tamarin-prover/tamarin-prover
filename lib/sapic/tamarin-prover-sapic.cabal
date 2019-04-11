@@ -66,6 +66,7 @@ library
       , Sapic.Exceptions
       , Sapic.ProcessUtils
       , Sapic.Locks
+      , Sapic.SecretChannels
       , Sapic.Facts
       , Sapic.Basetranslation
       , Sapic.Restrictions
