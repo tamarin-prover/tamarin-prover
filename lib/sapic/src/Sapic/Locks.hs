@@ -34,7 +34,7 @@ annotateEachClosestUnlock :: MonadThrow m =>
                              -> m( AnProcess ProcessAnnotation)
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) = 
-            if t == t' then -- TODO do we need more precise equality? test this
+            if t == t' then 
                 return $ ProcessAction (Unlock t') (a' `mappend` annUnlock v) p
             else do
                 p' <- annotateEachClosestUnlock t v p
