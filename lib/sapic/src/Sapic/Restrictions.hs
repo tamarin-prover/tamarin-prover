@@ -230,8 +230,6 @@ generateSapicRestrictions op anP =
     do
         hardcoded <- mapM toEx hardcoded_l
         locking   <- mapM resLocking (getLockPositions anP)
-        -- TODO do we need to remove duplicates?
-          -- @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
         progress  <- if hasProgress op then
                     generateProgressRestrictions anP
                 else
@@ -263,7 +261,7 @@ generateSapicRestrictions op anP =
         getLock p 
             | (ProcessAction (Lock _) an _) <- p, (Just (AnLVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
-        getLockPositions = pfoldMap  getLock
+        getLockPositions = pfoldMap getLock
 
         -- TODO need to incorporate lemma2string_noacc once we handle accountability
         -- TODO add feature checking lemmas for wellformedness, adding ass_immeadiate_in if necessary 
