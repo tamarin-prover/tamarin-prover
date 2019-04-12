@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
@@ -25,6 +26,10 @@ import Theory.Sapic.Print
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
 
+prettyWFLockTag :: WFLockTag -> String
+prettyWFLockTag WFRep = "replication"
+prettyWFLockTag WFPar = "a parallel"
+
 -- | Wellformedness errors, see instance of show below for explanation.
 data WFerrror a = WFLock WFLockTag (AnProcess a)
                 | WFUnboundProto (Set LVar)
@@ -33,17 +38,13 @@ data WFerrror a = WFLock WFLockTag (AnProcess a)
     deriving (Typeable, Show)
 
 -- | SapicExceptions see instance of show below for explanation.
-data SapicException a = SomethingBad
+data SapicException a = NotImplementedError String
+                    -- SomethingBad
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
-                    | NotImplementedError String
-                    | TranslationError String
                     -- | UnAnnotatedLock String
                     | ProcessNotWellformed (WFerrror a)
-                    | NoNextState
-                    | UnassignedTerm
                     | InvalidPosition ProcessPosition
-                    | NotInRange String
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
@@ -54,11 +55,11 @@ data SapicException a = SomethingBad
 prettyVarSet :: Set LVar -> [Char]
 prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
 
--- TODO not complete yet, add nicer error messages later
 instance Show (SapicException a) where
-    show SomethingBad = "Something bad happened"
+    -- show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (RestrictionNameExists s) = "Restriction already exists:" ++ s
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
     show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
@@ -78,5 +79,7 @@ instance Show (SapicException a) where
                    prettySapic pr
     show (ProcessNotWellformed WFReliable) =
                    "If reliable channels are activated, processes should only contain in('r',m), out('r',m), in('c',m) or out('c',m) for communication."
-    show (TranslationError s) = "Error in the translation: "++ show s
+    show (ProcessNotWellformed (WFLock tag pr)) =
+                   "Process " ++ prettySapic pr ++ " contains lock that extends over " 
+                   ++ prettyWFLockTag tag ++ " which is not allowed."
 instance (Typeable a, Show a) => Exception (SapicException a)

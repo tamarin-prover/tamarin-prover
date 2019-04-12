@@ -15,7 +15,7 @@
 module Sapic (
     translate
 ) where
-import Control.Exception
+import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
 import Sapic.Exceptions
@@ -233,7 +233,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         proc' <- processAt anP p
         case proc' of
             ProcessNull ann -> do
-                msrs <- trans_null ann p tildex
+                msrs <- catch (trans_null ann p tildex) (handler proc')
                 return $ mapToAnnotatedRule proc' msrs
             (ProcessComb NDC _ _ _) ->
                let  subst p_old = map_prems (substStatePos p_old p) in
@@ -243,14 +243,14 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
                    return $ subst (p++[1]) l ++ subst (p++[2]) r
             (ProcessComb c ann _ _) ->
                 do
-                (msrs, tildex'1, tildex'2) <- trans_comb c ann p tildex
+                (msrs, tildex'1, tildex'2) <- catch (trans_comb c ann p tildex) (handler proc')
                 msrs_l <- gen trans anP (p++[1]) tildex'1
                 msrs_r <- gen trans anP (p++[2]) tildex'2
                 return  $
                     mapToAnnotatedRule proc' msrs ++ msrs_l ++ msrs_r
             (ProcessAction  ac ann _) ->
                 do
-                    (msrs, tildex') <- trans_action ac ann p tildex
+                    (msrs, tildex') <- catch (trans_action ac ann p tildex) (handler proc')
                     msr' <-  gen trans anP (p++[1]) tildex'
                     return $ mapToAnnotatedRule proc' msrs ++ msr'
     where
@@ -265,3 +265,8 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc (Left p) l a r
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
+        handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
+        handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
+        handler _ e = throw e
+            
+            

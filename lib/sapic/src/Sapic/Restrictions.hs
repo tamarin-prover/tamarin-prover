@@ -265,8 +265,9 @@ generateSapicRestrictions op anP =
             | otherwise  = []
         getLockPositions = pfoldMap  getLock
 
-        -- TODO need to incorporate lemma2string_noacc
-        -- TODO add missing features. This is what SAPIC did
+        -- TODO need to incorporate lemma2string_noacc once we handle accountability
+        -- TODO add feature checking lemmas for wellformedness, adding ass_immeadiate_in if necessary 
+        -- This is what SAPIC did
           -- @ (if op.accountability then [] else [res_single_session_l])
         -- (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
          -- *                  TODO it would be better if we would actually check whether each lemma
