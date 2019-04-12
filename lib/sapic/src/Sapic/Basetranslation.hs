@@ -152,8 +152,6 @@ baseTransComb c _ p tildex
                      , tildex, tildex )
                 else
                     throw $
-                    -- TODO Catch and add process in calling function.
-                    -- as we cannot tell which process it is here.
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
@@ -175,7 +173,7 @@ reliableChannelTrans :: MonadThrow m =>
                             c)
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
-        tAct' ac an p tx   -- TODO test if it does what it should do
+        tAct' ac an p tx 
             | (ChIn (Just v) t) <- ac
             ,Lit (Con name) <- viewTerm v
             , sortOfName name == LSortPub
