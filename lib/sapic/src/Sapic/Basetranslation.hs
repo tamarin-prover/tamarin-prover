@@ -84,7 +84,7 @@ baseTransAction ac an p tildex
     | (ChOut (Just tc) t) <- ac, (Just (AnLVar v)) <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state], [], [Message tc t,semistate])], tildex)
+          ([def_state], [], [Message tc t,def_state' tildex])], tildex)
     | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
