@@ -99,7 +99,6 @@ pfFrom process = from' process True
         | otherwise = do
         -- |  (ProcessAction ac _ p' ) <- proc = 
         -- singletonOrEmpty (conditionAction proc b) `S.union` [1]<.> from' p' (isBlocking ac)
-        -- TODO can shorten once addWithRecursive is correct
         -- | (ProcessComb comb _ pl pr) <- proc =
         res <- foldM (addWithRecursive proc) S.empty (next proc)
         return $ singletonOrEmpty (conditionAction proc b) `S.union` res
