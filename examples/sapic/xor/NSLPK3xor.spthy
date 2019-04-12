@@ -90,6 +90,8 @@ precomputed case distinctions in the GUI. Try to complete the proof of the
 'nonce_secrecy' lemma.
 */
 // FINDS ATTACK - as we only find attacks below, this is ok.
+// Note Robert: turning this into a restriction does not help -- stuff further
+// down will not terminate.
 //
 lemma types [sources]:
   " (All ni m1 #i.
@@ -107,7 +109,6 @@ lemma types [sources]:
        )
     )
   "
-
 
 restriction onekeypername:
   " /* It cannot be that */

@@ -48,8 +48,7 @@ lemma alive:
 // FINDS ATTACK AUTOMATICALLY
 // due to restriction on inequality of nonce with zero, we get a nicer looking attack
 lemma recentalive_tag:
-  all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j #k. Challenge(x) @k & Response( y ) @ #j & k < j & j < i)"
-
+  exists-trace "not (∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j #k. Challenge(x) @k & Response( y ) @ #j & k < j & j < i))"
 
 // SHOWS CORRECT EXECUTION
 lemma executable:

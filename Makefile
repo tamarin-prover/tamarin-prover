@@ -346,46 +346,79 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 ## SAPIC output in Tamarin
 ##########################
 
+# FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
-SAPIC_CASE_STUDIES=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
-encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
-NSL/nsl-no_as-untagged.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
 SCADA/opc_ua_secure_conversation.spthy \
-xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy 
+xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy \
+GJM-contract/contract.spthy
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
-# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well. investigate
+# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
 # Yubikey/Yubikey.spthy NOTE commented out previously need to verify
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
 # predicates/decwrap_destr.spthy predicates/simple_example.spthy \
-#
-# not working because of missing support for locations
+# location stuff: not tested so far
 # locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
 # locations/SOC.spthy  -> commented out before
+# examples/sapic/locations/OTP.sapic examples/sapic/locations/AC.sapic examples/sapic/locations/AC_counter_with_attack.sapic examples/sapic/locations/AC_sid_with_attack.sapic -> not in Makefile before
+# pkcs11-example were previously commented out because they took so long, but should check if they can be completed.
+# examples/sapic/PKCS11/pkcs11-templates.sapic
+# examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic
 #
-# exceptional cases:
-# xor/NSLPK3xor.spthy -> attack finding relies on sources lemma which is untrue. 
-# 			its ok because these are attacks, but negating it would defeat its purpose
+# exceptional cases, that are left out on purpose, with explanations:
+# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model, 
+# 		because the attacks found despite an incorrect sources lemma
+# 		are correct by definition, but negating it would defeat its
+# 		purpose, and removing it would inhibit the attack finding. 
 #
-# to be checked 
-# GJM-contract/contract.spthy \
-#
+# missing (but also before): fairexchange stuff...-> check how long they take on fast machines
+# examples/sapic/fairexchange-km/km.sapic
+# examples/sapic/fairexchange-km/km-with-comments.sapic
+# examples/sapic/fairexchange-asw/aswAB-mod-weak-A.sapic
+# examples/sapic/fairexchange-asw/asw-mod-weak-locks.sapic
+# examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
+# examples/sapic/fairexchange-asw/aswAB.sapic
+# examples/sapic/fairexchange-asw/aswAB-mod.sapic
+# examples/sapic/fairexchange-gjm/gjm-locks-magic.sapic
+# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic
+# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.sapic
+# examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.sapic
+# examples/sapic/fairexchange-gjm/gjm.sapic
+# examples/sapic/fairexchange-gjm/gjm-locks.sapic#
 
-# TODO check with complete list.
+# envelope examples (this example was never completed and is for reference only)
+# examples/sapic/envelope/envelope.sapic
+# examples/sapic/envelope/envelope_simpler.sapic
+# examples/sapic/envelope/envelope_allowsattack.sapic
 
-SAPIC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES)))
 
-lol:
-	$(info $$var is [${SAPIC_CS_TARGETS}])
+SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
+
+# SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
+
+SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+NSL/nsl-no_as-untagged.spthy 
+
+SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
+
+
+SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
+SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
+
+# lol:
+# 	$(info $$var is [${SAPIC_CS_TARGETS}])
 
 # case studies
-sapic-case-studies:	$(SAPIC_CS_TARGETS)
-	# grep "verified\|falsified\|processing time" case-studies/sapic/basic/*.spthy case-studies/sapic/statVerifLeftRight/*.spthy case-studies/sapic/GJM-contract/*.spthy case-studies/sapic/NSL/*.spthy case-studies/sapic/predicates/*.spthy case-studies/sapic/locations/*.spthy case-studies/sapic/SCADA/*.spthy case-studies/sapic/fairexchange-mini/*.spthy
+sapic-case-studies:	$(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) # used for regressions, skips super slow tests
 	grep "verified\|falsified\|processing time" $^
-	# grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
+sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during development
+	grep "verified\|falsified\|processing time" $^
+sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPERSLOW) # used to heat in winter
+	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
 ###################

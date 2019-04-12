@@ -125,7 +125,7 @@ applyProcessCombinatorError subst c
 instance Apply SapicAction where
     apply subst ac 
         | (New v) <- ac        = New v
-        | (ChIn  mt t) <- ac   = ChIn (apply subst mt) t
+        | (ChIn  mt t) <- ac   = ChIn (apply subst mt) (apply subst t)
         | (ChOut mt t) <- ac   = ChOut (apply subst mt) (apply subst t)
         | (Insert t1 t2) <- ac = Insert (apply subst t1) (apply subst t2)
         | (Delete t) <- ac     = Delete (apply subst t)
@@ -149,7 +149,7 @@ applySapicActionError subst ac
                                   -- pat_
                                   throwM $ CapturedEx CapturedIn v
                             else
-                                  return $ ChIn (apply subst mt) t 
+                                  return $ ChIn (apply subst mt) (apply subst t)
         | otherwise = return $ apply subst ac
 
 instance Apply (AnProcess ann) where

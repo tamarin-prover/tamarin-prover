@@ -31,6 +31,7 @@ module Theory (
   , addProcessDef
   , lookupProcessDef
   , pName
+  , pBody
 
   -- * Options
   , transAllowPatternMatchinginLookup
@@ -200,6 +201,7 @@ module Theory (
   , prettyTraceQuantifier
 
   , prettyProcess
+  , prettyProcessDef
 
   -- * Convenience exports
   , module Theory.Model
@@ -229,6 +231,9 @@ import           Control.Parallel.Strategies
 
 import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
+import qualified Data.Label.Point
+import qualified Data.Label.Poly
+import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
@@ -931,12 +936,10 @@ addPredicate pDef thy = do
     return $ modify thyItems (++ [PredicateItem pDef]) thy
 
 -- | Add a new option. Overwrite previous settings
--- setOption :: Option -> Theory sig c r p s -> Theory sig c r p s
--- setOption o thy = L.modify thyOptions (overwrite' o) thy
---     where
---         overwrite op op' f = (L.modify f (\v -> v || (L.get f op')) op  :: Option)
---         overwrite' op op' = foldl (overwrite op) op' [transAllowPatternMatchinginLookup, transProgress, transReliable]
-setOption l thy = L.set (l . thyOptions) True thy
+setOption :: Data.Label.Poly.Lens
+               Data.Label.Point.Total (Option -> Option) (Bool -> Bool)
+             -> Theory sig c r p s -> Theory sig c r p s
+setOption l = L.set (l . thyOptions) True
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)

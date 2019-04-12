@@ -4,8 +4,6 @@ begin
 section{* small example for progression function *}
 builtins: signing, hashing, reliable-channel
 options: translation-progress
-/* builtins: signing, hashing */
-/* options: progress */
 
 new k; ( (in('r',sign(m,k)); event A())+(in('r',m); out('c',m);event B()))
 

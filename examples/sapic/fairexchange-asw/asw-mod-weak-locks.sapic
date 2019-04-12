@@ -30,7 +30,8 @@ section{* The ASW contract signing protocol *}
 
 /* The convention for communication on reliable channel is: <role,from,to,message> */
 
-builtins:  hashing
+builtins: hashing, reliable-channel
+options: translation-progress
 
 functions:
     pk/1,sk/1[private],
@@ -41,7 +42,6 @@ equations:
     verify(sign(m, sk(i)), pk(i)) = true,
     extrmsg(sign(m,x))=m
 
-options: progress
 
 /* Role of Alice */
 

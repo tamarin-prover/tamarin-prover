@@ -996,7 +996,10 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
-                        return p)                                           
+                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
                         -- TODO SAPIC parser: multterm return
                         -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
             <|>    try  (do -- parens parser
@@ -1129,7 +1132,7 @@ heuristic isDiff = do
 --     Nothing -> fail $ "process not defined: " ++ i    
 checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
-    Just p -> return (_pBody p) -- TODO why doesnt this work? (get pBody p)
+    Just p -> return $ get pBody p
     Nothing -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.

@@ -9,7 +9,6 @@ section{* Envelope protocol *}
  * Date:    	October 2013
  *
  * Status:		 
- * [1] REF
  */
 
 builtins: signing, asymmetric-encryption
