@@ -82,8 +82,8 @@ resSingleSession = [r|restrictionsingle_session: // for a single session
 
 -- | Restriction for Locking. Note that LockPOS hardcodes positions that
 -- should be modified below.
-resLocking_l :: String
-resLocking_l  = [r|restriction locking:
+resLockingL :: String
+resLockingL  = [r|restriction locking:
 "All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
         ==> 
         ( #t1<#t3 
@@ -95,12 +95,12 @@ resLocking_l  = [r|restriction locking:
         | #t3<#t1 | #t1=#t3"
 |]
 
--- | Produce locking lemma for variable v by instantiating resLocking_l 
+-- | Produce locking lemma for variable v by instantiating resLockingL 
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
 resLocking :: MonadThrow m => LVar -> m Restriction
 resLocking v =  do
-    rest <- toEx resLocking_l
+    rest <- toEx resLockingL
     return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
     where
         subst _ a 
@@ -149,8 +149,8 @@ flattenList = foldr List.union []
 generateProgressRestrictions :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m [Restriction]
 generateProgressRestrictions anp = do
     dom_pf <- pfFrom anp -- set of "from" positions
-    lss_to <- mapM (restriction) (S.toList dom_pf) -- list of set of sets of "to" positions
-    return $ flattenList $ lss_to
+    lss_to <- mapM restriction (S.toList dom_pf) -- list of set of sets of "to" positions
+    return $ flattenList lss_to
     where 
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anp pos
@@ -160,11 +160,8 @@ generateProgressRestrictions anp = do
             return $ restrL ++ [initL]
             where
                 name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ S.toList tos)
-                formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. (conclusion tos)
+                formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion tos
                 pvar = msgVarProgress pos
-                -- pvar = ("prog", LSortMsg)
-                -- t1var = ("t1", LSortNode)
-                -- t2var = ("t2", LSortNode)
                 t1var = LVar "t" LSortNode 1
                 t2var = LVar "t" LSortNode 2
                 antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFactFormula (ProgressFrom pos)
