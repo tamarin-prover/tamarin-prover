@@ -28,6 +28,7 @@ import qualified Data.Set              as S
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
+import Sapic.SecretChannels
 import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
@@ -45,7 +46,7 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
 translate th = case theoryProcesses th of
       []  -> return (removeSapicItems th)
       [p] -> do
-                an_proc <- evalFreshT (annotateLocks (toAnProcess p)) 0
+                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (toAnProcess p))) 0
                 -- add rules
                 msr <- trans basetrans (initialRules an_proc) an_proc
                 th1 <- foldM liftedAddProtoRule th (msr)
