@@ -354,18 +354,19 @@ statVerifLeftRight/stateverif_left_right.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
 SCADA/opc_ua_secure_conversation.spthy \
-xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy \
+feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
+feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy
 # not working because of missing support for predicates
 # basic/running-example.spthy basic/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
 # Yubikey/Yubikey.spthy NOTE commented out previously need to verify
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
-# predicates/decwrap_destr.spthy predicates/simple_example.spthy \
+# feature-predicates/decwrap_destr.spthy feature-predicates/simple_example.spthy \
 # location stuff: not tested so far
-# locations/AC.spthy locations/AKE.spthy locations/licensing.spthy \
-# locations/SOC.spthy  -> commented out before
-# examples/sapic/locations/OTP.sapic examples/sapic/locations/AC.sapic examples/sapic/locations/AC_counter_with_attack.sapic examples/sapic/locations/AC_sid_with_attack.sapic -> not in Makefile before
+# feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
+# feature-locations/SOC.spthy  -> commented out before
+# examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
 # pkcs11-example were previously commented out because they took so long, but should check if they can be completed.
 # examples/sapic/PKCS11/pkcs11-templates.sapic
 # examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic

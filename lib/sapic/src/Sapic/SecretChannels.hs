@@ -1,12 +1,16 @@
 -- |
--- Copyright   : (c) 2019 Robert Künnemann
+-- Copyright   : (c) 2019 Charlie Jacomme <charlie.jacomme@lsv.fr>
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- Compute annotations for secret channels
--- a channel is secret if it correspond to a fresh variable only use as a channel identifier
+-- Compute annotations for always-secret channels
+--
+-- A channel is defined always-secret iff it correspond to a fresh variable
+-- only use as a channel identifier. For these channels, we can use a more
+-- efficient translation, as the adversary can never deduce then, and thus only
+-- a silent transition is possible.
 
 module Sapic.SecretChannels (
     annotateSecretChannels
