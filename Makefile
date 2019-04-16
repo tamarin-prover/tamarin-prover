@@ -5,8 +5,8 @@ TAMARIN=~/.local/bin/tamarin-prover
 SAPIC=~/.local/bin/sapic
 
 # Default installation via stack, multi-threaded
-# Try to install Tamarin and SAPIC
-default: tamarin sapic
+# Try to install Tamarin
+default: tamarin
 
 # Default Tamarin installation via stack, multi-threaded
 .PHONY: tamarin
