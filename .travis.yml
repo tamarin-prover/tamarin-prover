@@ -50,7 +50,7 @@ install:
 
 script:
   - tamarin-prover test
-  - make sapic-case-studies
+  # - make sapic-case-studies
 
 notifications:
   slack:

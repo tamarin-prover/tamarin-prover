@@ -397,18 +397,13 @@ GJM-contract/contract.spthy
 # examples/sapic/envelope/envelope_simpler.sapic
 # examples/sapic/envelope/envelope_allowsattack.sapic
 
-
-SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
-
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-
 SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 NSL/nsl-no_as-untagged.spthy 
-
-SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
-
-
 SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
+
+SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
+SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
 SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
 
 # lol:
