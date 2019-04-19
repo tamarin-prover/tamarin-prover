@@ -24,6 +24,7 @@ module Sapic.Facts (
    , varMID
    , varProgress
    , msgVarProgress
+   , propagateNames
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -41,6 +42,7 @@ import Sapic.Annotation
 -- import Data.Typeable
 -- import Data.Text
 import Data.Char
+import Data.Bits
 import qualified Data.Set as S
 import Data.Color
 -- import Control.Monad.Trans.FastFresh
@@ -229,6 +231,40 @@ prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
 prettyEitherPositionOrSpecial (Right InitPosition) = "Init"
 prettyEitherPositionOrSpecial (Right NoPosition) = ""
 
+-- TODO: What is the intented behavior if we have multiple process names (e.g. ["P", "Q"])?
+-- Should the first name (i.e. "P") determine the rule colors even for the rules of the nested
+-- processes or should a nested process be assigned its own color?
+-- In the former case, this function should instead return the head of the process names instead
+-- of concatenating them.
+getTopLevelName :: (GoodAnnotation an) => AnProcess an -> String
+getTopLevelName (ProcessNull ann) = concat $ getProcessNames ann
+getTopLevelName (ProcessComb _ ann _ _) = concat $ getProcessNames ann
+getTopLevelName (ProcessAction _ ann _) = concat $ getProcessNames ann
+
+propagateNames :: (GoodAnnotation ann) => AnProcess ann -> AnProcess ann
+propagateNames = propagate' []
+    where
+      propagate' n (ProcessComb c an pl pr) = ProcessComb c 
+                                                (setProcessNames (n ++ getProcessNames an) an)
+                                                (propagate' (n ++ getProcessNames an) pl)
+                                                (propagate' (n ++ getProcessNames an) pr)
+      propagate' n (ProcessAction a an p) = ProcessAction a
+                                                (setProcessNames (n ++ getProcessNames an) an)
+                                                (propagate' (n ++ getProcessNames an) p)
+      propagate' n (ProcessNull an) = ProcessNull (setProcessNames (n ++ getProcessNames an) an)
+
+crc32 :: String -> Int
+crc32 s = foldl iter 0xffffffff (map ord s)
+    where
+        inner c = (c `shiftR` 1) `xor` (0xedb88329 .&. (-(c .&. 1)))
+        iter c m = iterate inner (c `xor` m) !! 8
+
+colorForProcessName :: String -> RGB Rational
+colorForProcessName p = RGB r g b
+      where
+        nthByte x n = (x `shiftR` (8*n)) .&. 0xff
+        [r,g,b] = map ((/255) . fromIntegral . nthByte (crc32 p)) [0,1,2]
+
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
@@ -239,7 +275,8 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                 Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
-            attr = [ RuleColor $ RGB 0.3 0.3 0.3 -- TODO compute color from processnames
+                      -- ++ " || " ++ (show $ getTopLevelName process) ++ " ||"
+            attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
