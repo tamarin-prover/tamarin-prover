@@ -1,5 +1,5 @@
 
-Model Specification {#sec:model-specification}
+Model Specification using Rules {#sec:model-specification} 
 ===================
 
 In this section, we now provide an informal description of the
@@ -96,7 +96,7 @@ successor state, the rule `MyRule2` can now be applied twice. It can be
 instantiated either by `u` equal to `'1'` (with `v` equal to `'x'`) or to `'2'` (with `v`  equal to `'y'`). Each of
 these instantiations leads to a new successor state.
 
-### Using 'let' binding in rules for local macros
+### Using 'let' binding in rules for local macros {#sec:let-rules}
 
 When modeling more complex protocols,  a term
 may occur multiple times (possibly as a subterm) within the same rule. To make such
