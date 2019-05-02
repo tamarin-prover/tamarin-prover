@@ -67,9 +67,8 @@ baseTransAction ac an p tildex
           ], tildex)
     | (New v) <- ac = let tx' = v `insert` tildex in
         ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
-    | (ChIn (Just tc) t) <- ac, (Just (AnLVar v)) <- secretChannel an =
+    | (ChIn (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
           let tx' = (freeset tc) `union` (freeset t) `union` tildex in
-          let ts  = fAppPair (tc,t) in
           ([
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'])], tx')
     | (ChIn (Just tc) t) <- ac, Nothing <- secretChannel an =
@@ -81,8 +80,7 @@ baseTransAction ac an p tildex
     | (ChIn Nothing t) <- ac =
           let tx' = freeset t `union` tildex in
           ([ ([def_state, (In t) ], [ ], [def_state' tx']) ], tx')
-    | (ChOut (Just tc) t) <- ac, (Just (AnLVar v)) <- secretChannel an =
-          let semistate = State LSemiState (p++[1]) tildex in
+    | (ChOut (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
           ([
           ([def_state], [], [Message tc t,def_state' tildex])], tildex)
     | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =

@@ -44,7 +44,10 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
-      []  -> return (removeSapicItems th)
+      []  -> if L.get transReliable ops then
+                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+             else 
+                    return (removeSapicItems th)
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- add rules
