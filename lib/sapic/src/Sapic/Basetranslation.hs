@@ -81,8 +81,10 @@ baseTransAction ac an p tildex
           let tx' = freeset t `union` tildex in
           ([ ([def_state, (In t) ], [ ], [def_state' tx']) ], tx')
     | (ChOut (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
+          let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state], [], [Message tc t,def_state' tildex])], tildex)
+          ([def_state], [], [Message tc t,semistate]),
+          ([semistate, Ack tc t], [], [def_state' tildex])], tildex)
     | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
