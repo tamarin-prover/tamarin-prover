@@ -27,29 +27,29 @@ equations:
     isAct(SpecialAct) = true,
     isAct(UnusualAct) = true
 
-let A = 
+let D = 
   ( in(a);
      if a = NormalAct()
-       then out(<a, sign( sk('A'), a)>)
+       then out(<a, sign( sk('D'), a)>)
        else if a = SpecialAct()
-              then new na; out(<na, sign(<a,na>, sk('A'))>);
-                   in(r); if verify( r, na, pk(sk('B'))) = true()
-                           then out(<a, na, sign( <a, na>, sk('A')), r>)
+              then new na; out(<na, sign(<a,na>, sk('D'))>);
+                   in(r); if verify( r, na, pk(sk('C'))) = true()
+                           then out(<a, na, sign( <a, na>, sk('D')), r>)
   ) 
 
-let B = 
+let C = 
   ( in(m);
-     if verify( snd(m), <fst(m), SpecialAct()>, pk(sk('A'))) = true()
-       then out(sign( fst(m), sk('B')))
+     if verify( snd(m), <fst(m), SpecialAct()>, pk(sk('D'))) = true()
+       then out(sign( fst(m), sk('C')))
   )
 
-let C = 
+let M = 
   ( in(m); 
-     if verify( snd(m), fst(m), pk(sk('A'))) = true()
-       then event Control('0','1'); event LogA(fst(m)); event Execute(fst(m))
-       else if verify( fst(snd(snd(m))), <fst(m), fst(snd(m))>, pk(sk('A'))) = true()
-              then if verify( snd(snd(snd(m))), fst(snd(m)), pk(sk('B'))) = true()
-                     then event Control('0','2'); event LogAB(fst(m)); event Execute(fst(m))
+     if verify( snd(m), fst(m), pk(sk('D'))) = true()
+       then event Control('0','1'); event LogD(fst(m)); event Execute(fst(m))
+       else if verify( fst(snd(snd(m))), <fst(m), fst(snd(m))>, pk(sk('D'))) = true()
+              then if verify( snd(snd(snd(m))), fst(snd(m)), pk(sk('C'))) = true()
+                     then event Control('0','2'); event LogDC(fst(m)); event Execute(fst(m))
   )
 
 // let I = 
@@ -57,38 +57,39 @@ let C =
 //   )
 
 // The trusted party can only run once during each run of the protocol
-(! (A || B )) || C ||
-    out(<pk(sk('A')), pk(sk('B'))>)
+(! (D || C )) || M ||
+    out(<pk(sk('D')), pk(sk('C'))>)
 || !(   in('c',<'corrupt',$x>); 
         event Corrupted($x);
         out('c',sk($x))
         /* (  !(in('r',<$x,sid,m>);0) ) */
    )
 
-lemma sanity_logA_not_misbehaving:
-    exists-trace
-    "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j"
 
-lemma sanity_logAB_not_misbehaving:
+lemma sanity_logD_not_misbehaving:
     exists-trace
-    "Ex a #i #j. (a = SpecialAct()) & LogAB(a)@i & Execute(a)@j"
+    "Ex a #i #j. (a = NormalAct()) & LogD(a)@i & Execute(a)@j"
 
-lemma sanity_logA:
+lemma sanity_logDC_not_misbehaving:
     exists-trace
-    "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
+    "Ex a #i #j. (a = SpecialAct()) & LogDC(a)@i & Execute(a)@j"
 
-lemma sanity_logAB:
+lemma sanity_logD:
     exists-trace
-    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
+    "Ex a #i #j. LogD(a)@i & Execute(a)@j" 
+
+lemma sanity_logDC:
+    exists-trace
+    "Ex a #i #j. LogDC(a)@i & Execute(a)@j" 
 
 verdictfunction v1:
-    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct() | a=SpecialAct())"   -> let verdict1 = <'A'>,
-    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() | a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    "Ex a #i #j. Execute(a)@i & LogD(a)@j & not(a=NormalAct() | a=SpecialAct())"   -> let verdict1 = <'D'>,
+    "Ex a #i #j. Execute(a)@i & LogDC(a)@j & not(a=NormalAct() | a=SpecialAct())" -> let verdict2 = <'D','C'> ,
     otherwise -> empty 
 
 lemma acc:
     v1 accounts [control] 
     for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
-    for parties <'A','B'>
+    for parties <'D','C'>
 
 end
