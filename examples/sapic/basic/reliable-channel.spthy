@@ -1,4 +1,4 @@
-theory channel1
+theory reliableChannels
 begin
 
 builtins: signing, hashing, reliable-channel

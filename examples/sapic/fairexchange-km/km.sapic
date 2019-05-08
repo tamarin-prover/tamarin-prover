@@ -15,7 +15,8 @@ section{* The  Kremer-Markowitch non-repudiation protocol *}
  * Should be able to show fairness, but disprove timeliness.
  */
 
-builtins:  hashing
+builtins: hashing, reliable-channel
+options: translation-progress
 
 functions:
     pk/1,sk/1[private],
@@ -30,7 +31,6 @@ equations:
     adec(aenc(m,pk(i)),sk(i))=m,
     sdec(senc(m,k),k)=m
 
-options: progress
 
 /* Role of Alice */
 let A =(in ('c',t);
@@ -39,16 +39,16 @@ let A =(in ('c',t);
         let c = senc{t}k in
         let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
         let sub  = sign {<'SUB', $B, l, aenc{k}pk(TTPID)>}sk($A) in
-        let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
+        let pat_nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
         let eook = sign {<'EOOk', $B, l, k>}sk($A) in
 	let m1 = <c,aenc{k}pk(TTPID),eoo,sub> in
-	let m2 = nrr in
+	let pat_m2 = pat_nrr in
         let m3 = eook in
-        let r2 = <'CONk',$A,$B,l,k,nrr> in
+        let r2 = <'CONk',$A,$B,l,k,pat_nrr> in
 	event StartA($A, k);
       	out('c', m1);
 	(
-	in('c', m2);
+	in('c', pat_m2);
 	out('c', m3);
         event ContractA($A,$B,t,k)
 	)
@@ -66,21 +66,22 @@ let B = (
         let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
         let sub  = sign {<'SUB', $B, l, aenc{~k}pk(TTPID)>}sk($A) in
         let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{~k}pk(TTPID)>}sk($B) in
-        let eook = sign {<'EOOk',$B, l, ~k>}sk($A) in
+        let pat_eook = sign {<'EOOk',$B, l, ~k>}sk($A) in
         let rec  = sign {<'REC',$A,l>}sk($B) in
         let conk = sign {<'CONk',$A,$B,l,~k>}sk(TTPID) in
-	let m1 = <c,aenc{~k}pk(TTPID),eoo,sub> in
+	let pat_m1 = <c,aenc{~k}pk(TTPID),eoo,sub> in
 	let m2 = nrr in
-        let m3 = eook in
+        let pat_m3 = pat_eook in
 	let r1 = <rec,sub,nrr,eoo> in
         let r3 = conk in
 
-	in ('c', m1);
+	in ('c', pat_m1);
       	new session;
         event StartB($B,session);
         out ('c', m2);
         (
-        in ('c', m3);
+        (
+        in ('c', pat_m3);
         event ContractB($A,$B,t,session)
 	)
         +
@@ -90,6 +91,7 @@ let B = (
          event ContractB($A,$B,t,session);
          event ResolveContractB($A,$B,t,session)
 	)
+        )
 )
 
 let TTP = (
@@ -116,8 +118,8 @@ let Judge =
     let eoo  = sign {<'EOO', $B, TTPID, l, h(c)>}sk($A) in
     let eook = sign {<'EOOk', $B, l, k>}sk($A) in
     let conk = sign {<'CONk',$A,$B,l,k>}sk(TTPID) in
-    let nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
-            (in ('c', <k,t,nrr>); event ReceiptJudge($A,$B,t))
+    let pat_nrr  = sign {<'EOR', $A, TTPID, l, h(c), aenc{k}pk(TTPID)>}sk($B) in
+            (in ('c', <k,t,pat_nrr>); event ReceiptJudge($A,$B,t))
          || (in ('c', <k,t,eoo,eook> ); event OriginJudge($A,$B,t))
          || (in ('c', <k,t,conk> ); event OriginJudge($A,$B,t))
 
@@ -150,3 +152,15 @@ lemma strongfairnessA:
     "
 
 end
+
+/* ============================================================================== */
+/* summary of summaries: */
+
+/* analyzed: fairexchange-km/km.sapic */
+
+/*   untimelinessA (exists-trace): verified (45 steps) */
+/*   strongfairnessA (all-traces): analysis incomplete (1 steps) */
+/* ^^ do later */ 
+
+/* ============================================================================== */
+

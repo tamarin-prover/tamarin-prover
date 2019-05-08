@@ -43,14 +43,14 @@ install:
   - stack --no-terminal install
 
   # SAPIC
-  - opam init
-  - eval `opam config env`
+  # - opam init
+  # - eval `opam config env`
   - stack install
-  - make -C plugins/sapic
+  # - make -C plugins/sapic
 
 script:
   - tamarin-prover test
-  - make sapic-case-studies
+  # - make sapic-case-studies
 
 notifications:
   slack:

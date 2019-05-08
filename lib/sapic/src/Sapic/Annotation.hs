@@ -17,11 +17,14 @@ module Sapic.Annotation (
     ProcessAnnotation(..)
     , AnnotatedProcess
     , annLock
+    , annSecretChannel
     , annUnlock
     , toAnProcess
     , toProcess
     , AnLVar (..)
     , GoodAnnotation
+    , getProcessNames
+    , setProcessNames
 ) where
 import           Data.Data
 -- import Data.Maybe
@@ -55,6 +58,7 @@ data ProcessAnnotation = ProcessAnnotation {
     processnames :: [String] -- processes identifiers recovered from "let P = "  bindings
   , lock :: Maybe AnLVar     -- Fresh variables annotating locking action and unlocking actions. 
   , unlock :: Maybe AnLVar   -- Matching actions should have the same variables.
+  , secretChannel :: Maybe AnLVar   -- If a channel is secret, we can perform a silent transition.
   } deriving (Show, Typeable)
 
 
@@ -65,23 +69,27 @@ data ProcessAnnotation = ProcessAnnotation {
 --      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
 class GoodAnnotation a where
     getProcessNames :: a ->  [String]
+    setProcessNames :: [String] -> a -> a
 
 instance GoodAnnotation ProcessAnnotation
     where
         getProcessNames = processnames
+        setProcessNames pn an = an { processnames = pn }
   
 instance Monoid ProcessAnnotation where
-    mempty = ProcessAnnotation [] Nothing Nothing
+    mempty = ProcessAnnotation [] Nothing Nothing Nothing
     mappend p1 p2 = ProcessAnnotation 
         (processnames p1 `mappend` processnames p2)
         (lock p1 `mappend` lock p2)
         (unlock p1 `mappend` unlock p2)
+        (secretChannel p1 `mappend` secretChannel p2)
 
 instance Semigroup ProcessAnnotation where
     (<>) p1 p2 = ProcessAnnotation 
         (processnames p1 `mappend` processnames p2)
         (lock p1 <> lock p2)
         (unlock p1 <> unlock p2)
+        (secretChannel p1 <> secretChannel p2)
 
 newtype AnnotatedProcess = AnProcess ProcessAnnotation
     deriving (Typeable, Monoid,Semigroup,Show)
@@ -89,15 +97,16 @@ newtype AnnotatedProcess = AnProcess ProcessAnnotation
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnLVar -> ProcessAnnotation
-annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing }
+annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing }
 annUnlock :: AnLVar -> ProcessAnnotation
-annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v }
-
+annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing}
+annSecretChannel :: AnLVar -> ProcessAnnotation
+annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v}
 -- | Convert to and from Process, i.e., AnProcess with processnames only.
 toAnProcess :: Process -> AnProcess ProcessAnnotation
 toAnProcess = fmap f
     where
-        f l = ProcessAnnotation { processnames = l, lock = Nothing, unlock = Nothing }
+        f l = ProcessAnnotation { processnames = l, lock = Nothing, unlock = Nothing, secretChannel = Nothing}
 
 toProcess :: GoodAnnotation an => AnProcess an -> Process
 toProcess = fmap f

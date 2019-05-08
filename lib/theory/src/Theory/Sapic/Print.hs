@@ -26,24 +26,28 @@ module Theory.Sapic.Print (
     , prettySapicTopLevel
     , ProcessPosition
     , prettyPosition
-    , lhs
-    , rhs
 ) where
 
-import           Data.Binary
-import           GHC.Generics                (Generic)
-import           Control.Parallel.Strategies
-import           Data.Foldable
+-- import           Data.Binary
+-- import           GHC.Generics                (Generic)
+-- import           Control.Parallel.Strategies
+-- import           Data.Foldable
 import           Theory.Model.Fact
 import           Theory.Model.Rule
 import           Theory.Sapic
-import           Term.LTerm
+-- import           Term.LTerm
 import           Theory.Text.Pretty
 
 
+rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> String
 rulePrinter l a r = render $ prettyRule l a r
 
 -- | Instantiate prenters with rulePrinter from Theory.Text.Pretty
+prettySapicAction :: SapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
+
+prettySapic :: AnProcess ann -> String
 prettySapic = prettySapic' rulePrinter
+
+prettySapicTopLevel :: AnProcess ann -> String
 prettySapicTopLevel = prettySapicTopLevel' rulePrinter

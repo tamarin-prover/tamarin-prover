@@ -32,7 +32,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import qualified Data.List                  as L
+-- import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -43,7 +43,7 @@ import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
-import           System.Process
+-- import           System.Process
 
 -- import qualified Extension.Data.Label       as L
 
@@ -497,11 +497,6 @@ fatom = asum
         vs <- many1 lvar <* dot
         f  <- iff
         return $ foldr (hinted q) f vs
-
-    hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-    hinted f v@(LVar n s _) = f (n,s) v
-
-
 
 -- | Parse a negation.
 negation :: Parser LNFormula
@@ -991,9 +986,9 @@ process thy=
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
                   try  (chainl1 (actionprocess thy) (
-                             do { _ <- opNDC; return (ProcessComb NDC mempty)}
+                             do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
-                         <|> do { _ <- try opParallel; return (ProcessComb Parallel mempty)}
+                         <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   ))
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
@@ -1001,7 +996,10 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
-                        return p)                                           
+                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
                         -- TODO SAPIC parser: multterm return
                         -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
             <|>    try  (do -- parens parser
@@ -1087,7 +1085,7 @@ actionprocess thy=
                         _ <- opSeq
                         p <- actionprocess thy
                         return (ProcessAction s mempty p))
-            <|> try ( do  -- allow trailing actions (syntactic suguar for action; 0)
+            <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
                         s <- sapicAction 
                         return (ProcessAction s mempty (ProcessNull mempty)))
             <|> try (do   -- null process: terminating element
@@ -1099,6 +1097,13 @@ actionprocess thy=
                         a <- let p = checkProcess (BC.unpack i) thy in
                             (\x -> paddAnn x [BC.unpack i]) <$> p
                         return a 
+                        )
+            <|>    try  (do -- let expression parser
+                        subst <- letBlock
+                        p     <- process thy
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
                         )
             <|> do        -- parens parser
                         _ <- symbol "("
@@ -1127,7 +1132,7 @@ heuristic isDiff = do
 --     Nothing -> fail $ "process not defined: " ++ i    
 checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
-    Just p -> return (_pBody p) -- TODO why doesnt this work? (get pBody p)
+    Just p -> return $ get pBody p
     Nothing -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.

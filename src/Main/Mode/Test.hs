@@ -20,7 +20,6 @@ import           Main.Console
 import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
-import qualified Test.ParserTests                as Parser
 
 
 -- | Self-test mode.

@@ -58,8 +58,12 @@ let Tag =
 ! new ~k; new ~id; ! (Reader || Tag)
 
 // FINDS ATTACK AUTOMATICALLY 
-lemma recentalive_tag:
-  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+/* lemma recentalive_tag: */
+/*   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)" */
+
+// Negated and rephrased as exist-trace, to be used for regression testing...
+lemma recentalive_tag_attack:
+  exists-trace "not (∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i))"
 
 // FINDS PROOF AUTOMATICALLY 
 lemma recentalive_reader:
@@ -88,3 +92,10 @@ lemma executable:
 
 end
 
+/* analyzed: examples/sapic/xor/CH07.sapic */
+
+/*   recentalive_tag (all-traces): falsified - found trace (10 steps) */
+/*   recentalive_reader (all-traces): verified (24 steps) */
+/*   noninjectiveagreement_tag (all-traces): verified (87 steps) */
+/*   noninjectiveagreement_reader (all-traces): verified (77 steps) */
+/*   executable (exists-trace): verified (11 steps) */

@@ -9,14 +9,14 @@
 module Sapic.Locks (
     annotateLocks
 ) where
-import Control.Exception
-import Control.Monad.Fresh
-import Control.Monad.Catch
-import qualified Data.Traversable as T
-import Sapic.Exceptions
-import Theory
-import Theory.Sapic
-import Sapic.Annotation
+import           Control.Exception
+import           Control.Monad.Catch
+import           Control.Monad.Fresh
+-- import qualified Data.Traversable as T
+import           Sapic.Annotation
+import           Sapic.Exceptions
+import           Theory
+import           Theory.Sapic
 
 -- This exceptions is thrown im annotateEachClosestUnlock finds 
 -- a parallel or replications below the locks. The calling function
@@ -34,7 +34,7 @@ annotateEachClosestUnlock :: MonadThrow m =>
                              -> m( AnProcess ProcessAnnotation)
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) = 
-            if t == t' then -- TODO do we need more precise equality? test this
+            if t == t' then 
                 return $ ProcessAction (Unlock t') (a' `mappend` annUnlock v) p
             else do
                 p' <- annotateEachClosestUnlock t v p
@@ -59,7 +59,7 @@ annotateLocks (ProcessAction (Lock t) a p) = do
             v <- freshLVar "lock" LSortMsg
             p' <- annotateEachClosestUnlock t (AnLVar v) p
             p'' <- annotateLocks p'
-            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p')
+            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p'')
             -- return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
 annotateLocks (ProcessAction ac an p) = do
             p' <- annotateLocks p

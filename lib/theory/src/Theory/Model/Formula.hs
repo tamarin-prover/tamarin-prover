@@ -38,6 +38,7 @@ module Theory.Model.Formula (
   , (.<=>.)
   , exists
   , forall
+  , hinted
 
   -- ** General Transformations
   , mapAtoms
@@ -262,6 +263,12 @@ forall hint x = Qua All hint . quantify x
 -- | Create a existential quantification with a sort hint for the bound variable.
 exists :: (Ord c, Ord v) => s -> v -> Formula s c v -> Formula s c v
 exists hint x = Qua Ex hint . quantify x
+
+-- | Transform @forall@ and @exists@ into functions that operate on logical variables
+hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
+hinted f v@(LVar n s _) = f (n,s) v
+
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing

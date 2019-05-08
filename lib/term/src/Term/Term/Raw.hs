@@ -66,6 +66,10 @@ data Term a = LIT a                 -- ^ atomic terms (constants, variables, ..)
             | FAPP FunSym [Term a]  -- ^ function applications
   deriving (Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
+instance Functor Term  where
+    fmap f (LIT a)      = LIT (f a)
+    fmap f (FAPP fs ts) = FAPP fs (map (fmap f) ts)
+
 ----------------------------------------------------------------------
 -- Diff Type - whether left/right interpretation of diff is desired,
 --             or no diff should occur

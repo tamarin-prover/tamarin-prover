@@ -67,7 +67,11 @@ baseTransAction ac an p tildex
           ], tildex)
     | (New v) <- ac = let tx' = v `insert` tildex in
         ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
-    | (ChIn (Just tc) t) <- ac =
+    | (ChIn (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
+          let tx' = (freeset tc) `union` (freeset t) `union` tildex in
+          ([
+          ([def_state, Message tc t], [], [Ack tc t, def_state' tx'])], tx')
+    | (ChIn (Just tc) t) <- ac, Nothing <- secretChannel an =
           let tx' = (freeset tc) `union` (freeset t) `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
@@ -76,7 +80,12 @@ baseTransAction ac an p tildex
     | (ChIn Nothing t) <- ac =
           let tx' = freeset t `union` tildex in
           ([ ([def_state, (In t) ], [ ], [def_state' tx']) ], tx')
-    | (ChOut (Just tc) t) <- ac =
+    | (ChOut (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
+          let semistate = State LSemiState (p++[1]) tildex in
+          ([
+          ([def_state], [], [Message tc t,semistate]),
+          ([semistate, Ack tc t], [], [def_state' tildex])], tildex)
+    | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
           ([def_state, In tc], [ ChannelIn tc], [Out t, def_state' tildex]),
@@ -152,15 +161,28 @@ baseTransComb c _ p tildex
                      , tildex, tildex )
                 else
                     throw $
-                    -- TODO Catch and add process in calling function.
-                    -- as we cannot tell which process it is here.
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
 
+reliableChannelTrans :: MonadThrow m =>
+                        (a,
+                         SapicAction
+                         -> t
+                         -> ProcessPosition
+                         -> Set LVar
+                         -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
+                         c)
+                        -> (a,
+                            SapicAction
+                            -> t
+                            -> ProcessPosition
+                            -> Set LVar
+                            -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
+                            c)
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
     where
-        tAct' ac an p tx   -- TODO test if it does what it should do
+        tAct' ac an p tx 
             | (ChIn (Just v) t) <- ac
             ,Lit (Con name) <- viewTerm v
             , sortOfName name == LSortPub
@@ -194,5 +216,5 @@ reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
             | otherwise = tAct ac an p tx -- otherwise case: call tAct
             where
                 def_state = State LState p tx
-                def_state1 tx = State LState (p++[1]) tx
+                def_state1 tx' = State LState (p++[1]) tx'
                 freeset = fromList . frees

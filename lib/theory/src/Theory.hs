@@ -31,6 +31,7 @@ module Theory (
   , addProcessDef
   , lookupProcessDef
   , pName
+  , pBody
 
   -- * Options
   , transAllowPatternMatchinginLookup
@@ -200,6 +201,7 @@ module Theory (
   , prettyTraceQuantifier
 
   , prettyProcess
+  , prettyProcessDef
 
   -- * Convenience exports
   , module Theory.Model
@@ -213,7 +215,7 @@ import           Prelude                             hiding (id, (.))
 
 import           GHC.Generics                        (Generic)
 
-import           Data.Typeable
+-- import           Data.Typeable
 import           Data.Binary
 import           Data.List
 import           Data.Maybe
@@ -229,6 +231,9 @@ import           Control.Parallel.Strategies
 
 import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
+import qualified Data.Label.Point
+import qualified Data.Label.Poly
+import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
@@ -764,7 +769,7 @@ type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 
--- Remove Sapic Items
+-- remove Sapic items and convert other items to identical item but with unit type for sapic elements
 removeSapicItems :: OpenTheory -> OpenTranslatedTheory
 removeSapicItems thy =
   Theory {_thyName=(L.get thyName thy)
@@ -774,18 +779,15 @@ removeSapicItems thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = createNewThyItems (filter isNoSapicItem (L.get thyItems thy))
-      createNewThyItems :: [TheoryItem r p SapicElement] -> [TheoryItem r p ()]
-      createNewThyItems [] = []
-      createNewThyItems (x:xs) = removeSapicElement(x) : createNewThyItems(xs)
+      newThyItems = map removeSapicElement (filter isNoSapicItem (L.get thyItems thy))
       removeSapicElement :: TheoryItem r p SapicElement -> TheoryItem r p ()
-      removeSapicElement (SapicItem s) = (SapicItem ())
-      removeSapicElement (RuleItem r) = (RuleItem r)
-      removeSapicElement (LemmaItem l) = (LemmaItem l)
-      removeSapicElement (RestrictionItem rl) = (RestrictionItem rl)
-      removeSapicElement (TextItem t) = (TextItem t)
-
-      isNoSapicItem (SapicItem s) = False
+      removeSapicElement (SapicItem _) = SapicItem ()
+      removeSapicElement (RuleItem r) = RuleItem r
+      removeSapicElement (LemmaItem l) = LemmaItem l
+      removeSapicElement (RestrictionItem rl) = RestrictionItem rl
+      removeSapicElement (TextItem t) = TextItem t
+      removeSapicElement (PredicateItem predi) = PredicateItem predi
+      isNoSapicItem (SapicItem _) = False
       isNoSapicItem _             = True
 
 
@@ -799,6 +801,7 @@ openTranslatedTheory thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
+-- <<<<<<< HEAD
       newThyItems = createNewThyItems (L.get thyItems thy)
       createNewThyItems :: [TheoryItem r p ()] -> [TheoryItem r p SapicElement]
       createNewThyItems [] = []
@@ -808,6 +811,16 @@ openTranslatedTheory thy =
       addSapicElement (LemmaItem l) = (LemmaItem l)
       addSapicElement (RestrictionItem rl) = (RestrictionItem rl)
       addSapicElement (TextItem t) = (TextItem t)
+-- =======
+--       newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
+--       addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
+--       addSapicElement (RuleItem r) = Just $ RuleItem r
+--       addSapicElement (LemmaItem l) = Just $ LemmaItem l
+--       addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
+--       addSapicElement (TextItem t) = Just $ TextItem t
+--       addSapicElement (PredicateItem predi) = Just $ PredicateItem predi
+--       addSapicElement (SapicItem _) = Nothing
+-- >>>>>>> feature-sapic-integration
 
 -- Shared theory modification functions
 ---------------------------------------
@@ -987,12 +1000,10 @@ addPredicate pDef thy = do
     return $ modify thyItems (++ [PredicateItem pDef]) thy
 
 -- | Add a new option. Overwrite previous settings
--- setOption :: Option -> Theory sig c r p s -> Theory sig c r p s
--- setOption o thy = L.modify thyOptions (overwrite' o) thy
---     where
---         overwrite op op' f = (L.modify f (\v -> v || (L.get f op')) op  :: Option)
---         overwrite' op op' = foldl (overwrite op) op' [transAllowPatternMatchinginLookup, transProgress, transReliable]
-setOption l thy = L.set (l . thyOptions) True thy
+setOption :: Data.Label.Poly.Lens
+               Data.Label.Point.Total (Option -> Option) (Bool -> Bool)
+             -> Theory sig c r p s -> Theory sig c r p s
+setOption l = L.set (l . thyOptions) True
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
@@ -1239,7 +1250,9 @@ normalizeTheory =
           RuleItem _    -> item
           TextItem _    -> item
           RestrictionItem _   -> item
-          SapicItem _   -> item)
+          SapicItem _   -> item
+          PredicateItem _   -> item
+          )
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
@@ -1957,7 +1970,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     thyH = L.get thyHeuristic thy
 
 emptyString :: HighlightDocument d => () -> d
-emptyString e = text ("")
+emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement a = case a of

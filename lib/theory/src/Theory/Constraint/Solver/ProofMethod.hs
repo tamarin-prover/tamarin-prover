@@ -423,7 +423,6 @@ rankGoals ctxt ranking = case ranking of
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
-    SapicLivenessRanking -> sapicLivenessRanking ctxt
     SapicPKCS11Ranking -> sapicPKCS11Ranking ctxt
     SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
@@ -602,7 +601,7 @@ isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
 isAuthOutFact  _                                 = False
 
 isStateFact :: Goal -> Bool
-isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
+isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "state_" n
 isStateFact  _                                 = False
 
 isUnlockAction :: Goal -> Bool
@@ -680,106 +679,24 @@ sapicRanking ctxt sys =
 
     solveLast = 
         [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst,
-        isLastProtoFact . fst ,
-        isKnowsLastNameGoal . fst,
-        isEventAction . fst
+        isLastInsertAction . fst, -- move insert actions for positions that start with L_ to the end
+        isLastProtoFact . fst, -- move Last proto facts (L_) to the end.
+        isKnowsLastNameGoal . fst, -- move last names (L_key) to the end
+        isEventAction . fst -- move event action, used in accountabilty translation, to the end
         ]
-        -- move the Last proto facts (L_) to the end.
 
     solveFirst =
         [ isChainGoal . fst
-        , isDisjGoal . fst
+        , isDisjGoalButNotProgress . fst --
         , isFirstProtoFact . fst
-        , isStateFact . fst
-        , isUnlockAction . fst
-        , isKnowsFirstNameGoal . fst
-        , isFirstInsertAction . fst
-        , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsert  . fst
-        , isNotAuthOut . fst
-        , isPrivateKnowsGoal . fst
-        -- , isFreshKnowsGoal . fst
-        , isSplitGoalSmall . fst
-        , isMsgOneCaseGoal . fst
-        , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
-        ]
-        -- move the rest (mostly more expensive KU-goals) before expensive
-        -- equation splits
-
-    -- FIXME: This small split goal preferral is quite hacky when using
-    -- induction. The problem is that we may end up solving message premise
-    -- goals all the time instead of performing a necessary split. We should make
-    -- sure that a split does not get too old.
-    smallSplitGoalSize = 3
-
-    -- Be conservative on splits that don't exist.
-    isSplitGoalSmall (SplitG sid) =
-        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
-    isSplitGoalSmall _            = False
-
-    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
-    isNoLargeSplitGoal _               = True
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-
-    
--- | A ranking function tuned for the automatic verification of
--- protocols with liveness properties generated with the Sapic tool
-sapicLivenessRanking :: ProofContext
-                     -> System
-                     -> [AnnotatedGoal] -> [AnnotatedGoal]
-sapicLivenessRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
-  where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
-
-    getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
-      Just (viewTerm -> FApp o _)
-        | length (getDisj (L.get cdCases cd)) == 1 -> Just o
-      _                                            -> Nothing
-
-    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
-
-    unmark = map unmarkPremiseG
-
-    tagUsefulness Useful                = 0 :: Int
-    tagUsefulness ProbablyConstructible = 1
-    tagUsefulness LoopBreaker           = 0
-    tagUsefulness CurrentlyDeducible    = 2
-
-    solveLast = 
-        [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst ,
-        isLastProtoFact . fst,
-        isKnowsLastNameGoal . fst,
-        isEventAction . fst
-        ]
-        -- move the Last proto facts (L_) to the end.
-
-    solveFirst =
-        [ 
-          isChainGoal . fst
-        , isDisjGoalButNotProgress . fst
-        , isFirstProtoFact . fst
-        , isMID_Receiver . fst
-        , isMID_Sender . fst
+        , isMID_Receiver . fst --
+        , isMID_Sender . fst --
         , isStateFact . fst
         , isUnlockAction . fst
         , isKnowsFirstNameGoal . fst
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoalButNotInsertOrReceive  . fst
-        , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         -- , isFreshKnowsGoal . fst
@@ -797,17 +714,6 @@ sapicLivenessRanking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-
-    isMsgOneCaseGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
-        _                                                  -> False
-
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
         maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
@@ -816,6 +722,11 @@ sapicLivenessRanking ctxt sys =
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
 
+--  Problematic when using handles.
+--    isFreshKnowsGoal goal = case msgPremise goal of
+--        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+--        _                                                           -> False
+    -- we recognize any variable starting with h as a handle an deprioritize 
 
 -- | A ranking function tuned for a specific model of the
 -- PKCS#11 keymanagement API formulated in SAPIC's input language.

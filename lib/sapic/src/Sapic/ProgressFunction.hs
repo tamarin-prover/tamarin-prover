@@ -13,6 +13,7 @@ module Sapic.ProgressFunction (
    ,pf
    ,ProgressFunction
    ,pfRange
+   ,pfInv
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -29,6 +30,7 @@ import Sapic.ProcessUtils
 -- import Theory.Model.Rule
 -- import Data.Typeable
 import qualified Data.Set                   as S
+import qualified Data.List                   as L
 -- import Control.Monad.Trans.FastFresh
 import qualified Data.Map.Strict as M
 
@@ -73,7 +75,7 @@ next ProcessComb{} = S.fromList $ [[1],[2]]
 
 -- | next position to jump but consider empty position for null process, used in pi 
 next0 :: (Num a, Ord a) => AnProcess ann -> S.Set [a]
-next0 (ProcessNull _) = S.empty
+next0 (ProcessNull _) = S.singleton []
 next0 (ProcessAction _ _ _ ) = S.singleton [1]
 next0 (ProcessComb NDC _ pl pr) = next0OrChild pl [1] `S.union` next0OrChild pr [2]
     where next0OrChild p' pos = if blocking p' then
@@ -89,7 +91,7 @@ next0 ProcessComb{} = S.fromList [[1],[2]]
 --     | otherwise = Nothing
 -- blocking0 _ =  Nothing
 
-pfFrom :: (MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> m (S.Set [Int])
+pfFrom :: (MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> m (S.Set ProcessPosition)
 pfFrom process = from' process True
     where
     from' proc b 
@@ -97,7 +99,6 @@ pfFrom process = from' process True
         | otherwise = do
         -- |  (ProcessAction ac _ p' ) <- proc = 
         -- singletonOrEmpty (conditionAction proc b) `S.union` [1]<.> from' p' (isBlocking ac)
-        -- TODO can shorten once addWithRecursive is correct
         -- | (ProcessComb comb _ pl pr) <- proc =
         res <- foldM (addWithRecursive proc) S.empty (next proc)
         return $ singletonOrEmpty (conditionAction proc b) `S.union` res
@@ -114,17 +115,17 @@ pfFrom process = from' process True
 -- | Combine set of sets of position so that they describe alternatives (see comment for progressTo)
 -- combine x y = { union of xi and yi | xi in x and yi in y}
 combine :: Ord a => S.Set (S.Set a) -> S.Set (S.Set a) -> S.Set (S.Set a)
-combine x y = S.fold (combine_with y) x S.empty --
+combine x y = S.foldr  (combine_with y) S.empty x
 
 -- | Take x_i, take union with y_i for all y_i in y and add result to accumulator set1.
 combine_with :: Ord a => S.Set (S.Set a) -> S.Set a -> S.Set (S.Set a) -> S.Set (S.Set a)
-combine_with y x_i set1 = S.fold (\y_i set2 -> (x_i `S.union` y_i) `S.insert` set2) y set1
+combine_with y x_i set1 = S.foldr (\y_i set2 -> (x_i `S.union` y_i) `S.insert` set2) set1 y
 
 -- | Given a process p, find set of set of positions describing the conjunctive
 -- normal form of the positions that    we need to go to.
 -- For example: {{p1},{p2,p3}} means we need to go to p1 AND to either p2 or p3.
 -- Correspond to f in Def. 15
--- TODO This is massively refactored code. Remove stuff that's commented out once everything wors.
+-- TODO This is massively refactored code. Remove stuff that's commented out once everything works.
 f :: (Show ann, MonadCatch m, Typeable ann) => (AnProcess ann) -> m (S.Set (S.Set ProcessPosition))
 f  p -- corresponds to f within generate progressfunction.ml
     | blocking p = return $ ss []
@@ -133,7 +134,10 @@ f  p -- corresponds to f within generate progressfunction.ml
                 lr <- f pr
                 return $ S.union ([1] <..>  ll) ([2] <..>  lr)
     | otherwise = foldM combineWithRecursive
-                            S.empty      -- accumulator, set of sets of position
+                            (S.singleton S.empty) -- accumulator, set of sets of position
+                                                  -- not that the Singleton set of the empty set is
+                                                  -- the neutral element with respect to combine
+                                                  -- the empty set combined with anything gives an emptyset
                             (next0 p) -- list of p∈next^0(proc)
     -- | (ProcessNull _) <- p = return $ ss []
     -- | (ProcessAction Rep _ _ ) <-p = return $ ss []
@@ -166,13 +170,13 @@ f  p -- corresponds to f within generate progressfunction.ml
     -- | (ProcessAction _ _ p')  <- p = do l' <- f p'
     --                                     return $ [1] <..> l'
     where ss x = S.singleton ( S.singleton x) -- shortcut for singleton set of singleton set
-          combineWithRecursive  acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
+          combineWithRecursive acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
                         proc'   <- (processAt p pos)
                         lpos <- f proc'
                         return $ combine (pos <..> lpos) acc 
 
 -- | Compute progress function of proc
-pf :: (Show ann, MonadCatch m, Typeable ann) => AnProcess ann -> ProcessPosition -> m (S.Set (S.Set [Int]))
+pf :: (Show ann, MonadCatch m, Typeable ann) => AnProcess ann -> ProcessPosition -> m (S.Set (S.Set ProcessPosition))
 pf proc pos = do proc' <- processAt proc pos
                  res  <- f proc'
                  return $ pos <..> res
@@ -180,11 +184,21 @@ pf proc pos = do proc' <- processAt proc pos
 flatten :: Ord a =>  S.Set (S.Set a) -> S.Set a
 flatten = S.foldr S.union S.empty 
 
-pfRange :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set [Int])
-pfRange proc = do 
+pfRange' :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set (ProcessPosition, ProcessPosition))
+pfRange' proc = do 
                    froms <- pfFrom proc
                    res   <- foldM  mapFlat S.empty froms
                    return res
                    where
                       mapFlat acc pos = do res <- flatten <$> pf proc pos 
-                                           return (S.union acc res)
+                                           return (acc `S.union` S.map (\r -> (r,pos)) res)
+
+pfRange :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (S.Set ProcessPosition)
+pfRange proc = do 
+                  set <- pfRange' proc
+                  return $ S.map fst  set
+
+pfInv :: (Show ann, Typeable ann, MonadCatch m) => AnProcess ann -> m (ProcessPosition -> Maybe ProcessPosition)
+pfInv proc = do
+                  set <- pfRange' proc
+                  return $ \x -> snd <$> L.find (\(to,_) -> to == x ) (S.toList set)
