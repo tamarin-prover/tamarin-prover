@@ -1,4 +1,4 @@
-# Please make sure that you have 'stack' installed. 
+# Please make sure that you have 'stack' installed.
 # https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 TAMARIN=~/.local/bin/tamarin-prover
@@ -16,7 +16,7 @@ tamarin:
 
 # Single-threaded Tamarin
 .PHONY: single
-single: 
+single:
 	stack setup
 	stack install --flag tamarin-prover:-threaded
 
@@ -70,7 +70,7 @@ KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
 
 SDH=SignedDH_PFS.spthy #SignedDH_eCK.spthy
-# The "SignedDH_eCK.spthy" case study has not been working for a long time, 
+# The "SignedDH_eCK.spthy" case study has not been working for a long time,
 # probably some change in the heuristics somewhere made it run indefinitely.
 
 STS=STS_MAC.spthy STS_MAC_fix1.spthy STS_MAC_fix2.spthy
@@ -215,6 +215,46 @@ TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.
 TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES))) $(REGRESSION_OBSEQ_TARGETS)
 
 OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
+
+
+# individual case studies, special case with oracle for csf19
+case-studies/%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf19-wrapping
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/gcm.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with oracle for csf19
+case-studies/%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf19-wrapping
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/siv.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# CSF19 case studies
+CSF19_WRAPPING_GCM_CASE_STUDIES=gcm.spthy
+CSF19_WRAPPING_GCM_TARGETS=$(subst .spthy,_analyzed-oracle-gcm-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_CASE_STUDIES)))
+
+CSF19_WRAPPING_SIV_CASE_STUDIES=siv.spthy
+CSF19_WRAPPING_SIV_TARGETS=$(subst .spthy,_analyzed-oracle-siv-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_SIV_CASE_STUDIES)))
+
+CSF19_WRAPPING_TARGETS= $(CSF19_WRAPPING_GCM_TARGETS) $(CSF19_WRAPPING_SIV_TARGETS)
+
+csf19-wrapping-case-studies: $(CSF19_WRAPPING_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/csf19-wrapping/*.spthy
+
 
 #Observational equivalence test case studies:
 obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
@@ -454,7 +494,7 @@ xor/CH07.spthy xor/CRxor.spthy xor/KCL07.spthy
 # currently not working because of wrong heuristic:
 # encWrapDecUnwrap/encwrapdecunwrap.spthy
 # MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy
-# locations/SOC.spthy 
+# locations/SOC.spthy
 
 SAPIC_TAMARIN_CS_TARGETS=$(subst .spthy,_analyzed-sapic.spthy,$(addprefix case-studies/,$(SAPIC_TAMARIN_CASE_STUDIES)))
 
@@ -480,9 +520,9 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
-case-studies: 	case-studies/system.info $(CS_TARGETS) 
+case-studies: 	case-studies/system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
 	-grep -iR "warning\|error" case-studies/
 
