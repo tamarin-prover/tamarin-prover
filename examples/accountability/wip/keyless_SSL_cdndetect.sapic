@@ -1,0 +1,62 @@
+/*
+ * Protocol:    Modified Keyless SSL protocol
+ * Modeler: 	Robert Künnemann
+ * Date: 	Sep 2017
+ * Source:	Adapted from Milner,Cremers,Yu,Ryan: Automaticaly Detecting the Misuse of Secrets
+ * Status: 	wip 
+ */
+
+theory Keyless_SSL_Modified
+begin
+
+builtins: signing, hashing
+functions: S/1, SInv/1,
+  extract/1, sk/1[private]  // sign, verify, pk, and true are from builtins
+
+restriction unique:
+    "All m #i #j.
+        (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
+
+restriction pairings_unique:
+    "All id1 id2 a b ka kb #i #j.
+        Paired(id1,a,b,ka,kb) @ i & Paired(id2,a,b,ka,kb) @ j
+    ==> #i = #j"
+
+let C = 
+    let m1 = <'1',$A,$B,nc>
+        m2 = <'2',$B,$A,nc,nw>
+        m3 = <'3',$A,$B,h(<m1,m2>)> in
+    lock $A;
+    lookup <'cc',$A,$B> as cc;
+    new ~nc;
+    out (m1);
+    in  (<m2,sign{m2}sk($B)>);
+    out (<m3, sign{m3}sk($A)>);
+    out (<m4, sign{m4}sk($A)>);
+    unlock $A
+
+
+let W = 
+    let m1 = <'1',$A,$B,nc>
+        m2 = <'2',$B,$A,nc,nw>
+        m3 = <'3',$A,$B,h(<m1,m2>)>
+        m4 = <'4',$B,$A,h(<m1,m2,m3>),S(cw)> in
+    new ~nw;
+    in  (m1);
+    out (<m2,sign{m2}sk($B)>);
+    in  (<m3,sign{m3}sk($A)>);
+    out (<m4,sign{m4}sk($B)>)
+
+
+// not complete, forbids C and W running on same server
+// (but allows us to use pattern matching, as in Milner et.al.'s modelling
+!( in($A,$B);  
+   event Unique(<$A,$B>);
+   insert <'state',$A,$B>,<'0',<'initnonce','initnonce'>,'initnonce','0'>;
+   insert <'state',$B,$A>,<'0',<'initnonce','initnonce'>,'initnonce','0'>;
+   ! ( C || W  )
+   )
+   ||
+!( in($A); event Compromise($A); out(sk($A)))
+
+end

@@ -1,0 +1,175 @@
+theory NSLPK3XOR
+
+begin
+
+/* 
+  Adapted from tamarin file to SAPIC.
+
+protocol NSLPK3 {
+    1. I -> R: {'1',ni,I}pk(R)
+    2. I <- R: {'2',ni,nr⊕R}pk(I)
+    3. I -> R: {'3',nr}pk(R)
+  }
+
+   Note that we are using explicit global constants for discerning the
+   different encryption instead of the implicit sources.
+
+*/
+
+builtins: asymmetric-encryption, xor
+
+
+let Register =
+  in($A);
+  new ~ltkA;
+  event Register($A);
+  lock $A;
+  insert <'Ltk', $A>, ~ltkA;
+  insert <'Pk', $A>, pk(~ltkA);
+  unlock $A;
+  out(pk(~ltkA))
+
+
+let Reveal_ltk =
+   in(A);
+   lookup  <'Ltk', A>  as ltkA in
+   (
+      event RevLtk(A);
+      out(ltkA)
+   )
+
+
+let Initiator =
+  in(<$I,$R>);
+  lookup  <'Pk', $R>  as pkR in
+  new ~ni;
+  event OUT_I_1( aenc(<'1', ~ni, $I>,pkR) );
+  out( aenc(<'1', ~ni, $I>,pkR) );
+  let nr = x ⊕ $R in
+  lookup   <'Ltk', $I>  as ltkI in
+  in( aenc(<'2', ~ni, x>,pk(ltkI)) );
+  event IN_I_2_nr( nr , aenc(<'2', ~ni, x>,pk(ltkI)) ); // alternatively use "x" here?
+  event Commit ($I, $R, <'init', ~ni,nr>);  // need to log identities explicitly to
+  event Running($R, $I, <'resp', ~ni,nr>);  // specify that they must not be
+                                     // compromised in the property.
+  out( aenc(<'3', nr>,pkR) );
+  event Secret($I,$R,nr);
+  event Secret($I,$R, ~ni)
+  
+  
+let Responder =
+  in( $R );
+  lookup   <'Ltk', $R>  as ltkR in
+  in( aenc(<'1', ni, $I>,pk(ltkR)) );
+  lookup  <'Pk', $I>  as pkI in
+  new ~nr;
+  event IN_R_1_ni( ni, aenc(<'1', ni, $I>,pk(ltkR)) );
+  event OUT_R_1( aenc(<'2', ni, ~nr ⊕ $R>,pkI) );
+  event Running($I, $R, <'init',ni,~nr>);
+  out( aenc(<'2', ni, ~nr ⊕ $R>,pkI) );
+  in( aenc(<'3', ~nr>,pk(ltkR)) );
+  event Commit ($R, $I, <'resp',ni,~nr>);
+  event Secret($R,$I,~nr);
+  event Secret($R,$I,ni)
+  
+  (!Register) || (!Reveal_ltk) || (!Initiator) || (!Responder)
+
+
+
+/* Note that we are using an untyped protocol model.
+The contents of the 'ni' variable in the responder role may therefore in general be any
+message. This leads to unsolved chain constraints when checking what message
+can be extracted from the message sent by the responder. In order to get rid of
+these constraints, we require the following sources invariant that relates the
+point of instantiation to the point of sending by either the adversary or the
+initiator.
+
+In order to understand the use of this sources invariant you might try the
+follwing experiment. Comment out this sources invariant and then check the
+precomputed case distinctions in the GUI. Try to complete the proof of the
+'nonce_secrecy' lemma.
+*/
+// FINDS ATTACK - as we only find attacks below, this is ok.
+// Note Robert: turning this into a restriction does not help -- stuff further
+// down will not terminate.
+//
+lemma types [sources]:
+  " (All ni m1 #i.
+       IN_R_1_ni( ni, m1) @ i
+       ==>
+       ( (Ex #j. KU(ni) @ j & j < i)
+       | (Ex #j. OUT_I_1( m1 ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+  "
+
+restriction onekeypername:
+  " /* It cannot be that */
+    not(
+        Ex A #i #j.
+          /* one name registers two public keys */
+          Register(A) @i & Register(A) @j & (not ( #i = #j))
+        )"
+
+
+// FINDS EXPECTED ATTACK AUTOMATICALLY
+// Nonce secrecy from the perspective of both the initiator and the responder.
+// reformulated as exist-trace
+lemma nonce_secrecy:
+  exists-trace
+  " /* It should not be that (but it is, because we find the attack) */
+        Ex A B s #i.
+          /* somebody claims to have setup a shared secret, */
+          Secret(A, B, s) @ i
+          /* but the adversary knows it */
+        & (Ex #j. K(s) @ j)
+          /* without having performed a long-term key reveal. */
+        & not (Ex #r. RevLtk(A) @ r)
+        & not (Ex #r. RevLtk(B) @ r)
+       "
+
+
+// FINDS EXPECTED ATTACK AUTOMATICALLY
+// Injective agreement from the perspective of both the initiator and the responder.
+// negated and marked exists-trace for regression-tests
+lemma injective_agree:
+  exists-trace
+  " not(
+  /* Whenever somebody commits to running a session, then*/
+    All actor peer params #i.
+        Commit(actor, peer, params) @ i
+      ==>
+        /* there is somebody running a session with the same parameters */
+          (Ex #j. Running(actor, peer, params) @ j & j < i
+            /* and there is no other commit on the same parameters */
+            & not(Ex actor2 peer2 #i2.
+                    Commit(actor2, peer2, params) @ i2 & not(#i = #i2)
+                 )
+          )
+        /* or the adversary perform a long-term key reveal on actor or peer */
+        | (Ex #r. RevLtk(actor) @ r)
+        | (Ex #r. RevLtk(peer)  @ r))
+  "
+
+
+// SHOWS CORRECT EXECUTION
+// Consistency check: ensure that secrets can be shared between honest agents.
+// negated and marked exists-trace for regression-tests
+lemma session_key_setup_possible:
+  exists-trace
+  " /* It is possible that */
+    Ex A B s #i.
+      /* somebody claims to have setup a shared secret, */
+      Secret(A, B, s) @ i
+      /* without the adversary having performed a long-term key reveal. */
+    & not (Ex #r. RevLtk(A) @ r)
+    & not (Ex #r. RevLtk(B) @ r)
+  "
+end

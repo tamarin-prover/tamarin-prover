@@ -1,0 +1,167 @@
+/*
+ * Protocol:    TrollThrottle protocol for accountable and privacy-preserving rate limiting
+ * Modeler: 	Robert Künnemann
+ * Date: 	Oct 2017
+ * Source:	Designed by Lucjan Hanzlik and Robert Künnemann
+ * Status: 	wip 
+ */
+
+theory TrollThrottle
+begin
+
+builtins: signing, hashing
+functions: 
+  extract/1, sk/1[private], // sign, verify, pk, and true are from builtins
+  // direct anonymous attestation
+  ipk/1,daa_cert/3,daa_sig/3,daa_pseudo/2,daa_ver/5,
+   // extraction function for soundness, but not to be used in protocol
+    ex_daa_sig_m/1,
+    ex_daa_sig_dom/1,
+    ex_daa_cert_id/1,
+    ex_daa_cert_pk/1,
+    ex_daa_pseudo_dom/1,
+    ex_daa_pseudo_id/1,
+   // model authenticated channel from ledger to anyone
+   ledger/1[private],readl/1,
+   kdf/1
+
+
+equations:
+    //DAA
+    daa_ver( ipk(sk_iss),
+             daa_pseudo(daa_cert(id,ipk(sk_iss),sk_iss),dom),
+             dom,
+             daa_sig(daa_cert(id,ipk(sk_iss),sk_iss),dom,m),
+             m)
+             = true(),
+    // extraction function for soundness, but not to be used in protocol
+    ex_daa_sig_m(daa_sig(cert,dom,m))=m,
+    ex_daa_sig_dom(daa_sig(cert,dom,m))=dom,
+    ex_daa_cert_id(daa_cert(id,ipk_iss,sk_iss))=id,
+    ex_daa_cert_pk(daa_cert(id,ipk_iss,sk_iss))=ipk_iss,
+    ex_daa_pseudo_dom(daa_pseudo(cert,dom))=dom,
+    ex_daa_pseudo_id(daa_pseudo(daa_cert(id,ipk_iss,sk_iss),dom))=id,
+    // channel to ledger
+    readl(ledger(m))=m
+
+
+
+let Issuer = 0 //DAA issuer and verification of users, not explicit, but implicit in user definition
+
+let U =  // honest user posting a comment on $date at website $W, after registering
+    let cert = daa_cert(id,ipk(sk_iss),sk_iss) 
+        dom = <$date,$seq>
+        hash = h(<c,$W>)
+        m1 = <'1',h(<c,$W>),$date,$seq>
+        m2 = <'2',sign(m1,sk($W))>
+        m3 = <'3',<daa_pseudo(cert,dom),dom>,<daa_sig(cert,dom,hash),hash>>
+        m4 = <'4',ledger(m3)>
+        m5 = <'5',m3,m4,c>
+    in
+    new id;
+    event Registered($U,cert);
+    (!( in ($date); // adversary gets to chose current date
+        !( in ($seq); // adversary gets to chose which sequence number is used
+           in (<$W,c>); // adversary gets to chose comment and website to post do
+           event Unique(<$date,$seq>); // honest user uses each coin only once
+           event BelowThreshold($seq);
+           out (m1);
+           in (m2);
+           out (m3);
+           in (m4);
+           out (m5)
+         )
+     )
+     || (event Corrupted($U); out (cert); 
+     /* !(in (x); event Claim(x)) */ 
+     0
+      ))
+
+let W = //Webserver verifies comments with help of ledger before accepting them
+    let dom = <$date,$seq>
+        m1 = <'1',h(<c,$W>),$date,$seq>
+        m2 = <'2',sign(m1,sk($W))>
+        m3 = <'3',<xdaapseudo,dom>,<xdaasig,xhash>>
+        m4 = <'4',ledger(m3)>
+        m5 = <'5',m3,m4,c>
+    in
+    event Webserver($W);
+    (!(
+    in (m1);
+    out (m2);
+    in (m5);
+    if h(<c,$W>)=xhash then
+        event Accept($W,c,$date,$seq)
+     )
+     || (event Corrupted($W); out (sk($W))))
+
+let L = // public ledger, can be implemented as consensus mechanism
+    let dom = <$date,$seq>
+        key = <pseudo,dom>
+        val = <sig,xhash>
+        m3 = <'3',key,val>
+        m4 = <'4',ledger(m3)>
+    in
+    !( lock 'L';
+       in(m3); 
+       event BelowThreshold($seq);
+       event Now($date);
+       if daa_ver(ipk_iss,pseudo,dom,sig,xhash)=true() then
+       lock key; // never unlocked, so we know same key was never used
+       insert key,val;
+       out (m4);
+       unlock 'L'
+    )
+    ||
+    !( in (xkey); lookup xkey as v in out (v))
+
+let R = 0// TODO comment registry / rainbow table. stores comments and their hashes
+
+    (new sk_iss; 
+     let ipk_iss = ipk(sk_iss)
+     in
+     out (ipk_iss);
+     out (pk(sk($W)));
+        !(in ($U); U) 
+      ||!(in ($W); W)
+      ||! L
+      ||! R
+    ) 
+
+restriction unique:
+    "All m #i #j.
+        (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
+
+/* only needed if ledger signs messages */
+/* restriction ledger_no_webserver: */
+/*     "not (Ex #i. Webserver('Log')@i)" */
+
+/* restriction ledger_no_user: */
+/*     "not (Ex #i c. Registered('Log',c)@i)" */
+
+/* restriction threshold: */
+/*     " All s #i. BelowThreshold(s)@i ==> s=1 | s=2 | s=3" */
+
+lemma sanity:
+    exists-trace
+    " (Ex w c d s #i. Accept(w,c,d,s)@i )
+    & not (Ex p #j . Corrupted(p)@j)"
+    
+lemma accept_sound:
+    "All w c d s #i. Accept(w,c,d,s)@i ==> 
+      (Ex #j. BelowThreshold(s)@j)
+    & (Ex #j. Now(d)@j & j<i //the ledger agreed that d is a current date ..
+        & All #k dp. Now(dp)@k &  k<i ==> #k = #j | #k < j // and this was the last time the ledger agreed on something
+        )
+    "
+
+
+/* TODO: - incorporate fairexchange 
+ *       - rainbow table: leave open
+ *       - prove:
+ *              1. timeliness --> protocol finishes eventually 
+ *              2. accountability 
+ *              3. unlinkability 
+ *       */
+
+end

@@ -8,7 +8,7 @@ theory PKCS11TemplatePolicy
  * Status:      working 
  */
 
-/* Some more comments:  TODO write*
+/* Some more comments:  
  * wrap_with_trusted and trusted introduced in v2.20 of PKCS#11
  * always_sensitive, never_extractible not modelled, because I don't see a use
  * for it atm

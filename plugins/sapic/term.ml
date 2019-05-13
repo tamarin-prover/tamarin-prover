@@ -77,8 +77,8 @@ let rec term2string = function
 let flatten_termlist termlist = (String.concat ", ") (List.map term2string termlist)
 let term2termlist s = [s] (* dummy for the moment .. TODO*)
 
-let rec subs_t id t term = 
-        let f = (subs_t id t) in
+let rec subs_t v t term = 
+        let f = (subs_t v t) in
         match term with
             Mult(t1,t2)         -> Mult (f t1, f t2)
             | Exp(t1,t2)        -> Exp(f t1, f t2)
@@ -86,10 +86,5 @@ let rec subs_t id t term =
             | Xor(t1,t2)       -> Xor(f t1, f t2)
             | List(termlist)    -> List(List.map f termlist)
             | App(g,termlist)   -> App(g,List.map f termlist)
-            | Var(Msg(l))       -> if l=id then t else term
-            | Var(Temp(_))
-            | Var(Fresh(_))
-            | Var(FreshFixed _)
-            | Var(PubFixed _)
-            | Var(Pub _)        -> term
+            | Var(v')       -> if v=v' then t else Var(v')
 

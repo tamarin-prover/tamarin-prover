@@ -68,6 +68,17 @@ let msrs2annotated_rules sapic_terms position msrs =
     | [] -> []
     | x::xs -> match disambiguate (x::xs) with (rules,_) -> List.rev rules
 
+let msrs_subst f msr =  
+    let (l,a,r) = f (msr.left,msr.actions,msr.right) in
+    { 
+      process_name = msr.process_name;
+      sapic_terms = msr.sapic_terms;
+      position= msr.position;
+      left  = l;
+      right= r;
+      actions= a;
+    }
+
 let annotated_rules_update process_name ars =
     List.map (fun ar ->
         let p_n = match ar.process_name with

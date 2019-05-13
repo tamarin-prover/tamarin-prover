@@ -1,0 +1,66 @@
+theory Bla
+begin
+
+section{* The Yubikey-Protocol *}
+
+/*
+ * Protocol:    Yubikey Protocol
+ * Modeler:     Robert Kunnemann, Graham Steel
+ * Date:    August 2012
+ *
+ * Status:  working
+ */
+
+builtins: symmetric-encryption
+
+functions: S/1,myzero/0
+
+let test = 0|0|0
+
+let testprocess = 0
+let p2 = 0||0
+
+let p3 = new test;((test||(0+test))||!test)
+
+
+/* (! 0) + 0 */
+/* !(0 | 0) */
+
+/* !!!!0 */
+
+/* 0+(0+0) */
+
+/* (0+0)+0 */
+
+/* 0+!(0|0) */
+/* 0+!(0|0) */
+/* 0||0 */
+/* 0||(0||0) */
+/* (0||0) || 0 */
+/* 0||0||0 */
+
+/* 0|0|0 */
+
+/* test */
+
+new  ~s; new ~t;
+/* insert x,y */
+
+/* new  s; new t; 0 */
+
+/* (new  ~s; new ~t) */
+
+/* in(<a,b>); 0 */
+
+
+/* event Oi(); 0 */
+
+/* if a = b then 0 else 0 */
+
+/* if equal(a = b) then 0 else 0 */
+
+/* test */
+/* test || test */
+
+end
+

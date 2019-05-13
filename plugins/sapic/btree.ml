@@ -1,3 +1,5 @@
+
+
 type 'a btree =  Empty 
             | Node of 'a * 'a btree * 'a btree 
 
@@ -20,4 +22,5 @@ let rec fold_top f join zero = function
             and res_right = fold_top f join acc right
             in
             join acc res_left res_right
+
 

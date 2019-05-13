@@ -1,0 +1,117 @@
+theory OPC_UA_Secure_Communication
+begin
+
+section{* The OPC UA Secure Conversation protocol *}
+
+/*
+ * Protocol:    OPC UA Secure Conversation protocol
+ * Date:        July 2016
+ * Status:      Working
+ */
+
+builtins: symmetric-encryption, hashing, multiset, reliable-channel
+options: translation-progress
+
+/* Equations for MAC, similar to signatures but with symmetric keys */
+functions: mac/2, verifyMac/3, true/0
+
+equations: verifyMac(mac(m, sk), m, sk)=true
+
+
+/* Role of Alice, the sender */
+
+let A = (
+    let id = <a,b> in
+    !( lock id;
+       in('c',seq);
+       event Seq_Sent(a, b, seq);
+       new m;
+       event Sent(a, b, m);
+       out('r', <$MH, $SH, senc(<seq, m, $pad, mac(<$MH, $SH, seq, m, $pad>, kSign)>, kEnc)>);
+       unlock id
+     )
+)
+
+/* Role of Bob, the receiver */
+
+let B = (
+    let id = <b,a> in
+    !( lock id;
+       in('r', <MH, SH, senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, kSign)>, kEnc)>);
+       event Seq_Recv(a, b, seq);
+       event Recv(a, b, m);
+       unlock id
+     )
+
+)
+
+/* Main process */
+
+!(
+new a; new b;
+new kSign; new kEnc;
+ (A || B)
+)
+
+
+// RESTRICTIONS
+
+// Sequence number restrictions:
+
+// A's counter increases
+restriction A_Counter_Increases:
+    "All A B seq1 seq2 #i #j.(Seq_Sent(A, B, seq1) @ #i & Seq_Sent(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = seq1 + dif )"
+
+// A's counter cannot be reused
+restriction A_Counter_No_Reuse:
+    "All A B seq #i #j.(Seq_Sent(A, B, seq) @ #i & Seq_Sent(A, B, seq) @ #j ==> #i=#j)"
+
+// B's counter counter increases
+restriction B_Counter_Counter_Increases:
+    "All A B seq1 seq2 #i #j.(Seq_Recv(A, B, seq1) @ #i & Seq_Recv(A, B, seq2) @ #j & #i < #j ==> Ex dif. seq2 = seq1 + dif )"
+
+// B's counter cannot be reused
+restriction B_Counter_No_Reuse:
+    "All A B seq #i #j.(Seq_Recv(A, B, seq) @ #i & Seq_Recv(A, B, seq) @ #j ==> #i=#j)"
+
+
+// The protocol is executable. (auto)
+lemma Executable:
+    exists-trace
+    "Ex A B m #i. Recv(A, B, m) @ #i"
+
+
+// All received messages were sent (auto)
+lemma all_received_were_sent:
+    all-traces
+    "All A B m #i.(Recv(A,B,m) @ #i ==> (Ex #k. (Sent(A,B,m) @ #k & #k < #i)))"
+
+
+// All received messages were sent, and are not received twice (auto)
+lemma all_received_were_sent_injective:
+    "All A B t #i. 
+    Recv(A,B,t) @#i
+    ==> (Ex #j. Sent(A,B,t) @#j 
+        & #j < #i
+        & not (Ex A2 B2 #i2. Recv(A2,B2,t) @i2
+                           & not (#i2 = #i)))"
+
+// The order of messages is preserved (auto)
+// currently not auto!
+lemma order:
+    all-traces
+    "All A B m m2 #i #j.(Recv(A,B,m) @ #i & Recv(A,B,m2) @ #j & #i < #j ==> (Ex #k #l. (Sent(A,B,m) @ #k & Sent(A,B,m2) @ #l & #k < #l) ))"
+
+
+// Message Delivery: all sent messages are received (auto)
+lemma delivery_wo_order:
+    all-traces
+    "All A B m #i.(Sent(A,B,m) @ #i ==> (Ex #k. (Recv(A,B,m) @ #k & #i < #k)))"
+
+// Message Delivery: all sent messages are received in the same order (auto)
+// currently not auto!
+lemma delivery_order:
+    all-traces
+    "All A B m m2 #i #j.(Sent(A,B,m) @ #i & Sent(A,B,m2) @ #j & #i < #j ==> (Ex #k #l. (Recv(A,B,m) @ #k & Recv(A,B,m2) @ #l & #k < #l) ))"
+
+end
