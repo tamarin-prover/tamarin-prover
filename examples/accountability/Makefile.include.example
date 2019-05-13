@@ -1,0 +1,57 @@
+
+PROVER=tamarin-prover
+# ALTPROVER=/Users/robert/Library/Haskell/ghc-7.0.4/lib/tamarin-prover-0.4.1.0/bin/tamarin-prover
+HEURISTIC=--heuristic=p
+#BOUND=--bound=31
+INTERACTIVEBOUND=--bound=4
+MAUDE=--with-maude=/Users/robert/bin/maudelib/maude.darwin64
+FLAGS=$(MAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+INTERACTIVEFLAGS=$(MAUDE) $(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+
+cassisLOCALPORT=3002
+cassisREMOTEPORT=3002
+cassisPROVER=~/.local/bin/tamarin-prover
+cassisMAUDE=--with-maude=/usr/local/maude27-linux/maude.linux64
+cassisFLAGS=$(cassisMAUDE) $(HEURISTIC) $(BOUND) #+RTS -N -RTS
+cassisINTERACTIVEFLAGS=$(cassisMAUDE) $(HEURISTIC) $(INTERACTIVEBOUND) #+RTS -N -RTS
+cassisULIMITS=ulimit -Sv 154800016 # 80% of the available memory on cassis in idle.
+
+colossus11LOCALPORT=3011
+colossus11REMOTEPORT=3001
+colossus11PROVER=~/.local/bin/tamarin-prover
+colossus11MAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossus11FLAGS=$(colossusMAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossus11INTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+colossus11ULIMITS = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+colossus04LOCALPORT=3004
+colossus04REMOTEPORT=3001
+colossus04PROVER=~/.local/bin/tamarin-prover
+colossus04MAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossus04FLAGS=$(colossus04MAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossus04INTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+colossus04ULIMITS = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+colossus08LOCALPORT=3008
+colossus08REMOTEPORT=3001
+colossus08PROVER=~/.local/bin/tamarin-prover
+colossus08MAUDE=#--with-maude=/usr/local/maude27-linux/maude.linux64
+colossus08FLAGS=$(colossus08MAUDE) $(HEURISTIC) $(BOUND) +RTS -N16 -RTS
+colossus08INTERACTIVEFLAGS=$(HEURISTIC) $(INTERACTIVEBOUND) +RTS -N16 -RTS
+colossus08ULIMITS = ulimit -Sv 1253873580
+			    # 80% of available ram on idle
+                              #30000000
+
+SAPIC=sapic 
+
+FILES= $(wildcard *.spthy)
+
+BENCHMARKMACHINE = smarthomerob
+BENCHMARKULIMITS = ulimit -Sv 6000000
+BENCHMARKPROVER=$(REMOTEPROVER)
+BENCHMARKFLAGS=$(HEURISTIC)
+BENCHMARKFLAGSNOH=

@@ -12,7 +12,7 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
+-- Maintainer  : Simon Meier <iridcode@gmail.com>, Alexander Dax <alexander@dax.saarland>
 -- Portability : GHC only
 --
 -- Theory datatype and transformations on it.
@@ -22,6 +22,28 @@ module Theory (
   , RestrictionAttribute(..)
   , rstrName
   , rstrFormula
+
+  -- * Processes
+  , ProcessDef(..)
+  -- Datastructure added to Theory Items
+  , addProcess
+  , findProcess
+  , addProcessDef
+  , lookupProcessDef
+  , pName
+  , pBody
+
+  -- * Options
+  , transAllowPatternMatchinginLookup
+  , transProgress
+  , transReliable
+  , thyOptions
+  , setOption
+
+  -- * Predicates
+  , Predicate(..)
+  , pFact
+  , addPredicate
 
   -- * Lemmas
   , LemmaAttribute(..)
@@ -68,6 +90,7 @@ module Theory (
   , theoryRules
   , theoryLemmas
   , theoryRestrictions
+  , theoryProcesses
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
@@ -96,7 +119,9 @@ module Theory (
 
   -- ** Open theories
   , OpenTheory
+  , OpenTranslatedTheory
   , OpenDiffTheory
+  , removeSapicItems
 --  , EitherTheory
   , EitherOpenTheory
   , EitherClosedTheory
@@ -106,6 +131,7 @@ module Theory (
   , addProtoDiffRule
   , applyPartialEvaluation
   , applyPartialEvaluationDiff
+  , addIntrRuleACsAfterTranslate
   , addIntrRuleACs
   , addIntrRuleACsDiffBoth
   , addIntrRuleACsDiffBothDiff
@@ -119,6 +145,7 @@ module Theory (
   , closeTheory
   , closeDiffTheory
   , openTheory
+  , openTranslatedTheory
   , openDiffTheory
 
   , ClosedProtoRule(..)
@@ -153,8 +180,9 @@ module Theory (
   , modifyLemmaProofDiff
   , lookupDiffLemmaProof
   , modifyDiffLemmaProof
-  
+
   -- * Pretty printing
+  , prettyTheory
   , prettyFormalComment
   , prettyLemmaName
   , prettyRestriction
@@ -163,6 +191,7 @@ module Theory (
   , prettyClosedTheory
   , prettyClosedDiffTheory
   , prettyOpenTheory
+  , prettyOpenTranslatedTheory
   , prettyOpenDiffTheory
 
   , prettyClosedSummary
@@ -170,6 +199,9 @@ module Theory (
 
   , prettyIntruderVariants
   , prettyTraceQuantifier
+
+  , prettyProcess
+  , prettyProcessDef
 
   -- * Convenience exports
   , module Theory.Model
@@ -183,6 +215,7 @@ import           Prelude                             hiding (id, (.))
 
 import           GHC.Generics                        (Generic)
 
+-- import           Data.Typeable
 import           Data.Binary
 import           Data.List
 import           Data.Maybe
@@ -198,10 +231,15 @@ import           Control.Parallel.Strategies
 
 import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
+import qualified Data.Label.Point
+import qualified Data.Label.Poly
+import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
 import           Theory.Model
+import           Theory.Sapic
+import           Theory.Sapic.Print
 import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
@@ -306,7 +344,7 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
       ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
-                              -- If t is a private function symbol we need to permit one more rule 
+                              -- If t is a private function symbol we need to permit one more rule
                               -- application as there is no associated constructor.
                               else 0) subterm constant) prems concs acts nvs)
         where
@@ -347,10 +385,10 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
 
     -- Maude handle
     hnd = L.get sigmMaudeHandle sig
-    
+
     -- close intruder rules
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
-    
+
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
@@ -388,6 +426,50 @@ data Restriction = Restriction
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''Restriction])
+
+------------------------------------------------------------------------------
+-- Processes
+------------------------------------------------------------------------------
+
+data ProcessDef = ProcessDef
+        { _pName            :: String
+        , _pBody            :: Process
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+
+-- generate accessors for ProcessDef data structure records
+$(mkLabels [''ProcessDef])
+
+------------------------------------------------------------------------------
+-- Predicates
+------------------------------------------------------------------------------
+
+data Predicate = Predicate
+        { _pFact            :: LNFact
+        , _pFormula         :: LNFormula
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+
+-- generate accessors for Predicate data structure records
+$(mkLabels [''Predicate])
+
+------------------------------------------------------------------------------
+-- Options
+------------------------------------------------------------------------------
+-- | Options for translation and, maybe in the future, also msrs itself.
+-- | Note: setOption below assumes all values to be boolean
+data Option = Option
+        {
+          _transAllowPatternMatchinginLookup   :: Bool
+        , _transProgress            :: Bool
+        , _transReliable            :: Bool
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- generate accessors for Option data structure records
+$(mkLabels [''Option])
 
 
 ------------------------------------------------------------------------------
@@ -435,6 +517,21 @@ data DiffLemma p = DiffLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''DiffLemma])
+
+
+-- | An accountability Lemma describes a property that holds in the context
+-- of a theory and some parties with a verdict function
+--data AccLemma v p par = AccLemma
+--       { _acName            :: String
+--       , _acTraceQuantifier :: TraceQuantifier
+--       , _acFormula         :: LNFormula
+--       , _acAttributes      :: [LemmaAttribute]
+--       , _acVerdict         :: v
+--     , _acProof           :: p
+--       , _acParties         :: par
+--       }
+--       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
 
 -- Instances
 ------------
@@ -499,7 +596,7 @@ skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
 skeletonLemma name atts qua fm = Lemma name qua fm atts
 
 -- | Create a new unproven diff lemma.
-unprovenDiffLemma :: String -> [LemmaAttribute] 
+unprovenDiffLemma :: String -> [LemmaAttribute]
               -> DiffLemma DiffProofSkeleton
 unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 
@@ -530,12 +627,21 @@ addRightLemma lem =
 -- | A formal comment is a header together with the body of the comment.
 type FormalComment = (String, String)
 
+
+-- | SapicItems can be processes and accountability lemmas
+data SapicElement=
+      ProcessItem Process
+      | ProcessDefItem ProcessDef
+      deriving( Show, Eq, Ord, Generic, NFData, Binary )
+
 -- | A theory item built over the given rule type.
-data TheoryItem r p =
+data TheoryItem r p s =
        RuleItem r
      | LemmaItem (Lemma p)
      | RestrictionItem Restriction
      | TextItem FormalComment
+     | PredicateItem Predicate
+     | SapicItem s
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A diff theory item built over the given rule type.
@@ -555,18 +661,19 @@ data DiffTheoryItem r r2 p p2 =
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
 -- and the lemmas that
-data Theory sig c r p = Theory {
+data Theory sig c r p s = Theory {
          _thyName      :: String
        , _thyHeuristic :: [GoalRanking]
        , _thySignature :: sig
        , _thyCache     :: c
-       , _thyItems     :: [TheoryItem r p]
+       , _thyItems     :: [TheoryItem r p s]
+       , _thyOptions   :: Option
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''Theory])
 
-       
+
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
          _diffThyName           :: String
@@ -580,26 +687,32 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-       
+
 $(mkLabels [''DiffTheory])
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenTheory =
-    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton
+    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton SapicElement
+
+-- | Open theories can be extended. Invariants:
+--   1. Lemma names are unique.
+--   2. All SapicItems are translated
+type OpenTranslatedTheory =
+    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton ()
 
 -- | Open diff theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenDiffTheory =
     DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
-    
+
 -- | Closed theories can be proven. Invariants:
 --     1. Lemma names are unique
 --     2. All proof steps with annotated sequents are sound with respect to the
 --        closed rule set of the theory.
 --     3. Maude is running under the given handle.
 type ClosedTheory =
-    Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof
+    Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof ()
 
 -- | Closed Diff theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -616,6 +729,47 @@ type EitherOpenTheory = Either OpenTheory OpenDiffTheory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 
+-- remove Sapic items and convert other items to identical item but with unit type for sapic elements
+removeSapicItems :: OpenTheory -> OpenTranslatedTheory
+removeSapicItems thy =
+  Theory {_thyName=(L.get thyName thy)
+          ,_thyHeuristic=(L.get thyHeuristic thy)
+          ,_thySignature=(L.get thySignature thy)
+          ,_thyCache=(L.get thyCache thy)
+          ,_thyItems = newThyItems
+          ,_thyOptions =(L.get thyOptions thy)}
+    where
+      newThyItems = map removeSapicElement (filter isNoSapicItem (L.get thyItems thy))
+      removeSapicElement :: TheoryItem r p SapicElement -> TheoryItem r p ()
+      removeSapicElement (SapicItem _) = SapicItem ()
+      removeSapicElement (RuleItem r) = RuleItem r
+      removeSapicElement (LemmaItem l) = LemmaItem l
+      removeSapicElement (RestrictionItem rl) = RestrictionItem rl
+      removeSapicElement (TextItem t) = TextItem t
+      removeSapicElement (PredicateItem predi) = PredicateItem predi
+      isNoSapicItem (SapicItem _) = False
+      isNoSapicItem _             = True
+
+
+--open translated theory again
+openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory
+openTranslatedTheory thy =
+  Theory {_thyName=(L.get thyName thy)
+          ,_thyHeuristic=(L.get thyHeuristic thy)
+          ,_thySignature=(L.get thySignature thy)
+          ,_thyCache=(L.get thyCache thy)
+          ,_thyItems = newThyItems
+          ,_thyOptions =(L.get thyOptions thy)}
+    where
+      newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
+      addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
+      addSapicElement (RuleItem r) = Just $ RuleItem r
+      addSapicElement (LemmaItem l) = Just $ LemmaItem l
+      addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
+      addSapicElement (TextItem t) = Just $ TextItem t
+      addSapicElement (PredicateItem predi) = Just $ PredicateItem predi
+      addSapicElement (SapicItem _) = Nothing
+
 -- Shared theory modification functions
 ---------------------------------------
 
@@ -627,14 +781,26 @@ filterSide s l = case l of
 
 -- | Fold a theory item.
 foldTheoryItem
-    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a)
-    -> TheoryItem r p -> a
-foldTheoryItem fRule fRestriction fLemma fText i = case i of
+    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Predicate -> a) -> (s -> a)
+    -> TheoryItem r p s -> a
+foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i of
     RuleItem ru   -> fRule ru
     LemmaItem lem -> fLemma lem
     TextItem txt  -> fText txt
     RestrictionItem rstr  -> fRestriction rstr
-    
+    PredicateItem     p  -> fPredicate p
+    SapicItem s -> fSapicItem s
+
+
+
+-- fold a sapic item.
+foldSapicItem
+    :: (Process -> a) -> (ProcessDef -> a)
+    -> SapicElement -> a
+foldSapicItem fProcess fProcessDef i = case i of
+    ProcessItem     proc  -> fProcess proc
+    ProcessDefItem     pDef  -> fProcessDef pDef
+
 -- | Fold a theory item.
 foldDiffTheoryItem
     :: (r -> a) -> ((Side, r2) -> a) -> (DiffLemma p -> a) -> ((Side, Lemma p2) -> a) -> ((Side, Restriction) -> a) -> (FormalComment -> a)
@@ -648,9 +814,9 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
     DiffTextItem txt  -> fText txt
 
 -- | Map a theory item.
-mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p -> TheoryItem r' p'
+mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
 mapTheoryItem f g =
-    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem
+    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem PredicateItem SapicItem
 
 -- | Map a diff theory item.
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
@@ -658,9 +824,9 @@ mapDiffTheoryItem f g h i =
     foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffTextItem
 
 -- | All rules of a theory.
-theoryRules :: Theory sig c r p -> [r]
+theoryRules :: Theory sig c r p s -> [r]
 theoryRules =
-    foldTheoryItem return (const []) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem return (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All diff rules of a theory.
 diffTheoryDiffRules :: DiffTheory sig c r r2 p p2 -> [r]
@@ -682,16 +848,30 @@ rightTheoryRules :: DiffTheory sig c r r2 p p2 -> [r2]
 rightTheoryRules =
     foldDiffTheoryItem (const []) (\(x, y) -> if (x == RHS) then [y] else []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
 
-    
+
 -- | All restrictions of a theory.
-theoryRestrictions :: Theory sig c r p -> [Restriction]
+theoryRestrictions :: Theory sig c r p s -> [Restriction]
 theoryRestrictions =
-    foldTheoryItem (const []) return (const []) (const []) <=< L.get thyItems
+    foldTheoryItem (const []) return (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All lemmas of a theory.
-theoryLemmas :: Theory sig c r p -> [Lemma p]
+theoryLemmas :: Theory sig c r p s -> [Lemma p]
 theoryLemmas =
-    foldTheoryItem (const []) (const []) return (const []) <=< L.get thyItems
+    foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
+
+-- | All processes of a theory (TODO give warning if there is more than one...)
+theoryProcesses :: Theory sig c r p SapicElement -> [Process]
+theoryProcesses = foldSapicItem return (const []) <=< sapicElements
+  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
+
+-- | All process definitions of a theory.
+theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
+theoryProcessDefs = foldSapicItem (const []) return <=< sapicElements
+  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
+
+-- | All process definitions of a theory.
+theoryPredicates :: Theory sig c r p SapicElement -> [Predicate]
+theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -719,16 +899,47 @@ diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
     -- | Add a new restriction. Fails, if restriction with the same name exists.
-addRestriction :: Restriction -> Theory sig c r p -> Maybe (Theory sig c r p)
+addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addRestriction l thy = do
     guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
     return $ modify thyItems (++ [RestrictionItem l]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
-addLemma :: Lemma p -> Theory sig c r p -> Maybe (Theory sig c r p)
+addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
+
+
+-- | Add a new process expression.  since expression (and not definitions)
+-- could appear several times, checking for doubled occurrence isn't necessary
+addProcess :: Process -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+addProcess l thy = modify thyItems (++ [SapicItem (ProcessItem l)]) thy
+
+
+-- search process
+findProcess :: String -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+findProcess s thy =  do
+                guard (isJust $ lookupProcessDef s thy)
+                return thy
+
+-- | Add a new process definition. fails if process with the same name already exists
+addProcessDef :: ProcessDef -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addProcessDef pDef thy = do
+    guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
+    return $ modify thyItems (++ [SapicItem (ProcessDefItem pDef)]) thy
+
+-- | Add a new process definition. fails if process with the same name already exists
+addPredicate :: Predicate -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addPredicate pDef thy = do
+    guard (isNothing $ lookupPredicate (L.get pFact pDef) thy)
+    return $ modify thyItems (++ [PredicateItem pDef]) thy
+
+-- | Add a new option. Overwrite previous settings
+setOption :: Data.Label.Poly.Lens
+               Data.Label.Point.Total (Option -> Option) (Bool -> Bool)
+             -> Theory sig c r p s -> Theory sig c r p s
+setOption l = L.set (l . thyOptions) True
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
@@ -749,8 +960,8 @@ addDiffLemma l thy = do
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
-addHeuristic :: [GoalRanking] -> Theory sig c r p -> Maybe (Theory sig c r p)
-addHeuristic h (Theory n [] sig c i) = Just (Theory n h sig c i)
+addHeuristic :: [GoalRanking] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
@@ -758,7 +969,7 @@ addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h 
 addDiffHeuristic _ _ = Nothing
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
-removeLemma :: String -> Theory sig c r p -> Maybe (Theory sig c r p)
+removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 removeLemma lemmaName thy = do
     _ <- lookupLemma lemmaName thy
     return $ modify thyItems (concatMap fItem) thy
@@ -767,6 +978,8 @@ removeLemma lemmaName thy = do
                              (return . RestrictionItem)
                              check
                              (return . TextItem)
+                             (return . PredicateItem)
+                             (return . SapicItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -798,12 +1011,20 @@ removeDiffLemma lemmaName thy = do
     check l = do guard (L.get lDiffName l /= lemmaName); return (DiffLemmaItem l)
 
 -- | Find the restriction with the given name.
-lookupRestriction :: String -> Theory sig c r p -> Maybe Restriction
+lookupRestriction :: String -> Theory sig c r p s -> Maybe Restriction
 lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
 
 -- | Find the lemma with the given name.
-lookupLemma :: String -> Theory sig c r p -> Maybe (Lemma p)
+lookupLemma :: String -> Theory sig c r p s -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
+
+-- | Find the process with the given name.
+lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef)
+lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
+
+-- | Find the predicate with the fact name.
+lookupPredicate :: LNFact -> Theory sig c r p SapicElement -> Maybe (Predicate)
+lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -818,7 +1039,7 @@ lookupDiffLemma :: String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffLemma p)
 lookupDiffLemma name = find ((name ==) . L.get lDiffName) . diffTheoryDiffLemmas
 
 -- | Add a comment to the theory.
-addComment :: Doc -> Theory sig c r p -> Theory sig c r p
+addComment :: Doc -> Theory sig c r p s -> Theory sig c r p s
 addComment c = modify thyItems (++ [TextItem ("", render c)])
 
 -- | Add a comment to the diff theory.
@@ -826,10 +1047,10 @@ addDiffComment :: Doc -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p
 addDiffComment c = modify diffThyItems (++ [DiffTextItem ("", render c)])
 
 -- | Add a comment represented as a string to the theory.
-addStringComment :: String -> Theory sig c r p -> Theory sig c r p
+addStringComment :: String -> Theory sig c r p s -> Theory sig c r p s
 addStringComment = addComment . vcat . map text . lines
 
-addFormalComment :: FormalComment -> Theory sig c r p -> Theory sig c r p
+addFormalComment :: FormalComment -> Theory sig c r p s -> Theory sig c r p s
 addFormalComment c = modify thyItems (++ [TextItem c])
 
 addFormalCommentDiff :: FormalComment -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
@@ -839,10 +1060,12 @@ addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 ------------------------------------------------------------------------------
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
+defaultOption :: Option
+defaultOption = Option False False False
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
-defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] []
+defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] [] defaultOption
 
 -- | Default diff theory
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
@@ -855,7 +1078,7 @@ addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Obser
 -- Add the rule labels to an Open Diff Theory
 addProtoRuleLabel :: OpenProtoRule -> OpenProtoRule
 addProtoRuleLabel rule = addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
-    
+
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
 addIntrRuleLabels thy =
@@ -863,13 +1086,14 @@ addIntrRuleLabels thy =
   where
     addRuleLabel :: IntrRuleAC -> IntrRuleAC
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
-    
+
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
-openTheory  (Theory n h sig c items) =
+openTheory  (Theory n h sig c items opts) = openTranslatedTheory(
     Theory n h (toSignaturePure sig) (openRuleCache c)
       (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
+      opts)
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
@@ -878,7 +1102,7 @@ openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items) =
     DiffTheory n h (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
       (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
-      
+
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
@@ -889,7 +1113,7 @@ lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProt
 lookupOpenDiffProtoDiffRule name =
     find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
--- | Add a new protocol rules. Fails, if a protocol rule with the same name
+-- | Add new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
@@ -908,6 +1132,10 @@ addProtoDiffRule ruE thy = do
   where
     nameNotUsedForDifferentRule =
         maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo) ruE) thy
+
+-- | Add intruder proof rules after Translate.
+addIntrRuleACsAfterTranslate :: [IntrRuleAC] -> OpenTranslatedTheory -> OpenTranslatedTheory
+addIntrRuleACsAfterTranslate rs' = modify (thyCache) (\rs -> nub $ rs ++ rs')
 
 -- | Add intruder proof rules.
 addIntrRuleACs :: [IntrRuleAC] -> OpenTheory -> OpenTheory
@@ -954,7 +1182,10 @@ normalizeTheory =
               LemmaItem $ L.modify lProof stripProofAnnotations $ lem
           RuleItem _    -> item
           TextItem _    -> item
-          RestrictionItem _   -> item)
+          RestrictionItem _   -> item
+          SapicItem _   -> item
+          PredicateItem _   -> item
+          )
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
@@ -1194,12 +1425,12 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 -- correct signature. This is the right place to do that because in a closed
 -- theory the signature may not change any longer.
 closeTheory :: FilePath         -- ^ Path to the Maude executable.
-            -> OpenTheory
+            -> OpenTranslatedTheory
             -> IO ClosedTheory
 closeTheory maudePath thy0 = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
     return $ closeTheoryWithMaude sig thy0
-    
+
 -- | Close a theory by closing its associated rule set and checking the proof
 -- skeletons and caching AC variants as well as precomputed case distinctions.
 --
@@ -1212,7 +1443,7 @@ closeDiffTheory :: FilePath         -- ^ Path to the Maude executable.
 closeDiffTheory maudePath thy0 = do
     sig <- toSignatureWithMaude maudePath $ L.get diffThySignature thy0
     return $ closeDiffTheoryWithMaude sig thy0
-    
+
 -- | Close a diff theory given a maude signature. This signature must be valid for
 -- the given theory.
 closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
@@ -1248,7 +1479,7 @@ closeDiffTheoryWithMaude sig thy0 = do
               (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
               EitherRestrictionItem
               DiffTextItem
-            
+
     -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
@@ -1279,13 +1510,13 @@ closeDiffTheoryWithMaude sig thy0 = do
         addBreakers _  item              = item
 
 
-    
+
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
-closeTheoryWithMaude :: SignatureWithMaude -> OpenTheory -> ClosedTheory
+closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> ClosedTheory
 closeTheoryWithMaude sig thy0 = do
       proveTheory (const True) checkProof
-    $ Theory (L.get thyName thy0) h sig cache items
+    $ Theory (L.get thyName thy0) h sig cache items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
     cache      = closeRuleCache restrictions typAsms sig rules (L.get thyCache thy0) False
@@ -1305,6 +1536,8 @@ closeTheoryWithMaude sig thy0 = do
        RestrictionItem
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
+       PredicateItem
+       SapicItem
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
@@ -1315,7 +1548,7 @@ closeTheoryWithMaude sig thy0 = do
 
     -- extract protocol rules
     rules :: [ClosedProtoRule]
-    rules = theoryRules (Theory errClose errClose errClose errClose items)
+    rules = theoryRules (Theory errClose errClose errClose errClose items errClose)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1340,7 +1573,7 @@ closeTheoryWithMaude sig thy0 = do
 applyPartialEvaluation :: EvaluationStyle -> ClosedTheory -> ClosedTheory
 applyPartialEvaluation evalStyle thy0 =
     closeTheoryWithMaude sig $
-    L.modify thyItems replaceProtoRules (openTheory thy0)
+    removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0))
   where
     sig          = L.get thySignature thy0
     ruEs         = getProtoRuleEs thy0
@@ -1406,7 +1639,7 @@ applyPartialEvaluationDiff evalStyle thy0 =
               " right refined multiset rewriting rules.\n" ++
               "Note that the original number of multiset rewriting rules was "
               ++ show (length (ruEs RHS)) ++ ".\n\n")
-              
+
 
 -- Applying provers
 -------------------
@@ -1469,9 +1702,9 @@ proveDiffTheory selector diffselector prover diffprover thy =
         ctxt    = getDiffProofContext lem thy
         sys     = emptyDiffSystem
         add prf = fromMaybe prf $ runDiffProver diffprover ctxt 0 sys prf
-        
+
 -- | Construct a constraint system for verifying the given formula.
-mkSystem :: ProofContext -> [Restriction] -> [TheoryItem r p]
+mkSystem :: ProofContext -> [Restriction] -> [TheoryItem r p s]
          -> LNFormula -> System
 mkSystem ctxt restrictions previousItems =
     -- Note that it is OK to add reusable lemmas directly to the system, as
@@ -1593,7 +1826,7 @@ modifyLemmaProofDiff s prover name thy =
              return $ pre ++ i':post
         (_, []) -> Nothing
 
-        
+
 -- | Modify the proof at the given diff lemma ref, if there is one. Fails if the
 -- path is not present or if the prover fails.
 modifyDiffLemmaProof :: DiffProver -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
@@ -1634,10 +1867,10 @@ prettyFormalComment "" body = multiComment_ [body]
 prettyFormalComment header body = text $ header ++ "{*" ++ body ++ "*}"
 
 -- | Pretty print a theory.
-prettyTheory :: HighlightDocument d
-             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d)
-             -> Theory sig c r p -> d
-prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
+prettyTheoryWithSapic :: HighlightDocument d
+             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (SapicElement -> d)
+             -> Theory sig c r p SapicElement -> d
+prettyTheoryWithSapic ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
@@ -1648,8 +1881,44 @@ prettyTheory ppSig ppCache ppRule ppPrf thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldTheoryItem
-        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment)
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
     thyH = L.get thyHeuristic thy
+
+--Pretty print a theory
+prettyTheory :: HighlightDocument d
+             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (() -> d)
+             -> Theory sig c r p () -> d
+prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
+    [ kwTheoryHeader $ text $ L.get thyName thy
+    , lineComment_ "Function signature and definition of the equational theory E"
+    , ppSig $ L.get thySignature thy
+    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
+    , ppCache $ L.get thyCache thy
+    ] ++
+    parMap rdeepseq ppItem (L.get thyItems thy) ++
+    [ kwEnd ]
+  where
+    ppItem = foldTheoryItem
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
+    thyH = L.get thyHeuristic thy
+
+emptyString :: HighlightDocument d => () -> d
+emptyString _ = text ("")
+
+prettySapicElement :: HighlightDocument d => SapicElement -> d
+prettySapicElement a = text ("TODO prettyPrint SapicItems")
+
+prettyPredicate :: HighlightDocument d => Predicate -> d
+prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
+    where
+        factstr = render $ prettyLNFact $ L.get pFact p
+        formulastr = render $ prettyLNFormula $ L.get pFormula p
+
+prettyProcess :: HighlightDocument d => Process -> d
+prettyProcess p = text (prettySapic p)
+
+prettyProcessDef :: HighlightDocument d => ProcessDef -> d
+prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
@@ -1692,7 +1961,7 @@ prettyLemmaName l = case L.get lAttributes l of
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
-    
+
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d
 prettyRestriction rstr =
@@ -1766,7 +2035,7 @@ prettyEitherLemma ppPrf (_, lem) =
 -- | Pretty print a diff lemma.
 prettyDiffLemma :: HighlightDocument d => (p -> d) -> DiffLemma p -> d
 prettyDiffLemma ppPrf lem =
-    kwDiffLemma <-> prettyDiffLemmaName lem <> colon 
+    kwDiffLemma <-> prettyDiffLemmaName lem <> colon
     $-$
     ppPrf (L.get lDiffProof lem)
 
@@ -1826,7 +2095,7 @@ prettyClosedProtoRule cru =
 
 -- -- | Pretty print an closed rule.
 -- prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
--- prettyClosedEitherRule (s, cru) = 
+-- prettyClosedEitherRule (s, cru) =
 --     text ((show s) ++ ": ") <>
 --     (prettyProtoRuleE ruE) $--$
 --     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
@@ -1840,8 +2109,8 @@ prettyClosedProtoRule cru =
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
 prettyOpenTheory =
-    prettyTheory prettySignaturePure
-                 (const emptyDoc) prettyOpenProtoRule prettyProof
+    prettyTheoryWithSapic prettySignaturePure
+                 (const emptyDoc) prettyOpenProtoRule prettyProof prettySapicElement
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print an open theory.
@@ -1851,6 +2120,13 @@ prettyOpenDiffTheory =
                  (const emptyDoc) prettyEitherRule prettyDiffProof prettyProof
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
+-- | Pretty print a translated Open Theory
+prettyOpenTranslatedTheory :: HighlightDocument d => OpenTranslatedTheory -> d
+prettyOpenTranslatedTheory =
+    prettyTheory prettySignaturePure
+                 (const emptyDoc) prettyOpenProtoRule prettyProof emptyString
+
+
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory thy =
@@ -1859,6 +2135,7 @@ prettyClosedTheory thy =
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
                  prettyClosedProtoRule
                  prettyIncrementalProof
+                 emptyString
                  thy
   where
     ppInjectiveFactInsts crc =
