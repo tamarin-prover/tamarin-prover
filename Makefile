@@ -229,7 +229,7 @@ case-studies/%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
 
 # CSF19 case studies
 CSF19_WRAPPING_GCM_CASE_STUDIES=gcm.spthy
-CSF19_WRAPPING_GCM_TARGETS=$(subst .spthy,_analyzed-oracle-gcm-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_CASE_STUDIES)))
+CSF19_WRAPPING_GCM_TARGETS=$(subst .spthy,_analyzed-oracle-gcm-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_GCM_CASE_STUDIES)))
 
 CSF19_WRAPPING_SIV_CASE_STUDIES=siv.spthy
 CSF19_WRAPPING_SIV_TARGETS=$(subst .spthy,_analyzed-oracle-siv-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_SIV_CASE_STUDIES)))
