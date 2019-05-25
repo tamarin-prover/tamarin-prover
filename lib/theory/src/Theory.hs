@@ -44,10 +44,16 @@ module Theory (
   , pFact
   , addPredicate
 
+  -- * Verdicts
+  , ProtoVerdictMapping(..)
+  , ProtoVerdictf
+
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
+  , AccKind(..)
   , Lemma
+  , AccLemma
   , lName
   , DiffLemma
   , lDiffName
@@ -57,9 +63,15 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , aName
+  , aAccKind
+  , aAttributes
+  , aProtoVerdictf
+  , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
+  , skeletonAccLemma
   , isLeftLemma
   , isRightLemma
 --   , isBothLemma
@@ -94,6 +106,7 @@ module Theory (
   , diffTheorySideRestrictions
   , addRestriction
   , addLemma
+  , addAccLemma
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
@@ -554,10 +567,10 @@ $(mkLabels [''DiffLemma])
 
 -- | An accountability lemma describes an accountabilty property that holds in the context of a theory
 data AccLemma = AccLemma
-       { _aAccKind         :: AccKind
-       , _aName            :: String
+       { _aName            :: String
        , _aAttributes      :: [LemmaAttribute]
        , _aProtoVerdictf   :: ProtoVerdictf
+       , _aAccKind         :: AccKind
        , _aFormula         :: LNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -637,6 +650,9 @@ unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
 skeletonDiffLemma name atts = DiffLemma name atts
 
+-- ! Create a new acc lemma.
+skeletonAccLemma :: String -> [LemmaAttribute] -> ProtoVerdictf -> AccKind -> LNFormula -> AccLemma
+skeletonAccLemma = AccLemma
 
 -- | The source kind allowed for a lemma.
 lemmaSourceKind :: Lemma p -> SourceKind

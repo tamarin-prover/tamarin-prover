@@ -616,6 +616,14 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
+-- | Parse an 'AccKind'
+accKind :: Parser AccKind
+accKind = asum
+  [ try (symbol "coarse")              *> pure Coarse
+  , try (symbol "cases")               *> pure Cases
+  , try (symbol "control-equivalence") *> pure ControlEquivalence
+  ]
+
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
@@ -630,6 +638,15 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
+lemmaAcc :: Parser AccLemma
+lemmaAcc = try $ skeletonAccLemma <$> (symbol "lemma" *> identifier) 
+                                  <*> (option [] $ list (lemmaAttribute False))
+                                  <*> (colon *> commaSep1 protoMapping)
+                                  <*> (symbol "accounts with" *> brackets accKind)
+                                  <*> (symbol "for" *> doubleQuoted standardFormula)
+      where
+        protoMapping :: Parser ProtoVerdictMapping
+        protoMapping = RefCase <$> identifier <*> (pure (TF False)) <*> (pure [])
                       
 ------------------------------------------------------------------------------
 -- Parsing Proofs
@@ -1164,6 +1181,8 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
+      , do thy' <- ((liftedAddAccLemma thy) =<<) lemmaAcc
+           addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
       , do ru <- protoRule
@@ -1208,6 +1227,10 @@ theory flags0 = do
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+
+    liftedAddAccLemma thy lem = case addAccLemma lem thy of
+        Just thy'  -> return thy'
+        Nothing    -> fail $ "duplicate lemma: " ++ get aName lem
 
     -- check process defined only once
     -- add process to theoryitems
