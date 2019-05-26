@@ -1192,7 +1192,10 @@ theory flags0 = do
            -- add legacy deprecation warning output
       , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
            addItems flags thy'
-      , do lemAcc <- fmap (skeletonToAccLemma (theoryCaseTests thy) S.empty) lemmaAcc
+      , do 
+           let tests = theoryCaseTests thy
+           let rel = buildRelation tests
+           lemAcc <- fmap (skeletonToAccLemma tests rel) lemmaAcc
            thy' <- liftedAddAccLemma thy lemAcc
            addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma

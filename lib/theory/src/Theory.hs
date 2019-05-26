@@ -48,11 +48,17 @@ module Theory (
   , ProtoVerdictMapping(..)
   , ProtoVerdictf
 
+  -- * Case Tests
+  , CaseTest(..)
+  , cName
+  , cFormula
+  , cRelated
+  , buildRelation
+
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
   , AccKind(..)
-  , CaseTest(..)
   , Lemma
   , AccLemma
   , AccLemmaSkeleton
@@ -66,9 +72,6 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
-  , cName
-  , cFormula
-  , cRelated
   , aName
   , aAccKind
   , aAttributes
@@ -532,6 +535,9 @@ data CaseTest = CaseTest
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''CaseTest])
+
+buildRelation :: [CaseTest] -> Relation
+buildRelation tests =  S.fromList (fmap _cName tests) `S.union` S.unions (fmap _cRelated tests)
 
 
 
