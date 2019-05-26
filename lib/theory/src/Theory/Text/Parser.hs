@@ -638,16 +638,25 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
-lemmaAcc :: Parser AccLemma
-lemmaAcc = try $ skeletonAccLemma <$> (symbol "lemma" *> identifier) 
-                                  <*> (option [] $ list (lemmaAttribute False))
-                                  <*> (colon *> commaSep1 protoMapping)
-                                  <*> (symbol "accounts with" *> brackets accKind)
-                                  <*> (symbol "for" *> doubleQuoted standardFormula)
-      where
-        protoMapping :: Parser ProtoVerdictMapping
-        protoMapping = RefCase <$> identifier <*> (pure (TF False)) <*> (pure [])
-                      
+-- | Parse an accountability lemma.
+lemmaAcc :: Parser AccLemmaSkeleton
+lemmaAcc = try $ AccLemma <$> (symbol "lemma" *> identifier) 
+                          <*> (option [] $ list (lemmaAttribute False))
+                          <*> (colon *> commaSep1 identifier)
+                          <*> (symbol "accounts with" *> brackets accKind)
+                          <*> (symbol "for" *> doubleQuoted standardFormula)
+
+
+------------------------------------------------------------------------------
+-- Parsing Case Tests
+------------------------------------------------------------------------------
+
+caseTest :: Parser CaseTest
+caseTest =  CaseTest <$> (symbol "test" *> identifier)
+                     <*> (colon *> doubleQuoted standardFormula)
+                     <*> (option S.empty (symbol "relates to" *> (fmap S.fromList (commaSep1 identifier))))
+
+
 ------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
@@ -1181,7 +1190,10 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- ((liftedAddAccLemma thy) =<<) lemmaAcc
+      , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
+           addItems flags thy'
+      , do lemAcc <- fmap (skeletonToAccLemma (theoryCaseTests thy) S.empty) lemmaAcc
+           thy' <- liftedAddAccLemma thy lemAcc
            addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
@@ -1231,6 +1243,10 @@ theory flags0 = do
     liftedAddAccLemma thy lem = case addAccLemma lem thy of
         Just thy'  -> return thy'
         Nothing    -> fail $ "duplicate lemma: " ++ get aName lem
+
+    liftedAddCaseTest thy cTest = case addCaseTest cTest thy of
+        Just thy'  -> return thy'
+        Nothing    -> fail $ "duplicate case test: " ++ get cName cTest
 
     -- check process defined only once
     -- add process to theoryitems

@@ -52,8 +52,11 @@ module Theory (
   , LemmaAttribute(..)
   , TraceQuantifier(..)
   , AccKind(..)
+  , CaseTest(..)
   , Lemma
   , AccLemma
+  , AccLemmaSkeleton
+  , AccLemmaGeneral(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -63,20 +66,23 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , cName
+  , cFormula
+  , cRelated
   , aName
   , aAccKind
   , aAttributes
-  , aProtoVerdictf
+  , aCaseTests
   , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
-  , skeletonAccLemma
   , isLeftLemma
   , isRightLemma
 --   , isBothLemma
   , addLeftLemma
   , addRightLemma
+  , skeletonToAccLemma
 
   -- * Theories
   , Theory(..)
@@ -100,6 +106,7 @@ module Theory (
   , diffTheoryDiffLemmas
   , theoryRules
   , theoryLemmas
+  , theoryCaseTests
   , theoryRestrictions
   , theoryProcesses
   , diffTheoryRestrictions
@@ -107,6 +114,7 @@ module Theory (
   , addRestriction
   , addLemma
   , addAccLemma
+  , addCaseTest
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
@@ -509,6 +517,25 @@ type ProtoVerdictf = [ProtoVerdictMapping]
 
 
 ------------------------------------------------------------------------------
+-- Test Cases
+------------------------------------------------------------------------------
+
+type Identifier = String
+
+type Relation = S.Set Identifier
+
+data CaseTest = CaseTest 
+       { _cName     :: Identifier
+       , _cFormula  :: LNFormula
+       , _cRelated  :: S.Set Identifier
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+$(mkLabels [''CaseTest])
+
+
+
+------------------------------------------------------------------------------
 -- Lemmas
 ------------------------------------------------------------------------------
 
@@ -566,17 +593,22 @@ $(mkLabels [''DiffLemma])
 
 
 -- | An accountability lemma describes an accountabilty property that holds in the context of a theory
-data AccLemma = AccLemma
+data AccLemmaGeneral c = AccLemma
        { _aName            :: String
        , _aAttributes      :: [LemmaAttribute]
-       , _aProtoVerdictf   :: ProtoVerdictf
+       , _aCaseTests       :: c
        , _aAccKind         :: AccKind
        , _aFormula         :: LNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''AccLemma])
+$(mkLabels [''AccLemmaGeneral])
 
+type AccLemmaSkeleton = AccLemmaGeneral [Identifier]
+type AccLemma = AccLemmaGeneral ([CaseTest], Relation)
+
+skeletonToAccLemma :: [CaseTest] -> Relation -> AccLemmaSkeleton -> AccLemma
+skeletonToAccLemma cTests rel accLem = accLem { _aCaseTests = (cTests, rel) }
 
 
 
@@ -650,10 +682,6 @@ unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
 skeletonDiffLemma name atts = DiffLemma name atts
 
--- ! Create a new acc lemma.
-skeletonAccLemma :: String -> [LemmaAttribute] -> ProtoVerdictf -> AccKind -> LNFormula -> AccLemma
-skeletonAccLemma = AccLemma
-
 -- | The source kind allowed for a lemma.
 lemmaSourceKind :: Lemma p -> SourceKind
 lemmaSourceKind lem
@@ -683,6 +711,7 @@ data SapicElement=
       ProcessItem Process
       | ProcessDefItem ProcessDef
       | AccLemmaItem AccLemma
+      | CaseTestItem CaseTest
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -850,12 +879,13 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
 
 -- fold a sapic item.
 foldSapicItem
-    :: (Process -> a) -> (ProcessDef -> a) -> (AccLemma -> a)
+    :: (Process -> a) -> (ProcessDef -> a) -> (AccLemma -> a) -> (CaseTest -> a)
     -> SapicElement -> a
-foldSapicItem fProcess fProcessDef fAccLemma i = case i of
+foldSapicItem fProcess fProcessDef fAccLemma fCaseTest i = case i of
     ProcessItem     proc    -> fProcess proc
     ProcessDefItem  pDef    -> fProcessDef pDef
     AccLemmaItem    aLem    -> fAccLemma aLem
+    CaseTestItem    cTest   -> fCaseTest cTest
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -917,18 +947,23 @@ theoryLemmas =
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [Process]
-theoryProcesses = foldSapicItem return (const []) (const []) <=< sapicElements
+theoryProcesses = foldSapicItem return (const []) (const []) (const []) <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return (const []) <=< sapicElements
+theoryProcessDefs = foldSapicItem (const []) return (const []) (const []) <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All AccLemmas definitions of a theory.
 theoryAccLemmas :: Theory sig c r p SapicElement -> [AccLemma]
-theoryAccLemmas = foldSapicItem (const []) (const []) return <=< sapicElements
+theoryAccLemmas = foldSapicItem (const []) (const []) return (const []) <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
+
+-- | All CaseTest definitions of a theory.
+theoryCaseTests :: Theory sig c r p SapicElement -> [CaseTest]
+theoryCaseTests = foldSapicItem (const []) (const []) (const []) return <=< sapicElements
+  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
@@ -995,6 +1030,12 @@ addAccLemma :: AccLemma -> Theory sig c r p SapicElement -> Maybe (Theory sig c 
 addAccLemma aLem thy = do
     guard (isNothing $ lookupAccLemma (L.get aName aLem) thy)
     return $ modify thyItems (++ [SapicItem (AccLemmaItem aLem)]) thy
+
+-- | Add a new case test. Fails if CaseTest with the same name already exists.
+addCaseTest :: CaseTest -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addCaseTest cTest thy = do
+    guard (isNothing  $ lookupCaseTest (L.get cName cTest) thy)
+    return $ modify thyItems (++ [SapicItem (CaseTestItem cTest)]) thy
 
 -- | Add a new process definition. fails if process with the same name already exists
 addPredicate :: Predicate -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -1097,6 +1138,9 @@ lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
 
 lookupAccLemma :: String -> Theory sig c r p SapicElement -> Maybe (AccLemma)
 lookupAccLemma name = find ((name ==) . L.get aName) . theoryAccLemmas
+
+lookupCaseTest :: Identifier -> Theory sig c r p SapicElement -> Maybe CaseTest
+lookupCaseTest name = find ((name ==) . L.get cName) . theoryCaseTests
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
