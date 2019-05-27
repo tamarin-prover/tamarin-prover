@@ -24,7 +24,6 @@ import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Set              as S
--- import qualified Data.List              as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -35,6 +34,7 @@ import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import Sapic.Restrictions
 import Sapic.ProgressFunction
+import Sapic.Accountability
 import Theory.Text.Pretty
 
 
@@ -56,9 +56,12 @@ translate th = case theoryProcesses th of
                 -- add restrictions
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th2 <- foldM liftedAddRestriction th1 sapic_restrictions
+                -- add accountability lemma
+                accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
+                th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
                 -- add heuristic, if not already defined:
-                th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return (removeSapicItems th3)
+                th4 <- return $ fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
+                return (removeSapicItems th4)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
@@ -67,6 +70,9 @@ translate th = case theoryProcesses th of
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
         Nothing   -> throwM (RestrictionNameExists (render (prettyRestriction rest))  :: SapicException AnnotatedProcess)
+    liftedAddLemma thy lem = case addLemma lem thy of
+        Just thy' -> return thy'
+        Nothing   -> throwM (LemmaNameExists (render (prettyLemmaName lem))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
     addIf True l  = l
     addIf False _ = []

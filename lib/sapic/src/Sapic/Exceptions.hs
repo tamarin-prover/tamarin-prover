@@ -48,6 +48,7 @@ data SapicException a = NotImplementedError String
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
+                    | LemmaNameExists String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
     -- deriving (Typeable, Show)
@@ -60,6 +61,7 @@ instance Show (SapicException a) where
     -- show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (LemmaNameExists s) = "Lemma name already exists:" ++ s
     show (RestrictionNameExists s) = "Restriction already exists:" ++ s
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
