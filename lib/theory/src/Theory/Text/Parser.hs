@@ -34,6 +34,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 -- import qualified Data.List                  as L
 import           Data.Color
+import           Data.Either
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -614,9 +615,9 @@ traceQuantifier = asum
 -- | Parse an 'AccKind'
 accKind :: Parser AccKind
 accKind = asum
-  [ try (symbol "coarse")              *> pure Coarse
-  , try (symbol "cases")               *> pure Cases
-  , try (symbol "control-equivalence") *> pure ControlEquivalence
+  [ symbol "coarse"              *> pure Coarse
+  , symbol "cases"              *> pure Cases
+  , symbol "control-equivalence" *> pure ControlEquivalence
   ]
 
 -- | Parse a lemma.
@@ -635,12 +636,21 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
 
 -- | Parse an accountability lemma.
 lemmaAcc :: Parser AccLemmaSkeleton
-lemmaAcc = try $ AccLemma <$> (symbol "lemma" *> identifier) 
-                          <*> (option [] $ list (lemmaAttribute False))
-                          <*> (colon *> commaSep1 identifier)
-                          <*> (symbol "accounts with" *> brackets accKind)
-                          <*> (symbol "for" *> doubleQuoted standardFormula)
-
+lemmaAcc = do
+               _ <-  symbol "lemma"
+               name <- identifier
+               attributes <- option [] $ list (try (Left <$> lemmaAttribute False) <|> (Right <$> accKind))
+               _ <-  colon
+               tests <- commaSep1 identifier
+               _ <-  symbol "accounts for"
+               -- kind <- brackets accKind
+               formula <-  doubleQuoted standardFormula
+               case rights attributes of
+                [] -> return $ AccLemma name (lefts attributes) tests defaultKind formula
+                [kind] -> return $ AccLemma name (lefts attributes) tests kind formula
+                list -> fail $ "An accountability lemma can only have one of " ++ show list ++ "."
+               where
+                defaultKind = Coarse
 
 ------------------------------------------------------------------------------
 -- Parsing Case Tests
