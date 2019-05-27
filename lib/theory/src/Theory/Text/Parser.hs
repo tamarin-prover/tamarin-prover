@@ -636,7 +636,7 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
 
 -- | Parse an accountability lemma.
 lemmaAcc :: Parser AccLemmaSkeleton
-lemmaAcc = do
+lemmaAcc = try $ do
                _ <-  symbol "lemma"
                name <- identifier
                attributes <- option [] $ list (try (Left <$> lemmaAttribute False) <|> (Right <$> accKind))
