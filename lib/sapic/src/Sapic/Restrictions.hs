@@ -137,12 +137,6 @@ resProgressInit = [r|restriction progressInit:
 "Ex #t . Init()@t"
 |]
 
-flattenList :: Eq a0 => [[a0]] -> [a0]
-flattenList = foldr List.union []
-
--- flattenSet :: Ord a =>  S.Set (S.Set a) -> S.Set a
--- flattenSet = S.foldr S.union S.empty 
-
 -- | Generate set of restrictions:  for a given "from" position
 -- | @pf anP pos@ gives set of set position in conjunctive normal form
 -- | we produce one restriction for each set of positions in it
@@ -150,7 +144,7 @@ generateProgressRestrictions :: (Show ann, Typeable ann, MonadCatch m) => AnProc
 generateProgressRestrictions anp = do
     dom_pf <- pfFrom anp -- set of "from" positions
     lss_to <- mapM restriction (S.toList dom_pf) -- list of set of sets of "to" positions
-    return $ flattenList lss_to
+    return $ concat lss_to
     where 
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anp pos
