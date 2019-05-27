@@ -642,7 +642,7 @@ lemmaAcc = try $ do
                attributes <- option [] $ list (try (Left <$> lemmaAttribute False) <|> (Right <$> accKind))
                _ <-  colon
                tests <- commaSep1 identifier
-               _ <-  symbol "accounts for"
+               _ <-  try (symbol "accounts for") <|> symbol "account for"
                -- kind <- brackets accKind
                formula <-  doubleQuoted standardFormula
                case rights attributes of
