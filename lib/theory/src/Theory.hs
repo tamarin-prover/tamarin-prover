@@ -59,6 +59,7 @@ module Theory (
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
+  , CaseIdentifier
   , AccKind(..)
   , Lemma
   , AccLemma
@@ -113,6 +114,7 @@ module Theory (
   , theoryCaseTests
   , theoryRestrictions
   , theoryProcesses
+  , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
@@ -528,14 +530,14 @@ type ProtoVerdictf = [ProtoVerdictMapping]
 -- Test Cases
 ------------------------------------------------------------------------------
 
-type Identifier = String
+type CaseIdentifier = String
 
-type Relation = S.Set Identifier
+type Relation = S.Set CaseIdentifier
 
 data CaseTest = CaseTest 
-       { _cName     :: Identifier
+       { _cName     :: CaseIdentifier
        , _cFormula  :: LNFormula
-       , _cRelated  :: S.Set Identifier
+       , _cRelated  :: Relation
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -615,7 +617,7 @@ data AccLemmaGeneral c = AccLemma
 
 $(mkLabels [''AccLemmaGeneral])
 
-type AccLemmaSkeleton = AccLemmaGeneral [Identifier]
+type AccLemmaSkeleton = AccLemmaGeneral [CaseIdentifier]
 type AccLemma = AccLemmaGeneral ([CaseTest], Relation)
 
 skeletonToAccLemma :: [CaseTest] -> Relation -> AccLemmaSkeleton -> AccLemma
@@ -1025,7 +1027,6 @@ addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
-
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
 addProcess :: Process -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
@@ -1156,7 +1157,7 @@ lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
 lookupAccLemma :: String -> Theory sig c r p SapicElement -> Maybe (AccLemma)
 lookupAccLemma name = find ((name ==) . L.get aName) . theoryAccLemmas
 
-lookupCaseTest :: Identifier -> Theory sig c r p SapicElement -> Maybe CaseTest
+lookupCaseTest :: CaseIdentifier -> Theory sig c r p SapicElement -> Maybe CaseTest
 lookupCaseTest name = find ((name ==) . L.get cName) . theoryCaseTests
 
 -- | Find the restriction with the given name.
