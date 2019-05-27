@@ -71,6 +71,7 @@ library
       , Sapic.Basetranslation
       , Sapic.Restrictions
       , Sapic.ProgressFunction
+      , Sapic.Accountability
       , Sapic
 
     other-modules:
