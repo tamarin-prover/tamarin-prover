@@ -611,6 +611,14 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
+-- | Parse an 'AccKind'
+accKind :: Parser AccKind
+accKind = asum
+  [ try (symbol "coarse")              *> pure Coarse
+  , try (symbol "cases")               *> pure Cases
+  , try (symbol "control-equivalence") *> pure ControlEquivalence
+  ]
+
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
@@ -625,7 +633,25 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
-                      
+-- | Parse an accountability lemma.
+lemmaAcc :: Parser AccLemmaSkeleton
+lemmaAcc = try $ AccLemma <$> (symbol "lemma" *> identifier) 
+                          <*> (option [] $ list (lemmaAttribute False))
+                          <*> (colon *> commaSep1 identifier)
+                          <*> (symbol "accounts with" *> brackets accKind)
+                          <*> (symbol "for" *> doubleQuoted standardFormula)
+
+
+------------------------------------------------------------------------------
+-- Parsing Case Tests
+------------------------------------------------------------------------------
+
+caseTest :: Parser CaseTest
+caseTest =  CaseTest <$> (symbol "test" *> identifier)
+                     <*> (colon *> doubleQuoted standardFormula)
+                     <*> (option S.empty (symbol "relates to" *> (fmap S.fromList (commaSep1 identifier))))
+
+
 ------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
@@ -1169,6 +1195,14 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
+      , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
+           addItems flags thy'
+      , do 
+           let tests = theoryCaseTests thy
+           let rel = buildRelation tests
+           lemAcc <- fmap (skeletonToAccLemma tests rel) lemmaAcc
+           thy' <- liftedAddAccLemma thy lemAcc
+           addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
       , do ru <- protoRule
@@ -1213,6 +1247,14 @@ theory flags0 = do
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+
+    liftedAddAccLemma thy lem = case addAccLemma lem thy of
+        Just thy'  -> return thy'
+        Nothing    -> fail $ "duplicate lemma: " ++ get aName lem
+
+    liftedAddCaseTest thy cTest = case addCaseTest cTest thy of
+        Just thy'  -> return thy'
+        Nothing    -> fail $ "duplicate case test: " ++ get cName cTest
 
     -- check process defined only once
     -- add process to theoryitems
