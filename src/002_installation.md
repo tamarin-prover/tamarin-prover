@@ -103,14 +103,13 @@ Notepad++. Below we details the steps required to install your preferred plug-in
 
 #### Sublime Text 3
 
-[TamarinAssist](http://jwhitefield.co.uk/TamarinAssist/) is a plug-in developed for the Sublime Text 3 editor. The plug-in has the following functionality:
+[editor-sublime](https://github.com/tamarin-prover/editor-sublime) is a plug-in developed for the Sublime Text 3 editor. The plug-in has the following functionality:
 - Basic Syntaxes
-- Run Tamarin within Sublime
-- Snippets for Theory, Rule, Axiom and Lemma
+- Snippets for Theories, Rules, Restrictions and Lemmas
 
-TamarinAssist can be install in two ways:
+editor-sublime can be install in two ways:
 
-The first and preferred method is with [PackageControl.io](https://packagecontrol.io/). TamarinAssist can now be installed via the sublime package manager. See the [install](https://packagecontrol.io/installation) and [usage](https://packagecontrol.io/docs/usage) documentation, then search and install TamarinAssist.
+The first and preferred method is with [PackageControl.io](https://packagecontrol.io/). editor-sublime can now be installed via the sublime package manager. See the [install](https://packagecontrol.io/installation) and [usage](https://packagecontrol.io/docs/usage) documentation, then search and install Tamarin​Prover.
 
 Alternatively it can be installed from source. For Linux / OS X this process can be followed. We assume you have
 the `git` tool installed.
@@ -120,12 +119,12 @@ the `git` tool installed.
     + Linux: `~/.Sublime\ Text\ 3/Packages/`
 
 2. Pull directory into Packages folder.
-    + SSH: `git pull git@github.com:lordqwerty/TamarinAssist.git`
-    + HTTPS: `https://github.com/lordqwerty/TamarinAssist.git`
+    + SSH: `git pull git@github.com:tamarin-prover/editor-sublime.git`
+    + HTTPS: `git pull https://github.com/tamarin-prover/editor-sublime.git`
 
 3. Open Sublime and bottom right syntaxes 'Tamarin' should be in the list.
 
-*Please be aware that TamarinAssist is still under active development and as such, several of the features are still implemented in a prototypical manner. If you experience any problems or have any questions on running any parts of the plug-in please [visit the project GitHub page](https://github.com/lordqwerty/TamarinAssist/).*
+*Please be aware that this plugin is under active development and as such, several of the features are still implemented in a prototypical manner. If you experience any problems or have any questions on running any parts of the plug-in please [visit the project GitHub page](https://github.com/tamarin-prover/editor-sublime).*
 
 #### Notepad++
 
