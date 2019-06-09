@@ -10,11 +10,12 @@
 module Sapic.Accountability (
       generateAccountabilityLemmas
 ) where
+import           Control.Monad
 import           Control.Monad.Catch
 import           Control.Arrow
 -- import qualified Data.List              as List
 -- import qualified Data.Monoid            as M
--- import qualified Data.Set               as S
+import qualified Data.Set               as S
 -- import           Data.Typeable
 import qualified Extension.Data.Label   as L
 import           Sapic.Annotation
@@ -26,7 +27,9 @@ import           Theory
 -- import           Theory.Sapic
 -- import           Theory.Text.Parser
 
--- | Create a lemma from a formula with quantifier. Copyies accLemma's name
+import           Extension.Prelude
+
+-- | Create a lemma from a formula with quantifier. Copies accLemma's name
 -- (plus suffix) and attributes.
 toLemma :: AccLemmaGeneral c -> TraceQuantifier -> ([Char], LNFormula) -> Lemma ProofSkeleton
 toLemma accLemma quantifier (suffix,formula)  = 
@@ -36,7 +39,21 @@ toLemma accLemma quantifier (suffix,formula)  =
 caseNames :: AccLemmaGeneral [CaseTest] -> [CaseIdentifier]
 caseNames accLemma = map (L.get cName) (L.get aCaseTests accLemma)
 
--- | Exclusiveness of φ_1,..: not (φ_i && φ_j) for all i≠j ) 
+-- | Quantify all free variables after removing duplicates and sorting them.
+quantifyFrees :: LNFormula -> LNFormula
+quantifyFrees fm = foldr (\(h, v) -> exists h v) fm hintedVars
+    where hintedVars = map (\s -> ((lvarName s, lvarSort s), s)) (freesList fm)
+
+-- | Conjunction of corrupt events off the parties in the argument list
+-- | TODO: - Replace 'pubTerm' with ??
+-- |       - How to avoid 'True' atom? 
+corruptParties :: [LVar] -> LNFormula
+corruptParties parties = foldl (.&&.) (TF True) corrupted
+    where
+        corrupted = map (\p -> (Ato (Action (pubTerm "0") (Fact {factTag = ProtoFact Linear "Corrupted" 1, factAnnotations = S.empty, factTerms = [varTerm $ Free p]})))) parties
+-- | (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Corrupted" 1, factAnnotations = fromList [], factTerms = [varTerm (Free $ A)]}))))
+
+-- | Exclusiveness of ψ_1,..: not (ψ_i && ψ_j) for all i≠j ) 
 exclusiveness :: AccLemma -> [Lemma ProofSkeleton]
 exclusiveness accLemma  = map (toLemma accLemma AllTraces) unequals
     where
@@ -46,12 +63,76 @@ exclusiveness accLemma  = map (toLemma accLemma AllTraces) unequals
                                     , id_i /= id_j
                                     ]
         get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id1 id2 = "excl_"++id1++id2
-        f phi1 phi2 =  Not (phi1 .&&. phi2) -- TODO bind free names
+        suff id1 id2 = "_excl_" ++ id1 ++ id2
+        f phi1 phi2 = Not (phi1 .&&. phi2) -- TODO bind free names, how?
 
-cases_axioms :: AccLemma -> [Lemma ProofSkeleton]
-cases_axioms accLemma = exclusiveness accLemma 
-                     -- ++ []
+-- | Minimiality for singleton
+-- | For all traces t: ∀ S' ⊆ fv(ψ_i). not(ψ_i ∧ corrupted(t) = S')
+minimalitySingleton :: AccLemma -> [Lemma ProofSkeleton]
+minimalitySingleton accLemma = map (toLemma accLemma AllTraces) implies
+    where
+        implies = [ (suff id_i parties, f phi_i parties)
+                                   | (id_i, phi_i) <- get accLemma
+                                   , parties <- powerset $ frees phi_i ]
+        powerset = filterM (const [True,False])
+        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
+        suff id parties = "_min_" ++ id ++ (show parties)
+        f phi parties = Not (phi .&&. (corruptParties parties))
+
+-- | Verifiability of ψ_i -> fv(ψ_i) and fv(ψ_i) empty
+-- | For all traces t: ψ_i ⇒ φ(t).
+verifiabilityEmpty :: AccLemma -> [Lemma ProofSkeleton]
+verifiabilityEmpty accLemma = map (toLemma accLemma AllTraces) implies
+    where
+        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma, null $ freesList phi_i ]
+        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
+        suff id = "_ver_empty_" ++ id
+        f phi = phi .==>. L.get aFormula accLemma
+
+-- | Verifiability of ψ_i -> fv(ψ_i) and fv(ψ_i) non-empty
+-- | For all traces t: ψ_i ⇒ ¬φ(t).
+verifiabilityNonempty :: AccLemma -> [Lemma ProofSkeleton]
+verifiabilityNonempty accLemma = map (toLemma accLemma AllTraces) implies
+    where
+        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma, not $ null $ freesList phi_i ]
+        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
+        suff id = "_ver_nonempty_" ++ id
+        f phi = phi .==>. Not (L.get aFormula accLemma)
+
+-- | Sufficiency for singleton
+-- | Exists trace t: ψ_i ∧ ¬φ(t) ∧ corrupt(t) = fv(ψ_i)
+-- | TODO: How to combine #i #j in the different formulas?
+sufficiencySingleton :: AccLemma -> [Lemma ProofSkeleton]
+sufficiencySingleton accLemma = map (toLemma accLemma ExistsTrace) implies
+    where
+        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma ]
+        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
+        suff id = "_suf_" ++ id
+        f phi = phi .&&. Not (L.get aFormula accLemma) .&&. (corruptParties $ frees phi)
+
+-- | Uniqueness
+-- | For all traces t: ψ_i ⇒ corrupt(t) = fv(ψ_i)
+uniquenessSingleton :: AccLemma -> [Lemma ProofSkeleton]
+uniquenessSingleton accLemma = map (toLemma accLemma AllTraces) implies
+    where
+        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma ]
+        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
+        suff id = "_uniq_" ++ id
+        f phi = phi .==>. (corruptParties $ frees phi)
+
+casesAxioms :: AccLemma -> [Lemma ProofSkeleton]
+casesAxioms accLemma = 
+        exclusiveness accLemma
+        ++
+        verifiabilityEmpty accLemma
+        ++
+        verifiabilityNonempty accLemma
+        ++
+        sufficiencySingleton accLemma
+        ++
+        minimalitySingleton accLemma
+        ++
+        uniquenessSingleton accLemma
         -- (exclusiveness id op vf )
         -- @
         -- [exhaustiveness id op vf]
@@ -74,7 +155,8 @@ cases_axioms accLemma = exclusiveness accLemma
         -- (* Reflexivity and termination are guaranteed by parser, too. *)
 
 generateAccountabilityLemmas :: (Monad m, MonadThrow m) => AccLemma -> m [Lemma ProofSkeleton]
-generateAccountabilityLemmas accLemma = throwM ( (NotImplementedError "lol"):: SapicException AnnotatedProcess)
+generateAccountabilityLemmas accLemma = do
+    return (casesAxioms accLemma)
     -- | Coarse <- L.get aAccKind accLemma = return []
     -- | Cases <- L.get aAccKind  accLemma = return $ cases_axioms accLemma 
     --     -- (cases_axioms id op parties vf phi)

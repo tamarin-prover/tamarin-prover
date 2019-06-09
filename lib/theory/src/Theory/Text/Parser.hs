@@ -36,6 +36,8 @@ import qualified Data.Text.Encoding         as TE
 import           Data.Color
 import           Data.Either
 
+import qualified Extension.Data.Label                as L
+
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
@@ -659,7 +661,7 @@ lemmaAcc = try $ do
 caseTest :: Parser CaseTest
 caseTest =  CaseTest <$> (symbol "test" *> identifier)
                      <*> (colon *> doubleQuoted standardFormula)
-                     <*> (option S.empty (symbol "relates to" *> (fmap S.fromList (commaSep1 identifier))))
+                     <*> (option [] (symbol "relates to" *> (commaSep1 identifier)))
 
 
 ------------------------------------------------------------------------------
@@ -1208,11 +1210,16 @@ theory flags0 = do
       , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
            addItems flags thy'
       , do 
-           let tests = theoryCaseTests thy
+           lemSkel <- lemmaAcc
+           let testsIdentifier = S.fromList $ get aCaseTests lemSkel
+           let tests = filter (\c -> (get cName c) `S.member` testsIdentifier) (theoryCaseTests thy)
+           let related = S.fromList $ concat $ fmap (get cRelated) tests
            let rel = buildRelation tests
-           lemAcc <- fmap (skeletonToAccLemma tests rel) lemmaAcc
-           thy' <- liftedAddAccLemma thy lemAcc
-           addItems flags thy'
+           if not $ related `S.isSubsetOf` testsIdentifier
+             then fail $ "related case tests [" ++ (show $ related `S.difference` testsIdentifier) ++ "] not appearing in lemma " ++ (get aName lemSkel)
+             else do
+              thy' <- liftedAddAccLemma thy (skeletonToAccLemma tests rel lemSkel)
+              addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
       , do ru <- protoRule

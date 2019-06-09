@@ -532,20 +532,19 @@ type ProtoVerdictf = [ProtoVerdictMapping]
 
 type CaseIdentifier = String
 
-type Relation = S.Set CaseIdentifier
+type Relation = S.Set (CaseIdentifier, CaseIdentifier)
 
 data CaseTest = CaseTest 
        { _cName     :: CaseIdentifier
        , _cFormula  :: LNFormula
-       , _cRelated  :: Relation
+       , _cRelated  :: [CaseIdentifier]
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''CaseTest])
 
 buildRelation :: [CaseTest] -> Relation
-buildRelation tests =  S.fromList (fmap _cName tests) `S.union` S.unions (fmap _cRelated tests)
-
+buildRelation tests = S.unions $ fmap (\c -> S.fromList [(x,y) | x <- [L.get cName c], y <- (L.get cName c) : (L.get cRelated c)]) tests
 
 
 ------------------------------------------------------------------------------
@@ -622,7 +621,6 @@ type AccLemma = AccLemmaGeneral ([CaseTest], Relation)
 
 skeletonToAccLemma :: [CaseTest] -> Relation -> AccLemmaSkeleton -> AccLemma
 skeletonToAccLemma cTests rel accLem = accLem { _aCaseTests = (cTests, rel) }
-
 
 
 -- Instances
@@ -864,6 +862,7 @@ openTranslatedTheory thy =
       addSapicElement (LemmaItem l) = (LemmaItem l)
       addSapicElement (RestrictionItem rl) = (RestrictionItem rl)
       addSapicElement (TextItem t) = (TextItem t)
+      addSapicElement (PredicateItem p) = (PredicateItem p)
 -- =======
 --       newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
 --       addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
