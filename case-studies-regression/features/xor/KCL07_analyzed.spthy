@@ -519,7 +519,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 2.7. OK.
  checking installation: OK.
 SAPIC tool: 'sapic'
 Checking availablity ... OK.
@@ -531,7 +531,7 @@ analyzing: examples/features/xor/KCL07.spthy
 analyzed: examples/features/xor/KCL07.spthy
 
   output:          examples/features/xor/KCL07.spthy.tmp
-  processing time: 0.996618434s
+  processing time: 2.322004s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -543,7 +543,7 @@ summary of summaries:
 analyzed: examples/features/xor/KCL07.spthy
 
   output:          examples/features/xor/KCL07.spthy.tmp
-  processing time: 0.996618434s
+  processing time: 2.322004s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 

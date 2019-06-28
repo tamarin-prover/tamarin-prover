@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* NAXOS *}
 
 rule (modulo E) generate_ltk:
@@ -75,65 +77,65 @@ rule (modulo E) Init_2:
         z     = x.601^(~lkI.304*x.602)
         z.1   = x.601^(x.602*h1(<~eskI.303, ~lkI.304>))
     
-     5. ~eskI = ~eskI.303
-        ~lkI  = ~lkI.304
-        Y     = x.602^inv((~lkI.304*h1(<~eskI.303, ~lkI.304>)))
-        z     = x.602^inv(h1(<~eskI.303, ~lkI.304>))
-        z.1   = x.602^inv(~lkI.304)
-    
-     6. ~eskI = ~eskI.304
-        ~lkI  = ~lkI.305
-        Y     = x.603^inv((~lkI.305*x.604))
-        z     = x.603^inv(x.604)
-        z.1   = x.603^(h1(<~eskI.304, ~lkI.305>)*inv((~lkI.305*x.604)))
-    
-     7. ~eskI = ~eskI.304
-        ~lkI  = ~lkI.305
-        Y     = x.603^(x.604*inv(~lkI.305))
-        z     = x.603^x.604
-        z.1   = x.603^(x.604*h1(<~eskI.304, ~lkI.305>)*inv(~lkI.305))
-    
-     8. ~eskI = ~eskI.305
+     5. ~eskI = ~eskI.305
         ~lkI  = ~lkI.306
-        Y     = x.604^inv((~lkI.306*x.606*h1(<~eskI.305, ~lkI.306>)))
-        z     = x.604^inv((x.606*h1(<~eskI.305, ~lkI.306>)))
-        z.1   = x.604^inv((~lkI.306*x.606))
+        Y     = x.605^inv((~lkI.306*x.606))
+        z     = x.605^inv(x.606)
+        z.1   = x.605^(h1(<~eskI.305, ~lkI.306>)*inv((~lkI.306*x.606)))
     
-     9. ~eskI = ~eskI.305
+     6. ~eskI = ~eskI.305
         ~lkI  = ~lkI.306
-        Y     = x.604^inv((x.606*h1(<~eskI.305, ~lkI.306>)))
-        z     = x.604^(~lkI.306*inv((x.606*h1(<~eskI.305, ~lkI.306>))))
-        z.1   = x.604^inv(x.606)
+        Y     = x.605^(x.606*inv(~lkI.306))
+        z     = x.605^x.606
+        z.1   = x.605^(x.606*h1(<~eskI.305, ~lkI.306>)*inv(~lkI.306))
     
-    10. ~eskI = ~eskI.305
+     7. ~eskI = ~eskI.305
         ~lkI  = ~lkI.306
-        Y     = x.604^(x.606*inv(h1(<~eskI.305, ~lkI.306>)))
-        z     = x.604^(~lkI.306*x.606*inv(h1(<~eskI.305, ~lkI.306>)))
-        z.1   = x.604^x.606
+        Y     = x.606^inv((~lkI.306*h1(<~eskI.305, ~lkI.306>)))
+        z     = x.606^inv(h1(<~eskI.305, ~lkI.306>))
+        z.1   = x.606^inv(~lkI.306)
     
-    11. ~eskI = ~eskI.305
-        ~lkI  = ~lkI.306
-        Y     = x.604^(x.606*inv((~lkI.306*x.605)))
-        z     = x.604^(x.606*inv(x.605))
-        z.1   = x.604^(x.606*h1(<~eskI.305, ~lkI.306>)*inv((~lkI.306*x.605)))
-    
-    12. ~eskI = ~eskI.305
-        ~lkI  = ~lkI.306
-        Y     = x.604^(x.606*inv((~lkI.306*h1(<~eskI.305, ~lkI.306>))))
-        z     = x.604^(x.606*inv(h1(<~eskI.305, ~lkI.306>)))
-        z.1   = x.604^(x.606*inv(~lkI.306))
-    
-    13. ~eskI = ~eskI.306
+     8. ~eskI = ~eskI.306
         ~lkI  = ~lkI.307
-        Y     = x.605^(x.608*inv((~lkI.307*x.607*h1(<~eskI.306, ~lkI.307>))))
-        z     = x.605^(x.608*inv((x.607*h1(<~eskI.306, ~lkI.307>))))
-        z.1   = x.605^(x.608*inv((~lkI.307*x.607)))
+        Y     = x.606^(x.607*inv((~lkI.307*x.608)))
+        z     = x.606^(x.607*inv(x.608))
+        z.1   = x.606^(x.607*h1(<~eskI.306, ~lkI.307>)*inv((~lkI.307*x.608)))
     
-    14. ~eskI = ~eskI.306
+     9. ~eskI = ~eskI.306
         ~lkI  = ~lkI.307
-        Y     = x.605^(x.608*inv((x.607*h1(<~eskI.306, ~lkI.307>))))
-        z     = x.605^(~lkI.307*x.608*inv((x.607*h1(<~eskI.306, ~lkI.307>))))
-        z.1   = x.605^(x.608*inv(x.607))
+        Y     = x.607^inv((~lkI.307*x.608*h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^inv((x.608*h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^inv((~lkI.307*x.608))
+    
+    10. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^inv((x.608*h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^(~lkI.307*inv((x.608*h1(<~eskI.306, ~lkI.307>))))
+        z.1   = x.607^inv(x.608)
+    
+    11. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^(x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^(~lkI.307*x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^x.608
+    
+    12. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^(x.608*inv((~lkI.307*h1(<~eskI.306, ~lkI.307>))))
+        z     = x.607^(x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^(x.608*inv(~lkI.307))
+    
+    13. ~eskI = ~eskI.307
+        ~lkI  = ~lkI.308
+        Y     = x.608^(x.609*inv((~lkI.308*x.610*h1(<~eskI.307, ~lkI.308>))))
+        z     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z.1   = x.608^(x.609*inv((~lkI.308*x.610)))
+    
+    14. ~eskI = ~eskI.307
+        ~lkI  = ~lkI.308
+        Y     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z     = x.608^(~lkI.308*x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z.1   = x.608^(x.609*inv(x.610))
   */
 
 rule (modulo E) Resp_1:
@@ -190,65 +192,65 @@ rule (modulo E) Resp_1:
         z     = x.1069^(~lkR.539*x.1070)
         z.1   = x.1069^(x.1070*h1(<~eskR.537, ~lkR.539>))
     
-     5. ~eskR = ~eskR.537
-        ~lkR  = ~lkR.539
-        X     = x.1070^inv((~lkR.539*h1(<~eskR.537, ~lkR.539>)))
-        z     = x.1070^inv(h1(<~eskR.537, ~lkR.539>))
-        z.1   = x.1070^inv(~lkR.539)
-    
-     6. ~eskR = ~eskR.538
+     5. ~eskR = ~eskR.538
         ~lkR  = ~lkR.540
         X     = x.1071^inv((~lkR.540*x.1072))
         z     = x.1071^inv(x.1072)
         z.1   = x.1071^(h1(<~eskR.538, ~lkR.540>)*inv((~lkR.540*x.1072)))
     
-     7. ~eskR = ~eskR.538
+     6. ~eskR = ~eskR.538
         ~lkR  = ~lkR.540
         X     = x.1071^(x.1072*inv(~lkR.540))
         z     = x.1071^x.1072
         z.1   = x.1071^(x.1072*h1(<~eskR.538, ~lkR.540>)*inv(~lkR.540))
     
+     7. ~eskR = ~eskR.539
+        ~lkR  = ~lkR.541
+        X     = x.1072^(x.1073*inv((~lkR.541*x.1074)))
+        z     = x.1072^(x.1073*inv(x.1074))
+        z.1   = x.1072^(x.1073*h1(<~eskR.539, ~lkR.541>)*inv((~lkR.541*x.1074)))
+    
      8. ~eskR = ~eskR.539
         ~lkR  = ~lkR.541
-        X     = x.1072^inv((~lkR.541*x.1074*h1(<~eskR.539, ~lkR.541>)))
-        z     = x.1072^inv((x.1074*h1(<~eskR.539, ~lkR.541>)))
-        z.1   = x.1072^inv((~lkR.541*x.1074))
+        X     = x.1074^inv((~lkR.541*h1(<~eskR.539, ~lkR.541>)))
+        z     = x.1074^inv(h1(<~eskR.539, ~lkR.541>))
+        z.1   = x.1074^inv(~lkR.541)
     
-     9. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1072^inv((x.1074*h1(<~eskR.539, ~lkR.541>)))
-        z     = x.1072^(~lkR.541*inv((x.1074*h1(<~eskR.539, ~lkR.541>))))
-        z.1   = x.1072^inv(x.1074)
-    
-    10. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1072^(x.1074*inv(h1(<~eskR.539, ~lkR.541>)))
-        z     = x.1072^(~lkR.541*x.1074*inv(h1(<~eskR.539, ~lkR.541>)))
-        z.1   = x.1072^x.1074
-    
-    11. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1072^(x.1074*inv((~lkR.541*x.1073)))
-        z     = x.1072^(x.1074*inv(x.1073))
-        z.1   = x.1072^(x.1074*h1(<~eskR.539, ~lkR.541>)*inv((~lkR.541*x.1073)))
-    
-    12. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1072^(x.1074*inv((~lkR.541*h1(<~eskR.539, ~lkR.541>))))
-        z     = x.1072^(x.1074*inv(h1(<~eskR.539, ~lkR.541>)))
-        z.1   = x.1072^(x.1074*inv(~lkR.541))
-    
-    13. ~eskR = ~eskR.540
+     9. ~eskR = ~eskR.540
         ~lkR  = ~lkR.542
-        X     = x.1073^(x.1076*inv((~lkR.542*x.1075*h1(<~eskR.540, ~lkR.542>))))
-        z     = x.1073^(x.1076*inv((x.1075*h1(<~eskR.540, ~lkR.542>))))
-        z.1   = x.1073^(x.1076*inv((~lkR.542*x.1075)))
+        X     = x.1075^inv((~lkR.542*x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^inv((~lkR.542*x.1076))
     
-    14. ~eskR = ~eskR.540
+    10. ~eskR = ~eskR.540
         ~lkR  = ~lkR.542
-        X     = x.1073^(x.1076*inv((x.1075*h1(<~eskR.540, ~lkR.542>))))
-        z     = x.1073^(~lkR.542*x.1076*inv((x.1075*h1(<~eskR.540, ~lkR.542>))))
-        z.1   = x.1073^(x.1076*inv(x.1075))
+        X     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^(~lkR.542*inv((x.1076*h1(<~eskR.540, ~lkR.542>))))
+        z.1   = x.1075^inv(x.1076)
+    
+    11. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^(~lkR.542*x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^x.1076
+    
+    12. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^(x.1076*inv((~lkR.542*h1(<~eskR.540, ~lkR.542>))))
+        z     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^(x.1076*inv(~lkR.542))
+    
+    13. ~eskR = ~eskR.541
+        ~lkR  = ~lkR.543
+        X     = x.1076^(x.1077*inv((~lkR.543*x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z.1   = x.1076^(x.1077*inv((~lkR.543*x.1078)))
+    
+    14. ~eskR = ~eskR.541
+        ~lkR  = ~lkR.543
+        X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z.1   = x.1076^(x.1077*inv(x.1078))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -734,7 +736,7 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 2.611213773s
+  processing time: 4.56824s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -745,7 +747,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 2.611213773s
+  processing time: 4.56824s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

@@ -1,0 +1,94 @@
+/*
+ * Protocol:    Centralised monitor protocol - Faulty
+ * Modeler:   Robert Künnemann
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+
+
+theory CentralisedMonitor_Faulty
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    true/0,
+    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
+
+equations: 
+    /* adec(aenc(m,pk(i)),sk(i))=m, */
+    // only accept signatures from corresponding public keys
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    isAct(NormalAct) = true,
+    isAct(SpecialAct) = true,
+    isAct(UnusualAct) = true
+
+let A = 
+  ( in(a);
+     if a = NormalAct()
+       then out(<a, sign( sk('A'), a)>)
+       else if a = SpecialAct()
+              then new na; out(<na, sign(<a,na>, sk('A'))>);
+                   in(r); if verify( r, na, pk(sk('B'))) = true()
+                           then out(<a, na, sign( <a, na>, sk('A')), r>)
+  ) 
+
+let B = 
+  ( in(m);
+     if verify( snd(m), <fst(m), SpecialAct()>, pk(sk('A'))) = true()
+       then out(sign( fst(m), sk('B')))
+  )
+
+let C = 
+  ( in(m); 
+     if verify( snd(m), fst(m), pk(sk('A'))) = true()
+       then event Control('0','1'); event LogA(fst(m)); event Execute(fst(m))
+       else if verify( fst(snd(snd(m))), <fst(m), fst(snd(m))>, pk(sk('A'))) = true()
+              then if verify( snd(snd(snd(m))), fst(snd(m)), pk(sk('B'))) = true()
+                     then event Control('0','2'); event LogAB(fst(m)); event Execute(fst(m))
+  )
+
+// let I = 
+//   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
+//   )
+
+// The trusted party can only run once during each run of the protocol
+(! (A || B )) || C ||
+    out(<pk(sk('A')), pk(sk('B'))>)
+|| !(   in('c',<'corrupt',$x>); 
+        event Corrupted($x);
+        out('c',sk($x))
+        /* (  !(in('r',<$x,sid,m>);0) ) */
+   )
+
+lemma sanity_logA_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j"
+
+lemma sanity_logAB_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = SpecialAct()) & LogAB(a)@i & Execute(a)@j"
+
+lemma sanity_logA:
+    exists-trace
+    "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
+
+lemma sanity_logAB:
+    exists-trace
+    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
+
+verdictfunction v1:
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct() | a=SpecialAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=NormalAct() | a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    otherwise -> empty 
+
+lemma acc:
+    v1 accounts [control] 
+    for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
+    for parties <'A','B'>
+
+end

@@ -15,7 +15,7 @@ sencSucc (c,k) <=> Ex m . senc(m,k)=c
   || //Dec
 	( in(<h,c>);
 	  lookup <'att',h> as a in if a='dec' then 
-            lookup <'key',h> as k in if encSucc(c,k) then
+            lookup <'key',h> as k in if sencSucc(c,k) then
                 event DecUsing(k,sdec(c,k)); out(sdec(c,k)) 
 	)
   || //Wrap

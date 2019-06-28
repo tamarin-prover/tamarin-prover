@@ -29,6 +29,8 @@ module Theory.Constraint.Solver.Heuristics (
   , listGoalRankingsDiff
 
   , goalRankingName
+  , prettyGoalRankings
+  , prettyGoalRanking
 ) where
 
 import           GHC.Generics       (Generic)
@@ -36,6 +38,7 @@ import           Data.Binary
 import           Control.DeepSeq
 import           Data.Maybe         (fromMaybe)
 import qualified Data.Map as M
+import           Data.List          (find)
 
 import           Theory.Text.Pretty
 
@@ -46,7 +49,6 @@ data GoalRanking =
   | OracleRanking String
   | OracleSmartRanking String
   | SapicRanking
-  | SapicLivenessRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
   | SmartRanking Bool
@@ -64,7 +66,6 @@ goalRankingIdentifiers = M.fromList
                         , ('o', OracleRanking "./oracle")
                         , ('O', OracleSmartRanking "./oracle")
                         , ('p', SapicRanking)
-                        , ('l', SapicLivenessRanking)
                         , ('P', SapicPKCS11Ranking)
                         , ('c', UsefulGoalNrRanking)
                         , ('C', GoalNrRanking)
@@ -115,11 +116,22 @@ goalRankingName ranking =
         OracleRanking oracleName      -> "an oracle for ranking, located at " ++ oracleName
         OracleSmartRanking oracleName -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oracleName
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
-        SapicRanking                  -> "heuristics adapted to the output of the SAPIC tool"
-        SapicLivenessRanking          -> "heuristics adapted to the output of the SAPIC tool for liveness properties"
-        SapicPKCS11Ranking            -> "heuristics adapted to a model of PKCS#11 translated using the SAPIC tool"
+        SapicRanking                  -> "heuristics adapted for processes"
+        SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
+
+prettyGoalRankings :: [GoalRanking] -> String
+prettyGoalRankings rs = map prettyGoalRanking rs
+
+prettyGoalRanking :: GoalRanking -> Char
+prettyGoalRanking ranking = case find (\(_,v) -> v == ranking) $ combinedIdentifiers of
+    Just (k,_) -> k
+    Nothing    -> error "Goal ranking does not have a defined identifier"
+  where
+    -- Note because find works left first this will look at non-diff identifiers first. Thus,
+    -- this assumes the diff rankings don't use a different character for the same goal ranking.
+    combinedIdentifiers = (M.toList goalRankingIdentifiers) ++ (M.toList goalRankingIdentifiersDiff)

@@ -1,0 +1,13 @@
+theory LetBlockCharlyTwo
+
+begin
+
+functions: hash/1
+
+let P = 
+   new a; 
+   let h=a in
+   out(h)
+
+P
+end

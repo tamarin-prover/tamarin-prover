@@ -72,7 +72,6 @@ run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | otherwise    = do
       _ <- ensureMaude as
-      _ <- ensureSapic as
       putStrLn $ ""
       summaries <- mapM processThy $ inFiles
       putStrLn $ ""
@@ -119,7 +118,7 @@ run thisMode as
       | (argExists "parseOnly" as) && (argExists "diff" as) =
           out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
       | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
       | argExists "diff" as =
           out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
       | otherwise        =
@@ -128,7 +127,7 @@ run thisMode as
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 
         ppWfAndSummary thy =
-            case checkWellformedness (openTheory thy) of
+            case checkWellformedness (removeSapicItems (openTheory thy)) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)

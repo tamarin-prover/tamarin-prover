@@ -90,6 +90,87 @@ uniqueListBy ord single distinguish xs0 =
       where
         dist = distinguish $ length xs
 
+isNonLoopBreakerProtoFactGoal :: (Goal, (a, Usefulness)) -> Bool
+isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
+   not (isKFact fa) && not (isAuthOutFact fa)
+isNonLoopBreakerProtoFactGoal _                            = False
+
+
+isLastProtoFact :: Goal -> Bool
+isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
+isLastProtoFact _               = False
+
+isFirstProtoFact :: Goal -> Bool
+isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
+isFirstProtoFact _               = False
+
+isNotAuthOut :: Goal -> Bool
+isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
+isNotAuthOut _               = False
+
+msgPremise :: Goal -> Maybe LNTerm
+msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
+msgPremise _              = Nothing
+
+isProgressFact :: Fact t -> Bool
+isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" name
+isProgressFact _ = False
+
+isProgressDisj :: Goal -> Bool
+isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
+        GGuarded Ex [(_,LSortNode)] [Action _ f' ] _ -> isProgressFact f'
+        _                                            -> False
+        )) disj
+isProgressDisj _ = False
+
+isDisjGoalButNotProgress :: Goal -> Bool
+isDisjGoalButNotProgress g = isDisjGoal g && not (isProgressDisj g)
+
+isLastName :: LVar -> Bool
+isLastName lv = "L_" `isPrefixOf` (lvarName lv)
+
+isFirstName :: LVar -> Bool
+isFirstName lv = "F_" `isPrefixOf` (lvarName lv)
+
+isKnowsLastNameGoal :: Goal -> Bool
+isKnowsLastNameGoal goal = case msgPremise goal of
+    Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> True
+    _                                                           -> False
+
+isKnowsFirstNameGoal :: Goal -> Bool
+isKnowsFirstNameGoal goal = case msgPremise goal of
+    Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
+    _                                                           -> False
+
+isPrivateKnowsGoal :: Goal -> Bool
+isPrivateKnowsGoal goal = case msgPremise goal of
+    Just t -> isPrivateFunction t
+    _      -> False
+
+isDoubleExpGoal :: Goal -> Bool
+isDoubleExpGoal goal = case msgPremise goal of
+    Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
+    _                                                  -> False
+
+-- | @sortDecisionTree xs ps@ returns a reordering of @xs@
+-- such that the sublist satisfying @ps!!0@ occurs first,
+-- then the sublist satisfying @ps!!1@, and so on.
+sortDecisionTree :: [a -> Bool] -> [a] -> [a]
+sortDecisionTree []     xs = xs
+sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
+  where (sat, nonsat) = partition p xs
+
+-- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
+sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
+sortDecisionTreeLast []     xs = xs
+sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
+  where (sat, nonsat) = partition p xs
+
+unmarkPremiseG :: (Goal, (a, Usefulness))
+    -> (Goal, (a, Usefulness))
+unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
+unmarkPremiseG annGoal                        = annGoal
+
 
 ------------------------------------------------------------------------------
 -- Proof Methods
@@ -270,6 +351,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> if (isSolved s sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
                                                                                                         then return M.empty
+                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys')) && (isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
+                                                                                                        -- here the system is trivial, has no mirror and restrictions do not get in the way.
+                                                                                                        -- If we solve arbitrarily the last remaining trivial goals,
+                                                                                                        -- then there will be an attack.
+                                                                                                        return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
@@ -337,7 +423,6 @@ rankGoals ctxt ranking = case ranking of
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
-    SapicLivenessRanking -> sapicLivenessRanking ctxt
     SapicPKCS11Ranking -> sapicPKCS11Ranking ctxt
     SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
@@ -509,6 +594,62 @@ oracleSmartRanking oracleName ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
+-- | Utilities for SAPiC translations specifically 
+
+isAuthOutFact :: Fact t -> Bool
+isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
+isAuthOutFact  _                                 = False
+
+isStateFact :: Goal -> Bool
+isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "state_" n
+isStateFact  _                                 = False
+
+isUnlockAction :: Goal -> Bool
+isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
+isUnlockAction  _                                 = False
+
+isEventAction :: Goal -> Bool
+isEventAction (ActionG _ (Fact (ProtoFact _ "Event" _) _ _ )) = True
+isEventAction  _                                 = False
+
+isMID_Receiver :: Goal -> Bool
+isMID_Receiver (PremiseG _ (Fact (ProtoFact _ "MID_Receiver" _) _ _)) = True
+isMID_Receiver  _                                 = False
+
+isMID_Sender :: Goal -> Bool
+isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _ _)) = True
+isMID_Sender  _                                 = False
+
+isFirstInsertAction :: Goal -> Bool
+isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
+    case t of
+    (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
+    _ -> False
+isFirstInsertAction _ = False
+
+isLastInsertAction :: Goal -> Bool
+isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
+        case t of
+            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) ->  isPrefixOf "L_" (show a)
+            _ -> False
+isLastInsertAction _ = False
+
+isNotInsertAction :: Goal -> Bool
+isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
+isNotInsertAction  _                                 = True
+
+isNotReceiveAction :: Goal -> Bool
+isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _ _)) = False
+isNotReceiveAction  _                                 = True
+
+isStandardActionGoalButNotInsertOrReceive :: Goal -> Bool
+isStandardActionGoalButNotInsertOrReceive g = 
+   (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
+
+isStandardActionGoalButNotInsert :: Goal -> Bool
+isStandardActionGoalButNotInsert g = 
+       (isStandardActionGoal g) &&  (isNotInsertAction g) && (not $ isEventAction g)
+
 -- | A ranking function tuned for the automatic verification of
 -- protocols generated with the Sapic tool
 sapicRanking :: ProofContext
@@ -519,176 +660,17 @@ sapicRanking ctxt sys =
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
-    getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
-      Just (viewTerm -> FApp o _)
-        | length (getDisj (L.get cdCases cd)) == 1 -> Just o
-      _                                            -> Nothing
-
-    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
-
-    unmark = map unmarkPremiseG
-    unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
-    unmarkPremiseG annGoal                        = annGoal
-
-    tagUsefulness Useful                = 0 :: Int
-    tagUsefulness ProbablyConstructible = 1
-    tagUsefulness LoopBreaker           = 0
-    tagUsefulness CurrentlyDeducible    = 2
-
-    solveLast = 
-        [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst,
-        isLastProtoFact . fst ,
-        isKnowsLastNameGoal . fst
-        ]
-        -- move the Last proto facts (L_) to the end.
-
-    solveFirst =
-        [ isChainGoal . fst
-        , isDisjGoal . fst
-        , isFirstProtoFact . fst
-        , isStateFact . fst
-        , isUnlockAction . fst
-        , isKnowsFirstNameGoal . fst
-        , isFirstInsertAction . fst
-        , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsert  . fst
-        , isNotAuthOut . fst
-        , isPrivateKnowsGoal . fst
-        -- , isFreshKnowsGoal . fst
-        , isSplitGoalSmall . fst
-        , isMsgOneCaseGoal . fst
-        , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
-        ]
-        -- move the rest (mostly more expensive KU-goals) before expensive
-        -- equation splits
-
-    -- FIXME: This small split goal preferral is quite hacky when using
-    -- induction. The problem is that we may end up solving message premise
-    -- goals all the time instead of performing a necessary split. We should make
-    -- sure that a split does not get too old.
-    smallSplitGoalSize = 3
-
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
-       not (isKFact fa) && not (isAuthOutFact fa)
-    isNonLoopBreakerProtoFactGoal _                            = False
-
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
-    isAuthOutFact  _                                 = False
-
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
-    isStateFact  _                                 = False
-
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
-    isUnlockAction  _                                 = False
-
-    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) =
-        case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
-            _ -> False
-    isFirstInsertAction _ = False
-
-    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
-        case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
-            _ -> False
-    isLastInsertAction _ = False
-
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
-    isNotInsertAction  _                                 = True
-
-    isStandardActionGoalButNotInsert g = 
-       (isStandardActionGoal g) &&  (isNotInsertAction g)
-
-
-    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
-    isLastProtoFact _               = False
-
-    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
-    isFirstProtoFact _               = False
-
-    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
-    isNotAuthOut _               = False
-
-    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-    isLastName lv = isPrefixOf "L_" (lvarName lv)
-
-    isFirstName lv = isPrefixOf "F_" (lvarName lv)
-
-    isKnowsLastNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
-        _                                                           -> True
-
-    isKnowsFirstNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
-        _                                                           -> False
-
-
     isMsgOneCaseGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
-    isPrivateKnowsGoal goal = case msgPremise goal of
-        Just t -> isPrivateFunction t
-        _      -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
-
-    -- Be conservative on splits that don't exist.
-    isSplitGoalSmall (SplitG sid) =
-        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
-    isSplitGoalSmall _            = False
-
-    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
-    isNoLargeSplitGoal _               = True
-
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
-    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
-    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTreeLast []     xs = xs
-    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
-      where (sat, nonsat) = partition p xs
-
-    
--- | A ranking function tuned for the automatic verification of
--- protocols with liveness properties generated with the Sapic tool
-sapicLivenessRanking :: ProofContext
-                     -> System
-                     -> [AnnotatedGoal] -> [AnnotatedGoal]
-sapicLivenessRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
-  where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
-
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
         | length (getDisj (L.get cdCases cd)) == 1 -> Just o
       _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
-
     unmark = map unmarkPremiseG
-    unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
-    unmarkPremiseG annGoal                        = annGoal
 
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
@@ -697,28 +679,24 @@ sapicLivenessRanking ctxt sys =
 
     solveLast = 
         [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst ,
-        isLastProtoFact . fst,
-        isKnowsLastNameGoal . fst
+        isLastInsertAction . fst, -- move insert actions for positions that start with L_ to the end
+        isLastProtoFact . fst, -- move Last proto facts (L_) to the end.
+        isKnowsLastNameGoal . fst, -- move last names (L_key) to the end
+        isEventAction . fst -- move event action, used in accountabilty translation, to the end
         ]
-        -- move the Last proto facts (L_) to the end.
 
     solveFirst =
-        [ 
-          isChainGoal . fst
-        , isDisjGoalButNotProgress . fst
+        [ isChainGoal . fst
+        , isDisjGoalButNotProgress . fst --
         , isFirstProtoFact . fst
-        , isMID_Receiver . fst
-        , isMID_Sender . fst
+        , isMID_Receiver . fst --
+        , isMID_Sender . fst --
         , isStateFact . fst
         , isUnlockAction . fst
         , isKnowsFirstNameGoal . fst
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoalButNotInsertOrReceive  . fst
-        , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         -- , isFreshKnowsGoal . fst
@@ -736,101 +714,6 @@ sapicLivenessRanking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
-       not (isKFact fa) && not (isAuthOutFact fa)
-    isNonLoopBreakerProtoFactGoal _                            = False
-
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
-    isAuthOutFact  _                                 = False
-
-    isMID_Receiver (PremiseG _ (Fact (ProtoFact _ "MID_Receiver" _) _ _)) = True
-    isMID_Receiver  _                                 = False
-
-    isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _ _)) = True
-    isMID_Sender  _                                 = False
-
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
-    isStateFact  _                                 = False
-
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
-    isUnlockAction  _                                 = False
-
-    isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
-        case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
-            _ -> False
-    isFirstInsertAction _ = False
-
-    isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
-        case t of
-            (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> not( isPrefixOf "L_" (show a))
-            _ -> False
-    isLastInsertAction _ = False
-
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
-    isNotInsertAction  _                                 = True
-
-    isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _ _)) = False
-    isNotReceiveAction  _                                 = True
-
-    isStandardActionGoalButNotInsertOrReceive g = 
-       (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
-
-
-    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
-    isLastProtoFact _               = False
-
-    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
-    isFirstProtoFact _               = False
-
-    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
-    isNotAuthOut _               = False
-
-    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
-
-    isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" name
-    isProgressFact _ = False
-
-    isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
-            GGuarded Ex [(_,LSortNode)] [Action _ f' ] _ -> isProgressFact f'
-            _                                            -> False
-            )) disj
-    
-    isProgressDisj _ = False
-
-    isDisjGoalButNotProgress g = (isDisjGoal g) && not (isProgressDisj g)
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-    isLastName lv = isPrefixOf "L_" (lvarName lv)
-
-    isFirstName lv = isPrefixOf "F_" (lvarName lv)
-
-    isKnowsLastNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> True
-        _                                                           -> False
-
-    isKnowsFirstNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
-        _                                                           -> False
-
-
-    isMsgOneCaseGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
-        _                                                  -> False
-
-    isPrivateKnowsGoal goal = case msgPremise goal of
-        Just t -> isPrivateFunction t
-        _      -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
-
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
         maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
@@ -839,20 +722,11 @@ sapicLivenessRanking ctxt sys =
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
 
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
-    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
-    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTreeLast []     xs = xs
-    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
-      where (sat, nonsat) = partition p xs
-
+--  Problematic when using handles.
+--    isFreshKnowsGoal goal = case msgPremise goal of
+--        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+--        _                                                           -> False
+    -- we recognize any variable starting with h as a handle an deprioritize 
 
 -- | A ranking function tuned for a specific model of the
 -- PKCS#11 keymanagement API formulated in SAPIC's input language.
@@ -864,6 +738,7 @@ sapicPKCS11Ranking ctxt sys =
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
+
     getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
       Just (viewTerm -> FApp o _)
         | length (getDisj (L.get cdCases cd)) == 1 -> Just o
@@ -872,9 +747,6 @@ sapicPKCS11Ranking ctxt sys =
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
     unmark = map unmarkPremiseG
-    unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
-    unmarkPremiseG annGoal                        = annGoal
-
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
     tagUsefulness LoopBreaker           = 0
@@ -885,7 +757,8 @@ sapicPKCS11Ranking ctxt sys =
         -- isNotInsertAction . fst 
         -- ,        
         isKnowsHandleGoal . fst,
-        isLastProtoFact . fst
+        isLastProtoFact . fst,
+        isEventAction . fst
         ]
         -- move the Last proto facts (L_) to the end.
 
@@ -915,43 +788,11 @@ sapicPKCS11Ranking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
-       not (isKFact fa) && not (isAuthOutFact fa)
-    isNonLoopBreakerProtoFactGoal _                            = False
-
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
-    isAuthOutFact  _                                 = False
-
-    isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
-    isStateFact  _                                 = False
-
-    isUnlockAction (ActionG _ (Fact (ProtoFact _ "Unlock" _) _ _)) = True
-    isUnlockAction  _                                 = False
-
     isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "template" (show a)
             _ -> False
     isInsertTemplateAction _ = False
-
-    isNotInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ _)) = False
-    isNotInsertAction  _                                 = True
-
-    isStandardActionGoalButNotInsert g = 
-       (isStandardActionGoal g) &&  (isNotInsertAction g)
-
-
-    isLastProtoFact (PremiseG _ fa) = isSolveLastFact fa
-    isLastProtoFact _               = False
-
-    isFirstProtoFact (PremiseG _ fa) = isSolveFirstFact fa
-    isFirstProtoFact _               = False
-
-    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
-    isNotAuthOut _               = False
-
-    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
 
 --  Problematic when using handles.
 --    isFreshKnowsGoal goal = case msgPremise goal of
@@ -968,14 +809,6 @@ sapicPKCS11Ranking ctxt sys =
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
-    isPrivateKnowsGoal goal = case msgPremise goal of
-        Just t -> isPrivateFunction t
-        _      -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
-
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
         maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
@@ -983,20 +816,6 @@ sapicPKCS11Ranking ctxt sys =
 
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
-
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
-    -- | Same as sortDecisionTree, but adding the satisfied goals at the end of the list
-    sortDecisionTreeLast :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTreeLast []     xs = xs
-    sortDecisionTreeLast (p:ps) xs = sortDecisionTreeLast ps nonsat ++ sat
-      where (sat, nonsat) = partition p xs
 
 
 -- | A ranking function tailored for automatic verification of stateful
@@ -1025,9 +844,6 @@ injRanking ctxt allowLoopBreakers sys =
     unmark | allowLoopBreakers = map unmarkPremiseG
            | otherwise         = id
 
-    unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
-    unmarkPremiseG annGoal                        = annGoal
-
     -- move the Last proto facts (L_) and large splits to the end by
     -- putting all goals that shouldn't be solved last in front
     notSolveLast goaltuple = (isNoLargeSplitGoal $ fst goaltuple)
@@ -1043,9 +859,6 @@ injRanking ctxt allowLoopBreakers sys =
         -- equation splits
 
     smallSplitGoalSize = 3
-
-    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
 
     -- Putting the goals together like this ranks them by goal number
     -- within the same priority class, so one type of goal doesn't always win
@@ -1066,9 +879,6 @@ injRanking ctxt allowLoopBreakers sys =
                                 || (isSignatureGoal $ fst goaltuple)
                                 || (isProtoFactGoal goaltuple)
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) = not (isKFact fa)
-    isNonLoopBreakerProtoFactGoal _                            = False
-
     isProtoFactGoal (PremiseG _ fa, (_, _)) = not (isKFact fa)
     isProtoFactGoal _                       = False
 
@@ -1085,17 +895,11 @@ injRanking ctxt allowLoopBreakers sys =
     isSolveFirstGoal (ActionG  _ fa) = isSolveFirstFact fa
     isSolveFirstGoal _               = False
 
-    isLastName lv = isPrefixOf "L_" (lvarName lv)
-    isFirstName lv = isPrefixOf "F_" (lvarName lv)
     isImmediateName lv = isPrefixOf "I_" (lvarName lv)
 
     isNotKnowsLastNameGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isLastName lv)-> False
         _                                                           -> True
-
-    isKnowsFirstNameGoal goal = case msgPremise goal of
-        Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isFirstName lv)-> True
-        _                                                           -> False
 
     isKnowsImmediateNameGoal goal = case msgPremise goal of
         Just (viewTerm -> Lit (Var lv)) | ((lvarSort lv  == LSortFresh) && isImmediateName lv)-> True
@@ -1108,16 +912,9 @@ injRanking ctxt allowLoopBreakers sys =
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
-    isPrivateKnowsGoal goal = case msgPremise goal of
-        Just t -> isPrivateFunction t
-        _      -> False
-
     isSignatureGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
         _                                                                 -> False
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
 
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
@@ -1126,15 +923,6 @@ injRanking ctxt allowLoopBreakers sys =
 
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
-
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: (Show a) => [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
 
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise
@@ -1163,9 +951,6 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     unmark | allowPremiseGLoopBreakers = map unmarkPremiseG
            | otherwise                 = id
 
-    unmarkPremiseG (goal@(PremiseG _ _), (nr, _)) = (goal, (nr, Useful))
-    unmarkPremiseG annGoal                        = annGoal
-
     notSolveLast =
        [ isNonSolveLastGoal . fst ]
        -- move the Last proto facts (L_) to the end by sorting all other goals in front
@@ -1193,19 +978,6 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isNonLoopBreakerProtoFactGoal (PremiseG _ fa, (_, Useful)) =
-      not (isKFact fa) && not (isAuthOutFact fa)
-    isNonLoopBreakerProtoFactGoal _                            = False
-
-    isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
-    isAuthOutFact  _                                 = False
-
-    isNotAuthOut (PremiseG _ fa) = not (isAuthOutFact fa)
-    isNotAuthOut _               = False
-
-    msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
-    msgPremise _              = Nothing
-
     isNonSolveLastGoal (PremiseG _ fa) = not $ isSolveLastFact fa
     isNonSolveLastGoal (ActionG  _ fa) = not $ isSolveLastFact fa
     isNonSolveLastGoal _               = True
@@ -1222,17 +994,9 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
         _                                                  -> False
 
-    isPrivateKnowsGoal goal = case msgPremise goal of
-        Just t -> isPrivateFunction t
-        _      -> False
-
     isSignatureGoal goal = case msgPremise goal of
         Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
         _                                                                 -> False
-
-    isDoubleExpGoal goal = case msgPremise goal of
-        Just (viewTerm2 -> FExp  _ (viewTerm2 -> FMult _)) -> True
-        _                                                  -> False
 
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
@@ -1241,15 +1005,6 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
 
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
-
-    -- | @sortDecisionTree xs ps@ returns a reordering of @xs@
-    -- such that the sublist satisfying @ps!!0@ occurs first,
-    -- then the sublist satisfying @ps!!1@, and so on.
-    sortDecisionTree :: [a -> Bool] -> [a] -> [a]
-    sortDecisionTree []     xs = xs
-    sortDecisionTree (p:ps) xs = sat ++ sortDecisionTree ps nonsat
-      where (sat, nonsat) = partition p xs
-
 
 -- | A ranking function tuned for the automatic verification of
 -- classical security protocols that exhibit a well-founded protocol premise

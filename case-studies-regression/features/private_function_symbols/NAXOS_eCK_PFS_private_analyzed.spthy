@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h1/1, h2/1, pair/2, sk/1 [private], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* NAXOS *}
 
 rule (modulo E) Init_1:
@@ -63,65 +65,65 @@ rule (modulo E) Init_2:
         z     = x.587^(x.588*sk($A.295))
         z.1   = x.587^(x.588*h1(<~ex.297, sk($A.295)>))
     
-     5. $A    = $A.295
-        ~ex   = ~ex.297
-        Y     = x.588^inv((h1(<~ex.297, sk($A.295)>)*sk($A.295)))
-        z     = x.588^inv(h1(<~ex.297, sk($A.295)>))
-        z.1   = x.588^inv(sk($A.295))
-    
-     6. $A    = $A.296
-        ~ex   = ~ex.298
-        Y     = x.589^inv((x.590*sk($A.296)))
-        z     = x.589^inv(x.590)
-        z.1   = x.589^(h1(<~ex.298, sk($A.296)>)*inv((x.590*sk($A.296))))
-    
-     7. $A    = $A.296
-        ~ex   = ~ex.298
-        Y     = x.589^(x.590*inv(sk($A.296)))
-        z     = x.589^x.590
-        z.1   = x.589^(x.590*h1(<~ex.298, sk($A.296)>)*inv(sk($A.296)))
-    
-     8. $A    = $A.297
+     5. $A    = $A.297
         ~ex   = ~ex.299
-        Y     = x.590^inv((x.592*h1(<~ex.299, sk($A.297)>)))
-        z     = x.590^(inv((x.592*h1(<~ex.299, sk($A.297)>)))*sk($A.297))
-        z.1   = x.590^inv(x.592)
+        Y     = x.592^inv((h1(<~ex.299, sk($A.297)>)*sk($A.297)))
+        z     = x.592^inv(h1(<~ex.299, sk($A.297)>))
+        z.1   = x.592^inv(sk($A.297))
     
-     9. $A    = $A.297
-        ~ex   = ~ex.299
-        Y     = x.590^inv((x.592*h1(<~ex.299, sk($A.297)>)*sk($A.297)))
-        z     = x.590^inv((x.592*h1(<~ex.299, sk($A.297)>)))
-        z.1   = x.590^inv((x.592*sk($A.297)))
-    
-    10. $A    = $A.297
-        ~ex   = ~ex.299
-        Y     = x.590^(x.592*inv(h1(<~ex.299, sk($A.297)>)))
-        z     = x.590^(x.592*inv(h1(<~ex.299, sk($A.297)>))*sk($A.297))
-        z.1   = x.590^x.592
-    
-    11. $A    = $A.297
-        ~ex   = ~ex.299
-        Y     = x.590^(x.592*inv((x.591*sk($A.297))))
-        z     = x.590^(x.592*inv(x.591))
-        z.1   = x.590^(x.592*h1(<~ex.299, sk($A.297)>)*inv((x.591*sk($A.297))))
-    
-    12. $A    = $A.297
-        ~ex   = ~ex.299
-        Y     = x.590^(x.592*inv((h1(<~ex.299, sk($A.297)>)*sk($A.297))))
-        z     = x.590^(x.592*inv(h1(<~ex.299, sk($A.297)>)))
-        z.1   = x.590^(x.592*inv(sk($A.297)))
-    
-    13. $A    = $A.298
+     6. $A    = $A.298
         ~ex   = ~ex.300
-        Y     = x.591^(x.594*inv((x.593*h1(<~ex.300, sk($A.298)>))))
-        z     = x.591^(x.594*inv((x.593*h1(<~ex.300, sk($A.298)>)))*sk($A.298))
-        z.1   = x.591^(x.594*inv(x.593))
+        Y     = x.593^inv((x.594*h1(<~ex.300, sk($A.298)>)))
+        z     = x.593^(inv((x.594*h1(<~ex.300, sk($A.298)>)))*sk($A.298))
+        z.1   = x.593^inv(x.594)
     
-    14. $A    = $A.298
+     7. $A    = $A.298
         ~ex   = ~ex.300
-        Y     = x.591^(x.594*inv((x.593*h1(<~ex.300, sk($A.298)>)*sk($A.298))))
-        z     = x.591^(x.594*inv((x.593*h1(<~ex.300, sk($A.298)>))))
-        z.1   = x.591^(x.594*inv((x.593*sk($A.298))))
+        Y     = x.593^inv((x.594*h1(<~ex.300, sk($A.298)>)*sk($A.298)))
+        z     = x.593^inv((x.594*h1(<~ex.300, sk($A.298)>)))
+        z.1   = x.593^inv((x.594*sk($A.298)))
+    
+     8. $A    = $A.298
+        ~ex   = ~ex.300
+        Y     = x.593^inv((x.594*sk($A.298)))
+        z     = x.593^inv(x.594)
+        z.1   = x.593^(h1(<~ex.300, sk($A.298)>)*inv((x.594*sk($A.298))))
+    
+     9. $A    = $A.298
+        ~ex   = ~ex.300
+        Y     = x.593^(x.594*inv(h1(<~ex.300, sk($A.298)>)))
+        z     = x.593^(x.594*inv(h1(<~ex.300, sk($A.298)>))*sk($A.298))
+        z.1   = x.593^x.594
+    
+    10. $A    = $A.298
+        ~ex   = ~ex.300
+        Y     = x.593^(x.594*inv(sk($A.298)))
+        z     = x.593^x.594
+        z.1   = x.593^(x.594*h1(<~ex.300, sk($A.298)>)*inv(sk($A.298)))
+    
+    11. $A    = $A.298
+        ~ex   = ~ex.300
+        Y     = x.593^(x.594*inv((h1(<~ex.300, sk($A.298)>)*sk($A.298))))
+        z     = x.593^(x.594*inv(h1(<~ex.300, sk($A.298)>)))
+        z.1   = x.593^(x.594*inv(sk($A.298)))
+    
+    12. $A    = $A.299
+        ~ex   = ~ex.301
+        Y     = x.594^(x.595*inv((x.596*h1(<~ex.301, sk($A.299)>))))
+        z     = x.594^(x.595*inv((x.596*h1(<~ex.301, sk($A.299)>)))*sk($A.299))
+        z.1   = x.594^(x.595*inv(x.596))
+    
+    13. $A    = $A.299
+        ~ex   = ~ex.301
+        Y     = x.594^(x.595*inv((x.596*h1(<~ex.301, sk($A.299)>)*sk($A.299))))
+        z     = x.594^(x.595*inv((x.596*h1(<~ex.301, sk($A.299)>))))
+        z.1   = x.594^(x.595*inv((x.596*sk($A.299))))
+    
+    14. $A    = $A.299
+        ~ex   = ~ex.301
+        Y     = x.594^(x.595*inv((x.596*sk($A.299))))
+        z     = x.594^(x.595*inv(x.596))
+        z.1   = x.594^(x.595*h1(<~ex.301, sk($A.299)>)*inv((x.596*sk($A.299))))
   */
 
 rule (modulo E) Resp_1:
@@ -175,65 +177,65 @@ rule (modulo E) Resp_1:
         z     = x.926^(x.927*sk($B.465))
         z.1   = x.926^(x.927*h1(<~ey.466, sk($B.465)>))
     
-     5. $B    = $B.465
-        ~ey   = ~ey.466
-        X     = x.927^inv((h1(<~ey.466, sk($B.465)>)*sk($B.465)))
-        z     = x.927^inv(h1(<~ey.466, sk($B.465)>))
-        z.1   = x.927^inv(sk($B.465))
-    
-     6. $B    = $B.466
+     5. $B    = $B.466
         ~ey   = ~ey.467
-        X     = x.928^inv((x.929*sk($B.466)))
-        z     = x.928^inv(x.929)
-        z.1   = x.928^(h1(<~ey.467, sk($B.466)>)*inv((x.929*sk($B.466))))
+        X     = x.929^inv((h1(<~ey.467, sk($B.466)>)*sk($B.466)))
+        z     = x.929^inv(h1(<~ey.467, sk($B.466)>))
+        z.1   = x.929^inv(sk($B.466))
     
-     7. $B    = $B.466
-        ~ey   = ~ey.467
-        X     = x.928^(x.929*inv(sk($B.466)))
-        z     = x.928^x.929
-        z.1   = x.928^(x.929*h1(<~ey.467, sk($B.466)>)*inv(sk($B.466)))
+     6. $B    = $B.467
+        ~ey   = ~ey.468
+        X     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)))
+        z     = x.930^(inv((x.931*h1(<~ey.468, sk($B.467)>)))*sk($B.467))
+        z.1   = x.930^inv(x.931)
+    
+     7. $B    = $B.467
+        ~ey   = ~ey.468
+        X     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)*sk($B.467)))
+        z     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)))
+        z.1   = x.930^inv((x.931*sk($B.467)))
     
      8. $B    = $B.467
         ~ey   = ~ey.468
-        X     = x.929^inv((x.931*h1(<~ey.468, sk($B.467)>)))
-        z     = x.929^(inv((x.931*h1(<~ey.468, sk($B.467)>)))*sk($B.467))
-        z.1   = x.929^inv(x.931)
+        X     = x.930^inv((x.931*sk($B.467)))
+        z     = x.930^inv(x.931)
+        z.1   = x.930^(h1(<~ey.468, sk($B.467)>)*inv((x.931*sk($B.467))))
     
      9. $B    = $B.467
         ~ey   = ~ey.468
-        X     = x.929^inv((x.931*h1(<~ey.468, sk($B.467)>)*sk($B.467)))
-        z     = x.929^inv((x.931*h1(<~ey.468, sk($B.467)>)))
-        z.1   = x.929^inv((x.931*sk($B.467)))
+        X     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
+        z     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>))*sk($B.467))
+        z.1   = x.930^x.931
     
     10. $B    = $B.467
         ~ey   = ~ey.468
-        X     = x.929^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
-        z     = x.929^(x.931*inv(h1(<~ey.468, sk($B.467)>))*sk($B.467))
-        z.1   = x.929^x.931
+        X     = x.930^(x.931*inv(sk($B.467)))
+        z     = x.930^x.931
+        z.1   = x.930^(x.931*h1(<~ey.468, sk($B.467)>)*inv(sk($B.467)))
     
     11. $B    = $B.467
         ~ey   = ~ey.468
-        X     = x.929^(x.931*inv((x.930*sk($B.467))))
-        z     = x.929^(x.931*inv(x.930))
-        z.1   = x.929^(x.931*h1(<~ey.468, sk($B.467)>)*inv((x.930*sk($B.467))))
+        X     = x.930^(x.931*inv((h1(<~ey.468, sk($B.467)>)*sk($B.467))))
+        z     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
+        z.1   = x.930^(x.931*inv(sk($B.467)))
     
-    12. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.929^(x.931*inv((h1(<~ey.468, sk($B.467)>)*sk($B.467))))
-        z     = x.929^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
-        z.1   = x.929^(x.931*inv(sk($B.467)))
+    12. $B    = $B.468
+        ~ey   = ~ey.469
+        X     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>))))
+        z     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>)))*sk($B.468))
+        z.1   = x.931^(x.932*inv(x.933))
     
     13. $B    = $B.468
         ~ey   = ~ey.469
-        X     = x.930^(x.933*inv((x.932*h1(<~ey.469, sk($B.468)>))))
-        z     = x.930^(x.933*inv((x.932*h1(<~ey.469, sk($B.468)>)))*sk($B.468))
-        z.1   = x.930^(x.933*inv(x.932))
+        X     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>)*sk($B.468))))
+        z     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>))))
+        z.1   = x.931^(x.932*inv((x.933*sk($B.468))))
     
     14. $B    = $B.468
         ~ey   = ~ey.469
-        X     = x.930^(x.933*inv((x.932*h1(<~ey.469, sk($B.468)>)*sk($B.468))))
-        z     = x.930^(x.933*inv((x.932*h1(<~ey.469, sk($B.468)>))))
-        z.1   = x.930^(x.933*inv((x.932*sk($B.468))))
+        X     = x.931^(x.932*inv((x.933*sk($B.468))))
+        z     = x.931^(x.932*inv(x.933))
+        z.1   = x.931^(x.932*h1(<~ey.469, sk($B.468)>)*inv((x.933*sk($B.468))))
   */
 
 rule (modulo E) Sessk_reveal:
@@ -351,7 +353,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spt
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy.tmp
-  processing time: 1.571614704s
+  processing time: 2.394506s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ------------------------------------------------------------------------------
@@ -362,7 +364,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy.tmp
-  processing time: 1.571614704s
+  processing time: 2.394506s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ==============================================================================

@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 section{* TLS Handshake *}
 
 text{*
@@ -150,12 +152,12 @@ rule (modulo E) S_2:
        z     = verify(signature.37, <'32', h(<'32', ns.31, S.28, pms.34>)>,
                       pkC.33)
     
-    2. S     = S.129
-       ns    = ns.132
-       pkC   = pk(x.255)
-       pms   = pms.135
+    2. S     = S.132
+       ns    = ns.135
+       pkC   = pk(x.261)
+       pms   = pms.138
        signature
-             = sign(<'32', h(<'32', ns.132, S.129, pms.135>)>, x.255)
+             = sign(<'32', h(<'32', ns.135, S.132, pms.138>)>, x.261)
        z     = true
   */
 
@@ -742,7 +744,7 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 2.585301901s
+  processing time: 3.553591s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -755,7 +757,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 2.585301901s
+  processing time: 3.553591s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

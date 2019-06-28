@@ -137,7 +137,7 @@ class rules(object):
             if sa == src:
                 sa = dst
             self.abbreviations[i] = (tb,sa)
-            if ta != tb and firstUse == None:
+            if ta != tb and firstUse is None:
                 firstUse = i
 
         self.dirty = True
@@ -254,7 +254,7 @@ class rules(object):
         firstUse = self.replaceAll(tt,string)
         
         # insert the new abbreviation before firstUse
-        if firstUse == None:
+        if firstUse is None:
             firstUse = len(self.abbreviations)
         pre = self.abbreviations[:firstUse]
         post = self.abbreviations[firstUse:]
@@ -659,7 +659,7 @@ def findArgs(infile=None):
     """
     args = []
     for x in sys.argv[1:]:
-        if (infile == None) or (x != infile):
+        if (infile is None) or (x != infile):
             args.append(x)
 
     appendLog("  Using arguments: %s\n" % (str(args)))
@@ -805,10 +805,10 @@ def getRuleName(N):
     Try to reconstruct the rule name or None.
     Tricky business.
     """
-    if N == None:
+    if N is None:
         return None
     sh = N.get("shape")
-    if sh == None:
+    if sh is None:
         return None
     if not ("record" in sh):
         return None
@@ -832,7 +832,7 @@ def getNodePrefix(N):
     """
 
     fullname = getRuleName(N)
-    if fullname == None:
+    if fullname is None:
         return None
 
     #print "@@@%s@@@" % fullname
@@ -1022,7 +1022,7 @@ def noPort(nn):
     """
     Strip port part of node name
     """
-    if nn == None:
+    if nn is None:
         return None
     i = nn.find(":")
     if i >= 0:
@@ -1193,7 +1193,7 @@ def collapseRules(G,removeFacts=False):
             if not removeFacts:
                 # We retain the fact, but move it to the edge
                 newlabel = getPortLabel(G,dstn)
-                if newlabel == None:
+                if newlabel is None:
                     newlabel = getPortLabel(G,srcn)
                 if newlabel != None:
                     if "label" in attr.keys():
@@ -1723,7 +1723,7 @@ def joinSimilar(G,subsumetest=True):
     RootNodes = []
     for N in AllNodes:
         if len(incomingEdges(G,N)) == 0:
-            if extractNodeColor(N) == None:
+            if extractNodeColor(N) is None:
                 RootNodes.append(N)
 
     # Determine if we can merge some edges
@@ -1834,7 +1834,7 @@ def extractColor(S):
 
     TODO: What if there is more than one?
     """
-    if S == None:
+    if S is None:
         return None
 
     prefix = "COLOR"
@@ -1976,7 +1976,7 @@ def newDot(infile):
     G = graph_from_dot_file(infile)
     if isinstance(G, list):
         G = G[0]
-    if G == None:
+    if G is None:
         appendLog("Could not prase graph sensibly.\n")
         return None
 
@@ -2095,7 +2095,7 @@ def experiment(L):
             if d < worstd:
                 worstd = d
 
-        if worstd > bestd or bestf == None:
+        if worstd > bestd or bestf is None:
             bestd = worstd
             bestf = mfactor
             

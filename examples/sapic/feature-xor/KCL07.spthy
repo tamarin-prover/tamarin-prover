@@ -1,0 +1,64 @@
+theory  KCL07
+
+begin
+
+/* 
+  Adapted from tamarin file to SAPIC.
+
+KCL07: Reader R, RFID tag T, shared knowledge k, ID
+
+   R: knows(k, ID)
+   T: knows(k, ID)
+   R: fresh(r1)
+R->T: r1
+   T: fresh(r2)
+T->R: ID XOR r2,  h(r1,k) XOR r2  
+   
+   R considers T recent alive if it can find ID, k such that
+     the pair of terms received from T in the last step satisfies
+     
+     ID XOR r2  XOR  h(r1,k) XOR r2   =   ID XOR h(r1,k)
+
+recent aliveness is satisfied, but untracability is not.
+The model below only considers recent aliveness at the moment.
+*/
+
+builtins: xor, hashing
+
+let Reader =
+  new ~r1;
+  event Challenge( ~r1, 'Reader' );
+  out( ~r1 );
+// in( <idr2, hashr2> ); // This is how it should be
+  in( xoredhash );        // This is the only way I can make it work
+// if idr2 XOR hashr2 = ~id XOR h(<~r1,~k>) then // How it should be
+  if xoredhash = ~id XOR h(<~r1,~k>) then	 // how it works
+     event Alive( ~k, 'Tag' )
+
+let Tag =
+   in( r1 );
+   new ~r2;
+   event Response( ~k, 'Tag' );
+   out( <~id XOR ~r2, h(<r1,~k>) XOR ~r2>)
+
+
+new ~k; new ~id;  (!Reader || !Tag)
+
+
+// PROOF FOUND AUTOMATICALLY
+lemma recentalive_tag:
+  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+
+
+// SHOWS CORRECT EXECUTION
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+     // further restriction to automatically get the desired execution
+     ∧ (not Ex #k. Response( x, 'Tag' ) @ #k & (not (#j=#k)))"
+
+end
+
+
+
+
+

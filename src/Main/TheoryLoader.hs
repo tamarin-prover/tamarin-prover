@@ -30,7 +30,7 @@ module Main.TheoryLoader (
   , loadClosedDiffThyString
   , reportOnClosedDiffThyStringWellformedness
 
-  
+
   -- ** Constructing automatic provers
   , constructAutoProver
   , constructAutoDiffProver
@@ -43,7 +43,7 @@ module Main.TheoryLoader (
   ) where
 
 -- import           Debug.Trace
-  
+
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
@@ -65,11 +65,11 @@ import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
-
+import           Sapic
 import           Main.Console
 import           Main.Environment
 
-import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec                hiding ((<|>),try)
 
 
 ------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ theoryLoadFlags =
   [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
       "Attempt to prove a lemma "
 
-  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|NONE"
+  , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
 
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
@@ -129,8 +129,11 @@ loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
 -- | Load an open theory from a file.
-loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as)
+loadOpenThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
+loadOpenThy as inFile =  do
+    thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
+    thy' <-  Sapic.translate thy
+    return thy'
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -143,7 +146,7 @@ loadClosedDiffThy as inFile = do
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
 
--- | Load a close theory and report on well-formedness errors.
+-- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
     thy <- loadOpenThy as inFile
@@ -190,7 +193,10 @@ loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ closeThy as thy
+        Right thy -> do
+            thy' <- Sapic.translate thy
+            Right <$> closeThy as thy' -- No "return" because closeThy gives IO (ClosedTheory)
+
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
 loadClosedDiffThyString as input =
@@ -208,17 +214,18 @@ loadOpenThyString as = parseOpenTheoryString (diff as ++ defines as ++ quitOnWar
 loadOpenDiffThyString :: Arguments -> String -> Either ParseError OpenDiffTheory
 loadOpenDiffThyString as = parseOpenDiffTheoryString (diff as ++ defines as ++ quitOnWarning as)
 
--- | Load a close theory and only report on well-formedness errors.
+-- | Load a close theory and only report on well-formedness errors or translation errors
 reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
-reportOnClosedThyStringWellformedness as input = do
+reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
-      Left  err -> return $ "parse error: " ++ show err
-      Right thy ->
-        case checkWellformedness thy of
-          []     -> return ""
-          report -> do
-            if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
-            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
+      Left  err   -> return $ "parse error: " ++ show err
+      Right thy -> do
+            thy' <- Sapic.translate thy
+            case checkWellformedness thy' of
+                  []     -> return ""
+                  report -> do
+                    if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+                    return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
 -- | Load a closed diff theory and report on well-formedness errors.
 reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String
@@ -235,7 +242,7 @@ reportOnClosedDiffThyStringWellformedness as input = do
             return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
 -- | Close a theory according to arguments.
-closeThy :: Arguments -> OpenTheory -> IO ClosedTheory
+closeThy :: Arguments -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as thy0 = do
   thy1 <- addMessageDeductionRuleVariants thy0
   -- FIXME: wf-check is at the wrong position here. Needs to be more
@@ -254,7 +261,7 @@ closeThy as thy0 = do
 
       -- wellformedness check
       -----------------------
-      wfCheck :: OpenTheory -> OpenTheory
+      wfCheck :: OpenTranslatedTheory -> OpenTranslatedTheory
       wfCheck thy =
         noteWellformedness
           (checkWellformedness thy) thy (elem "quit-on-warning" (quitOnWarning as))
@@ -271,7 +278,7 @@ closeThy as thy0 = do
       prover | argExists "prove" as =
                   replaceSorryProver $ runAutoProver $ constructAutoProver as
              | otherwise            = mempty
-             
+
 -- | Close a diff theory according to arguments.
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
@@ -321,7 +328,7 @@ closeDiffThy as thy0 = do
       prover | argExists "prove" as =
                   replaceSorryProver $ runAutoProver $ constructAutoProver as
              | otherwise            = mempty
-             
+
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
@@ -344,15 +351,16 @@ constructAutoProver as =
         _                        -> [SmartRanking False]
 
     setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
-      Nothing     -> CutDFS
-      Just "dfs"  -> CutDFS
-      Just "none" -> CutNothing
-      Just "bfs"  -> CutBFS
-      Just other  -> error $ "unknown stop-on-trace method: " ++ other
+      Nothing       -> CutDFS
+      Just "dfs"    -> CutDFS
+      Just "none"   -> CutNothing
+      Just "bfs"    -> CutBFS
+      Just "seqdfs" -> CutSingleThreadDFS
+      Just other    -> error $ "unknown stop-on-trace method: " ++ other
 
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).
@@ -378,15 +386,16 @@ constructAutoDiffProver as =
 
 
     setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleRanking oracleName
+    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
     setOracleName r = r
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
-      Nothing     -> CutDFS
-      Just "dfs"  -> CutDFS
-      Just "none" -> CutNothing
-      Just "bfs"  -> CutBFS
-      Just other  -> error $ "unknown stop-on-trace method: " ++ other
+      Nothing       -> CutDFS
+      Just "dfs"    -> CutDFS
+      Just "none"   -> CutNothing
+      Just "bfs"    -> CutBFS
+      Just "seqdfs" -> CutSingleThreadDFS
+      Just other    -> error $ "unknown stop-on-trace method: " ++ other
 
 
 ------------------------------------------------------------------------------
@@ -418,7 +427,7 @@ mkBpIntruderVariants msig =
 -- | Add the variants of the message deduction rule. Uses built-in cached
 -- files for the variants of the message deduction rules for Diffie-Hellman
 -- exponentiation and Bilinear-Pairing.
-addMessageDeductionRuleVariants :: OpenTheory -> IO OpenTheory
+addMessageDeductionRuleVariants :: OpenTranslatedTheory -> IO OpenTranslatedTheory
                                 -- TODO (SM): drop use of IO here.
 addMessageDeductionRuleVariants thy0
   | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
@@ -430,9 +439,9 @@ addMessageDeductionRuleVariants thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
-    thy          = addIntrRuleACs rules thy0
+    thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = do
-        return $ addIntrRuleACs (concatMap ($ msig) mkRuless) thy
+        return $ addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message

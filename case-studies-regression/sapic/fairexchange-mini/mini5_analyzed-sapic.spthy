@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -167,22 +169,22 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_12111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_12121( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_1221( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_1211( ~prog_, s, x ) ▶₀ #t )
-    case if_eqx_HELLO__0_121
-    solve( State_11( ~prog_, s ) ▶₀ #t2 )
-      case Par_1
-      solve( (#t2 < #t2.3)  ∥ (#t2 = #t2.3)  ∥ (#vr.1 < #t2) )
-        case case_2
-        solve( State_1211( ~prog_, s, x ) ▶₀ #t2.1 )
-          case if_eqx_HELLO__0_121
-          solve( (#t2 < #t2.2)  ∥ (#t2 = #t2.2) )
-            case case_2
-            solve( State_11( ~prog_, s ) ▶₀ #t2.1 )
-              case Par_1
+solve( State_1211( ~prog_, s, x ) ▶₀ #t )
+  case if_eqx_HELLO__0_121
+  solve( State_11( ~prog_, s ) ▶₀ #t2 )
+    case Par_1
+    solve( (#t2 < #t2.2)  ∥ (#t2 = #t2.2)  ∥ (#vr.1 < #t2) )
+      case case_2
+      solve( State_11( ~prog_, s ) ▶₀ #t2.1 )
+        case Par_1
+        solve( (∃ #t2. (ProgressTo_12111( ~prog_ ) @ #t2))  ∥
+               (∃ #t2. (ProgressTo_12121( ~prog_ ) @ #t2))  ∥
+               (∃ #t2. (ProgressTo_1221( ~prog_ ) @ #t2)) )
+          case case_1
+          solve( State_1211( ~prog_, s, x ) ▶₀ #t2.1 )
+            case if_eqx_HELLO__0_121
+            solve( (#t2 < #t2.1)  ∥ (#t2 = #t2.1) )
+              case case_2
               SOLVED // trace found
             qed
           qed
@@ -199,26 +201,9 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_12111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_12121( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_1221( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_1212( ~prog_, s, x ) ▶₀ #t )
-    case if_eqx_HELLO__1_121
-    by contradiction /* from formulas */
-  qed
-next
-  case case_2
-  solve( State_1212( ~prog_, s, x ) ▶₀ #t )
-    case if_eqx_HELLO__1_121
-    by contradiction /* from formulas */
-  qed
-next
-  case case_3
-  solve( State_1212( ~prog_, s, x ) ▶₀ #t )
-    case if_eqx_HELLO__1_121
-    by contradiction /* from formulas */
-  qed
+solve( State_1212( ~prog_, s, x ) ▶₀ #t )
+  case if_eqx_HELLO__1_121
+  by contradiction /* from formulas */
 qed
 
 lemma C_possible:
@@ -228,25 +213,25 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (C( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_12111( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_12121( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_1221( ~prog_.1 ) @ #t2)) )
-  case case_3
-  solve( State_122( ~prog_, s ) ▶₀ #t )
-    case lookup_s_as_x_1_12
-    solve( (∀ #t1 y. (Insert( ~n, y ) @ #t1) ⇒ #vr < #t1)  ∥
-           (∃ #t1.
-             (Delete( ~n ) @ #t1)
-            ∧
-             (#t1 < #vr) ∧
-             (∀ #t2 y. (Insert( ~n, y ) @ #t2) ⇒ ((¬(#t2 < #vr)) ∨ (#t2 < #t1)))) )
-      case case_1
-      solve( State_11( ~prog_, s ) ▶₀ #t2 )
+solve( State_122( ~prog_, s ) ▶₀ #t )
+  case lookup_s_as_x_1_12
+  solve( (∀ #t1 y. (Insert( ~n, y ) @ #t1) ⇒ #vr < #t1)  ∥
+         (∃ #t1.
+           (Delete( ~n ) @ #t1)
+          ∧
+           (#t1 < #vr) ∧
+           (∀ #t2 y. (Insert( ~n, y ) @ #t2) ⇒ ((¬(#t2 < #vr)) ∨ (#t2 < #t1)))) )
+    case case_1
+    solve( State_11( ~prog_, s ) ▶₀ #t2 )
+      case Par_1
+      solve( State_11( ~prog_, s ) ▶₀ #t2.1 )
         case Par_1
-        solve( State_122( ~prog_, s ) ▶₀ #t2.1 )
-          case lookup_s_as_x_1_12
-          solve( State_11( ~prog_, s ) ▶₀ #t2.1 )
-            case Par_1
+        solve( (∃ #t2. (ProgressTo_12111( ~prog_ ) @ #t2))  ∥
+               (∃ #t2. (ProgressTo_12121( ~prog_ ) @ #t2))  ∥
+               (∃ #t2. (ProgressTo_1221( ~prog_ ) @ #t2)) )
+          case case_3
+          solve( State_122( ~prog_, s ) ▶₀ #t2.1 )
+            case lookup_s_as_x_1_12
             SOLVED // trace found
           qed
         qed
@@ -295,12 +280,12 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.307455901s
+  processing time: 0.218245s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)
-  B_impossible (all-traces): verified (8 steps)
+  B_impossible (all-traces): verified (3 steps)
   C_possible (exists-trace): verified (8 steps)
 
 ------------------------------------------------------------------------------
@@ -311,12 +296,12 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini5.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.307455901s
+  processing time: 0.218245s
   WARNING: 5 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)
-  B_impossible (all-traces): verified (8 steps)
+  B_impossible (all-traces): verified (3 steps)
   C_possible (exists-trace): verified (8 steps)
 
 ==============================================================================

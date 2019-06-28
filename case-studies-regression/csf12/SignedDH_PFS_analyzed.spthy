@@ -9,6 +9,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 section{* The Signed Diffie-Hellman Protocol *}
 
 rule (modulo E) Register_pk:
@@ -74,8 +76,8 @@ rule (modulo E) Init_2:
        z     = x.17^x.18
     
     6. ~ekI  = ~ekI.12
-       Y     = x.18^(x.20*inv((~ekI.12*x.19)))
-       z     = x.18^(x.20*inv(x.19))
+       Y     = x.18^(x.19*inv((~ekI.12*x.20)))
+       z     = x.18^(x.19*inv(x.20))
   */
 
 rule (modulo E) Resp:
@@ -116,8 +118,8 @@ rule (modulo E) Resp:
        z     = x.125^x.126
     
     6. ~ekR  = ~ekR.66
-       X     = x.126^(x.128*inv((~ekR.66*x.127)))
-       z     = x.126^(x.128*inv(x.127))
+       X     = x.126^(x.127*inv((~ekR.66*x.128)))
+       z     = x.126^(x.127*inv(x.128))
   */
 
 lemma Perfect_Forward_Secrecy:
@@ -217,7 +219,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.293886067s
+  processing time: 0.363893s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -228,7 +230,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.293886067s
+  processing time: 0.363893s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

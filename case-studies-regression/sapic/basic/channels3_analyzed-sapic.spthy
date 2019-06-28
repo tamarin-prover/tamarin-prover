@@ -9,6 +9,8 @@ equations:
     get_rep(rep(m, loc)) = m,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -19,51 +21,51 @@ rule (modulo E) Par_:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) new_a_1:
+rule (modulo E) new_a_1[color=#569dc0]:
    [ State_1( ), Fr( a ) ] --> [ State_11( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_0_11:
+rule (modulo E) out_c_a_0_11[color=#569dc0]:
    [ State_11( a ), In( 'c' ) ]
   --[ ChannelInEvent( 'c' ) ]->
    [ Out( a ), State_111( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_1_11:
+rule (modulo E) out_c_a_1_11[color=#569dc0]:
    [ State_11( a ) ] --> [ Semistate_11( a ), Message( 'c', a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) out_c_a_2_11:
+rule (modulo E) out_c_a_2_11[color=#569dc0]:
    [ Semistate_11( a ), Ack( 'c', a ) ] --> [ State_111( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_111:
+rule (modulo E) Zero_111[color=#569dc0]:
    [ State_111( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_c_x_0_2:
+rule (modulo E) in_c_x_0_2[color=#2cd719]:
    [ State_2( ), In( <'c', x> ) ]
   --[ ChannelInEvent( <'c', x> ) ]->
    [ State_21( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_c_x_1_2:
+rule (modulo E) in_c_x_1_2[color=#2cd719]:
    [ State_2( ), Message( 'c', x ) ] --> [ Ack( 'c', x ), State_21( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) event_Receivedx_21:
+rule (modulo E) event_Receivedx_21[color=#2cd719]:
    [ State_21( x ) ] --[ Event( ), Received( x ) ]-> [ State_211( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Zero_211:
+rule (modulo E) Zero_211[color=#2cd719]:
    [ State_211( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -114,7 +116,7 @@ analyzing: case-studies-sapic-regression/basic/channels3.spthy
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies-sapic-regression/basic/channels3.spthy.tmp
-  processing time: 0.061304134s
+  processing time: 0.154433s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 
@@ -126,7 +128,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/channels3.spthy
 
   output:          case-studies-sapic-regression/basic/channels3.spthy.tmp
-  processing time: 0.061304134s
+  processing time: 0.154433s
   not_secret (exists-trace): verified (3 steps)
   internal_comm (exists-trace): verified (3 steps)
 

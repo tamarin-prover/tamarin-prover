@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 rule (modulo E) SetupServerKey:
    [ Fr( ~sk ) ]
   -->
@@ -146,7 +148,7 @@ analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.063332158s
+  processing time: 0.084453s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -157,7 +159,7 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.063332158s
+  processing time: 0.084453s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

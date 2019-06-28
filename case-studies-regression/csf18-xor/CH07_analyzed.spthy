@@ -1,0 +1,770 @@
+theory CH07 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k ), Fr( ~id ) ] --> [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ),
+  Running( <'R', 'T', (~k⊕~r2⊕r1)> )
+  ]->
+   [
+   Out( <~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))> ),
+   TagState( ~k, r1, ~r2, h((~k⊕~r2⊕r1)) )
+   ]
+
+  /*
+  rule (modulo AC) tag1:
+     [ In( r1 ), Fr( ~r2 ), !Tag( ~k, ~id ) ]
+    --[
+    Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ), Running( <'R', 'T', z> )
+    ]->
+     [ Out( <~r2, lh((h(z)⊕rot(~id, h(z))))> ), TagState( ~k, r1, ~r2, h(z) )
+     ]
+    variants (modulo AC)
+    1. ~k    = ~k.19
+       ~r2   = ~r2.20
+       r1    = ~k.19
+       z     = ~r2.20
+    
+    2. ~k    = ~k.19
+       ~r2   = ~r2.20
+       r1    = ~r2.20
+       z     = ~k.19
+    
+    3. ~k    = ~k.19
+       ~r2   = ~r2.20
+       r1    = zero
+       z     = (~k.19⊕~r2.20)
+    
+    4. ~k    = ~k.19
+       ~r2   = ~r2.20
+       r1    = (~k.19⊕~r2.20)
+       z     = zero
+    
+    5. ~k    = ~k.20
+       ~r2   = ~k.20
+       r1    = r1.22
+       z     = r1.22
+    
+    6. ~k    = ~k.20
+       ~r2   = ~r2.21
+       r1    = r1.22
+       z     = (~k.20⊕~r2.21⊕r1.22)
+    
+    7. ~k    = ~k.22
+       ~r2   = ~r2.23
+       r1    = (~k.22⊕~r2.23⊕z.26)
+       z     = z.26
+    
+    8. ~k    = ~k.150
+       ~r2   = ~r2.151
+       r1    = (~r2.151⊕x.297)
+       z     = (~k.150⊕x.297)
+    
+    9. ~k    = ~k.151
+       ~r2   = ~r2.152
+       r1    = (~k.151⊕x.299)
+       z     = (~r2.152⊕x.299)
+  */
+
+rule (modulo E) reader2:
+   [
+   Initiated( ~r1 ), !Reader( ~k, ~id ),
+   In( <r2, lh((hash⊕rot(~id, hash)))> )
+   ]
+  --[
+  Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ), Eq( h((~k⊕~r1⊕r2)), hash ),
+  Running( <'T', 'R', (~k⊕~r1⊕r2)> ), Commit( <'R', 'T', (~k⊕~r1⊕r2)> )
+  ]->
+   [ Out( rh((hash⊕rot(~id, hash))) ) ]
+
+  /*
+  rule (modulo AC) reader2:
+     [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <r2, lh(z)> ) ]
+    --[
+    Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ), Eq( h(z.1), hash ),
+    Running( <'T', 'R', z.1> ), Commit( <'R', 'T', z.1> )
+    ]->
+     [ Out( rh(z) ) ]
+    variants (modulo AC)
+     1. ~id   = ~id.13
+        ~k    = ~k.14
+        ~r1   = ~r1.15
+        hash  = zero
+        r2    = ~k.14
+        z     = rot(~id.13, zero)
+        z.1   = ~r1.15
+    
+     2. ~id   = ~id.13
+        ~k    = ~k.14
+        ~r1   = ~r1.15
+        hash  = zero
+        r2    = ~r1.15
+        z     = rot(~id.13, zero)
+        z.1   = ~k.14
+    
+     3. ~id   = ~id.13
+        ~k    = ~k.14
+        ~r1   = ~r1.15
+        hash  = zero
+        r2    = zero
+        z     = rot(~id.13, zero)
+        z.1   = (~k.14⊕~r1.15)
+    
+     4. ~id   = ~id.13
+        ~k    = ~k.14
+        ~r1   = ~r1.15
+        hash  = zero
+        r2    = (~k.14⊕~r1.15)
+        z     = rot(~id.13, zero)
+        z.1   = zero
+    
+     5. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r1   = ~r1.16
+        hash  = hash.17
+        r2    = ~k.15
+        z     = (hash.17⊕rot(~id.14, hash.17))
+        z.1   = ~r1.16
+    
+     6. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r1   = ~r1.16
+        hash  = hash.17
+        r2    = ~r1.16
+        z     = (hash.17⊕rot(~id.14, hash.17))
+        z.1   = ~k.15
+    
+     7. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r1   = ~r1.16
+        hash  = hash.17
+        r2    = zero
+        z     = (hash.17⊕rot(~id.14, hash.17))
+        z.1   = (~k.15⊕~r1.16)
+    
+     8. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r1   = ~r1.16
+        hash  = hash.17
+        r2    = (~k.15⊕~r1.16)
+        z     = (hash.17⊕rot(~id.14, hash.17))
+        z.1   = zero
+    
+     9. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r1   = ~k.16
+        hash  = hash.18
+        r2    = r2.19
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = r2.19
+    
+    10. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r1   = ~k.16
+        hash  = zero
+        r2    = r2.19
+        z     = rot(~id.15, zero)
+        z.1   = r2.19
+    
+    11. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r1   = ~r1.17
+        hash  = hash.18
+        r2    = r2.19
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = (~k.16⊕~r1.17⊕r2.19)
+    
+    12. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r1   = ~r1.17
+        hash  = zero
+        r2    = r2.19
+        z     = rot(~id.15, zero)
+        z.1   = (~k.16⊕~r1.17⊕r2.19)
+    
+    13. ~id   = ~id.19
+        ~k    = ~k.20
+        ~r1   = ~r1.21
+        hash  = hash.22
+        r2    = (~k.20⊕~r1.21⊕z.27)
+        z     = (hash.22⊕rot(~id.19, hash.22))
+        z.1   = z.27
+    
+    14. ~id   = ~id.19
+        ~k    = ~k.20
+        ~r1   = ~r1.21
+        hash  = zero
+        r2    = (~k.20⊕~r1.21⊕z.27)
+        z     = rot(~id.19, zero)
+        z.1   = z.27
+    
+    15. ~id   = ~id.45
+        ~k    = ~k.46
+        ~r1   = ~r1.47
+        hash  = zero
+        r2    = (~r1.47⊕x.88)
+        z     = rot(~id.45, zero)
+        z.1   = (~k.46⊕x.88)
+    
+    16. ~id   = ~id.46
+        ~k    = ~k.47
+        ~r1   = ~r1.48
+        hash  = hash.49
+        r2    = (~r1.48⊕x.90)
+        z     = (hash.49⊕rot(~id.46, hash.49))
+        z.1   = (~k.47⊕x.90)
+    
+    17. ~id   = ~id.46
+        ~k    = ~k.47
+        ~r1   = ~r1.48
+        hash  = zero
+        r2    = (~k.47⊕x.90)
+        z     = rot(~id.46, zero)
+        z.1   = (~r1.48⊕x.90)
+    
+    18. ~id   = ~id.47
+        ~k    = ~k.48
+        ~r1   = ~r1.49
+        hash  = hash.50
+        r2    = (~k.48⊕x.92)
+        z     = (hash.50⊕rot(~id.47, hash.50))
+        z.1   = (~r1.49⊕x.92)
+  */
+
+rule (modulo E) tag2:
+   [
+   In( rh((hash⊕rot(~id, hash))) ), !Tag( ~k, ~id ),
+   TagState( ~k, r1, ~r2, hash )
+   ]
+  --[ Alive( ~k, 'Reader' ), Commit( <'T', 'R', (~k⊕~r2⊕r1)> ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) tag2:
+     [ In( rh(z) ), !Tag( ~k, ~id ), TagState( ~k, r1, ~r2, hash ) ]
+    --[ Alive( ~k, 'Reader' ), Commit( <'T', 'R', z.1> ) ]->
+     [ ]
+    variants (modulo AC)
+     1. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r2   = ~r2.16
+        hash  = zero
+        r1    = ~k.15
+        z     = rot(~id.14, zero)
+        z.1   = ~r2.16
+    
+     2. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r2   = ~r2.16
+        hash  = zero
+        r1    = ~r2.16
+        z     = rot(~id.14, zero)
+        z.1   = ~k.15
+    
+     3. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r2   = ~r2.16
+        hash  = zero
+        r1    = zero
+        z     = rot(~id.14, zero)
+        z.1   = (~k.15⊕~r2.16)
+    
+     4. ~id   = ~id.14
+        ~k    = ~k.15
+        ~r2   = ~r2.16
+        hash  = zero
+        r1    = (~k.15⊕~r2.16)
+        z     = rot(~id.14, zero)
+        z.1   = zero
+    
+     5. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r2   = ~r2.17
+        hash  = hash.18
+        r1    = ~k.16
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = ~r2.17
+    
+     6. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r2   = ~r2.17
+        hash  = hash.18
+        r1    = ~r2.17
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = ~k.16
+    
+     7. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r2   = ~r2.17
+        hash  = hash.18
+        r1    = zero
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = (~k.16⊕~r2.17)
+    
+     8. ~id   = ~id.15
+        ~k    = ~k.16
+        ~r2   = ~r2.17
+        hash  = hash.18
+        r1    = (~k.16⊕~r2.17)
+        z     = (hash.18⊕rot(~id.15, hash.18))
+        z.1   = zero
+    
+     9. ~id   = ~id.16
+        ~k    = ~k.17
+        ~r2   = ~k.17
+        hash  = hash.19
+        r1    = r1.20
+        z     = (hash.19⊕rot(~id.16, hash.19))
+        z.1   = r1.20
+    
+    10. ~id   = ~id.16
+        ~k    = ~k.17
+        ~r2   = ~k.17
+        hash  = zero
+        r1    = r1.20
+        z     = rot(~id.16, zero)
+        z.1   = r1.20
+    
+    11. ~id   = ~id.16
+        ~k    = ~k.17
+        ~r2   = ~r2.18
+        hash  = hash.19
+        r1    = r1.20
+        z     = (hash.19⊕rot(~id.16, hash.19))
+        z.1   = (~k.17⊕~r2.18⊕r1.20)
+    
+    12. ~id   = ~id.16
+        ~k    = ~k.17
+        ~r2   = ~r2.18
+        hash  = zero
+        r1    = r1.20
+        z     = rot(~id.16, zero)
+        z.1   = (~k.17⊕~r2.18⊕r1.20)
+    
+    13. ~id   = ~id.21
+        ~k    = ~k.22
+        ~r2   = ~r2.23
+        hash  = hash.24
+        r1    = (~k.22⊕~r2.23⊕z.30)
+        z     = (hash.24⊕rot(~id.21, hash.24))
+        z.1   = z.30
+    
+    14. ~id   = ~id.21
+        ~k    = ~k.22
+        ~r2   = ~r2.23
+        hash  = zero
+        r1    = (~k.22⊕~r2.23⊕z.30)
+        z     = rot(~id.21, zero)
+        z.1   = z.30
+    
+    15. ~id   = ~id.33
+        ~k    = ~k.34
+        ~r2   = ~r2.35
+        hash  = zero
+        r1    = (~r2.35⊕x.64)
+        z     = rot(~id.33, zero)
+        z.1   = (~k.34⊕x.64)
+    
+    16. ~id   = ~id.34
+        ~k    = ~k.35
+        ~r2   = ~r2.36
+        hash  = hash.37
+        r1    = (~r2.36⊕x.66)
+        z     = (hash.37⊕rot(~id.34, hash.37))
+        z.1   = (~k.35⊕x.66)
+    
+    17. ~id   = ~id.34
+        ~k    = ~k.35
+        ~r2   = ~r2.36
+        hash  = zero
+        r1    = (~k.35⊕x.66)
+        z     = rot(~id.34, zero)
+        z.1   = (~r2.36⊕x.66)
+    
+    18. ~id   = ~id.35
+        ~k    = ~k.36
+        ~r2   = ~r2.37
+        hash  = hash.38
+        r1    = (~k.36⊕x.68)
+        z     = (hash.38⊕rot(~id.35, hash.38))
+        z.1   = (~r2.37⊕x.68)
+  */
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+lemma recentalive_tag:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( Alive( x, 'Tag' ) @ #i )
+  case reader2
+  solve( Initiated( ~r1 ) ▶₀ #i )
+    case reader1
+    solve( !Reader( ~k, ~id ) ▶₁ #i )
+      case Setup
+      solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 )
+        case tag1
+        solve( splitEqs(0) )
+          case split_case_7
+          solve( !KU( (~r1⊕x) ) @ #vk.2 )
+            case c_xor
+            solve( splitEqs(1) )
+              case split_case_1
+              solve( !KU( ~r1 ) @ #vk.5 )
+                case reader1
+                solve( !KU( ~r2 ) @ #vk.5 )
+                  case tag1
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma recentalive_reader:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( Alive( x, 'Reader' ) @ #i )
+  case tag2
+  solve( !Tag( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( TagState( ~k, r1, ~r2, hash ) ▶₂ #i )
+      case tag1
+      solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk )
+        case c_rh
+        solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.2 )
+          case c_xor
+          solve( !KU( rot(~id, h(z)) ) @ #vk.3 )
+            case c_rot
+            by solve( !KU( ~id ) @ #vk.5 )
+          qed
+        next
+          case coerce
+          solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.1 )
+            case reader1
+            by contradiction /* impossible chain */
+          next
+            case reader2
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case tag1
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case reader2
+        solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.4 )
+          case c_lh
+          solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.5 )
+            case c_xor
+            solve( !KU( rot(~id, h(z)) ) @ #vk.6 )
+              case c_rot
+              by solve( !KU( ~id ) @ #vk.8 )
+            qed
+          next
+            case coerce
+            solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.2 )
+              case reader1
+              by contradiction /* impossible chain */
+            next
+              case reader2
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case tag1
+              by contradiction /* from formulas */
+            qed
+          qed
+        next
+          case tag1
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma noninjectiveagreement_tag:
+  all-traces
+  "∀ t #i.
+    (Commit( <'T', 'R', t> ) @ #i) ⇒ (∃ #j. Running( <'T', 'R', t> ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ t #i.
+  (Commit( <'T', 'R', t> ) @ #i)
+ ∧
+  ∀ #j. (Running( <'T', 'R', t> ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( Commit( <'T', 'R', t> ) @ #i )
+  case tag2
+  solve( !Tag( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( TagState( ~k, r1, ~r2, hash ) ▶₂ #i )
+      case tag1
+      solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk )
+        case c_rh
+        solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.2 )
+          case c_xor
+          solve( !KU( rot(~id, h(z)) ) @ #vk.3 )
+            case c_rot
+            by solve( !KU( ~id ) @ #vk.5 )
+          qed
+        next
+          case coerce
+          solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.1 )
+            case reader1
+            by contradiction /* impossible chain */
+          next
+            case reader2
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case tag1
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case reader2
+        solve( splitEqs(0) )
+          case split_case_1
+          by contradiction /* from formulas */
+        next
+          case split_case_2
+          by contradiction /* from formulas */
+        next
+          case split_case_3
+          by contradiction /* from formulas */
+        next
+          case split_case_4
+          by contradiction /* from formulas */
+        next
+          case split_case_5
+          by contradiction /* from formulas */
+        next
+          case split_case_6
+          by contradiction /* from formulas */
+        next
+          case split_case_7
+          solve( splitEqs(1) )
+            case split
+            by contradiction /* from formulas */
+          qed
+        next
+          case split_case_8
+          solve( splitEqs(1) )
+            case split
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma noninjectiveagreement_reader:
+  all-traces
+  "∀ t #i.
+    (Commit( <'R', 'T', t> ) @ #i) ⇒ (∃ #j. Running( <'R', 'T', t> ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ t #i.
+  (Commit( <'R', 'T', t> ) @ #i)
+ ∧
+  ∀ #j. (Running( <'R', 'T', t> ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( Commit( <'R', 'T', t> ) @ #i )
+  case reader2
+  solve( Initiated( ~r1 ) ▶₀ #i )
+    case reader1
+    solve( !Reader( ~k, ~id ) ▶₁ #i )
+      case Setup
+      solve( !KU( lh((h(t)⊕rot(~id, h(t)))) ) @ #vk.2 )
+        case c_lh
+        solve( !KU( (h(t)⊕rot(~id, h(t))) ) @ #vk.3 )
+          case c_xor
+          solve( !KU( rot(~id, h(t)) ) @ #vk.4 )
+            case c_rot
+            by solve( !KU( ~id ) @ #vk.6 )
+          qed
+        next
+          case coerce
+          solve( !KD( (h(t)⊕rot(~id, h(t))) ) ▶₀ #vk.1 )
+            case reader1
+            by contradiction /* impossible chain */
+          next
+            case reader2
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case tag1
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case tag1
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma executable:
+  exists-trace
+  "∃ x #i #j.
+    ((Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+    (¬(∃ #k. (Response( x, 'Tag' ) @ #k) ∧ (¬(#j = #k))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  ∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k"
+*/
+simplify
+solve( Alive( x, 'Reader' ) @ #i )
+  case tag2
+  solve( !Tag( ~k, ~id ) ▶₁ #i )
+    case Setup
+    solve( TagState( ~k, r1, ~r2, hash ) ▶₂ #i )
+      case tag1
+      solve( Response( ~k, 'Tag' ) @ #j )
+        case tag1
+        solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk )
+          case reader2
+          solve( splitEqs(0) )
+            case split_case_3
+            solve( splitEqs(2) )
+              case split_case_1
+              solve( !KU( ~r1 ) @ #vk.1 )
+                case reader1
+                solve( !KU( ~r2 ) @ #vk.3 )
+                  case tag1
+                  solve( !KU( lh((h((~k⊕~r1⊕~r2))⊕rot(~id, h((~k⊕~r1⊕~r2))))) ) @ #vk.4 )
+                    case tag1
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/csf18-xor/CH07.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf18-xor/CH07.spthy
+
+  output:          examples/csf18-xor/CH07.spthy.tmp
+  processing time: 1.620686s
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
+  recentalive_reader (all-traces): verified (23 steps)
+  noninjectiveagreement_tag (all-traces): verified (25 steps)
+  noninjectiveagreement_reader (all-traces): verified (15 steps)
+  executable (exists-trace): verified (12 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf18-xor/CH07.spthy
+
+  output:          examples/csf18-xor/CH07.spthy.tmp
+  processing time: 1.620686s
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
+  recentalive_reader (all-traces): verified (23 steps)
+  noninjectiveagreement_tag (all-traces): verified (25 steps)
+  noninjectiveagreement_reader (all-traces): verified (15 steps)
+  executable (exists-trace): verified (12 steps)
+
+==============================================================================
+*/

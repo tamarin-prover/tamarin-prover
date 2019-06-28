@@ -25,6 +25,7 @@ rule token = parse
      | "asymmetric-encryption" as theory { BUILTIN_THEORY (theory) }
      | "multiset" as theory { BUILTIN_THEORY (theory) }
      | "signing" as theory     	  	 { BUILTIN_THEORY (theory) }
+     | "xor" as theory     	  	 { BUILTIN_THEORY (theory) }
      | "functions" { FUNCTIONS }
      | "equations" { EQUATIONS }
      | "predicates" { PREDICATES }
@@ -33,6 +34,7 @@ rule token = parse
      | "lemma"     { LEMMA }
      | "axiom"       { Printf.eprintf "\"axiom\" is deprecated, replace with \"restriction\".\n"; RESTRICTION }
      | "restriction" { RESTRICTION }
+     | "verdictfunction" { VERDICTFUNCTION }
      | "private" as attr     { FUNCTION_ATTR(attr) }
      | "typing" 			{ Printf.eprintf "Option \"typing\" is deprecated, replace with \"sources\".\n";  LEMMA_ATTR ("sources") } 
      | "sources"    as attr		{ LEMMA_ATTR (attr) } 
@@ -43,16 +45,36 @@ rule token = parse
      | "hide_lemma" { HIDE_LEMMA }
      | "all-traces" { ALL_TRACES ('A') }
      | "exists-trace" { EXISTS_TRACE ('E') }
-     | "All"	   { ALL }
-     | "Ex"	   { EXISTS }
+     | "All"
+     | "∀"         { ALL }
+     | "Ex"
+     | "∃"	   { EXISTS }
+     | "⇔"
      | "<=>"	   { IFF }
+     | "⇒"
      | "==>"	   { IMP }
+     | "¬"
      | "not"	   { NOT}
+     | "⊤"
      | "T"	   { TRUE }
+     | "⊥"
      | "F"	   { FALSE }
+     | "∨"
      | "|"	   { OR }
+     | "∧"
      | "&"	   { AND }
      | "@"	   { AT }
+     | "otherwise"	   { OTHERWISE }
+     | "empty"	   { EMPTY }
+     | "accounts" { ACCOUNTS }
+     | "coarse" { COARSE }
+     | "cases" { CASES }
+     | "control" { CONTROL }
+     | "control-equivalence" { CONTROLEQUIVALENCE }
+     | "control-subset" { CONTROLSUBSET }
+     | "for" { FOR }
+     | "parties" { PARTIES }
+     | "->"	   { RIGHTARROW }
      | "-->"	   { TRANSIT }
      | "--["	   { OPENTRANS }
      | "]->"	   { CLOSETRANS }
@@ -73,6 +95,9 @@ rule token = parse
      | '~'	   { TILDE }
      | '#'	   { SHARP }
      | '+'	   { PLUS }
+     | "⊕"
+     | "XOR"       { XOR }
+     | "zero"      { ZERO }
      | '0'         { NULL } 
      | "new" 	   { NEW }
      | "in"	   { IN }

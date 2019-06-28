@@ -9,6 +9,8 @@ equations:
     prefix(enc(<X, Y>, k)) = enc(X, k),
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) setup:
    [ Fr( ~k ) ] --[ KeyGen( $A ) ]-> [ !SharedKeyWithServer( $A, ~k ) ]
 
@@ -125,7 +127,7 @@ analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 7.690356636s
+  processing time: 11.777222s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -136,7 +138,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 7.690356636s
+  processing time: 11.777222s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

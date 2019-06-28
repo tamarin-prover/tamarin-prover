@@ -6,6 +6,8 @@ builtins: multiset
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~v1 ) ]
   --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
@@ -287,7 +289,7 @@ analyzing: examples/regression/diff/issue198-1.spthy
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.274697664s
+  processing time: 1.469272s
   DiffLemma:  Observational_equivalence : verified (84 steps)
 
 ------------------------------------------------------------------------------
@@ -298,7 +300,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.274697664s
+  processing time: 1.469272s
   DiffLemma:  Observational_equivalence : verified (84 steps)
 
 ==============================================================================

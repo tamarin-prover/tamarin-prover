@@ -1,0 +1,550 @@
+theory CRXOR begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) initiator:
+   [ Fr( ~na ) ] --[ Challenge( ~na ) ]-> [ Out( ~na ), Initiated( ~na ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) responder:
+   [ In( na ), Fr( ~nb ), !RespLTK( ~k ) ]
+  --[ Response( ~k ), Neq( na, zero ), NeqForExec( na, zero ) ]->
+   [ Out( <h((~k⊕~nb⊕na)), ~nb> ) ]
+
+  /*
+  rule (modulo AC) responder:
+     [ In( na ), Fr( ~nb ), !RespLTK( ~k ) ]
+    --[ Response( ~k ), Neq( na, zero ), NeqForExec( na, zero ) ]->
+     [ Out( <h(z), ~nb> ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.5
+       ~nb   = ~nb.5
+       na    = na.5
+       z     = (~k.5⊕~nb.5⊕na.5)
+    
+    2. ~k    = ~k.5
+       ~nb   = ~nb.5
+       na    = zero
+       z     = (~k.5⊕~nb.5)
+    
+    3. ~k    = ~x.5
+       ~nb   = ~x.5
+       na    = na.6
+       z     = na.6
+    
+    4. ~k    = ~x.5
+       ~nb   = ~nb.6
+       na    = ~x.5
+       z     = ~nb.6
+    
+    5. ~k    = ~x.5
+       ~nb   = ~x.6
+       na    = (~x.5⊕~x.6)
+       z     = zero
+    
+    6. ~k    = ~x.5
+       ~nb   = ~x.6
+       na    = (~x.5⊕~x.6⊕x.7)
+       z     = x.7
+    
+    7. ~k    = ~x.5
+       ~nb   = ~nb.8
+       na    = (~x.5⊕x.7)
+       z     = (x.7⊕~nb.8)
+    
+    8. ~k    = ~k.6
+       ~nb   = ~x.5
+       na    = ~x.5
+       z     = ~k.6
+    
+    9. ~k    = ~k.7
+       ~nb   = ~x.5
+       na    = (~x.5⊕x.6)
+       z     = (x.6⊕~k.7)
+  */
+
+rule (modulo E) initiator2:
+   [ Initiated( ~na ), !InitLTK( ~k ), In( <m, nb> ) ]
+  --[ Alive( ~na, ~k ), Eq( h((~k⊕~na⊕nb)), m ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) initiator2:
+     [ Initiated( ~na ), !InitLTK( ~k ), In( <m, nb> ) ]
+    --[ Alive( ~na, ~k ), Eq( h(z), m ) ]->
+     [ ]
+    variants (modulo AC)
+    1. ~k    = ~k.6
+       ~na   = ~na.6
+       nb    = nb.6
+       z     = (~k.6⊕~na.6⊕nb.6)
+    
+    2. ~k    = ~k.6
+       ~na   = ~na.6
+       nb    = zero
+       z     = (~k.6⊕~na.6)
+    
+    3. ~k    = ~x.6
+       ~na   = ~x.6
+       nb    = nb.7
+       z     = nb.7
+    
+    4. ~k    = ~x.6
+       ~na   = ~na.7
+       nb    = ~x.6
+       z     = ~na.7
+    
+    5. ~k    = ~x.6
+       ~na   = ~x.7
+       nb    = (~x.6⊕~x.7)
+       z     = zero
+    
+    6. ~k    = ~x.6
+       ~na   = ~x.7
+       nb    = (~x.6⊕~x.7⊕x.9)
+       z     = x.9
+    
+    7. ~k    = ~x.6
+       ~na   = ~na.10
+       nb    = (~x.6⊕x.9)
+       z     = (x.9⊕~na.10)
+    
+    8. ~k    = ~k.7
+       ~na   = ~x.6
+       nb    = ~x.6
+       z     = ~k.7
+    
+    9. ~k    = ~k.9
+       ~na   = ~x.6
+       nb    = (~x.6⊕x.8)
+       z     = (x.8⊕~k.9)
+  */
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction inequality:
+  "¬(∃ x #i. Neq( x, x ) @ #i)"
+  // safety formula
+
+lemma alive:
+  all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j. Response( y ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Alive( x, y ) @ #i) ∧ ∀ #j. (Response( y ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( Initiated( ~na ) ▶₀ #i )
+  case initiator
+  solve( !InitLTK( ~k ) ▶₁ #i )
+    case Setup
+    solve( splitEqs(0) )
+      case split_case_1
+      by solve( !KU( ~k ) @ #vk.2 )
+    next
+      case split_case_2
+      solve( !KU( h(~k) ) @ #vk.1 )
+        case c_h
+        by solve( !KU( ~k ) @ #vk.3 )
+      next
+        case responder
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_3
+      solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
+        case c_h
+        solve( !KU( (~k⊕~na⊕nb) ) @ #vk.3 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕nb) ) @ #vk.4 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕nb) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕~na) ) @ #vk.4 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕~na) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k⊕~na⊕nb) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case responder
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_4
+      solve( !KU( h((~k⊕~na)) ) @ #vk.1 )
+        case c_h
+        solve( !KU( (~k⊕~na) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case responder
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_5
+      solve( !KU( (~k⊕~na) ) @ #vk.2 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
+        case coerce
+        solve( !KD( (~k⊕~na) ) ▶₀ #vk )
+          case initiator
+          by contradiction /* impossible chain */
+        next
+          case responder
+          solve( (#vl, 0) ~~> (#vk, 0) )
+            case d_0_fst
+            by solve( (#vr.3, 0) ~~> (#vk, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      qed
+    next
+      case split_case_6
+      solve( !KU( (~k⊕~na⊕z) ) @ #vk.2 )
+        case c_xor_case_1
+        solve( !KU( (~k⊕z) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case c_xor_case_2
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
+        case c_xor_case_3
+        solve( !KU( (~k⊕~na) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case coerce
+        solve( !KD( (~k⊕~na⊕z) ) ▶₀ #vk )
+          case initiator
+          by contradiction /* impossible chain */
+        next
+          case responder
+          solve( (#vl, 0) ~~> (#vk, 0) )
+            case d_0_fst
+            by solve( (#vr.3, 0) ~~> (#vk, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      qed
+    next
+      case split_case_7
+      solve( !KU( h((~k⊕x)) ) @ #vk.1 )
+        case c_h
+        solve( !KU( (~na⊕x) ) @ #vk.2 )
+          case c_xor
+          solve( !KU( (~k⊕x) ) @ #vk.3 )
+            case c_xor
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case coerce
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              case initiator
+              by contradiction /* impossible chain */
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~na⊕x) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case responder
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_8
+      solve( !KU( h((~na⊕x)) ) @ #vk.1 )
+        case c_h
+        solve( !KU( (~k⊕x) ) @ #vk.2 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+            case initiator
+            by contradiction /* impossible chain */
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          qed
+        qed
+      next
+        case responder
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma recentalive_tag:
+  all-traces
+  "∀ x y #i.
+    (Alive( x, y ) @ #i) ⇒
+    (∃ #j #k.
+      (((Challenge( x ) @ #k) ∧ (Response( y ) @ #j)) ∧ (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i.
+  (Alive( x, y ) @ #i)
+ ∧
+  ∀ #j #k.
+   (Challenge( x ) @ #k) ∧ (Response( y ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( Initiated( ~na ) ▶₀ #i )
+  case initiator
+  solve( !InitLTK( ~k ) ▶₁ #i )
+    case Setup
+    solve( splitEqs(0) )
+      case split_case_7
+      solve( !KU( h((~k⊕x)) ) @ #vk.1 )
+        case responder
+        solve( !KU( (~na⊕x) ) @ #vk.2 )
+          case c_xor
+          solve( splitEqs(2) )
+            case split_case_2
+            solve( !KU( (~nb⊕na.1) ) @ #vk.4 )
+              case c_xor
+              solve( !KU( ~na ) @ #vk.5 )
+                case initiator
+                solve( !KU( ~nb ) @ #vk.6 )
+                  case responder
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executable:
+  exists-trace
+  "∃ x y #i #j.
+    (((Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)) ∧
+     (¬(∃ #k. (Response( y ) @ #k) ∧ (¬(#j = #k))))) ∧
+    (¬(∃ #l. NeqForExec( x, x ) @ #l))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)
+ ∧
+  (∀ #k. (Response( y ) @ #k) ⇒ #j = #k) ∧
+  (∀ #l. (NeqForExec( x, x ) @ #l) ⇒ ⊥)"
+*/
+simplify
+solve( Initiated( ~na ) ▶₀ #i )
+  case initiator
+  solve( !InitLTK( ~k ) ▶₁ #i )
+    case Setup
+    solve( !RespLTK( ~k ) ▶₂ #j )
+      case Setup
+      solve( splitEqs(0) )
+        case split_case_3
+        solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
+          case responder
+          solve( splitEqs(1) )
+            case split_case_2
+            solve( !KU( ~nb ) @ #vk.2 )
+              case responder
+              solve( !KU( ~na ) @ #vk.3 )
+                case initiator
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+SAPIC tool: 'sapic'
+Checking availablity ... OK.
+
+
+analyzing: examples/csf18-xor/CRxor.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf18-xor/CRxor.spthy
+
+  output:          examples/csf18-xor/CRxor.spthy.tmp
+  processing time: 1.124793s
+  alive (all-traces): verified (92 steps)
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
+  executable (exists-trace): verified (10 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf18-xor/CRxor.spthy
+
+  output:          examples/csf18-xor/CRxor.spthy.tmp
+  processing time: 1.124793s
+  alive (all-traces): verified (92 steps)
+  recentalive_tag (all-traces): falsified - found trace (11 steps)
+  executable (exists-trace): verified (10 steps)
+
+==============================================================================
+*/

@@ -11,6 +11,8 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+heuristic: p
+
 rule (modulo E) Init_:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -491,18 +493,18 @@ induction
       case case_1
       solve( State_11211111( a, c, h, k ) ▶₀ #t1 )
         case if_encSuccc_k_0_1121111
-        solve( Insert( <'key', h>, k ) @ #t2 )
-          case insert_key_h_k_1111111
-          solve( State_1111111( h, k ) ▶₀ #t2 )
-            case event_NewKeyh_k_111111
-            solve( Insert( <'att', ~n>, 'dec' ) @ #t2.1 )
-              case insert_att_h_dec__11111111
-              solve( State_11111111( ~n, k ) ▶₀ #t2.1 )
-                case insert_key_h_k_1111111
-                solve( !KU( ~n ) @ #vk.1 )
-                  case out_h_111111111
-                  solve( splitEqs(0) )
-                    case split_case_1
+        solve( splitEqs(0) )
+          case split_case_1
+          solve( Insert( <'key', h>, k ) @ #t2 )
+            case insert_key_h_k_1111111
+            solve( State_1111111( h, k ) ▶₀ #t2 )
+              case event_NewKeyh_k_111111
+              solve( Insert( <'att', ~n>, 'dec' ) @ #t2.1 )
+                case insert_att_h_dec__11111111
+                solve( State_11111111( ~n, k ) ▶₀ #t2.1 )
+                  case insert_key_h_k_1111111
+                  solve( !KU( ~n ) @ #vk.1 )
+                    case out_h_111111111
                     SOLVED // trace found
                   qed
                 qed
@@ -755,7 +757,7 @@ analyzing: case-studies-sapic-regression/basic/running-example.spthy
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 1.473584676s
+  processing time: 8.964893s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -773,7 +775,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/basic/running-example.spthy
 
   output:          case-studies-sapic-regression/basic/running-example.spthy.tmp
-  processing time: 1.473584676s
+  processing time: 8.964893s
   WARNING: 9 wellformedness check failed!
            The analysis results might be wrong!
   

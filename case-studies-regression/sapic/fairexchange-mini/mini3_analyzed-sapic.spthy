@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -195,7 +197,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini3.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini3.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini3.spthy.tmp
-  processing time: 0.094715554s
+  processing time: 0.136785s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -212,7 +214,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini3.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini3.spthy.tmp
-  processing time: 0.094715554s
+  processing time: 0.136785s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

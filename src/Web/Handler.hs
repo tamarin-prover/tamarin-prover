@@ -61,15 +61,15 @@ import           Theory                       (
     thyName, diffThyName, removeLemma,
     removeLemmaDiff, removeDiffLemma,
     openTheory, sorryProver, runAutoProver,
-    sorryDiffProver, runAutoDiffProver, 
-    prettyClosedTheory, prettyOpenTheory, 
-    openDiffTheory, 
+    sorryDiffProver, runAutoDiffProver,
+    prettyClosedTheory, prettyOpenTheory,
+    openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apDefaultHeuristic)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
-import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON 
+import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import           Web.Hamlet
 import           Web.Instances                ()
 import           Web.Settings
@@ -141,7 +141,7 @@ getTheory :: TheoryIdx -> Handler (Maybe EitherTheoryInfo)
 getTheory idx = do
     yesod <- getYesod
     liftIO $ withMVar (theoryVar yesod) $ return. M.lookup idx
- 
+
 
 -- | Store a theory, return index.
 putTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
@@ -183,7 +183,7 @@ putDiffTheory parent origin thy = do
       storeTheory yesod newThy idx
       return (M.insert idx newThy theories, idx)
 
-      
+
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
 delTheory idx = do
@@ -248,7 +248,7 @@ adjEitherTheory idx f = do
 --             Trace _ -> error "adjTheory: found normal Theory"
 --         Nothing -> error "adjTheory: invalid theory index"
 
-        
+
 -- | Debug tracing.
 dtrace :: WebUI -> String -> a -> a
 dtrace yesod msg | debug yesod = trace msg
@@ -372,7 +372,7 @@ withBothTheory idx handler diffhandler = do
                           Diff ti -> diffhandler ti
     Nothing -> notFound
 
-    
+
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
 withDiffTheory :: TheoryIdx
@@ -397,7 +397,7 @@ withEitherTheory idx handler = do
     Just ti  -> handler ti
     Nothing -> notFound
 
-    
+
 {-
 -- | Run a form and provide a JSON response.
 -- formHandler :: (HamletValue h, HamletUrl h ~ WebUIRoute, h ~ Widget ())
@@ -518,8 +518,8 @@ getOverviewR idx path = withTheory idx ( \ti -> do
   defaultLayout $ do
     overview <- liftIO $ overviewTpl renderF ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-    overview ) 
-                        
+    overview )
+
 -- | Show overview over diff theory (framed layout).
 getOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
 getOverviewDiffR idx path = withDiffTheory idx ( \ti -> do
@@ -536,7 +536,7 @@ getTheorySourceR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
     prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
@@ -545,7 +545,7 @@ getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
     prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory    
+    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
@@ -586,7 +586,7 @@ getTheoryPathMR :: TheoryIdx
                 -> Handler RepJson
 getTheoryPathMR idx path = do
     renderUrl <- getUrlRender
-    jsonValue <- withTheory idx (go renderUrl path) 
+    jsonValue <- withTheory idx (go renderUrl path)
     return $ RepJson $ toContent jsonValue
   where
     --
@@ -606,7 +606,7 @@ getTheoryPathMR idx path = do
       let title = T.pack $ titleThyPath (tiTheory ti) path
       let html = htmlThyPath renderUrl ti path
       return $ responseToJson (JsonHtml title $ toContent html)
-    
+
 -- | Show a given path within a diff theory (main view).
 getTheoryPathDiffMR :: TheoryIdx
                     -> DiffTheoryPath
@@ -616,7 +616,7 @@ getTheoryPathDiffMR idx path = do
     renderUrl <- getUrlRender
     jsonValue <- withDiffTheory idx (goDiff renderUrl path)
     return $ RepJson $ toContent jsonValue
-  where    
+  where
     --
     -- Handle method paths by trying to solve the given goal/method
     --
@@ -639,8 +639,8 @@ getTheoryPathDiffMR idx path = do
     goDiff renderUrl _ ti = do
       let title = T.pack $ titleDiffThyPath (dtiTheory ti) path
       let html = htmlDiffThyPath renderUrl ti path
-      return $ responseToJson (JsonHtml title $ toContent html) 
-    
+      return $ responseToJson (JsonHtml title $ toContent html)
+
 
 -- | Run the some prover on a given proof path.
 getProverR :: (T.Text, AutoProver -> Prover)
@@ -659,7 +659,7 @@ getProverR (name, mkProver) idx path = do
 
     go _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
-      
+
 -- | Run the some prover on a given proof path.
 getProverDiffR :: (T.Text, AutoProver -> Prover)
                -> TheoryIdx -> Side -> DiffTheoryPath -> Handler RepJson
@@ -667,7 +667,7 @@ getProverDiffR (name, mkProver) idx s path = do
     jsonValue <- withDiffTheory idx (goDiff s path)
     return $ RepJson $ toContent jsonValue
   where
-    goDiff s'' (DiffTheoryProof s' lemma proofPath) ti = 
+    goDiff s'' (DiffTheoryProof s' lemma proofPath) ti =
         if s''==s'
            then modifyDiffTheory ti
               (\thy ->
@@ -690,7 +690,7 @@ getDiffProverR (name, mkProver) idx path = do
     jsonValue <- withDiffTheory idx (goDiff path)
     return $ RepJson $ toContent jsonValue
   where
-    goDiff (DiffTheoryDiffProof lemma proofPath) ti = 
+    goDiff (DiffTheoryDiffProof lemma proofPath) ti =
         modifyDiffTheory ti
               (\thy ->
                   return $ applyDiffProverAtPath thy lemma proofPath autoProver)
@@ -702,7 +702,7 @@ getDiffProverR (name, mkProver) idx path = do
     goDiff _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
-      
+
 -- | Run an autoprover on a given proof path.
 getAutoProverR :: TheoryIdx
                -> SolutionExtractor
@@ -722,9 +722,10 @@ getAutoProverR idx extractor bound =
         | otherwise = (Nothing,    []                               )
 
     (proverName, extractorQualfier) = case extractor of
-        CutNothing -> ("characterization", ["dfs"])
-        CutDFS     -> ("the autoprover",   []     )
-        CutBFS     -> ("the autoprover",   ["bfs"])
+        CutNothing         -> ("characterization", ["dfs"]   )
+        CutDFS             -> ("the autoprover",   []        )
+        CutBFS             -> ("the autoprover",   ["bfs"]   )
+        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
 
 -- | Run an autoprover on a given proof path.
 getAutoProverDiffR :: TheoryIdx
@@ -745,9 +746,10 @@ getAutoProverDiffR idx extractor bound s =
         | otherwise = (Nothing,    []                               )
 
     (proverName, extractorQualfier) = case extractor of
-        CutNothing -> ("characterization", ["dfs"])
-        CutDFS     -> ("the autoprover",   []     )
-        CutBFS     -> ("the autoprover",   ["bfs"])
+        CutNothing         -> ("characterization", ["dfs"]   )
+        CutDFS             -> ("the autoprover",   []        )
+        CutBFS             -> ("the autoprover",   ["bfs"]   )
+        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
 
 -- | Run an autoprover on a given proof path.
 getAutoDiffProverR :: TheoryIdx
@@ -770,6 +772,7 @@ getAutoDiffProverR idx extractor bound =
     (proverName, extractorQualfier) = case extractor of
         CutNothing -> ("characterization", ["dfs"])
         CutDFS     -> ("the autoprover",   []     )
+        CutSingleThreadDFS -> ("the autoprover",   []     )
         CutBFS     -> ("the autoprover",   ["bfs"])
 
 
@@ -887,12 +890,12 @@ getNextTheoryPathR :: TheoryIdx         -- ^ Theory index
                    -> Handler RepPlain
 getNextTheoryPathR idx md path = withTheory idx (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathMR idx $ next md (tiTheory ti) path)
-    return . RepPlain $ toContent url)  
+    return . RepPlain $ toContent url)
   where
     next "normal" = nextThyPath
     next "smart"  = nextSmartThyPath
     next _        = const id
-    
+
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getNextTheoryPathDiffR :: TheoryIdx         -- ^ Theory index
@@ -901,7 +904,7 @@ getNextTheoryPathDiffR :: TheoryIdx         -- ^ Theory index
                        -> Handler RepPlain
 getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ nextDiff md (dtiTheory ti) path)
-    return . RepPlain $ toContent url) 
+    return . RepPlain $ toContent url)
   where
     nextDiff "normal" = nextDiffThyPath
     nextDiff "smart"  = nextSmartDiffThyPath
@@ -912,7 +915,7 @@ getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
 getPrevTheoryPathR :: TheoryIdx -> String -> TheoryPath -> Handler RepPlain
 getPrevTheoryPathR idx md path = withTheory idx (\ti -> do
     url <- getUrlRender <*> pure (TheoryPathMR idx $ prev md (tiTheory ti) path)
-    return $ RepPlain $ toContent url) 
+    return $ RepPlain $ toContent url)
   where
     prev "normal" = prevThyPath
     prev "smart" = prevSmartThyPath
@@ -1024,7 +1027,7 @@ postEditPathR _ _ =
 -- | Delete a given proof step.
 getDeleteStepR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getDeleteStepR idx path = do
-    jsonValue <- withTheory idx (go path) 
+    jsonValue <- withTheory idx (go path)
     return $ RepJson $ toContent jsonValue
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
@@ -1116,10 +1119,10 @@ getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
               jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
     prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti 
-    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti 
+    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti
     same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
     same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
-    setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo 
+    setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo
     setPrimary bool (Trace ti)  = Trace (ti { tiPrimary  = bool })
     setPrimary bool (Diff ti)     = Diff    (ti { dtiPrimary = bool })
 

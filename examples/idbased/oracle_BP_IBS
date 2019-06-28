@@ -1,0 +1,92 @@
+#!/usr/bin/python
+
+import re
+import os
+import sys
+debug = True
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+
+# INPUT:
+# - lines contain a list of "%i:goal" where "%i" is the index of the goal
+# - lemma contain the name of the lemma under scrutiny
+# OUTPUT:
+# - (on stdout) a list of ordered index separated by EOL
+
+
+rank = []                          # list of list of goals, main list is ordered by priority
+maxPrio = 101
+for i in range(0,maxPrio):
+  rank.append([])
+  
+def disj(listStrs, line):
+  return(any([re.match(string, line) for string in listStrs]))
+  
+# List of goals in priority order:
+# !Client(, !Server(
+# ~~>
+# KU( ~key)
+# KU(KDF(
+# CreateFastId
+# CreateMK(  
+# F_MK_?(
+  
+# Abort and do not help Tamarin if we are not proving the main source lemma
+if False and not(lemma == "mainSourceLemma"):
+  exit(0)
+  
+for line in lines:
+  num = line.split(':')[0]
+  goal = line.split(':')[0]
+  if debug:
+    sys.stderr.write(line)
+
+  # Prio 94
+  if re.match('.*St_.*\(.*', line): # F_MK_C or F_MK_S
+    rank[94].append(num)
+
+  # Priority 92
+  if re.match('.*KU\( ~.*', line):
+    rank[91].append(num)
+
+  # Prio 90
+  if re.match('.*~~>.*', line):
+    rank[90].append(num)
+
+  # Prio 85
+  if re.match('.*KU\( KDF\(.*', line):
+    rank[85].append(num)
+
+  # Prio 84
+  if re.match('.*KU\( IBPriv\(.*', line):
+    rank[84].append(num)
+    
+  # Prio 82
+  if re.match('.*KU\( idsign\(.*', line):
+    rank[82].append(num)
+    
+  # Prio 80
+  if disj(['.*KU\( em\(.*','.*KU\( pmult\(.*'], line):
+    rank[80].append(num)
+
+
+  # Prio 50
+  if re.match('.*!IB_.*', line): # F_MK_C or F_MK_S
+    rank[40].append(num)
+
+  # Prio 40
+  if re.match('.*splitEqs\(.*', line): # F_MK_C or F_MK_S
+    rank[40].append(num)
+
+  # # Prio 40
+  # if re.match('.*F_MK_.\( .*', line): # F_MK_C or F_MK_S
+  #   rank[40].append(num)
+
+# Ordering all goals by ranking (higher first)
+for listGoals in reversed(rank):
+  for goal in listGoals:
+    if debug:
+      sys.stderr.write(goal)
+      print goal
+

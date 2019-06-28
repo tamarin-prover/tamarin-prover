@@ -10,6 +10,8 @@ equations:
     revealVerify(revealSign(x.1, x.2), x.1, pk(x.2)) = true,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) ONE:
    [ Fr( ~sk ), Fr( ~random ) ]
   -->
@@ -76,7 +78,7 @@ analyzing: examples/regression/trace/issue193.spthy
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.042209184s
+  processing time: 0.090618s
   debug (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -87,7 +89,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.042209184s
+  processing time: 0.090618s
   debug (exists-trace): verified (4 steps)
 
 ==============================================================================

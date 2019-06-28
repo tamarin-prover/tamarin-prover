@@ -2,7 +2,7 @@ name:               tamarin-prover-theory
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            1.5.0
+version:            1.5.1
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -22,7 +22,7 @@ description:        This is an internal library of the Tamarin prover for
                     (<hackage.haskell.org/package/tamarin-prover>).
                     .
                     This library provides the types to represent security
-                    protocol, and it implements the constraint solver.
+                    protocols, and it implements the constraint solver.
 
 homepage:           https://tamarin-prover.github.io/
 
@@ -58,6 +58,7 @@ library
       , text
       , transformers
       , uniplate
+      , exceptions
 
       , tamarin-prover-utils
       , tamarin-prover-term
@@ -84,12 +85,16 @@ library
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
+      Theory.Sapic
+      Theory.Sapic.Print
+
       Theory.Model
       Theory.Model.Atom
       Theory.Model.Fact
       Theory.Model.Formula
       Theory.Model.Rule
       Theory.Model.Signature
+
 
       Theory.Text.Pretty
       Theory.Text.Parser

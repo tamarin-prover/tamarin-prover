@@ -1,0 +1,284 @@
+/*
+ * Protocol:    Modified Keyless SSL protocol
+ * Modeler: 	Robert Künnemann
+ * Date: 	Sep 2017
+ * Source:	Adapted from Milner,Cremers,Yu,Ryan: Automaticaly Detecting the Misuse of Secrets
+ * Status: 	wip 
+ */
+
+theory Keyless_SSL_Clientdetect
+begin
+
+builtins: signing, hashing
+functions: 
+  extract/1, sk/1[private],
+  // sign, verify, pk, and true are from builtins
+  S/1
+
+let C = 
+    let m1 = <'1',$A,$B,~nc>
+        m2 = <'2',$B,$A,~nc,nw>
+        m3 = <'3',$A,$B,h(<m1,m2>),S(cc)> 
+        m4 = <'4',$B,$A,h(<m1,m2,m3>)> in
+    lock $A;
+    lookup <'cc',$A,$B> as cc in
+        new ~nc;
+        out (m1);
+        in  (<m2,sign{m2}sk($B)>);
+        event CCount($A,$B,cc,S(cc));
+        event Nonces($A,~nc,nw);
+        event CDHParams($A,$B,~nc,nw);
+        insert <'cc',$A,$B>, S(cc);
+        out (<m3, sign{m3}sk($A)>);
+        in (<m4, sign{m4}sk($B)>); 
+        event CSession($A,$B,~nc,nw,S(cc));
+        unlock $A
+    else 
+        insert <'cc',$A,$B>,'0';
+        unlock $A
+        
+
+
+let W = 
+    let m1 = <'1',$A,$B,nc>
+        m2 = <'2',$B,$A,nc,~nw>
+        m3 = <'3',$A,$B,h(<m1,m2>),xcc> 
+        m4 = <'4',$B,$A,h(<m1,m2,m3>)> in
+    lock $B;
+    in  (m1);
+    new ~nw;
+    event Nonces($B,nc,~nw);
+    lookup <'cw',$B,$A> as cw in (
+        event W($A,$B,cw);
+        event WDHParams($A,$B,nc,~nw);
+        out (<m2,sign{m2}sk($B)>);
+        in  (<m3,sign{m3}sk($A)>);
+        if xcc = S(cw) then 
+            event WSession($A,$B,nc,~nw,S(cw));
+            event WCount($A,$B,cw,S(cw));
+            insert <'cw',$B,$A>,S(cw);
+            out (<m4,sign{m4}sk($B)>);
+            unlock $B
+        else
+            event WSession($A,$B,nc,~nw,S(cw));
+            event Detect($A,$B);
+            event WCount($A,$B,cw,S(cw));
+            insert <'cw',$B,$A>,S(cw);
+            out (<m4,sign{m4}sk($B)>);
+            unlock $B
+        )
+    else 
+        insert <'cw',$B,$A>,'0';
+        unlock $B
+
+
+// not complete, forbids C and W running on same server
+// (but allows us to use pattern matching, as in Milner et.al.'s modelling
+!( in($A,$B);  
+   event Unique(<$A,$B>);
+   ! ( C || W  )
+   )
+   ||
+!( 
+    in($A);
+    event Corrupted($A); 
+    // output secrets
+    out(sk($A)); 
+    // allow to produce events relevant to property we account for
+    !( in (<$A,$B,~nc,nw,cc>);
+    event FalseCSession ($A,$B,~nc,nw,cc);
+    event CSession($A,$B,~nc,nw,cc)
+    ) 
+)
+
+restriction unique:
+    "All m #i #j.
+        (Unique(m) @ i & Unique(m) @ j) ==> #i = #j"
+
+/* C need to check again */
+
+/* // verifies 146063 steps / 24 (both counter_uniques) */  
+lemma counter_unique_c[reuse,use_induction]:
+    "(All a b c oc oc2 #i c2 #i2.
+        CCount(a,b,oc,c) @ i & CCount(a,b,oc2, c2) @ i2
+        & (c2 = c)
+    ==> #i = #i2)"
+
+/* // verifies 555004 steps / 24 (both counter_uniques) */   
+lemma counter_unique_w[reuse,use_induction]:
+    "(All a b c oc oc2 #i c2 #i2.
+        WCount(a,b,oc,c) @ i & WCount(a,b,oc2, c2) @ i2
+        & (c2 = c)
+    ==> #i = #i2)"
+
+// verifies quickly
+lemma nonces_unique[reuse, use_induction]:
+    "All id ni nr #i #j.
+        Nonces(id,ni,nr) @ i & Nonces(id,ni,nr) @ j
+    ==> #i = #j"
+
+// SANITY lemmas: verify relatively fast  C
+lemma exists_session: exists-trace
+    "Ex a b ni nr c #i #j.
+        CSession(a,b,ni,nr,c) @ j 
+        & WSession(a,b,ni,nr,c) @ i & #i < #j
+        & not(Ex #k a . Corrupted(a) @ k)"
+
+lemma exists_second_session: exists-trace
+    "Ex a b ni nr c ni2 nr2 c2 #i #j #i2 #j2.
+        CSession(a,b,ni,nr,c) @ i 
+        & WSession(a,b,ni,nr,c) @ j & #j < #i
+      & CSession(a,b,ni2,nr2,c2) @ i2 
+        & WSession(a,b,ni2,nr2,c2) @ j2 & #j2 < #i2
+        & not(Ex #k a. Corrupted(a) @ k)"
+
+lemma exists_detect: exists-trace
+    "Ex a b #i.
+        Detect(a,b) @ i 
+        & not(Ex #j. Corrupted(b) @ j)"
+
+// verifies  C
+lemma counter_inj_c[reuse,use_induction]:
+    "All a b oc1 oc2 c1 c2 c3 #i #j #k .
+        CCount(a,b,oc2,c2) @ i
+      & CCount(a,b,c2,c3) @ j
+      & CCount(a,b,oc1,c1) @ k
+      & #k<#j
+    ==> not ( #i < #k)"
+
+// verifies 7117 steps / 15min on colossus C
+lemma counter_inj_w[reuse,use_induction]:
+    "All a b oc1 oc2 c1 c2 c3 #i #j #k .
+        WCount(a,b,oc2,c2) @ i
+      & WCount(a,b,c2,c3) @ j
+      & WCount(a,b,oc1,c1) @ k
+      & #k<#j
+    ==> not ( #i < #k)"
+
+// verifies quickly C -- does not hold if we detect during communication
+/* lemma detect_last[reuse,use_induction]: */
+/*     "All a b  #i cc #j. */
+/*         Detect(a,b) @ i & W(a,b,cc) @ j */
+/*     ==> #j < #i" */
+
+// verifies quickly 
+lemma matching_DH_w_uncompromised:
+    "All a b nc nw #i.
+        CDHParams(a,b,nc,nw) @ i 
+    ==>(Ex #j. #j < #i & WDHParams(a,b,nc,nw) @ j)
+        | (Ex #k . #k < #i &  Corrupted(b) @ k)"
+
+// verifies quickly
+lemma correct_dolevyao:
+    "All a b nc nw c #i.
+        CSession(a,b,nc,nw,c) @ i
+    ==> (Ex #j. Corrupted(b) @ j & #j < #i)
+        | (Ex #j. WSession(a,b,nc,nw,c) @ j & #j < #i)
+        // or detected 
+        | (Ex #j. Detect(a,b) @ j & #j < #i)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,nc,nw,c) @ j & #j < #i)
+        "
+
+// can be proven by hand, not auto after more than 3 days on colossus C
+lemma detect_sound [reuse]:
+    "All a b #i.
+        Detect(a,b) @ i 
+    ==>  (Ex #j. #j < #i & Corrupted(b) @ j)
+        |(Ex #j. #j < #i & Corrupted(a) @ j)"
+
+
+// verifies quickly 
+lemma no_detect_implies_rsession[reuse]:
+    "All a b ni nr nrp c #i.
+        CSession(a,b,ni,<nr,nrp>,c) @ i
+    ==> (Ex #j. #j < #i 
+            & WSession(a,b,ni,<nr,nrp>,c) @ j)
+        | (Ex #j. #j < #i & Corrupted(b) @ j)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,ni,<nr,nrp>,c) @ j & #j < #i)
+        "
+
+// verifies quickly
+lemma aposteriori_boundary_case[reuse]:
+    "All a b ni nr c #i niprev nrprev cprev #iprev.
+        //Given an unmatching session
+        CSession(a,b,niprev,nrprev,cprev) @ iprev
+        & not(Ex #j. WSession(a,b,niprev,nrprev,cprev) @ j & #j < #iprev)
+        //Then for the session immediately after that
+        & CSession(a,b,ni,nr,c) @ i & #iprev < #i
+        & (S(cprev) = c)
+    ==> //Either this also was not a matching session
+        not(Ex #j. WSession(a,b,ni,nr,c) @ j & #j < #i)
+        //Or we've detected
+        | (Ex #j. Detect(a,b) @ j)
+        //Or B was compromised. Comment this out to see an attack
+        //(tamarin will find find an attack after about ~10 minutes)
+        | (Ex #k. Corrupted(b) @ k)
+        // Or A emitted false event
+        | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j & #j < #i)
+        "
+
+lemma unmatching_implies_detect_with_W_uncompromised[use_induction,reuse]:
+    "All a b ni nr c niprev nrprev cprev #t1 #t2 #t3.
+        //Given an matching m3
+          CSession(a,b,ni,nr,c) @ t2
+        & WSession(a,b,ni,nr,c) @ t3
+        //Then for all sessions before that
+        & WSession(a,b,niprev,nrprev,cprev) @ t1
+        & #t1 < #t3
+    ==> //Either that session was also matching
+        (Ex #t0.  CSession(a,b,niprev,nrprev,cprev) @ t0)
+        //Or we did detect key misuse
+        | (Ex #t4.  Detect(a,b) @ t4 )
+        //Or B was compromised
+        | (Ex #k. Corrupted(b) @ k)
+        | (Ex #j. FalseCSession(a,b,ni,nr,c) @ j ) // <- Definitely need to be not outcommented 
+        /* | (Ex #j. FalseCSession(a,b,niprev,nrprev,cprev) @ j ) */ // <-- maybe can stay outcommented
+        "
+        /* | (Ex #j. Corrupted(a) @ j & #j < #i)" */
+
+restriction b_not_corrupted: // assume party B is not corrupted.
+    "not (Ex #k. Corrupted('B')@k)"
+
+verdictfunction v1:
+    "Ex #i #t2 #t3 ni nr c .
+          CSession('A','B',ni,nr,c) @ t2
+        & WSession('A','B',ni,nr,c) @ t3
+        & Detect('A','B')@i " -> <'A'>,
+    otherwise -> empty
+
+// ex/exh is quick
+/* lemma acc: */
+/*     v1 accounts */ 
+/*     for "All ni nr c #i . CSession('A','B',ni,nr,c) @i */ 
+/*          ==>  (Ex #j . WSession('A','B',ni,nr,c)@j) */
+/*          |   (Ex #j . FalseCSession('A','B',ni,nr,c)@j) */
+/*          /1* Not sure if this ^^ is correct: if we have it, suff cannot be shown, if we do not have it, compl cannot be shown. *1/ */
+/*          " */
+/*     for parties <'A','B'> */
+
+// suf_0_0     ?
+// compl_empty ?
+// compl_non-empty ?
+// min_0_0_0 auto quick
+// uniq_0 auto quick
+lemma acc2:
+    v1 accounts 
+    for 
+    "All ni nr c niprev nrprev cprev #t1 #t2 #t3.
+        //Given an matching m3
+          CSession('A','B',ni,nr,c) @ t2
+        & WSession('A','B',ni,nr,c) @ t3
+        //Then for all sessions before that
+        & WSession('A','B',niprev,nrprev,cprev) @ t1
+        & #t1 < #t3
+    ==> //Either that session was also matching
+          (Ex #t0.  CSession('A','B',niprev,nrprev,cprev) @ t0)
+        //or one of the previous session was faked.
+        | (Ex #j. FalseCSession('A','B',ni,nr,c) @ j )
+        /* | (Ex #j. FalseCSession('A','B',niprev,nrprev,cprev) @ j ) */
+        "
+    for parties <'A','B'>
+
+end

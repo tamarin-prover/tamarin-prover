@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -86,12 +88,12 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-  case case_1
-  solve( State_( ~prog_ ) ▶₀ #t )
-    case Init_
+solve( State_( ~prog_ ) ▶₀ #t )
+  case Init_
+  solve( (∃ #t2. (ProgressTo_11( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_211( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_221( ~prog_ ) @ #t2)) )
+    case case_1
     solve( State_( ~prog_ ) ▶₀ #t2 )
       case Init_
       SOLVED // trace found
@@ -106,12 +108,12 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-  case case_2
-  solve( State_( ~prog_ ) ▶₀ #t )
-    case Init_
+solve( State_( ~prog_ ) ▶₀ #t )
+  case Init_
+  solve( (∃ #t2. (ProgressTo_11( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_211( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_221( ~prog_ ) @ #t2)) )
+    case case_2
     solve( State_( ~prog_ ) ▶₀ #t2 )
       case Init_
       SOLVED // trace found
@@ -126,12 +128,12 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (C( ) @ #t)"
 */
 simplify
-solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-       (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-  case case_3
-  solve( State_( ~prog_ ) ▶₀ #t )
-    case Init_
+solve( State_( ~prog_ ) ▶₀ #t )
+  case Init_
+  solve( (∃ #t2. (ProgressTo_11( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_211( ~prog_ ) @ #t2))  ∥
+         (∃ #t2. (ProgressTo_221( ~prog_ ) @ #t2)) )
+    case case_3
     solve( State_( ~prog_ ) ▶₀ #t2 )
       case Init_
       SOLVED // trace found
@@ -166,49 +168,15 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (∃ #t2. (B( ) @ #t2))  ∥ (∃ #t2. (C( ) @ #t2)) )
   case case_1
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 next
   case case_2
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 qed
 
@@ -222,49 +190,15 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (∃ #t2. (A( ) @ #t2))  ∥ (∃ #t2. (C( ) @ #t2)) )
   case case_1
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 next
   case case_2
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 qed
 
@@ -278,49 +212,15 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (∃ #t2. (A( ) @ #t2))  ∥ (∃ #t2. (B( ) @ #t2)) )
   case case_1
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 next
   case case_2
-  solve( (∃ #t2. (ProgressTo_11( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_211( ~prog_.1 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_221( ~prog_.1 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_2
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
-  next
-    case case_3
-    solve( State_( ~prog_ ) ▶₀ #t )
-      case Init_
-      by solve( State_( ~prog_.1 ) ▶₀ #t2 )
-    qed
+  solve( State_( ~prog_ ) ▶₀ #t )
+    case Init_
+    by solve( State_( ~prog_.1 ) ▶₀ #t2 )
   qed
 qed
 
@@ -374,7 +274,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy.tmp
-  processing time: 0.14117988s
+  processing time: 0.140584s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -382,9 +282,9 @@ analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
   no_progress_possible (exists-trace): verified (4 steps)
-  A_excludesBC (all-traces): verified (16 steps)
-  B_excludesAC (all-traces): verified (16 steps)
-  C_excludesAC (all-traces): verified (16 steps)
+  A_excludesBC (all-traces): verified (6 steps)
+  B_excludesAC (all-traces): verified (6 steps)
+  C_excludesAC (all-traces): verified (6 steps)
   oneEventAlways (all-traces): verified (5 steps)
 
 ------------------------------------------------------------------------------
@@ -395,7 +295,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy.tmp
-  processing time: 0.14117988s
+  processing time: 0.140584s
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -403,9 +303,9 @@ analyzed: case-studies-sapic-regression/fairexchange-mini/ndc-nested.spthy
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
   no_progress_possible (exists-trace): verified (4 steps)
-  A_excludesBC (all-traces): verified (16 steps)
-  B_excludesAC (all-traces): verified (16 steps)
-  C_excludesAC (all-traces): verified (16 steps)
+  A_excludesBC (all-traces): verified (6 steps)
+  B_excludesAC (all-traces): verified (6 steps)
+  C_excludesAC (all-traces): verified (6 steps)
   oneEventAlways (all-traces): verified (5 steps)
 
 ==============================================================================

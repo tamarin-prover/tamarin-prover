@@ -6,6 +6,8 @@ builtins: diffie-hellman, bilinear-pairing
 functions: fst/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* Scott: MTI-C0 like identity based key exchange protocol *}
 
 rule (modulo E) KGC_Setup:
@@ -85,17 +87,17 @@ rule (modulo E) Init_2:
        Y     = x.25^x.26
        z     = x.25^(~ex.15*x.26)
     
-    4. ~ex   = ~ex.16
-       Y     = x.27^inv((~ex.16*x.28))
-       z     = x.27^inv(x.28)
+    4. ~ex   = ~ex.17
+       Y     = x.29^inv((~ex.17*x.30))
+       z     = x.29^inv(x.30)
     
-    5. ~ex   = ~ex.16
-       Y     = x.27^(x.28*inv(~ex.16))
-       z     = x.27^x.28
+    5. ~ex   = ~ex.17
+       Y     = x.29^(x.30*inv(~ex.17))
+       z     = x.29^x.30
     
-    6. ~ex   = ~ex.17
-       Y     = x.28^(x.30*inv((~ex.17*x.29)))
-       z     = x.28^(x.30*inv(x.29))
+    6. ~ex   = ~ex.18
+       Y     = x.30^(x.31*inv((~ex.18*x.32)))
+       z     = x.30^(x.31*inv(x.32))
   */
 
 rule (modulo E) Resp_1:
@@ -140,17 +142,17 @@ rule (modulo E) Resp_1:
        X     = x.739^x.740
        z     = x.739^(~ey.372*x.740)
     
-    4. ~ey   = ~ey.373
-       X     = x.741^inv((~ey.373*x.742))
-       z     = x.741^inv(x.742)
+    4. ~ey   = ~ey.374
+       X     = x.743^inv((~ey.374*x.744))
+       z     = x.743^inv(x.744)
     
-    5. ~ey   = ~ey.373
-       X     = x.741^(x.742*inv(~ey.373))
-       z     = x.741^x.742
+    5. ~ey   = ~ey.374
+       X     = x.743^(x.744*inv(~ey.374))
+       z     = x.743^x.744
     
-    6. ~ey   = ~ey.374
-       X     = x.742^(x.744*inv((~ey.374*x.743)))
-       z     = x.742^(x.744*inv(x.743))
+    6. ~ey   = ~ey.375
+       X     = x.744^(x.745*inv((~ey.375*x.746)))
+       z     = x.744^(x.745*inv(x.746))
   */
 
 lemma key_agreement_reachable:
@@ -307,7 +309,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 18.31090932s
+  processing time: 19.559522s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -319,7 +321,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 18.31090932s
+  processing time: 19.559522s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+heuristic: l
+
 section{* small example for progression function *}
 
 rule (modulo E) Init_:
@@ -133,17 +135,17 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ▶₀ #t )
   case in_r_m_111
-  solve( (∃ #t2. (ProgressTo_111( ~prog_11 ) @ #t2))  ∥
-         (∃ #t2. (ProgressTo_1121( ~prog_11 ) @ #t2)) )
-    case case_1
-    solve( State_( ~prog_ ) ▶₀ #t2 )
+  solve( State_( ~prog_ ) ▶₀ #t2 )
+    case Init_
+    solve( State_( ~prog_ ) ▶₀ #t2.1 )
       case Init_
-      solve( State_( ~prog_ ) ▶₀ #t2.1 )
-        case Init_
-        solve( State_1111( ~prog_.1, ~prog_11.1, ~prog_1111, a, m.1 ) ▶₀ #t2.1 )
-          case in_r_m_111
-          solve( State_( ~prog_ ) ▶₀ #t2.1 )
-            case Init_
+      solve( State_1111( ~prog_.1, ~prog_11.1, ~prog_1111, a, m.1 ) ▶₀ #t2.1 )
+        case in_r_m_111
+        solve( State_( ~prog_ ) ▶₀ #t2.1 )
+          case Init_
+          solve( (∃ #t2. (ProgressTo_111( ~prog_11 ) @ #t2))  ∥
+                 (∃ #t2. (ProgressTo_1121( ~prog_11 ) @ #t2)) )
+            case case_1
             solve( ProgressTo_111( ~prog_11 ) @ #t2.1 )
               case if_eqa_a_0_11
               solve( State_11( ~prog_.1, ~prog_11, a ) ▶₀ #t2.1 )
@@ -194,7 +196,7 @@ analyzing: case-studies-sapic-regression/fairexchange-mini/mini6.spthy
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini6.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.120143646s
+  processing time: 0.148021s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -209,7 +211,7 @@ summary of summaries:
 analyzed: case-studies-sapic-regression/fairexchange-mini/mini6.spthy
 
   output:          case-studies-sapic-regression/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.120143646s
+  processing time: 0.148021s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

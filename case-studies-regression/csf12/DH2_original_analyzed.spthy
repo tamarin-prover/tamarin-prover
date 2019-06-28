@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: KDF/1, MAC/2, fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* DH2 *}
 
 rule (modulo E) Register_pk:
@@ -95,12 +97,12 @@ rule (modulo E) Resp_1:
        z     = x.530^inv((~ltkR.268*x.531))
     
     5. ~ltkR = ~ltkR.269
-       XB    = x.531^(x.533*inv(x.532))
-       z     = x.531^(x.533*inv((~ltkR.269*x.532)))
+       XB    = x.531^(x.532*inv(x.533))
+       z     = x.531^(x.532*inv((~ltkR.269*x.533)))
     
-    6. ~ltkR = ~ltkR.269
-       XB    = x.532^(~ltkR.269*x.533)
-       z     = x.532^x.533
+    6. ~ltkR = ~ltkR.270
+       XB    = x.534^(~ltkR.270*x.535)
+       z     = x.534^x.535
   */
 
 rule (modulo E) Init_2:
@@ -156,12 +158,12 @@ rule (modulo E) Init_2:
        z     = x.33^inv((~ltkI.19*x.34))
     
     5. ~ltkI = ~ltkI.20
-       YA    = x.34^(x.36*inv(x.35))
-       z     = x.34^(x.36*inv((~ltkI.20*x.35)))
+       YA    = x.34^(x.35*inv(x.36))
+       z     = x.34^(x.35*inv((~ltkI.20*x.36)))
     
-    6. ~ltkI = ~ltkI.20
-       YA    = x.35^(~ltkI.20*x.36)
-       z     = x.35^x.36
+    6. ~ltkI = ~ltkI.23
+       YA    = x.41^(~ltkI.23*x.42)
+       z     = x.41^x.42
   */
 
 rule (modulo E) Resp_2:
@@ -1828,7 +1830,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 14.046984868s
+  processing time: 19.987767s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1839,7 +1841,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 14.046984868s
+  processing time: 19.987767s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

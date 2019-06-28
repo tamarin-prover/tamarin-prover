@@ -8,6 +8,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 section{* KAS1 *}
 
 rule (modulo E) Register_pk:
@@ -259,7 +261,7 @@ analyzing: examples/csf12/KAS1.spthy
 analyzed: examples/csf12/KAS1.spthy
 
   output:          examples/csf12/KAS1.spthy.tmp
-  processing time: 0.357282691s
+  processing time: 0.790986s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -270,7 +272,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          examples/csf12/KAS1.spthy.tmp
-  processing time: 0.357282691s
+  processing time: 0.790986s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

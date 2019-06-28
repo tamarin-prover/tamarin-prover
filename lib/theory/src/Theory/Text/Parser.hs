@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
+--               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
@@ -14,7 +15,9 @@ module Theory.Text.Parser (
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
   , parseLemma
+  , parseRestriction
   , parseIntruderRules
+  , newVariables
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -29,26 +32,30 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import qualified Data.List                  as L
+-- import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+import qualified Control.Monad.Catch        as Catch
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 
-import           System.Process
+-- import           System.Process
 
 -- import qualified Extension.Data.Label       as L
 
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
+import           Theory.Sapic
 import           Theory.Text.Parser.Token
 
 import           Debug.Trace
+
+import Data.Functor.Identity 
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -91,15 +98,8 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = if ".sapic" `L.isSuffixOf` file 
-    then 
-       do
-          callCommand $ "sapic " ++ file ++ " > " ++ spthyfile
-          parseFile (theory flags) spthyfile
-    else
-          parseFile (theory flags) spthyfile       
-    where
-       spthyfile = (take ((length file) - 6) file) ++ ".spthy"
+parseOpenTheory flags file = do 
+          parseFile (theory flags) file
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
@@ -128,6 +128,10 @@ parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory fla
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
 parseLemma = parseString "<unknown source>" lemma
+
+-- | Parse a lemma for an open theory from a string.
+parseRestriction :: String -> Either ParseError Restriction
+parseRestriction = parseString "<unknown source>" restriction
 
 ------------------------------------------------------------------------------
 -- Parsing Terms
@@ -494,11 +498,6 @@ fatom = asum
         f  <- iff
         return $ foldr (hinted q) f vs
 
-    hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-    hinted f v@(LVar n s _) = f (n,s) v
-
-
-
 -- | Parse a negation.
 negation :: Parser LNFormula
 negation = opLNot *> (Not <$> fatom) <|> fatom
@@ -587,19 +586,23 @@ legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation
 ------------------------------------------------------------------------------
 
 -- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Parser LemmaAttribute
-lemmaAttribute = asum
+lemmaAttribute :: Bool -> Parser LemmaAttribute
+lemmaAttribute isDiff = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> identifier)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> many1 letter
+        False -> map charToGoalRanking     <$> many1 letter
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier
@@ -611,7 +614,7 @@ traceQuantifier = asum
 -- | Parse a lemma.
 lemma :: Parser (Lemma ProofSkeleton)
 lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list lemmaAttribute)
+                      <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted standardFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
@@ -619,7 +622,7 @@ lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
 diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> (option [] $ list lemmaAttribute)
+                              <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
                       
@@ -731,8 +734,44 @@ diffProofSkeleton =
 ------------------------------------------------------------------------------
 
 -- | Builtin signatures.
-builtins :: Parser ()
-builtins =
+builtins :: OpenTheory -> Parser OpenTheory
+builtins thy0 =do
+            _  <- symbol "builtins"
+            _  <- colon 
+            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
+                                         -- builtinTheory modifies signature in state.
+            return $ foldl setOption' thy0 l
+  where
+    setOption' thy Nothing  = thy
+    setOption' thy (Just l) = setOption l thy
+    extendSig msig = do
+        modifyState (`mappend` msig)
+        return Nothing
+    builtinTheory = asum
+      [ try (symbol "diffie-hellman")
+          *> extendSig dhMaudeSig
+      , try (symbol "bilinear-pairing")
+          *> extendSig bpMaudeSig
+      , try (symbol "multiset")
+          *> extendSig msetMaudeSig
+      , try (symbol "xor")
+          *> extendSig xorMaudeSig
+      , try (symbol "symmetric-encryption")
+          *> extendSig symEncMaudeSig
+      , try (symbol "asymmetric-encryption")
+          *> extendSig asymEncMaudeSig
+      , try (symbol "signing")
+          *> extendSig signatureMaudeSig
+      , try (symbol "revealing-signing")
+          *> extendSig revealSignatureMaudeSig
+      , try ( symbol "reliable-channel")
+             *> return (Just transReliable)
+      , symbol "hashing"
+          *> extendSig hashMaudeSig
+      ]
+
+diffbuiltins :: Parser ()
+diffbuiltins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
     extendSig msig = modifyState (`mappend` msig)
@@ -756,6 +795,7 @@ builtins =
       , symbol "hashing"
           *> extendSig hashMaudeSig
       ]
+
 
 functions :: Parser ()
 functions =
@@ -788,10 +828,312 @@ equations =
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
+-- | options
+options :: OpenTheory -> Parser OpenTheory
+options thy0 =do
+            _  <- symbol "options"
+            _  <- colon 
+            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
+                                         -- builtinTheory modifies signature in state.
+            return $ foldl setOption' thy0 l
+  where
+    setOption' thy Nothing  = thy
+    setOption' thy (Just l) = setOption l thy
+    builtinTheory = asum
+      [  try (symbol "translation-progress")
+             *> return (Just transProgress)
+        , symbol "translation-allow-pattern-lookups"
+             *> return (Just transAllowPatternMatchinginLookup)
+      ]
+
+
+predicate :: Parser Predicate
+predicate = do
+           f <- fact llit
+           _ <- symbol "<=>"
+           form <- standardFormula
+           return $ Predicate f form
+
+preddeclaration :: OpenTheory -> Parser OpenTheory
+preddeclaration thy = do
+                    _          <- symbol "predicates"
+                    _          <- colon
+                    predicates <- commaSep1 predicate
+                    thy'       <-  foldM liftedAddPredicate thy predicates
+                    return thy'
+                where 
+                liftedAddPredicate thy pr  = 
+                    case addPredicate pr thy of 
+                        (Just thy') -> return (thy'::OpenTheory)
+                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
+
+-- used for debugging 
+-- println :: String -> ParsecT String u Identity ()          
+-- println str = traceShowM str
+
+-- parse a process definition (let block)
+processDef :: OpenTheory -> Parser ProcessDef
+processDef thy= do
+                letIdentifier
+                i <- BC.pack <$> identifier
+                equalSign 
+                p <- process thy
+                return (ProcessDef (BC.unpack i) p )
+
+-- | Parse a single sapic action, i.e., a thing that can appear before the ";"
+-- (This includes almost all items that are followed by one instead of two
+-- processes, the exception is replication)
+sapicAction :: Parser SapicAction
+sapicAction = try (do 
+                        _ <- symbol "new"
+                        s <- msgvar 
+                        return (New s)
+                   )
+               <|> try (do 
+                        _ <- symbol "in"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- symbol ")"
+                        return (ChIn Nothing t)
+                   )
+               <|> try (do 
+                        _ <- symbol "in"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        _ <- symbol ")"
+                        return (ChIn (Just t) t')
+                   )
+               <|> try (do 
+                        _ <- symbol "out"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- symbol ")"
+                        return (ChOut Nothing t)
+                   )
+               <|> try (do 
+                        _ <- symbol "out"
+                        _ <- symbol "("
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        _ <- symbol ")"
+                        return (ChOut (Just t) t')
+                   )
+               <|> try (do 
+                        _ <- symbol "insert"
+                        t <- msetterm llit
+                        _ <- comma
+                        t' <- msetterm llit
+                        return (Insert t t')
+                   )
+               <|> try (do 
+                        _ <- symbol "delete"
+                        t <- msetterm llit
+                        return (Delete t)
+                   )
+               <|> try (do 
+                        _ <- symbol "lock"
+                        t <- msetterm llit
+                        return (Lock t)
+                   )
+               <|> try (do 
+                        _ <- symbol "unlock"
+                        t <- msetterm llit
+                        return (Unlock t)
+                   )
+               <|> try (do 
+                        _ <- symbol "event"
+                        f <- fact llit
+                        return (Event f)
+                   )
+               <|> try (do 
+                        r <- genericRule
+                        return (MSR r)
+                   )
+-- | Parse a process. Process combinators like | are left-associative (not that
+-- it matters), so we had to split the grammar for processes in two, so that
+-- the precedence is expressed in a way that can be directly encoded in Parsec.
+-- This is the grammar, more or less. (Process definition is written down in
+-- a way that you can read of the precise definition from there
+-- process:
+--     | LP process RP                                  
+--     | LP process RP AT multterm                      
+--     | actionprocess PARALLEL process      
+--     | actionprocess PLUS process                           
+--     null
+
+-- actionprocess:
+--     | sapic_action optprocess                        
+--     | NULL                                           
+--     | REP process                                    
+--     | IF if_cond THEN process ELSE process           
+--     | IF if_cond THEN process                        
+--     | LOOKUP term AS literal IN process ELSE process 
+--     | LOOKUP term AS literal IN process              
+--     | LET id_eq_termseq IN process          
+--     | LET id_not_res EQ REPORT LP multterm RP IN process 
+--     | IDENTIFIER                                     
+--     | msr
+process :: OpenTheory -> Parser Process
+process thy= 
+            -- left-associative NDC and parallel using chainl1.
+            -- Note: this roughly encodes the following grammar:
+            -- <|>   try   (do  
+            --             p1 <- actionprocess thy
+            --             opParallel
+            --             p2 <- process thy
+            --             return (ProcessParallel p1 p2))
+                  try  (chainl1 (actionprocess thy) (
+                             do { _ <- try opNDC; return (ProcessComb NDC mempty)}
+                         <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
+                         <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
+                  ))
+            <|>   try (do    -- parens parser + at multterm
+                        _ <- symbol "("
+                        p <- actionprocess thy
+                        _ <- symbol ")"
+                        _ <- symbol "@"
+                        m <- msetterm llit
+                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
+                        -- TODO SAPIC parser: multterm return
+                        -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
+            <|>    try  (do -- parens parser
+                        _ <- symbol "("
+                        p <- process thy
+                        _ <- symbol ")"
+                        return p)
+            <|>    try  (do -- let expression parser
+                        subst <- letBlock
+                        p <- process thy
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
+            <|>    do       -- action at top-level
+                        p <- actionprocess thy
+                        return p
+
+actionprocess :: OpenTheory -> Parser Process
+actionprocess thy= 
+            try (do         -- replication parser
+                        _ <- symbol "!"
+                        p <- process thy
+                        return (ProcessAction Rep mempty p))
+            <|> try (do     -- lookup / if with and w/o else branches
+                        _ <- symbol "lookup"
+                        t <- msetterm llit
+                        _ <- symbol "as"
+                        v <- msgvar
+                        _ <- symbol "in"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (Lookup t v) mempty p q)
+                   )
+            <|> try (do 
+                        _ <- symbol "lookup"
+                        t <- msetterm llit
+                        _ <- symbol "as"
+                        v <- msgvar
+                        _ <- symbol "in"
+                        p <- process thy
+                        return (ProcessComb (Lookup t v) mempty p (ProcessNull mempty))
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        t1 <- msetterm llit
+                        _ <- opEqual
+                        t2 <- msetterm llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (CondEq t1 t2  ) mempty p q)
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        pr <- fact llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        _ <- symbol "else"
+                        q <- process thy
+                        return (ProcessComb (Cond pr) mempty p q)
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        t1 <- msetterm llit
+                        _ <- opEqual
+                        t2 <- msetterm llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
+                   )
+            <|> try (do 
+                        _ <- symbol "if"
+                        pr <- fact llit
+                        _ <- symbol "then"
+                        p <- process thy
+                        return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
+                   )
+            <|> try ( do  -- sapic actions are constructs separated by ";"
+                        s <- sapicAction
+                        _ <- opSeq
+                        p <- actionprocess thy
+                        return (ProcessAction s mempty p))
+            <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
+                        s <- sapicAction 
+                        return (ProcessAction s mempty (ProcessNull mempty)))
+            <|> try (do   -- null process: terminating element
+                        _ <- opNull 
+                        return (ProcessNull mempty) )
+            <|> try   (do -- parse identifier
+                        -- println ("test process identifier parsing Start")
+                        i <- BC.pack <$> identifier
+                        a <- let p = checkProcess (BC.unpack i) thy in
+                            (\x -> paddAnn x [BC.unpack i]) <$> p
+                        return a 
+                        )
+            <|>    try  (do -- let expression parser
+                        subst <- letBlock
+                        p     <- process thy
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
+            <|> do        -- parens parser
+                        _ <- symbol "("
+                        p <- process thy
+                        _ <- symbol ")"
+                        return p
+                        
+
+heuristic :: Bool -> Parser [GoalRanking]
+heuristic isDiff = do
+      symbol "heuristic" *> colon *> parseGoalRanking
+  where
+    parseGoalRanking = case isDiff of
+        True  -> map charToGoalRankingDiff <$> identifier
+        False -> map charToGoalRanking     <$> identifier
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
 
+
+-- checks if process exists, if not -> error
+-- checkProcess :: String -> OpenTheory -> Parser OpenTheory
+-- checkProcess i thy= case findProcess i thy of
+--     Just thy' -> return thy
+--     Nothing -> fail $ "process not defined: " ++ i    
+checkProcess :: String -> OpenTheory -> Parser Process
+checkProcess i thy = case lookupProcessDef i thy of
+    Just p -> return $ get pBody p
+    Nothing -> fail $ "process not defined: " ++ i    
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
@@ -807,9 +1149,13 @@ theory flags0 = do
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic False)
+           addItems flags thy'
+      , do thy' <- builtins thy
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
+      , do thy' <- options thy
+           addItems flags thy'
       , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
@@ -823,7 +1169,10 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< lemma
+      , do thy' <- ((liftedAddLemma thy) =<<) lemma
+           addItems flags thy'
+      , do ru <- protoRule
+           thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
@@ -832,6 +1181,12 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
+      , do procc <- process thy                          -- try parsing a process
+           addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
+      , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
+           addItems flags thy'
+      , do thy' <- preddeclaration thy             
+           addItems flags (thy')    
       , do ifdef flags thy
       , do define flags thy
       , do return thy
@@ -857,12 +1212,21 @@ theory flags0 = do
 
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+
+    -- check process defined only once
+    -- add process to theoryitems
+    liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate process: " ++ get pName pDef 
 
     liftedAddRestriction thy rstr = case addRestriction rstr thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
 
+    liftedAddHeuristic thy h = case addHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
         
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
@@ -878,7 +1242,10 @@ diffTheory flags0 = do
   where
     addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems flags thy = asum
-      [ do builtins
+      [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
+           addItems flags thy'
+      , do 
+           diffbuiltins 
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions
@@ -923,6 +1290,10 @@ diffTheory flags0 = do
        if flag `S.member` flags
          then addItems flags thy'
          else addItems flags thy
+
+    liftedAddHeuristic thy h = case addDiffHeuristic h thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default heuristic already defined"
 
     liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
         Just thy' -> return thy'
