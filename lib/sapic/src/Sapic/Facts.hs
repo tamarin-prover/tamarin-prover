@@ -24,6 +24,7 @@ module Sapic.Facts (
    , varMID
    , varProgress
    , msgVarProgress
+   , propagateNames
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -41,6 +42,7 @@ import Sapic.Annotation
 -- import Data.Typeable
 -- import Data.Text
 import Data.Char
+import Data.Bits
 import qualified Data.Set as S
 import Data.Color
 -- import Control.Monad.Trans.FastFresh
@@ -229,6 +231,55 @@ prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
 prettyEitherPositionOrSpecial (Right InitPosition) = "Init"
 prettyEitherPositionOrSpecial (Right NoPosition) = ""
 
+getTopLevelName :: (GoodAnnotation an) => AnProcess an -> [String]
+getTopLevelName (ProcessNull ann) = getProcessNames ann
+getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
+getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
+
+propagateNames :: (GoodAnnotation ann) => AnProcess ann -> AnProcess ann
+propagateNames = propagate' []
+    where
+      propagate' n (ProcessComb c an pl pr) = ProcessComb c 
+                                                (setProcessNames (n ++ getProcessNames an) an)
+                                                (propagate' (n ++ getProcessNames an) pl)
+                                                (propagate' (n ++ getProcessNames an) pr)
+      propagate' n (ProcessAction a an p) = ProcessAction a
+                                                (setProcessNames (n ++ getProcessNames an) an)
+                                                (propagate' (n ++ getProcessNames an) p)
+      propagate' n (ProcessNull an) = ProcessNull (setProcessNames (n ++ getProcessNames an) an)
+
+crc32 :: String -> Int
+crc32 s = foldl iter 0xffffffff (map ord s)
+    where
+        inner c = (c `shiftR` 1) `xor` (0xedb88329 .&. (-(c .&. 1)))
+        iter c m = iterate inner (c `xor` m) !! 8
+
+interpolate :: (Fractional t, Ord t) => HSV t -> HSV t -> t -> HSV t
+interpolate (HSV h1 s1 v1) (HSV h2 s2 v2) a = HSV h' s' v'
+      where
+        h' = (h2 - h1) * a + h1
+        s' = (s2 - s1) * a + s1
+        v' = (v2 - v1) * a + v1
+
+colorHash :: (Fractional t, Ord t) => String -> RGB t
+colorHash s = RGB r g b
+      where
+        nthByte x n = (x `shiftR` (8*n)) .&. 0xff
+        [r,g,b] = map ((/255) . fromIntegral . nthByte (crc32 s)) [0,1,2]
+
+-- Computes a color for a list of strings by first computing
+-- the CRC32 checksum of each string and then interpolating the
+-- colors with an exponentionally decaying threshold (2^(-i)).
+-- The interpolation is performed on colors in HSV representation.
+-- To avoid to bright, dark, or saturated colors, the saturation
+-- and luminance of the final color is normalized to to 0.5.
+colorForProcessName :: [String] -> RGB Rational
+colorForProcessName [] = RGB 255 255 255
+colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 0) (tail palette)
+      where
+        palette = map (rgbToHSV . colorHash) names
+        normalize (HSV h _ _) = HSV h 0.5 0.5
+        f (acc, i) v = (interpolate acc v (2^^(-i)), i+1)
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
@@ -239,7 +290,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                 Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
-            attr = [ RuleColor $ RGB 0.3 0.3 0.3 -- TODO compute color from processnames
+            attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
