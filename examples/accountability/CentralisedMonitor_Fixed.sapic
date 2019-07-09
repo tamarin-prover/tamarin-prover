@@ -70,7 +70,10 @@ let M =
             event Control('0','2'); event LogDC(a); event Execute(a))
 
 // The trusted party can only run once during each run of the protocol
-let Proto = out(<pk(sk('D')), pk(sk('C'))>); ! (D || C ) || M
+
+let Proto = out(pk(sk('D')));
+            out(pk(sk('C')));
+            ! (D || C ) || M
 
 // general form for accountabilty processes
 Proto
@@ -99,8 +102,6 @@ lemma sanity_logDC:
 verdictfunction v1:
     "Ex a #i #j. Execute(a)@i & LogD(a)@j &  not(a=NormalAct() | a=SpecialAct())" -> let verdict1 = <'D'>,
     "Ex a #i #j. Execute(a)@i & LogDC(a)@j & not(a=NormalAct() | a=SpecialAct())" -> let verdict2 = <'D','C'> ,
-    /* "Ex a #i #j. Execute(a)@i & LogD(a)@j & a=NormalAct()"   -> empty, */
-    /* "Ex a #i #j. Execute(a)@i & LogDC(a)@j & a=SpecialAct()" -> empty, */
     otherwise -> empty 
 
 lemma acc:
