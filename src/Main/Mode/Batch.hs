@@ -25,6 +25,8 @@ import qualified Text.PrettyPrint.Class          as Pretty
 import           Theory
 import           Theory.Tools.Wellformedness     (checkWellformedness, checkWellformednessDiff)
 
+import           Sapic
+
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
@@ -64,6 +66,7 @@ batchMode = tamarinMode
     outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
+      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|msr|proverif" "What to output:  spthy (including SAPIC), pure msrs or ProVerif."
       ]
 
 -- | Process a theory file.
@@ -116,13 +119,14 @@ run thisMode as
       -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
       | (argExists "parseOnly" as) && (argExists "diff" as) =
-          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
-      | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
+      | (argExists "parseOnly" as) || (argExists "outModule" as) =
+          -- out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) (choosePretty $ findArg "outModule" as) (loadOpenThy       as inFile)
       | argExists "diff" as =
-          out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
+          out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy as inFile)
       | otherwise        =
-          out ppWfAndSummary          prettyClosedTheory     (loadClosedThy     as inFile)
+          out ppWfAndSummary          (return . prettyClosedTheory)     (loadClosedThy     as inFile)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 
@@ -144,11 +148,25 @@ run thisMode as
                           , "         The analysis results might be wrong!" ]
             Pretty.$--$ prettyClosedDiffSummary thy
 
-        out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
+        choosePretty Nothing = return . prettyOpenTheory -- output as is, including SAPIC elements
+        choosePretty (Just "spthy") = return . prettyOpenTheory -- output as is, including SAPIC elements
+        -- choosePretty (Just "msr") =  Sapic.translate >>=  prettyOpenTranslatedTheory-- only msrs
+        -- choosePretty (Just "msr") =  \ thy ->  do thy' <- Sapic.translate thy
+        --                                           return $ prettyOpenTranslatedTheory thy'
+        -- choosePretty (Just "msr") = \thy -> (return . prettyOpenTranslatedTheory) =<< (Sapic.translate thy)
+        choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate
+        choosePretty (Just "proverif") = prettyProVerifTheory
+        choosePretty _ = error "output mode not supported."
+
+        prettyProVerifTheory = return $ error "not yet implemented"
+                   
+
+        out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
           | dryRun    = do
               thy <- load
-              putStrLn $ renderDoc $ fullDoc thy
+              doc <- fullDoc thy
+              putStrLn $ renderDoc doc
               return $ ppAnalyzed Pretty.$--$ Pretty.nest 2 (summaryDoc thy)
           | otherwise = do
               putStrLn $ ""
@@ -157,7 +175,8 @@ run thisMode as
               let outFile = mkOutPath inFile
               (thySummary, t) <- timed $ do
                   thy <- load
-                  writeFileWithDirs outFile $ renderDoc $ fullDoc thy
+                  doc <- fullDoc thy
+                  writeFileWithDirs outFile $ renderDoc doc
                   -- ensure that the summary is in normal form
                   evaluate $ force $ summaryDoc thy
               let summary = Pretty.vcat

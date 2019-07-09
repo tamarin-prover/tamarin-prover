@@ -129,11 +129,11 @@ loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
 -- | Load an open theory from a file.
-loadOpenThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
+loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    thy' <-  Sapic.translate thy
-    return thy'
+    -- thy' <-  Sapic.translate thy
+    return thy
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -144,14 +144,15 @@ loadClosedDiffThy as inFile = do
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
+loadClosedThy as inFile = loadOpenThy as inFile >>= Sapic.translate >>= closeThy as
 
 -- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
     thy <- loadOpenThy as inFile
+    thy' <- Sapic.translate thy
     -- report
-    case checkWellformedness thy of
+    case checkWellformedness thy' of
       []     -> return ()
       report -> do
           putStrLn ""
@@ -165,7 +166,7 @@ loadClosedThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
-    closeThy as thy
+    closeThy as thy'
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
