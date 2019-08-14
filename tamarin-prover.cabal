@@ -139,6 +139,7 @@ executable tamarin-prover
       , file-embed
       , filepath
       , gitrev
+      , HStringTemplate
       , http-types
       , lifted-base
       , monad-unlift
@@ -161,6 +162,7 @@ executable tamarin-prover
       , tamarin-prover-term   == 1.5.1
       , tamarin-prover-theory == 1.5.1
       , tamarin-prover-sapic == 1.5.1
+      , tamarin-prover-export == 1.5.1
 
     other-modules:
       Paths_tamarin_prover

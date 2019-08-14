@@ -27,6 +27,8 @@ import           Theory.Tools.Wellformedness     (checkWellformedness, checkWell
 
 import           Sapic
 
+import           Export
+
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
@@ -155,11 +157,8 @@ run thisMode as
         --                                           return $ prettyOpenTranslatedTheory thy'
         -- choosePretty (Just "msr") = \thy -> (return . prettyOpenTranslatedTheory) =<< (Sapic.translate thy)
         choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate
-        choosePretty (Just "proverif") = prettyProVerifTheory
+        choosePretty (Just "proverif") = return . prettyProVerifTheory
         choosePretty _ = error "output mode not supported."
-
-        prettyProVerifTheory = return $ error "not yet implemented"
-                   
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load

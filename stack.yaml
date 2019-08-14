@@ -5,6 +5,7 @@ packages:
 - lib/term/
 - lib/utils/
 - lib/sapic/
+- lib/export/
 extra-deps: []
 resolver: lts-13.2
 nix:
