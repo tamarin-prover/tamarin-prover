@@ -22,9 +22,10 @@ import         Term.SubtermRule
 
 import         Text.StringTemplate
 import         Theory
+import         Theory.Sapic
 import         Text.PrettyPrint.Highlight
 
-
+import qualified Text.PrettyPrint.Highlight as H
 
 import qualified Data.Set as S
 import qualified Data.Label as L
@@ -85,9 +86,44 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
 prettyProVerifTheory :: HighlightDocument d => OpenTheory -> d
 prettyProVerifTheory thy = text result
   where result = toString tmp
-        tmp = setManyAttrib hd template
+        tmp = setAttribute "process" proc $ setManyAttrib hd template
         hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy))
+        proc = loadProc thy
+        -- TODO - when term or event is pretty printed, need to collect the Headers to declare (for const & event)
 
+ppAction :: SapicAction -> String
+ppAction (New n) = "new "++ (show n) ++ ":bitstring"
+ppAction Rep  = "!"
+ppAction (ChIn (Just t1) t2 )  = "in(" ++ H.render (prettyLNTerm t1) ++ "," ++ H.render ( prettyLNTerm t2) ++ ")"
+ppAction (ChIn Nothing t2 )  = "in(attacker_channel," ++ H.render (prettyLNTerm t2) ++ ")"
+ppAction (ChOut (Just t1) t2 )  = "out(" ++ H.render (prettyLNTerm t1) ++ "," ++ H.render (prettyLNTerm t2) ++ ")"
+ppAction (ChOut Nothing t2 )  = "out(attacher_channel," ++ H.render (prettyLNTerm t2) ++ ")"
+ppAction (Event a )  = "event " ++ H.render (prettyLNFact a)
+ppAction _  = "Action not supported for translation"
+
+ppComb :: ProcessCombinator -> String
+ppComb Parallel = "||"
+ppComb NDC = "+"
+ppComb (Cond a) = "if "++ H.render (prettyLNFact a)
+ppComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
+                                    where p = H.render . prettyLNTerm
+ppComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
+                                    where p = H.render . prettyLNTerm
+
+
+ppSapic :: AnProcess ann -> String
+ppSapic  = pfoldMap f 
+    where f (ProcessNull _) = "0 \n"
+          f (ProcessComb c _ _ _)  = ppComb c ++ "\n"
+          f (ProcessAction Rep _ _)  = ppAction Rep 
+          f (ProcessAction a _ _)  = ppAction a ++ ";"
+
+
+loadProc :: OpenTheory -> String
+loadProc thy = case theoryProcesses thy of
+  []  -> ""
+  [p] -> ppSapic p
+  ps  -> "Multiple sapic processes detected, error"
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
@@ -96,7 +132,7 @@ loadHeaders thy =
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- generating headers for function symbols
         sigFunSyms = stFunSyms sig
-        funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf y sigFunSyms then  x `S.union` z else x  )) S.empty builtins)
+        funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf y sigFunSyms then  x `S.union` z else x )) S.empty builtins)
         funSymsNoBuiltin = sigFunSyms S.\\ ((foldl (\x (y,z) -> x `S.union` y  )) S.empty builtins)
         headerOfFunSym (f,(k,Public)) = Fun (make_str (f,k) ++ ".")
         headerOfFunSym (f,(k,Private)) = Fun ((make_str (f,k))  ++ " [private].")
