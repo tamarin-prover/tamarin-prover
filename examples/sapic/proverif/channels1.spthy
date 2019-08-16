@@ -8,10 +8,11 @@ example illustrating some proverif translations:
 theory ChannelsTestOne
 begin
 
+functions: bij/1, unbij/1
 /* Check for communication on private channels */
 /*  - communication is private */
 /*  - communication is possible */
-
+equations: bij(unbij(x))=x
 
 let P = new a; event Secret(a); out (c, a);  out(c)
 let Q = in(c, <x,'test'>); event Received(x)

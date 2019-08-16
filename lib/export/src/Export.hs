@@ -19,6 +19,7 @@ module Export (
 ) where
 
 import         Term.Builtin.Signature
+import         Term.Builtin.Rules
 import         Term.SubtermRule
 
 
@@ -31,7 +32,7 @@ import qualified Text.PrettyPrint.Highlight as H
 
 import qualified Data.Set as S
 import qualified Data.Label as L
-
+import Data.List as List
 import qualified Data.ByteString.Char8 as BC
 
 
@@ -84,6 +85,9 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   )
   ]
 
+
+builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules]
+  
 -- utility function, generate a sequence of type arguments, for events and function declaration
 make_args :: Int -> String
 make_args 0 = ""
@@ -191,7 +195,7 @@ loadProc thy = case theoryProcesses thy of
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
 loadHeaders thy =
-  (S.map  headerOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins -- `S.union` (S.map headerOfRule sigRules)
+  (S.map  headerOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule y)) S.empty sigRules) 
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- generating headers for function symbols, both for builtins and user defined functions
         sigFunSyms = stFunSyms sig
@@ -200,10 +204,23 @@ loadHeaders thy =
         headerOfFunSym (f,(k,Public)) = Fun (make_str (f,k) ++ ".")
         headerOfFunSym (f,(k,Private)) = Fun ((make_str (f,k))  ++ " [private].")
         make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
-        -- generating headers for equations, TODO, needs term printer for proverif
-        -- sigRules = stRules sig        
-        -- headerOfRule r = Eq (Text.PrettyPrint.Highlight.render (prettyCtxtStRule r))
-        
+        -- generating headers for equations
+        sigRules = stRules sig S.\\ builtins_rules
+
+headersOfRule r = case ctxtStRuleToRRule r of
+  (lhs `RRule` rhs) -> (S.singleton hrule)  `S.union` lsh `S.union` rsh          
+    where (plhs,lsh) = ppLNTerm lhs 
+          (prhs,rsh) = ppLNTerm rhs
+          hrule = Eq  ("equation forall" ++
+                       make_frees (map show freesr)  ++
+                       ";" ++
+                       (H.render $ sep [ nest 2 $ text plhs
+                           , operator_ "=" <-> (text prhs) ])++".")
+          freesr = List.union (frees lhs) (frees rhs)        
+          make_frees [] = ""
+          make_frees [x] = x ++ ":bitstring"
+          make_frees (x:xs) =  x ++ ":bitstring," ++ (make_frees xs)
+
 attribHeaders :: [ProverifHeader] -> [(String, String)]
 attribHeaders hd =
   eq ++ fun ++ sym
