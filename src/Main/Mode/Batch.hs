@@ -75,7 +75,10 @@ batchMode = tamarinMode
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
-  | otherwise    = do
+  | (argExists "parseOnly" as) || (argExists "outModule" as) = do
+      _ <- mapM processThy $ inFiles
+      putStrLn $ ""
+  | otherwise  = do
       _ <- ensureMaude as
       putStrLn $ ""
       summaries <- mapM processThy $ inFiles
@@ -85,7 +88,7 @@ run thisMode as
       putStrLn $ ""
       putStrLn $ renderDoc $ Pretty.vcat $ intersperse (Pretty.text "") summaries
       putStrLn $ ""
-      putStrLn $ replicate 78 '='
+      putStrLn $ replicate 78 '='           
   where
     -- handles to arguments
     -----------------------
@@ -131,7 +134,6 @@ run thisMode as
           out ppWfAndSummary          (return . prettyClosedTheory)     (loadClosedThy     as inFile)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
-
         ppWfAndSummary thy =
             case checkWellformedness (removeSapicItems (openTheory thy)) of
                 []   -> Pretty.emptyDoc
