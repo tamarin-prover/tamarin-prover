@@ -166,7 +166,7 @@ ppAction (Event (Fact tag m ts) )  = ("event " ++ pa, sh `S.union` (S.singleton 
 ppAction _  = ("Action not supported for translation", S.empty)
 
 ppComb :: ProcessCombinator -> (String, S.Set ProverifHeader)
-ppComb Parallel = ("||", S.empty)
+ppComb Parallel = ("|", S.empty)
 ppComb NDC = ("+", S.empty)
 ppComb (Cond a) = ("if "++ pa, sh)
   where (pa, sh) = ppFact a
