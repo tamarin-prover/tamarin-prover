@@ -71,7 +71,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Eq "equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a)."
       ]
   ),
-  (asymEncFunSig, [
+  (symEncFunSig, [
       Fun "fun senc(bitstring,bitstring):bitstring.",
       Eq "reduc forall m:bitstring,sk:bitstring; sdec(senc(m,sk),sk) = m."]
   ),
@@ -95,13 +95,15 @@ prettyProVerifTheory thy =  template hd [] proc
   where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
         (proc,prochd) = loadProc thy
 
--- pretty print an LNTerm, collecting the constant that need to be declared         
-ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
-ppLNTerm t = (ppTerm t, getHdTerm t)
+-- pretty print an LNTerm, collecting the constant that need to be declared
+-- a boolean b allows to add types to variables (for input bindings)        
+pppLNTerm :: Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
+pppLNTerm b t = (ppTerm t, getHdTerm t)
   where
     ppTerm t = case viewTerm t of
         Lit  (Con (Name FreshName n))             -> text $ show n
         Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (t)              | b                 -> text $ show t <> ":bitstring"                    
         Lit  (t)                                  -> text $ show t
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
@@ -128,6 +130,9 @@ ppLNTerm t = (ppTerm t, getHdTerm t)
         Lit  (t)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
+ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
+ppLNTerm = pppLNTerm False
+
 -- pretty print a Fact, collecting the constant that need to be declared         
 ppFact :: LNFact -> (Doc, S.Set ProverifHeader)
 ppFact (Fact tag _ ts)
@@ -145,14 +150,14 @@ ppAction (New n) = (text "new " <> (text $ show n) <> text ":bitstring", S.empty
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppLNTerm t1
-        (pt2, sh2) = ppLNTerm t2
+        (pt2, sh2) = pppLNTerm True t2
 ppAction (ChIn Nothing t2 )  = (text "in(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = ppLNTerm t2
+  where (pt2, sh2) = pppLNTerm True t2
 
 ppAction (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppLNTerm t1
         (pt2, sh2) = ppLNTerm t2
-ppAction (ChOut Nothing t2 )  = (text "out(attacher_channel," <> pt2 <> text ")", sh2)
+ppAction (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ")", sh2)
   where (pt2, sh2) = ppLNTerm t2
 ppAction (Event (Fact tag m ts) )  = (text "event " <> pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
   where (pa, sh) = ppFact (Fact tag m ts)
@@ -228,7 +233,7 @@ headersOfRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> (S.singleton hrule)  `S.union` lsh `S.union` rsh          
     where (plhs,lsh) = ppLNTerm lhs 
           (prhs,rsh) = ppLNTerm rhs
-          hrule = Eq  ("equation forall" ++
+          hrule = Eq  ("equation forall " ++
                        make_frees (map show freesr)  ++
                        ";" ++
                        (render $ sep [ nest 2 $ plhs

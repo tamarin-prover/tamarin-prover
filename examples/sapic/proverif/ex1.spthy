@@ -8,16 +8,18 @@ example illustrating some proverif translations:
 theory ChannelsTestOne
 begin
 
+builtins: symmetric-encryption
+
 functions: bij/1, unbij/1
 /* Check for communication on private channels */
 /*  - communication is private */
 /*  - communication is possible */
 equations: bij(unbij(x))=x
 
-let P = new a; event Secret(a); out (c, a);  out(c)
-let Q = in(c, <x,y>); if y='test' then event Received(x)
+let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
+let Q = in( m); let md = sdec(m,sk) in if snd(md)='test' then event Received(fst(md))
 
-new c; (P || Q)
+new sk; (P || Q)
 
 lemma secret : 
       "All x #i. ( Secret(x) @ i ==> not (Ex #j. K(x) @ j) )"
