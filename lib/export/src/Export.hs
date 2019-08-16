@@ -84,16 +84,21 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   )
   ]
 
-  
+-- utility function, generate a sequence of type arguments, for events and function declaration
+make_args :: Int -> String
+make_args 0 = ""
+make_args 1 = "bitstring"
+make_args n = "bitstring,"++(make_args (n-1))
+
+-- main pp function  
 prettyProVerifTheory :: HighlightDocument d => OpenTheory -> d
 prettyProVerifTheory thy = text result
   where result = toString tmp
         tmp = setAttribute "process" proc $ setManyAttrib hd template
         hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
         (proc,prochd) = loadProc thy
-        -- TODO - when term or event is pretty printed, need to collect the Headers to declare (for const & event)
 
-         
+-- pretty print an LNTerm, collecting the constant that need to be declared         
 ppLNTerm :: LNTerm -> (String,S.Set ProverifHeader)
 ppLNTerm t = (H.render $ ppTerm t, getHdTerm t)
   where
@@ -126,6 +131,18 @@ ppLNTerm t = (H.render $ ppTerm t, getHdTerm t)
         Lit  (t)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
+-- pretty print a Fact, collecting the constant that need to be declared         
+ppFact :: LNFact -> (String, S.Set ProverifHeader)
+ppFact (Fact tag _ ts)
+  | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
+  | otherwise                     = sppFact (showFactTag tag) ts
+  where
+    sppFact name ts = 
+      (H.render $ nestShort' (name ++ "(") ")" . fsep . punctuate comma $ map text pts, sh)
+      where (pts, shs) = unzip $ map ppLNTerm ts
+            sh = foldl S.union S.empty shs
+
+-- pretty print an Action, collecting the constant and events that need to be declared         
 ppAction :: SapicAction -> (String, S.Set ProverifHeader)
 ppAction (New n) = ("new "++ (show n) ++ ":bitstring", S.empty)
 ppAction Rep  = ("!", S.empty)
@@ -140,13 +157,15 @@ ppAction (ChOut (Just t1) t2 )  = ("out(" ++ pt1 ++ "," ++ pt2 ++ ")", sh1 `S.un
         (pt2, sh2) = ppLNTerm t2
 ppAction (ChOut Nothing t2 )  = ("out(attacher_channel," ++ pt2 ++ ")", sh2)
   where (pt2, sh2) = ppLNTerm t2
-ppAction (Event a )  = ("event " ++ H.render (prettyLNFact a), S.empty)
+ppAction (Event (Fact tag m ts) )  = ("event " ++ pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
+  where (pa, sh) = ppFact (Fact tag m ts)
 ppAction _  = ("Action not supported for translation", S.empty)
 
 ppComb :: ProcessCombinator -> (String, S.Set ProverifHeader)
 ppComb Parallel = ("||", S.empty)
 ppComb NDC = ("+", S.empty)
-ppComb (Cond a) = ("if "++ H.render (prettyLNFact a), S.empty)
+ppComb (Cond a) = ("if "++ pa, sh)
+  where (pa, sh) = ppFact a
 ppComb (CondEq t1 t2) = ("if "++ pt1 ++ "=" ++ pt2, sh1 `S.union` sh2)
   where (pt1, sh1) = ppLNTerm t1
         (pt2, sh2) = ppLNTerm t2                                          
@@ -174,16 +193,13 @@ loadHeaders :: OpenTheory -> S.Set ProverifHeader
 loadHeaders thy =
   (S.map  headerOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins -- `S.union` (S.map headerOfRule sigRules)
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
-        -- generating headers for function symbols
+        -- generating headers for function symbols, both for builtins and user defined functions
         sigFunSyms = stFunSyms sig
         funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf y sigFunSyms then  x `S.union` z else x )) S.empty builtins)
         funSymsNoBuiltin = sigFunSyms S.\\ ((foldl (\x (y,z) -> x `S.union` y  )) S.empty builtins)
         headerOfFunSym (f,(k,Public)) = Fun (make_str (f,k) ++ ".")
         headerOfFunSym (f,(k,Private)) = Fun ((make_str (f,k))  ++ " [private].")
         make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
-        make_args 0 = ""
-        make_args 1 = "bitstring"
-        make_args n = "bitstring,"++(make_args (n-1))
         -- generating headers for equations, TODO, needs term printer for proverif
         -- sigRules = stRules sig        
         -- headerOfRule r = Eq (Text.PrettyPrint.Highlight.render (prettyCtxtStRule r))
