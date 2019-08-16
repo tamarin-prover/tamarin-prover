@@ -23,12 +23,10 @@ import         Term.Builtin.Rules
 import         Term.SubtermRule
 
 
-import         Text.StringTemplate
 import         Theory
 import         Theory.Sapic
-import         Text.PrettyPrint.Highlight
+import         Text.PrettyPrint.Class
 
-import qualified Text.PrettyPrint.Highlight as H
 
 import qualified Data.Set as S
 import qualified Data.Label as L
@@ -36,17 +34,14 @@ import Data.List as List
 import qualified Data.ByteString.Char8 as BC
 
 
-template = newSTMP $ unlines [
-  "$headers;separator='\n'$",
-  "",
-  "$reduc;separator='\n'$",
-  "",
-  "$queries;separator='\n'$",
-  "",
-  "process",
-  "    $process$",
-  ""
-  ] :: StringTemplate String
+template headers queries process =
+  (vcat headers)
+  $$
+  (vcat queries)
+  $$
+  (text "process")
+  $$
+  (nest 4 process)
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProverifHeader =
@@ -95,21 +90,19 @@ make_args 1 = "bitstring"
 make_args n = "bitstring,"++(make_args (n-1))
 
 -- main pp function  
-prettyProVerifTheory :: HighlightDocument d => OpenTheory -> d
-prettyProVerifTheory thy = text result
-  where result = toString tmp
-        tmp = setAttribute "process" proc $ setManyAttrib hd template
-        hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
+prettyProVerifTheory :: OpenTheory -> Doc
+prettyProVerifTheory thy =  template hd [] proc
+  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
         (proc,prochd) = loadProc thy
 
 -- pretty print an LNTerm, collecting the constant that need to be declared         
-ppLNTerm :: LNTerm -> (String,S.Set ProverifHeader)
-ppLNTerm t = (H.render $ ppTerm t, getHdTerm t)
+ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
+ppLNTerm t = (ppTerm t, getHdTerm t)
   where
     ppTerm t = case viewTerm t of
         Lit  (Con (Name FreshName n))             -> text $ show n
-        Lit  (Con (Name PubName n))               -> text $  show n
-        Lit  (t)                                  -> text $  show t
+        Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (t)                                  -> text $ show t
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -136,61 +129,85 @@ ppLNTerm t = (H.render $ ppTerm t, getHdTerm t)
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
 -- pretty print a Fact, collecting the constant that need to be declared         
-ppFact :: LNFact -> (String, S.Set ProverifHeader)
+ppFact :: LNFact -> (Doc, S.Set ProverifHeader)
 ppFact (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
   | otherwise                     = sppFact (showFactTag tag) ts
   where
     sppFact name ts = 
-      (H.render $ nestShort' (name ++ "(") ")" . fsep . punctuate comma $ map text pts, sh)
+      (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
       where (pts, shs) = unzip $ map ppLNTerm ts
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared         
-ppAction :: SapicAction -> (String, S.Set ProverifHeader)
-ppAction (New n) = ("new "++ (show n) ++ ":bitstring", S.empty)
-ppAction Rep  = ("!", S.empty)
-ppAction (ChIn (Just t1) t2 )  = ("in(" ++ pt1 ++ "," ++ pt2 ++ ")", sh1 `S.union` sh2)
+ppAction :: SapicAction -> (Doc, S.Set ProverifHeader)
+ppAction (New n) = (text "new " <> (text $ show n) <> text ":bitstring", S.empty)
+ppAction Rep  = (text "!", S.empty)
+ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppLNTerm t1
         (pt2, sh2) = ppLNTerm t2
-ppAction (ChIn Nothing t2 )  = ("in(attacker_channel," ++ pt2 ++ ")", sh2)
+ppAction (ChIn Nothing t2 )  = (text "in(attacker_channel," <> pt2 <> text ")", sh2)
   where (pt2, sh2) = ppLNTerm t2
 
-ppAction (ChOut (Just t1) t2 )  = ("out(" ++ pt1 ++ "," ++ pt2 ++ ")", sh1 `S.union` sh2)
+ppAction (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppLNTerm t1
         (pt2, sh2) = ppLNTerm t2
-ppAction (ChOut Nothing t2 )  = ("out(attacher_channel," ++ pt2 ++ ")", sh2)
+ppAction (ChOut Nothing t2 )  = (text "out(attacher_channel," <> pt2 <> text ")", sh2)
   where (pt2, sh2) = ppLNTerm t2
-ppAction (Event (Fact tag m ts) )  = ("event " ++ pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
+ppAction (Event (Fact tag m ts) )  = (text "event " <> pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
   where (pa, sh) = ppFact (Fact tag m ts)
-ppAction _  = ("Action not supported for translation", S.empty)
+ppAction _  = (text "Action not supported for translation", S.empty)
 
-ppComb :: ProcessCombinator -> (String, S.Set ProverifHeader)
-ppComb Parallel = ("|", S.empty)
-ppComb NDC = ("+", S.empty)
-ppComb (Cond a) = ("if "++ pa, sh)
-  where (pa, sh) = ppFact a
-ppComb (CondEq t1 t2) = ("if "++ pt1 ++ "=" ++ pt2, sh1 `S.union` sh2)
-  where (pt1, sh1) = ppLNTerm t1
-        (pt2, sh2) = ppLNTerm t2                                          
-ppComb (Lookup t v) = ("lookup "++ pt1 ++ " as " ++ show v, sh1)
-  where (pt1, sh1) = ppLNTerm t
+ppSapic :: AnProcess ann -> (Doc, S.Set ProverifHeader)
+ppSapic (ProcessNull _) = (text "0", S.empty)
+ppSapic (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (ppr, pshr) = ppSapic pr
+ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (ppr, pshr) = ppSapic pr
 
-ppSapic :: AnProcess ann -> (String, S.Set ProverifHeader)
-ppSapic  = pfoldMap f 
-    where f (ProcessNull _) = ("0 \n", S.empty)
-          f (ProcessComb c _ _ _)  = (pc ++ "\n", sh)
-                                     where (pc, sh) = ppComb c
-          f (ProcessAction Rep _ _)  = ppAction Rep 
-          f (ProcessAction a _ _)  = (pa ++ ";", sh)
+ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
+  ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
+  where (ppl, pshl) = ppSapic pl
+        (pa, sh) = ppFact a
+
+ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (pt1, sh1) = ppLNTerm t1
+                                           (pt2, sh2) = ppLNTerm t2 
+                                           
+ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
+  ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
+  where (ppl, pshl) = ppSapic pl
+        (pa, sh) = ppFact a
+
+ppSapic (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (ppr, pshr) = ppSapic pr
+                                           (pt1, sh1) = ppLNTerm t1
+                                           (pt2, sh2) = ppLNTerm t2 
+   
+ppSapic (ProcessComb (Lookup t v )  _ pl pr)  = (text "lookup " <> pt1 <> text " as " <> (text $ show v) $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (ppr, pshr) = ppSapic pr
+                                           (pt1, sh1) = ppLNTerm t
+   
+
+                                           
+ppSapic (ProcessAction Rep _ p)  = (text "!" <> parens pp, psh)
+                                   where (pp, psh) = ppSapic p
+ppSapic  (ProcessAction a _ (ProcessNull _))  = (pa, sh)
                                      where (pa, sh) = ppAction a
+ppSapic  (ProcessAction a _ p)  = (pa <> text ";" $$ pp , sh `S.union` psh)
+                                     where (pa, sh) = ppAction a
+                                           (pp, psh) = ppSapic p
 
-
-loadProc :: OpenTheory -> (String, S.Set ProverifHeader)
+loadProc :: OpenTheory -> (Doc, S.Set ProverifHeader)
 loadProc thy = case theoryProcesses thy of
-  []  -> ("", S.empty)
+  []  -> (text "", S.empty)
   [p] -> ppSapic p
-  ps  -> ("Multiple sapic processes detected, error", S.empty)
+  ps  -> (text "Multiple sapic processes detected, error", S.empty)
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
@@ -214,21 +231,21 @@ headersOfRule r = case ctxtStRuleToRRule r of
           hrule = Eq  ("equation forall" ++
                        make_frees (map show freesr)  ++
                        ";" ++
-                       (H.render $ sep [ nest 2 $ text plhs
-                           , operator_ "=" <-> (text prhs) ])++".")
+                       (render $ sep [ nest 2 $ plhs
+                           , text "=" <-> prhs ])++".")
           freesr = List.union (frees lhs) (frees rhs)        
           make_frees [] = ""
           make_frees [x] = x ++ ":bitstring"
           make_frees (x:xs) =  x ++ ":bitstring," ++ (make_frees xs)
 
-attribHeaders :: [ProverifHeader] -> [(String, String)]
+attribHeaders :: [ProverifHeader] -> [Doc]
 attribHeaders hd =
-  eq ++ fun ++ sym
+  sym ++ fun ++ eq
   where (eq,fun,sym) = splitHeaders hd
         splitHeaders [] = ([],[],[])
         splitHeaders (x:xs)
-          | Sym s <- x = (e1,f1,("headers",s):s1)
-          | Fun s <- x =  (e1,("headers",s):f1,s1)
-          | Eq s <- x =  (("headers", s):e1,f1,s1)
+          | Sym s <- x = (e1,f1,(text s):s1)
+          | Fun s <- x =  (e1,(text s):f1,s1)
+          | Eq s <- x =  ((text s):e1,f1,s1)
           where (e1,f1,s1) = splitHeaders xs
           

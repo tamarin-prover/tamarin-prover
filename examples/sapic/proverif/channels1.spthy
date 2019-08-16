@@ -15,7 +15,7 @@ functions: bij/1, unbij/1
 equations: bij(unbij(x))=x
 
 let P = new a; event Secret(a); out (c, a);  out(c)
-let Q = in(c, <x,'test'>); event Received(x)
+let Q = in(c, <x,y>); if y='test' then event Received(x)
 
 new c; (P || Q)
 

@@ -139,7 +139,6 @@ executable tamarin-prover
       , file-embed
       , filepath
       , gitrev
-      , HStringTemplate
       , http-types
       , lifted-base
       , monad-unlift
