@@ -3,6 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE ViewPatterns               #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme and Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -19,6 +20,7 @@ module Export (
 
 import         Term.Builtin.Signature
 import         Term.SubtermRule
+
 
 import         Text.StringTemplate
 import         Theory
@@ -87,43 +89,85 @@ prettyProVerifTheory :: HighlightDocument d => OpenTheory -> d
 prettyProVerifTheory thy = text result
   where result = toString tmp
         tmp = setAttribute "process" proc $ setManyAttrib hd template
-        hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy))
-        proc = loadProc thy
+        hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
+        (proc,prochd) = loadProc thy
         -- TODO - when term or event is pretty printed, need to collect the Headers to declare (for const & event)
 
-ppAction :: SapicAction -> String
-ppAction (New n) = "new "++ (show n) ++ ":bitstring"
-ppAction Rep  = "!"
-ppAction (ChIn (Just t1) t2 )  = "in(" ++ H.render (prettyLNTerm t1) ++ "," ++ H.render ( prettyLNTerm t2) ++ ")"
-ppAction (ChIn Nothing t2 )  = "in(attacker_channel," ++ H.render (prettyLNTerm t2) ++ ")"
-ppAction (ChOut (Just t1) t2 )  = "out(" ++ H.render (prettyLNTerm t1) ++ "," ++ H.render (prettyLNTerm t2) ++ ")"
-ppAction (ChOut Nothing t2 )  = "out(attacher_channel," ++ H.render (prettyLNTerm t2) ++ ")"
-ppAction (Event a )  = "event " ++ H.render (prettyLNFact a)
-ppAction _  = "Action not supported for translation"
+         
+ppLNTerm :: LNTerm -> (String,S.Set ProverifHeader)
+ppLNTerm t = (H.render $ ppTerm t, getHdTerm t)
+  where
+    ppTerm t = case viewTerm t of
+        Lit  (Con (Name FreshName n))             -> text $ show n
+        Lit  (Con (Name PubName n))               -> text $  show n
+        Lit  (t)                                  -> text $  show t
+        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+        FApp (NoEq s)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split t)
+        FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
+        FApp (NoEq (f, _)) ts                     -> ppFun f ts
+        FApp (C EMap)      ts                     -> ppFun emapSymString ts
+        FApp List          ts                     -> ppFun (BC.pack"LIST") ts
+               
+    ppACOp Mult  = "*"
+    ppACOp Union = "+"
+    ppACOp Xor   = "⊕"
+    ppTerms sepa n lead finish ts =
+        fcat . (text lead :) . (++[text finish]) .
+            map (nest n) . punctuate (text sepa) . map ppTerm $ ts
+    split (viewTerm2 -> FPair t1 t2) = t1 : split t2
+    split t                          = [t]
+  
+    ppFun f ts =
+      text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+    getHdTerm t =  case viewTerm t of
+        Lit  (Con (Name PubName n))               -> S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+        Lit  (t)                                  -> S.empty
+        FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
-ppComb :: ProcessCombinator -> String
-ppComb Parallel = "||"
-ppComb NDC = "+"
-ppComb (Cond a) = "if "++ H.render (prettyLNFact a)
-ppComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
-                                    where p = H.render . prettyLNTerm
-ppComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
-                                    where p = H.render . prettyLNTerm
+ppAction :: SapicAction -> (String, S.Set ProverifHeader)
+ppAction (New n) = ("new "++ (show n) ++ ":bitstring", S.empty)
+ppAction Rep  = ("!", S.empty)
+ppAction (ChIn (Just t1) t2 )  = ("in(" ++ pt1 ++ "," ++ pt2 ++ ")", sh1 `S.union` sh2)
+  where (pt1, sh1) = ppLNTerm t1
+        (pt2, sh2) = ppLNTerm t2
+ppAction (ChIn Nothing t2 )  = ("in(attacker_channel," ++ pt2 ++ ")", sh2)
+  where (pt2, sh2) = ppLNTerm t2
 
+ppAction (ChOut (Just t1) t2 )  = ("out(" ++ pt1 ++ "," ++ pt2 ++ ")", sh1 `S.union` sh2)
+  where (pt1, sh1) = ppLNTerm t1
+        (pt2, sh2) = ppLNTerm t2
+ppAction (ChOut Nothing t2 )  = ("out(attacher_channel," ++ pt2 ++ ")", sh2)
+  where (pt2, sh2) = ppLNTerm t2
+ppAction (Event a )  = ("event " ++ H.render (prettyLNFact a), S.empty)
+ppAction _  = ("Action not supported for translation", S.empty)
 
-ppSapic :: AnProcess ann -> String
+ppComb :: ProcessCombinator -> (String, S.Set ProverifHeader)
+ppComb Parallel = ("||", S.empty)
+ppComb NDC = ("+", S.empty)
+ppComb (Cond a) = ("if "++ H.render (prettyLNFact a), S.empty)
+ppComb (CondEq t1 t2) = ("if "++ pt1 ++ "=" ++ pt2, sh1 `S.union` sh2)
+  where (pt1, sh1) = ppLNTerm t1
+        (pt2, sh2) = ppLNTerm t2                                          
+ppComb (Lookup t v) = ("lookup "++ pt1 ++ " as " ++ show v, sh1)
+  where (pt1, sh1) = ppLNTerm t
+
+ppSapic :: AnProcess ann -> (String, S.Set ProverifHeader)
 ppSapic  = pfoldMap f 
-    where f (ProcessNull _) = "0 \n"
-          f (ProcessComb c _ _ _)  = ppComb c ++ "\n"
+    where f (ProcessNull _) = ("0 \n", S.empty)
+          f (ProcessComb c _ _ _)  = (pc ++ "\n", sh)
+                                     where (pc, sh) = ppComb c
           f (ProcessAction Rep _ _)  = ppAction Rep 
-          f (ProcessAction a _ _)  = ppAction a ++ ";"
+          f (ProcessAction a _ _)  = (pa ++ ";", sh)
+                                     where (pa, sh) = ppAction a
 
 
-loadProc :: OpenTheory -> String
+loadProc :: OpenTheory -> (String, S.Set ProverifHeader)
 loadProc thy = case theoryProcesses thy of
-  []  -> ""
+  []  -> ("", S.empty)
   [p] -> ppSapic p
-  ps  -> "Multiple sapic processes detected, error"
+  ps  -> ("Multiple sapic processes detected, error", S.empty)
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
