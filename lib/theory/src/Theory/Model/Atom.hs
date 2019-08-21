@@ -1,13 +1,13 @@
-{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
 -- {-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleInstances     #-}
 -- {-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TemplateHaskell       #-}
 -- {-# LANGUAGE TupleSections        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE ViewPatterns         #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 -- {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
   -- spurious warnings for view patterns
@@ -105,13 +105,13 @@ instance HasFrees t => HasFrees (Atom t) where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in atoms for now
     mapFrees  f = traverse (mapFrees f)
 
-instance Apply LNAtom where
+instance Apply LNSubst LNAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
 
-instance Apply BLAtom where
+instance Apply LNSubst BLAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)

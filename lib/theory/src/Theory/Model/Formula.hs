@@ -7,6 +7,7 @@
 {-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE MultiParamTypeClasses#-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -241,7 +242,7 @@ instance HasFrees LNFormula where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
     mapFrees   f = traverseFormula (mapFrees   f)
 
-instance Apply LNFormula where
+instance Apply LNSubst LNFormula where
     apply subst = mapAtoms (const $ apply subst)
 
 ------------------------------------------------------------------------------

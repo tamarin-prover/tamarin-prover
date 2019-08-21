@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -87,7 +88,6 @@ type LSubst c = Subst c LVar
 
 -- | A substitution with names and logical variables.
 type LNSubst = Subst Name LVar
-
 
 -- Application
 ----------------------------------------------------------------------
@@ -218,11 +218,12 @@ instance Ord c => HasFrees (LSubst c) where
     foldFreesOcc = mempty -- we ignore occurences in substitutions for now
     mapFrees   f = (substFromList <$>) . mapFrees   f . substToList
 
--- | Types that support the application of 'LSubst's.
-class Apply t where
-    apply :: LNSubst -> t -> t
+-- | Types that support the application of some type
+class Apply t' t where
+    apply :: t' -> t -> t
 
-instance Apply LVar where
+
+instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
     apply subst x = maybe x extractVar $ imageOf subst x
       where
         extractVar (viewTerm -> Lit (Var x')) = x'
@@ -230,10 +231,10 @@ instance Apply LVar where
           error $ "apply (LVar): variable '" ++ show x ++
                   "' substituted with term '" ++ show t ++ "'"
 
-instance Apply LNTerm where
+instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
     apply subst = applyVTerm subst
 
-instance Apply BLVar where
+instance Apply LNSubst BLVar where
     apply _     x@(Bound _) = x
     apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
       where
@@ -242,7 +243,7 @@ instance Apply BLVar where
           error $ "apply (BLVar): variable '" ++ show v ++
                   "' substituted with term '" -- ++ show _t ++ "'"
 
-instance Apply BLTerm where
+instance Apply LNSubst BLTerm where
     apply subst = (`bindTerm` applyBLLit)
       where
         applyBLLit :: Lit Name BLVar -> BLTerm
@@ -250,48 +251,47 @@ instance Apply BLTerm where
             maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
         applyBLLit l                = lit l
 
-instance Apply () where
+instance Apply s () where
     apply _ = id
 
-instance Apply Char where
+instance Apply s Char where
     apply _ = id
 
-instance Apply Int where
+instance Apply s Int where
     apply _ = id
 
-instance Apply Bool where
+instance Apply s Bool where
     apply _ = id
 
-instance (Apply a, Apply b) => Apply (a, b) where
+instance (Apply s a, Apply s b) => Apply s (a, b) where
     apply subst (x,y) = (apply subst x, apply subst y)
 
-instance (Apply a, Apply b, Apply c) => Apply (a, b, c) where
+instance (Apply s a, Apply s b, Apply s c) => Apply s (a, b, c) where
     apply subst (x,y,z) = (apply subst x, apply subst y, apply subst z)
 
-instance Apply a => Apply (Maybe a) where
+instance Apply s a => Apply s (Maybe a) where
     apply subst = fmap (apply subst)
 
-instance (Apply a, Apply b) => Apply (Either a b) where
+instance (Apply s a, Apply s b) => Apply s (Either a b) where
     apply subst = either (Left . apply subst) (Right . apply subst)
 
-instance Apply a => Apply [a] where
+instance Apply s a => Apply s [a] where
     apply subst = fmap (apply subst)
 
-instance Apply a => Apply (Map k a) where
+instance Apply s a => Apply s (Map k a) where
     apply subst = fmap (apply subst)
 
-instance Apply a => Apply (Conj a) where
+instance Apply s a => Apply s (Conj a) where
     apply subst = fmap (apply subst)
 
-instance Apply a => Apply (Disj a) where
+instance Apply s a => Apply s (Disj a) where
     apply subst = fmap (apply subst)
 
-instance (Ord a, Apply a) => Apply (S.Set a) where
+instance (Ord a, Apply s a) => Apply s (S.Set a) where
     apply subst = S.map (apply subst)
 
-instance Apply t => Apply (Equal t) where
+instance Apply s t => Apply s (Equal t) where
     apply subst = fmap (apply subst)
-
 
 ----------------------------------------------------------------------
 -- Pretty Printing

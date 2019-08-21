@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -375,7 +376,7 @@ closeGuarded qua vs as gf =
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
-instance Apply LNGuarded where
+instance Apply LNSubst LNGuarded where
   apply subst = mapGuardedAtoms (const $ apply subst)
 
 

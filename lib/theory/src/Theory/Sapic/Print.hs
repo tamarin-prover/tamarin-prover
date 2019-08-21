@@ -35,12 +35,12 @@ module Theory.Sapic.Print (
 import           Theory.Model.Fact
 import           Theory.Model.Rule
 import           Theory.Sapic
--- import           Term.LTerm
+import           Term.LTerm
 import           Theory.Text.Pretty
 
 
-rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> String
-rulePrinter l a r = render $ prettyRule l a r
+rulePrinter :: Show l => [Fact (Term l)] -> [Fact (Term l)] -> [Fact (Term l)] -> String
+rulePrinter l a r = render $ prettyRuleShow l a r
 
 -- | Instantiate prenters with rulePrinter from Theory.Text.Pretty
 prettySapicAction :: SapicAction -> String

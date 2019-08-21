@@ -7,6 +7,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -123,6 +124,8 @@ module Theory.Model.Rule (
   , reservedRuleNames
   , showRuleCaseName
   , prettyRule
+  , prettyRuleGen
+  , prettyRuleShow
   , prettyProtoRuleName
   , prettyRuleName
   , prettyRuleAttribute
@@ -267,7 +270,7 @@ instance (Show i, HasFrees i) => HasFrees (Rule i) where
              <*> mapFrees f ps <*> mapFrees f cs <*> mapFrees f as
              <*> mapFrees f nvs
 
-instance Apply i => Apply (Rule i) where
+instance Apply LNSubst i => Apply LNSubst (Rule i) where
     apply subst (Rule i ps cs as nvs) =
         Rule (apply subst i) (apply subst ps) (apply subst cs) (apply subst as) (apply subst nvs)
 
@@ -303,7 +306,7 @@ instance (HasFrees p, HasFrees i) => HasFrees (RuleInfo p i) where
     mapFrees   f = ruleInfo (fmap ProtoInfo . mapFrees   f)
                             (fmap IntrInfo . mapFrees   f)
 
-instance (Apply p, Apply i) => Apply (RuleInfo p i) where
+instance (Apply s p, Apply s i) => Apply s (RuleInfo p i) where
     apply subst = ruleInfo (ProtoInfo . apply subst) (IntrInfo . apply subst)
 
 
@@ -370,7 +373,7 @@ $(mkLabels [''ProtoRuleEInfo, ''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
 
 -- Instances
 ------------
-instance Apply RuleAttribute where
+instance Apply s RuleAttribute where
     apply _ = id
 
 instance HasFrees RuleAttribute where
@@ -378,7 +381,7 @@ instance HasFrees RuleAttribute where
     foldFreesOcc _ _ = const mempty
     mapFrees  _ = pure
 
-instance Apply ProtoRuleName where
+instance Apply s ProtoRuleName where
     apply _ = id
 
 instance HasFrees ProtoRuleName where
@@ -386,7 +389,7 @@ instance HasFrees ProtoRuleName where
     foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
-instance Apply PremIdx where
+instance Apply s PremIdx where
     apply _ = id
 
 instance HasFrees PremIdx where
@@ -394,7 +397,7 @@ instance HasFrees PremIdx where
     foldFreesOcc  _ _ = const mempty
     mapFrees   _ = pure
 
-instance Apply ConcIdx where
+instance Apply s ConcIdx where
     apply _ = id
 
 instance HasFrees ConcIdx where
@@ -409,7 +412,7 @@ instance HasFrees ProtoRuleEInfo where
     mapFrees f (ProtoRuleEInfo na attr) =
         ProtoRuleEInfo na <$> mapFrees f attr
 
-instance Apply ProtoRuleEInfo where
+instance Apply s ProtoRuleEInfo where
     apply _ = id
 
 instance HasFrees ProtoRuleACInfo where
@@ -424,7 +427,7 @@ instance HasFrees ProtoRuleACInfo where
                            <*> mapFrees f vari
                            <*> mapFrees f breakers
 
-instance Apply ProtoRuleACInstInfo where
+instance Apply s ProtoRuleACInstInfo where
     apply subst (ProtoRuleACInstInfo na attr breakers) =
         ProtoRuleACInstInfo (apply subst na) attr breakers
 
@@ -522,7 +525,7 @@ destrRuleToDestrRule _ = error "Not a destructor rule."
 -- Instances
 ------------
 
-instance Apply IntrRuleACInfo where
+instance Apply s IntrRuleACInfo where
     apply _ = id
 
 instance HasFrees IntrRuleACInfo where
@@ -1026,7 +1029,7 @@ prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
     RuleColor c -> text "color=" <> text (rgbToHex c)
     Process   p -> text "process=" <> text (prettySapicTopLevel' f p)
-        where f l a r = render $ prettyRule l a r
+        where f l a r = render $ prettyRuleShow l a r
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
@@ -1045,8 +1048,8 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
-prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
-prettyRule prems acts concls=
+prettyRuleGen :: (HighlightDocument d) => (f -> d) -> [f] -> [f] -> [f] -> d
+prettyRuleGen ppFact prems acts concls=
     (sep [ nest 1 $ ppFactsList prems
                 , if null acts
                     then operator_ "-->"
@@ -1056,8 +1059,14 @@ prettyRule prems acts concls=
 --     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
   where
     ppList pp        = fsep . punctuate comma . map pp
-    ppFacts'         = ppList prettyLNFact
+    ppFacts'         = ppList ppFact
     ppFactsList list = fsep [operator_ "[", ppFacts' list, operator_ "]"]
+
+prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
+prettyRule = prettyRuleGen prettyLNFact
+
+prettyRuleShow :: (HighlightDocument d, Show l) => [Fact (Term l)] -> [Fact (Term l)] -> [Fact (Term l)] -> d
+prettyRuleShow = prettyRuleGen (prettyFact $ prettyTerm $ text . show)
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
                 => d           -- ^ Prefix.
