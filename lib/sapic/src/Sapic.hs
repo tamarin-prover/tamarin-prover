@@ -80,6 +80,13 @@ translate th = case theoryProcesses th of
                     BT.reliableChannelTrans BT.baseTrans
                   else
                     BT.baseTrans
+    computeIf True  f = f
+    computeIf False _ = id
+    computeIf' lens f = computeIf' (L.get lens ops) f
+    trans' = foldl (.) BT.baseTrans [ --- fold from left, i.e., top.
+                        computeIf' transReliable BT.reliableChannelTrans -- TODO move reliableChannelTrans into its own package
+                      , computeIf' transProgress 
+                      ] 
     restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
                                       , hasProgress = L.get transProgress ops
                                       , hasReliableChannels = L.get transReliable ops }

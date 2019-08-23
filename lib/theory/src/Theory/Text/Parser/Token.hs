@@ -34,6 +34,7 @@ module Theory.Text.Parser.Token (
   , lvar
   , msgvar
   , nodevar
+  , sapicvar
 
   , letIdentifier
 
@@ -111,6 +112,7 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
+import           Theory.Sapic
 
 
 ------------------------------------------------------------------------------
@@ -309,6 +311,25 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 pubName :: Parser String
 pubName = singleQuoted identifier
 
+
+-- | Parse a variable in sapic that is typed:
+--   first parse for lvar, then parse for one more type
+--   so:
+--   ~x: foo
+--   $x: bar
+--   x: foo
+--   are all valid, but
+--   x: pub: foo
+--   is not
+sapicvar :: Parser SapicLVar
+sapicvar = do
+        s <- option LSortMsg $ asum $ map mkPrefixParser [LSortFresh, LSortPub, LSortMsg]
+        (n, i) <- indexedIdentifier <* colon
+        t <- identifier 
+        return (SapicLVar (LVar n s i) t ) 
+    where mkPrefixParser s = do
+                _ <- symbol (sortSuffix s)
+                return s
 
 -- Term Operators
 -----------------

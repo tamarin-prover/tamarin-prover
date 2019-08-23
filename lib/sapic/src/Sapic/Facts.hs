@@ -58,17 +58,17 @@ data TransAction =  InitEmpty
   | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
   | Listen ProcessPosition LVar
-  | Receive ProcessPosition SapicTerm
-  | IsIn SapicTerm LVar
-  | IsNotSet SapicTerm
-  | InsertA SapicTerm SapicTerm
-  | DeleteA SapicTerm
-  | ChannelIn SapicTerm
-  | Send ProcessPosition SapicTerm
-  | LockUnnamed SapicTerm LVar
-  | LockNamed SapicTerm LVar
-  | UnlockUnnamed SapicTerm LVar
-  | UnlockNamed SapicTerm LVar
+  | Receive ProcessPosition LNTerm
+  | IsIn LNTerm LVar
+  | IsNotSet LNTerm
+  | InsertA LNTerm LNTerm
+  | DeleteA LNTerm
+  | ChannelIn LNTerm
+  | Send ProcessPosition LNTerm
+  | LockUnnamed LNTerm LVar
+  | LockNamed LNTerm LVar
+  | UnlockUnnamed LNTerm LVar
+  | UnlockNamed LNTerm LVar
   | TamarinAct LNFact
 
 -- | Facts that are used as premises and conclusions.
@@ -77,10 +77,10 @@ data TransAction =  InitEmpty
 -- actions. Semistates are used in rules where a SAPIC step might take more
 -- than one MSR step, i.e., messages over private channels.
 data StateKind  = LState | PState | LSemiState | PSemiState
-data TransFact =  Fr LVar | In SapicTerm
-            | Out SapicTerm
-            | Message SapicTerm SapicTerm
-            | Ack SapicTerm SapicTerm
+data TransFact =  Fr LVar | In LNTerm
+            | Out LNTerm
+            | Message LNTerm LNTerm
+            | Ack LNTerm LNTerm
             | State StateKind ProcessPosition (S.Set LVar)
             | MessageIDSender ProcessPosition
             | MessageIDReceiver ProcessPosition
@@ -168,18 +168,13 @@ varMsgId p = LVar n s i
           s = LSortFresh
           i = 0
 
--- actionToFact :: TransAction -> Fact t
-actionToFact :: TransAction -> Fact (VTerm Name LVar)
+actionToFact :: TransAction -> Fact LNTerm
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | Not implemented yet: progress
   -- | StopId
   -- | EventEmpty
   -- | EventId
-  -- | ProgressFrom ProcessPosition
-  -- | ProgressTo ProcessPosition ProcessPosition
   -- | Listen ProcessPosition LVar
-  -- | Receive ProcessPosition SapicTerm
-actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
+actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
 actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
@@ -212,7 +207,7 @@ varMID p = LVar n s i
                 -- We could also compute it from the position as before,
                 -- but I don't see an advantage (yet)
 
-factToFact :: TransFact -> Fact SapicTerm
+factToFact :: TransFact -> Fact LNTerm
 factToFact (Fr v) = freshFact $ varTerm (v)
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t

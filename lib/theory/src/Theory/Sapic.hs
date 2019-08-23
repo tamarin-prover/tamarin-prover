@@ -19,7 +19,10 @@ module Theory.Sapic (
     Process
     , ProcessCombinator(..)
     , AnProcess(..)
+    , SapicType
+    , defaultSapicType
     , SapicAction(..)
+    , SapicLVar(..)
     , SapicTerm
     , paddAnn
     , applyProcess
@@ -52,11 +55,14 @@ import Control.Monad.Catch
 -- | In general, terms we use in the translation have logical veriables
 
 type SapicType = String
-data SapicLVar = SapicLVar LVar SapicType 
+data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType }
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
 type LNTTerm = VTerm Name SapicLVar
 type SapicTerm = LNTTerm
 type SapicLNFact = Fact SapicTerm
+
+defaultSapicType :: String
+defaultSapicType = "bitstring"
 
 -- | A substitution with names and typed logical variables.
 type SapicSubst = Subst Name SapicLVar

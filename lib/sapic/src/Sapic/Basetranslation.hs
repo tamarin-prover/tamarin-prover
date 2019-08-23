@@ -28,6 +28,17 @@ import Sapic.Annotation
 -- import Data.Typeable
 import Data.Set            hiding (map)
 -- import Control.Monad.Trans.FastFresh
+--
+
+-- TODO not sure which module to more these two
+toLVar:: SapicLVar -> LVar
+toLVar = slvar
+
+toLNTerm:: SapicTerm -> LNTerm 
+toLNTerm = fmap f 
+    where 
+        f (Con c) = Con c
+        f (Var v) = Var $ toLVar v
 
 -- | The basetranslation has three functions, one for translation the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
@@ -38,12 +49,12 @@ baseTrans :: MonadThrow m =>
                           SapicAction
                           -> ProcessAnnotation
                           -> [Int]
-                          -> Set LVar
+                          -> Set SapicLVar
                           -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
                           ProcessCombinator
                           -> p1
                           -> ProcessPosition
-                          -> Set LVar
+                          -> Set SapicLVar
                           -> m ([([TransFact], [TransAction], [TransFact])], Set LVar,
                                  Set LVar))
 baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
@@ -58,12 +69,12 @@ baseTransNull _ p tildex =  [([State LState p tildex ], [], [])]
 baseTransAction :: SapicAction
                              -> ProcessAnnotation
                              -> [Int]
-                             -> Set LVar
-                             -> ([([TransFact], [TransAction], [TransFact])], Set LVar)
+                             -> Set SapicLVar
+                             -> ([([TransFact], [TransAction], [TransFact])], Set SapicLVar)
 baseTransAction ac an p tildex
     |  Rep <- ac = ([
-          ([def_state], [], [State PSemiState (p++[1]) tildex ]),
-          ([State PSemiState (p++[1]) tildex], [], [def_state' tildex])
+          ([def_state], [], [State PSemiState (p++[1]) (dropTypes tildex) ]),
+          ([State PSemiState (p++[1]) (dropTypes tildex)], [], [def_state' tildex])
           ], tildex)
     | (New v) <- ac = let tx' = v `insert` tildex in
         ([ ([def_state, Fr v], [], [def_state' tx']) ], tx')
@@ -116,8 +127,9 @@ baseTransAction ac an p tildex
           ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
-        def_state = State LState p tildex -- default state when entering
-        def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
+        dropTypes = fmap toLVar
+        def_state = State LState p (dropTypes tildex) -- default state when entering
+        def_state' tx = State LState (p++[1]) (dropTypes tx) -- default follow upstate, possibly with new bound variables
         freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
 
@@ -131,7 +143,7 @@ baseTransAction ac an p tildex
 --      a set of mrs
 --      the set of bound variables for the lhs process
 --      the set of bound variables for the rhs process
-baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set LVar
+baseTransComb :: ProcessCombinator -> p -> ProcessPosition -> Set SapicLVar
     -> ([([TransFact], [TransAction], [TransFact])], Set LVar, Set LVar)
 baseTransComb c _ p tildex
     | Parallel <- c = (

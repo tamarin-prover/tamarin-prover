@@ -32,8 +32,8 @@ getTermVariables :: LNTerm -> S.Set LVar
 getTermVariables ts =
   S.fromList $ L.map fst $ varOccurences ts
 
--- | Get all variables never outputed
-getSecretChannels :: AnProcess ProcessAnnotation -> S.Set LVar -> S.Set LVar
+-- | Get all variables that were never output
+getSecretChannels :: AnProcess ProcessAnnotation -> S.Set SapicLVar -> S.Set SapicLVar
 getSecretChannels (ProcessAction (New v) _ p) candidates =
   let c = S.insert v candidates in
     getSecretChannels p c

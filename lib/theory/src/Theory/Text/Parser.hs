@@ -145,6 +145,10 @@ llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
 llitNoPub :: Parser LNTerm
 llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 
+-- | Parse an lit with logical typed variables for SAPIC
+ltypedlit :: Parser SapicTerm
+ltypedlit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> sapicvar]
+
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
 lookupArity :: String -> Parser (Int, Privacy)
@@ -336,24 +340,30 @@ protoRule = do
     ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
-    subst <- option emptySubst letBlock
-    (ps0,as0,cs0) <- genericRule
+    subst <- option emptySubst $ letBlock 
+    (ps0,as0,cs0) <- genericRule llit
     let (ps,as,cs) = apply subst (ps0,as0,cs0)
     return $ Rule ri ps cs as (newVariables ps cs)
 
 -- | Parse a let block with bottom-up application semantics.
-letBlock :: Parser LNSubst
-letBlock = do
+-- genericletBlock :: Parser (Term (Lit c v)) -> Parser (Subst c v)
+genericletBlock :: (IsConst c, IsVar v) => Parser (Term (Lit c v)) -> Parser
+    v -> Parser (Subst c v)
+genericletBlock litp varp = do
     toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
+    definition = (,) <$> (varp <* equalSign) <*> msetterm litp
+
+
+letBlock :: Parser LNSubst
+letBlock = genericletBlock llit (sortedLVar [LSortMsg])
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
-    (ps,as,cs) <- genericRule
+    (ps,as,cs) <- genericRule llit
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
@@ -366,12 +376,12 @@ intrRule = do
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact])
-genericRule =
-    (,,) <$> list (fact llit)
+genericRule :: Ord l => Parser (Term l) -> Parser ([Fact (Term l)], [Fact (Term l)], [Fact (Term l)])
+genericRule lit =
+    (,,) <$> list (fact lit)
          <*> ((pure [] <* symbol "-->") <|>
-              (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
-         <*> list (fact llit)
+              (symbol "--[" *> commaSep (fact lit) <* symbol "]->"))
+         <*> list (fact lit)
 
 newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
 newVariables prems concs = map varTerm $ S.toList newvars
@@ -886,70 +896,70 @@ processDef thy= do
 sapicAction :: Parser SapicAction
 sapicAction = try (do 
                         _ <- symbol "new"
-                        s <- msgvar 
+                        s <- sapicvar 
                         return (New s)
                    )
                <|> try (do 
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
                <|> try (do 
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm ltypedlit
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
                <|> try (do 
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- symbol ")"
                         return (ChOut Nothing t)
                    )
                <|> try (do 
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm ltypedlit
                         _ <- symbol ")"
                         return (ChOut (Just t) t')
                    )
                <|> try (do 
                         _ <- symbol "insert"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm ltypedlit
                         return (Insert t t')
                    )
                <|> try (do 
                         _ <- symbol "delete"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         return (Delete t)
                    )
                <|> try (do 
                         _ <- symbol "lock"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         return (Lock t)
                    )
                <|> try (do 
                         _ <- symbol "unlock"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         return (Unlock t)
                    )
                <|> try (do 
                         _ <- symbol "event"
-                        f <- fact llit
+                        f <- fact ltypedlit
                         return (Event f)
                    )
                <|> try (do 
-                        r <- genericRule
+                        r <- genericRule ltypedlit
                         return (MSR r)
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
@@ -995,20 +1005,18 @@ process thy=
                         p <- actionprocess thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
-                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of 
+                        m <- msetterm ltypedlit
+                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of 
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
-                        -- TODO SAPIC parser: multterm return
-                        -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
             <|>    try  (do -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
                         return p)
             <|>    try  (do -- let expression parser
-                        subst <- letBlock
+                        subst <- genericletBlock ltypedlit sapicvar
                         p <- process thy
                         case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
@@ -1026,9 +1034,9 @@ actionprocess thy=
                         return (ProcessAction Rep mempty p))
             <|> try (do     -- lookup / if with and w/o else branches
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- symbol "as"
-                        v <- msgvar
+                        v <- sapicvar
                         _ <- symbol "in"
                         p <- process thy
                         _ <- symbol "else"
@@ -1037,18 +1045,18 @@ actionprocess thy=
                    )
             <|> try (do 
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm ltypedlit
                         _ <- symbol "as"
-                        v <- msgvar
+                        v <- sapicvar
                         _ <- symbol "in"
                         p <- process thy
                         return (ProcessComb (Lookup t v) mempty p (ProcessNull mempty))
                    )
             <|> try (do 
                         _ <- symbol "if"
-                        t1 <- msetterm llit
+                        t1 <- msetterm ltypedlit
                         _ <- opEqual
-                        t2 <- msetterm llit
+                        t2 <- msetterm ltypedlit
                         _ <- symbol "then"
                         p <- process thy
                         _ <- symbol "else"
@@ -1057,7 +1065,7 @@ actionprocess thy=
                    )
             <|> try (do 
                         _ <- symbol "if"
-                        pr <- fact llit
+                        pr <- fact ltypedlit
                         _ <- symbol "then"
                         p <- process thy
                         _ <- symbol "else"
@@ -1066,16 +1074,16 @@ actionprocess thy=
                    )
             <|> try (do 
                         _ <- symbol "if"
-                        t1 <- msetterm llit
+                        t1 <- msetterm ltypedlit
                         _ <- opEqual
-                        t2 <- msetterm llit
+                        t2 <- msetterm ltypedlit
                         _ <- symbol "then"
                         p <- process thy
                         return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
                    )
             <|> try (do 
                         _ <- symbol "if"
-                        pr <- fact llit
+                        pr <- fact ltypedlit
                         _ <- symbol "then"
                         p <- process thy
                         return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
@@ -1099,7 +1107,7 @@ actionprocess thy=
                         return a 
                         )
             <|>    try  (do -- let expression parser
-                        subst <- letBlock
+                        subst <- genericletBlock ltypedlit sapicvar
                         p     <- process thy
                         case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above

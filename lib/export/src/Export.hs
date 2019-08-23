@@ -97,6 +97,44 @@ prettyProVerifTheory thy =  template hd [] proc
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)        
+pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+pppSapicTerm b t = (ppTerm t, getHdTerm t)
+  where
+    ppTerm t = case viewTerm t of
+        Lit  (Con (Name FreshName n))             -> text $ show n
+        Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (t)              | b                 -> text $ show t <> ":bitstring"                    
+        Lit  (t)                                  -> text $ show t
+        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+        FApp (NoEq s)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split t)
+        FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
+        FApp (NoEq (f, _)) ts                     -> ppFun f ts
+        FApp (C EMap)      ts                     -> ppFun emapSymString ts
+        FApp List          ts                     -> ppFun (BC.pack"LIST") ts
+               
+    ppACOp Mult  = "*"
+    ppACOp Union = "+"
+    ppACOp Xor   = "⊕"
+    ppTerms sepa n lead finish ts =
+        fcat . (text lead :) . (++[text finish]) .
+            map (nest n) . punctuate (text sepa) . map ppTerm $ ts
+    split (viewTerm2 -> FPair t1 t2) = t1 : split t2
+    split t                          = [t]
+  
+    ppFun f ts =
+      text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+    getHdTerm t =  case viewTerm t of
+        Lit  (Con (Name PubName n))               -> S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+        Lit  (t)                                  -> S.empty
+        FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
+
+ppSapicTerm :: SapicTerm -> (Doc, S.Set ProverifHeader)
+ppSapicTerm = pppSapicTerm False
+
+-- TODO: we should generalise functionality so pppSapicTerm and pppLNTerm share
+-- the code they have in common
 pppLNTerm :: Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
 pppLNTerm b t = (ppTerm t, getHdTerm t)
   where
@@ -134,14 +172,14 @@ ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
 ppLNTerm = pppLNTerm False
 
 -- pretty print a Fact, collecting the constant that need to be declared         
-ppFact :: LNFact -> (Doc, S.Set ProverifHeader)
+ppFact :: Fact SapicTerm -> (Doc, S.Set ProverifHeader)
 ppFact (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
   | otherwise                     = sppFact (showFactTag tag) ts
   where
     sppFact name ts = 
       (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
-      where (pts, shs) = unzip $ map ppLNTerm ts
+      where (pts, shs) = unzip $ map ppSapicTerm ts
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared         
@@ -149,16 +187,16 @@ ppAction :: SapicAction -> (Doc, S.Set ProverifHeader)
 ppAction (New n) = (text "new " <> (text $ show n) <> text ":bitstring", S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
-  where (pt1, sh1) = ppLNTerm t1
-        (pt2, sh2) = pppLNTerm True t2
+  where (pt1, sh1) = ppSapicTerm t1
+        (pt2, sh2) = pppSapicTerm True t2
 ppAction (ChIn Nothing t2 )  = (text "in(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = pppLNTerm True t2
+  where (pt2, sh2) = pppSapicTerm True t2
 
 ppAction (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
-  where (pt1, sh1) = ppLNTerm t1
-        (pt2, sh2) = ppLNTerm t2
+  where (pt1, sh1) = ppSapicTerm t1
+        (pt2, sh2) = ppSapicTerm t2
 ppAction (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = ppLNTerm t2
+  where (pt2, sh2) = ppSapicTerm t2
 ppAction (Event (Fact tag m ts) )  = (text "event " <> pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
   where (pa, sh) = ppFact (Fact tag m ts)
 ppAction _  = (text "Action not supported for translation", S.empty)
@@ -179,8 +217,8 @@ ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
 
 ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic pl
-                                           (pt1, sh1) = ppLNTerm t1
-                                           (pt2, sh2) = ppLNTerm t2 
+                                           (pt1, sh1) = ppSapicTerm t1
+                                           (pt2, sh2) = ppSapicTerm t2 
                                            
 ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
   ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
@@ -190,13 +228,13 @@ ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
 ppSapic (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = ppLNTerm t1
-                                           (pt2, sh2) = ppLNTerm t2 
+                                           (pt1, sh1) = ppSapicTerm t1
+                                           (pt2, sh2) = ppSapicTerm t2 
    
 ppSapic (ProcessComb (Lookup t v )  _ pl pr)  = (text "lookup " <> pt1 <> text " as " <> (text $ show v) $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = ppLNTerm t
+                                           (pt1, sh1) = ppSapicTerm t
    
 
                                            
