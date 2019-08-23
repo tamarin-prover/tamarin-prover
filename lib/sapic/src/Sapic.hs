@@ -51,6 +51,10 @@ translate th = case theoryProcesses th of
       [p] -> do
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- add rules
+                -- basetrans <- foldM (\ai xi -> xi ai) BT.baseTrans [ --- fold from left to right in a monad http://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Monad.html
+                --         computeIf' transReliable (pure BT.reliableChannelTrans) -- TODO move reliableChannelTrans into its own package
+                --                   -- , computeIf' transProgress 
+                --                   ] 
                 msr <- trans basetrans (initialRules an_proc) an_proc
                 th1 <- foldM liftedAddProtoRule th (msr)
                 -- add restrictions
@@ -76,10 +80,18 @@ translate th = case theoryProcesses th of
                 progresstrans 
             else
                 noprogresstrans 
-    basetrans = if L.get transReliable ops then
-                    BT.reliableChannelTrans BT.baseTrans
-                  else
-                    BT.baseTrans
+    computeIf True  f = f
+    computeIf False _ = id
+    computeIf' lens f = computeIf (L.get lens ops) f
+    -- Notes
+    -- 1. trans for init rules
+    -- 2. allow transformations to be monads
+    --  -> no, but can produce monads
+    -- 3. generalise gen..
+    basetrans = foldr ($) BT.baseTrans [ --- fold from right to left 
+                      -- , computeIf' transProgress 
+                       computeIf' transReliable BT.reliableChannelTrans -- TODO move reliableChannelTrans into its own package
+                      ] 
     restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
                                       , hasProgress = L.get transProgress ops
                                       , hasReliableChannels = L.get transReliable ops }
