@@ -23,8 +23,6 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
-import qualified Data.Set              as S
--- import qualified Data.List              as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -33,12 +31,13 @@ import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
+import qualified Sapic.ProgressTranslation as PT
+import qualified Sapic.ReliableChannelTranslation as RCT
 import Sapic.Restrictions
-import Sapic.ProgressFunction
 import Theory.Text.Pretty
 
 
--- Translates the process (singular) into a set of rules and adds them to the theory
+-- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              Monoid (m (AnProcess ProcessAnnotation)) =>
              OpenTheory
@@ -49,14 +48,14 @@ translate th = case theoryProcesses th of
              else 
                     return (removeSapicItems th)
       [p] -> do
+                -- annotate
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
-                -- add rules
-                -- basetrans <- foldM (\ai xi -> xi ai) BT.baseTrans [ --- fold from left to right in a monad http://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Monad.html
-                --         computeIf' transReliable (pure BT.reliableChannelTrans) -- TODO move reliableChannelTrans into its own package
-                --                   -- , computeIf' transProgress 
-                --                   ] 
-                msr <- trans basetrans (initialRules an_proc) an_proc
-                th1 <- foldM liftedAddProtoRule th (msr)
+                -- compute initial rules
+                (initRule,initTx) <- initialRules an_proc
+                -- generate protocol rules, starting from variables in initial tilde x
+                protoRule <-  gen (trans an_proc) an_proc [] initTx
+                -- add these rules
+                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRule ++ protoRule
                 -- add restrictions
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th2 <- foldM liftedAddRestriction th1 sapic_restrictions
@@ -72,31 +71,25 @@ translate th = case theoryProcesses th of
         Just thy' -> return thy'
         Nothing   -> throwM (RestrictionNameExists (render (prettyRestriction rest))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
-    addIf True l  = l
-    addIf False _ = []
-    initialRules anP  =  -- map toRule $ 
-                         getInitRule anP : addIf (L.get transReliable ops) [getMsgId anP]
-    trans = if L.get transProgress ops then
-                progresstrans 
-            else
-                noprogresstrans 
-    computeIf True  f = f
-    computeIf False _ = id
-    computeIf' lens f = computeIf (L.get lens ops) f
-    -- Notes
-    -- 1. trans for init rules
-    -- 2. allow transformations to be monads
-    --  -> no, but can produce monads
-    -- 3. generalise gen..
-    basetrans = foldr ($) BT.baseTrans [ --- fold from right to left 
-                      -- , computeIf' transProgress 
-                       computeIf' transReliable BT.reliableChannelTrans -- TODO move reliableChannelTrans into its own package
+    checkOps (lens,x) 
+        | L.get lens ops = Just x
+        | otherwise = Nothing
+    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from right to left 
+                        $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
+                        (transProgress, PT.progressInit anP)
+                      , (transReliable, RCT.reliableChannelInit anP) 
                       ] 
+    trans anP = foldr ($) BT.baseTrans 
+                        $ mapMaybe checkOps [--- fold from right to left, foldr applies ($) the other way around
+                        (transProgress, PT.progressTrans anP)
+                      , (transReliable, RCT.reliableChannelTrans )
+                      ] 
+    -- TODO: in the future, restrictions can also be pushed to the modules of
+    -- their respective translations
     restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
                                       , hasProgress = L.get transProgress ops
                                       , hasReliableChannels = L.get transReliable ops }
     heuristics = [SapicRanking]
-
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
@@ -110,113 +103,6 @@ translate th = case theoryProcesses th of
   -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
   -- predicate_restrictions ^ lemmas_tamarin
   -- ^ "end"
-
-getInitRule:: AnProcess ann -> AnnotatedRule ann
-getInitRule anP = initrule
-  where
-        initrule = AnnotatedRule (Just "Init") anP (Right InitPosition) l a r 0
-        l = []
-        a = [InitEmpty ]
-        r = [State LState [] S.empty]
-
-getMsgId :: AnProcess ann -> AnnotatedRule ann
-getMsgId anP = messageidrule
-  where
-        messageidrule = AnnotatedRule (Just "MessageID-rule") anP (Right NoPosition)
-                    [ Fr  $ varMID [] ] -- prem
-                    []                -- act
-                    [ MessageIDReceiver [], MessageIDSender [] ]
-                    0
--- | Standard translation without progress:
--- | use gen and basetranslation and add a simple Init rule.
-noprogresstrans :: (Show ann, MonadCatch m, Typeable ann,
-                    Foldable t1, Foldable t2, Foldable t3, GoodAnnotation ann) =>
-                   (ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t1 ([TransFact], [TransAction], [TransFact])),
-                    SapicAction
-                    -> ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t3 ([TransFact], [TransAction], [TransFact]), S.Set a),
-                    ProcessCombinator
-                    -> ann
-                    -> ProcessPosition
-                    -> S.Set a
-                    -> m (t2 ([TransFact], [TransAction], [TransFact]), S.Set a,
-                          S.Set a))
-                   -> [AnnotatedRule ann] -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-noprogresstrans basetrans initrules anP = do
-    msrs <- gen basetrans anP [] S.empty
-    return $ map toRule $ initrules ++ msrs
-
--- | translation with progress:
--- | use gen and basetranslation, but
--- | adds ProgressTo actions where a state-fact is in the premise
--- | adds ProgressFrom actions where a state-fact is in the conclusion
--- | also adds a message id rule
-progresstrans :: (MonadCatch m, Show ann, Typeable ann,
-                  Foldable t1, GoodAnnotation ann) =>
-                 (ann
-                  -> ProcessPosition
-                  -> S.Set LVar
-                  -> m (t1 ([TransFact], [TransAction], [TransFact])),
-                  SapicAction
-                  -> ann
-                  -> [Int]
-                  -> S.Set LVar
-                  -> m ([([TransFact], [TransAction], [TransFact])], S.Set LVar),
-                  ProcessCombinator
-                  -> ann
-                  -> [Int]
-                  -> S.Set LVar
-                  -> m ([([TransFact], [TransAction], [TransFact])], S.Set LVar,
-                        S.Set LVar))
-                 -> [AnnotatedRule ann] -> AnProcess ann -> m [Rule ProtoRuleEInfo]
-progresstrans (tNull,tAct,tComb) initrules anP = do
-    domPF <- pfFrom anP
-    invPF <- pfInv anP
-    msrs <- gen (t domPF invPF) anP [] (initTx domPF)
-    return $ map toRule $ initrules' domPF ++ msrs
-    where
-          initrules' domPF =  map (mapAct $ addProgressFrom domPF []) initrules
-          initTx domPF = if [] `S.member` domPF then S.singleton $ varProgress [] else S.empty
-          addProgressFrom domPF child (l,a,r)
-             | any isNonSemiState r
-             , child `S.member` domPF =
-                     (Fr(varProgress child):l
-                     , ProgressFrom child:a
-                     , map (addVarToState $ varProgress child) r)
-             | otherwise = (l,a,r)
-          t domPF invPF = (tNull',tAct',tComb') -- modify translation to add Progress*-events
-            where
-              tNull' = tNull
-              tComb' comb an pos tx =  do
-                (rs0,tx1,tx2) <- tComb comb an pos tx
-                return (map (addProgressItems pos) rs0
-                       ,extendVars pos tx1
-                       ,extendVars pos tx2)
-              tAct' ac an pos tx = do 
-                (rs0,tx1) <- tAct ac an pos tx 
-                return (map (addProgressItems pos) rs0
-                       ,extendVars pos tx1)
-              extendVars pos tx
-                | lhsP pos `S.member` domPF =  varProgress (lhsP pos) `S.insert` tx
-                | otherwise = tx
-              addProgressItems pos =addProgressFrom domPF (lhsP pos) -- can only start from ! or in, which have no rhs position
-                                  . addProgressTo (lhsP pos)
-                                  . addProgressTo (rhsP pos)
-              -- corresponds to step2 (child[12] p) in Firsttranslation.ml if
-              -- one of the direct childen of anrule is in the range of the pf
-              -- it has an inverse. We thus add ProgressTo to each such rule
-              -- that has the *old* state in the premise (we don't want to move
-              -- into Semistates too early). ProgressTo is annotated with the
-              -- inverse of the child's position, for verification speedup.
-              addProgressTo child (l,a,r) 
-                | any isState l
-                , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r)
-                | otherwise                     = (l,a,r)
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
@@ -284,5 +170,3 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
         handler _ e = throw e
-            
-            

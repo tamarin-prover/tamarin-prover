@@ -11,7 +11,7 @@ module Sapic.Basetranslation (
    , baseTransComb
    , baseTransAction
    , baseTrans
-   , reliableChannelTrans
+   , baseInit
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -164,57 +164,10 @@ baseTransComb c _ p tildex
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
+baseInit :: AnProcess ann -> ([AnnotatedRule ann], Set a)
+baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r 0],empty)
+  where
+        l = []
+        a = [InitEmpty ]
+        r = [State LState [] empty]
 
-reliableChannelTrans :: MonadThrow m =>
-                        (a,
-                         SapicAction
-                         -> t
-                         -> ProcessPosition
-                         -> Set LVar
-                         -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                         c)
-                        -> (a,
-                            SapicAction
-                            -> t
-                            -> ProcessPosition
-                            -> Set LVar
-                            -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                            c)
-reliableChannelTrans (tNull,tAct,tComb) = (tNull, tAct',tComb)
-    where
-        tAct' ac an p tx 
-            | (ChIn (Just v) t) <- ac
-            ,Lit (Con name) <- viewTerm v
-            , sortOfName name == LSortPub
-            , getNameId (nId name) == "c"
-            = let tx' = (freeset v) `union` (freeset t) `union` tx in
-              let ts  = fAppPair (v,t) in
-              return $ ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
-            | (ChOut (Just v) t) <- ac
-            ,Lit (Con name) <- viewTerm v
-            , sortOfName name == LSortPub
-            , getNameId (nId name) == "c"
-            = let tx' = (freeset v) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
-            | (ChIn (Just r) t) <- ac
-            ,Lit (Con name) <- viewTerm r
-            , sortOfName name == LSortPub
-            , getNameId (nId name) == "r"
-            = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx']) ],tx')
-            | (ChOut (Just r) t) <- ac
-            ,Lit (Con name) <- viewTerm r
-            , sortOfName name == LSortPub
-            , getNameId (nId name) == "r"
-            = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx']) ],tx')
-            | (ChOut (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChIn (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChOut Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChIn Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-                         -- raising exceptions is done with throwM. Add exceptions to Exceptions.hs
-            | otherwise = tAct ac an p tx -- otherwise case: call tAct
-            where
-                def_state = State LState p tx
-                def_state1 tx' = State LState (p++[1]) tx'
-                freeset = fromList . frees

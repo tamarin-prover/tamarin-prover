@@ -71,6 +71,8 @@ library
       , Sapic.Basetranslation
       , Sapic.Restrictions
       , Sapic.ProgressFunction
+      , Sapic.ProgressTranslation
+      , Sapic.ReliableChannelTranslation
       , Sapic
 
     other-modules:
