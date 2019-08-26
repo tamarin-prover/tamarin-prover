@@ -15,23 +15,13 @@ module Sapic.ProgressFunction (
    ,pfRange
    ,pfInv
 ) where
--- import Data.Maybe
--- import Data.Foldable
--- import Control.Exception
--- import Control.Monad.Fresh
 import Data.Typeable
 import Control.Monad.Catch
 import Control.Monad
--- import Sapic.Exceptions
--- import Theory
 import Theory.Sapic
--- import Sapic.Exceptions
 import Sapic.ProcessUtils
--- import Theory.Model.Rule
--- import Data.Typeable
 import qualified Data.Set                   as S
 import qualified Data.List                   as L
--- import Control.Monad.Trans.FastFresh
 import qualified Data.Map.Strict as M
 
 type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
@@ -83,27 +73,14 @@ next0 (ProcessComb NDC _ pl pr) = next0OrChild pl [1] `S.union` next0OrChild pr 
                                else S.singleton pos
 next0 ProcessComb{} = S.fromList [[1],[2]]
 
--- blocking0 (ProcessAction ac _ _ )
---         | isBlocking ac = Just (S.singleton [1])
---         | otherwise     = Nothing
--- blocking0 (ProcessComb NDC _ pl pr)
---     | (Just sl) <- blocking0 pl, (Just sr) <- blocking0 pr = Just (([1] <.>sl) `S.union` ([2]<.>sr))
---     | otherwise = Nothing
--- blocking0 _ =  Nothing
-
 pfFrom :: (MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> m (S.Set ProcessPosition)
 pfFrom process = from' process True
     where
     from' proc b 
         | ProcessNull _ <- proc  = return S.empty
         | otherwise = do
-        -- |  (ProcessAction ac _ p' ) <- proc = 
-        -- singletonOrEmpty (conditionAction proc b) `S.union` [1]<.> from' p' (isBlocking ac)
-        -- | (ProcessComb comb _ pl pr) <- proc =
         res <- foldM (addWithRecursive proc) S.empty (next proc)
         return $ singletonOrEmpty (conditionAction proc b) `S.union` res
-        -- `S.union`   ([1] <.> from' pl False)
-        -- `S.union`   ([2] <.> from' pr False)
     singletonOrEmpty True  =  S.singleton []
     singletonOrEmpty False =  S.empty
     conditionAction proc b = not (blocking proc) && b -- condition to add singleton set is given, see Def. 14 in paper
@@ -125,7 +102,6 @@ combine_with y x_i set1 = S.foldr (\y_i set2 -> (x_i `S.union` y_i) `S.insert` s
 -- normal form of the positions that    we need to go to.
 -- For example: {{p1},{p2,p3}} means we need to go to p1 AND to either p2 or p3.
 -- Correspond to f in Def. 15
--- TODO This is massively refactored code. Remove stuff that's commented out once everything works.
 f :: (Show ann, MonadCatch m, Typeable ann) => (AnProcess ann) -> m (S.Set (S.Set ProcessPosition))
 f  p -- corresponds to f within generate progressfunction.ml
     | blocking p = return $ ss []
@@ -139,36 +115,6 @@ f  p -- corresponds to f within generate progressfunction.ml
                                                   -- the neutral element with respect to combine
                                                   -- the empty set combined with anything gives an emptyset
                             (next0 p) -- list of p∈next^0(proc)
-    -- | (ProcessNull _) <- p = return $ ss []
-    -- | (ProcessAction Rep _ _ ) <-p = return $ ss []
-    -- | (ProcessAction (ChIn _ _) _ _) <-p = return $ ss []
-    -- | (ProcessComb comb _ pl pr) <- p 
-    -- , isExclusive comb = foldM combineWithRecursive 
-    --                         S.empty      -- accumulator, set of sets of position
-    --                         (next0 proc) -- list of p∈next^0(proc) 
-    -- | (ProcessComb NDC _ pl pr) <- p 
-    -- , Just psl <- blocking0 pl, Just psr <- blocking0 pr = return $ ss [] 
-    -- | (ProcessComb NDC _ pl pr) <- p
-    -- , Just psl <- blocking0 pl, Nothing <- blocking0 pr = do
-    --           lr <- f pr
-    --           foldM combineWithRecursive 
-    --                     ([2] <..>  lr) -- accumulator start with rhs positions
-    --                     ([1] <.>  psl) -- fold over lhs positions
-    -- | (ProcessComb NDC _ pl pr) <- p
-    -- , Nothing <- blocking0 pl, Just psr <- blocking0 pr = do
-    --           ll <- f pl
-              -- foldM combineWithRecursive ([1] <..>  ll) ([2] <.>  psr)
-    -- | (ProcessComb NDC _ pl pr) <- p
-    -- , Nothing <- blocking0 pl, Nothing <- blocking0 pr =  do
-    --             ll <- f pl
-    --             lr <- f pr
-    --             return $ combine ([1]  <..>  ll) ([2] <..>  lr)
-    -- | (ProcessComb Parallel  _ pl pr) <- p =  do
-    --             ll <- f pl
-    --             lr <- f pr
-    --             return $ S.union ([1] <..>  ll) ([2] <..>  lr) 
-    -- | (ProcessAction _ _ p')  <- p = do l' <- f p'
-    --                                     return $ [1] <..> l'
     where ss x = S.singleton ( S.singleton x) -- shortcut for singleton set of singleton set
           combineWithRecursive acc pos = do -- combine pss with positions from recursive call (case of nested NDCs)
                         proc'   <- (processAt p pos)
