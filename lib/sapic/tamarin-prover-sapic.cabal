@@ -69,7 +69,6 @@ library
       , Sapic.SecretChannels
       , Sapic.Facts
       , Sapic.Basetranslation
-      , Sapic.Restrictions
       , Sapic.ProgressFunction
       , Sapic.ProgressTranslation
       , Sapic.ReliableChannelTranslation

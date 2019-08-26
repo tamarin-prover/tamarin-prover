@@ -33,7 +33,7 @@ import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
-import Sapic.Restrictions
+-- import Sapic.Restrictions
 import Theory.Text.Pretty
 
 
@@ -57,8 +57,8 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map toRule $ initRule ++ protoRule
                 -- add restrictions
-                sapic_restrictions <- generateSapicRestrictions restr_option an_proc
-                th2 <- foldM liftedAddRestriction th1 sapic_restrictions
+                restr <- restrictions an_proc
+                th2 <- foldM liftedAddRestriction th1 restr
                 -- add heuristic, if not already defined:
                 th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
@@ -74,7 +74,7 @@ translate th = case theoryProcesses th of
     checkOps (lens,x) 
         | L.get lens ops = Just x
         | otherwise = Nothing
-    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from right to left
+    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
                         $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressInit anP)
                       , (transReliable, RCT.reliableChannelInit anP) 
@@ -84,11 +84,24 @@ translate th = case theoryProcesses th of
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ] 
-    -- TODO: in the future, restrictions can also be pushed to the modules of
-    -- their respective translations
-    restr_option = RestrictionOptions { hasAccountabilityLemmaWithControl = False -- TODO need to compute this, once we have accountability lemmas
-                                      , hasProgress = L.get transProgress ops
-                                      , hasReliableChannels = L.get transReliable ops }
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [Restriction] 
+    restrictions anP = foldM (flip ($)) []  --- fold from left to right
+                                                                 --- TODO once accountability is supported, substitute True
+                                                                 -- with predicate saying whether we need single_session lemma
+                                                                 -- need to incorporate lemma2string_noacc once we handle accountability
+                                                                -- if op.accountability then
+                                                                  --   (* if an accountability lemma with control needs to be shown, we use a 
+                                                                  --    * more complex variant of the restritions, that applies them to only one execution *)
+                                                                  --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+                                                                  --   @ (if op.progress then [progress_init_lemma_acc] else [])
+                                                                -- else 
+                                                                  --   restrs
+                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
+                        $ [BT.baseRestr anP True] ++
+                           mapMaybe checkOps [
+                            (transProgress, PT.progressRestr anP)
+                          , (transReliable, RCT.reliableChannelRestr anP) 
+                           ]
     heuristics = [SapicRanking]
 
   -- TODO This function is not yet complete. This is what the ocaml code

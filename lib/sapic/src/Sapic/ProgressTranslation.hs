@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE QuasiQuotes #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -19,24 +20,18 @@ module Sapic.ProgressTranslation (
    , progressTransAct
    , progressTransComb
    , progressInit
+   , progressRestr
 ) where
--- import Data.Maybe
--- import Data.Foldable
--- import Control.Exception
--- import Control.Monad.Fresh
-import Control.Monad.Catch
-import Theory
-import Theory.Sapic
--- import Theory.Sapic.Print
--- import Sapic.Exceptions
-import Sapic.Facts
--- import Sapic.Annotation
--- import Theory.Model.Rule
-import Data.Typeable
-import Data.Set            hiding (map)
-import Sapic.ProgressFunction
--- import Control.Monad.Trans.FastFresh
-
+import qualified Data.List              as List
+import           Data.Set               hiding (map)
+import           Data.Typeable
+import qualified Text.RawString.QQ    as QQ
+import           Control.Monad.Catch
+import           Theory
+import           Theory.Sapic
+import           Sapic.Facts
+import           Sapic.ProgressFunction
+import           Sapic.Basetranslation
 
 -- | Adds event @ProgressFrom@ to any rule with a state fact (not semi-state
 -- fact) on the rhs, if the followup position (as marked in the state) is in
@@ -178,3 +173,33 @@ progressTrans :: (Show ann, Typeable ann, MonadCatch m1,
 progressTrans anP (tN,tA,tC) = ( progressTransNull anP tN
                                , progressTransAct anP tA
                                , progressTransComb anP tC)
+
+resProgressInit :: String
+resProgressInit = [QQ.r|restriction progressInit: 
+"Ex #t . Init()@t"
+|]
+
+-- | Add restrictions for all transitions that have to take place according to the progress function.
+progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> [Restriction] -> m [Restriction] 
+progressRestr anP restr  = do
+    domPF <- pfFrom anP -- set of "from" positions
+    initL <- toEx resProgressInit
+    lss_to <- mapM restriction (toList domPF) -- list of set of sets of "to" positions
+    return $ restr ++ concat lss_to ++ [initL]
+    where 
+        restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
+            toss <- pf anP pos
+            restrL <- mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
+            return restrL
+            where
+                name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ toList tos)
+                formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion tos
+                pvar = msgVarProgress pos
+                t1var = LVar "t" LSortNode 1
+                t2var = LVar "t" LSortNode 2
+                antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFactFormula (ProgressFrom pos)
+                conclusion tos = bigOr $ map progressTo $ toList tos
+                bigOr [to] = to
+                bigOr (to:tos) = to .||. bigOr tos 
+                bigOr []   = TF False -- This case should never occur
+                progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFactFormula $ ProgressTo to pos

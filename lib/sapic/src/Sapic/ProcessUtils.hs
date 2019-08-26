@@ -9,6 +9,7 @@
 -- Utilities for processes
 module Sapic.ProcessUtils (
    processAt 
+,  processContains
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -16,6 +17,7 @@ module Sapic.ProcessUtils (
 -- import Control.Monad.Fresh
 import Data.Typeable
 import Control.Monad.Catch
+import qualified Data.Monoid            as M
 -- import Sapic.Exceptions
 -- import Theory
 import Theory.Sapic
@@ -39,3 +41,6 @@ processAt pro pos
         h p (InvalidPosition _) = throwM ( InvalidPosition p :: SapicException (AnProcess ann))
         h _ e = throwM e
 processAt _ p = throwM (InvalidPosition p :: SapicException (AnProcess ann))
+
+processContains :: AnProcess ann -> (AnProcess ann -> Bool) -> Bool
+processContains anP f = M.getAny $ pfoldMap  (M.Any . f) anP

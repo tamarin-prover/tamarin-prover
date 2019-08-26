@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE QuasiQuotes   #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -9,14 +10,18 @@
 module Sapic.ReliableChannelTranslation (
      reliableChannelTrans
    , reliableChannelInit
+   , reliableChannelRestr
 ) where
-import Control.Monad.Catch
-import Theory
-import Theory.Sapic
-import Sapic.Exceptions
-import Sapic.Facts
-import Sapic.Annotation
-import Data.Set            hiding (map)
+import           Control.Monad.Catch
+import           Data.Set              hiding (map)
+import           Sapic.Annotation
+import           Sapic.Basetranslation
+import           Sapic.Exceptions
+import           Sapic.Facts
+import           Sapic.ProcessUtils
+import qualified Text.RawString.QQ     as QQ
+import           Theory
+import           Theory.Sapic
 
 -- | Init-rule that allows generating MessageIDSender and MessageIDReceiver facts, 
 -- | for later consumption.
@@ -95,3 +100,23 @@ reliableChannelTrans :: MonadThrow m =>
                             -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
                             c)
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, reliableChannelTransAct tAct,tComb)
+
+resReliable :: String
+resReliable = [QQ.r|restriction reliable: 
+"All #i x y. Send(x,y)@i ==> Ex #j. Receive(x,y)@j & #i<#j"
+|]
+
+-- | Add restrictions that enforces Send-events to have Receive-events
+reliableChannelRestr :: (MonadThrow m, MonadCatch m, Show ann) => AnProcess ann -> [Restriction] -> m [Restriction] 
+reliableChannelRestr anP restr  = do
+    res <- toEx resReliable
+    return $ restr ++ addIf (processContains anP isReliableTrans) [res]
+    where 
+        addIf phi list = if phi then list else []
+        isReliableTrans (ProcessAction ac _ _) 
+            | (ChOut (Just tr) _) <- ac -- If there are only receives on the reliable channel, we do not need the restriction
+            ,Lit (Con name) <- viewTerm tr
+            , sortOfName name == LSortPub
+            , getNameId (nId name) == "r" = True
+            | otherwise = False
+        isReliableTrans _ = False 
