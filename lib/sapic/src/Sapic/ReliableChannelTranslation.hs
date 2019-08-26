@@ -29,7 +29,7 @@ reliableChannelInit anP (initrules,initTx) = return (messageidrule : initrules, 
                     [ MessageIDReceiver [], MessageIDSender [] ]
                     0
 
--- | Send and receive actions are modified to produce the necessary events.
+-- | Send and receive actions are modified to produce the necessary Send and Receive events.
 reliableChannelTransAct :: MonadThrow m =>
                            (SapicAction
                             -> t

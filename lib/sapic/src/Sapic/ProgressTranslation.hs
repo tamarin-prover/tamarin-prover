@@ -5,7 +5,14 @@
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
--- Translation rules common for different translation types in SAPIC
+-- Translation rules for local progress: processes must reduce unless they are of form !P or in(..)
+--
+-- The theory behind this is quite involved, it is described in the following paper:
+--
+-- Michael Backes, Jannik Dreier, Steve Kremer and Robert Künnemann. "A Novel
+-- Approach for Reasoning about Liveness in Cryptographic Protocols and its
+-- Application to Fair Exchange". EuroS&P 2017 
+--
 module Sapic.ProgressTranslation (
      progressTrans
    , progressTransNull
@@ -31,6 +38,9 @@ import Sapic.ProgressFunction
 -- import Control.Monad.Trans.FastFresh
 
 
+-- | Adds event @ProgressFrom@ to any rule with a state fact (not semi-state
+-- fact) on the rhs, if the followup position (as marked in the state) is in
+-- @domPF@, i.e., the domain of the progress function.
 addProgressFrom :: Set [Int] -> [Int]
                     -> ([TransFact], [TransAction], [TransFact])
                     -> ([TransFact], [TransAction], [TransFact])
@@ -42,6 +52,9 @@ addProgressFrom domPF child (l,a,r)
                      , map (addVarToState $ varProgress child) r)
              | otherwise = (l,a,r)
 
+-- | Initial rules for progress: adds @ProgressFrom@ to the previous set of
+-- init rules, if [] in @domPF@, the domain of the progress function. Updates
+-- the initial ~x accordingly.
 progressInit :: (MonadCatch m, Show ann1, Typeable ann1)
                 => AnProcess ann1 -> ([AnnotatedRule ann2], Set LVar) -> m ([AnnotatedRule ann2], Set LVar)
 progressInit anP (initrules,initTx) = do
@@ -52,11 +65,15 @@ progressInit anP (initrules,initTx) = do
           initTx' domPF = if [] `member` domPF then singleton $ varProgress [] else empty
           initrules' domPF =  map (mapAct $ addProgressFrom domPF []) initrules
 
+-- | Helper function: add progress variable for @lhsP pos@ to @tx@ if if is in
+-- the dom(progress function)
 extendVars :: Set ProcessPosition -> [Int] -> Set LVar -> Set LVar
 extendVars domPF pos tx
     | lhsP pos `member` domPF =  varProgress (lhsP pos) `insert` tx
     | otherwise = tx
 
+-- | Add ProgressTo and ProgressFrom events to a rule: ProgressFrom for the
+-- position itself, and ProgressTo for one of the children.
 addProgressItems :: Set [Int]
                        -> ([Int] -> Maybe ProcessPosition)
                        -> [Int]
@@ -66,12 +83,13 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
                                   . addProgressTo invPF (lhsP pos)
                                   . addProgressTo invPF (rhsP pos)
 
--- corresponds to step2 (child[12] p) in Firsttranslation.ml if
--- one of the direct childen of anrule is in the range of the pf
--- it has an inverse. We thus add ProgressTo to each such rule
--- that has the *old* state in the premise (we don't want to move
--- into Semistates too early). ProgressTo is annotated with the
--- inverse of the child's position, for verification speedup.
+-- | Add ProgressTo events:
+-- corresponds to step2 (child[12] p) in Firsttranslation.ml if one of the
+-- direct childen of anrule is in the range of the pf it has an inverse. We
+-- thus add ProgressTo to each such rule that has the *old* state in the
+-- premise (we don't want to move into Semistates too early). ProgressTo is
+-- annotated with the inverse of the child's position, for verification
+-- speedup.
 addProgressTo :: Foldable t =>
                  ([Int] -> Maybe ProcessPosition)
                  -> [Int]
@@ -83,9 +101,11 @@ addProgressTo invPF child (l,a,r)
   | otherwise                     = (l,a,r)
 
 
+-- | Null Processes are translated without any modification
 progressTransNull :: p1 -> p2 -> p2
 progressTransNull _ tNull = tNull
 
+-- | Add ProgressTo or -From to rules generated on an action.
 progressTransAct :: (MonadCatch m, Show ann, Typeable ann) =>
                     AnProcess ann
                     -> (t1
@@ -104,6 +124,7 @@ progressTransAct anP tAct ac an pos tx = do
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0,extendVars domPF pos tx1)
 
+-- | Add ProgressTo or -From to rules generated on a combinator.
 progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
                      AnProcess ann
                      -> (t1
@@ -126,6 +147,7 @@ progressTransComb anP tComb comb an pos tx =  do
                        ,extendVars domPF pos tx1
                        ,extendVars domPF pos tx2)
 
+-- | Overall translation is a triple of the other translations.
 progressTrans :: (Show ann, Typeable ann, MonadCatch m1,
                   MonadCatch m2) =>
                  AnProcess ann

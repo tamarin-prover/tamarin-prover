@@ -74,13 +74,13 @@ translate th = case theoryProcesses th of
     checkOps (lens,x) 
         | L.get lens ops = Just x
         | otherwise = Nothing
-    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from right to left 
+    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from right to left
                         $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressInit anP)
                       , (transReliable, RCT.reliableChannelInit anP) 
                       ] 
-    trans anP = foldr ($) BT.baseTrans 
-                        $ mapMaybe checkOps [--- fold from right to left, foldr applies ($) the other way around
+    trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+                        $ mapMaybe checkOps [
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ] 
@@ -93,6 +93,8 @@ translate th = case theoryProcesses th of
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
+  -- NOTE: Kevin Milner is working on predicates, Kevin Morio on accountability
+  --
   -- and predicate_restrictions = print_predicates input.pred
   -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   -- in

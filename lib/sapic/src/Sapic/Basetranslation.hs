@@ -29,7 +29,7 @@ import Sapic.Annotation
 import Data.Set            hiding (map)
 -- import Control.Monad.Trans.FastFresh
 
--- | The basetranslation has three functions, one for translation the Null
+-- | The basetranslation has three functions, one for translating the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
 baseTrans :: MonadThrow m =>
@@ -164,6 +164,9 @@ baseTransComb c _ p tildex
                     ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
+-- | @baseInit@ provides the initial rule that is used to create the first
+-- linear statefact. An additional restriction on InitEmpty makes sure it can
+-- only be used once.
 baseInit :: AnProcess ann -> ([AnnotatedRule ann], Set a)
 baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r 0],empty)
   where
