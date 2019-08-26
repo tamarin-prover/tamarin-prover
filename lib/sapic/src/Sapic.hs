@@ -31,8 +31,8 @@ import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
-import qualified Sapic.ProgressTranslation as PT
-import qualified Sapic.ReliableChannelTranslation as RCT
+-- import qualified Sapic.ProgressTranslation as PT
+-- import qualified Sapic.ReliableChannelTranslation as RCT
 -- import Sapic.Restrictions
 import Theory.Text.Pretty
 
@@ -76,13 +76,13 @@ translate th = case theoryProcesses th of
         | otherwise = Nothing
     initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
                         $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
-                        (transProgress, PT.progressInit anP)
-                      , (transReliable, RCT.reliableChannelInit anP) 
+                        -- (transProgress, PT.progressInit anP)
+                      -- , (transReliable, RCT.reliableChannelInit anP) 
                       ] 
     trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe checkOps [
-                        (transProgress, PT.progressTrans anP)
-                      , (transReliable, RCT.reliableChannelTrans )
+                        -- (transProgress, PT.progressTrans anP)
+                      -- , (transReliable, RCT.reliableChannelTrans )
                       ] 
     restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [Restriction] 
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
@@ -99,8 +99,8 @@ translate th = case theoryProcesses th of
                                                                   --    @ (if op.progress then [progress_init_lemma] else [])
                         $ [BT.baseRestr anP True] ++
                            mapMaybe checkOps [
-                            (transProgress, PT.progressRestr anP)
-                          , (transReliable, RCT.reliableChannelRestr anP) 
+                            -- (transProgress, PT.progressRestr anP)
+                          -- , (transReliable, RCT.reliableChannelRestr anP) 
                            ]
     heuristics = [SapicRanking]
 

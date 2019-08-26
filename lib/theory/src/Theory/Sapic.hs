@@ -24,6 +24,7 @@ module Theory.Sapic (
     , SapicAction(..)
     , SapicLVar(..)
     , SapicTerm
+    , SapicLNFact
     , paddAnn
     , applyProcess
     , pfoldMap
@@ -103,8 +104,8 @@ deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
--- deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
--- deriving instance (Monoid ann) => Monoid (AnProcess ann)
+deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
+deriving instance (Monoid ann) => Monoid (AnProcess ann)
 deriving instance Foldable (AnProcess)
 deriving instance Traversable (AnProcess)
 

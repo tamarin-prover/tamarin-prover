@@ -22,20 +22,21 @@ module Sapic.SecretChannels (
 import           Data.Set as S
 import           Data.List as L
 import           Sapic.Annotation
+import           Sapic.Basetranslation
 -- import           Sapic.Exceptions
 import           Theory
 import           Theory.Sapic
 
 
 -- | Get all variables inside a term
-getTermVariables :: LNTerm -> S.Set LVar
+getTermVariables :: SapicTerm -> S.Set LVar -- TODO This is only an approximation, we should actually get SapicLVars out
 getTermVariables ts =
-  S.fromList $ L.map fst $ varOccurences ts
+  S.fromList $ L.map fst $ varOccurences $ toLNTerm ts
 
 -- | Get all variables that were never output
-getSecretChannels :: AnProcess ProcessAnnotation -> S.Set SapicLVar -> S.Set SapicLVar
+getSecretChannels :: AnProcess ProcessAnnotation -> S.Set LVar -> S.Set LVar
 getSecretChannels (ProcessAction (New v) _ p) candidates =
-  let c = S.insert v candidates in
+  let c = S.insert (toLVar v) candidates in
     getSecretChannels p c
 getSecretChannels (ProcessAction (ChOut _ t2) _ p) candidates =
   let c = S.difference candidates (getTermVariables t2) in
@@ -61,12 +62,14 @@ annotateEachSecretChannels (ProcessComb comb an pl pr ) svars =
               pl' = annotateEachSecretChannels pl svars
               pr' = annotateEachSecretChannels pr svars
 annotateEachSecretChannels (ProcessAction ac an p) svars
-  | (ChIn (Just t1) _) <- ac, Lit (Var v) <- viewTerm t1 =
+  | (ChIn (Just t1) _) <- ac, Lit (Var v') <- viewTerm t1
+   , v <- toLVar v' =
       if S.member v svars then
         (ProcessAction ac (an `mappend` annSecretChannel (AnLVar v)) p')
       else
         (ProcessAction ac an p')
-  | (ChOut (Just t1) _) <- ac, Lit (Var v) <- viewTerm t1 =
+  | (ChOut (Just t1) _) <- ac, Lit (Var v') <- viewTerm t1
+   , v <- toLVar v' =
       if S.member v svars then
         (ProcessAction ac (an `mappend` annSecretChannel (AnLVar v)) p')
       else
