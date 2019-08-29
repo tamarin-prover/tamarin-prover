@@ -1,0 +1,168 @@
+theory Issue324 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Init:
+   [ Fr( ~k ) ] --> [ !Tag( ~k ) ]
+
+rule (modulo E) T_out:
+   [ !Tag( k ) ] --[ PlayT( k ) ]-> [ Out( k ) ]
+
+restriction singleSessionTag [right]:
+  "¬(∃ k #i1 #i2.
+      ((PlayT( k ) @ #i1) ∧ (PlayT( k ) @ #i2)) ∧ (¬(#i1 = #i2)))"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Var_fresh_k
+          step( solve( !KU( ~k ) @ #vk ) )
+            case T_out
+            by sorry // Cannot prove
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case T_out
+      step( solve( !Tag( t ) ▶₀ #vr ) )
+        case Init
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Var_fresh_k
+          step( solve( !KU( ~k ) @ #vk ) )
+            case T_out
+            MIRRORED
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Init
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_T_out
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/regression/diff/issue324.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/regression/diff/issue324.spthy
+
+  output:          examples/regression/diff/issue324.spthy.tmp
+  processing time: 0.320270941s
+  DiffLemma:  Observational_equivalence : analysis incomplete (47 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/diff/issue324.spthy
+
+  output:          examples/regression/diff/issue324.spthy.tmp
+  processing time: 0.320270941s
+  DiffLemma:  Observational_equivalence : analysis incomplete (47 steps)
+
+==============================================================================
+*/
