@@ -592,6 +592,7 @@ lemmaAttribute isDiff = asum
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
+  , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
   , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
