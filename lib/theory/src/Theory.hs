@@ -233,7 +233,7 @@ import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 import qualified Data.Label.Point
 import qualified Data.Label.Poly
-import qualified Data.Label.Total
+-- import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
