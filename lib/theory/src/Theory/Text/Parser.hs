@@ -55,7 +55,7 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
-import Data.Functor.Identity 
+-- import           Data.Functor.Identity 
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
