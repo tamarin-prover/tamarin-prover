@@ -515,7 +515,7 @@ frees = sortednub . freesList
 -- The function is used to "guess" renamings of variables, i.e., if t is a renaming of s,
 -- then variables that occur in equal contexts in t and s are probably renamings of
 -- each other.
--- varOccurences :: HasFrees a => a -> [(LVar, S.Set Occurence)]
+varOccurences :: HasFrees a => a -> [(LVar, S.Set Occurence)]
 varOccurences t =
     map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:(map snd rest)))) . groupOn fst . sortOn fst
     . foldFreesOcc (\ c v -> [(v,c)]) [] $ t
