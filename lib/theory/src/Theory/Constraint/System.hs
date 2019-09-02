@@ -50,6 +50,7 @@ module Theory.Constraint.System (
   , dpcDestrRules
   , dpcConstrRules
   , dpcRestrictions
+  , dpcReuseLemmas
   , eitherProofContext
 
   -- ** Classified rules
@@ -393,6 +394,7 @@ data DiffProofContext = DiffProofContext
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
        , _dpcRestrictions         :: [(Side, [LNGuarded])]
+       , _dpcReuseLemmas          :: [(Side, LNGuarded)]
        }
        deriving( Eq, Ord, Show )
 

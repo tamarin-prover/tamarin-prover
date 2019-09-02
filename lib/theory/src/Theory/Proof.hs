@@ -384,7 +384,7 @@ data ProofStatus =
        | CompleteProof      -- ^ The proof is complete: no annotated sorry,
                             --  no annotated solved step
        | IncompleteProof    -- ^ There is a annotated sorry,
-                            --   but no annotatd solved step.
+                            --   but no annotated solved step.
        | TraceFound         -- ^ There is an annotated solved step
     deriving ( Show, Generic, NFData, Binary )
 
@@ -1035,7 +1035,7 @@ proveDiffSystemDFS heuristic ctxt d0 sys0 =
   where
     prove !depth sys =
         case rankDiffProofMethods (useHeuristic heuristic depth) ctxt sys of
-          []                         -> node DiffMirrored M.empty
+          []                         -> node (DiffSorry (Just "Cannot prove")) M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
         node method cases =
