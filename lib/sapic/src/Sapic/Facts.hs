@@ -49,15 +49,15 @@ import Data.Color
 
 -- | Facts that are used as actions
 data TransAction =  InitEmpty
-  | InitId
-  | StopId
-  | EventEmpty
-  | EventId
+  -- to implement with accountability extension
+  -- | InitId
+  -- | StopId 
+  -- | EventEmpty
+  -- | EventId
   | PredicateA LNFact
   | NegPredicateA LNFact
   | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
-  | Listen ProcessPosition LVar
   | Receive ProcessPosition SapicTerm
   | IsIn SapicTerm LVar
   | IsNotSet SapicTerm
@@ -175,10 +175,6 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | StopId
   -- | EventEmpty
   -- | EventId
-  -- | ProgressFrom ProcessPosition
-  -- | ProgressTo ProcessPosition ProcessPosition
-  -- | Listen ProcessPosition LVar
-  -- | Receive ProcessPosition SapicTerm
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
@@ -275,7 +271,7 @@ colorHash s = RGB r g b
 -- and luminance of the final color is normalized to to 0.5.
 colorForProcessName :: [String] -> RGB Rational
 colorForProcessName [] = RGB 255 255 255
-colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 0) (tail palette)
+colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 0::Int) (tail palette)
       where
         palette = map (rgbToHSV . colorHash) names
         normalize (HSV h _ _) = HSV h 0.5 0.5
