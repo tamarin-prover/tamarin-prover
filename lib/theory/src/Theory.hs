@@ -1913,7 +1913,7 @@ emptyString :: HighlightDocument d => () -> d
 emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement a = text ("TODO prettyPrint SapicItems")
+prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = text (factstr ++ "<->" ++ formulastr)

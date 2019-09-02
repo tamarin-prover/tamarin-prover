@@ -40,7 +40,7 @@ import Theory.Text.Pretty
 
 -- Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
-             Monoid (m (AnProcess ProcessAnnotation)) =>
+             -- Monoid (m (AnProcess ProcessAnnotation)) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
