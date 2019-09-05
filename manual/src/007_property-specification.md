@@ -525,6 +525,14 @@ syntactically following it (except `sources` lemmas as above). This
 includes other `reuse` lemmas that can transitively depend on each
 other.
 
+Note that `reuse` lemmas are ignored in equivalence mode.
+
+### `diff_reuse`
+
+A lemma marked `diff_reuse` will be used in the proofs of the observational
+equivalence lemma.
+
+Note that `diff_reuse` lemmas are not reused in trace mode.
 
 ### `hide_lemma=L`
 
