@@ -902,13 +902,17 @@ diffTheoryDiffLemmas =
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addRestriction l thy = do
     guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
-    return $ modify thyItems (++ [RestrictionItem l]) thy
+    return $ modify thyItems (++ [RestrictionItem (expandPreds l)]) thy
+  where
+    expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
-    return $ modify thyItems (++ [LemmaItem l]) thy
+    return $ modify thyItems (++ [LemmaItem (expandPreds l)]) thy
+  where
+    expandPreds (Lemma n tq f a p) = (Lemma n tq (expandPredicates thy f) a p)
 
 
 -- | Add a new process expression.  since expression (and not definitions)

@@ -62,6 +62,7 @@ import           Theory.Text.Pretty
 -- | @Atom@'s are the atoms of trace formulas parametrized over arbitrary
 -- terms.
 data Atom t = Action   t (Fact t)
+            | Pred (Fact t)
             | EqE  t t
             | Less t t
             | Last t
@@ -82,6 +83,7 @@ type BLAtom = Atom BLTerm
 
 instance Functor Atom where
     fmap f (Action   i fa) = Action    (f i) (fmap f fa)
+    fmap f (Pred fa)       = Pred (fmap f fa)
     fmap f (EqE l r)       = EqE       (f l) (f r)
     fmap f (Less v u)      = Less      (f v) (f u)
     fmap f (Last i)        = Last      (f i)
@@ -89,6 +91,7 @@ instance Functor Atom where
 instance Foldable Atom where
     foldMap f (Action i fa)   =
         f i `mappend` (foldMap f fa)
+    foldMap f (Pred fa)       = (foldMap f fa)
     foldMap f (EqE l r)       = f l `mappend` f r
     foldMap f (Less i j)      = f i `mappend` f j
     foldMap f (Last i)        = f i
@@ -96,6 +99,7 @@ instance Foldable Atom where
 instance Traversable Atom where
     traverse f (Action i fa)   =
         Action <$> f i <*> traverse f fa
+    traverse f (Pred fa)       = Pred <$> (traverse f fa)
     traverse f (EqE l r)       = EqE <$> f l <*> f r
     traverse f (Less v u)      = Less <$> f v <*> f u
     traverse f (Last i)        = Last <$> f i
@@ -107,12 +111,14 @@ instance HasFrees t => HasFrees (Atom t) where
 
 instance Apply LNAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
+    apply subst (Pred fa)         = Pred (apply subst fa)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
 
 instance Apply BLAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
+    apply subst (Pred fa)         = Pred (apply subst fa)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
@@ -124,6 +130,10 @@ instance Apply BLAtom where
 -- | True iff the atom is an action atom.
 isActionAtom :: Atom t -> Bool
 isActionAtom ato = case ato of Action _ _ -> True; _ -> False
+
+-- | True iff the atom is a predicate atom.
+isPredicateAtom :: Atom t -> Bool
+isPredicateAtom ato = case ato of Pred _ -> True; _ -> False
 
 -- | True iff the atom is a last atom.
 isLastAtom :: Atom t -> Bool
@@ -145,6 +155,7 @@ isEqAtom ato = case ato of EqE _ _ -> True; _ -> False
 prettyNAtom :: (Show v, HighlightDocument d) => NAtom v -> d
 prettyNAtom (Action v fa) =
     prettyFact prettyNTerm fa <-> opAction <-> text (show v)
+prettyNAtom (Pred fa) = prettyFact prettyNTerm fa
 prettyNAtom (EqE l r) =
     sep [prettyNTerm l <-> opEqual, prettyNTerm r]
     -- sep [prettyNTerm l <-> text "≈", prettyNTerm r]

@@ -475,6 +475,7 @@ blatom :: Parser BLAtom
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
+  , Pred        <$> try (fact (varTerm <$> lvar))                    <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
@@ -849,7 +850,7 @@ options thy0 =do
 
 predicate :: Parser Predicate
 predicate = do
-           f <- fact llit
+           f <- fact (varTerm <$> lvar)
            _ <- symbol "<=>"
            form <- standardFormula
            return $ Predicate f form

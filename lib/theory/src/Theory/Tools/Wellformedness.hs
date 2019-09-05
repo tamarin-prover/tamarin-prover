@@ -562,6 +562,7 @@ formulaFacts =
       (const mappend) (const $ const id)
   where
     atomFacts (Action _ fa)   = [fa]
+    atomFacts (Pred _)        = mempty --the 'facts' in a predicate atom are not real facts
     atomFacts (EqE _ _)       = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
@@ -572,6 +573,7 @@ formulaTerms =
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
   where
     atomTerms (Action i fa)   = i : factTerms fa
+    atomTerms (Pred p)        = factTerms p
     atomTerms (EqE t s)       = [t, s]
     atomTerms (Less i j)      = [i, j]
     atomTerms (Last i)        = [i]
