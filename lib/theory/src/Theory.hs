@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -871,7 +872,7 @@ theoryProcessDefs = foldSapicItem (const []) return <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All process definitions of a theory.
-theoryPredicates :: Theory sig c r p SapicElement -> [Predicate]
+theoryPredicates :: Theory sig c r p s -> [Predicate]
 theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All restrictions of a theory.
@@ -907,13 +908,25 @@ addRestriction l thy = do
   where
     expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
 
-expandPredicates thy phi = mapAtoms' (const f) phi
-    where
-        mapAtoms' f = --like mapAtoms, but f maps to LNFormula instead of Atom
-            foldFormula f TF Not Conn Qua
-        f x | (Pred fa)   <-x
-            , Just (pred) <- lookupPredicate fa thy = L.get pFormula pred -- TODO substitution
-            | otherwise = x --TODO give error if lookup fails.
+expandPredicates :: Theory sig c r p s
+                    -> Formula (String, LSort) Name LVar
+                    -> Formula (String, LSort) Name LVar
+expandPredicates thy phi = mapAtoms' f phi
+  where
+        mapAtoms' f' (Ato a) = f' a
+        mapAtoms' _ phi' = phi'
+        f x | (Pred fa)   <- x
+            , Just (pr) <- lookupPredicate fa thy 
+              = apply (subst (L.get pFact pr) fa) (L.get pFormula pr) 
+            | otherwise = Ato x --TODO give error if lookup fails.
+        subst pFa aFa = emptySubst
+        -- TODO need to build substitution
+        -- predicate is an LNFormula, variables not yet in debrijn notation
+        -- but Atoms have bound variables.
+        --
+        -- subst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1 ts2'
+        --     where ts2' = fmap (fmapTerm (fmap (foldBVar boundError id)))
+        --           boundError = 
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -1036,8 +1049,11 @@ lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the predicate with the fact name.
-lookupPredicate :: LNFact -> Theory sig c r p SapicElement -> Maybe (Predicate)
-lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
+lookupPredicate :: Fact t  -> Theory sig c r p s -> Maybe (Predicate)
+lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
+    where
+        sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
+
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
