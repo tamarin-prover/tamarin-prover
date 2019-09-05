@@ -233,7 +233,7 @@ import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 import qualified Data.Label.Point
 import qualified Data.Label.Poly
-import qualified Data.Label.Total
+-- import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
@@ -480,6 +480,7 @@ $(mkLabels [''Option])
 data LemmaAttribute =
          SourceLemma
        | ReuseLemma
+       | ReuseDiffLemma
        | InvariantLemma
        | HideLemma String
        | LHSLemma
@@ -1332,13 +1333,19 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, restrictionsLeft):[(RHS, restrictionsRight)])
+getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, restrictionsLeft):[(RHS, restrictionsRight)]) gatherReusableLemmas
   where
     items = L.get diffThyItems thy
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     restrictionsRight = do EitherRestrictionItem (RHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
+    gatherReusableLemmas = do
+        EitherLemmaItem (s, lem) <- items
+        guard $    lemmaSourceKind lem <= RefinedSource
+                && ReuseDiffLemma `elem` L.get lAttributes lem
+                && AllTraces == L.get lTraceQuantifier lem
+        return $ (s, formulaToGuarded_ $ L.get lFormula lem)
     proofContext s   = case s of
         LHS -> ProofContext
             ( L.get diffThySignature                    thy)
@@ -1707,12 +1714,12 @@ proveDiffTheory selector diffselector prover diffprover thy =
         sys     = mkSystemDiff s ctxt (diffTheoryRestrictions thy) preItems $ L.get lFormula lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
-    proveDiffLemma lem _
+    proveDiffLemma lem preItems
       | diffselector lem = modify lDiffProof add lem
       | otherwise        = lem
       where
         ctxt    = getDiffProofContext lem thy
-        sys     = emptyDiffSystem
+        sys     = mkDiffSystem ctxt (diffTheoryRestrictions thy) preItems
         add prf = fromMaybe prf $ runDiffProver diffprover ctxt 0 sys prf
 
 -- | Construct a constraint system for verifying the given formula.
@@ -1918,7 +1925,7 @@ emptyString :: HighlightDocument d => () -> d
 emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement a = text ("TODO prettyPrint SapicItems")
+prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
@@ -1962,6 +1969,7 @@ prettyLemmaName l = case L.get lAttributes l of
   where
     prettyLemmaAttribute SourceLemma        = text "sources"
     prettyLemmaAttribute ReuseLemma         = text "reuse"
+    prettyLemmaAttribute ReuseDiffLemma     = text "diff_reuse"
     prettyLemmaAttribute InvariantLemma     = text "use_induction"
     prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
     prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))

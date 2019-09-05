@@ -55,7 +55,7 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
-import Data.Functor.Identity 
+-- import           Data.Functor.Identity 
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -588,11 +588,12 @@ legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation
 
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Bool -> Parser LemmaAttribute
-lemmaAttribute isDiff = asum
+lemmaAttribute diff = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
   , symbol "reuse"         *> pure ReuseLemma
+  , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
   , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
@@ -601,7 +602,7 @@ lemmaAttribute isDiff = asum
 --   , symbol "both"          *> pure BothLemma
   ]
   where
-    parseGoalRanking = case isDiff of
+    parseGoalRanking = case diff of
         True  -> map charToGoalRankingDiff <$> many1 letter
         False -> map charToGoalRanking     <$> many1 letter
 
@@ -863,9 +864,9 @@ preddeclaration thy = do
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
                 where 
-                liftedAddPredicate thy pr  = 
-                    case addPredicate pr thy of 
-                        (Just thy') -> return (thy'::OpenTheory)
+                liftedAddPredicate thy' pr  = 
+                    case addPredicate pr thy' of 
+                        (Just thy'') -> return (thy''::OpenTheory)
                         Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
 
 -- used for debugging 
@@ -1114,10 +1115,10 @@ actionprocess thy=
                         
 
 heuristic :: Bool -> Parser [GoalRanking]
-heuristic isDiff = do
+heuristic diff = do
       symbol "heuristic" *> colon *> parseGoalRanking
   where
-    parseGoalRanking = case isDiff of
+    parseGoalRanking = case diff of
         True  -> map charToGoalRankingDiff <$> identifier
         False -> map charToGoalRanking     <$> identifier
 

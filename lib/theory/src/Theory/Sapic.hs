@@ -67,7 +67,7 @@ data SapicAction =
 -- | When the process tree splits, it is connected with one of these connectives
 data ProcessCombinator = Parallel | NDC | Cond LNFact 
         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
-    deriving (Generic, NFData, Binary, Show, Eq, Data )
+    deriving (Generic, NFData, Binary, Show, Eq, Data, Ord )
 
 -- | The process tree is terminated with null processes, and either splits
 -- (parallel and other combinators) or describes a sequence of actions with
@@ -78,13 +78,11 @@ data AnProcess ann =
     -- |   ProcessIdentifier String ann 
     |   ProcessAction SapicAction ann (AnProcess ann)
      deriving(Generic, Data )
-instance (Ord ann) => Ord (AnProcess ann)
+deriving instance (Ord ann) => Ord (AnProcess ann)
 deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
-deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
-deriving instance (Monoid ann) => Monoid (AnProcess ann)
 deriving instance Foldable (AnProcess)
 deriving instance Traversable (AnProcess)
 
@@ -108,7 +106,7 @@ data LetExceptions = CapturedEx CapturedTag LVar
     -- deriving (Typeable)
 
 prettyLetExceptions :: LetExceptions -> [Char]
-prettyLetExceptions (CapturedEx tag v) = "Problem with let expression. Variable "++ show v ++ " captured in " ++ pretty tag ++ ". Please rename." 
+prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ "appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ "throughout."  
     where pretty CapturedIn = "input"
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
@@ -194,6 +192,7 @@ rhsP :: [Int] -> ProcessPosition
 rhsP p = (p++[2]) :: ProcessPosition
 -- rhs :: ProcessPosition = 2
 
+descendant :: Eq a => [a] -> [a] -> Bool
 descendant child parent = parent `isPrefixOf` child 
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.

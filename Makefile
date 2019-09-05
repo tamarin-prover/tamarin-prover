@@ -192,7 +192,7 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
 
-REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy issue324.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
@@ -349,7 +349,7 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
 SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
-basic/let-blocks2.spthy basic/let-blocks3.spthy \
+feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
 fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
@@ -358,7 +358,7 @@ feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy
 # not working because of missing support for predicates
-# basic/running-example.spthy basic/let-blocks.spthy 
+# basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
 # Yubikey/Yubikey.spthy NOTE commented out previously need to verify
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
