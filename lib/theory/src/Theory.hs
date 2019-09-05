@@ -906,6 +906,14 @@ addRestriction l thy = do
   where
     expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
 
+expandPredicates thy phi = mapAtoms' (const f) phi
+    where
+        mapAtoms' f = --like mapAtoms, but f maps to LNFormula instead of Atom
+            foldFormula f TF Not Conn Qua
+        f x | (Pred fa)   <-x
+            , Just (pred) <- lookupPredicate fa thy = L.get pFormula pred -- TODO substitution
+            | otherwise = x --TODO give error if lookup fails.
+
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
