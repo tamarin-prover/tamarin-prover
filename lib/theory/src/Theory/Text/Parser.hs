@@ -254,16 +254,16 @@ factAnnotation = asum
   , symbol "no_precomp" *> pure NoSources
   ]
 
--- | Parse a fact.
-fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = try (
+-- | Parse a fact that does not necessarily have a term in it.
+fact' :: Parser t -> Parser (Fact t)
+fact' pterm = try (
     do multi <- option Linear (opBang *> pure Persistent)
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (commaSep (msetterm plit))
+       ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
        mkProtoFact multi i (S.fromList ann) ts
     <?> "fact" )
@@ -281,6 +281,9 @@ fact plit = try (
       "FR"  -> singleTerm f freshFact
       _     -> return . protoFactAnn multi f ann
 
+-- | Parse a fact.
+fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
+fact plit = fact' (msetterm plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
@@ -851,7 +854,7 @@ options thy0 =do
 
 predicate :: Parser Predicate
 predicate = do
-           f <- fact (varTerm <$> lvar)
+           f <- fact' lvar
            _ <- symbol "<=>"
            form <- standardFormula
            return $ Predicate f form
@@ -867,7 +870,7 @@ preddeclaration thy = do
                 liftedAddPredicate thy' pr  = 
                     case addPredicate pr thy' of 
                         (Just thy'') -> return (thy''::OpenTheory)
-                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
+                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyFact prettyLVar (get pFact pr))
 
 -- used for debugging 
 -- println :: String -> ParsecT String u Identity ()          

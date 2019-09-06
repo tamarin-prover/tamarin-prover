@@ -27,6 +27,7 @@ module Theory.Model.Atom(
   , LNAtom
 
   , isActionAtom
+  , isPredicateAtom
   , isLastAtom
   , isLessAtom
   , isEqAtom
@@ -35,6 +36,7 @@ module Theory.Model.Atom(
   , BLAtom
 
   -- * Pretty-Printing
+  , prettyAtom
   , prettyNAtom
   )
 where
@@ -152,12 +154,17 @@ isEqAtom ato = case ato of EqE _ _ -> True; _ -> False
 -- Pretty-Printing
 ------------------------------------------------------------------------------
 
-prettyNAtom :: (Show v, HighlightDocument d) => NAtom v -> d
-prettyNAtom (Action v fa) =
-    prettyFact prettyNTerm fa <-> opAction <-> text (show v)
-prettyNAtom (Pred fa) = prettyFact prettyNTerm fa
-prettyNAtom (EqE l r) =
-    sep [prettyNTerm l <-> opEqual, prettyNTerm r]
+prettyAtom :: (Show v, HighlightDocument d) => 
+              (v -> d)  -- ^ Function for pretty printing terms / variables
+              -> Atom v -> d
+prettyAtom ppT (Action v fa) =
+    prettyFact ppT fa <-> opAction <-> text (show v)
+prettyAtom ppT (Pred fa) = prettyFact ppT fa
+prettyAtom ppT (EqE l r) =
+    sep [ppT l <-> opEqual, ppT r]
     -- sep [prettyNTerm l <-> text "≈", prettyNTerm r]
-prettyNAtom (Less u v) = text (show u) <-> opLess <-> text (show v)
-prettyNAtom (Last i)   = operator_ "last" <> parens (text (show i))
+prettyAtom _ (Less u v) = text (show u) <-> opLess <-> text (show v)
+prettyAtom _ (Last i)   = operator_ "last" <> parens (text (show i))
+
+prettyNAtom :: (Show v, HighlightDocument d) => NAtom v -> d
+prettyNAtom  = prettyAtom prettyNTerm

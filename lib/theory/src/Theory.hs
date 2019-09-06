@@ -447,7 +447,7 @@ $(mkLabels [''ProcessDef])
 ------------------------------------------------------------------------------
 
 data Predicate = Predicate
-        { _pFact            :: LNFact
+        { _pFact            :: Fact LVar
         , _pFormula         :: LNFormula
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -915,18 +915,25 @@ expandPredicates thy phi = mapAtoms' f phi
   where
         mapAtoms' f' (Ato a) = f' a
         mapAtoms' _ phi' = phi'
+        f:: Atom (VTerm Name (BVar LVar)) -> LNFormula
         f x | (Pred fa)   <- x
             , Just (pr) <- lookupPredicate fa thy 
-              = apply (subst (L.get pFact pr) fa) (L.get pFormula pr) 
+              = apply' (subst (L.get pFact pr) fa) (L.get pFormula pr) 
             | otherwise = Ato x --TODO give error if lookup fails.
-        subst pFa aFa = emptySubst
+        -- subst pFa aFa = emptySubst
         -- TODO need to build substitution
         -- predicate is an LNFormula, variables not yet in debrijn notation
         -- but Atoms have bound variables.
-        --
-        -- subst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1 ts2'
-        --     where ts2' = fmap (fmapTerm (fmap (foldBVar boundError id)))
-        --           boundError = 
+        apply' :: Subst Name (BVar LVar) -> LNFormula -> LNFormula
+        apply' subst = foldFormula (\a -> Ato $ fmap (applyVTerm subst) a) TF Not Conn Qua
+        subst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1' ts2'
+            where 
+                  ts1':: [BVar LVar]
+                  ts1' = map Free ts1 
+                  -- ts2':: [VTerm c1 (BVar LVar)]
+                  -- ts2' = fmap (fmapTerm (fmap (foldBVar id id))) ts2
+                  ts2' = ts2
+                  -- boundError = 
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -1946,7 +1953,7 @@ prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
     where
-        factstr = render $ prettyLNFact $ L.get pFact p
+        factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => Process -> d
