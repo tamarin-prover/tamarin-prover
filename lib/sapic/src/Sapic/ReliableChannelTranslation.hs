@@ -107,7 +107,7 @@ resReliable = [QQ.r|restriction reliable:
 |]
 
 -- | Add restrictions that enforces Send-events to have Receive-events
-reliableChannelRestr :: (MonadThrow m, MonadCatch m, Show ann) => AnProcess ann -> [Restriction] -> m [Restriction] 
+reliableChannelRestr :: (MonadThrow m, MonadCatch m, Show ann) => AnProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction] 
 reliableChannelRestr anP restr  = do
     res <- toEx resReliable
     return $ restr ++ addIf (processContains anP isReliableTrans) [res]

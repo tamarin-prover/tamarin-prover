@@ -19,7 +19,9 @@
 -- Theory datatype and transformations on it.
 module Theory (
   -- * Restrictions
-    Restriction(..)
+    ProtoRestriction(..)
+  , Restriction
+  , SyntacticRestriction
   , RestrictionAttribute(..)
   , rstrName
   , rstrFormula
@@ -45,11 +47,14 @@ module Theory (
   , Predicate(..)
   , pFact
   , addPredicate
+  , expandPredicates
 
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
   , Lemma
+  , SyntacticLemma
+  , ProtoLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -420,13 +425,22 @@ data RestrictionAttribute =
 
 -- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
-data Restriction = Restriction
+data ProtoRestriction f = Restriction
        { _rstrName    :: String
-       , _rstrFormula :: LNFormula
+       , _rstrFormula :: f
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Generic )
 
-$(mkLabels [''Restriction])
+type Restriction = ProtoRestriction LNFormula
+type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
+
+deriving instance Eq Restriction 
+deriving instance Ord Restriction 
+deriving instance Show Restriction 
+deriving instance NFData Restriction 
+deriving instance Binary Restriction 
+
+$(mkLabels [''ProtoRestriction])
 
 ------------------------------------------------------------------------------
 -- Processes
@@ -496,16 +510,25 @@ data TraceQuantifier = ExistsTrace | AllTraces
 
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
-data Lemma p = Lemma
+data ProtoLemma f p = Lemma
        { _lName            :: String
        , _lTraceQuantifier :: TraceQuantifier
-       , _lFormula         :: LNFormula
+       , _lFormula         :: f 
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Generic)
 
-$(mkLabels [''Lemma])
+type Lemma = ProtoLemma LNFormula
+type SyntacticLemma = ProtoLemma SyntacticLNFormula
+
+deriving instance Eq p => Eq (Lemma p)
+deriving instance Ord p => Ord (Lemma p)
+deriving instance Show p => Show (Lemma p)
+deriving instance NFData p => NFData (Lemma p)
+deriving instance Binary p => Binary  (Lemma p)
+
+$(mkLabels [''ProtoLemma])
 
 -- | A diff lemma describes a correspondence property that holds in the context of a theory
 -- together with a proof of its correctness.
@@ -571,12 +594,12 @@ isSourceLemma lem =
   && (SourceLemma `elem` L.get lAttributes lem)
 
 -- | True iff the lemma is a LHS lemma.
-isLeftLemma :: Lemma p -> Bool
+isLeftLemma :: ProtoLemma f p -> Bool
 isLeftLemma lem =
      (LHSLemma `elem` L.get lAttributes lem)
 
 -- | True iff the lemma is a RHS lemma.
-isRightLemma :: Lemma p -> Bool
+isRightLemma :: ProtoLemma f p -> Bool
 isRightLemma lem =
      (RHSLemma `elem` L.get lAttributes lem)
 
@@ -593,8 +616,7 @@ unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
               -> Lemma ProofSkeleton
 unprovenLemma name atts qua fm = Lemma name qua fm atts (unproven ())
 
-skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
-              -> ProofSkeleton -> Lemma ProofSkeleton
+skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> f -> p -> ProtoLemma f p
 skeletonLemma name atts qua fm = Lemma name qua fm atts
 
 -- | Create a new unproven diff lemma.
@@ -613,12 +635,12 @@ lemmaSourceKind lem
   | otherwise                                = RefinedSource
 
 -- | Adds the LHS lemma attribute.
-addLeftLemma :: Lemma p -> Lemma p
+addLeftLemma :: ProtoLemma f p -> ProtoLemma f p
 addLeftLemma lem =
      L.set lAttributes (LHSLemma:(L.get lAttributes lem)) lem
 
 -- | Adds the RHS lemma attribute.
-addRightLemma :: Lemma p -> Lemma p
+addRightLemma :: ProtoLemma f p -> ProtoLemma f p
 addRightLemma lem =
      L.set lAttributes (RHSLemma:(L.get lAttributes lem)) lem
 
@@ -900,43 +922,42 @@ diffTheoryDiffLemmas :: DiffTheory sig c r r2 p p2 -> [DiffLemma p]
 diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
-    -- | Add a new restriction. Fails, if restriction with the same name exists.
-addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
-addRestriction l thy = do
-    guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
-    return $ modify thyItems (++ [RestrictionItem (expandPreds l)]) thy
-  where
-    expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
 
 expandPredicates :: Theory sig c r p s
-                    -> Formula (String, LSort) Name LVar
-                    -> Formula (String, LSort) Name LVar
+                    -> SyntacticLNFormula
+                    -> LNFormula
 expandPredicates thy phi = mapAtoms' f phi
   where
-        mapAtoms' f' (Ato a) = f' a
-        mapAtoms' _ phi' = phi'
-        f:: Atom (VTerm Name (BVar LVar)) -> LNFormula
-        f x | (Pred fa)   <- x
+        mapAtoms' fAt = foldFormula fAt TF Not Conn Qua
+        f:: SyntacticAtom (VTerm Name (BVar LVar)) -> LNFormula
+        f x | (Syntactic (Pred fa))   <- x
             , Just (pr) <- lookupPredicate fa thy 
-              = apply' (subst (L.get pFact pr) fa) (L.get pFormula pr) 
-            | otherwise = Ato x --TODO give error if lookup fails.
+              = apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
+            | otherwise = Ato $ toAtom x --TODO give error if lookup fails.
         -- subst pFa aFa = emptySubst
         -- TODO need to build substitution
         -- predicate is an LNFormula, variables not yet in debrijn notation
         -- but Atoms have bound variables.
         apply' :: Subst Name (BVar LVar) -> LNFormula -> LNFormula
         apply' subst = foldFormula (\a -> Ato $ fmap (applyVTerm subst) a) TF Not Conn Qua
-        subst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1' ts2'
+        compSubst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1' ts2'
             where 
                   ts1':: [BVar LVar]
                   ts1' = map Free ts1 
                   -- ts2':: [VTerm c1 (BVar LVar)]
                   -- ts2' = fmap (fmapTerm (fmap (foldBVar id id))) ts2
                   ts2' = ts2
-                  -- boundError = 
+
+-- | Add a new restriction. Fails, if restriction with the same name exists.
+addRestriction :: SyntacticRestriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addRestriction l thy = do
+    guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
+    return $ modify thyItems (++ [RestrictionItem (expandPreds l)]) thy
+  where
+    expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
-addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addLemma :: SyntacticLemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem (expandPreds l)]) thy
@@ -2004,6 +2025,7 @@ prettyLemmaName l = case L.get lAttributes l of
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
+
 
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d

@@ -61,8 +61,8 @@ import           Debug.Trace
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
 
--- | A restriction describes a property that must hold for all traces. Restrictions are
--- always used as lemmas in proofs.
+-- | A restriction describes a property that must hold for all traces.
+-- | Restrictions are always used as lemmas in proofs.
 data ParseRestriction = ParseRestriction
        { pRstrName       :: String
        , pRstrAttributes :: [RestrictionAttribute]
@@ -126,11 +126,11 @@ parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
 parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags)
 
 -- | Parse a lemma for an open theory from a string.
-parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
+parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString "<unknown source>" lemma
 
 -- | Parse a lemma for an open theory from a string.
-parseRestriction :: String -> Either ParseError Restriction
+parseRestriction :: String -> Either ParseError SyntacticRestriction
 parseRestriction = parseString "<unknown source>" restriction
 
 ------------------------------------------------------------------------------
@@ -474,11 +474,11 @@ transferProto = do
 ------------------------------------------------------------------------------
 
 -- | Parse an atom with possibly bound logical variables.
-blatom :: Parser BLAtom
+blatom :: Parser (SyntacticAtom BLTerm)
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Pred        <$> try (fact (varTerm <$> lvar))                    <?> "predicate atom"
+  , Syntactic . Pred <$> try (fact (varTerm <$> lvar))                    <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
@@ -487,7 +487,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
     nodevarTerm = (lit . Var) <$> nodevar
 
 -- | Parse an atom of a formula.
-fatom :: Parser LNFormula
+fatom :: Parser  SyntacticLNFormula
 fatom = asum
   [ pure lfalse <* opLFalse
   , pure ltrue  <* opLTrue
@@ -503,44 +503,51 @@ fatom = asum
         return $ foldr (hinted q) f vs
 
 -- | Parse a negation.
-negation :: Parser LNFormula
+negation :: Parser SyntacticLNFormula
 negation = opLNot *> (Not <$> fatom) <|> fatom
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser LNFormula
+conjuncts :: Parser SyntacticLNFormula
 conjuncts = chainl1 negation ((.&&.) <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser LNFormula
+disjuncts :: Parser SyntacticLNFormula
 disjuncts = chainl1 conjuncts ((.||.) <$ opLOr)
 
 -- | An implication.
-imp :: Parser LNFormula
+imp :: Parser SyntacticLNFormula
 imp = do
   lhs <- disjuncts
   asum [ opImplies *> ((lhs .==>.) <$> imp)
        , pure lhs ]
 
 -- | An logical equivalence.
-iff :: Parser LNFormula
+iff :: Parser SyntacticLNFormula 
 iff = do
   lhs <- imp
   asum [opLEquiv *> ((lhs .<=>.) <$> imp), pure lhs ]
 
 -- | Parse a standard formula.
-standardFormula :: Parser LNFormula
+standardFormula :: Parser (SyntacticLNFormula)
 standardFormula = iff
+
+
+plainFormula :: Parser LNFormula
+plainFormula = try $ do
+    lnf <- toLNFormula <$> standardFormula
+    case lnf of
+        Nothing -> fail "Syntactic sugar is not allowed, guarded formula expected."
+        Just lnf' -> return lnf'
 
 -- | Parse a guarded formula using the hack of parsing a standard formula and
 -- converting it afterwards.
---
 -- FIXME: Write a proper parser.
 guardedFormula :: Parser LNGuarded
-guardedFormula = try $ do
-    res <- formulaToGuarded <$> standardFormula
-    case res of
-        Left d   -> fail $ render d
-        Right gf -> return gf
+guardedFormula = do
+    pf <- plainFormula
+    case formulaToGuarded pf of
+           Left d   -> fail $ render d
+           Right gf -> return gf
 
 
 ------------------------------------------------------------------------------
@@ -556,7 +563,7 @@ restrictionAttribute = asum
   ]
 
 -- | Parse a restriction.
-restriction :: Parser Restriction
+restriction :: Parser SyntacticRestriction
 restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
@@ -565,7 +572,7 @@ restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
 --legacyAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
 
 -- | Parse a legacy axiom, now called restriction.
-legacyAxiom :: Parser Restriction
+legacyAxiom :: Parser SyntacticRestriction
 legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
@@ -573,7 +580,7 @@ legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, re
 diffRestriction :: Parser ParseRestriction
 diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
                     <*> (option [] $ list restrictionAttribute)
-                    <*> (colon *> doubleQuoted standardFormula)
+                    <*> (colon *> doubleQuoted plainFormula)
 
 -- | Fail on parsing an old "axiom" keyword.
 --legacyDiffAxiom :: Parser ParseRestriction
@@ -583,7 +590,7 @@ diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
 legacyDiffAxiom :: Parser ParseRestriction
 legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") ParseRestriction <$> (symbol "axiom" *> identifier)
               <*> (option [] $ list restrictionAttribute)
-              <*> (colon *> doubleQuoted standardFormula)
+              <*> (colon *> doubleQuoted plainFormula)
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
@@ -616,13 +623,20 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
--- | Parse a lemma.
-lemma :: Parser (Lemma ProofSkeleton)
-lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
+protoLemma :: Parser f -> Parser (ProtoLemma f ProofSkeleton)
+protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
-                      <*> doubleQuoted standardFormula
+                      <*> doubleQuoted parseFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
+
+-- | Parse a lemma.
+lemma :: Parser (SyntacticLemma ProofSkeleton)
+lemma = protoLemma standardFormula
+
+-- | Parse a lemma w/o syntactic sugar
+plainLemma :: Parser (Lemma ProofSkeleton)
+plainLemma = protoLemma plainFormula
 
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
@@ -856,7 +870,7 @@ predicate :: Parser Predicate
 predicate = do
            f <- fact' lvar
            _ <- symbol "<=>"
-           form <- standardFormula
+           form <- plainFormula
            return $ Predicate f form
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
@@ -1266,7 +1280,7 @@ diffTheory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyDiffAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< lemma
+      , do thy' <- liftedAddLemma thy =<< plainLemma
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'

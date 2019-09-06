@@ -181,7 +181,7 @@ baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r 0],e
 -- a hand-written string. It is possible that there are syntax arrors, in
 -- which case the translation should crash with the following error
 -- message.
-toEx :: MonadThrow m => String -> m Restriction
+toEx :: MonadThrow m => String -> m SyntacticRestriction
 toEx s 
     | (Left  err) <- parseRestriction s =
         throwM ( ImplementationError ( "Error parsing hard-coded restriction: " ++ s ++ show err )::SapicException AnnotatedProcess)
@@ -240,7 +240,7 @@ resLockingL  = [QQ.r|restriction locking:
 -- | Produce locking lemma for variable v by instantiating resLockingL 
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
-resLocking :: MonadThrow m => LVar -> m Restriction
+resLocking :: MonadThrow m => LVar -> m SyntacticRestriction
 resLocking v =  do
     rest <- toEx resLockingL
     return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
@@ -271,7 +271,7 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> [Restriction] -> m [Restriction] 
+baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction] 
 baseRestr anP hasAccountabilityLemmaWithControl prevRestr = 
   let hardcoded_l = 
        (if contains isLookup then

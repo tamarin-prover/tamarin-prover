@@ -68,7 +68,7 @@ translate th = case theoryProcesses th of
         Nothing   -> throwM (RuleNameExists (render (prettyRuleName ru))  :: SapicException AnnotatedProcess)
     liftedAddRestriction thy rest = case addRestriction rest thy of
         Just thy' -> return thy'
-        Nothing   -> throwM (RestrictionNameExists (render (prettyRestriction rest))  :: SapicException AnnotatedProcess)
+        Nothing   -> throwM (RestrictionNameExists (L.get rstrName rest)  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
     checkOps (lens,x) 
         | L.get lens ops = Just x
@@ -83,7 +83,7 @@ translate th = case theoryProcesses th of
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ] 
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [Restriction] 
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction] 
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma

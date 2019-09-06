@@ -180,7 +180,7 @@ resProgressInit = [QQ.r|restriction progressInit:
 |]
 
 -- | Add restrictions for all transitions that have to take place according to the progress function.
-progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> [Restriction] -> m [Restriction] 
+progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction] 
 progressRestr anP restr  = do
     domPF <- pfFrom anP -- set of "from" positions
     initL <- toEx resProgressInit

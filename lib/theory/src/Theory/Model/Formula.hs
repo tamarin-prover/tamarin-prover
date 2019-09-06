@@ -7,6 +7,7 @@
 {-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -20,13 +21,18 @@ module Theory.Model.Formula (
    -- * Formulas
     Connective(..)
   , Quantifier(..)
-  , Formula(..)
+  , ProtoFormula(..)
+  , Formula
+  , SyntacticFormula
   , LNFormula
+  , ProtoLNFormula
+  , SyntacticLNFormula
   , LFormula
 
   , quantify
   , openFormula
   , openFormulaPrefix
+  , toLNFormula
 --  , unquantify
 
   -- ** More convenient constructors
@@ -85,23 +91,31 @@ data Quantifier = All | Ex
 
 
 -- | First-order formulas in locally nameless representation with hints for the
--- names/sorts of quantified variables.
-data Formula s c v = Ato (Atom (VTerm c (BVar v)))
+-- names/sorts of quantified variables and syntactic sugar in atoms.
+data ProtoFormula syn s c v = Ato (ProtoAtom syn (VTerm c (BVar v)))
                    | TF !Bool
-                   | Not (Formula s c v)
-                   | Conn !Connective (Formula s c v) (Formula s c v)
-                   | Qua !Quantifier s (Formula s c v)
-                   deriving ( Generic, NFData, Binary )
+                   | Not (ProtoFormula syn s c v)
+                   | Conn !Connective (ProtoFormula syn  s c v) (ProtoFormula syn  s c v)
+                   | Qua !Quantifier s (ProtoFormula syn  s c v)
+                   deriving ( Generic)
+
+-- | First-order formulas in locally nameless representation with hints for the
+-- names/sorts of quantified variables.
+type Formula s c v = ProtoFormula Unit2 s c v
+
+type SyntacticFormula s c v = ProtoFormula SyntacticSugar s c v
 
 -- Folding
 ----------
 
 -- | Fold a formula.
 {-# INLINE foldFormula #-}
-foldFormula :: (Atom (VTerm c (BVar v)) -> b) -> (Bool -> b)
-            -> (b -> b) -> (Connective -> b -> b -> b)
+foldFormula :: (ProtoAtom syn (VTerm c (BVar v)) -> b)
+            -> (Bool -> b)
+            -> (b -> b)
+            -> (Connective -> b -> b -> b)
             -> (Quantifier -> s -> b -> b)
-            -> Formula s c v
+            -> (ProtoFormula syn s c v)
             -> b
 foldFormula fAto fTF fNot fConn fQua =
     go
@@ -114,10 +128,11 @@ foldFormula fAto fTF fNot fConn fQua =
 
 -- | Fold a formula.
 {-# INLINE foldFormulaScope #-}
-foldFormulaScope :: (Integer -> Atom (VTerm c (BVar v)) -> b) -> (Bool -> b)
+foldFormulaScope :: (Integer -> ProtoAtom syn (VTerm c (BVar v)) -> b)
+                 -> (Bool -> b)
                  -> (b -> b) -> (Connective -> b -> b -> b)
                  -> (Quantifier -> s -> b -> b)
-                 -> Formula s c v
+                 -> ProtoFormula syn s c v
                  -> b
 foldFormulaScope fAto fTF fNot fConn fQua =
     go 0
@@ -137,7 +152,12 @@ instance Functor (Formula s c) where
     fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
 -}
 
-instance Foldable (Formula s c) where
+deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula SyntacticSugar s c v)
+deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
+deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula Unit2 s c v)
+deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula Unit2 s c v)
+
+instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
 
@@ -162,14 +182,14 @@ infixr 1 .==>.
 infix  1 .<=>.
 
 -- | Logically true.
-ltrue :: Formula a s v
+ltrue :: ProtoFormula syn a s v
 ltrue = TF True
 
 -- | Logically false.
-lfalse :: Formula a s v
+lfalse :: ProtoFormula syn a s v
 lfalse = TF False
 
-(.&&.), (.||.), (.==>.), (.<=>.) :: Formula a s v -> Formula a s v -> Formula a s v
+(.&&.), (.||.), (.==>.), (.<=>.) :: ProtoFormula syn a s v -> ProtoFormula syn a s v -> ProtoFormula syn a s v
 (.&&.)  = Conn And
 (.||.)  = Conn Or
 (.==>.) = Conn Imp
@@ -183,12 +203,15 @@ lfalse = TF False
 -- the name of the bound variable, as well as the variable's actual sort.
 type LFormula c = Formula (String, LSort) c LVar
 
+type ProtoLNFormula syn = ProtoFormula syn (String, LSort) Name LVar
 type LNFormula = Formula (String, LSort) Name LVar
+type SyntacticLNFormula = ProtoLNFormula SyntacticSugar
+
 
 -- | Change the representation of atoms.
-mapAtoms :: (Integer -> Atom (VTerm c (BVar v))
-         -> Atom (VTerm c1 (BVar v1)))
-         -> Formula s c v -> Formula s c1 v1
+mapAtoms :: (Integer -> ProtoAtom syn (VTerm c (BVar v))
+         -> ProtoAtom syn1 (VTerm c1 (BVar v1)))
+         -> ProtoFormula syn s c v -> ProtoFormula syn1 s c1 v1
 mapAtoms f = foldFormulaScope (\i a -> Ato $ f i a) TF Not Conn Qua
 
 -- | @openFormula f@ returns @Just (v,Q,f')@ if @f = Q v. f'@ modulo
@@ -236,6 +259,10 @@ deriving instance Eq       LNFormula
 deriving instance Show     LNFormula
 deriving instance Ord      LNFormula
 
+deriving instance Eq       SyntacticLNFormula
+deriving instance Show     SyntacticLNFormula
+deriving instance Ord      SyntacticLNFormula
+
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
@@ -249,7 +276,7 @@ instance Apply LNFormula where
 ------------------------------------------------------------------------------
 
 -- | Introduce a bound variable for a free variable.
-quantify :: (Ord c, Ord v) => v -> Formula s c v -> Formula s c v
+quantify :: (Ord c, Ord v, Functor syn) => v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
 quantify x =
     mapAtoms (\i a -> fmap (mapLits (fmap (>>= subst i))) a)
   where
@@ -257,18 +284,29 @@ quantify x =
               | otherwise = Free v
 
 -- | Create a universal quantification with a sort hint for the bound variable.
-forall :: (Ord c, Ord v) => s -> v -> Formula s c v -> Formula s c v
+forall :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
 forall hint x = Qua All hint . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
-exists :: (Ord c, Ord v) => s -> v -> Formula s c v -> Formula s c v
+exists :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
 exists hint x = Qua Ex hint . quantify x
 
 -- | Transform @forall@ and @exists@ into functions that operate on logical variables
 hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
 hinted f v@(LVar n s _) = f (n,s) v
 
-
+-- | Convert to LNFormula, if possible.
+-- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))
+toLNFormula :: ProtoFormula syn s c v -> Maybe (Formula s c v)
+toLNFormula = traverseFormula' f 
+  where
+        traverseFormula' fAt = foldFormula (liftA Ato . fAt)
+                                (pure . TF) (liftA Not)
+                                (liftA2 . Conn) ((liftA .) . Qua)
+        -- mapAtoms' fAt = foldFormula fAt (return . TF) (return . Not) (return . Conn) (return . Qua)
+        -- mapAtoms' fAt = traverseFormula fAt
+        f x |  (Syntactic _) <- x = Nothing
+            | otherwise           = Just (toAtom x)
 
 ------------------------------------------------------------------------------
 -- Pretty printing
