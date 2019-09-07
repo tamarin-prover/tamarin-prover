@@ -775,14 +775,15 @@ impliedFormulasAndSystems hnd sys gf = res
         go :: [(NodeId, LNFact)] -> [([Equal LNTerm], [Equal LNTerm])]
         go []                                                  = []
         go ((nid, sysAct):acts) | factTag sysAct == factTag fa =
-            (map (\(x, y) -> ((((Equal (toConst nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ x),
-                              (((Equal (varTerm nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ y))) $ equalities as)
+            (map (\(x, y) -> ((((Equal (variableToConst nid) a):(zipWith Equal sysTerms formulaTerms)) ++ x),
+                              (((Equal (varTerm nid) a):(zipWith Equal sysTerms formulaTerms)) ++ y))) $ equalities as)
                                   ++ (go acts)
+            where
+                sysTerms = map freshToConst (factTerms sysAct)
+                formulaTerms = factTerms fa
+
         go ((_  , _     ):acts) | otherwise                    = go acts
     equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
-
-    toConst cvar = constTerm (Name NodeName (NameId ("constVar_" ++ toConstName cvar)))
-    toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
 
 -- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
