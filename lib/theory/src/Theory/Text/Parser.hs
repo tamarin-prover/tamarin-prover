@@ -1188,7 +1188,7 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- ((liftedAddLemma thy) =<<) lemma
+      , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
@@ -1229,9 +1229,15 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
-    liftedAddLemma thy lem = case addLemma lem thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+    liftedAddLemma thy lem = case expandLemma thy lem of
+         Right l -> case addLemma l thy of
+                Just thy' -> return thy'
+                Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+         Left facttag -> fail $ "undefined predicate "
+                                 ++ showFactTagArity facttag
+                                 ++ " in lemma: "
+                                 ++ get lName lem
+                                 ++ "."
 
     -- check process defined only once
     -- add process to theoryitems
@@ -1239,9 +1245,17 @@ theory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate process: " ++ get pName pDef 
 
-    liftedAddRestriction thy rstr = case addRestriction rstr thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
+    liftedAddRestriction thy rstr =
+        case  expandRestriction thy rstr of
+         Right r' ->
+            case addRestriction r' thy of
+                Just thy' -> return thy'
+                Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
+         Left facttag -> fail $ "undefined predicate "
+                                 ++ showFactTagArity facttag
+                                 ++ " in definition of predicate: "
+                                 ++ get rstrName rstr
+                                 ++ "."
 
     liftedAddHeuristic thy h = case addHeuristic h thy of
         Just thy' -> return thy'

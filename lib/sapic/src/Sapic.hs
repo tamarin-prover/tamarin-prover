@@ -64,11 +64,18 @@ translate th = case theoryProcesses th of
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> throwM (RuleNameExists (render (prettyRuleName ru))  :: SapicException AnnotatedProcess)
-    liftedAddRestriction thy rest = case addRestriction rest thy of
-        Just thy' -> return thy'
-        Nothing   -> throwM (RestrictionNameExists (L.get rstrName rest)  :: SapicException AnnotatedProcess)
+            Just thy' -> return thy'
+            Nothing   -> throwM 
+                (RuleNameExists (render (prettyRuleName ru)) 
+                    :: SapicException AnnotatedProcess)
+    liftedAddRestriction thy rest = case  expandRestriction thy rest of
+      Right rest' ->
+        case addRestriction rest' thy of
+            Just thy' -> return thy'
+            Nothing   -> throwM (RestrictionNameExists (L.get rstrName rest)
+                    :: SapicException AnnotatedProcess)
+      Left facttag -> throwM (CannotExpandPredicate facttag rest
+                              :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
     checkOps (lens,x) 
         | L.get lens ops = Just x

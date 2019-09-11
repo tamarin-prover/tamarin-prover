@@ -25,6 +25,7 @@ module Theory (
   , RestrictionAttribute(..)
   , rstrName
   , rstrFormula
+  , expandRestriction
 
   -- * Processes
   , ProcessDef(..)
@@ -47,7 +48,6 @@ module Theory (
   , Predicate(..)
   , pFact
   , addPredicate
-  , expandPredicates
 
   -- * Lemmas
   , LemmaAttribute(..)
@@ -72,6 +72,7 @@ module Theory (
 --   , isBothLemma
   , addLeftLemma
   , addRightLemma
+  , expandLemma
 
   -- * Theories
   , Theory(..)
@@ -922,47 +923,48 @@ diffTheoryDiffLemmas :: DiffTheory sig c r r2 p p2 -> [DiffLemma p]
 diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
-
-expandPredicates :: Theory sig c r p s
+-- | expand predicaates in formalua with those defined in theory. If this
+-- fails, return FactTag of the predicate we could not find.
+expandFormula :: Theory sig c r p s
                     -> SyntacticLNFormula
-                    -> LNFormula
-expandPredicates thy phi = mapAtoms' f phi
+                    -> Either FactTag LNFormula
+expandFormula thy = traverseFormulaAtom f
   where
-        mapAtoms' fAt = foldFormula fAt TF Not Conn Qua
-        f:: SyntacticAtom (VTerm Name (BVar LVar)) -> LNFormula
+        f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
         f x | (Syntactic (Pred fa))   <- x
             , Just (pr) <- lookupPredicate fa thy 
-              = apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
-            | otherwise = Ato $ toAtom x --TODO give error if lookup fails.
-        -- subst pFa aFa = emptySubst
-        -- TODO need to build substitution
-        -- predicate is an LNFormula, variables not yet in debrijn notation
-        -- but Atoms have bound variables.
+              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
+            | (Syntactic (Pred fa))   <- x
+            , Nothing <- lookupPredicate fa thy = Left $ factTag fa
+            | otherwise = return $ Ato $ toAtom x 
         apply' :: Subst Name (BVar LVar) -> LNFormula -> LNFormula
         apply' subst = foldFormula (\a -> Ato $ fmap (applyVTerm subst) a) TF Not Conn Qua
         compSubst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1' ts2'
             where 
                   ts1':: [BVar LVar]
                   ts1' = map Free ts1 
-                  -- ts2':: [VTerm c1 (BVar LVar)]
-                  -- ts2' = fmap (fmapTerm (fmap (foldBVar id id))) ts2
                   ts2' = ts2
 
+expandRestriction :: Theory sig c r p s -> ProtoRestriction SyntacticLNFormula
+    -> Either FactTag (ProtoRestriction LNFormula)
+expandRestriction thy (Restriction n f) =  (Restriction n) <$> (expandFormula thy f)
+
+expandLemma :: Theory sig c r p1 s
+               -> ProtoLemma SyntacticLNFormula p2
+               -> Either FactTag (ProtoLemma LNFormula p2)
+expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> (expandFormula thy f)
+
 -- | Add a new restriction. Fails, if restriction with the same name exists.
-addRestriction :: SyntacticRestriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addRestriction l thy = do
     guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
-    return $ modify thyItems (++ [RestrictionItem (expandPreds l)]) thy
-  where
-    expandPreds (Restriction n f) = (Restriction n (expandPredicates thy f))
+    return $ modify thyItems (++ [RestrictionItem l]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
-addLemma :: SyntacticLemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
-    return $ modify thyItems (++ [LemmaItem (expandPreds l)]) thy
-  where
-    expandPreds (Lemma n tq f a p) = (Lemma n tq (expandPredicates thy f) a p)
+    return $ modify thyItems (++ [LemmaItem l]) thy
 
 
 -- | Add a new process expression.  since expression (and not definitions)

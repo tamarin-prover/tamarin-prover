@@ -49,6 +49,7 @@ module Theory.Model.Formula (
   -- ** General Transformations
   , mapAtoms
   , foldFormula
+  , traverseFormulaAtom
 
   -- ** Pretty-Printing
   , prettyLNFormula
@@ -161,9 +162,19 @@ instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
 
+-- | traverse formula down to the term level
 traverseFormula :: (Ord v, Ord c, Ord v', Applicative f)
                 => (v -> f v') -> Formula s c v -> f (Formula s c v')
 traverseFormula f = foldFormula (liftA Ato . traverse (traverseTerm (traverse (traverse f))))
+                                (pure . TF) (liftA Not)
+                                (liftA2 . Conn) ((liftA .) . Qua)
+
+-- | traverse formula up to atom level
+traverseFormulaAtom :: Applicative f =>
+                       (ProtoAtom syn1 (VTerm c1 (BVar v1))
+                        -> f (ProtoFormula syn2 s c2 v2))
+                       -> ProtoFormula syn1 s c1 v1 -> f (ProtoFormula syn2 s c2 v2)
+traverseFormulaAtom fAt = foldFormula (fAt)
                                 (pure . TF) (liftA Not)
                                 (liftA2 . Conn) ((liftA .) . Qua)
 {-
@@ -298,13 +309,8 @@ hinted f v@(LVar n s _) = f (n,s) v
 -- | Convert to LNFormula, if possible.
 -- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))
 toLNFormula :: ProtoFormula syn s c v -> Maybe (Formula s c v)
-toLNFormula = traverseFormula' f 
+toLNFormula = traverseFormulaAtom (liftA Ato . f) 
   where
-        traverseFormula' fAt = foldFormula (liftA Ato . fAt)
-                                (pure . TF) (liftA Not)
-                                (liftA2 . Conn) ((liftA .) . Qua)
-        -- mapAtoms' fAt = foldFormula fAt (return . TF) (return . Not) (return . Conn) (return . Qua)
-        -- mapAtoms' fAt = traverseFormula fAt
         f x |  (Syntactic _) <- x = Nothing
             | otherwise           = Just (toAtom x)
 
