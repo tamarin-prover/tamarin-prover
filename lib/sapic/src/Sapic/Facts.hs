@@ -97,6 +97,7 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
+    , restr        :: [LNFact]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
@@ -279,7 +280,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s

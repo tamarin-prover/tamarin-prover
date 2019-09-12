@@ -27,6 +27,7 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
 import           Data.Label
+import           Data.Either
 import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
@@ -327,27 +328,30 @@ ruleAttribute = asum
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
-protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
-                                        (symbol "rule" *> optional moduloE *> identifier))
-                               <*> (option [] $ list ruleAttribute)) <*  colon
+protoRuleInfo = do
+                _ <- symbol "rule"
+                _ <- optional moduloE
+                ident <- identifier
+                att <- option [] $ list ruleAttribute
+                _ <- colon
+                return $ ProtoRuleEInfo (StandRule ident) att [] 
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 protoRule :: Parser (ProtoRuleE)
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0) <- genericRule
+    (ps0,as0,cs0,rs) <- genericRule
     let (ps,as,cs) = apply subst (ps0,as0,cs0)
-    return $ Rule ri ps cs as (newVariables ps cs)
+    return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps cs)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
-letBlock = do
-    toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
+letBlock = toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
     definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
@@ -356,7 +360,7 @@ letBlock = do
 intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
-    (ps,as,cs) <- genericRule
+    (ps,as,cs,[]) <- genericRule -- intruder rules should not introduce restrictions.
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
@@ -369,19 +373,24 @@ intrRule = do
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact])
-genericRule =
-    (,,) <$> list (fact llit)
-         <*> ((pure [] <* symbol "-->") <|>
-              (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
-         <*> list (fact llit)
+factOrRestr ::  Parser (Either LNFact LNFact)
+factOrRestr =      try $ Left <$> (symbol "_restrict" *> parens (fact llit))
+              <|> Right <$> fact llit 
+
+genericRule :: Parser ([LNFact], [LNFact], [LNFact],[LNFact]) --- lhs, actions, rhs, restrictions
+genericRule = do
+        lhs <- list (fact llit)
+        actsAndRsts <- ((pure [] <* symbol "-->") 
+               <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->"))
+        rhs <- list (fact llit)
+        return (lhs,lefts actsAndRsts, rhs, rights actsAndRsts)
 
 newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
 newVariables prems concs = map varTerm $ S.toList newvars
   where
     newvars = S.difference concvars premvars
-    premvars = S.fromList $ concat $ map getFactVariables prems
-    concvars = S.fromList $ concat $ map getFactVariables concs
+    premvars = S.fromList $ concatMap getFactVariables prems
+    concvars = S.fromList $ concatMap getFactVariables concs
 
 {-
 -- | Add facts to a rule.
@@ -967,10 +976,8 @@ sapicAction = try (do
                         f <- fact llit
                         return (Event f)
                    )
-               <|> try (do 
-                        r <- genericRule
-                        return (MSR r)
-                   )
+               <|> try ( MSR <$> genericRule)
+
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that
 -- the precedence is expressed in a way that can be directly encoded in Parsec.

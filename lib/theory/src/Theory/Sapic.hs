@@ -61,7 +61,7 @@ data SapicAction =
                  | Lock SapicTerm 
                  | Unlock SapicTerm 
                  | Event LNFact 
-                 | MSR ([LNFact], [LNFact], [LNFact])
+                 | MSR ([LNFact], [LNFact], [LNFact], [LNFact])
         deriving( Show, Eq, Ord, Generic, NFData, Binary, Data )
 
 -- | When the process tree splits, it is connected with one of these connectives
@@ -130,7 +130,7 @@ instance Apply SapicAction where
         | (Lock t) <- ac       = Lock (apply subst t)
         | (Unlock t) <- ac     = Unlock (apply subst t)
         | (Event f) <- ac      = Event (apply subst f)
-        | (MSR (l,a,r)) <- ac  = MSR (apply subst (l,a,r))
+        | (MSR (l,a,r,rest)) <- ac  = MSR (apply subst (l,a,r,rest))
         | Rep <- ac            = Rep
 
 applySapicActionError :: MonadThrow m =>
@@ -223,7 +223,7 @@ prettyPosition = foldl (\ s n -> s ++ show n ) ""
 -- we would have circular dependencies.
 -- Instantiated in Theory.Sapic.Print later
 prettySapicAction' :: 
-                   ( [LNFact] -> [LNFact] -> [LNFact] -> String)
+                   ( [LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> String)
                     -> SapicAction  -> String
 prettySapicAction' _ (New n) = "new "++ show n
 prettySapicAction' _ Rep  = "!"
@@ -236,7 +236,7 @@ prettySapicAction' _ (Delete t )  = "delete " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Lock t )  = "lock " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Event a )  = "event " ++ render (prettyLNFact a)
-prettySapicAction' prettyRule' (MSR (p,a,c)) = prettyRule' p a c
+prettySapicAction' prettyRule' (MSR (p,a,c,r)) = prettyRule' p a c r
 
 prettySapicComb :: ProcessCombinator -> [Char]
 prettySapicComb Parallel = "|"
@@ -251,7 +251,7 @@ prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
 -- TODO At the moment, the process structure is not used to properly print how
 -- elements are associated.
 -- Should do it, but then we cannot use pfoldMap anymore.
-prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
 prettySapic' prettyRule = pfoldMap f 
     where f (ProcessNull _) = "0"
           f (ProcessComb c _ _ _)  = prettySapicComb c 
@@ -259,9 +259,9 @@ prettySapic' prettyRule = pfoldMap f
           f (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
 
 -- | Printer for the top-level process, used, e.g., for rule names.
-prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
 prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 
-prettySapicTopLevel' prettyRule (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
-prettySapicTopLevel' prettyRule (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
+prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
 

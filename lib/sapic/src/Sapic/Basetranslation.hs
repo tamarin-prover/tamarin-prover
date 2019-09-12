@@ -112,7 +112,7 @@ baseTransAction ac an p tildex
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
           ([([def_state], [TamarinAct f], [def_state' tildex])], tildex)
-    | (MSR (l,a,r)) <- ac =
+    | (MSR (l,a,r,c)) <- ac =
           let tx' = (freeset' r) `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)

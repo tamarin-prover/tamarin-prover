@@ -45,6 +45,7 @@ module Theory.Model.Rule (
   , ProtoRuleEInfo(..)
   , preName
   , preAttributes
+  , preRestriction
   , ProtoRuleACInfo(..)
   , pracName
   , pracAttributes
@@ -123,6 +124,7 @@ module Theory.Model.Rule (
   , reservedRuleNames
   , showRuleCaseName
   , prettyRule
+  , prettyRuleRestr
   , prettyProtoRuleName
   , prettyRuleName
   , prettyRuleAttribute
@@ -332,10 +334,11 @@ data ProtoRuleName =
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
 
--- | Information for protocol rules modulo E.
+-- | Information for protocol rules modulo E. 
 data ProtoRuleEInfo = ProtoRuleEInfo
        { _preName       :: ProtoRuleName
        , _preAttributes :: [RuleAttribute]
+       , _preRestriction:: [LNFact]
        }
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData ProtoRuleEInfo
@@ -403,11 +406,11 @@ instance HasFrees ConcIdx where
     mapFrees   _ = pure
 
 instance HasFrees ProtoRuleEInfo where
-    foldFrees f (ProtoRuleEInfo na attr) =
-        foldFrees f na `mappend` foldFrees f attr
+    foldFrees f (ProtoRuleEInfo na attr rstr) =
+        foldFrees f na `mappend` foldFrees f attr `mappend` foldFrees f rstr
     foldFreesOcc  _ _ = const mempty
-    mapFrees f (ProtoRuleEInfo na attr) =
-        ProtoRuleEInfo na <$> mapFrees f attr
+    mapFrees f (ProtoRuleEInfo na attr rstr) =
+        ProtoRuleEInfo na <$> mapFrees f attr <*> mapFrees f rstr
 
 instance Apply ProtoRuleEInfo where
     apply _ = id
@@ -1026,7 +1029,7 @@ prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
     RuleColor c -> text "color=" <> text (rgbToHex c)
     Process   p -> text "process=" <> text (prettySapicTopLevel' f p)
-        where f l a r = render $ prettyRule l a r
+        where f l a r rest = render $ prettyRuleRestr l a r rest
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
@@ -1045,19 +1048,30 @@ prettyIntrRuleACInfo rn = text $ case rn of
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
-prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
-prettyRule prems acts concls=
-    (sep [ nest 1 $ ppFactsList prems
+
+prettyRestr :: HighlightDocument d => LNFact -> d
+prettyRestr fact =  operator_ "_restriction(" <> prettyLNFact fact <> operator_ ")" 
+
+-- | pretty-print rules with restrictions
+prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> d
+prettyRuleRestr prems acts concls restr =
+    sep [ nest 1 $ ppFactsList prems
                 , if null acts
                     then operator_ "-->"
-                    else fsep [operator_ "--[", ppFacts' acts, operator_ "]->"]
-                , nest 1 $ ppFactsList concls])
+                    else fsep [operator_ "--[", ppFacts' acts, ppRestr' restr, operator_ "]->"]
+                , nest 1 $ ppFactsList concls]
 -- Debug:
 --     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
   where
     ppList pp        = fsep . punctuate comma . map pp
     ppFacts'         = ppList prettyLNFact
+    ppRestr'         = ppList prettyRestr
     ppFactsList list = fsep [operator_ "[", ppFacts' list, operator_ "]"]
+
+-- | pretty-print rules without restrictions
+prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
+prettyRule prems acts concls = prettyRuleRestr prems acts concls []
+
 
 prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
                 => d           -- ^ Prefix.
