@@ -37,15 +37,16 @@ import           Sapic.Basetranslation
 -- fact) on the rhs, if the followup position (as marked in the state) is in
 -- @domPF@, i.e., the domain of the progress function.
 addProgressFrom :: Set [Int] -> [Int]
-                    -> ([TransFact], [TransAction], [TransFact])
-                    -> ([TransFact], [TransAction], [TransFact])
-addProgressFrom domPF child (l,a,r)
+                    -> ([TransFact], [TransAction], [TransFact],a)
+                    -> ([TransFact], [TransAction], [TransFact],a)
+addProgressFrom domPF child (l,a,r,res)
              | any isNonSemiState r
              , child `member` domPF =
                      (Fr(varProgress child):l
                      , ProgressFrom child:a
-                     , map (addVarToState $ varProgress child) r)
-             | otherwise = (l,a,r)
+                     , map (addVarToState $ varProgress child) r
+                     , res)
+             | otherwise = (l,a,r,res)
 
 -- | Initial rules for progress: adds @ProgressFrom@ to the previous set of
 -- init rules, if [] in @domPF@, the domain of the progress function. Updates
@@ -72,8 +73,8 @@ extendVars domPF pos tx
 addProgressItems :: Set [Int]
                        -> ([Int] -> Maybe ProcessPosition)
                        -> [Int]
-                       -> ([TransFact], [TransAction], [TransFact])
-                       -> ([TransFact], [TransAction], [TransFact])
+                       -> ([TransFact], [TransAction], [TransFact], a)
+                       -> ([TransFact], [TransAction], [TransFact], a)
 addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only start from ! or in, which have no rhs position
                                   . addProgressTo invPF (lhsP pos)
                                   . addProgressTo invPF (rhsP pos)
@@ -88,12 +89,12 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
 addProgressTo :: Foldable t =>
                  ([Int] -> Maybe ProcessPosition)
                  -> [Int]
-                 -> (t TransFact, [TransAction], c)
-                 -> (t TransFact, [TransAction], c)
-addProgressTo invPF child (l,a,r) 
+                 -> (t TransFact, [TransAction], c, d)
+                 -> (t TransFact, [TransAction], c,d )
+addProgressTo invPF child (l,a,r,res) 
   | any isState l
-  , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r)
-  | otherwise                     = (l,a,r)
+  , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
+  | otherwise                     = (l,a,r,res)
 
 
 -- | Null Processes are translated without any modification
@@ -103,16 +104,8 @@ progressTransNull _ tNull = tNull
 -- | Add ProgressTo or -From to rules generated on an action.
 progressTransAct :: (MonadCatch m, Show ann, Typeable ann) =>
                     AnProcess ann
-                    -> (t1
-                        -> t2
-                        -> [Int]
-                        -> t3
-                        -> m ([([TransFact], [TransAction], [TransFact])], Set LVar))
-                    -> t1
-                    -> t2
-                    -> [Int]
-                    -> t3
-                    -> m ([([TransFact], [TransAction], [TransFact])], Set LVar)
+                    -> TransFAct (m TranslationResultAct)
+                    -> TransFAct (m TranslationResultAct)
 progressTransAct anP tAct ac an pos tx = do 
                 (rs0,tx1) <- tAct ac an pos tx 
                 domPF <- pfFrom anP
@@ -122,18 +115,8 @@ progressTransAct anP tAct ac an pos tx = do
 -- | Add ProgressTo or -From to rules generated on a combinator.
 progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
                      AnProcess ann
-                     -> (t1
-                         -> t2
-                         -> [Int]
-                         -> t3
-                         -> m ([([TransFact], [TransAction], [TransFact])], Set LVar,
-                               Set LVar))
-                     -> t1
-                     -> t2
-                     -> [Int]
-                     -> t3
-                     -> m ([([TransFact], [TransAction], [TransFact])], Set LVar,
-                           Set LVar)
+                    -> TransFComb (m TranslationResultComb)
+                    -> TransFComb (m TranslationResultComb)
 progressTransComb anP tComb comb an pos tx =  do
                 (rs0,tx1,tx2) <- tComb comb an pos tx
                 domPF <- pfFrom anP
@@ -143,33 +126,17 @@ progressTransComb anP tComb comb an pos tx =  do
                        ,extendVars domPF pos tx2)
 
 -- | Overall translation is a triple of the other translations.
-progressTrans :: (Show ann, Typeable ann, MonadCatch m1,
-                  MonadCatch m2) =>
+progressTrans :: (Show ann, Typeable ann, MonadCatch m2,
+                  MonadCatch m3) =>
                  AnProcess ann
-                 -> (a,
-                     t4
-                     -> t5
-                     -> [Int]
-                     -> t6
-                     -> m1 ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                     t7
-                     -> t8
-                     -> [Int]
-                     -> t9
-                     -> m2 ([([TransFact], [TransAction], [TransFact])], Set LVar,
-                            Set LVar))
-                 -> (a,
-                     t4
-                     -> t5
-                     -> [Int]
-                     -> t6
-                     -> m1 ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                     t7
-                     -> t8
-                     -> [Int]
-                     -> t9
-                     -> m2 ([([TransFact], [TransAction], [TransFact])], Set LVar,
-                            Set LVar))
+                 -> 
+                          (TransFNull (m1 TranslationResultNull),
+                           TransFAct (m2 TranslationResultAct),
+                           TransFComb (m3 TranslationResultComb))
+                 -> 
+                          (TransFNull (m1 TranslationResultNull),
+                           TransFAct (m2 TranslationResultAct),
+                           TransFComb (m3 TranslationResultComb))
 progressTrans anP (tN,tA,tC) = ( progressTransNull anP tN
                                , progressTransAct anP tA
                                , progressTransComb anP tC)
@@ -181,11 +148,11 @@ resProgressInit = [QQ.r|restriction progressInit:
 
 -- | Add restrictions for all transitions that have to take place according to the progress function.
 progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction] 
-progressRestr anP restr  = do
+progressRestr anP restrictions  = do
     domPF <- pfFrom anP -- set of "from" positions
     initL <- toEx resProgressInit
     lss_to <- mapM restriction (toList domPF) -- list of set of sets of "to" positions
-    return $ restr ++ concat lss_to ++ [initL]
+    return $ restrictions ++ concat lss_to ++ [initL]
     where 
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anP pos

@@ -23,6 +23,7 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
+import qualified Data.Set as S
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -134,23 +135,11 @@ translate th = case theoryProcesses th of
 -- |      - annotated process
 -- |      - current position in this process
 -- |      - tildex, the set of variables in the state
-gen :: (Show ann, MonadCatch m, Typeable ann, Foldable t1,
-        Foldable t2, Foldable t3) =>
-       (ann
-        -> ProcessPosition
-        -> t4
-        -> m (t1 ([TransFact], [TransAction], [TransFact])),
-        SapicAction
-        -> ann
-        -> ProcessPosition
-        -> t4
-        -> m (t3 ([TransFact], [TransAction], [TransFact]), t4),
-        ProcessCombinator
-        -> ann
-        -> ProcessPosition
-        -> t4
-        -> m (t2 ([TransFact], [TransAction], [TransFact]), t4, t4))
-       -> AnProcess ann -> [Int] -> t4 -> m [AnnotatedRule ann]
+gen :: (MonadCatch m) =>
+        (BT.TransFNull (m BT.TranslationResultNull),
+         BT.TransFAct (m BT.TranslationResultAct),
+         BT.TransFComb (m BT.TranslationResultComb))
+       -> AnProcess ann -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule ann]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
