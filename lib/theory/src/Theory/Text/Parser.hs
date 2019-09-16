@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
@@ -75,12 +74,12 @@ data ParseRestriction = ParseRestriction
 -- | True iff the restriction is a LHS restriction.
 isLeftRestriction :: ParseRestriction -> Bool
 isLeftRestriction rstr =
-     (LHSRestriction `elem` pRstrAttributes rstr)
+     LHSRestriction `elem` pRstrAttributes rstr
 
 -- | True iff the restriction is a RHS restriction.
 isRightRestriction :: ParseRestriction -> Bool
 isRightRestriction rstr =
-     (RHSRestriction `elem` pRstrAttributes rstr)
+     RHSRestriction `elem` pRstrAttributes rstr
 
 -- -- | True iff the restriction is a Both restriction.
 -- isBothRestriction :: ParseRestriction -> Bool
@@ -99,8 +98,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = do 
-          parseFile (theory flags) file
+parseOpenTheory flags file = parseFile (theory flags) file
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
@@ -177,14 +175,14 @@ binaryAlgApp plit = do
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
-    when (k /= 2) $ fail $
+    when (k /= 2) $ fail 
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm plit))
-  when (2 /= length ts) $ fail $
+  when (2 /= length ts) $ fail 
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
   when eqn $ fail $
@@ -339,15 +337,15 @@ protoRuleInfo = do
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
-protoRule :: Parser (ProtoRuleE)
+protoRule :: Parser ProtoRuleE
 protoRule = do
     ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs) <- genericRule
-    let (ps,as,cs) = apply subst (ps0,as0,cs0)
-    return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps cs)
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
+    return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
@@ -373,17 +371,22 @@ intrRule = do
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
-factOrRestr ::  Parser (Either LNFact LNFact)
-factOrRestr =      try $ Left <$> (symbol "_restrict" *> parens (fact llit))
-              <|> Right <$> fact llit 
+embeddedRestriction :: Parser a -> Parser a
+embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact],[LNFact]) --- lhs, actions, rhs, restrictions
+factOrRestr ::  Parser (Either LNFact LNFact)
+factOrRestr = Right <$> fact llit 
+              <|> Left <$> embeddedRestriction (fact llit) 
+
+genericRule :: Parser ([LNFact], [LNFact], [LNFact], [LNFact]) --- lhs, actions, rhs, restrictions
 genericRule = do
-        lhs <- list (fact llit)
-        actsAndRsts <- ((pure [] <* symbol "-->") 
-               <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->"))
-        rhs <- list (fact llit)
-        return (lhs,lefts actsAndRsts, rhs, rights actsAndRsts)
+    lhs         <- list (fact llit)
+    actsAndRsts <-
+        (   (pure [] <* symbol "-->")
+        <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->")
+        )
+    rhs <- list (fact llit)
+    return (lhs, rights actsAndRsts, rhs, lefts actsAndRsts)
 
 newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
 newVariables prems concs = map varTerm $ S.toList newvars
@@ -884,7 +887,7 @@ predicate = do
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
 preddeclaration thy = do
-                    _          <- symbol "predicates"
+                    _          <- try (symbol "predicates") <|> symbol "predicate"
                     _          <- colon
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
@@ -1218,7 +1221,7 @@ theory flags0 = do
       , do return thy
       ]
 
-    define :: S.Set String -> OpenTheory -> Parser OpenTheory
+
     define flags thy = do
        flag <- try (symbol "#define") *> identifier
        addItems (S.insert flag flags) thy
