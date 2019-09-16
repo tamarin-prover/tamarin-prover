@@ -615,7 +615,7 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
         (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
-                                                            (map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
+                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
         (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
         _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                             [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
