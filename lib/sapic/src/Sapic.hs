@@ -57,8 +57,8 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map toRule $ initRule ++ protoRule
                 -- add restrictions
-                restr <- restrictions an_proc
-                th2 <- foldM liftedAddRestriction th1 restr
+                rest <- restrictions an_proc
+                th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
@@ -139,7 +139,7 @@ gen :: (MonadCatch m) =>
         (BT.TransFNull (m BT.TranslationResultNull),
          BT.TransFAct (m BT.TranslationResultAct),
          BT.TransFComb (m BT.TranslationResultComb))
-       -> AnProcess ann -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule ann]
+       -> AnProcess ProcessAnnotation -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule ProcessAnnotation]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
@@ -174,7 +174,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         trans = (trans_null, trans_action, trans_comb)
         -- convert prems, acts and concls generated for current process
         -- into annotated rule
-        toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc (Left p) l a r
+        toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
