@@ -47,6 +47,7 @@ module Theory.Model.Atom(
   , prettyProtoAtom
   , prettyAtom
   , prettyNAtom
+  , prettySyntacticNAtom
   )
 where
 
@@ -108,6 +109,10 @@ type LNAtom = Atom LNTerm
 -- | Atoms built over 'BLTerm's.
 type BLAtom = Atom BLTerm
 
+type SyntacticLNAtom = SyntacticAtom LNTerm
+type SyntacticNAtom v = SyntacticAtom (VTerm Name v)
+type SyntacticBLAtom = SyntacticAtom BLTerm
+
 
 -- Instances
 ------------
@@ -125,7 +130,7 @@ instance (Foldable s) => Foldable (ProtoAtom s) where
     foldMap f (EqE l r)       = f l `mappend` f r
     foldMap f (Less i j)      = f i `mappend` f j
     foldMap f (Last i)        = f i
-    foldMap f (Syntactic s)       = (foldMap f s)
+    foldMap f (Syntactic s)   = foldMap f s
 
 instance (Traversable s) => Traversable (ProtoAtom s) where
     traverse f (Action i fa)   =
@@ -133,7 +138,13 @@ instance (Traversable s) => Traversable (ProtoAtom s) where
     traverse f (EqE l r)       = EqE <$> f l <*> f r
     traverse f (Less v u)      = Less <$> f v <*> f u
     traverse f (Last i)        = Last <$> f i
-    traverse f (Syntactic s)       = Syntactic <$> (traverse f s)
+    traverse f (Syntactic s)       = Syntactic <$> traverse f s
+
+instance Apply (SyntacticSugar LNTerm) where
+    apply subst (Pred fa) = Pred $ apply subst fa
+
+instance Apply (SyntacticSugar BLTerm) where
+    apply subst (Pred fa) = Pred $ apply subst fa
 
 instance HasFrees t => HasFrees (Atom t) where
     foldFrees f = foldMap (foldFrees f)
@@ -148,6 +159,20 @@ instance Apply LNAtom where
     apply subst (Syntactic fa)    = Syntactic (apply subst fa)
 
 instance Apply BLAtom where
+    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
+    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
+    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
+    apply subst (Last i)          = Last (apply subst i)
+    apply subst (Syntactic fa)         = Syntactic (apply subst fa)
+
+instance Apply SyntacticLNAtom where
+    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
+    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
+    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
+    apply subst (Last i)          = Last (apply subst i)
+    apply subst (Syntactic fa)         = Syntactic (apply subst fa)
+
+instance Apply SyntacticBLAtom where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
@@ -212,3 +237,9 @@ prettyAtom = prettyProtoAtom (const emptyDoc)
 
 prettyNAtom :: (Show v, HighlightDocument d) => NAtom v -> d
 prettyNAtom  = prettyAtom prettyNTerm
+
+
+prettySyntacticNAtom :: (Show v, HighlightDocument d) => SyntacticNAtom v -> d
+prettySyntacticNAtom  = prettyProtoAtom prettyPred prettyNTerm
+    where
+        prettyPred (Pred fa) = prettyNFact fa

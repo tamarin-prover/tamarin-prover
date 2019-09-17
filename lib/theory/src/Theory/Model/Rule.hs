@@ -170,6 +170,7 @@ import           Term.Rewriting.Norm  (nf', norm')
 import           Term.Builtin.Convenience (var)
 import           Term.Unification
 import           Theory.Model.Fact
+import qualified Theory.Model.Formula as F
 import           Theory.Text.Pretty
 import           Theory.Sapic
 
@@ -338,7 +339,7 @@ instance Binary ProtoRuleName
 data ProtoRuleEInfo = ProtoRuleEInfo
        { _preName       :: ProtoRuleName
        , _preAttributes :: [RuleAttribute]
-       , _preRestriction:: [LNFact]
+       , _preRestriction:: [F.SyntacticLNFormula]
        }
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData ProtoRuleEInfo
@@ -1049,11 +1050,11 @@ prettyIntrRuleACInfo rn = text $ case rn of
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
 
-prettyRestr :: HighlightDocument d => LNFact -> d
-prettyRestr fact =  operator_ "_restriction(" <> prettyLNFact fact <> operator_ ")" 
+prettyRestr :: HighlightDocument d => F.SyntacticLNFormula -> d
+prettyRestr fact =  operator_ "_restriction(" <> F.prettySyntacticLNFormula fact <> operator_ ")" 
 
 -- | pretty-print rules with restrictions
-prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> d
+prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [F.SyntacticLNFormula] -> d
 prettyRuleRestr prems acts concls restr =
     sep [ nest 1 $ ppFactsList prems
                 , if null acts

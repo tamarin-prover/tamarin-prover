@@ -28,12 +28,13 @@ module Theory.Sapic.Print (
 -- import           Data.Foldable
 import           Theory.Model.Fact
 import           Theory.Model.Rule
+import           Theory.Model.Formula
 import           Theory.Sapic
 -- import           Term.LTerm
 import           Theory.Text.Pretty
 
 
-rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> [LNFact] -> String
+rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String
 rulePrinter l a r res = render $ prettyRuleRestr l a r res
 
 -- | Instantiate printers with rulePrinter from Theory.Text.Pretty

@@ -97,13 +97,13 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
-    , restr        :: [TransAction]
+    , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
 -- | applies function acting on rule taple on annotated rule.
-mapAct :: (([TransFact], [TransAction], [TransFact],[TransAction])
-           -> ([TransFact], [TransAction], [TransFact],[TransAction]))
+mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
+           -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
 mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
                                            concs anrule, restr anrule) 
@@ -282,7 +282,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name ) attr (map actionToFact restr)) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s

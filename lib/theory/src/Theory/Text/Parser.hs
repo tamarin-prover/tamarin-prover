@@ -374,11 +374,11 @@ intrRule = do
 embeddedRestriction :: Parser a -> Parser a
 embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"
 
-factOrRestr ::  Parser (Either LNFact LNFact)
+factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
 factOrRestr = Right <$> fact llit 
-              <|> Left <$> embeddedRestriction (fact llit) 
+              <|> Left <$> embeddedRestriction standardFormula 
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact], [LNFact]) --- lhs, actions, rhs, restrictions
+genericRule :: Parser ([LNFact], [LNFact], [LNFact], [SyntacticLNFormula]) --- lhs, actions, rhs, restrictions
 genericRule = do
     lhs         <- list (fact llit)
     actsAndRsts <-
@@ -1202,6 +1202,8 @@ theory flags0 = do
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
+           -- thy'' <- foldM liftedAddRestriction thy' $ 
+           --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru

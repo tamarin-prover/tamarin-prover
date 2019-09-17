@@ -53,6 +53,7 @@ module Theory.Model.Formula (
 
   -- ** Pretty-Printing
   , prettyLNFormula
+  , prettySyntacticLNFormula
 
   ) where
 
@@ -163,8 +164,8 @@ instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
                             (const mappend) (const $ const id)
 
 -- | traverse formula down to the term level
-traverseFormula :: (Ord v, Ord c, Ord v', Applicative f)
-                => (v -> f v') -> Formula s c v -> f (Formula s c v')
+traverseFormula :: (Ord v, Ord c, Ord v', Applicative f, Traversable syn)
+                => (v -> f v') -> ProtoFormula syn s c v -> f (ProtoFormula syn s c v')
 traverseFormula f = foldFormula (liftA Ato . traverse (traverseTerm (traverse (traverse f))))
                                 (pure . TF) (liftA Not)
                                 (liftA2 . Conn) ((liftA .) . Qua)
@@ -213,9 +214,10 @@ lfalse = TF False
 -- | @LFormula@ are FOL formulas with sorts abused to denote both a hint for
 -- the name of the bound variable, as well as the variable's actual sort.
 type LFormula c = Formula (String, LSort) c LVar
+type ProtoLFormula syn c = ProtoFormula syn (String, LSort) c LVar
 
-type ProtoLNFormula syn = ProtoFormula syn (String, LSort) Name LVar
 type LNFormula = Formula (String, LSort) Name LVar
+type ProtoLNFormula syn = ProtoLFormula syn Name
 type SyntacticLNFormula = ProtoLNFormula SyntacticSugar
 
 
@@ -227,8 +229,9 @@ mapAtoms f = foldFormulaScope (\i a -> Ato $ f i a) TF Not Conn Qua
 
 -- | @openFormula f@ returns @Just (v,Q,f')@ if @f = Q v. f'@ modulo
 -- alpha renaming and @Nothing otherwise@. @v@ is always chosen to be fresh.
-openFormula :: (MonadFresh m, Ord c)
-            => LFormula c -> Maybe (Quantifier, m (LVar, LFormula c))
+openFormula :: (MonadFresh m, Ord c, Functor syn)
+            => ProtoLFormula syn c
+            -> Maybe (Quantifier, m (LVar, ProtoLFormula syn c))
 openFormula (Qua qua (n,s) fm) =
     Just ( qua
          , do x <- freshLVar n s
@@ -248,8 +251,9 @@ mapLits f t = case viewTerm t of
 -- | @openFormulaPrefix f@ returns @Just (vs,Q,f')@ if @f = Q v_1 .. v_k. f'@
 -- modulo alpha renaming and @Nothing otherwise@. @vs@ is always chosen to be
 -- fresh.
-openFormulaPrefix :: (MonadFresh m, Ord c)
-                  => LFormula c -> m ([LVar], Quantifier, LFormula c)
+openFormulaPrefix :: (MonadFresh m, Ord c, Functor syn)
+                  => ProtoLFormula syn c 
+                  -> m ([LVar], Quantifier, ProtoLFormula syn c)
 openFormulaPrefix f0 = case openFormula f0 of
     Nothing        -> error $ "openFormulaPrefix: no outermost quantifier"
     Just (q, open) -> do
@@ -273,14 +277,23 @@ deriving instance Ord      LNFormula
 deriving instance Eq       SyntacticLNFormula
 deriving instance Show     SyntacticLNFormula
 deriving instance Ord      SyntacticLNFormula
+deriving instance Data     SyntacticLNFormula
 
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
     mapFrees   f = traverseFormula (mapFrees   f)
 
+instance HasFrees SyntacticLNFormula where
+    foldFrees  f = foldMap  (foldFrees  f)
+    foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
+    mapFrees   f = traverseFormula (mapFrees   f)
+
 instance Apply LNFormula where
     apply subst = mapAtoms (const $ apply subst)
+
+instance Apply SyntacticLNFormula where
+    apply subst = mapAtoms (const $ apply subst )
 
 ------------------------------------------------------------------------------
 -- Formulas modulo E and modulo AC
@@ -319,9 +332,9 @@ toLNFormula = traverseFormulaAtom (liftA Ato . f)
 ------------------------------------------------------------------------------
 
 -- | Pretty print a formula.
-prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c)
-              => (Atom (VTerm c LVar) -> d)  -- ^ Function for pretty printing atoms
-              -> LFormula c                      -- ^ Formula to pretty print.
+prettyLFormula :: (HighlightDocument d, MonadFresh m, Ord c, Functor syn)
+              => (ProtoAtom syn (VTerm c LVar) -> d)  -- ^ Function for pretty printing atoms
+              -> ProtoLFormula syn c                  -- ^ Formula to pretty print.
               -> m d                             -- ^ Pretty printed formula.
 prettyLFormula ppAtom =
     pp
@@ -366,3 +379,8 @@ prettyLFormula ppAtom =
 prettyLNFormula :: HighlightDocument d => LNFormula -> d
 prettyLNFormula fm =
     Precise.evalFresh (prettyLFormula prettyNAtom fm) (avoidPrecise fm)
+
+-- | Pretty print a logical formula
+prettySyntacticLNFormula :: HighlightDocument d => SyntacticLNFormula -> d
+prettySyntacticLNFormula fm =
+    Precise.evalFresh (prettyLFormula prettySyntacticNAtom fm) (avoidPrecise fm)

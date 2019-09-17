@@ -38,9 +38,9 @@ import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Parser
 
-type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [TransAction])])
-type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [TransAction])], Set LVar)
-type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [TransAction])], Set LVar, Set LVar)
+type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])])
+type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
+type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar, Set LVar)
 
 type TransFNull t = ProcessAnnotation
                              -> ProcessPosition
@@ -127,7 +127,7 @@ baseTransAction ac an p tildex
           ([([def_state], [TamarinAct f], [def_state' tildex], [])], tildex)
     | (MSR (l,a,r,res)) <- ac =
           let tx' = freeset' r `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r, map PredicateA res)], tx')
+          ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
@@ -161,7 +161,7 @@ baseTransComb c _ p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
-    | otherwise = throw ((NotImplementedError "baseTransComb"):: SapicException AnnotatedProcess)
+    | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
@@ -169,12 +169,12 @@ baseTransComb c _ p tildex
         condition f =
                 let vars_f = fromList $ getFactVariables f in
                 if vars_f `isSubsetOf` tildex then
-                ( [ ([def_state], [], [def_state1 tildex], [PredicateA f]),
-                    ([def_state], [], [def_state2 tildex], [NegPredicateA f])]
+                ( [ ([def_state], [PredicateA f], [def_state1 tildex], []),
+                    ([def_state], [NegPredicateA f], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
-                    throw $
-                    ( ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
+                    throw ( 
+                    ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
 -- | @baseInit@ provides the initial rule that is used to create the first
