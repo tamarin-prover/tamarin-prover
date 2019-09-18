@@ -5,7 +5,7 @@ builtins: multiset
 predicates: Smaller(x,y) <=> Ex z. x + z = y
 
 rule A:
-  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(), B('1','1'+'1'), _restrict(Q())]-> [ X('A')]
+  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(), B('1','1'+'1')]-> [ X('A')]
 
 lemma one_smaller_two:
     "All x y #i. B(x,y)@i ==> Smaller(x,y)"

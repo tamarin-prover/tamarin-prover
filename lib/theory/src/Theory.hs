@@ -29,6 +29,7 @@ module Theory (
 
   -- * Processes
   , ProcessDef(..)
+  , SapicElement(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
@@ -126,6 +127,7 @@ module Theory (
 
   -- ** Open theories
   , OpenTheory
+  , OpenTheoryItem
   , OpenTranslatedTheory
   , OpenDiffTheory
   , removeSapicItems
@@ -155,6 +157,7 @@ module Theory (
   , openTranslatedTheory
   , openDiffTheory
 
+  , OpenProtoRule
   , ClosedProtoRule(..)
 
   , getLemmas
@@ -720,6 +723,9 @@ $(mkLabels [''DiffTheory])
 type OpenTheory =
     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton SapicElement
 
+type OpenTheoryItem = TheoryItem OpenProtoRule ProofSkeleton SapicElement
+
+
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
 --   2. All SapicItems are translated
@@ -1173,14 +1179,15 @@ lookupOpenDiffProtoDiffRule name =
     find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
 -- | Add new protocol rules. Fails, if a protocol rule with the same name
--- exists.
+-- exists. Ignore _restrict construct.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
     guard nameNotUsedForDifferentRule
     return $ modify thyItems (++ [RuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
+        maybe True (ruE ==) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
+
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.

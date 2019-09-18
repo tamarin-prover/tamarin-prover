@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE PatternGuards          #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
@@ -55,7 +57,7 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
--- import           Data.Functor.Identity 
+import           Data.Functor.Identity 
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -892,11 +894,6 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
-                where 
-                liftedAddPredicate thy' pr  = 
-                    case addPredicate pr thy' of 
-                        (Just thy'') -> return (thy''::OpenTheory)
-                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyFact prettyLVar (get pFact pr))
 
 -- used for debugging 
 -- println :: String -> ParsecT String u Identity ()          
@@ -1149,9 +1146,105 @@ heuristic diff = do
         True  -> map charToGoalRankingDiff <$> identifier
         False -> map charToGoalRanking     <$> identifier
 
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
+
+-- | Exception type for catching parsing errors
+data ParsingException = UndefinedPredicate FactTag
+                      | DuplicateItem OpenTheoryItem
+                      | TryingToAddFreshRule
+
+instance Show (ParsingException) where
+    show (UndefinedPredicate facttag) = "undefined predicate "
+                                         ++ showFactTagArity facttag
+                                         -- ++ " in lemma: "
+                                         -- ++ get lName lem
+                                         -- ++ "."
+    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName ru)
+    show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
+    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
+    show (DuplicateItem (TextItem _)) =  undefined
+    show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
+    show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
+    show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
+        "duplicate process: " ++ get pName pDef
+    show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
+
+instance Catch.Exception ParsingException 
+
+liftEitherToEx :: (Catch.MonadThrow m, Catch.Exception e) => (t -> e) -> Either t a -> m a
+liftEitherToEx _ (Right r)     = return r
+liftEitherToEx constr (Left l) = Catch.throwM $ constr l
+
+liftMaybeToEx :: (Catch.MonadThrow m, Catch.Exception e) => e -> Maybe a -> m a
+liftMaybeToEx _      (Just r) = return r
+liftMaybeToEx constr Nothing  = Catch.throwM constr
+
+-- liftedExpandFormula thy =  (liftEitherToEx UndefinedPredicate) . (expandFormula thy) 
+
+liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
+                     -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
+liftedExpandLemma thy =  liftEitherToEx UndefinedPredicate . expandLemma thy 
+
+liftedExpandRestriction :: Catch.MonadThrow m =>
+                           Theory sig c r p s
+                           -> ProtoRestriction SyntacticLNFormula
+                           -> m (ProtoRestriction LNFormula)
+liftedExpandRestriction thy = liftEitherToEx UndefinedPredicate . expandRestriction thy
+
+liftedAddProtoRuleNoExpand :: Catch.MonadThrow m => OpenTheory -> Theory.OpenProtoRule -> m OpenTheory
+liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addProtoRule ru thy)
+
+liftedAddPredicate :: Catch.MonadThrow m =>
+                      Theory sig c r p SapicElement
+                      -> Predicate -> m (Theory sig c r p SapicElement)
+liftedAddPredicate thy prd = liftMaybeToEx (DuplicateItem (PredicateItem prd)) (addPredicate prd thy)
+
+liftedAddRestriction :: Catch.MonadThrow m =>
+                        Theory sig c r p s
+                        -> ProtoRestriction SyntacticLNFormula -> m (Theory sig c r p s)
+liftedAddRestriction thy rstr = do
+        rstr' <- liftedExpandRestriction thy rstr
+        liftMaybeToEx (DuplicateItem $ RestrictionItem rstr') (addRestriction rstr' thy)
+                                         -- Could catch at which point in to lemma, but need MonadCatch
+                                         -- ++ " in lemma: "
+                                         -- ++ get lName lem
+                                         -- ++ "."
+
+liftedAddLemma thy lem = do
+        lem' <- liftedExpandLemma thy lem
+        liftMaybeToEx (DuplicateItem $ LemmaItem lem') (addLemma lem' thy)
+
+-- | Add new protocol rule and introduce restrictions for _restrict contruct
+--  1. expand syntactic restrict constructs
+--  2. for each, chose fresh action and restriction name 
+--  3. add action names to rule
+--  4. add rule, fail if duplicate
+--  5. add restrictions, fail if duplicate
+liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> Rule ProtoRuleEInfo -> m (OpenTheory)
+liftedAddProtoRule thy ru 
+    | (StandRule rname) <- get (preName . rInfo) ru = do
+        thy'  <- foldM liftedAddRestriction thy (restrictions rname)
+        thy'' <- liftedAddProtoRuleNoExpand thy' (addActions rname ru)
+        return thy'' 
+    | otherwise = Catch.throwM TryingToAddFreshRule
+            where
+                counter = zip [1..]
+                nameSuffix rname n = rname ++ "_" ++ show n
+                mkRestriction:: String -> (Int,SyntacticLNFormula) -> SyntacticRestriction
+                mkRestriction rname (n,f) = Restriction 
+                                        ("restr_"++ nameSuffix rname n) 
+                                        (foldr (hinted forall) f (frees f))
+                                        -- TODO need to add Action => 
+                mkAction rname (n,f) = protoFactAnn Linear ("_rstr_"++ nameSuffix rname n) S.empty (map varTerm (frees f))
+                restrictionItems rname r = -- get restriction items
+                    map (mkRestriction rname) (counter r)
+                rfacts = get (preRestriction . rInfo) ru
+                restrictions rname = restrictionItems rname rfacts
+                actions rname r = map (mkAction rname) (counter r)
+                addActions rname r = modify rActs (++ actions rname rfacts) r
 
 
 -- checks if process exists, if not -> error
@@ -1163,6 +1256,10 @@ checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
     Just p -> return $ get pBody p
     Nothing -> fail $ "process not defined: " ++ i    
+
+-- We can throw exceptions, but not catch them
+instance Catch.MonadThrow (ParsecT String MaudeSig Data.Functor.Identity.Identity) where
+    throwM e = fail (show e)
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
@@ -1236,10 +1333,6 @@ theory flags0 = do
        if flag `S.member` flags
          then addItems flags thy'
          else addItems flags thy
-
-    liftedAddProtoRule thy ru = case addProtoRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
     liftedAddLemma thy lem = case expandLemma thy lem of
          Right l -> case addLemma l thy of
