@@ -1208,14 +1208,23 @@ liftedAddRestriction :: Catch.MonadThrow m =>
 liftedAddRestriction thy rstr = do
         rstr' <- liftedExpandRestriction thy rstr
         liftMaybeToEx (DuplicateItem $ RestrictionItem rstr') (addRestriction rstr' thy)
+                                 -- Could catch at which point in to lemma, but need MonadCatch
+                                 -- ++ " in definition of predicate: "
+                                 -- ++ get rstrName rstr
+                                 -- ++ "."
+
+
+liftedAddLemma :: Catch.MonadThrow m =>
+                  Theory sig c r ProofSkeleton s
+                  -> ProtoLemma SyntacticLNFormula ProofSkeleton
+                  -> m (Theory sig c r ProofSkeleton s)
+liftedAddLemma thy lem = do
+        lem' <- liftedExpandLemma thy lem
+        liftMaybeToEx (DuplicateItem $ LemmaItem lem') (addLemma lem' thy)
                                          -- Could catch at which point in to lemma, but need MonadCatch
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
-
-liftedAddLemma thy lem = do
-        lem' <- liftedExpandLemma thy lem
-        liftMaybeToEx (DuplicateItem $ LemmaItem lem') (addLemma lem' thy)
 
 -- | Add new protocol rule and introduce restrictions for _restrict contruct
 --  1. expand syntactic restrict constructs
@@ -1334,33 +1343,11 @@ theory flags0 = do
          then addItems flags thy'
          else addItems flags thy
 
-    liftedAddLemma thy lem = case expandLemma thy lem of
-         Right l -> case addLemma l thy of
-                Just thy' -> return thy'
-                Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
-         Left facttag -> fail $ "undefined predicate "
-                                 ++ showFactTagArity facttag
-                                 ++ " in lemma: "
-                                 ++ get lName lem
-                                 ++ "."
-
     -- check process defined only once
     -- add process to theoryitems
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate process: " ++ get pName pDef 
-
-    liftedAddRestriction thy rstr =
-        case  expandRestriction thy rstr of
-         Right r' ->
-            case addRestriction r' thy of
-                Just thy' -> return thy'
-                Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
-         Left facttag -> fail $ "undefined predicate "
-                                 ++ showFactTagArity facttag
-                                 ++ " in definition of predicate: "
-                                 ++ get rstrName rstr
-                                 ++ "."
 
     liftedAddHeuristic thy h = case addHeuristic h thy of
         Just thy' -> return thy'
@@ -1394,12 +1381,12 @@ diffTheory flags0 = do
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
-      , do thy' <- liftedAddRestriction thy =<< diffRestriction
+      , do thy' <- liftedAddRestriction' thy =<< diffRestriction
            addItems flags thy'
-      , do thy' <- liftedAddRestriction thy =<< legacyDiffAxiom
+      , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< plainLemma
+      , do thy' <- liftedAddLemma' thy =<< plainLemma
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
@@ -1433,15 +1420,11 @@ diffTheory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
-
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
         
-    liftedAddLemma thy lem = if isLeftLemma lem
+    liftedAddLemma' thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of
                                         Just thy' -> return thy'
                                         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
@@ -1455,7 +1438,7 @@ diffTheory flags0 = do
                                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
-    liftedAddRestriction thy rstr = if isLeftRestriction rstr
+    liftedAddRestriction' thy rstr = if isLeftRestriction rstr
                                        then case addRestrictionDiff LHS (toRestriction rstr) thy of
                                                Just thy' -> return thy'
                                                Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
