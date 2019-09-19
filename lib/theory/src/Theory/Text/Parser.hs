@@ -34,7 +34,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
--- import qualified Data.List                  as L
+import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -1242,8 +1242,8 @@ liftedAddProtoRule thy ru
             where
                 counter = zip [1..]
                 nameSuffix rname n = rname ++ "_" ++ show n
-                varNow = LVar "_now" LSortNode 0
-                frees' f = frees f ++ [varNow]
+                varNow = LVar "NOW" LSortNode 0
+                frees' f = freesList f `L.union` [varNow]
                 mkRestriction:: String -> (Int,SyntacticLNFormula) -> SyntacticRestriction
                 mkRestriction rname (n,f) = Restriction 
                                         ("restr_"++ nameSuffix rname n) 
