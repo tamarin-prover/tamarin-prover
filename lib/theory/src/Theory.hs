@@ -937,28 +937,36 @@ expandFormula :: Theory sig c r p s
 expandFormula thy = traverseFormulaAtom f
   where
         f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
-        f x | (Syntactic (Pred fa))   <- x
-            , Just (pr) <- lookupPredicate fa thy 
+        f x | Syntactic (Pred fa)   <- x
+            , Just pr <- lookupPredicate fa thy 
               = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
+
             | (Syntactic (Pred fa))   <- x
             , Nothing <- lookupPredicate fa thy = Left $ factTag fa
+
             | otherwise = return $ Ato $ toAtom x 
-        apply' :: Subst Name (BVar LVar) -> LNFormula -> LNFormula
-        apply' subst = foldFormula (\a -> Ato $ fmap (applyVTerm subst) a) TF Not Conn Qua
-        compSubst (Fact _ _ ts1) (Fact _ _ ts2) = substFromList $ zip ts1' ts2'
+        apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula
+        apply' subst = mapAtoms (\i a -> fmap (applyVTerm $ subst i) a)
+        compSubst (Fact _ _ ts1) (Fact _ _ ts2) i = substFromList $ zip ts1' ts2'
+        -- ts1 varTerms that are free in the predicate definition
+        -- ts2 terms used in reference, need to add the number of quantifiers we added 
+        -- to correctly dereference.
             where 
                   ts1':: [BVar LVar]
                   ts1' = map Free ts1 
-                  ts2' = ts2
+                  ts2' = map (fmap $ fmap up) ts2
+                  up (Free v) = Free v
+                  up (Bound i') = Bound $ i' + i
+
 
 expandRestriction :: Theory sig c r p s -> ProtoRestriction SyntacticLNFormula
     -> Either FactTag (ProtoRestriction LNFormula)
-expandRestriction thy (Restriction n f) =  (Restriction n) <$> (expandFormula thy f)
+expandRestriction thy (Restriction n f) =  (Restriction n) <$> expandFormula thy f
 
 expandLemma :: Theory sig c r p1 s
                -> ProtoLemma SyntacticLNFormula p2
                -> Either FactTag (ProtoLemma LNFormula p2)
-expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> (expandFormula thy f)
+expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormula thy f
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)

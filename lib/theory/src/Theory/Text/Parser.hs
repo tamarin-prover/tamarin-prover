@@ -886,6 +886,7 @@ predicate = do
            _ <- symbol "<=>"
            form <- plainFormula
            return $ Predicate f form
+           <?> "predicate declaration"
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
 preddeclaration thy = do
@@ -894,6 +895,7 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
+                    <?> "predicates"
 
 -- used for debugging 
 -- println :: String -> ParsecT String u Identity ()          
@@ -1182,8 +1184,6 @@ liftMaybeToEx :: (Catch.MonadThrow m, Catch.Exception e) => e -> Maybe a -> m a
 liftMaybeToEx _      (Just r) = return r
 liftMaybeToEx constr Nothing  = Catch.throwM constr
 
--- liftedExpandFormula thy =  (liftEitherToEx UndefinedPredicate) . (expandFormula thy) 
-
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
 liftedExpandLemma thy =  liftEitherToEx UndefinedPredicate . expandLemma thy 
@@ -1242,25 +1242,30 @@ liftedAddProtoRule thy ru
             where
                 counter = zip [1..]
                 nameSuffix rname n = rname ++ "_" ++ show n
+                varNow = LVar "_now" LSortNode 0
+                frees' f = frees f ++ [varNow]
                 mkRestriction:: String -> (Int,SyntacticLNFormula) -> SyntacticRestriction
                 mkRestriction rname (n,f) = Restriction 
                                         ("restr_"++ nameSuffix rname n) 
-                                        (foldr (hinted forall) f (frees f))
-                                        -- TODO need to add Action => 
-                mkAction rname (n,f) = protoFactAnn Linear ("_rstr_"++ nameSuffix rname n) S.empty (map varTerm (frees f))
-                restrictionItems rname r = -- get restriction items
+                                        (foldr (hinted forall) f' (frees' f))
+                                        where
+                                            f' = Ato (Action timepoint (facts (n,f))) .==>. f
+                                            timepoint = varTerm $ Free varNow
+                                            facts = mkFact rname getBVarTerms
+
+                getBVarTerms =  map (varTerm . Free) . frees
+                getVarTerms =   map (varTerm) . frees
+                mkFact  rname getTerms (n,f)  = 
+                        protoFactAnn Linear ("_rstr_"++ nameSuffix rname n) S.empty (getTerms f)
+                restrictionItems rname r = 
                     map (mkRestriction rname) (counter r)
                 rfacts = get (preRestriction . rInfo) ru
                 restrictions rname = restrictionItems rname rfacts
-                actions rname r = map (mkAction rname) (counter r)
+                actions rname r = map (mkFact rname getVarTerms) (counter r)
                 addActions rname r = modify rActs (++ actions rname rfacts) r
 
 
--- checks if process exists, if not -> error
--- checkProcess :: String -> OpenTheory -> Parser OpenTheory
--- checkProcess i thy= case findProcess i thy of
---     Just thy' -> return thy
---     Nothing -> fail $ "process not defined: " ++ i    
+-- | checks if process exists, if not -> error
 checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
     Just p -> return $ get pBody p
@@ -1391,7 +1396,7 @@ diffTheory flags0 = do
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
       , do ru <- protoRule
-           thy' <- liftedAddProtoRule thy ru
+           thy' <- liftedAddProtoDiffRule thy ru
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACsDiffAll [r] thy)
@@ -1419,6 +1424,10 @@ diffTheory flags0 = do
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
+
+    liftedAddProtoDiffRule thy ru = case addProtoDiffRule ru thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
