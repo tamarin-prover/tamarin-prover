@@ -324,8 +324,8 @@ pubName = singleQuoted identifier
 sapicvar :: Parser SapicLVar
 sapicvar = do
         s <- option LSortMsg $ asum $ map mkPrefixParser [LSortFresh, LSortPub, LSortMsg]
-        (n, i) <- indexedIdentifier <* colon
-        t <- identifier 
+        (n, i) <- indexedIdentifier
+        t <- option defaultSapicType $ colon *> identifier 
         return (SapicLVar (LVar n s i) t ) 
     where mkPrefixParser s = do
                 _ <- symbol (sortSuffix s)
