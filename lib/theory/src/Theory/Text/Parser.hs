@@ -1184,6 +1184,10 @@ liftMaybeToEx :: (Catch.MonadThrow m, Catch.Exception e) => e -> Maybe a -> m a
 liftMaybeToEx _      (Just r) = return r
 liftMaybeToEx constr Nothing  = Catch.throwM constr
 
+liftedExpandFormula :: Catch.MonadThrow m =>
+                       Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
 liftedExpandLemma thy =  liftEitherToEx UndefinedPredicate . expandLemma thy 
@@ -1235,16 +1239,22 @@ liftedAddLemma thy lem = do
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> Rule ProtoRuleEInfo -> m (OpenTheory)
 liftedAddProtoRule thy ru 
     | (StandRule rname) <- get (preName . rInfo) ru = do
-        thy'  <- foldM liftedAddRestriction thy (restrictions rname)
+        rforms <- mapM (liftedExpandFormula thy) (rfacts ru)
+        thy'  <- foldM addExpandedRestriction thy (restrictions rname rforms)
         thy'' <- liftedAddProtoRuleNoExpand thy' (addActions rname ru)
         return thy'' 
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
+                rfacts = get (preRestriction . rInfo)
+
+                restrictions rname rforms = restrictionItems rname rforms
+
+                restrictionItems rname r = 
+                    map (mkRestriction rname) (counter r)
+
                 counter = zip [1..]
-                nameSuffix rname n = rname ++ "_" ++ show n
-                varNow = LVar "NOW" LSortNode 0
-                frees' f = freesList f `L.union` [varNow]
-                mkRestriction:: String -> (Int,SyntacticLNFormula) -> SyntacticRestriction
+
+                mkRestriction:: String -> (Int,LNFormula) -> Restriction
                 mkRestriction rname (n,f) = Restriction 
                                         ("restr_"++ nameSuffix rname n) 
                                         (foldr (hinted forall) f' (frees' f))
@@ -1253,16 +1263,22 @@ liftedAddProtoRule thy ru
                                             timepoint = varTerm $ Free varNow
                                             facts = mkFact rname getBVarTerms
 
-                getBVarTerms =  map (varTerm . Free) . frees
+                addExpandedRestriction thy' xrstr = liftMaybeToEx
+                                                     (DuplicateItem $ RestrictionItem xrstr)
+                                                     (addRestriction xrstr thy')
+
+                nameSuffix rname n = rname ++ "_" ++ show n
+                varNow = LVar "NOW" LSortNode 0
+                frees' f = freesList f `L.union` [varNow]
+
+                getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
                 getVarTerms =   map (varTerm) . frees
                 mkFact  rname getTerms (n,f)  = 
                         protoFactAnn Linear ("_rstr_"++ nameSuffix rname n) S.empty (getTerms f)
-                restrictionItems rname r = 
-                    map (mkRestriction rname) (counter r)
-                rfacts = get (preRestriction . rInfo) ru
-                restrictions rname = restrictionItems rname rfacts
+
+
                 actions rname r = map (mkFact rname getVarTerms) (counter r)
-                addActions rname r = modify rActs (++ actions rname rfacts) r
+                addActions rname r = modify rActs (++ actions rname (rfacts ru)) r
 
 
 -- | checks if process exists, if not -> error

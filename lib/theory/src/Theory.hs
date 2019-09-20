@@ -18,8 +18,11 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
+  -- * Formulas
+    expandFormula
+
   -- * Restrictions
-    ProtoRestriction(..)
+  , ProtoRestriction(..)
   , Restriction
   , SyntacticRestriction
   , RestrictionAttribute(..)
