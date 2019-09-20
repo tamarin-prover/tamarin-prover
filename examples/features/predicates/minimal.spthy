@@ -15,7 +15,7 @@ rule B:
 lemma one_smaller_two:
     "All x y #i. B(x,y)@i ==> Smaller(x,y)"
 
-lemma equal:
+lemma unequal:
     "All x y #i. A(x,y)@i ==> not (Equal(x,y))"
 
 end
