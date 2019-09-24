@@ -27,14 +27,13 @@ begin
 
 builtins: symmetric-encryption
 
-functions: key/1,att/1
-
-predicates:
-sencSucc (c,k) <=> Ex m . senc(m,k)=c
+functions: key/1,att/1,sencSucc/2, true/0
 
 equations:
-key (<k,a>) = k,
-att (<k,a>) = a
+     key (<k,a>) = k
+   , att (<k,a>) = a
+   , sencSucc(senc(m,k),k)=true()
+
 
 !(
 	( in('create'); 
@@ -70,7 +69,7 @@ att (<k,a>) = a
           lock L_h;
         lookup L_h as v in 
 	if att(v)='dec' then 
-            if sencSucc(c,key(v)) then
+            if sencSucc(c,key(v)) = true() then
                 let m = sdec(c,key(v)) in
 		event DecUsing(key(v),m);
                 out(m);

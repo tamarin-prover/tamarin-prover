@@ -356,13 +356,16 @@ fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/m
 SCADA/opc_ua_secure_conversation.spthy \
 feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
-GJM-contract/contract.spthy
-# not working because of missing support for predicates
-# basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
+GJM-contract/contract.spthy \ 
+feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
+basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
+# Yubikey/Yubikey.spthy
+
+# not working because of missing support for predicates
 # Yubikey/Yubikey.spthy NOTE commented out previously need to verify
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
-# feature-predicates/decwrap_destr.spthy feature-predicates/simple_example.spthy \
+#
 # location stuff: not tested so far
 # feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
 # feature-locations/SOC.spthy  -> commented out before
