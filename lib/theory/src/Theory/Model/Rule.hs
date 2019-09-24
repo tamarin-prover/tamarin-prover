@@ -1051,23 +1051,21 @@ prettyIntrRuleACInfo rn = text $ case rn of
 
 
 prettyRestr :: HighlightDocument d => F.SyntacticLNFormula -> d
-prettyRestr fact =  operator_ "_restriction(" <> F.prettySyntacticLNFormula fact <> operator_ ")" 
+prettyRestr fact =  operator_ "_restrict(" <> F.prettySyntacticLNFormula fact <> operator_ ")" 
 
 -- | pretty-print rules with restrictions
 prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [F.SyntacticLNFormula] -> d
 prettyRuleRestr prems acts concls restr =
     sep [ nest 1 $ ppFactsList prems
-                , if null acts
+                , if null acts && null restr
                     then operator_ "-->"
-                    else fsep [operator_ "--[", ppFacts' acts, ppRestr' restr, operator_ "]->"]
+                    else fsep [operator_ "--[", ppList (map prettyLNFact  acts ++ map prettyRestr restr), operator_ "]->"]
                 , nest 1 $ ppFactsList concls]
 -- Debug:
 --     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
   where
-    ppList pp        = fsep . punctuate comma . map pp
-    ppFacts'         = ppList prettyLNFact
-    ppRestr'         = ppList prettyRestr
-    ppFactsList list = fsep [operator_ "[", ppFacts' list, operator_ "]"]
+    ppList           = fsep . punctuate comma 
+    ppFactsList list = fsep [operator_ "[", ppList $ map prettyLNFact list, operator_ "]"]
 
 -- | pretty-print rules without restrictions
 prettyRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d

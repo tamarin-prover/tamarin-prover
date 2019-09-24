@@ -34,8 +34,7 @@ import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
--- import Sapic.Restrictions
-import Theory.Text.Pretty
+import Theory.Text.Parser
 
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
@@ -51,32 +50,19 @@ translate th = case theoryProcesses th of
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- compute initial rules
-                (initRule,initTx) <- initialRules an_proc
+                (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRule ++ protoRule
+                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
                 -- add restrictions
-                rest <- restrictions an_proc
+                rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    liftedAddProtoRule thy ru = case addProtoRule ru thy of
-            Just thy' -> return thy'
-            Nothing   -> throwM 
-                (RuleNameExists (render (prettyRuleName ru)) 
-                    :: SapicException AnnotatedProcess)
-    liftedAddRestriction thy rest = case  expandRestriction thy rest of
-      Right rest' ->
-        case addRestriction rest' thy of
-            Just thy' -> return thy'
-            Nothing   -> throwM (RestrictionNameExists (L.get rstrName rest)
-                    :: SapicException AnnotatedProcess)
-      Left facttag -> throwM (CannotExpandPredicate facttag rest
-                              :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
     checkOps (lens,x) 
         | L.get lens ops = Just x
@@ -113,7 +99,7 @@ translate th = case theoryProcesses th of
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
-  -- NOTE: Kevin Milner is working on predicates, Kevin Morio on accountability
+  -- NOTE: Kevin Morio is working on accountability
   --
   -- and predicate_restrictions = print_predicates input.pred
   -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)

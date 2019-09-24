@@ -66,7 +66,7 @@ data SapicAction =
         deriving( Show, Eq, Ord, Generic, NFData, Binary, Data )
 
 -- | When the process tree splits, it is connected with one of these connectives
-data ProcessCombinator = Parallel | NDC | Cond LNFact 
+data ProcessCombinator = Parallel | NDC | Cond SyntacticLNFormula
         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
     deriving (Generic, NFData, Binary, Show, Eq, Data, Ord )
 
@@ -242,7 +242,7 @@ prettySapicAction' prettyRule' (MSR (p,a,c,r)) = prettyRule' p a c r
 prettySapicComb :: ProcessCombinator -> [Char]
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb (Cond a) = "if "++ render (prettyLNFact a)
+prettySapicComb (Cond a) = "if "++ render (prettySyntacticLNFormula a)
 prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
                                     where p = render . prettyLNTerm
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v

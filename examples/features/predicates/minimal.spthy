@@ -12,11 +12,18 @@ rule A:
 rule B:
     [In(x), In(y)] --[ _restrict(Added(x,y))]-> []
 
+rule C:
+    [In(<x,x>)] --[ _restrict(Equal(x,x)), C() ]-> []
+
 lemma one_smaller_two:
     "All x y #i. B(x,y)@i ==> Smaller(x,y)"
 
 lemma unequal:
     "All x y #i. A(x,y)@i ==> not (Equal(x,y))"
+
+lemma equal:
+    exists-trace
+    "Ex #i. C()@i"
 
 end
 

@@ -11,7 +11,8 @@
 -- Parsing protocol theories. See the MANUAL for a high-level description of
 -- the syntax.
 module Theory.Text.Parser (
-    parseOpenTheory
+    varNow
+  , parseOpenTheory
   , parseOpenTheoryString
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
@@ -19,6 +20,8 @@ module Theory.Text.Parser (
   , parseRestriction
   , parseIntruderRules
   , newVariables
+  , liftedAddProtoRule
+  , liftedAddRestriction
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -58,6 +61,15 @@ import           Theory.Text.Parser.Token
 import           Debug.Trace
 
 import           Data.Functor.Identity 
+
+------------------------------------------------------------------------------
+-- Constants
+------------------------------------------------------------------------------
+
+-- | Used in liftedAddProtoRule to expand restriction, used in process
+-- translation
+varNow :: LVar
+varNow = LVar "NOW" LSortNode 0
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -1079,35 +1091,35 @@ actionprocess thy=
                         t2 <- msetterm llit
                         _ <- symbol "then"
                         p <- process thy
-                        _ <- symbol "else"
-                        q <- process thy
+                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
                         return (ProcessComb (CondEq t1 t2  ) mempty p q)
+                        <?> "conditional process (with equality)"
                    )
             <|> try (do 
                         _ <- symbol "if"
-                        pr <- fact llit
+                        frml <- standardFormula
                         _ <- symbol "then"
                         p <- process thy
-                        _ <- symbol "else"
-                        q <- process thy
-                        return (ProcessComb (Cond pr) mempty p q)
+                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
+                        return (ProcessComb (Cond frml) mempty p q)
+                        <?> "conditional process (with predicate)"
                    )
-            <|> try (do 
-                        _ <- symbol "if"
-                        t1 <- msetterm llit
-                        _ <- opEqual
-                        t2 <- msetterm llit
-                        _ <- symbol "then"
-                        p <- process thy
-                        return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
-                   )
-            <|> try (do 
-                        _ <- symbol "if"
-                        pr <- fact llit
-                        _ <- symbol "then"
-                        p <- process thy
-                        return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
-                   )
+            -- <|> try (do 
+            --             _ <- symbol "if"
+            --             t1 <- msetterm llit
+            --             _ <- opEqual
+            --             t2 <- msetterm llit
+            --             _ <- symbol "then"
+            --             p <- process thy
+            --             return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
+            --        )
+            -- <|> try (do 
+            --             _ <- symbol "if"
+            --             pr <- fact llit
+            --             _ <- symbol "then"
+            --             p <- process thy
+            --             return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
+            --        )
             <|> try ( do  -- sapic actions are constructs separated by ";"
                         s <- sapicAction
                         _ <- opSeq
@@ -1268,8 +1280,7 @@ liftedAddProtoRule thy ru
                                                      (addRestriction xrstr thy')
 
                 nameSuffix rname n = rname ++ "_" ++ show n
-                varNow = LVar "NOW" LSortNode 0
-                frees' f = freesList f `L.union` [varNow]
+                frees' f = frees f `L.union` [varNow]
 
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
                 getVarTerms =   map (varTerm) . frees

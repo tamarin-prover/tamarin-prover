@@ -2,10 +2,10 @@ theory SimpleIf
 begin
 
 predicates:
-equal(h1,h2) <=> h1=h2
+Equal(h1,h2) <=> h1=h2
 
 new h; 
-if equal(h,h) then
+if Equal(h,h) then
             event Bogus()
         else
             0

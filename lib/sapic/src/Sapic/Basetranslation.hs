@@ -153,8 +153,21 @@ baseTransComb c _ p tildex
     | NDC <- c = (
                []
              , tildex, tildex )
-    | Cond f <- c = condition f
-    | CondEq t1 t2 <- c = condition (protoFact Linear "Eq" [t1,t2])
+    | Cond f <- c = -- TODO add boundedness checks later
+                ([ ([def_state], [], [def_state1 tildex], [f]),
+                    ([def_state], [], [def_state2 tildex], [Not f])]
+                     , tildex, tildex )
+    | CondEq t1 t2 <- c =
+        let fa = (protoFact Linear "Eq" [t1,t2]) in
+        let vars_f = fromList $ getFactVariables fa in
+        if vars_f `isSubsetOf` tildex then
+                ([ ([def_state], [PredicateA fa], [def_state1 tildex], []),
+                    ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
+                     , tildex, tildex )
+                else
+                    throw ( 
+                    ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
+                        :: SapicException AnnotatedProcess)
     | Lookup t v <- c =
            let tx' = v `insert` tildex in
                 (
@@ -166,16 +179,6 @@ baseTransComb c _ p tildex
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
-        condition f =
-                let vars_f = fromList $ getFactVariables f in
-                if vars_f `isSubsetOf` tildex then
-                ( [ ([def_state], [PredicateA f], [def_state1 tildex], []),
-                    ([def_state], [NegPredicateA f], [def_state2 tildex], [])]
-                     , tildex, tildex )
-                else
-                    throw ( 
-                    ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
-                        :: SapicException AnnotatedProcess)
 
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
