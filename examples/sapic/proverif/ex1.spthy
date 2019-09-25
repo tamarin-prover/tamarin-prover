@@ -17,9 +17,9 @@ functions: bij/1, unbij/1
 equations: bij(unbij(x))=x
 
 let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
-let Q = in( m); let md = sdec(m,sk) in if snd(md)='test' then event Received(fst(md))
+let Q = in( m:bitstring); let md = sdec(m,sk) in if snd(md)='test' then event Received(fst(md))
 
-new sk; (P || Q)
+new sk:skey; (P || Q)
 
 lemma secret : 
       "All x #i. ( Secret(x) @ i ==> not (Ex #j. K(x) @ j) )"

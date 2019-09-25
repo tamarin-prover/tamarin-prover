@@ -69,8 +69,8 @@ defaultSapicType = "bitstring"
 type SapicSubst = Subst Name SapicLVar
 
 instance Show SapicLVar where
-    show (SapicLVar v t) = show  v ++ ":" ++ show t
-
+    show (SapicLVar v t) = show  v ++ ":" ++ id t
+    
 -- | Actions are parts of the process that maybe connected with ";"
 data SapicAction = 
                    Rep

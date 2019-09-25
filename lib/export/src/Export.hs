@@ -72,8 +72,9 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       ]
   ),
   (symEncFunSig, [
-      Fun "fun senc(bitstring,bitstring):bitstring.",
-      Eq "reduc forall m:bitstring,sk:bitstring; sdec(senc(m,sk),sk) = m."]
+      Sym "type skey.",
+      Fun "fun senc(bitstring,skey):bitstring.",
+      Eq "reduc forall m:bitstring,sk:skey; sdec(senc(m,sk),sk) = m."]
   ),
   (pairFunSig,  [Eq "reduc forall a:bitstring,b:bitstring; fst((a,b))=a.",
   Eq  "reduc forall a:bitstring,b:bitstring; snd((a,b))=b."]
@@ -103,8 +104,8 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
     ppTerm t = case viewTerm t of
         Lit  (Con (Name FreshName n))             -> text $ show n
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (t)              | b                 -> text $ show t <> ":bitstring"                    
-        Lit  (t)                                  -> text $ show t
+        Lit  (t)              | b                 -> text $ show t
+        Lit  (Var (SapicLVar n t))                -> text $ show n
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -184,7 +185,7 @@ ppFact (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared         
 ppAction :: SapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New n) = (text "new " <> (text $ show n) <> text ":bitstring", S.empty)
+ppAction (New n) = (text "new " <> (text $ show n), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1
