@@ -358,31 +358,21 @@ feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy \
 feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
-basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
-# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
-# Yubikey/Yubikey.spthy
+basic/running-example.spthy feature-let-bindings/let-blocks.spthy \
 
-# not working because of missing support for predicates
-# Yubikey/Yubikey.spthy NOTE commented out previously need to verify
-# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
-#
-# location stuff: not tested so far
-# feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
-# feature-locations/SOC.spthy  -> commented out before
-# examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
-# pkcs11-example were previously commented out because they took so long, but should check if they can be completed.
-# examples/sapic/PKCS11/pkcs11-templates.sapic
-# examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic
-#
-# exceptional cases, that are left out on purpose, with explanations:
-# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model, 
-# 		because the attacks found despite an incorrect sources lemma
-# 		are correct by definition, but negating it would defeat its
-# 		purpose, and removing it would inhibit the attack finding. 
+
+# SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
+SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+NSL/nsl-no_as-untagged.spthy \
+Yubikey/Yubikey.spthy \
+encWrapDecUnwrap/encwrapdecunwrap.spthy
+
+# SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
+SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy \
+fairexchange-km/km.spthy
+
 #
 # missing (but also before): fairexchange stuff...-> check how long they take on fast machines
-# examples/sapic/fairexchange-km/km.sapic
-# examples/sapic/fairexchange-km/km-with-comments.sapic
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.sapic
 # examples/sapic/fairexchange-asw/asw-mod-weak-locks.sapic
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
@@ -395,15 +385,25 @@ basic/running-example.spthy feature-let-bindings/let-blocks.spthy
 # examples/sapic/fairexchange-gjm/gjm.sapic
 # examples/sapic/fairexchange-gjm/gjm-locks.sapic#
 
-# envelope examples (this example was never completed and is for reference only)
-# examples/sapic/envelope/envelope.sapic
-# examples/sapic/envelope/envelope_simpler.sapic
-# examples/sapic/envelope/envelope_allowsattack.sapic
+# # case studies that cannot be proven automatically or are in fact nor working
+# # exceptional cases, that are left out on purpose, with explanations:
+# SAPIC_CASE_STUDIES_NO_PROOF = \
+# PKCS11/pkcs11-templates.spthy \ # heavy use of manual lemmas, not part of regresstion tests
+# PKCS11/pkcs11-dynamic-policy.spthy \ # not working 
+# xor/NSLPK3xor.spthy \ # attack finding relies on sources lemma which is untrue. it is acceptable for
+# # this model, because the attacks found despite an incorrect sources lemma are
+# # correct by definition, but negating it would defeat its purpose, and removing
+# # it would inhibit the attack finding. 
+# envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
+# # these examples were never completed and are here for reference only
 
-# SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
-NSL/nsl-no_as-untagged.spthy 
-SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
+# not working because of missing support for predicates
+#
+# location stuff: not tested so far
+# feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
+# feature-locations/SOC.spthy  -> commented out before
+# examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
+
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
 SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))

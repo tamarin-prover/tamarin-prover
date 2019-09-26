@@ -109,22 +109,24 @@ equations:
         )
 )
 
-/* manually verified Tue Dec 20 12:54:01 CET 2016 */
-lemma can_create_key: //for sanity
-	exists-trace
-	"Ex #t h k. NewKey(h,k)@t"
+// Sanity lemmas to be shown manually.
 
 /* manually verified Tue Dec 20 12:54:01 CET 2016 */
-lemma can_set_wrap: //for sanity
-	exists-trace
-	"Ex #t h .WrapHandle(h)@t"
+/* lemma can_create_key: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k. NewKey(h,k)@t" */
+
+/* manually verified Tue Dec 20 12:54:01 CET 2016 */
+/* lemma can_set_wrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h .WrapHandle(h)@t" */
 
 /* (this sanity test is not automatic ) */
 /* manually verified Tue Dec 20 12:54:01 CET 2016 */
 /* see EncWrapDecUnwrap/encwrapdecunwrap_can_unwrap_manual.spthy */
-lemma can_unwrap: //for sanity
-	exists-trace
-	"Ex #t h k.Unwrapped(h,k )@t"
+/* lemma can_unwrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k.Unwrapped(h,k )@t" */
 
 lemma dec_limits[sources]: 
 // a message that can be decrypted was either encrypted on the device, or some key leaked.
@@ -188,3 +190,17 @@ lemma cannot_obtain_key:
 
 end
 
+/* ============================================================================== */
+/* summary of summaries: */
+
+/* analyzed: encWrapDecUnwrap/encwrapdecunwrap.spthy */
+
+/*   dec_limits (all-traces): verified (290 steps) */
+/*   wrap_key_origins (all-traces): verified (1236 steps) */
+/*   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps) */
+/*   no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps) */
+/*   cannot_obtain_key_ind (all-traces): verified (422 steps) */
+/*   cannot_obtain_key (all-traces): verified (2 steps) */
+
+/* ============================================================================== */
+/* tamarin-prover --prove encWrapDecUnwrap/encwrapdecunwrap.spthy  447.84s user 45.80s system 148% cpu 5:31.39 total */

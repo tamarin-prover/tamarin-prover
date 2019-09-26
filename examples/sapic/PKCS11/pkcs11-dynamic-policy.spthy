@@ -5,10 +5,12 @@ theory PKCS11DynamicPolicy
  * Modeler:     Robert Kunnemann 
  * Date:    	Jan 2015
  *
- * Status:      ..
+ * Status:      not working
  */
 
 /* Some more comments:  
+ *
+ *  - Experiments with a dynamic policy that never really concluded. 
  *
  */
 
@@ -35,18 +37,18 @@ key (<k,templ>) = k,
 tem (<k,templ>) = templ
 
 predicates:
-can_encrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> enc='on',
-can_decrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> dec='on',
-can_wrap(
+Can_encrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> enc='on',
+Can_decrypt(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> dec='on',
+Can_wrap(
 wrap1, unwrap1, enc1, dec1, sens1, extr1, trus1, wwt1, wt1, ut1,
 wrap2, unwrap2, enc2, dec2, sens2, extr2, trus2, wwt2, wt2, ut2
 ) <=> ( wrap1='on' & extr2='on') &
 ( (wwt2='off') 
 | ( wwt2='on' & trus1='on'))
 ,
-can_unwrap(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> unwrap='on',
-can_get_keyvalue(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> sens='off',
-permits(
+Can_unwrap(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> unwrap='on',
+Can_get_keyvalue(wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=> sens='off',
+Permits(
 t_wrap, t_unwrap, t_enc, t_dec, t_sens, t_extr, t_trus, t_wwt, t_wt, t_ut,
 wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut) <=>
 //TODO change definition later, so that an actual match is not needed.
@@ -67,7 +69,7 @@ let create = ( in(<'create',atts,ptr>);
     new L_h; new k; 
     // wrap, unwrap, enc,   dec,   sens,  extr, trus,   wwt, wt, ut
     lookup <'F_template',ptr> as templ in
-        if permits(
+        if Permits(
         attwrap(templ), attunwrap(templ), attenc(templ), attdec(templ),
 attsens(templ), attextr(templ), atttrus(templ), attwwt(templ),
 attwt(templ), attut(templ),
@@ -90,7 +92,7 @@ let decrypt= (
     in(<L_h,senc(m,k)>); 
     lock 'device';
     lookup <'obj',L_h> as v in 
-        if can_decrypt(
+        if Can_decrypt(
         attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
 attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
 attwt(tem(v)), attut(tem(v))) then 
@@ -101,7 +103,7 @@ attwt(tem(v)), attut(tem(v))) then
 let encrypt = ( in(<L_h,m>);
     lock 'device';
     lookup <'obj',L_h> as v in 
-        if can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+        if Can_encrypt(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
 attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
 attwt(tem(v)), attut(tem(v))) then 
             event EncUsing(key(v),m); out(senc(m,key(v))); unlock 'device' 
@@ -112,14 +114,14 @@ let wrap =
     lock 'device'; 
     lookup <'obj',h1> as v1 in 
         lookup <'obj',h2> as v2 in 
-            if can_wrap(
+            if Can_wrap(
 attwrap(tem(v1)), attunwrap(tem(v1)), attenc(tem(v1)), attdec(tem(v1)),
 attsens(tem(v1)), attextr(tem(v1)), atttrus(tem(v1)), attwwt(tem(v1)),
 attwt(tem(v1)), attut(tem(v1)), attwrap(tem(v2)), attunwrap(tem(v2)),
 attenc(tem(v2)), attdec(tem(v2)), attsens(tem(v2)), attextr(tem(v2)),
 atttrus(tem(v2)), attwwt(tem(v2)), attwt(tem(v2)), attut(tem(v2))) then 
                 lookup <'F_template', attwt(tem(v1))> as wt in
-                    if permits(
+                    if Permits(
                             attwrap(wt), attunwrap(wt), attenc(wt), attdec(wt),
                             attsens(wt), attextr(wt), atttrus(wt), attwwt(wt),
                             attwt(wt), attut(wt),
@@ -137,12 +139,12 @@ let unwrap =
     ( in(<L_h,senc(m,k),atts>); 
       lock 'device';
       lookup <'obj',L_h> as v in 
-        if can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
+        if Can_unwrap(attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
 attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
 attwt(tem(v)), attut(tem(v))) then
             if key(v)=k then
                 lookup <'F_template', attut(tem(v))> as ut in
-                    if permits(
+                    if Permits(
                             attwrap(ut), attunwrap(ut), attenc(ut), attdec(ut),
                             attsens(ut), attextr(ut), atttrus(ut), attwwt(ut),
                             attwt(ut), attut(ut),
@@ -167,7 +169,7 @@ attwt(tem(v)), attut(tem(v))) then
 let get_keyvalue= ( in(L_h); 
     lock 'device';
     lookup <'obj',L_h> as v in 
-        if can_get_keyvalue(
+        if Can_get_keyvalue(
         attwrap(tem(v)), attunwrap(tem(v)), attenc(tem(v)), attdec(tem(v)),
 attsens(tem(v)), attextr(tem(v)), atttrus(tem(v)), attwwt(tem(v)),
 attwt(tem(v)), attut(tem(v))) then 

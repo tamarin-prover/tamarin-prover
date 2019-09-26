@@ -84,8 +84,13 @@ lemma init_yubikey[sources]:
 
 // If a succesful Login happens before a second sucesfull Login, the
 // counter value of the first is smaller than the counter value of the
-// second
-lemma slightly_weaker_invariant[reuse, use_induction]:
+// second.
+//
+// This lemma needs some manual intervention. See README for where to fine the
+// manual part of the proof. For the sake of automated regresstion testing,
+// this lemma is assumed as a restriction.
+/* lemma slightly_weaker_invariant[reuse, use_induction]: */
+restriction slightly_weaker_invariant:
         "(All pid k tc1 tc2 #t1 #t2 .
              Login(pid,k,tc1)@#t1 & Login(pid,k,tc2)@#t2
         ==> ( #t1<#t2 & ( Ex z . tc1+z=tc2))
@@ -121,18 +126,16 @@ lemma Login_invalidates_smaller_counters:
          	==>  #t1<#t2 "
 end
 
+// Automated part..
 /* ============================================================================== */
 /* summary of summaries: */
 
 /* analyzed: Yubikey/Yubikey.spthy */
 
-/* All except slightly_weaker_invariant are automatic, testing this one on colossus11. */
-
-/*   init_server (all-traces): verified (136 steps) */
-/*   init_server_secrecy (all-traces): verified (185 steps) */
-/*   init_yubikey (all-traces): verified (57 steps) */
-/*   slightly_weaker_invariant (all-traces): analysis incomplete (1 steps) */
-/*   one_count_foreach_login (all-traces): analysis incomplete (1 steps) */
-/*   no_replay (all-traces): analysis incomplete (1 steps) */
-/*   injective_correspondance (all-traces): analysis incomplete (1 steps) */
-/*   Login_invalidates_smaller_counters (all-traces): analysis incomplete (1 steps) */
+/*   init_server (all-traces): verified (148 steps) */
+/*   init_server_secrecy (all-traces): verified (191 steps) */
+/*   init_yubikey (all-traces): verified (63 steps) */
+/*   one_count_foreach_login (all-traces): verified (88 steps) */
+/*   no_replay (all-traces): verified (2 steps) */
+/*   injective_correspondance (all-traces): verified (6 steps) */
+/*   Login_invalidates_smaller_counters (all-traces): verified (340 steps) */
