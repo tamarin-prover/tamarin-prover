@@ -356,7 +356,7 @@ fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/m
 SCADA/opc_ua_secure_conversation.spthy \
 feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
-GJM-contract/contract.spthy \ 
+GJM-contract/contract.spthy \
 feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
 basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate

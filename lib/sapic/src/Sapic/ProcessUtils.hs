@@ -10,6 +10,9 @@
 module Sapic.ProcessUtils (
    processAt 
 ,  processContains
+,  isLookup
+,  isEq
+,  isDelete
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -44,3 +47,16 @@ processAt _ p = throwM (InvalidPosition p :: SapicException (AnProcess ann))
 
 processContains :: AnProcess ann -> (AnProcess ann -> Bool) -> Bool
 processContains anP f = M.getAny $ pfoldMap  (M.Any . f) anP
+
+isLookup :: AnProcess ann -> Bool
+isLookup (ProcessComb (Lookup _ _) _ _ _) = True
+isLookup _  = False
+
+isDelete :: AnProcess ann -> Bool
+isDelete (ProcessAction (Delete _) _ _) = True
+isDelete _  = False
+
+isEq :: AnProcess ann -> Bool
+isEq (ProcessComb (CondEq _ _) _ _ _) = True
+isEq _  = False
+

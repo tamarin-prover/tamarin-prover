@@ -64,16 +64,17 @@ translate th = case theoryProcesses th of
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = L.get thyOptions th
-    checkOps (lens,x) 
+    checkOps lens x   
         | L.get lens ops = Just x
         | otherwise = Nothing
+
     initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
-                        $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
-                        (transProgress, PT.progressInit anP)
-                      , (transReliable, RCT.reliableChannelInit anP) 
+                        $ catMaybes [ 
+                        checkOps transProgress (PT.progressInit anP)
+                      , checkOps transReliable (RCT.reliableChannelInit anP)
                       ] 
     trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
-                        $ mapMaybe checkOps [
+                        $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ] 
@@ -91,7 +92,7 @@ translate th = case theoryProcesses th of
                                                                   --   restrs
                                                                   --    @ (if op.progress then [progress_init_lemma] else [])
                         $ [BT.baseRestr anP True] ++
-                           mapMaybe checkOps [
+                           mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP) 
                            ]

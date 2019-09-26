@@ -126,6 +126,8 @@ end
 
 /* analyzed: Yubikey/Yubikey.spthy */
 
+/* All except slightly_weaker_invariant are automatic, testing this one on colossus11. */
+
 /*   init_server (all-traces): verified (136 steps) */
 /*   init_server_secrecy (all-traces): verified (185 steps) */
 /*   init_yubikey (all-traces): verified (57 steps) */

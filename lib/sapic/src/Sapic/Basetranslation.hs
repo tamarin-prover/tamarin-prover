@@ -307,12 +307,6 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
-        isLookup (ProcessComb (Lookup _ _) _ _ _) = True
-        isLookup _  = False
-        isDelete (ProcessAction (Delete _) _ _) = True
-        isDelete _  = False
-        isEq (ProcessComb (CondEq _ _) _ _ _) = True
-        isEq _  = False
         getLock p
             | (ProcessAction (Lock _) an _) <- p, (Just (AnLVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
