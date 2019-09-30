@@ -58,6 +58,7 @@ options: translation-progress
 
 let AA= out('c',m3);
         (
+        (
          in('c',m4);
          event ContractA($A,$B,text,sida);
          event EndA4($A,$B,text,sida)
@@ -77,6 +78,7 @@ let AA= out('c',m3);
            event ContractA($A,$B,text,sida);
            event EndA3($A,$B,text,sida)
           /* ) */
+        )
         )
 
 let A = new sida; event StartA($A,$B,text,sida);
@@ -104,6 +106,7 @@ let A = new sida; event StartA($A,$B,text,sida);
         ( /* Abort */
           out('r',<TTPID,sida,a1>);
           (
+          (
             in('r',<$A,sida,pat_a2>);
             event AbortA($A,$B,text,sida);
             event EndA1($A,$B,text,sida)
@@ -112,6 +115,7 @@ let A = new sida; event StartA($A,$B,text,sida);
             in('r',<$A,sida,pat_m4>);
             event ContractA($A,$B,text,sida);
             event EndA2($A,$B,text,sida) 
+          )
           )
           /* SIMPLIFICATION: Protocol description forsees a third alternative:
            * TTP might send m3(!) to A -- but A can generate this herself.
