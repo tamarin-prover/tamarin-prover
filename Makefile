@@ -370,7 +370,8 @@ encWrapDecUnwrap/encwrapdecunwrap.spthy
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
 SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy \
 fairexchange-km/km.spthy \
-examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.spthy
+examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
+examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.spthy \
 
 
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff
@@ -385,7 +386,6 @@ examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.spthy
 # examples/sapic/fairexchange-gjm/gjm-locks-magic.sapic
 # examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic
 # examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.sapic
 # examples/sapic/fairexchange-gjm/gjm.sapic
 
 # # case studies that cannot be proven automatically or are in fact nor working
