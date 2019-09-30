@@ -370,9 +370,11 @@ encWrapDecUnwrap/encwrapdecunwrap.spthy
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
 SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy \
 fairexchange-km/km.spthy \
-examples/sapic/fairexchange-gjm/gjm-locks.spthy
+examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.spthy
+
 
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff
+# examples/sapic/fairexchange-gjm/gjm-locks.spthy -> cleanup lemmas does not hold, unfinished example I think -> need to delete
 
 #
 # missing (but also before): fairexchange stuff...-> check how long they take on fast machines
