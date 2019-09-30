@@ -107,7 +107,7 @@ data LetExceptions = CapturedEx CapturedTag LVar
     -- deriving (Typeable)
 
 prettyLetExceptions :: LetExceptions -> [Char]
-prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ "appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ "throughout."  
+prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ " throughout."
     where pretty CapturedIn = "input"
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"

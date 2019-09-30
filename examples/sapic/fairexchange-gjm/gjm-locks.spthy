@@ -37,6 +37,7 @@ equations:
     /* fakepcs () */
     checkpcs(c, pk(s), pk(v), pk(ttp), fakepcs(pk(s), sk(v), pk(ttp), c)) = true
 
+builtins: reliable-channel
 options: translation-progress
 
 
@@ -83,7 +84,7 @@ let A = /* in('c',text); */
         let m3 = sign(<text,'1'>,sk($A)) in
         let pat_m4 = sign(<text,'2'>,sk($B)) in
         let a1 = sign(<text,$A,$B,'abort'>,sk('A')) in
-        let a2 = sign(a1,sk(TTPID)) in
+        let pat_a2 = sign(a1,sk(TTPID)) in
         let r1 = <m3,m2> in
         out('c',pat_m1);
         (
@@ -105,7 +106,7 @@ let A = /* in('c',text); */
                  */
                 /*
                 (
-                 in('r',<'originator',TTPID,$A,a2>);
+                 in('r',<'originator',TTPID,$A,pat_a2>);
                  event AbortA(text,sida)
                 ) + ( */
                  in('r',<$A,sida,pat_m4>);
@@ -119,7 +120,7 @@ let A = /* in('c',text); */
         ( /* Abort */
           out('r',<TTPID,sida,a1>);
           (
-            in('r',<$A,sida,a2>);
+            in('r',<$A,sida,pat_a2>);
             event AbortA($A,$B,text,sida);
             event EndA1($A,$B,text,sida)
           )
@@ -141,13 +142,14 @@ let B =
         let pat_m3 = sign(<text,'1'>,sk($A)) in
         let m4 = sign(<text,'2'>,sk($B)) in
         let a1 = sign(<text,$A,$B,'abort'>,sk('A')) in
-        let a2 = sign(a1,sk(TTPID)) in
+        let pat_a2 = sign(a1,sk(TTPID)) in
         let r2 = <m1,m4> in
         in('c',m1);
         if checkpcs(<text,'1'>,pk($A),pk($B), pk(TTPID), m1)=true() then
         (
             new sidb; event StartB($A,$B,text,sidb);
             out('c',m2);
+            (
             (
               in('c',pat_m3);
               event ContractB($A,$B,text,sidb);
@@ -158,7 +160,7 @@ let B =
             ( /* Resolve */
               out('r',<TTPID,sidb,aenc(r2,pk(TTPID))>);
               (
-              in('r',<$B,sidb,a2>);
+              in('r',<$B,sidb,pat_a2>);
               event AbortB($A,$B,text,sidb);
               event EndB1($A,$B,text,sidb)
               ) + (
@@ -166,6 +168,7 @@ let B =
               event ContractB($A,$B,text,sidb);
               event EndB2($A,$B,text,sidb)
               )
+            )
             )
         )
 
@@ -181,6 +184,7 @@ let a1 = sign(<text,$A,$B,'abort'>,sk($A)) in
 let a2 = sign(a1,sk(TTPID)) in
 let r1 = <m3,m2> in
 let r2 = <pat_m1,m4> in
+(
 ( /* Abort */
   in('r',<TTPID,sida,a1>);
   lock text; /* only possible if neither aborted nor resolved */
@@ -204,7 +208,7 @@ let r2 = <pat_m1,m4> in
   out('r',<$B,sidb,m3>);
   event ResolveCert($A,$B,text)
   /* note that if A calls for resolve, B must have sent m2
-   * and thus has a contract.
+   * and thus has a contract. */
   /* no unlock! */
     /* if A aborted previously */
     /* out('r',<'originator',TTPID,$A,abortcert>); */
@@ -215,7 +219,7 @@ let r2 = <pat_m1,m4> in
 ( /* Resolve B */
   in('r',<TTPID,sidb,aenc(r2,pk(TTPID))>);
   lock text;
-  out('r',<$B,sidb,convertpcs(sk(TTPID),m1)>);
+  out('r',<$B,sidb,convertpcs(sk(TTPID),pat_m1)>);
   event ResolveCert($A,$B,text);
   ( /* A wants to abort */
   in('r',<TTPID,sida,a1>);
@@ -229,6 +233,7 @@ let r2 = <pat_m1,m4> in
     /* if A resolved previously */
     /* out('r',<'responder',TTPID,$B,resolvesig>); */
 )
+)
 
 let Judge = 
   let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
@@ -236,10 +241,10 @@ let Judge =
   let m3 = sign(<text,'1'>,sk($A)) in
   let m4 = sign(<text,'2'>,sk($B)) in
   let a1 = sign(<text,$A,$B,'abort'>,sk($A)) in
-  let a2 = sign(a1,sk(TTPID)) in
+  let pat_a2 = sign(a1,sk(TTPID)) in
   let wittness_resolved = sign(<sign(text,sk1), sign(text,sk2)>,sk(TTPID)) in
              (in('c',<m3,m4>); event ContractJudge($A,$B,text))
-         ||  (in('c',a2); event AbortJudge($A,$B,text))
+         ||  (in('c',pat_a2); event AbortJudge($A,$B,text))
 
 let TTPID=<'TTP',$TTP> in
 let text=<$A,$B,$TEXT,TTPID> in
@@ -289,24 +294,24 @@ exists-trace
  * and all Receives are redundant */
 /* even with cleanup as typing, it seems to diverge */
 /* UPDATED: manual inspection */
-lemma sanity_a1b1:
-exists-trace
- "Ex #i #j  a b t sida sidb. 
-    EndA1(a,b,t,sida)@i 
-  & EndB1(a,b,t,sidb)@j
-  & not (Ex #k. Corrupt(a)@k)
-  & not (Ex #k. Corrupt(b)@k)
-  "
+/* lemma sanity_a1b1: */
+/* exists-trace */
+/*  "Ex #i #j  a b t sida sidb. */ 
+/*     EndA1(a,b,t,sida)@i */ 
+/*   & EndB1(a,b,t,sidb)@j */
+/*   & not (Ex #k. Corrupt(a)@k) */
+/*   & not (Ex #k. Corrupt(b)@k) */
+/*   " */
 
 /* manual */
-lemma sanity_a2b2:
-exists-trace
- "Ex #i #j  a b t sida sidb. 
-    EndA2(a,b,t,sida)@i 
-  & EndB2(a,b,t,sidb)@j
-  & not (Ex #k. Corrupt(a)@k)
-  & not (Ex #k. Corrupt(b)@k)
-  "
+/* lemma sanity_a2b2: */
+/* exists-trace */
+/*  "Ex #i #j  a b t sida sidb. */ 
+/*     EndA2(a,b,t,sida)@i */ 
+/*   & EndB2(a,b,t,sidb)@j */
+/*   & not (Ex #k. Corrupt(a)@k) */
+/*   & not (Ex #k. Corrupt(b)@k) */
+/*   " */
 
 /* test remove later */
 /* seems to help with sanity lemmas, so keep for manual verification */

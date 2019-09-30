@@ -41,7 +41,7 @@ equations:
     verify(sign(m, sk(i)), pk(i)) = true,
     extrmsg(sign(m,x))=m
 
-options: progress
+options: translation-progress
 
 /* Role of Alice */
 
