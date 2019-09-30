@@ -90,6 +90,7 @@ let A = new sida; event StartA($A,$B,text,sida);
         let pat_a2 = sign(a1,sk(TTPID)) in
         let r1 = <m3,m2> in
         out('c',m1);
+        (
         ( in('c',pat_m2a);
           let m2=pat_m2a in 
           let r1=<m3,pat_m2a> in
@@ -117,6 +118,7 @@ let A = new sida; event StartA($A,$B,text,sida);
            * Furthermore, this only happens if Resolve1 was called
            * before, which can never happen if we excute the abort protocol.
            */
+        )
         )
 
 let BB = 
