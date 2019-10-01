@@ -256,23 +256,23 @@ exists-trace
 /*   & not (Ex #k. Corrupt(b)@k) */
 /*   " */
 
-lemma sanity_a2b2:
-exists-trace
- "Ex #i #j  a b t sida sidb. 
-    EndA2(a,b,t,sida)@i 
-  & EndB2(a,b,t,sidb)@j
-  & not (Ex #k. Corrupt(a)@k)
-  & not (Ex #k. Corrupt(b)@k)
-  "
+/* lemma sanity_a2b2: */
+/* exists-trace */
+/*  "Ex #i #j  a b t sida sidb. */ 
+/*     EndA2(a,b,t,sida)@i */ 
+/*   & EndB2(a,b,t,sidb)@j */
+/*   & not (Ex #k. Corrupt(a)@k) */
+/*   & not (Ex #k. Corrupt(b)@k) */
+/*   " */
 
-lemma sanity_a3b3:
-exists-trace
- "Ex #i #j  a b t sida sidb. 
-    EndA3(a,b,t,sida)@i 
-  & EndB3(a,b,t,sidb)@j
-  & not (Ex #k. Corrupt(a)@k)
-  & not (Ex #k. Corrupt(b)@k)
-  "
+/* lemma sanity_a3b3: */
+/* exists-trace */
+/*  "Ex #i #j  a b t sida sidb. */ 
+/*     EndA3(a,b,t,sida)@i */ 
+/*   & EndB3(a,b,t,sidb)@j */
+/*   & not (Ex #k. Corrupt(a)@k) */
+/*   & not (Ex #k. Corrupt(b)@k) */
+/*   " */
 
 /* automatic */
 /* lemma aborted_and_resolved_exclusive: */
