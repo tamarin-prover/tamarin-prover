@@ -210,7 +210,7 @@ in('c',<$A,$B,TTPID>);
         )
     )
 
-/* new sanity, manual (possibly auto) */
+/* auto */
 lemma sanity_a1b1:
 exists-trace
  "Ex #i #j a b t na. 
@@ -301,4 +301,17 @@ lemma fullfairnessB:
         ==> (Ex #j nb . ContractB(a,b,t, nb)@j) 
             | (Ex #k. Corrupt(b)@k)
            "
+
+/* analyzed: examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy */
+
+/*   WARNING: 9 wellformedness check failed! */
+/*            The analysis results might be wrong! */
+
+/*   sanity_a1b1 (exists-trace): verified (196 steps) */
+/*   timelinessA (all-traces): analysis incomplete (1 steps) */
+/*   timelinessB (all-traces): analysis incomplete (1 steps) */
+/*   fullfairnessA (all-traces): analysis incomplete (1 steps) */
+/*   fullfairnessB (all-traces): analysis incomplete (1 steps) */
+
+
 end

@@ -34,30 +34,33 @@ equations:
     verify(sign(m, sk(i)), pk(i)) = true,
     extrmsg(sign(m,x))=m
 
-options: progress
+builtins: reliable-channel
+options: translation-progress
 
 /* Role of Alice */
 
 let A = in ('c',t);
       	new na;
 	let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
-	let m2 = sign {<h(m1),h(nb)>}sk($B) in
+	let pat_m2 = sign {<h(m1),h(nb)>}sk($B) in
 	let m3 = sign {<na,h(nb)>}sk($A) in
-	let m4 = sign {<nb,h(na)>}sk($B) in
+	let pat_m4 = sign {<nb,h(na)>}sk($B) in
 	let a1 = sign {<'Abort', m1>}sk($A) in
 	event StartA($A, m1, na);
       	out('c', m1);
+        (
 	(
-	in('c', m2);
+	in('c', pat_m2);
 	out('c', m3);
             (
-             in('c', m4);
-             event ContractA($A,$B,m1,m2,na,nb)
+            (
+             in('c', pat_m4);
+             event ContractA($A,$B,m1,pat_m2,na,nb)
             )
             +
             (
              /* Resolve */
-             out('r', <'originator',$A,TTPID,<m1,m2>>);
+             out('r', <'originator',$A,TTPID,<m1,pat_m2>>);
                      /* simplification: original protocol specification
                       * contained case where originator receives abort token at
                       * this point. 
@@ -75,59 +78,65 @@ let A = in ('c',t);
                       * is fresh. 
                       */
                      (
-                     in ('r',<'originator',$A,TTPID,sign{<m1, m2>}sk(TTPID)>);
-                     event ContractA($A,$B,m1,m2,na,nb)
+                     in ('r',<'originator',$A,TTPID,sign{<m1, pat_m2>}sk(TTPID)>);
+                     event ContractA($A,$B,m1,pat_m2,na,nb)
                      )
+            )
             )
         )
         +
 	(
 	/* Abort */
 	out('r', <'originator',$A,TTPID,a1>);
+                 (
 		 (
 		 in('r',<'originator',$A,TTPID,sign{<'Aborted', a1>}sk(TTPID)>);
 		 event AbortA($A,m1,na)
 		 )
 		 +
 		 (
-		 in ('r',<'originator',$A,TTPID,sign{<m1, m2>}sk(TTPID)>);
-		 event ContractA($A,$B,m1,m2,na,nb)
+		 in ('r',<'originator',$A,TTPID,sign{<m1, pat_m2>}sk(TTPID)>);
+		 event ContractA($A,$B,m1,pat_m2,na,nb)
 		 )
+                 )
 	)
+        )
 
 /* Role of Bob */
 
 let B = (
-	let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
-	let m2 = sign {<h(m1),h(nb)>}sk($B) in
-	let m3 = sign {<na,h(nb)>}sk($A) in
+	let pat_m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
+	let m2 = sign {<h(pat_m1),h(nb)>}sk($B) in
+	let pat_m3 = sign {<na,h(nb)>}sk($A) in
 	let m4 = sign {<nb,h(na)>}sk($B) in
-	let a1 = sign {<'Abort', m1>}sk($A) in
-        in ('c', m1 );
+	let a1 = sign {<'Abort', pat_m1>}sk($A) in
+        in ('c', pat_m1 );
       	new nb;
-        event StartB($A,$B,m1,m2,na,nb);
+        event StartB($A,$B,pat_m1,m2,na,nb);
         out ('c', m2);
         (
-        in ('c', m3);
-        event ContractB($A,$B,m1,m2,na,nb); 
+        (
+        in ('c', pat_m3);
+        event ContractB($A,$B,pat_m1,m2,na,nb); 
         out ('c',m4)
 	)
         +
         (
 	 /* Resolve */
-	 out('r', <'responder',$B,TTPID,<m1,m2>>);
+	 out('r', <'responder',$B,TTPID,<pat_m1,m2>>);
 	 	 (
 		 in('r',<'responder',$B,TTPID,sign{<'Aborted', a1, h(nb)>}sk(TTPID)>);
                  /* modified -- aborted message contains h(nb) to link 
                   * response to right responder session */
-		 event AbortB($A,$B, m1, m2, na, nb)
+		 event AbortB($A,$B, pat_m1, m2, na, nb)
 		 )
 		 +
 		 (
-		 in ('r',<'responder',$B,TTPID,sign{<m1, m2>}sk(TTPID)>);
-                 event ContractB($A,$B,m1,m2,na,nb)
+		 in ('r',<'responder',$B,TTPID,sign{<pat_m1, m2>}sk(TTPID)>);
+                 event ContractB($A,$B,pat_m1,m2,na,nb)
 		 )
 	)
+        )
 )
 
 let TTP =
@@ -174,9 +183,9 @@ let TTP =
 let Judge = 
   let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
   let m2 = sign {<h(m1),h(nb)>}sk($B) in
-  let m3 = sign {<na,h(nb)>}sk($A) in
+  let pat_m3 = sign {<na,h(nb)>}sk($A) in
   let m4 = sign {<nb,h(na)>}sk($B) in
-             (in('c',<m1,m2,m3,m4>); event ContractJudge($A,$B,m1,m2,na,nb))
+             (in('c',<m1,m2,pat_m3,m4>); event ContractJudge($A,$B,m1,m2,na,nb))
          ||  (in('c', sign{<m1,m2>}sk(TTPID)); event ContractJudge($A,$B,m1,m2,na,nb))
 
 let TTPID=<'TTP',$TTP> in

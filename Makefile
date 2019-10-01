@@ -349,7 +349,7 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
 SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
-basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy\
+basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy basic/operator-precedence-5.spthy \
 feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
@@ -369,12 +369,12 @@ Yubikey/Yubikey.spthy \
 encWrapDecUnwrap/encwrapdecunwrap.spthy
 
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
-SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy \
+SAPIC_CASE_STUDIES_SUPER_SLOW= fairexchange-asw/aswAB.spthy \
 fairexchange-km/km.spthy \
 fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
 fairexchange-gjm/gjm-locks-unfairness-A.spthy \
-examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy
-# examples/sapic/fairexchange-asw/aswAB-mod.sapic
+examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
+examples/sapic/fairexchange-asw/aswAB-mod.spthy 
 
 
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff
