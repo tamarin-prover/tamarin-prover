@@ -349,6 +349,7 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
 SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
+basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy\
 feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
@@ -370,23 +371,16 @@ encWrapDecUnwrap/encwrapdecunwrap.spthy
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
 SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy \
 fairexchange-km/km.spthy \
-examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
-examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.spthy \
+fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
+fairexchange-gjm/gjm-locks-unfairness-A.spthy \
+examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy
+# examples/sapic/fairexchange-asw/aswAB-mod.sapic
 
 
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff
-# examples/sapic/fairexchange-gjm/gjm-locks.spthy -> cleanup lemmas does not hold, unfinished example I think -> need to delete
-
 #
 # missing (but also before): fairexchange stuff...-> check how long they take on fast machines
-# examples/sapic/fairexchange-asw/asw-mod-weak-locks.sapic
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
-# examples/sapic/fairexchange-asw/aswAB.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-magic.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.sapic
-# examples/sapic/fairexchange-gjm/gjm.sapic
 
 # # case studies that cannot be proven automatically or are in fact nor working
 # # exceptional cases, that are left out on purpose, with explanations:

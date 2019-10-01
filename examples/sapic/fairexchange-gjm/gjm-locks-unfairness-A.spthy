@@ -303,4 +303,16 @@ lemma fullfairnessA:
         &  not (Ex #j sida . ContractA(a,b,t, sida)@j) 
         &  not (Ex #k. Corrupt(a)@k)"
 
+/* analyzed: examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.spthy */
+
+/*   WARNING: 9 wellformedness check failed! */
+/*            The analysis results might be wrong! */
+
+/*   sanity_a4b3 (exists-trace):  .. */
+/*   timelinessA (all-traces): verified (326 steps) */
+/*   timelinessB (all-traces): verified (11659 steps) */
+/*   fullfairnessA (exists-trace): verified (112 steps) */
+
+
+
 end    
