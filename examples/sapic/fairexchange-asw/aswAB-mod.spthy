@@ -6,7 +6,7 @@ section{* The ASW contract signing protocol *}
 /*
  * Protocol:    ASW
  * Date:        Jan 2016
- * Status:      wip
+ * Status:      working
  * 
  * ASW protocol with the following modifications:
  *      - The third and fourth message are modified according to [1], in particular:
@@ -209,7 +209,7 @@ exists-trace
   & not (Ex #k. Corrupt(b)@k)
  "
 
-/* /1* by hand *1/ */
+/* /1* manual *1/ */
 /* lemma sanity_abort_a_b: */
 /*  exists-trace */
 /*  "Ex #i #j a b m1 m2 na nb . */
@@ -253,5 +253,15 @@ lemma fullfairnessAattack:
         ==> (Ex #j. ContractA(a,b,m1,m2,na,nb)@j) | (Ex #k. Corrupt(a)@k) 
         )
 "
+
+/* analyzed: examples/sapic/fairexchange-asw/aswAB-mod.spthy */
+
+/*   sanity_optimistic_AB (exists-trace): verified (198 steps) */
+/*   timelinessA (all-traces): verified (293 steps) */
+/*   timelinessB (all-traces): verified (9392 steps) */
+/*   partialfairnessA (all-traces): verified (339 steps) */
+/*   partialfairnessB (all-traces): verified (662 steps) */
+/*   fullfairnessAattack (exists-trace): verified (214 steps) */
+
 
 end

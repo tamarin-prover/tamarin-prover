@@ -169,12 +169,12 @@ lemma strongfairnessA:
 
 end
 
-==============================================================================
-summary of summaries:
+/* ============================================================================== */
+/* summary of summaries: */
 
-analyzed: examples/sapic/fairexchange-km/km.sapic
+/* analyzed: examples/sapic/fairexchange-km/km.sapic */
 
-  untimelinessA (exists-trace): verified (45 steps)
-  strongfairnessA (all-traces): verified (4507 steps)
+/*   untimelinessA (exists-trace): verified (45 steps) */
+/*   strongfairnessA (all-traces): verified (4507 steps) */
 
-==============================================================================
+/* ============================================================================== */

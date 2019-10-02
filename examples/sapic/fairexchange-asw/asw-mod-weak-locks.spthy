@@ -7,7 +7,7 @@ section{* The ASW contract signing protocol *}
  * Protocol:    ASW
  * Date:        Aug 2016
  * Modeler:     Robert Kunnemann
- * Status:      works
+ * Status:      working
  * 
  * ASW protocol with the following modifications:
  *      - The third and fourth message are modified according to [1], in particular:
@@ -308,10 +308,10 @@ lemma fullfairnessB:
 /*            The analysis results might be wrong! */
 
 /*   sanity_a1b1 (exists-trace): verified (196 steps) */
-/*   timelinessA (all-traces): analysis incomplete (1 steps) */
-/*   timelinessB (all-traces): analysis incomplete (1 steps) */
-/*   fullfairnessA (all-traces): analysis incomplete (1 steps) */
-/*   fullfairnessB (all-traces): analysis incomplete (1 steps) */
+/*   timelinessA (all-traces): verified (387 steps) */
+/*   timelinessB (all-traces): verified (35947 steps) */
+/*   fullfairnessA (all-traces): verified (20862 steps) */
+/*   fullfairnessB (all-traces): verified (93593 steps) */
 
 
 end

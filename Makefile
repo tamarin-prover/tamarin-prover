@@ -369,12 +369,13 @@ Yubikey/Yubikey.spthy \
 encWrapDecUnwrap/encwrapdecunwrap.spthy
 
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
-SAPIC_CASE_STUDIES_SUPER_SLOW= fairexchange-asw/aswAB.spthy \
+SAPIC_CASE_STUDIES_SUPER_SLOW= \
 fairexchange-km/km.spthy \
+fairexchange-asw/aswAB.spthy \
+examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
+examples/sapic/fairexchange-asw/aswAB-mod.spthy \
 fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
 fairexchange-gjm/gjm-locks-unfairness-A.spthy \
-examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
-examples/sapic/fairexchange-asw/aswAB-mod.spthy 
 
 
 # examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff

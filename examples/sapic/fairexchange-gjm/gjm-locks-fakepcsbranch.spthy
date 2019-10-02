@@ -318,17 +318,17 @@ lemma timelinessB [reuse]:
              | ( Ex #j. Corrupt(b)@j)
              "
 
-/* auto */
+/* auto confirmed */
 lemma fullfairnessA:
     "All #i a b t . ContractJudge(a,b,t)@i
         ==> (Ex #j sida . ContractA(a,b,t, sida)@j) 
             | (Ex #k. Corrupt(a)@k)"
 
 /* auto 2:51h */
-/* lemma helperB1 [reuse,hide_lemma=timelinessA]: */
-/*     "All #i a b t . BtriesResolve(a,b,t)@i */
-/*         ==> (Ex #j sidb . ContractB(a,b,t, sidb)@j) */ 
-/*             |    (Ex #k . Corrupt(b)@k)" */
+lemma helperB1 [reuse,hide_lemma=timelinessA]:
+    "All #i a b t . BtriesResolve(a,b,t)@i
+        ==> (Ex #j sidb . ContractB(a,b,t, sidb)@j) 
+            |    (Ex #k . Corrupt(b)@k)"
 
 /* auto 50:06h with helperB1 */
 lemma fullfairnessB:
