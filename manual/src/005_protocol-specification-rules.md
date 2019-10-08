@@ -196,6 +196,26 @@ all such rules need to be considered, which is clearly less efficient and
 non-termination-prone as mentioned above. Hence, when trying to model facts that
 are never consumed, the use of persistent facts is preferred.
 
+### Embedded restrictions{#sec:embeddedrestrictions}
+
+A frequently used trick when modelling protocols is to enforce a 
+restriction
+on the trace once a certain rule is invoked, for instance if
+the step represented by the rule requires another step at some later point in time, e.g., to model a reliable channel.
+[We explain what restriction are later](007_property-specification.html#sec:restrictions),
+but roughly speaking, they specify constraints that a protocol execution should
+uphold. 
+
+This can be done by hand, namely by specifying a restriction that refers to an `action
+fact` unique to this rule, or by using embedded restrictions like this:
+
+```
+rule B:
+    [In(x), In(y)] --[ _restrict( formula )]-> []
+```
+
+where `formula` is a restriction. 
+
 
 Modeling protocols
 ------------------
