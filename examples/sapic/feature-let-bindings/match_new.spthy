@@ -1,0 +1,26 @@
+theory Test
+
+begin
+
+let P = in(c); new a;
+    let t = <a,'test'> in
+	in(<t,'toto'>);
+	event AcceptP()
+
+let Q = in(c); 
+    let t = <c,'test'> in
+	in(<t,'toto'>);
+	event AcceptQ()
+
+P | Q
+
+lemma no_acceptP:
+  "(not (Ex #i . AcceptP()@i))"
+
+lemma acceptQ:
+exists-trace
+  "(Ex #i . AcceptQ()@i)"
+
+end
+
+

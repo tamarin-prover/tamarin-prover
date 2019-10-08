@@ -49,6 +49,7 @@ data SapicException a = NotImplementedError String
                     | MoreThanOneProcess
                     | RuleNameExists String
                     | RestrictionNameExists String
+                    | ReliableTransmissionButNoProcess
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
@@ -82,4 +83,5 @@ instance Show (SapicException a) where
     show (ProcessNotWellformed (WFLock tag pr)) =
                    "Process " ++ prettySapic pr ++ " contains lock that extends over " 
                    ++ prettyWFLockTag tag ++ " which is not allowed."
+    show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
 instance (Typeable a, Show a) => Exception (SapicException a)

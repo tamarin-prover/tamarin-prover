@@ -488,9 +488,9 @@ constrRuleToDestrRule (Rule (IntrInfo (ConstrRule name)) ps' cs _ _) i s c
 constrRuleToDestrRule _ _ _ _ = error "Not a destructor rule."
 
 -- | Converts between destructor and constructor rules.
-destrRuleToConstrRule :: FunSym -> Int -> RuleAC -> RuleAC
+destrRuleToConstrRule :: FunSym -> Int -> RuleAC -> [RuleAC]
 destrRuleToConstrRule f l (Rule (IntrInfo (DestrRule name _ _ _)) ps cs _ _)
-    = toRule (map convertKDtoKU ps ++ kuFacts) (conclusions cs)
+    = map (\x -> toRule x (conclusions cs)) (permutations (map convertKDtoKU ps ++ kuFacts))
     where
         -- we add the conclusion as an action as constructors have this action
         toRule :: [LNFact] -> [LNFact] -> RuleAC

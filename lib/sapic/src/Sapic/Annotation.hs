@@ -23,6 +23,8 @@ module Sapic.Annotation (
     , toProcess
     , AnLVar (..)
     , GoodAnnotation
+    , getProcessNames
+    , setProcessNames
 ) where
 import           Data.Data
 -- import Data.Maybe
@@ -67,10 +69,12 @@ data ProcessAnnotation = ProcessAnnotation {
 --      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
 class GoodAnnotation a where
     getProcessNames :: a ->  [String]
+    setProcessNames :: [String] -> a -> a
 
 instance GoodAnnotation ProcessAnnotation
     where
         getProcessNames = processnames
+        setProcessNames pn an = an { processnames = pn }
   
 instance Monoid ProcessAnnotation where
     mempty = ProcessAnnotation [] Nothing Nothing Nothing

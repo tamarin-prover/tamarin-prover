@@ -40,13 +40,16 @@ import Theory.Text.Pretty
 
 -- Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
-             Monoid (m (AnProcess ProcessAnnotation)) =>
+             -- Monoid (m (AnProcess ProcessAnnotation)) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
-      []  -> return (removeSapicItems th)
+      []  -> if L.get transReliable ops then
+                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+             else 
+                    return (removeSapicItems th)
       [p] -> do
-                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (toAnProcess p))) 0
+                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- add rules
                 msr <- trans basetrans (initialRules an_proc) an_proc
                 th1 <- foldM liftedAddProtoRule th (msr)
