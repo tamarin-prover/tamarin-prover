@@ -369,19 +369,12 @@ Yubikey/Yubikey.spthy \
 encWrapDecUnwrap/encwrapdecunwrap.spthy
 
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
-SAPIC_CASE_STUDIES_SUPER_SLOW= \
-fairexchange-km/km.spthy \
-fairexchange-asw/aswAB.spthy \
-examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
-examples/sapic/fairexchange-asw/aswAB-mod.spthy \
-fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
-fairexchange-gjm/gjm-locks-unfairness-A.spthy \
-
-
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-A.spthy -> need to rename stuff
-#
-# missing (but also before): fairexchange stuff...-> check how long they take on fast machines
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
+# SAPIC_CASE_STUDIES_SUPER_SLOW= fairexchange-km/km.spthy \
+# fairexchange-asw/aswAB.spthy \
+# examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
+# examples/sapic/fairexchange-asw/aswAB-mod.spthy \
+# fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \ 
+# fairexchange-gjm/gjm-locks-unfairness-A.spthy
 
 # # case studies that cannot be proven automatically or are in fact nor working
 # # exceptional cases, that are left out on purpose, with explanations:
@@ -395,7 +388,7 @@ fairexchange-gjm/gjm-locks-unfairness-A.spthy \
 # envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
 # # these examples were never completed and are here for reference only
 
-# not working because of missing support for predicates
+# not working because of missing support for locations
 #
 # location stuff: not tested so far
 # feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \

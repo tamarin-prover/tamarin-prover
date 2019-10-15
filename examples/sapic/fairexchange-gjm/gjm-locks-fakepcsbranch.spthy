@@ -325,6 +325,7 @@ lemma fullfairnessA:
             | (Ex #k. Corrupt(a)@k)"
 
 /* auto 2:51h */
+  /* helperB1 (all-traces): verified (2235 steps) */
 lemma helperB1 [reuse,hide_lemma=timelinessA]:
     "All #i a b t . BtriesResolve(a,b,t)@i
         ==> (Ex #j sidb . ContractB(a,b,t, sidb)@j) 
