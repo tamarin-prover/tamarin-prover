@@ -252,12 +252,25 @@ resLockingL  = [QQ.r|restriction locking:
         | #t3<#t1 | #t1=#t3"
 |]
 
+-- | Restriction for Locking where no Unlock is necessary.
+resLockingLNoUnlock :: String
+resLockingLNoUnlock  = [QQ.r|restriction locking:
+" (All p l x #t1 . LockPOS(p,l,x)@t1 
+                 ==> (All pp lp #t2. LockPOS(pp,lp,x)@t2 ==> #t1=#t2))
+& (All p l x #t1 . Lock(p,l,x)@t1 
+                 ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2))"
+|]
+
+
 -- | Produce locking lemma for variable v by instantiating resLockingL 
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
-resLocking :: MonadThrow m => LVar -> m SyntacticRestriction
-resLocking v =  do
-    rest <- toEx resLockingL
+resLocking :: MonadThrow m => Bool -> LVar -> m SyntacticRestriction
+resLocking hasUnlock v =  do
+    rest <- if hasUnlock then
+              toEx resLockingL
+            else
+              toEx resLockingLNoUnlock
     return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
     where
         subst _ a
@@ -302,7 +315,7 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
     in
     do
         hardcoded <- mapM toEx hardcoded_l
-        locking   <- mapM resLocking (getLockPositions anP)
+        locking   <- mapM (resLocking $ contains isUnlock) (getLockPositions anP)
         return $ prevRestr ++ hardcoded ++ locking
     where
         addIf phi list = if phi then list else []
