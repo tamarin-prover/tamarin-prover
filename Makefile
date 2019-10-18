@@ -408,7 +408,7 @@ sapic-case-studies:	$(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) # used for
 	grep "verified\|falsified\|processing time" $^
 sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during development
 	grep "verified\|falsified\|processing time" $^
-sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPERSLOW) # used to heat in winter
+sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
