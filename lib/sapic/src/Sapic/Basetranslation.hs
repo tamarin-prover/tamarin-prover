@@ -324,7 +324,7 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
 
         return $ prevRestr ++ hardcoded ++ locking 
                  ++ 
-                 addIf (not $ contains isUnlock) [singleLocking]
+                 addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
