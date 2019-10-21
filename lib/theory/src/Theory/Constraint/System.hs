@@ -615,7 +615,7 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
         (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
-                                                            (map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
+                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
         (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
         _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                             [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
@@ -777,14 +777,15 @@ impliedFormulasAndSystems hnd sys gf = res
         go :: [(NodeId, LNFact)] -> [([Equal LNTerm], [Equal LNTerm])]
         go []                                                  = []
         go ((nid, sysAct):acts) | factTag sysAct == factTag fa =
-            (map (\(x, y) -> ((((Equal (toConst nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ x),
-                              (((Equal (varTerm nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ y))) $ equalities as)
+            (map (\(x, y) -> ((((Equal (variableToConst nid) a):(zipWith Equal sysTerms formulaTerms)) ++ x),
+                              (((Equal (varTerm nid) a):(zipWith Equal sysTerms formulaTerms)) ++ y))) $ equalities as)
                                   ++ (go acts)
+            where
+                sysTerms = map freshToConst (factTerms sysAct)
+                formulaTerms = factTerms fa
+
         go ((_  , _     ):acts) | otherwise                    = go acts
     equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
-
-    toConst cvar = constTerm (Name NodeName (NameId ("constVar_" ++ toConstName cvar)))
-    toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
 
 -- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
