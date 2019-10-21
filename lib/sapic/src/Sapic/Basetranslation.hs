@@ -153,10 +153,17 @@ baseTransComb c _ p tildex
     | NDC <- c = (
                []
              , tildex, tildex )
-    | Cond f <- c = -- TODO add boundedness checks later
+    | Cond f <- c =
+        let freevars_f = fromList $ freesList  f in
+        if freevars_f `isSubsetOf` tildex then
                 ([ ([def_state], [], [def_state1 tildex], [f]),
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
+        else
+                    throw ( 
+                    ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
+                        :: SapicException AnnotatedProcess)
+
     | CondEq t1 t2 <- c =
         let fa = (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
