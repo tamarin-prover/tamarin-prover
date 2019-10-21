@@ -349,6 +349,7 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
 SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
+basic/running-example.spthy \
 basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy basic/operator-precedence-5.spthy \
 feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
@@ -359,7 +360,8 @@ feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy \
 feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
-basic/running-example.spthy feature-let-bindings/let-blocks.spthy \
+feature-predicates/binding.spthy \
+feature-let-bindings/let-blocks.spthy
 
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
