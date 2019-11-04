@@ -1,0 +1,58 @@
+#!/usr/bin/env python2
+# coding=utf-8
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global avoid, priorities, plist, possible, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         return
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         return
+  for j in avoid:
+    if j in m:
+      return
+  possible.append(num)
+          
+
+if lemma == "coins":
+  match = False
+  priorities = [ "!St_C_1",  "!Bank_Pk", "(last", "splitEqs", "Mint", "~~>", "!KU( ~r" ]
+  avoid = [ ]
+else:
+  print 1
+  sys.exit()
+
+plist = [ [] for i in priorities ]
+possible = []
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+for j in possible:
+  print j

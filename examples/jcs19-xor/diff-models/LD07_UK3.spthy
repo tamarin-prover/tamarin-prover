@@ -1,0 +1,91 @@
+theory LD07_UK3
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+LD07: Readers R_i for i>0, RFID tag T
+      Reader R_i knows k_0, k_i, k_{i+1}
+      Tag T knows alpha := k_0 XOR k_i
+
+   Ri: knows(k0, ki, ksi)
+   T: let alpha := k0 XOR ki
+   T: knows(alpha)
+   Ri: fresh(r)
+Ri->T: r
+   T: let alpha := k0 XOR ki
+T->Ri: h(r XOR alpha)
+   Ri: let  a := ki XOR ksi
+   Ri: let  b := h(a XOR k0 XOR ki)
+Ri->T: a, b
+   T: if b = h(a XOR k0 XOR ki) then let alpha' := alpha XOR a else alpha'=alpha
+   T: knows(alpha')
+
+This is a stateful protocol for the tag. The tag's knowledge is updated. 
+
+The model concerns untraceability based on the UK3 definition. 
+It shows that the untraceability claim made in the LD07 paper is false.
+*/
+
+rule SetupLearning:
+   [ Fr( ~k ), Fr(~k1) ]
+ --[ Setup(~k)
+   , OnlyOnce( 'setup' ) ]-> 
+   [ Tag(~k, ~k XOR ~k1 ) ]
+
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x )
+   ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   ]
+
+rule tag2:
+   let newCurrentKey = diff(x XOR newKey, ~k2 XOR ~k3)
+       initialKey = diff(~k, ~k2)
+   in
+   [ Fr(~k2), Fr(~k3)
+   , In( <newKey, newhash> )
+   , Tag( ~k, x )
+   ]
+ --[ Eq(h(newKey XOR x),newhash)
+   , Alive( ~k, 'Reader' ) 
+   , Update( x, newKey, 'Tag' )
+   ]->
+   [ Tag( initialKey, newCurrentKey)
+   ]
+
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+/*
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+
+restriction unique:
+   "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+/*
+restriction uniqueTwice:
+  "∀ x #i #j #k. ((OnlyTwice(x) @ #i) ∧ (OnlyTwice(x) @ #j) ∧ (OnlyTwice(x) @ #k)) ⇒ ((#i = #j) | (#i = #k) | (#j = #k))"
+*/
+
+// TRACE FOUND AUTOMATICALLY
+lemma executable:
+  exists-trace "∃ x y #i #j. (Challenge( x, 'Tag' ) @ #i) & (Update( x, y, 'Tag') @ #j) & not (y=zero)
+           // further restriction to automatically get the simplest execution
+           ∧ (not Ex #l. Challenge( x, 'Tag' ) @ #l & (not (#i=#l)))"
+
+// ATTACK FOUND MANUALLY (see LD07_UK3_proofs.spthy)
+// Observational Equivalence
+
+end
