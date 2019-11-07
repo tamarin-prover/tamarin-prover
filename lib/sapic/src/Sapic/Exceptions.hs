@@ -52,7 +52,6 @@ data SapicException a = NotImplementedError String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
-                    | AssImmediateViolation [String]
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
@@ -92,6 +91,4 @@ instance Show (SapicException a) where
                               ++ " in definition of predicate: "
                               ++ get rstrName rstr
                               ++ "."
-    show (AssImmediateViolation [x]) = "Lemma '" ++ x ++ "' violates ass immediate condition"
-    show (AssImmediateViolation xs) = "Lemmas '" ++ List.intercalate ", " xs ++ "' violate ass immediate condition"
 instance (Typeable a, Show a) => Exception (SapicException a)

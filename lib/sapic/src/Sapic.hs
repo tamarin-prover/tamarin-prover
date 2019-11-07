@@ -47,7 +47,6 @@ translate th = case theoryProcesses th of
              else 
                     return (removeSapicItems th)
       [p] -> do
-                _ <- liftCheckAssImmediate (theoryLemmas th)
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- compute initial rules
@@ -84,20 +83,21 @@ translate th = case theoryProcesses th of
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
-                                                                -- if op.accountability then
-                                                                  --   (* if an accountability lemma with control needs to be shown, we use a 
-                                                                  --    * more complex variant of the restritions, that applies them to only one execution *)
-                                                                  --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
-                                                                  --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                -- else 
-                                                                  --   restrs
-                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP True] ++
+                                                                 -- if op.accountability then
+                                                                 --   (* if an accountability lemma with control needs to be shown, we use a 
+                                                                 --    * more complex variant of the restritions, that applies them to only one execution *)
+                                                                 --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+                                                                 --   @ (if op.progress then [progress_init_lemma_acc] else [])
+                                                                 -- else 
+                                                                 --   restrs
+                                                                 --    @ (if op.progress then [progress_init_lemma] else [])
+                        $ [BT.baseRestr anP needsAssImmediate True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP) 
                            ]
     heuristics = [SapicRanking]
+    needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
@@ -172,9 +172,9 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
 
 isPosNegFormula :: LNFormula -> (Bool, Bool)
 isPosNegFormula fm = case fm of
-    TF  _            -> (False, True)
+    TF  _            -> (True, True)
     Ato (Action _ f) -> isActualKFact $ factTag f
-    Ato _            -> (False, True)
+    Ato _            -> (True, True)
     Not p            -> not2 $ isPosNegFormula p
     Conn And p q     -> isPosNegFormula p `and2` isPosNegFormula q
     Conn Or  p q     -> isPosNegFormula p `and2` isPosNegFormula q
@@ -182,8 +182,8 @@ isPosNegFormula fm = case fm of
     Conn Iff p q     -> isPosNegFormula $ p .==>. q .&&. q .==>. p
     Qua  _   _ p     -> isPosNegFormula p
     where
-      isActualKFact (ProtoFact _ s _) = (s == "K", s /= "K")
-      isActualKFact _ = (False, True)
+      isActualKFact (ProtoFact _ "K" _) = (True, False)
+      isActualKFact _ = (True, True)
 
       and2 (x, y) (p, q) = (x && p, y && q)
       not2 (x, y) = (not x, not y)
@@ -191,14 +191,8 @@ isPosNegFormula fm = case fm of
 
 checkAssImmediate :: Lemma p -> Bool
 checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
-  (AllTraces,   (False, True)) -> True  -- lemma is all-quantified and in L-
-  (ExistsTrace, (False, True)) -> True  -- lemma is ex-quantified and in L- -> if it holds for all traces than also for one
-  (ExistsTrace, (True, False)) -> True  -- lemma is ex-quantified and in L+
-  (AllTraces,   (True, False)) -> False -- lemma is all-quantified and in L+ -> check failed
-  _                            -> True  -- in all other cases the check succeeds
-  
-
-liftCheckAssImmediate :: (Monad m, MonadThrow m) => [Lemma p] -> m [Lemma p]
-liftCheckAssImmediate lems = case (filter (not . checkAssImmediate) lems) of
-  [] -> return lems
-  v  -> throw (AssImmediateViolation (map (L.get lName) v) :: SapicException AnnotatedProcess)
+  (AllTraces,   (_, True))     -> True  -- L- for all-traces
+  (ExistsTrace, (True, _))     -> True  -- L+ for exists-trace
+  (ExistsTrace, (False, True)) -> False -- L- for exists-trace
+  (AllTraces,   (True, False)) -> False -- L+ for all-traces
+  _                            -> False -- not in L- and L+ should not be possible
