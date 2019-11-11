@@ -10,10 +10,9 @@ Authors:
 - Jorden Whitefield, Ericsson AB, Finland
 
 
-These are the models associated with the paper accepted to
-ASIACCS 2020.
-
-
+These are the models associated with the paper "Formal
+Analysis and Implementation of a TPM 2.0-based Direct
+Anonymous Attestation Scheme" accepted to ASIACCS 2020.
 
 The different models are contained with the following 3
 folders:
@@ -36,5 +35,5 @@ with the .spthy extension), the details of how to prove it
 using Tamarin are included together with the timings.
 
 Note that all these models were proven on a server with 2
-Intel ntel(R) Xeon(R) CPU E5-2667 v3 @ 3.20GHz processeor
+Intel (R) Xeon(R) CPU E5-2667 v3 @ 3.20GHz processeor
 (16 cores/32 vCPUs) and 378GB of RAM.
