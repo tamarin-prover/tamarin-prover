@@ -211,6 +211,9 @@ ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nes
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
 
+-- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
+-- syntactic sugar for predicates, but this contains BVars, which first need to
+-- be translated to Vars
 ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic pl
@@ -224,6 +227,7 @@ ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt
                                            (pt1, sh1) = ppSapicTerm t1
                                            (pt2, sh2) = ppSapicTerm t2 
                                            
+-- ROBERTBROKEIT: commented out ... isn't this clashing with the previous defiition.
 -- ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
 --   ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
 --   where (ppl, pshl) = ppSapic pl
