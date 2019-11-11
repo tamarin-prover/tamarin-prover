@@ -1,0 +1,13 @@
+theory Issue331 begin
+
+functions: g/2
+
+rule R:
+   [ Fr(~k), Fr(~p), Fr(~n) ]
+  --[ A(~k) ]->
+   [ Out(diff( g(~k,~p), ~n )) ]
+
+restriction secrecy :
+  "not (Ex #i1 #i2 k. A(k)@i1 & KU(k)@i2)"
+
+end

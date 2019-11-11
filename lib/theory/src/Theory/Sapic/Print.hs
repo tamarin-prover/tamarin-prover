@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveTraversable       #-}
-{-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -28,21 +22,29 @@ module Theory.Sapic.Print (
     , prettyPosition
 ) where
 
--- import           Data.Binary
--- import           GHC.Generics                (Generic)
--- import           Control.Parallel.Strategies
--- import           Data.Foldable
 import           Theory.Model.Fact
 import           Theory.Model.Rule
+import           Theory.Model.Formula
 import           Theory.Sapic
 import           Term.LTerm
 import           Theory.Text.Pretty
 
+-- | pretty-print rules using a generic fact pretty-printer (based on show)
+-- rulePrinter :: Show a =>
+--              [Fact (Term a)]
+--              -> [Fact (Term a)] -> [Fact (Term a)] -> [b] -> String
+rulePrinter :: Show a =>
+               [Fact (Term a)]
+               -> [Fact (Term a)]
+               -> [Fact (Term a)]
+               -> [SapicFormula]
+               -> String
+rulePrinter l a r res = render $ prettyRuleRestrGen ppFact ppRes l a r res 
+    where
+        ppFact = prettyFact $ prettyTerm $ text . show
+        ppRes  = prettySyntacticLNFormula . toLFormula 
 
-rulePrinter :: Show l => [Fact (Term l)] -> [Fact (Term l)] -> [Fact (Term l)] -> String
-rulePrinter l a r = render $ prettyRuleShow l a r
-
--- | Instantiate prenters with rulePrinter from Theory.Text.Pretty
+-- | Instantiate printers with rulePrinter from Theory.Text.Pretty
 prettySapicAction :: SapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
 

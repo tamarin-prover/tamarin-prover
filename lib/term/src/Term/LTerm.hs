@@ -55,6 +55,8 @@ module Term.LTerm (
   , isSimpleTerm
   , getVar
   , getMsgVar
+  , freshToConst
+  , variableToConst
   , niFactors
   , containsPrivate
   , containsNoPrivateExcept
@@ -352,6 +354,27 @@ neverContainsFreshPriv t =
     not (containsPrivate t) && 
     (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
+-- | Replaces all Fresh variables with constants using toConst.
+freshToConst :: LNTerm -> LNTerm
+freshToConst t = case viewTerm t of
+    Lit (Con _)                              -> t
+    Lit (Var v) | (lvarSort v == LSortFresh) -> variableToConst v
+    Lit _                                    -> t
+    FApp f as                                -> termViewToTerm $ FApp f (map freshToConst as)
+
+
+-- | Given a variable returns a constant containing its name and type
+variableToConst :: LVar -> LNTerm
+variableToConst cvar = constTerm (Name (nameOfSort cvar) (NameId ("constVar_" ++ toConstName cvar)))
+  where
+    toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
+
+    nameOfSort (LVar _ LSortFresh _) = FreshName
+    nameOfSort (LVar _ LSortPub   _) = PubName
+    nameOfSort (LVar _ LSortNode  _) = NodeName
+    nameOfSort (LVar _ LSortMsg   _) = error "Invalid sort Msg"
+
+
 -- Destructors
 --------------
 
@@ -383,7 +406,7 @@ ltermNodeId' = ltermVar' LSortNode
 -- | Bound and free variables.
 data BVar v = Bound Integer  -- ^ A bound variable in De-Brujin notation.
             | Free  v        -- ^ A free variable.
-            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
+            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary, IsVar)
 
 -- | 'LVar's combined with quantified variables. They occur only in 'LFormula's.
 type BLVar = BVar LVar

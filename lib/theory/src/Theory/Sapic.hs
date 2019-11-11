@@ -1,12 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveTraversable       #-}
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE PatternGuards       #-}
-{-# LANGUAGE FlexibleInstances       #-}
-{-# LANGUAGE MultiParamTypeClasses       #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DeriveTraversable     #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PatternGuards         #-}
+{-# LANGUAGE StandaloneDeriving    #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -16,6 +15,7 @@
 --
 -- Data types for SAPIC processes in theories
 module Theory.Sapic (
+    -- types 
     Process
     , ProcessCombinator(..)
     , AnProcess(..)
@@ -25,20 +25,29 @@ module Theory.Sapic (
     , SapicLVar(..)
     , SapicTerm
     , SapicLNFact
+    , SapicFormula
+    -- converters
+    , toLVar
+    , toLNTerm
+    , toLNFact
+    , toLFormula
+    -- utitlities 
     , paddAnn
     , applyProcess
     , pfoldMap
     , ProcessPosition
     , lhsP
     , rhsP
+    , descendant
+    -- pretty printing
     , prettySapic'
     , prettySapicAction'
     , prettySapicComb
     , prettySapicTopLevel'
     , prettyPosition
+    -- exception type for lets
     , LetExceptions (..)
     , prettyLetExceptions
-    , descendant
 ) where
 
 import Data.Binary
@@ -47,9 +56,11 @@ import Data.List
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Theory.Model.Fact
+import Theory.Model.Atom
+import Theory.Model.Formula
 import Term.LTerm
-import Theory.Text.Pretty
 import Term.Substitution
+import Theory.Text.Pretty
 import Control.Monad.Catch
 
 -- | A process data structure
@@ -61,6 +72,7 @@ data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType }
 type LNTTerm = VTerm Name SapicLVar
 type SapicTerm = LNTTerm
 type SapicLNFact = Fact SapicTerm
+type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 
 defaultSapicType :: String
 defaultSapicType = "bitstring"
@@ -69,7 +81,33 @@ defaultSapicType = "bitstring"
 type SapicSubst = Subst Name SapicLVar
 
 instance Show SapicLVar where
-    show (SapicLVar v t) = show  v ++ ":" ++ id t
+    show (SapicLVar v t) = show  v ++ ":" ++ t
+
+instance Hinted SapicLVar where
+    hint (SapicLVar v _) = hint v
+
+-- conversion function
+toLVar:: SapicLVar -> LVar
+toLVar = slvar
+
+toLNTerm:: SapicTerm -> LNTerm 
+toLNTerm = fmap f 
+    where 
+        f (Con c) = Con c
+        f (Var v) = Var $ toLVar v
+
+toLNFact:: SapicLNFact -> LNFact 
+toLNFact = fmap toLNTerm
+
+-- toLFormua:: SapicFormula -> LFormula
+toLFormula:: (Functor syn) => ProtoFormula syn (String, LSort) c SapicLVar -> ProtoFormula syn (String, LSort) c LVar
+toLFormula = mapAtoms f
+    where f _ = fmap $ fmap $ fmap $ fmap toLVar 
+
+deriving instance Show SapicFormula
+deriving instance Eq SapicFormula
+deriving instance Ord SapicFormula
+deriving instance Data SapicFormula
     
 -- | Actions are parts of the process that maybe connected with ";"
 data SapicAction = 
@@ -82,11 +120,11 @@ data SapicAction =
                  | Lock SapicTerm 
                  | Unlock SapicTerm 
                  | Event SapicLNFact 
-                 | MSR ([SapicLNFact], [SapicLNFact], [SapicLNFact])
+                 | MSR ([SapicLNFact], [SapicLNFact], [SapicLNFact], [SapicFormula])
         deriving( Show, Eq, Ord, Generic, NFData, Binary, Data )
 
 -- | When the process tree splits, it is connected with one of these connectives
-data ProcessCombinator = Parallel | NDC | Cond SapicLNFact 
+data ProcessCombinator = Parallel | NDC | Cond SapicFormula 
         | CondEq SapicTerm SapicTerm | Lookup SapicTerm SapicLVar
     deriving (Generic, NFData, Binary, Show, Eq, Data, Ord )
 
@@ -104,8 +142,6 @@ deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
-deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
-deriving instance (Monoid ann) => Monoid (AnProcess ann)
 deriving instance Foldable (AnProcess)
 deriving instance Traversable (AnProcess)
 
@@ -129,7 +165,7 @@ data LetExceptions = CapturedEx CapturedTag SapicLVar
     -- deriving (Typeable)
 
 prettyLetExceptions :: LetExceptions -> [Char]
-prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ "appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ "throughout."  
+prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ " throughout."
     where pretty CapturedIn = "input"
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
@@ -153,7 +189,7 @@ instance Apply SapicSubst SapicAction where
         | (Lock t) <- ac       = Lock (apply subst t)
         | (Unlock t) <- ac     = Unlock (apply subst t)
         | (Event f) <- ac      = Event (apply subst f)
-        | (MSR (l,a,r)) <- ac  = MSR (apply subst (l,a,r))
+        | (MSR (l,a,r,rest)) <- ac  = MSR $ apply subst (l,a,r,rest)
         | Rep <- ac            = Rep
 
 applySapicActionError :: MonadThrow m =>
@@ -246,15 +282,20 @@ prettyPosition = foldl (\ s n -> s ++ show n ) ""
 prettySapicTerm :: Document d => SapicTerm -> d
 prettySapicTerm = prettyTerm (text . show)
 
-prettySapicFact :: Fact SapicTerm -> Doc
+prettySapicFact :: Document d => Fact SapicTerm -> d
 prettySapicFact = prettyFact prettySapicTerm 
+
+prettySyntacticSapicFormula :: HighlightDocument d => ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar -> d
+prettySyntacticSapicFormula = prettySyntacticLNFormula . toLFormula
+
+    
 
 -- | Printer for SAPIC actions. 
 -- Note: Need to give the pretty printer for rules as a parameter as otherwise
 -- we would have circular dependencies.
 -- Instantiated in Theory.Sapic.Print later
 prettySapicAction' :: 
-                   ( [SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> String)
+                   ( [SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String)
                     -> SapicAction  -> String
 prettySapicAction' _ (New n) = "new "++ show n
 prettySapicAction' _ Rep  = "!"
@@ -267,12 +308,12 @@ prettySapicAction' _ (Delete t )  = "delete " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Lock t )  = "lock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Event a )  = "event " ++ render (prettySapicFact a)
-prettySapicAction' prettyRule' (MSR (p,a,c)) = prettyRule' p a c
+prettySapicAction' prettyRule' (MSR (p,a,c,r)) = prettyRule' p a c r
 
 prettySapicComb :: ProcessCombinator -> [Char]
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb (Cond a) = "if "++ render (prettySapicFact a)
+prettySapicComb (Cond a) = "if "++ render (prettySyntacticSapicFormula a)
 prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
                                     where p = render . prettySapicTerm
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
@@ -282,17 +323,17 @@ prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
 -- TODO At the moment, the process structure is not used to properly print how
 -- elements are associated.
 -- Should do it, but then we cannot use pfoldMap anymore.
-prettySapic' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> String) -> AnProcess ann -> String
-prettySapic' prettyRule = pfoldMap f 
+prettySapic' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> AnProcess ann -> String
+prettySapic' prettyRuleRestr = pfoldMap f 
     where f (ProcessNull _) = "0"
           f (ProcessComb c _ _ _)  = prettySapicComb c 
-          f (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
-          f (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
+          f (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+          f (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
 
 -- | Printer for the top-level process, used, e.g., for rule names.
-prettySapicTopLevel' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> String) -> AnProcess ann -> String
+prettySapicTopLevel' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> AnProcess ann -> String
 prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 
-prettySapicTopLevel' prettyRule (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
-prettySapicTopLevel' prettyRule (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
+prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
 

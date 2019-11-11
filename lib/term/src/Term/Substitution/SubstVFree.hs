@@ -234,7 +234,7 @@ instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
 instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
     apply subst = applyVTerm subst
 
-instance Apply LNSubst BLVar where
+instance (IsConst c, IsVar v) => Apply (Subst c v) (BVar v) where
     apply _     x@(Bound _) = x
     apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
       where
@@ -243,10 +243,9 @@ instance Apply LNSubst BLVar where
           error $ "apply (BLVar): variable '" ++ show v ++
                   "' substituted with term '" -- ++ show _t ++ "'"
 
-instance Apply LNSubst BLTerm where
+instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c (BVar v)) where
     apply subst = (`bindTerm` applyBLLit)
       where
-        applyBLLit :: Lit Name BLVar -> BLTerm
         applyBLLit l@(Var (Free v)) =
             maybe (lit l) (fmapTerm (fmap Free)) (imageOf subst v)
         applyBLLit l                = lit l
@@ -268,6 +267,9 @@ instance (Apply s a, Apply s b) => Apply s (a, b) where
 
 instance (Apply s a, Apply s b, Apply s c) => Apply s (a, b, c) where
     apply subst (x,y,z) = (apply subst x, apply subst y, apply subst z)
+
+instance (Apply s a, Apply s b, Apply s c, Apply s d) => Apply s (a, b, c, d) where
+    apply subst (w,x,y,z) = (apply subst w,apply subst x, apply subst y, apply subst z)
 
 instance Apply s a => Apply s (Maybe a) where
     apply subst = fmap (apply subst)

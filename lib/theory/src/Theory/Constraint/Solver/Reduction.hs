@@ -404,6 +404,7 @@ insertAtom ato = case ato of
     Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j)
                         return Unchanged
     Last i        -> insertLast (ltermNodeId' i)
+    Syntactic _   -> return Unchanged
 
 -- | Insert a 'Guarded' formula. Ensures that existentials, conjunctions, negated
 -- last atoms, and negated less atoms, are immediately solved using the rules

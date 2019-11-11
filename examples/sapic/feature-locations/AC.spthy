@@ -1,5 +1,9 @@
 theory AttestedComputation
 
+// NOTE Robert: syntax check fails, but I am not sure if construct
+// if <o,i,lio>= check_rep(r,'l') then // verification of the validity of the report 
+// ever worked.
+
 begin
 functions: prog/3,list/2
 

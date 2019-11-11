@@ -49,15 +49,15 @@ import Data.Color
 
 -- | Facts that are used as actions
 data TransAction =  InitEmpty
-  | InitId
-  | StopId
-  | EventEmpty
-  | EventId
+  -- to implement with accountability extension
+  -- | InitId
+  -- | StopId 
+  -- | EventEmpty
+  -- | EventId
   | PredicateA LNFact
   | NegPredicateA LNFact
   | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
-  | Listen ProcessPosition LVar
   | Receive ProcessPosition LNTerm
   | IsIn LNTerm LVar
   | IsNotSet LNTerm
@@ -97,15 +97,18 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
+    , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
 -- | applies function acting on rule taple on annotated rule.
-mapAct :: (([TransFact], [TransAction], [TransFact])
-           -> ([TransFact], [TransAction], [TransFact]))
+mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
+           -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
-mapAct f anrule = let (l',a',r') = f (prems anrule, acts anrule, concs anrule) in
-                  anrule { prems = l', acts = a', concs = r'  }
+mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
+                                           concs anrule, restr anrule) 
+                  in
+                  anrule { prems = l', acts = a', concs = r', restr = res' }
 
 isSemiState :: StateKind -> Bool
 isSemiState LState = False
@@ -173,7 +176,6 @@ actionToFact InitEmpty = protoFact Linear "Init" []
   -- | StopId
   -- | EventEmpty
   -- | EventId
-  -- | Listen ProcessPosition LVar
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
@@ -270,7 +272,7 @@ colorHash s = RGB r g b
 -- and luminance of the final color is normalized to to 0.5.
 colorForProcessName :: [String] -> RGB Rational
 colorForProcessName [] = RGB 255 255 255
-colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 0) (tail palette)
+colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 0::Int) (tail palette)
       where
         palette = map (rgbToHSV . colorHash) names
         normalize (HSV h _ _) = HSV h 0.5 0.5
@@ -278,7 +280,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s

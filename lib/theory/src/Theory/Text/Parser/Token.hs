@@ -35,6 +35,7 @@ module Theory.Text.Parser.Token (
   , msgvar
   , nodevar
   , sapicvar
+  , sapicnodevar
 
   , letIdentifier
 
@@ -330,6 +331,11 @@ sapicvar = do
     where mkPrefixParser s = do
                 _ <- symbol (sortSuffix s)
                 return s
+
+sapicnodevar :: Parser SapicLVar
+sapicnodevar = do 
+    v <- nodevar
+    return (SapicLVar v "node")
 
 -- Term Operators
 -----------------

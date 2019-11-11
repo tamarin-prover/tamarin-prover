@@ -23,6 +23,7 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
+import qualified Data.Set as S
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -31,15 +32,14 @@ import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
--- import qualified Sapic.ProgressTranslation as PT
+-- import qualified Sapic.ProgressTranslation as PT -- TODO commented out for now
 -- import qualified Sapic.ReliableChannelTranslation as RCT
--- import Sapic.Restrictions
+import Theory.Text.Parser
 import Theory.Text.Pretty
 
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
-             Monoid (m (AnProcess ProcessAnnotation)) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
@@ -51,40 +51,35 @@ translate th = case theoryProcesses th of
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- compute initial rules
-                (initRule,initTx) <- initialRules an_proc
+                (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRule ++ protoRule
+                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
                 -- add restrictions
-                restr <- restrictions an_proc
-                th2 <- foldM liftedAddRestriction th1 restr
+                rest<- restrictions an_proc
+                th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    liftedAddProtoRule thy ru = case addProtoRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> throwM (RuleNameExists (render (prettyRuleName ru))  :: SapicException AnnotatedProcess)
-    liftedAddRestriction thy rest = case addRestriction rest thy of
-        Just thy' -> return thy'
-        Nothing   -> throwM (RestrictionNameExists (render (prettyRestriction rest))  :: SapicException AnnotatedProcess)
     ops = L.get thyOptions th
-    checkOps (lens,x) 
+    checkOps lens x   
         | L.get lens ops = Just x
         | otherwise = Nothing
+
     initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
-                        $ mapMaybe checkOps [ --- remove if fst element does not point to option that is set
-                        -- (transProgress, PT.progressInit anP)
-                      -- , (transReliable, RCT.reliableChannelInit anP) 
+                        $ catMaybes [ 
+                        -- checkOps transProgress (PT.progressInit anP) -- TODO uncomment
+                      -- , checkOps transReliable (RCT.reliableChannelInit anP)
                       ] 
     trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
-                        $ mapMaybe checkOps [
-                        -- (transProgress, PT.progressTrans anP)
+                        $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
+                        -- (transProgress, PT.progressTrans anP) -- TODO uncomment
                       -- , (transReliable, RCT.reliableChannelTrans )
                       ] 
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [Restriction] 
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction] 
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
@@ -98,15 +93,15 @@ translate th = case theoryProcesses th of
                                                                   --   restrs
                                                                   --    @ (if op.progress then [progress_init_lemma] else [])
                         $ [BT.baseRestr anP True] ++
-                           mapMaybe checkOps [
-                            -- (transProgress, PT.progressRestr anP)
+                           mapMaybe (uncurry checkOps) [
+                            -- (transProgress, PT.progressRestr anP) -- TODO uncomment
                           -- , (transReliable, RCT.reliableChannelRestr anP) 
                            ]
     heuristics = [SapicRanking]
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
-  -- NOTE: Kevin Milner is working on predicates, Kevin Morio on accountability
+  -- NOTE: Kevin Morio is working on accountability
   --
   -- and predicate_restrictions = print_predicates input.pred
   -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
@@ -128,23 +123,11 @@ translate th = case theoryProcesses th of
 -- |      - annotated process
 -- |      - current position in this process
 -- |      - tildex, the set of variables in the state
-gen :: (Show ann, MonadCatch m, Typeable ann, Foldable t1,
-        Foldable t2, Foldable t3) =>
-       (ann
-        -> ProcessPosition
-        -> t4
-        -> m (t1 ([TransFact], [TransAction], [TransFact])),
-        SapicAction
-        -> ann
-        -> ProcessPosition
-        -> t4
-        -> m (t3 ([TransFact], [TransAction], [TransFact]), t4),
-        ProcessCombinator
-        -> ann
-        -> ProcessPosition
-        -> t4
-        -> m (t2 ([TransFact], [TransAction], [TransFact]), t4, t4))
-       -> AnProcess ann -> [Int] -> t4 -> m [AnnotatedRule ann]
+gen :: (MonadCatch m) =>
+        (BT.TransFNull (m BT.TranslationResultNull),
+         BT.TransFAct (m BT.TranslationResultAct),
+         BT.TransFComb (m BT.TranslationResultComb))
+       -> AnProcess ProcessAnnotation -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule ProcessAnnotation]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
@@ -179,7 +162,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         trans = (trans_null, trans_action, trans_comb)
         -- convert prems, acts and concls generated for current process
         -- into annotated rule
-        toAnnotatedRule proc (l,a,r) = AnnotatedRule Nothing proc (Left p) l a r
+        toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a

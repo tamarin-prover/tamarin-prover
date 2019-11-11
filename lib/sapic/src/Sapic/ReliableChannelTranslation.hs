@@ -32,20 +32,13 @@ reliableChannelInit anP (initrules,initTx) = return (messageidrule : initrules, 
                     [ Fr  $ varMID [] ] -- prem
                     []                -- act
                     [ MessageIDReceiver [], MessageIDSender [] ]
+                    []
                     0
 
 -- | Send and receive actions are modified to produce the necessary Send and Receive events.
 reliableChannelTransAct :: MonadThrow m =>
-                           (SapicAction
-                            -> t
-                            -> ProcessPosition
-                            -> Set LVar
-                            -> m ([([TransFact], [TransAction], [TransFact])], Set LVar))
-                           -> SapicAction
-                           -> t
-                           -> ProcessPosition
-                           -> Set LVar
-                           -> m ([([TransFact], [TransAction], [TransFact])], Set LVar)
+                           TransFAct (m TranslationResultAct)
+                           -> TransFAct (m TranslationResultAct)
 reliableChannelTransAct tAct ac an p tx 
             | (ChIn (Just v) t) <- ac
             ,Lit (Con name) <- viewTerm v
@@ -53,25 +46,25 @@ reliableChannelTransAct tAct ac an p tx
             , getNameId (nId name) == "c"
             = let tx' = (freeset v) `union` (freeset t) `union` tx in
               let ts  = fAppPair (v,t) in
-              return $ ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx']) ],tx')
+              return $ ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx'],[]) ],tx')
             | (ChOut (Just v) t) <- ac
             ,Lit (Con name) <- viewTerm v
             , sortOfName name == LSortPub
             , getNameId (nId name) == "c"
             = let tx' = (freeset v) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t]) ],tx')
+              return $ ([ ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t],[]) ],tx')
             | (ChIn (Just r) t) <- ac
             ,Lit (Con name) <- viewTerm r
             , sortOfName name == LSortPub
             , getNameId (nId name) == "r"
             = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx']) ],tx')
+              return $ ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx'],[]) ],tx')
             | (ChOut (Just r) t) <- ac
             ,Lit (Con name) <- viewTerm r
             , sortOfName name == LSortPub
             , getNameId (nId name) == "r"
             = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx']) ],tx')
+              return $ ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx'], []) ],tx')
             | (ChOut (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
             | (ChIn (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
             | (ChOut Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
@@ -85,20 +78,13 @@ reliableChannelTransAct tAct ac an p tx
 
 -- | The other parts of the translation remain unmodified.
 reliableChannelTrans :: MonadThrow m =>
-                        (a,
-                         SapicAction
-                         -> t
-                         -> ProcessPosition
-                         -> Set LVar
-                         -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                         c)
-                        -> (a,
-                            SapicAction
-                            -> t
-                            -> ProcessPosition
-                            -> Set LVar
-                            -> m ([([TransFact], [TransAction], [TransFact])], Set LVar),
-                            c)
+                          (a,
+                           TransFAct (m TranslationResultAct),
+                           c)
+                 -> 
+                          (a,
+                           TransFAct (m TranslationResultAct),
+                           c)
 reliableChannelTrans (tNull,tAct,tComb) = (tNull, reliableChannelTransAct tAct,tComb)
 
 resReliable :: String
@@ -107,10 +93,10 @@ resReliable = [QQ.r|restriction reliable:
 |]
 
 -- | Add restrictions that enforces Send-events to have Receive-events
-reliableChannelRestr :: (MonadThrow m, MonadCatch m, Show ann) => AnProcess ann -> [Restriction] -> m [Restriction] 
-reliableChannelRestr anP restr  = do
+reliableChannelRestr :: (MonadThrow m, MonadCatch m, Show ann) => AnProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction] 
+reliableChannelRestr anP restrictions  = do
     res <- toEx resReliable
-    return $ restr ++ addIf (processContains anP isReliableTrans) [res]
+    return $ restrictions ++ addIf (processContains anP isReliableTrans) [res]
     where 
         addIf phi list = if phi then list else []
         isReliableTrans (ProcessAction ac _ _) 

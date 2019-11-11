@@ -474,9 +474,9 @@ prettyFact ppTerm (Fact tag an ts)
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 -- | Pretty print a 'NFact'.
-prettyNFact :: Document d => LNFact -> d
+prettyNFact :: (Document d, Show v) => NFact v -> d
 prettyNFact = prettyFact prettyNTerm
 
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
-prettyLNFact fa = prettyFact prettyNTerm fa
+prettyLNFact = prettyFact prettyNTerm 

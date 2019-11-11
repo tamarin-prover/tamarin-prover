@@ -214,17 +214,20 @@ ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nes
 ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic pl
-        (pa, sh) = ppFact a
+        (pa, sh) = ppFact' a
+        ppFact' formula@(Ato (Syntactic (Pred f))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
+                                                    --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
+        ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
 
 ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic pl
                                            (pt1, sh1) = ppSapicTerm t1
                                            (pt2, sh2) = ppSapicTerm t2 
                                            
-ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
-  ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
-  where (ppl, pshl) = ppSapic pl
-        (pa, sh) = ppFact a
+-- ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
+--   ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
+--   where (ppl, pshl) = ppSapic pl
+--         (pa , sh  ) = ppFact a
 
 ppSapic (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
