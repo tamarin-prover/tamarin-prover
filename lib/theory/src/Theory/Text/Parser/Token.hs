@@ -326,7 +326,7 @@ sapicvar :: Parser SapicLVar
 sapicvar = do
         s <- option LSortMsg $ asum $ map mkPrefixParser [LSortFresh, LSortPub, LSortMsg]
         (n, i) <- indexedIdentifier
-        t <- option defaultSapicType $ colon *> identifier 
+        t <- option Nothing $ colon *> (Just <$> identifier)
         return (SapicLVar (LVar n s i) t ) 
     where mkPrefixParser s = do
                 _ <- symbol (sortSuffix s)
@@ -335,7 +335,7 @@ sapicvar = do
 sapicnodevar :: Parser SapicLVar
 sapicnodevar = do 
     v <- nodevar
-    return (SapicLVar v "node")
+    return (SapicLVar v defaultSapicNodeType)
 
 -- Term Operators
 -----------------

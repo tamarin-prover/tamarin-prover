@@ -35,7 +35,6 @@ import qualified Sapic.Basetranslation as BT
 -- import qualified Sapic.ProgressTranslation as PT -- TODO commented out for now
 -- import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
-import Theory.Text.Pretty
 
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory

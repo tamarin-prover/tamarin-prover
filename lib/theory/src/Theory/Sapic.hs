@@ -21,6 +21,7 @@ module Theory.Sapic (
     , AnProcess(..)
     , SapicType
     , defaultSapicType
+    , defaultSapicNodeType
     , SapicAction(..)
     , SapicLVar(..)
     , SapicTerm
@@ -66,7 +67,7 @@ import Control.Monad.Catch
 -- | A process data structure
 -- | In general, terms we use in the translation have logical veriables
 
-type SapicType = String
+type SapicType = Maybe String
 data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType }
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
 type LNTTerm = VTerm Name SapicLVar
@@ -74,14 +75,18 @@ type SapicTerm = LNTTerm
 type SapicLNFact = Fact SapicTerm
 type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 
-defaultSapicType :: String
-defaultSapicType = "bitstring"
+defaultSapicType :: SapicType
+defaultSapicType = Just "bitstring"
+
+defaultSapicNodeType :: SapicType
+defaultSapicNodeType = Just "node"
 
 -- | A substitution with names and typed logical variables.
 type SapicSubst = Subst Name SapicLVar
 
 instance Show SapicLVar where
-    show (SapicLVar v t) = show  v ++ ":" ++ t
+    show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
+    show (SapicLVar v Nothing ) = show  v
 
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v

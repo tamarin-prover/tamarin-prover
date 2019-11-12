@@ -34,6 +34,7 @@ import Data.List as List
 import qualified Data.ByteString.Char8 as BC
 
 
+template :: Document d => [d] -> [d] -> d -> d
 template headers queries process =
   (vcat headers)
   $$
