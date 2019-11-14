@@ -137,6 +137,11 @@ The [spthy.el](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc
 implements a SPTHY major mode. You can load it with `M-x load-file`, or add it to your `.emacs` in
 your favourite way.
 
+#### Atom
+
+The [language-tamarin](https://atom.io/packages/language-tamarin) package provides Tamarin syntax
+highlighting for Atom. To install it, run `apm install language-tamarin`.
+
 FAQ
 ---
 
