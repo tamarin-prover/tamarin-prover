@@ -22,6 +22,7 @@ functions: aead/3, decrypt/2, verify/3, true/0
 equations: decrypt(aead(k, p, a), k) = p
 /* The authentication can be checked with the key and AAD */
 equations: verify(aead(k, p, a), a, k) = true
+heuristic: i
 
 /* This restriction tells Tamarin that whenever an Eq( ) fact occurs,
  * the terms in it must be equal. This allows us to model rules that
