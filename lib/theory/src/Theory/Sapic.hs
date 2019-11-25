@@ -27,6 +27,7 @@ module Theory.Sapic (
     , SapicTerm
     , SapicLNFact
     , SapicFormula
+    , SapicFunSym
     -- converters
     , toLVar
     , toLNTerm
@@ -74,6 +75,9 @@ type LNTTerm = VTerm Name SapicLVar
 type SapicTerm = LNTTerm
 type SapicLNFact = Fact SapicTerm
 type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
+
+-- | Function symbol (f,l,r) with argument types l and return type r
+type SapicFunSym = (FunSym, [SapicType], SapicType) 
 
 defaultSapicType :: SapicType
 defaultSapicType = Just "bitstring"

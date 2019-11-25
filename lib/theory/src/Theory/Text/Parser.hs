@@ -861,33 +861,41 @@ diffbuiltins =
       ]
 
 
-function :: Parser NoEqSym
+-- functiontype :: Parser a
+functionType = try (do
+                    _  <- opSlash
+                    k  <- fromIntegral <$> natural
+                    return (replicate k defaultSapicType, defaultSapicType)
+                   ) 
+                <|>(do
+                    argTypes  <- parens (commaSep (Just <$> identifier))
+                    _         <- colon
+                    outType   <- Just <$> identifier
+                    return (argTypes, outType)
+                    )
+
+function :: Parser SapicFunSym
 function =  do
-        f   <- BC.pack <$> identifier <* opSlash
-        k   <- fromIntegral <$> natural
+        f   <- BC.pack <$> identifier
+        (argTypes,outType) <- functionType
         priv <- option Public (symbol "[private]" *> pure Private)
         if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
           then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
           else return ()
         sig <- getState
-        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just kp' | kp' /= (k,priv) ->
-            fail $ "conflicting arities/private " ++
-                   show kp' ++ " and " ++ show (k,priv) ++
-                   " for `" ++ BC.unpack f
-          _ -> return (f,(k,priv))
-  
-functions :: Parser [SapicElement]
-functions = do
-           _ <- symbol "functions" 
-           _ <- colon
-           fs <- commaSep1 function
-           sig <- getState
-           _ <- (foldl addSymbols sig fs)
-           return []
-  where addSymbols sig s = setState (addFunSym s sig)
-          
-  
+        let k = length argTypes  in
+            case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
+              Just kp' | kp' /= (k,priv) ->
+                fail $ "conflicting arities/private " ++
+                       show kp' ++ " and " ++ show (k,priv) ++
+                       " for `" ++ BC.unpack f
+              _ -> do
+                    setState (addFunSym (f,(k,priv)) sig)
+                    return (NoEq (f,(k,priv)),argTypes,outType)
+
+functions :: Parser [SapicFunSym]
+functions =
+    symbol "functions" *> colon *> commaSep1 function 
 
 equations :: Parser ()
 equations =
@@ -1335,9 +1343,11 @@ theory flags0 = do
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
            addItems flags thy'
-      , do functions
+      , do 
+           fs   <-  functions
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           let thy' = foldl (flip addFunctionTypingInfo) thy fs   in
+               addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
       , do equations
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy
