@@ -658,11 +658,16 @@ addRightLemma lem =
 -- | A formal comment is a header together with the body of the comment.
 type FormalComment = (String, String)
 
+data ExportInfo =
+    FunctionTypingInfo (FunSym, [String])
+    | IncludeInfo (String, String)
+    deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | SapicItems can be processes and accountability lemmas
 data SapicElement=
       ProcessItem Process
       | ProcessDefItem ProcessDef
+      | ExportItem ExportInfo       
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -989,6 +994,10 @@ addLemma l thy = do
 addProcess :: Process -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
 addProcess l thy = modify thyItems (++ [SapicItem (ProcessItem l)]) thy
 
+-- | Add a new process expression.  since expression (and not definitions)
+-- could appear several times, checking for doubled occurrence isn't necessary
+addExportInfo :: ExportInfo -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+addExportInfo l thy = modify thyItems (++ [SapicItem (ExportItem l)]) thy
 
 -- search process
 findProcess :: String -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)

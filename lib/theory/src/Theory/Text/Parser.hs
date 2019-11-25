@@ -861,11 +861,8 @@ diffbuiltins =
       ]
 
 
-functions :: Parser ()
-functions =
-    symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
-  where
-    functionSymbol = do
+function :: Parser NoEqSym
+function =  do
         f   <- BC.pack <$> identifier <* opSlash
         k   <- fromIntegral <$> natural
         priv <- option Public (symbol "[private]" *> pure Private)
@@ -878,7 +875,19 @@ functions =
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,(k,priv)) sig)
+          _ -> return (f,(k,priv))
+  
+functions :: Parser [SapicElement]
+functions = do
+           _ <- symbol "functions" 
+           _ <- colon
+           fs <- commaSep1 function
+           sig <- getState
+           _ <- (foldl addSymbols sig fs)
+           return []
+  where addSymbols sig s = setState (addFunSym s sig)
+          
+  
 
 equations :: Parser ()
 equations =
