@@ -2,10 +2,13 @@ theory AC_counter
 // Use Tamarin command line options '--heuristic=S --bound=32' */
 
 begin
+
+builtins: locations-report
+
 functions: prog/3,null/0,succ/1,list/2
 
 predicates:
-pred_rep(x,y) <=> not  (y= 'l')
+Pred_rep(x,y) <=> not  (y= 'l')
 
 let r =                                        // The remote server who runs the code
 	(lock state; lookup state as st in

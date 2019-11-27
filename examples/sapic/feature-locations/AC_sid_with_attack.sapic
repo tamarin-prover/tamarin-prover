@@ -5,10 +5,13 @@ theory AC_sid
 // The server only has  a session identifier.
 
 begin
+
+builtins: locations-report
+
 functions: prog/3,list/2
 
 predicates:
-pred_rep(x,y) <=> not  (y= 'l')
+Pred_rep(x,y) <=> not  (y= 'l')
 
 let r =                                        // The remote server who runs the code
     (new sid;

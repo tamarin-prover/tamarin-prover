@@ -2,23 +2,20 @@ theory licensing
 
 begin
 
-builtins:  symmetric-encryption,asymmetric-encryption
+builtins:  symmetric-encryption,asymmetric-encryption,locations-report
 functions: pk/1,run/2,prg/1,tkn/1,ok/2,ask/2, dec/1,dec1/1,dec2/1
 
 
 predicates:
-pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
+Pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
 
 
-let p=                            // The enclave which will run the licensed program
-        in(pk(skV));              // we start with a Key exchange with the vendor
-
-        (new shared_key; 
-		event SessionP(pk(skV),shared_key);
-        let z = report(aenc(shared_key,pk(skV))) in
-	    out(<aenc(shared_key,pk(skV)),z>);
-
-
+let p = 
+	in(pk(skV));
+    (new shared_key; 
+	event SessionP(pk(skV),shared_key);
+	let z = report(aenc(shared_key,pk(skV))) in
+		    out(<aenc(shared_key,pk(skV)),z>);
 	        in(senc(prg(prog2),shared_key));                // we receive the program through the secure channel
 	        !(
 	        in(input);in(senc(tkn(token),shared_key));      // a requested input along with a token
@@ -27,9 +24,8 @@ let p=                            // The enclave which will run the licensed pro
 	        in(senc(ok(x,tkn(token)),shared_key ));
 	         event Poutput(input, token);
 	        out(run( prog2 ,input))                        // and only this publish the output
-	        ))@<'loc',pk(skV)>
-   
-
+	        )
+)@<'loc',pk(skV)>
 // The verifier, that check the encoding and the signing.
 let vendor = 
     new skV; 
@@ -49,9 +45,9 @@ let vendor =
 	 out(senc(tkn(token),shared_key));           // publication of a token
 
 	in(senc(ask(x,tkn(token2)),shared_key));     // consumption of the token and confirmation
-	if tkn(token)=tkn(token2) then (		
+	if tkn(token)=tkn(token2) then 		
 		out(senc(ok(x,tkn(token)),shared_key)) 
-			             )
+			             
 	
 	)
 	)
@@ -61,13 +57,6 @@ let vendor =
 new prog; event Auth(prog);   // initialisiation of the licensed program
  (  (!p) || (!vendor) )
 
-
-/*
-lemma can_run:
-    exists-trace
-    "Ex #t1 #t2  inp prog . K ( run(prog,inp) )@t1 & Auth(prog)@t2 "
-
-*/
 
 
 lemma attested_comput[reuse]:  
@@ -90,6 +79,5 @@ lemma final:
 )
 
 " 
-
 
 end

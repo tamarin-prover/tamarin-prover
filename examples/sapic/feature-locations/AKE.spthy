@@ -5,9 +5,9 @@ theory AKE
 
 begin
 
-builtins: symmetric-encryption,asymmetric-encryption
+builtins: symmetric-encryption,asymmetric-encryption,locations-report
 
-predicates: pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
+predicates: Pred_rep(x,y) <=> not(Ex z. y = <'loc',z>)
 
 	
 let r=                            // IEE sides
