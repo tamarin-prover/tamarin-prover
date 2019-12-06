@@ -177,12 +177,39 @@ deriving instance Functor (Process ann)
 deriving instance Foldable (Process ann)
 
 
+mapTerms f (ProcessNull ann)  = ProcessNull ann 
+mapTerms f (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ac) ann p'
+mapTerms f (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
+
+mapTermsAction f ac 
+        | (New v) <- ac, v' <- termVar' (f (varTerm v)) = New v'
+        | (ChIn  mt t) <- ac   = ChIn (fmap f mt) (f t)
+        | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
+        | (Insert t1 t2) <- ac = Insert (f t1) (f t2)
+        | (Delete t) <- ac     = Delete (f t)
+        | (Lock t) <- ac       = Lock (f t)
+        | (Unlock t) <- ac     = Unlock (f t)
+        | (Event fa) <- ac      = Event (fmap f fa)
+        | (MSR (l,a,r,rest)) <- ac  = MSR $ (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
+        | Rep <- ac            = Rep
+            where f2mapf = fmap $ fmap f
+                  -- something like
+                  -- formulaMap = mapAtoms $ const $ fmap $ fmap f
+                  formulaMap = undefined
+    
+mapTermsComb f c
+        | (Cond fa) <- c = Cond $ undefined -- same problem as above
+        | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
+        | (Lookup t v) <- c = Lookup (f t) v
+        | otherwise = c 
+
 instance (IsVar v) => Apply (Subst Name v) (ProcessCombinator v) where
     apply subst c 
-        | (Cond f) <- c = Cond $ apply subst f
-        | (CondEq t1 t2) <- c = CondEq (apply subst t1) (apply subst t2)
-        | (Lookup t v) <- c = Lookup (apply subst t) v
-        | otherwise = c 
+            = mapTermsComb (apply subst) c
+        -- | (Cond f) <- c = Cond $ apply subst f
+        -- | (CondEq t1 t2) <- c = CondEq (apply subst t1) (apply subst t2)
+        -- | (Lookup t v) <- c = Lookup (apply subst t) v
+        -- | otherwise = c 
 
 data CapturedTag = CapturedIn | CapturedLookup | CapturedNew
     deriving (Typeable, Show)
@@ -207,16 +234,17 @@ applyProcessCombinatorError subst c
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst ac 
-        | (New v) <- ac        = New v
-        | (ChIn  mt t) <- ac   = ChIn (apply subst mt) (apply subst t)
-        | (ChOut mt t) <- ac   = ChOut (apply subst mt) (apply subst t)
-        | (Insert t1 t2) <- ac = Insert (apply subst t1) (apply subst t2)
-        | (Delete t) <- ac     = Delete (apply subst t)
-        | (Lock t) <- ac       = Lock (apply subst t)
-        | (Unlock t) <- ac     = Unlock (apply subst t)
-        | (Event f) <- ac      = Event (apply subst f)
-        | (MSR (l,a,r,rest)) <- ac  = MSR $ apply subst (l,a,r,rest)
-        | Rep <- ac            = Rep
+        = mapTermsAction (apply subst) ac
+    --     | (New v) <- ac        = New v
+    --     | (ChIn  mt t) <- ac   = ChIn (apply subst mt) (apply subst t)
+    --     | (ChOut mt t) <- ac   = ChOut (apply subst mt) (apply subst t)
+    --     | (Insert t1 t2) <- ac = Insert (apply subst t1) (apply subst t2)
+    --     | (Delete t) <- ac     = Delete (apply subst t)
+    --     | (Lock t) <- ac       = Lock (apply subst t)
+    --     | (Unlock t) <- ac     = Unlock (apply subst t)
+    --     | (Event f) <- ac      = Event (apply subst f)
+    --     | (MSR (l,a,r,rest)) <- ac  = MSR $ apply subst (l,a,r,rest)
+    --     | Rep <- ac            = Rep
 
 applySapicActionError :: MonadThrow m =>
     Subst Name SapicLVar -> SapicAction SapicLVar -> m (SapicAction SapicLVar)
