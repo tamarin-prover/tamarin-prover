@@ -27,11 +27,11 @@ instance Exception LocalException
 
 -- | Annotate the closes occurence of unlock that has term t with the
 -- variable v output the exception above if we encounter rep or parallel
-annotateEachClosestUnlock :: MonadThrow m => 
-                            Theory.Sapic.SapicTerm
-                             -> AnLVar
-                             -> AnProcess ProcessAnnotation
-                             -> m( AnProcess ProcessAnnotation)
+annotateEachClosestUnlock :: (Eq v1, MonadThrow m) =>
+                             SapicNTerm v1
+                             -> AnVar v2
+                             -> Process (ProcessAnnotation v2) v1
+                             -> m (Process (ProcessAnnotation v2) v1)
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) = 
             if t == t' then 
@@ -54,12 +54,12 @@ annotateLocks :: ( MonadThrow m,
                  -- , Monoid (m (AnProcess ProcessAnnotation))
                   -- ,Foldable (AnProcess ProcessAnnotation)
                 )
-                    => AnProcess ProcessAnnotation -> m (AnProcess ProcessAnnotation)
+                    => LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
 annotateLocks (ProcessAction (Lock t) a p) = do 
             v <- freshLVar "lock" LSortMsg
-            p' <- annotateEachClosestUnlock t (AnLVar v) p
+            p' <- annotateEachClosestUnlock t (AnVar v) p
             p'' <- annotateLocks p'
-            return (ProcessAction (Lock t) (a `mappend` annLock (AnLVar v)) p'')
+            return (ProcessAction (Lock t) (a `mappend` annLock (AnVar v)) p'')
             -- return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
 annotateLocks (ProcessAction ac an p) = do
             p' <- annotateLocks p

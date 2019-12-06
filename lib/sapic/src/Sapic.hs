@@ -78,7 +78,7 @@ translate th = case theoryProcesses th of
                         -- (transProgress, PT.progressTrans anP) -- TODO uncomment
                       -- , (transReliable, RCT.reliableChannelTrans )
                       ] 
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction] 
+    restrictions:: (MonadThrow m1, MonadCatch m1) => LProcess (ProcessAnnotation LVar) -> m1 [SyntacticRestriction] 
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
@@ -126,7 +126,7 @@ gen :: (MonadCatch m) =>
         (BT.TransFNull (m BT.TranslationResultNull),
          BT.TransFAct (m BT.TranslationResultAct),
          BT.TransFComb (m BT.TranslationResultComb))
-       -> AnProcess ProcessAnnotation -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule ProcessAnnotation]
+       -> LProcess (ProcessAnnotation LVar) -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
@@ -164,6 +164,6 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
-        handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
+        handler:: (Typeable ann, Show ann) => LProcess ann ->  SapicException ann -> a
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
         handler _ e = throw e

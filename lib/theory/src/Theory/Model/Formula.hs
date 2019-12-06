@@ -104,7 +104,7 @@ data ProtoFormula syn s c v = Ato (ProtoAtom syn (VTerm c (BVar v)))
                    | Not (ProtoFormula syn s c v)
                    | Conn !Connective (ProtoFormula syn  s c v) (ProtoFormula syn  s c v)
                    | Qua !Quantifier s (ProtoFormula syn  s c v)
-                   deriving ( Generic)
+                   deriving ( Generic )
 
 -- | First-order formulas in locally nameless representation with hints for the
 -- names/sorts of quantified variables.
@@ -161,19 +161,31 @@ foldFormulaScope fAto fTF fNot fConn fQua =
 -- Instances
 ------------
 
-{-
-instance Functor (Formula s c) where
-    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
--}
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula SyntacticSugar s c v)
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula Unit2 s c v)
+
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula SyntacticSugar s c v)
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula Unit2 s c v)
+
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula SyntacticSugar s c v)
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula Unit2 s c v)
 
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula SyntacticSugar s c v)
-deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula Unit2 s c v)
+
+deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula Unit2 s c v)
+
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula SyntacticSugar s c v)
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula Unit2 s c v)
 
 instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
+
+instance (Functor syn) => Functor (ProtoFormula syn s c) where
+    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
+
 
 -- | traverse formula down to the term level
 traverseFormula :: (Ord v, Ord c, Ord v', Applicative f, Traversable syn)
@@ -285,15 +297,6 @@ openFormulaPrefix f0 = case openFormula f0 of
 -- Instances
 ------------
 
-deriving instance Eq       LNFormula
-deriving instance Show     LNFormula
-deriving instance Ord      LNFormula
-
-deriving instance Eq       SyntacticLNFormula
-deriving instance Show     SyntacticLNFormula
-deriving instance Ord      SyntacticLNFormula
-deriving instance Data     SyntacticLNFormula
-
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
@@ -307,7 +310,7 @@ instance HasFrees SyntacticLNFormula where
 instance Apply LNSubst LNFormula where
     apply subst = mapAtoms (const $ apply subst)
 
-instance (IsConst c, IsVar v) => Apply (Subst c v) (SyntacticFormula s c v) where
+instance (IsConst c, IsVar v) => Apply (Subst c v) (ProtoFormula SyntacticSugar s c v) where
     apply subst = mapAtoms (const $ apply subst )
 
 ------------------------------------------------------------------------------

@@ -92,7 +92,7 @@ data SpecialPosition = InitPosition -- initial position, is logically the predec
 -- | annotated rules know:
 data AnnotatedRule ann = AnnotatedRule {
       processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
-    , process      :: AnProcess ann   -- process this rules was generated for
+    , process      :: LProcess ann   -- process this rules was generated for
     , position     :: Either ProcessPosition SpecialPosition -- position of this process in top-level process
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
@@ -228,12 +228,12 @@ prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
 prettyEitherPositionOrSpecial (Right InitPosition) = "Init"
 prettyEitherPositionOrSpecial (Right NoPosition) = ""
 
-getTopLevelName :: (GoodAnnotation an) => AnProcess an -> [String]
+getTopLevelName :: (GoodAnnotation an) => Process an v -> [String]
 getTopLevelName (ProcessNull ann) = getProcessNames ann
 getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
 getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 
-propagateNames :: (GoodAnnotation ann) => AnProcess ann -> AnProcess ann
+propagateNames :: (GoodAnnotation an) => Process an v-> Process an v
 propagateNames = propagate' []
     where
       propagate' n (ProcessComb c an pl pr) = ProcessComb c 

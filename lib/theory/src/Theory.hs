@@ -456,7 +456,7 @@ $(mkLabels [''ProtoRestriction])
 
 data ProcessDef = ProcessDef
         { _pName            :: String
-        , _pBody            :: Process
+        , _pBody            :: PlainProcess
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -662,7 +662,7 @@ type FormalComment = (String, String)
 
 -- | SapicItems can be processes and accountability lemmas
 data SapicElement=
-      ProcessItem Process
+      ProcessItem PlainProcess
       | ProcessDefItem ProcessDef
       | FunctionTypingInfo SapicFunSym
       | IncludeInfo (String, String)
@@ -832,7 +832,7 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
 
 -- fold a sapic item.
 foldSapicItem
-    :: (Process -> a) -> (ProcessDef -> a)
+    :: (PlainProcess -> a) -> (ProcessDef -> a)
     -> SapicElement -> a
 foldSapicItem fProcess fProcessDef i = case i of
     ProcessItem     proc  -> fProcess proc
@@ -897,7 +897,7 @@ theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
-theoryProcesses :: Theory sig c r p SapicElement -> [Process]
+theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
 theoryProcesses = foldSapicItem return (const []) <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
@@ -989,7 +989,7 @@ addLemma l thy = do
 
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
-addProcess :: Process -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+addProcess :: PlainProcess -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
 addProcess l thy = modify thyItems (++ [SapicItem (ProcessItem l)]) thy
 
 -- | Add a new process expression.  since expression (and not definitions)
@@ -2004,7 +2004,7 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulast
         factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
-prettyProcess :: HighlightDocument d => Process -> d
+prettyProcess :: HighlightDocument d => PlainProcess -> d
 prettyProcess p = text (prettySapic p)
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d

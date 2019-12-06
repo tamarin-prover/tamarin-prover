@@ -48,18 +48,18 @@ type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [Synta
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
 type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar, Set LVar)
 
-type TransFNull t = ProcessAnnotation
+type TransFNull t = ProcessAnnotation LVar
                              -> ProcessPosition
                              -> Set LVar
                              -> t
 
-type TransFAct t = SapicAction
-                             -> ProcessAnnotation
+type TransFAct t = SapicAction SapicLVar
+                             -> ProcessAnnotation LVar
                              -> ProcessPosition
                              -> Set LVar
                              -> t
-type TransFComb t = ProcessCombinator
-                        -> ProcessAnnotation
+type TransFComb t = ProcessCombinator SapicLVar
+                        -> ProcessAnnotation LVar
                         -> ProcessPosition -> Set LVar
                         -> t
 
@@ -85,16 +85,16 @@ baseTransAction ac an p tildex
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
           ], tildex)
-    | (New v) <- ac = let tx' = (toLVar v) `insert` tildex in
+    | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
-    | (ChIn (Just tc') t') <- ac, (Just (AnLVar _)) <- secretChannel an
+    | (ChIn (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let tx' = (freeset tc) `union` (freeset t) `union` tildex in
+          let tx' = freeset tc `union` freeset t `union` tildex in
           ([
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
     | (ChIn (Just tc') t') <- ac, Nothing <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let tx' = (freeset tc) `union` (freeset t) `union` tildex in
+          let tx' = freeset tc `union` freeset t `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
           ([def_state, In ts], [ ChannelIn ts], [def_state' tx'], []),
@@ -103,7 +103,7 @@ baseTransAction ac an p tildex
       , t <- toLNTerm t' =
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
-    | (ChOut (Just tc') t') <- ac, (Just (AnLVar _)) <- secretChannel an 
+    | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an 
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
@@ -128,13 +128,13 @@ baseTransAction ac an p tildex
       , t <- toLNTerm t' =
           ([
           ([def_state], [DeleteA t ], [def_state' tildex], [])], tildex)
-    | (Lock t') <- ac, (Just (AnLVar v)) <- lock an 
+    | (Lock t') <- ac, (Just (AnVar v)) <- lock an 
       , t <- toLNTerm t' =
           let tx' = v `insert` tildex in
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'], [])], tx')
     | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
-    | (Unlock t') <- ac, (Just (AnLVar v)) <- unlock an 
+    | (Unlock t') <- ac, (Just (AnVar v)) <- unlock an 
       , t <- toLNTerm t' =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
@@ -208,7 +208,7 @@ baseTransComb c _ p tildex
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
 -- only be used once.
-baseInit :: AnProcess ann -> ([AnnotatedRule ann], Set a)
+baseInit :: LProcess ann -> ([AnnotatedRule ann], Set a)
 baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r [] 0],empty)
   where
         l = []
@@ -328,7 +328,7 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr :: (MonadThrow m, MonadCatch m) => LProcess (ProcessAnnotation LVar) -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
 baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
@@ -349,12 +349,12 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
 
         return $ prevRestr ++ hardcoded ++ locking 
                  ++ 
-                 addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
+                 addIf (not (contains isUnlock) && contains isLock) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
         getLock p
-            | (ProcessAction (Lock _) an _) <- p, (Just (AnLVar v)) <- lock an = [v] -- annotation is Maybe type
+            | (ProcessAction (Lock _) an _) <- p, (Just (AnVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
         getLockPositions = pfoldMap getLock
 

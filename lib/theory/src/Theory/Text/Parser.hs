@@ -861,7 +861,7 @@ diffbuiltins =
       ]
 
 
--- functiontype :: Parser a
+functionType :: Parser ([SapicType], SapicType)
 functionType = try (do
                     _  <- opSlash
                     k  <- fromIntegral <$> natural
@@ -961,7 +961,7 @@ processDef thy= do
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
-sapicAction :: Parser SapicAction
+sapicAction :: Parser LSapicAction
 sapicAction = try (do 
                         _ <- symbol "new"
                         s <- sapicvar 
@@ -1054,7 +1054,7 @@ sapicAction = try (do
 --     | LET id_not_res EQ REPORT LP multterm RP IN process 
 --     | IDENTIFIER                                     
 --     | msr
-process :: OpenTheory -> Parser Process
+process :: OpenTheory -> Parser PlainProcess
 process thy= 
             -- left-associative NDC and parallel using chainl1.
             -- Note: this roughly encodes the following grammar:
@@ -1094,7 +1094,7 @@ process thy=
                         p <- actionprocess thy
                         return p
 
-actionprocess :: OpenTheory -> Parser Process
+actionprocess :: OpenTheory -> Parser PlainProcess
 actionprocess thy= 
             try (do         -- replication parser
                         _ <- symbol "!"
@@ -1313,7 +1313,7 @@ liftedAddProtoRule thy ru
 
 
 -- | checks if process exists, if not -> error
-checkProcess :: String -> OpenTheory -> Parser Process
+checkProcess :: String -> OpenTheory -> Parser PlainProcess
 checkProcess i thy = case lookupProcessDef i thy of
     Just p -> return $ get pBody p
     Nothing -> fail $ "process not defined: " ++ i    
@@ -1427,7 +1427,7 @@ diffTheory flags0 = do
            diffbuiltins 
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
-      , do functions
+      , do functions -- TODO have to do something with this functions...
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do equations

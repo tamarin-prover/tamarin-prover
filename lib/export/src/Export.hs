@@ -185,7 +185,7 @@ ppFact (Fact tag _ ts)
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared         
-ppAction :: SapicAction -> (Doc, S.Set ProverifHeader)
+ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
 ppAction (New n) = (text "new " <> (text $ show n), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
@@ -203,7 +203,7 @@ ppAction (Event (Fact tag m ts) )  = (text "event " <> pa, sh `S.union` (S.singl
   where (pa, sh) = ppFact (Fact tag m ts)
 ppAction _  = (text "Action not supported for translation", S.empty)
 
-ppSapic :: AnProcess ann -> (Doc, S.Set ProverifHeader)
+ppSapic :: LProcess ann -> (Doc, S.Set ProverifHeader)
 ppSapic (ProcessNull _) = (text "0", S.empty)
 ppSapic (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl

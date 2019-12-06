@@ -9,7 +9,6 @@
 module Theory.Sapic.Print (
     Process
     , ProcessCombinator(..)
-    , AnProcess(..)
     , SapicAction(..)
     , SapicTerm
     , paddAnn
@@ -45,11 +44,11 @@ rulePrinter l a r res = render $ prettyRuleRestrGen ppFact ppRes l a r res
         ppRes  = prettySyntacticLNFormula . toLFormula 
 
 -- | Instantiate printers with rulePrinter from Theory.Text.Pretty
-prettySapicAction :: SapicAction -> String
+prettySapicAction :: LSapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
 
-prettySapic :: AnProcess ann -> String
+prettySapic :: LProcess ann -> String
 prettySapic = prettySapic' rulePrinter
 
-prettySapicTopLevel :: AnProcess ann -> String
+prettySapicTopLevel :: LProcess ann -> String
 prettySapicTopLevel = prettySapicTopLevel' rulePrinter
