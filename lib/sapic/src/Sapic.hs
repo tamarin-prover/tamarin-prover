@@ -28,6 +28,7 @@ import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
 import Sapic.SecretChannels
+import Sapic.Report
 import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
@@ -44,11 +45,11 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
                     throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
-             else 
+             else
                     return (removeSapicItems th)
       [p] -> do
                 -- annotate
-                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
+                an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
@@ -64,37 +65,42 @@ translate th = case theoryProcesses th of
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = L.get thyOptions th
-    checkOps lens x   
+    translateReport anp =
+      if L.get transReport ops then
+        translateTermsReport anp
+      else
+        anp
+    checkOps lens x
         | L.get lens ops = Just x
         | otherwise = Nothing
-
     initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
-                        $ catMaybes [ 
+                        $ catMaybes [
                         checkOps transProgress (PT.progressInit anP)
-                      , checkOps transReliable (RCT.reliableChannelInit anP)
-                      ] 
+                        , checkOps transReliable (RCT.reliableChannelInit anP)
+                        , checkOps transReport (reportInit anP)
+                      ]
     trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
-                      ] 
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction] 
+                      ]
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction]
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
                                                                 -- if op.accountability then
-                                                                  --   (* if an accountability lemma with control needs to be shown, we use a 
+                                                                  --   (* if an accountability lemma with control needs to be shown, we use a
                                                                   --    * more complex variant of the restritions, that applies them to only one execution *)
                                                                   --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
                                                                   --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                -- else 
+                                                                -- else
                                                                   --   restrs
                                                                   --    @ (if op.progress then [progress_init_lemma] else [])
                         $ [BT.baseRestr anP True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
-                          , (transReliable, RCT.reliableChannelRestr anP) 
+                          , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
 
@@ -165,5 +171,5 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
-        handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
+        handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp
         handler _ e = throw e

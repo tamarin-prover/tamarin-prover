@@ -16,7 +16,7 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | Binary builtin function symbols.
-sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym, repSym,checkRepSym :: NoEqSym
+sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym, repSym, checkRepSym :: NoEqSym
 sdecSym = ("sdec",(2, Public))
 sencSym = ("senc",(2, Public))
 adecSym = ("adec",(2, Public))

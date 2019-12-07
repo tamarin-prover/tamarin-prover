@@ -812,7 +812,9 @@ builtins thy0 =do
       , try (symbol "revealing-signing")
           *> extendSig revealSignatureMaudeSig
       , try (symbol "locations-report")
-          *> extendSig locationReportMaudeSig
+          *>  do
+          modifyState (`mappend` locationReportMaudeSig)
+          return (Just transReport)
       , try ( symbol "reliable-channel")
              *> return (Just transReliable)
       , symbol "hashing"
