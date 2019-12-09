@@ -27,6 +27,7 @@ import           Sapic.Facts
 -- import           Sapic.Exceptions
 import           Theory
 import           Theory.Sapic
+import           Term.Builtin.Signature
 
 
 reportInit ::  Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
@@ -74,12 +75,10 @@ subst :: Maybe SapicTerm -> SapicTerm -> SapicTerm
 subst Nothing t = t
 subst (Just loc) t = case viewTerm t of
   Lit _ -> t
-  FApp reportSym [a] -> termViewToTerm $ FApp reportSym  [subst (Just loc) a, loc]
-  -- the previous line should be:
-  --  FApp reportSym [a] -> termViewToTerm $ FApp repSym  [subst (Just loc) a, loc]
-  -- but it says that repSym is not in scope, while reportSym is, so I don't get it
+  FApp (NoEq sym) [a] -> if sym == reportSym then 
+                                termViewToTerm $ FApp (NoEq repSym)  [subst (Just loc) a, loc]
+                         else t
   FApp k as -> termViewToTerm $ FApp k (L.map (subst (Just loc)) as)
 
-translateTermsReport :: AnProcess ProcessAnnotation -> (AnProcess ProcessAnnotation)
-translateTermsReport anp =
-  mapTerms subst Nothing anp
+translateTermsReport :: AnProcess ProcessAnnotation -> AnProcess ProcessAnnotation
+translateTermsReport = mapTerms subst Nothing 
