@@ -105,6 +105,9 @@ theoryLoadFlags =
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
       "Strict mode that quits on any warning that is emitted."
 
+  , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
+      "Try to auto-generate sources lemmas."
+
   , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
       "Path to the oracle heuristic (default './oracle')."
 
@@ -249,14 +252,14 @@ closeThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheck thy1
   -- close and prove
-  cthy <- closeTheory (maudePath as) thy2
+  cthy <- closeTheory (maudePath as) thy2 (argExists "auto-sources" as)
   return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
-        Just "verbose" -> applyPartialEvaluation Tracing
-        Just _         -> applyPartialEvaluation Summary
+        Just "verbose" -> applyPartialEvaluation Tracing (argExists "auto-sources" as)
+        Just _         -> applyPartialEvaluation Summary (argExists "auto-sources" as)
         _              -> id
 
       -- wellformedness check

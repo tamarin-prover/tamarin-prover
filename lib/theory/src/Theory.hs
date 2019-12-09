@@ -209,7 +209,7 @@ module Theory (
 
   ) where
 
--- import           Debug.Trace
+import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 
@@ -405,6 +405,12 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
       , _crProtocol   = proto
       }
 
+
+-- | Returns true if the REFINED sources contain open chains.
+containsPartialDeconstructions :: ClosedRuleCache    -- ^ Cached rules and case distinctions.
+                     -> Bool               -- ^ Result
+containsPartialDeconstructions (ClosedRuleCache _ _ cases _) =
+      sum (map (sum . unsolvedChainConstraints) cases) /= 0
 
 ------------------------------------------------------------------------------
 -- Restrictions (Trace filters)
@@ -911,6 +917,23 @@ addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
+-- | Add an auto-generated sources lemma if possible
+-- Under development
+addAutoSourcesLemma :: ClosedRuleCache
+                    -> [ClosedProtoRule]
+                    -> [TheoryItem p ProofSkeleton s]
+                    -> [TheoryItem p ProofSkeleton s]
+addAutoSourcesLemma crc rules items =
+  case find lemma items of
+    Nothing  -> LemmaItem l:items
+    (Just _) -> items
+  where
+    lemma (LemmaItem (Lemma name _ _ _ _)) | name == lemmaName = True
+    lemma _                                                    = False
+
+    l = unprovenLemma lemmaName [SourceLemma] AllTraces ltrue
+
+    lemmaName = "typing"
 
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
@@ -1433,10 +1456,11 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 -- theory the signature may not change any longer.
 closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenTranslatedTheory
+            -> Bool             -- ^ Try to auto-generate sources lemmas
             -> IO ClosedTheory
-closeTheory maudePath thy0 = do
+closeTheory maudePath thy0 autosources = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
-    return $ closeTheoryWithMaude sig thy0
+    return $ closeTheoryWithMaude sig thy0 autosources
 
 -- | Close a theory by closing its associated rule set and checking the proof
 -- skeletons and caching AC variants as well as precomputed case distinctions.
@@ -1520,13 +1544,18 @@ closeDiffTheoryWithMaude sig thy0 = do
 
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
-closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> ClosedTheory
-closeTheoryWithMaude sig thy0 = do
-      proveTheory (const True) checkProof
-    $ Theory (L.get thyName thy0) h sig cache items (L.get thyOptions thy0)
+closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> ClosedTheory
+closeTheoryWithMaude sig thy0 autoSources =
+  if (autoSources && (containsPartialDeconstructions (cache items)))
+    then
+        proveTheory (const True) checkProof
+      $ Theory (L.get thyName thy0) h sig (cache items') items' (L.get thyOptions thy0)
+    else
+        proveTheory (const True) checkProof
+      $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
-    cache      = closeRuleCache restrictions typAsms sig rules (L.get thyCache thy0) False
+    cache its  = closeRuleCache restrictions (typAsms its) sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -1546,16 +1575,25 @@ closeTheoryWithMaude sig thy0 = do
        PredicateItem
        SapicItem
 
+    modifiedTheoryItems = addAutoSourcesLemma (cache items) (rules items) $ L.get thyItems thy0
+
+    -- Close all theory items: in parallel (especially useful for variants)
+    --
+    -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
+    -- and therefore no constraint systems will be unnecessarily cached.
+    (items', _solveRel', _breakers') = (`runReader` hnd) $ addSolvingLoopBreakers
+       ((closeTheoryItem <$> modifiedTheoryItems) `using` parList rdeepseq)
+
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
                       return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms      = do LemmaItem lem <- items
+    typAsms its  = do LemmaItem lem <- its
                       guard (isSourceLemma lem)
                       return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    rules :: [ClosedProtoRule]
-    rules = theoryRules (Theory errClose errClose errClose errClose items errClose)
+    rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
+    rules its = theoryRules (Theory errClose errClose errClose errClose its errClose)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1577,10 +1615,11 @@ closeTheoryWithMaude sig thy0 = do
 -----------------------------------------------
 
 -- | Apply partial evaluation.
-applyPartialEvaluation :: EvaluationStyle -> ClosedTheory -> ClosedTheory
-applyPartialEvaluation evalStyle thy0 =
-    closeTheoryWithMaude sig $
-    removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0))
+applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheory
+applyPartialEvaluation evalStyle autosources thy0 =
+    closeTheoryWithMaude sig
+      (removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
+      autosources
   where
     sig          = L.get thySignature thy0
     ruEs         = getProtoRuleEs thy0
