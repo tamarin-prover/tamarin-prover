@@ -37,7 +37,6 @@ import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
 
-
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory

@@ -29,15 +29,15 @@ import           Theory
 import           Theory.Sapic
 import           Term.Builtin.Signature
 
-
 reportInit ::  Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
-reportInit anP (initrules,initTx) = return (initrules, initTx)
+reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
   where
         reportrule = AnnotatedRule (Just "Report-rule") anP (Right NoPosition)
                     [In $ fAppPair (varTerm x,varTerm loc)] -- prem
                     [Report x loc]
                     [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
                     []
+                    0
         var s = LVar s LSortMsg 0
         x = var "x"
         loc = var "loc"
@@ -49,10 +49,20 @@ opt_loc loc ann =
   Nothing -> loc
   Just x -> Just x
 
-mapTerms f loc (ProcessNull ann)  = ProcessNull ann
-mapTerms f loc (ProcessAction ac ann p') = ProcessAction (mapTermsAction f (opt_loc loc ann) ac) ann p'
-mapTerms f loc (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f (opt_loc loc ann) c) ann pl pr
-
+mapTerms :: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
+            -> Maybe SapicTerm
+            -> AnProcess ProcessAnnotation
+            -> AnProcess ProcessAnnotation
+mapTerms _ _  (ProcessNull ann)  = ProcessNull ann
+mapTerms f loc (ProcessAction ac ann p') = ProcessAction (mapTermsAction f (opt_loc loc ann) ac) ann
+  $ mapTerms f (opt_loc loc ann) p'
+mapTerms f loc (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f (opt_loc loc ann) c) ann
+  (mapTerms f (opt_loc loc ann) pl)
+  (mapTerms f (opt_loc loc ann) pr)
+mapTermsAction :: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
+            -> Maybe SapicTerm
+            -> SapicAction
+            -> SapicAction
 mapTermsAction f loc ac
         | (New v) <- ac, v' <- termVar' (f loc (varTerm v)) = New v'
         | (ChIn  mt t) <- ac   = ChIn (fmap (f loc) mt) (f loc t)
@@ -68,9 +78,12 @@ mapTermsAction f loc ac
                   -- something like
                   -- formulaMap = mapAtoms $ const $ fmap $ fmap f
                   formulaMap = undefined
-
+mapTermsComb:: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
+            -> Maybe SapicTerm
+            -> ProcessCombinator
+            -> ProcessCombinator
 mapTermsComb f loc c
-        | (Cond fa) <- c = Cond $ undefined -- same problem as above
+        | (Cond _) <- c = Cond $ undefined -- same problem as above
         | (CondEq t1 t2) <- c = CondEq (f loc t1) (f loc t2)
         | (Lookup t v) <- c = Lookup (f loc t) v
         | otherwise = c
@@ -79,10 +92,10 @@ subst :: Maybe SapicTerm -> SapicTerm -> SapicTerm
 subst Nothing t = t
 subst (Just loc) t = case viewTerm t of
   Lit _ -> t
-  FApp (NoEq sym) [a] -> if sym == reportSym then 
+  FApp (NoEq sym) [a] -> if sym == reportSym then
                                 termViewToTerm $ FApp (NoEq repSym)  [subst (Just loc) a, loc]
                          else t
   FApp k as -> termViewToTerm $ FApp k (L.map (subst (Just loc)) as)
 
 translateTermsReport :: AnProcess ProcessAnnotation -> AnProcess ProcessAnnotation
-translateTermsReport = mapTerms subst Nothing 
+translateTermsReport = mapTerms subst Nothing

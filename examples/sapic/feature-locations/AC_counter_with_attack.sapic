@@ -8,7 +8,7 @@ builtins: locations-report
 functions: prog/3,null/0,succ/1,list/2
 
 predicates:
-Pred_rep(x,y) <=> not  (y= 'l')
+Report(x,y) <=> not  (y= 'l')
 
 let r =                                        // The remote server who runs the code
 	(lock state; lookup state as st in
