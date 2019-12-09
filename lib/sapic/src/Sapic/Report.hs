@@ -34,11 +34,15 @@ reportInit ::  Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m 
 reportInit anP (initrules,initTx) = return (initrules, initTx)
   where
         reportrule = AnnotatedRule (Just "Report-rule") anP (Right NoPosition)
-                    [] -- prem
-                    []                -- act
+                    [In $ fAppPair (varTerm x,varTerm loc)] -- prem
+                    [Report x loc]
+                    [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
                     []
-                    []
-                    0
+        var s = LVar s LSortMsg 0
+        x = var "x"
+        loc = var "loc"
+-- [In(<x,loc>)] -[Pred_rep(x,loc)]->[Out(rep(x,loc))]
+
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation -> Maybe SapicTerm
 opt_loc loc ann =
  case (location ann) of

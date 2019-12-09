@@ -70,6 +70,7 @@ data TransAction =  InitEmpty
   | UnlockUnnamed SapicTerm LVar
   | UnlockNamed SapicTerm LVar
   | TamarinAct LNFact
+  | Report LVar LVar
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -194,6 +195,7 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
+actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
