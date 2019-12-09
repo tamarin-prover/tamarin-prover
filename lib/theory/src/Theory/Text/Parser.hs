@@ -661,7 +661,7 @@ lemmaAcc = try $ do
 caseTest :: Parser CaseTest
 caseTest =  CaseTest <$> (symbol "test" *> identifier)
                      <*> (colon *> doubleQuoted standardFormula)
-                     <*> (option [] (symbol "relates to" *> (commaSep1 identifier)))
+                     <*> (optionMaybe (symbol "where" *> doubleQuoted standardFormula))
 
 
 ------------------------------------------------------------------------------
@@ -1213,13 +1213,8 @@ theory flags0 = do
            lemSkel <- lemmaAcc
            let testsIdentifier = S.fromList $ get aCaseTests lemSkel
            let tests = filter (\c -> (get cName c) `S.member` testsIdentifier) (theoryCaseTests thy)
-           let related = S.fromList $ concat $ fmap (get cRelated) tests
-           let rel = buildRelation tests
-           if not $ related `S.isSubsetOf` testsIdentifier
-             then fail $ "related case tests [" ++ (show $ related `S.difference` testsIdentifier) ++ "] not appearing in lemma " ++ (get aName lemSkel)
-             else do
-              thy' <- liftedAddAccLemma thy (skeletonToAccLemma tests rel lemSkel)
-              addItems flags thy'
+           thy' <- liftedAddAccLemma thy (skeletonToAccLemma tests lemSkel)
+           addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'
       , do ru <- protoRule

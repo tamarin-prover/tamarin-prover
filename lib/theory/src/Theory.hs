@@ -53,8 +53,7 @@ module Theory (
   , CaseTest(..)
   , cName
   , cFormula
-  , cRelated
-  , buildRelation
+  , cPermissible
 
   -- * Lemmas
   , LemmaAttribute(..)
@@ -527,24 +526,19 @@ type ProtoVerdictf = [ProtoVerdictMapping]
 
 
 ------------------------------------------------------------------------------
--- Test Cases
+-- Case Tests
 ------------------------------------------------------------------------------
 
 type CaseIdentifier = String
 
-type Relation = S.Set (CaseIdentifier, CaseIdentifier)
-
 data CaseTest = CaseTest 
-       { _cName     :: CaseIdentifier
-       , _cFormula  :: LNFormula
-       , _cRelated  :: [CaseIdentifier]
+       { _cName       :: CaseIdentifier
+       , _cFormula    :: LNFormula
+       , _cPermissible :: Maybe LNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 $(mkLabels [''CaseTest])
-
-buildRelation :: [CaseTest] -> Relation
-buildRelation tests = S.unions $ fmap (\c -> S.fromList [(x,y) | x <- [L.get cName c], y <- (L.get cName c) : (L.get cRelated c)]) tests
 
 
 ------------------------------------------------------------------------------
@@ -617,10 +611,10 @@ data AccLemmaGeneral c = AccLemma
 $(mkLabels [''AccLemmaGeneral])
 
 type AccLemmaSkeleton = AccLemmaGeneral [CaseIdentifier]
-type AccLemma = AccLemmaGeneral ([CaseTest], Relation)
+type AccLemma = AccLemmaGeneral [CaseTest]
 
-skeletonToAccLemma :: [CaseTest] -> Relation -> AccLemmaSkeleton -> AccLemma
-skeletonToAccLemma cTests rel accLem = accLem { _aCaseTests = (cTests, rel) }
+skeletonToAccLemma :: [CaseTest] -> AccLemmaSkeleton -> AccLemma
+skeletonToAccLemma cTests accLem = accLem { _aCaseTests = cTests }
 
 
 -- Instances

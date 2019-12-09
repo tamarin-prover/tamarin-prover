@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -9,157 +10,237 @@
 -- Compute translation-specific restrictions
 module Sapic.Accountability (
       generateAccountabilityLemmas
+   ,  generateAccountabilityRestrictions
 ) where
-import           Control.Monad
-import           Control.Monad.Catch
-import           Control.Arrow
--- import qualified Data.List              as List
--- import qualified Data.Monoid            as M
-import qualified Data.Set               as S
--- import           Data.Typeable
-import qualified Extension.Data.Label   as L
-import           Sapic.Annotation
-import           Sapic.Exceptions
--- import           Sapic.Facts
--- import           Text.Parsec.Error           
--- import           Text.RawString.QQ
-import           Theory
--- import           Theory.Sapic
--- import           Theory.Text.Parser
 
-import           Extension.Prelude
+import           Control.Monad.Catch
+import           Control.Monad.Fresh
+import qualified Extension.Data.Label   as L
+import           Theory
+
+
+
+------------------------------------------------------------------------------
+-- Utilities
+------------------------------------------------------------------------------
 
 -- | Create a lemma from a formula with quantifier. Copies accLemma's name
 -- (plus suffix) and attributes.
-toLemma :: AccLemmaGeneral c -> TraceQuantifier -> ([Char], LNFormula) -> Lemma ProofSkeleton
+toLemma :: AccLemmaGeneral c -> TraceQuantifier -> (String, LNFormula) -> Lemma ProofSkeleton
 toLemma accLemma quantifier (suffix,formula)  = 
         skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
 
--- | Obtain case names used in Lemma
-caseNames :: AccLemmaGeneral [CaseTest] -> [CaseIdentifier]
-caseNames accLemma = map (L.get cName) (L.get aCaseTests accLemma)
+-- | Quantify the given variables
+quantifyVars :: ((String, LSort) -> LVar -> LNFormula -> LNFormula) -> [LVar] -> LNFormula -> LNFormula
+quantifyVars quan vars fm = foldr (\s -> hinted quan s) fm vars
 
--- | Quantify all free variables after removing duplicates and sorting them.
-quantifyFrees :: LNFormula -> LNFormula
-quantifyFrees fm = foldr (\(h, v) -> exists h v) fm hintedVars
-    where hintedVars = map (\s -> ((lvarName s, lvarSort s), s)) (freesList fm)
+-- | Quantify all free variables
+quantifyFrees :: ((String, LSort) -> LVar -> LNFormula -> LNFormula) -> LNFormula -> LNFormula
+quantifyFrees quan fm = quantifyVars quan (frees fm) fm
 
--- | Conjunction of corrupt events off the parties in the argument list
--- | TODO: - Replace 'pubTerm' with ??
--- |       - How to avoid 'True' atom? 
-corruptParties :: [LVar] -> LNFormula
-corruptParties parties = foldl (.&&.) (TF True) corrupted
+protoFactFormula :: String -> [VTerm Name (BVar LVar)] -> VTerm Name (BVar LVar) -> LNFormula
+protoFactFormula name terms at = Ato $ Action at $ protoFact Linear name terms
+
+tempTerm :: String -> VTerm Name (BVar LVar)
+tempTerm name = varTerm $ Free $ LVar name LSortNode 0
+
+msgTerm :: String -> VTerm Name (BVar LVar)
+msgTerm name = varTerm $ Free $ LVar name LSortMsg  0
+
+tempVar :: String -> LVar
+tempVar name = LVar name LSortNode 0
+
+msgVar :: String -> LVar
+msgVar name = LVar name LSortMsg  0
+
+freesSubsetCorrupt :: [LVar] -> LNFormula
+freesSubsetCorrupt vars = foldl1 (.&&.) corrupted
     where
-        corrupted = map (\p -> (Ato (Action (pubTerm "0") (Fact {factTag = ProtoFact Linear "Corrupted" 1, factAnnotations = S.empty, factTerms = [varTerm $ Free p]})))) parties
--- | (Ato (Action Bound 0 (Fact {factTag = ProtoFact Linear "Corrupted" 1, factAnnotations = fromList [], factTerms = [varTerm (Free $ A)]}))))
+        corrupted = map corrupt vars
+        corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupt" [varTerm $ Free $ traceId, varTerm $ Free var] (tempTerm "i")
 
--- | Exclusiveness of ψ_1,..: not (ψ_i && ψ_j) for all i≠j ) 
-exclusiveness :: AccLemma -> [Lemma ProofSkeleton]
-exclusiveness accLemma  = map (toLemma accLemma AllTraces) unequals
+corruptSubsetFrees :: [LVar] -> LNFormula
+corruptSubsetFrees vars = quantifyVars forall [msgVar "a", tempVar "i"] $ 
+                            (protoFactFormula "Corrupt" [varTerm $ Free $ traceId, msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
+
+
+isElem :: LVar -> [LVar] -> LNFormula
+isElem v vars = foldr1 (.||.) (map (eq v) vars)
     where
-        unequals = [ (suff id_i id_j ,f phi_i phi_j) 
-                                   | (id_i,phi_i) <- get accLemma 
-                                    ,(id_j,phi_j) <- get accLemma
-                                    , id_i /= id_j
-                                    ]
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id1 id2 = "_excl_" ++ id1 ++ id2
-        f phi1 phi2 = Not (phi1 .&&. phi2) -- TODO bind free names, how?
+        eq x y = Ato $ EqE (varTerm $ Free x) (varTerm $ Free y)
 
--- | Minimiality for singleton
--- | For all traces t: ∀ S' ⊆ fv(ψ_i). not(ψ_i ∧ corrupted(t) = S')
-minimalitySingleton :: AccLemma -> [Lemma ProofSkeleton]
-minimalitySingleton accLemma = map (toLemma accLemma AllTraces) implies
+strictSubsetOf :: [LVar] -> [LVar] -> LNFormula
+strictSubsetOf left right = subset left right .&&. strict left right
     where
-        implies = [ (suff id_i parties, f phi_i parties)
-                                   | (id_i, phi_i) <- get accLemma
-                                   , parties <- powerset $ frees phi_i ]
-        powerset = filterM (const [True,False])
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id parties = "_min_" ++ id ++ (show parties)
-        f phi parties = Not (phi .&&. (corruptParties parties))
+        subset xs ys = foldr1 (.&&.) (map (\x -> foldr1 (.||.) (map (\y -> eq x y) ys)) xs)
+        strict xs ys = foldr1 (.||.) (map (\x -> foldr1 (.&&.) (map (\y -> Not $ eq y x) ys)) xs)
+        eq x y = Ato $ EqE (varTerm $ Free x) (varTerm $ Free y)
 
--- | Verifiability of ψ_i -> fv(ψ_i) and fv(ψ_i) empty
--- | For all traces t: ψ_i ⇒ φ(t).
-verifiabilityEmpty :: AccLemma -> [Lemma ProofSkeleton]
-verifiabilityEmpty accLemma = map (toLemma accLemma AllTraces) implies
+ntuple :: [LVar] -> VTerm Name (BVar LVar)
+ntuple vars = foldr1 (\a b -> fAppPair (a, b)) (map (varTerm . Free) vars)
+
+varsEq :: [LVar] -> [LVar] -> LNFormula
+varsEq l r = Ato $ EqE (ntuple l) (ntuple r)
+
+traceId :: LVar
+traceId = LVar "tid" LSortMsg  0
+
+isTraceId :: LVar -> Bool
+isTraceId (LVar name LSortMsg  _) = name == "tid"
+isTraceId _ = False
+
+freesNoTraceId :: LNFormula -> [LVar]
+freesNoTraceId = filter (not . isTraceId) . frees
+
+freeTraceIds :: LNFormula -> [LVar]
+freeTraceIds = filter isTraceId . frees
+
+sameInst :: LNFormula -> LNFormula -> LNFormula
+sameInst t1 t2 = varsEq (freesNoTraceId t1) (freesNoTraceId t2)
+
+newTrace :: MonadFresh m => LNFormula -> m LNFormula
+newTrace fm = renameIgnoring (freesNoTraceId fm) fm
+
+newInst :: MonadFresh m => LNFormula -> m LNFormula
+newInst fm = renameIgnoring (freeTraceIds fm) fm
+
+quantifyIds :: ((String, LSort) -> LVar -> LNFormula -> LNFormula) -> LNFormula -> LNFormula
+quantifyIds quan fm = quantifyVars quan (freeTraceIds fm) fm
+
+quantifyNonIds :: ((String, LSort) -> LVar -> LNFormula -> LNFormula) -> LNFormula -> LNFormula
+quantifyNonIds quan fm = quantifyVars quan (freesNoTraceId fm) fm
+
+singleInst :: MonadFresh m => LNFormula -> m LNFormula
+singleInst t1 = do
+    t2 <- newInst t1
+    return $ t1 .&&. quantifyVars forall (freesNoTraceId t2) (t2 .==>. sameInst t1 t2)
+
+noOther :: [LNFormula] -> LNFormula
+noOther fms = foldr1 (.&&.) (map (Not . quantifyNonIds exists) fms)
+
+andIf :: Bool -> Formula a s v -> Formula a s v -> Formula a s v
+andIf p a b = if p then a .&&. b else b
+
+
+
+------------------------------------------------------------------------------
+-- Verification Conditions
+------------------------------------------------------------------------------
+
+sufficiency :: MonadFresh m => [CaseTest] -> CaseTest -> m (Lemma ProofSkeleton)
+sufficiency caseTests caseTest = do
+    t1 <- newTrace tau
+    t2 <- singleInst tau
+    t3 <- newTrace (t2 .&&. andIf (not $ null taus) (noOther taus) (corruptSubsetFrees (freesNoTraceId t1)))
+
+    let formula = quantifyFrees forall $ t1 .==>. quantifyIds exists t3
+
+    return $ skeletonLemma name [] AllTraces formula (unproven ())
     where
-        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma, null $ freesList phi_i ]
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id = "_ver_empty_" ++ id
-        f phi = phi .==>. L.get aFormula accLemma
+        name = L.get cName caseTest ++ "_sufficiency"
+        tau = L.get cFormula caseTest
+        taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
--- | Verifiability of ψ_i -> fv(ψ_i) and fv(ψ_i) non-empty
--- | For all traces t: ψ_i ⇒ ¬φ(t).
-verifiabilityNonempty :: AccLemma -> [Lemma ProofSkeleton]
-verifiabilityNonempty accLemma = map (toLemma accLemma AllTraces) implies
+
+verifiability :: MonadFresh m => AccLemma -> m (Lemma ProofSkeleton)
+verifiability accLemma = return $ toLemma accLemma AllTraces (suffix, formula)
     where
-        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma, not $ null $ freesList phi_i ]
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id = "_ver_nonempty_" ++ id
-        f phi = phi .==>. Not (L.get aFormula accLemma)
+        suffix = "_verif"
+        taus = map (L.get cFormula) (L.get aCaseTests accLemma)
+        lhs = foldl1 (.&&.) $ map (Not . quantifyNonIds exists) taus
+        phi = L.get aFormula accLemma
+        formula = quantifyIds forall $ lhs .<=>. phi
 
--- | Sufficiency for singleton
--- | Exists trace t: ψ_i ∧ ¬φ(t) ∧ corrupt(t) = fv(ψ_i)
--- | TODO: How to combine #i #j in the different formulas?
-sufficiencySingleton :: AccLemma -> [Lemma ProofSkeleton]
-sufficiencySingleton accLemma = map (toLemma accLemma ExistsTrace) implies
+minimality :: MonadFresh m => [CaseTest] -> CaseTest -> m (Lemma ProofSkeleton)
+minimality caseTests caseTest = do
+    t1 <- newInst tau
+    tts <- mapM newInst taus
+
+    let rhs = map (\t -> Not (quantifyVars exists (freesNoTraceId t) $ t .&&. strictSubsetOf (freesNoTraceId t) (freesNoTraceId t1))) tts
+    let formula = simplifyFormula $ quantifyFrees forall $ t1 .==>. foldl1 (.&&.) rhs
+
+    return $ skeletonLemma name [] AllTraces formula (unproven ())
     where
-        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma ]
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id = "_suf_" ++ id
-        f phi = phi .&&. Not (L.get aFormula accLemma) .&&. (corruptParties $ frees phi)
+        name = L.get cName caseTest ++ "_minimality"
+        tau = L.get cFormula caseTest
+        taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
--- | Uniqueness
--- | For all traces t: ψ_i ⇒ corrupt(t) = fv(ψ_i)
-uniquenessSingleton :: AccLemma -> [Lemma ProofSkeleton]
-uniquenessSingleton accLemma = map (toLemma accLemma AllTraces) implies
+uniqueness :: MonadFresh m => CaseTest -> m (Lemma ProofSkeleton)
+uniqueness caseTest = return $ skeletonLemma name [] AllTraces formula (unproven ())
     where
-        implies = [ (suff id_i, f phi_i) | (id_i, phi_i) <- get accLemma ]
-        get l = map (L.get cName &&& L.get cFormula)  (fst $ L.get aCaseTests l)
-        suff id = "_uniq_" ++ id
-        f phi = phi .==>. (corruptParties $ frees phi)
+        name = L.get cName caseTest ++ "_uniqueness"
+        tau = L.get cFormula caseTest
+        formula = pnf $ quantifyFrees forall (tau .==>. (freesSubsetCorrupt $ freesNoTraceId tau))
 
-casesAxioms :: AccLemma -> [Lemma ProofSkeleton]
-casesAxioms accLemma = 
-        exclusiveness accLemma
-        ++
-        verifiabilityEmpty accLemma
-        ++
-        verifiabilityNonempty accLemma
-        ++
-        sufficiencySingleton accLemma
-        ++
-        minimalitySingleton accLemma
-        ++
-        uniquenessSingleton accLemma
-        -- (exclusiveness id op vf )
-        -- @
-        -- [exhaustiveness id op vf]
-        -- @
-        -- (sufficiencySingleton id op parties vf phi)
-        -- @
-        -- (sufficiencyComposite id rel vf)
-        -- @
-        -- (verifiability_empty id op vf phi)
-        -- @
-        -- (verifiability_nonempty id op vf phi)
-        -- @
-        -- (minimalitySingleton id op rel parties vf phi)
-        -- @
-        -- (minimalityComposite id rel vf)
-        -- @
-        -- (uniquenessSingleton id op vf)
-        -- @ 
-        -- (completenessComposite id rel vf) (*Not actually needed, parser takes care of that *)
-        -- (* Reflexivity and termination are guaranteed by parser, too. *)
+terminating :: MonadFresh m => [CaseTest] -> CaseTest -> m (Lemma ProofSkeleton)
+terminating caseTests caseTest = do
+    t1 <- newTrace tau
+    t2 <- singleInst tau
+    t3 <- newTrace (andIf (not $ null taus) (noOther taus) t2)
+
+    let formula = pnf $ quantifyFrees forall $ t1 .==>. quantifyIds exists t3
+    
+    return $ skeletonLemma name [] AllTraces formula (unproven ())
+    where
+        name = L.get cName caseTest ++ "_rel_terminating"
+        tau = L.get cFormula caseTest
+        taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
+
+
+test :: MonadFresh m => CaseTest -> m (Lemma ProofSkeleton)
+test caseTest = do
+    t1 <- newTrace tau
+
+    let formula = prenex $ quantifyFrees forall $ t1 .==>. t1
+    
+    return $ skeletonLemma name [] AllTraces formula (unproven ())
+    where
+        name = L.get cName caseTest ++ "_test"
+        tau = L.get cFormula caseTest
+
+------------------------------------------------------------------------------
+-- Restrictions
+------------------------------------------------------------------------------
+
+relationTerminatingRes :: MonadFresh m => CaseTest -> m Restriction
+relationTerminatingRes caseTest = do
+    t1 <- newTrace tau
+    t2 <- newInst t1
+    t3 <- (singleInst >=> newTrace) t1
+    t4 <- (singleInst >=> newTrace) t2
+    let formula = t1 .&&. t2 .&&. (Not $ sameInst t1 t2) .==>. quantifyIds exists (t3 .&&. t4)
+    return $ Restriction name $ quantifyFrees forall formula
+    where
+        name = L.get cName caseTest ++ "_rel_term"
+        tau = L.get cFormula caseTest
+
+
+
+------------------------------------------------------------------------------
+-- Generation
+------------------------------------------------------------------------------
+            
+casesLemmas :: MonadFresh m => AccLemma -> m [Lemma ProofSkeleton]
+casesLemmas accLemma = do
+        s <- mapM (sufficiency caseTests) caseTests
+        v <- verifiability accLemma
+        m <- mapM (minimality caseTests) caseTests
+        u <- mapM uniqueness caseTests
+        t <- mapM (terminating caseTests) caseTests
+        tt <- mapM test caseTests
+
+        return $ s ++ [v] ++ m ++ u ++ t ++ tt
+    where
+        caseTests = L.get aCaseTests accLemma
+
+casesRestrictions :: MonadFresh m => AccLemma -> m [Restriction]
+casesRestrictions accLemma = 
+        mapM relationTerminatingRes caseTests
+    where
+        caseTests = L.get aCaseTests accLemma
 
 generateAccountabilityLemmas :: (Monad m, MonadThrow m) => AccLemma -> m [Lemma ProofSkeleton]
-generateAccountabilityLemmas accLemma = do
-    return (casesAxioms accLemma)
-    -- | Coarse <- L.get aAccKind accLemma = return []
-    -- | Cases <- L.get aAccKind  accLemma = return $ cases_axioms accLemma 
-    --     -- (cases_axioms id op parties vf phi)
-    --     -- @
-    --     -- (relationLifting manualf id op vf rel)
-    -- | ControlEquivalence <- L.get aAccKind accLemma = return []
+generateAccountabilityLemmas accLemma = evalFreshT (casesLemmas accLemma) 0
+
+generateAccountabilityRestrictions :: (Monad m, MonadThrow m) => AccLemma -> m [Restriction]
+generateAccountabilityRestrictions accLemma = evalFreshT (casesRestrictions accLemma) 0
