@@ -59,12 +59,9 @@ translate th = case theoryProcesses th of
                 -- add accountability lemma
                 accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
                 th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
-                -- add accountability restriction
-                -- accRes <- mapM generateAccountabilityRestrictions (theoryAccLemmas th2)
-                -- th4 <- foldM liftedAddRestriction th3 (concat accRes)
                 -- add heuristic, if not already defined:
-                th5 <- return $ fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
-                return (removeSapicItems th5)
+                th4 <- return $ fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
+                return (removeSapicItems th4)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
