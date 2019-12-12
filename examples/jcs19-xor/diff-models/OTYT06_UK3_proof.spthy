@@ -1,0 +1,95 @@
+theory OTYT06_UK3_proof begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Tag/2 */
+
+/* looping facts with injective instances: Tag/2 */
+
+/* looping facts with injective instances: Tag/2 */
+
+/* looping facts with injective instances: Tag/2 */
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ]
+  --[ Setup( ~k ), OnlyOnce( 'setup' ) ]->
+   [ Tag( ~k, ~k ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x )
+  ]->
+   [ Out( h((r1⊕x)) ), Tag( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( newKey ), Tag( ~k, x ) ]
+  -->
+   [ Tag( diff(~k, ~k2), diff((newKey⊕x), ~k2) ) ]
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( Tag( ~k, x ) ▶₁ #vr ) )
+          case Setup
+          step( solve( !KU( h(z) ) @ #vk ) )
+            case tag1
+            step( solve( Tag( ~k.1, x ) ▶₁ #vr.2 ) )
+              case tag1
+              step( solve( Tag( ~k.1, x ) ▶₁ #vr.3 ) )
+                case tag2
+                step( solve( Tag( ~k.1, x.1 ) ▶₂ #vr.4 ) )
+                  case tag1
+                  step( solve( Tag( ~k.1, x.1 ) ▶₁ #vr.5 ) )
+                    case Setup
+                    step( solve( splitEqs(0) ) )
+                      case split_case_2
+                      step( solve( splitEqs(1) ) )
+                        case split_case_02
+                        step( solve( !KU( zero ) @ #vk.2 ) )
+                          case c_zero
+                          step( solve( splitEqs(2) ) )
+                            case split_case_01
+                            by ATTACK // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+end

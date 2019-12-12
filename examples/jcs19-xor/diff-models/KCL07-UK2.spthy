@@ -1,0 +1,97 @@
+theory KCL07_UK2 begin
+
+builtins: xor, hashing, multiset
+
+/*
+KCL07: Reader R, RFID tag T, shared knowledge k, ID
+
+   R: knows(k, ID)
+   T: knows(k, ID)
+   R: fresh(r1)
+R->T: r1
+   T: fresh(r2)
+T->R: ID XOR r2,  h(r1,k) XOR r2  
+   
+   R considers T recent alive if it can find ID, k such that
+     the pair of terms received from T in the last step satisfies
+     
+     ID XOR r2  XOR  h(r1,k) XOR r2   =   ID XOR h(r1,k)
+
+recent aliveness is satisfied, but untracability is not.
+The model below focuses on untraceability.
+The property being checked is weak unlinkability of the tag for one session.
+*/
+
+rule setup:
+   let data1 = <~k1,~id1>
+       data2 = <~k2,~id2>
+       datab = diff(data1, data2)
+       dataReader = data1 + data2
+   in
+   [ Fr( ~k1 ), Fr( ~id1 )
+   , Fr( ~k2 ), Fr( ~id2 )
+   ]
+--[ OnlyOnce('setup') ]->
+   [  Transcript(data1)    
+    , Reader(dataReader)
+    , TagRun(datab)
+   ]
+
+rule transcript:
+  let   m1 =  <~id XOR ~r2, h(<~r1,~k>) XOR ~r2>
+  in
+  [ Transcript(<~k,~id>)
+  , Fr(~r1)
+  , Fr(~r2) 
+  ]
+--[ ]->
+  [ Out(~r1)
+  , Out(<~r2,m1>)
+  ]
+
+rule initiatereader:
+  [ Reader(d1 + d2), Fr(~r0)]
+--[ ]->
+  [ ReaderRun(d1)]
+
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   [ In( r1 )
+   , Fr( ~r2 )
+   , TagRun( <~k, ~id> ) 
+   ]
+ --[ Response( ~k, 'Tag' )
+   ]->
+   [ Out( <~id XOR ~r2, h(<r1,~k>) XOR ~r2>)
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , ReaderRun(< ~k, ~id >)
+//   , In( <idr2, hashr2> ) // This is how it should be
+   , In( xoredhash )        // This is the only way I can make it work
+   ]
+ --[ Alive( ~k, 'Tag' )
+//   , Eq( idr2 XOR hashr2, ~id XOR h(<~r1,~k>) ) // How it should be
+   , Eq( xoredhash, ~id XOR h(<~r1,~k>) )  // how it works
+   ]->
+   []
+
+restriction onylOnce:
+  "All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2"
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+
+// FALSIFIED, attack found AUTOMATICALLY
+// Observational_equivalence lemma
+
+end

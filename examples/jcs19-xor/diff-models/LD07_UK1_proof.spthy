@@ -1,0 +1,119 @@
+theory LD07_UK1_proof begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) SetupLearning:
+   [ Fr( ~k1 ), Fr( ~k2 ), Fr( ~k ) ]
+  --[ Setup( ~k1 ), Setup( ~k2 ), OnlyOnce( 'setupLearning' ) ]->
+   [ Tag( ~k1, (~k⊕~k1) ), Tag( ~k2, (~k⊕~k2) ), SetupKeys( ~k1, ~k2 )
+   ]
+
+rule (modulo E) SetupGuessing:
+   [ SetupKeys( ~k1, ~k2 ), Tag( ~k1, x1 ), Tag( ~k2, x2 ) ]
+  --[ OnlyOnce( 'setupGuessing' ) ]->
+   [ Tag( diff(~k1, ~k2), diff(x1, x2) ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyTwice( 'tag1' )
+  ]->
+   [ Out( h((r1⊕x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( <newkey, newhash> ), TagRunning( ~k, x ) ]
+  --[
+  Update( ~k, (newkey⊕x), 'Tag' ), Eq( h((newkey⊕x)), newhash ),
+  Alive( ~k, 'Reader' ), OnlyTwice( 'tag2' )
+  ]->
+   [ Tag( ~k, (newkey⊕x) ) ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction uniqueTwice [right]:
+  "∀ x #i #j #k.
+    (((OnlyTwice( x ) @ #i) ∧ (OnlyTwice( x ) @ #j)) ∧
+     (OnlyTwice( x ) @ #k)) ⇒
+    (((#i = #j) ∨ (#i = #k)) ∨ (#j = #k))"
+  // safety formula
+
+restriction uniqueTwice [left]:
+  "∀ x #i #j #k.
+    (((OnlyTwice( x ) @ #i) ∧ (OnlyTwice( x ) @ #j)) ∧
+     (OnlyTwice( x ) @ #k)) ⇒
+    (((#i = #j) ∨ (#i = #k)) ∨ (#j = #k))"
+  // safety formula
+
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( Tag( ~k, x ) ▶₁ #vr ) )
+          case SetupGuessing
+          step( solve( Tag( ~k, x ) ▶₁ #vr.1 ) )
+            case tag1
+            step( solve( Tag( ~k2, x2 ) ▶₂ #vr.1 ) )
+              case SetupLearning
+              step( solve( Tag( ~k, x ) ▶₁ #vr.3 ) )
+                case SetupLearning
+                step( solve( !KU( h(z) ) @ #vk ) )
+                  case tag1
+                  step( solve( (#vr = #vr.4)  ∥ (#vr.3 = #vr.4) ) )
+                    case case_2
+                    step( solve( splitEqs(0) ) )
+                      case split_case_2
+                      step( solve( splitEqs(1) ) )
+                        case split
+                        step( solve( !KU( r1 ) @ #vk.1 ) )
+                          case fresh
+                          step( solve( !KU( ~x ) @ #vk.1 ) )
+                            case fresh
+                            by ATTACK // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+end
