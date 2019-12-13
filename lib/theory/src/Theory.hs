@@ -2142,10 +2142,14 @@ prettyLemma ppPrf lem =
           ]
     )
     $-$
+    debug (L.get lFormula lem)
+    $-$
     ppLNFormulaGuarded (L.get lFormula lem)
     $-$
     ppPrf (L.get lProof lem)
   where
+    debug fm = multiComment $
+      text $ show fm
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$

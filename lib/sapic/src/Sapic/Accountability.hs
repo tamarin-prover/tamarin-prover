@@ -12,6 +12,8 @@ module Sapic.Accountability (
       generateAccountabilityLemmas
 ) where
 
+import           Debug.Trace
+import           Control.Arrow
 import           Control.Monad.Catch
 import           Control.Monad.Fresh
 import qualified Extension.Data.Label   as L
@@ -68,7 +70,7 @@ isElem v vars = foldr1 (.||.) (map (eq v) vars)
         eq x y = Ato $ EqE (varTerm $ Free x) (varTerm $ Free y)
 
 strictSubsetOf :: [LVar] -> [LVar] -> LNFormula
-strictSubsetOf left right = subset left right .&&. strict left right
+strictSubsetOf lhs rhs = subset lhs rhs .&&. strict lhs rhs
     where
         subset xs ys = foldr1 (.&&.) (map (\x -> foldr1 (.||.) (map (\y -> eq x y) ys)) xs)
         strict xs ys = foldr1 (.||.) (map (\x -> foldr1 (.&&.) (map (\y -> Not $ eq y x) ys)) xs)
@@ -99,15 +101,25 @@ singleMatch t = do
 -- Verification Conditions
 ------------------------------------------------------------------------------
 
--- type VerificationCondition = LNFormula -> [LNFormula] -> LNFormula -> (String, TraceQuantifier, LNFormula)
+-- | TODO: Prefix all generated lemmas with acc lemma name to avoid multiple lemmas with the same name.
+
+type VerificationCondition = LNFormula -> [(String, LNFormula)] -> (String, LNFormula) -> (String, TraceQuantifier, LNFormula)
+
+generateLemmas :: MonadFresh m => AccLemma -> VerificationCondition -> m [Lemma ProofSkeleton]
+generateLemmas accLemma verifCond = mapM (\(suffix, quan, fm) -> return $ toLemma accLemma quan suffix fm) (map (verifCond phi taus) taus)
+    where
+        taus = map (L.get cName &&& L.get cFormula) (L.get aCaseTests accLemma)
+        phi = L.get aFormula accLemma
+
+-- sufficiency :: VerificationCondition
+-- sufficiency _ taus (name, tau) = do
+--     t1 <- singleMatch tau
 -- 
--- sufficiency tau taus phi
+--     let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (noOther taus) (corruptSubsetFrees (frees t1)))
 -- 
--- generateLemmas :: MonadFresh m => AccLemma -> VerificationCondition -> m [Lemma ProofSkeleton]
--- generateLemmas accLemma sufficiency 
--- generateLemmas accLemma minimality 
--- 
--- toSmth "_suff" ExistsTrace formula
+--     return $ (name ++ "_suff", ExistsTrace, formula)
+--     where
+--         taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
 sufficiency :: MonadFresh m => [CaseTest] -> CaseTest -> m (Lemma ProofSkeleton)
 sufficiency caseTests caseTest = do
@@ -115,14 +127,14 @@ sufficiency caseTests caseTest = do
 
     let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (noOther taus) (corruptSubsetFrees (frees t1)))
 
-    return $ skeletonLemma name [] ExistsTrace  formula (unproven ())
+    return $ skeletonLemma name [] ExistsTrace (wellformedness formula) (unproven ())
     where
         name = L.get cName caseTest ++ "_suff"
         tau = L.get cFormula caseTest
         taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
 verifiability :: MonadFresh m => AccLemma -> m (Lemma ProofSkeleton)
-verifiability accLemma = return $ toLemma accLemma AllTraces suffix formula
+verifiability accLemma = return $ toLemma accLemma AllTraces suffix (wellformedness formula)
     where
         suffix = "_verif"
         taus = map (L.get cFormula) (L.get aCaseTests accLemma)
@@ -138,14 +150,14 @@ minimality caseTests caseTest = do
     let rhs = map (\t -> Not (quantifyVars exists (frees t) $ t .&&. strictSubsetOf (frees t) (frees t1))) tts
     let formula = quantifyFrees forall $ t1 .==>. foldl1 (.&&.) rhs
 
-    return $ skeletonLemma name [] AllTraces formula (unproven ())
+    return $ skeletonLemma name [] AllTraces (wellformedness formula) (unproven ())
     where
         name = L.get cName caseTest ++ "_min"
         tau = L.get cFormula caseTest
         taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
 uniqueness :: MonadFresh m => CaseTest -> m (Lemma ProofSkeleton)
-uniqueness caseTest = return $ skeletonLemma name [] AllTraces formula (unproven ())
+uniqueness caseTest = return $ skeletonLemma name [] AllTraces (wellformedness formula) (unproven ())
     where
         name = L.get cName caseTest ++ "_uniq"
         tau = L.get cFormula caseTest
@@ -153,7 +165,7 @@ uniqueness caseTest = return $ skeletonLemma name [] AllTraces formula (unproven
 
 -- | :TODO: : Avoid duplicates
 injective :: MonadFresh m => CaseTest -> m (Lemma ProofSkeleton)
-injective caseTest = return $ skeletonLemma name [] AllTraces  formula (unproven ())
+injective caseTest = return $ skeletonLemma name [] AllTraces  (wellformedness formula) (unproven ())
     where
         name = L.get cName caseTest ++ "_inj"
         tau = L.get cFormula caseTest
@@ -165,9 +177,9 @@ terminating caseTests caseTest = do
 
     let formula = quantifyFrees exists $ andIf (not $ null taus) t1 (noOther taus)
 
-    return $ skeletonLemma name [] ExistsTrace  formula (unproven ())
+    return $ skeletonLemma name [] ExistsTrace (wellformedness formula) (unproven ())
     where
-        name = L.get cName caseTest ++ "_rel_ter"
+        name = L.get cName caseTest ++ "_rel_ter" 
         tau = L.get cFormula caseTest
         taus = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) caseTests)
 
@@ -186,9 +198,47 @@ casesLemmas accLemma = do
         i <- mapM injective caseTests
         t <- mapM (terminating caseTests) caseTests
 
-        return $ s ++ [v] ++ m ++ u ++ i ++ t
+        return $ t -- s ++ [v] ++ m ++ u ++ i ++ t
     where
         caseTests = L.get aCaseTests accLemma
 
 generateAccountabilityLemmas :: (Monad m, MonadThrow m) => AccLemma -> m [Lemma ProofSkeleton]
 generateAccountabilityLemmas accLemma = evalFreshT (casesLemmas accLemma) 0
+
+
+
+------------------------------------------------------------------------------
+-- Wellformedness transformation
+------------------------------------------------------------------------------
+
+wellformedness :: (Ord c, Ord v, Eq s, Show s, Show (Formula s c v)) => Formula s c v -> Formula s c v
+wellformedness = prenex
+
+pullquants :: (Ord c, Ord v, Eq s, Show s, Show (Formula s c v)) => Formula s c v -> Formula s c v
+pullquants fm = case fm of
+    Conn And (Qua All x p) (Qua All x' q) | x == x' -> pull_2 All (.&&.) x p q
+    Conn Or  (Qua Ex  x p) (Qua Ex  x' q) | x == x' -> pull_2 Ex  (.||.) x p q
+
+    Conn And (Qua qua x p) q             -> pull_l qua (.&&.) x p q
+    Conn And p             (Qua qua x q) -> pull_r qua (.&&.) x p q
+    Conn Or  (Qua qua x p) q             -> pull_l qua (.||.) x p q
+    Conn Or  p             (Qua qua x q) -> pull_r qua (.||.) x p q
+
+    Conn Imp (Qua Ex x p) q -> pull_l All (.==>.) x p q
+    Conn Imp (Qua All x p) q -> pull_l Ex (.==>.) x p q
+
+    _                                    -> fm
+  where
+    pull_l qua op x p q = Qua qua x (pullquants (p `op` shiftFreeIndices 1 q))
+    pull_r qua op x p q = Qua qua x (pullquants (shiftFreeIndices 1 p `op` q))
+    pull_2 qua op x p q = Qua qua x (pullquants (p `op` q))
+
+prenex :: (Ord c, Ord v, Eq s, Show s, Show (Formula s c v)) => Formula s c v -> Formula s c v
+prenex fm = case fm of
+    Not p        -> Not (prenex p)
+    Qua qua x p  -> Qua qua x (prenex p)
+    Conn And p q -> pullquants $ prenex p .&&. prenex q
+    Conn Or  p q -> pullquants $ prenex p .||. prenex q
+    Conn Imp p q -> pullquants $ prenex p .==>. prenex q
+    Conn Iff p q -> pullquants $ prenex p .==>. prenex q .&&. prenex q .==>. prenex p
+    _            -> fm

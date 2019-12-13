@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns         #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -46,10 +47,11 @@ module Theory.Model.Formula (
 
   -- ** Normal forms / simplification
   , simplifyFormula
-  , nnf
-  , pullquants
-  , prenex
-  , pnf
+  -- , nnf
+  -- , pullquants
+  -- , prenex
+  -- , pnf
+  , shiftFreeIndices
 
   -- ** Pretty-Printing
   , prettyLNFormula
@@ -294,7 +296,7 @@ simplifyFormula fm0 = case fm0 of
     _            -> fm0
   where
     simplifyFormula1 fm = case fm of
-        Ato (EqE l r)                   -> if l == r then TF True else TF False
+        a@(Ato (EqE l r))               -> if l == r then TF True else a
         Not (TF b)                      -> TF (not b)
         Conn And (TF False) _           -> TF False
         Conn And _          (TF False)  -> TF False
