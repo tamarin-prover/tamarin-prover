@@ -47,10 +47,10 @@ module Theory.Model.Formula (
 
   -- ** Normal forms / simplification
   , simplifyFormula
-  -- , nnf
-  -- , pullquants
-  -- , prenex
-  -- , pnf
+  , nnf
+  , pullquants
+  , prenex
+  , pnf
   , shiftFreeIndices
 
   -- ** Pretty-Printing

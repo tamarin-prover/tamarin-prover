@@ -53,7 +53,6 @@ module Theory (
   , CaseTest(..)
   , cName
   , cFormula
-  , cPermissible
 
   -- * Lemmas
   , LemmaAttribute(..)
@@ -534,7 +533,6 @@ type CaseIdentifier = String
 data CaseTest = CaseTest 
        { _cName       :: CaseIdentifier
        , _cFormula    :: LNFormula
-       , _cPermissible :: Maybe LNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -2142,14 +2140,10 @@ prettyLemma ppPrf lem =
           ]
     )
     $-$
-    debug (L.get lFormula lem)
-    $-$
     ppLNFormulaGuarded (L.get lFormula lem)
     $-$
     ppPrf (L.get lProof lem)
   where
-    debug fm = multiComment $
-      text $ show fm
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$

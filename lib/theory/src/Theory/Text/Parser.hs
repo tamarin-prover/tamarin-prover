@@ -661,8 +661,6 @@ lemmaAcc = try $ do
 caseTest :: Parser CaseTest
 caseTest =  CaseTest <$> (symbol "test" *> identifier)
                      <*> (colon *> doubleQuoted standardFormula)
-                     <*> (optionMaybe (symbol "where" *> doubleQuoted standardFormula))
-
 
 ------------------------------------------------------------------------------
 -- Parsing Proofs
