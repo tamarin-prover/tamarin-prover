@@ -56,11 +56,11 @@ freesSubsetCorrupt :: [LVar] -> LNFormula
 freesSubsetCorrupt vars = foldl1 (.&&.) corrupted
     where
         corrupted = map corrupt vars
-        corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupt" [varTerm $ Free var] (tempTerm "i")
+        corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupted" [varTerm $ Free var] (tempTerm "i")
 
 corruptSubsetFrees :: [LVar] -> LNFormula
 corruptSubsetFrees vars = quantifyVars forall [msgVar "a", tempVar "i"] $ 
-                            (protoFactFormula "Corrupt" [msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
+                            (protoFactFormula "Corrupted" [msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
 
 isElem :: LVar -> [LVar] -> LNFormula
 isElem v vars = foldr1 (.||.) (map (eq v) vars)
@@ -150,7 +150,7 @@ injective accLemma caseTest = return $ toLemma accLemma AllTraces name (toInterm
     where
         name = "_" ++ L.get cName caseTest ++ "_inj"
         tau = L.get cFormula caseTest
-        formula = quantifyFrees forall (tau .==>. foldr1 (.&&.) [ Not $ varsEq [x] [y] | x <- frees tau, y <- (frees tau), x /= y ])
+        formula = quantifyFrees forall (tau .==>. foldr (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- (frees tau), x /= y ])
 
 terminating :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
 terminating accLemma caseTest = do
