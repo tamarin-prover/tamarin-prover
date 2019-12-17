@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE ViewPatterns         #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -209,7 +210,7 @@ module Theory (
 
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 
@@ -249,6 +250,8 @@ import           Theory.Tools.RuleVariants
 import           Theory.Tools.IntruderRules
 
 import           Term.Positions
+
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -919,21 +922,161 @@ addLemma l thy = do
 
 -- | Add an auto-generated sources lemma if possible
 -- Under development
-addAutoSourcesLemma :: ClosedRuleCache
-                    -> [ClosedProtoRule]
-                    -> [TheoryItem p ProofSkeleton s]
-                    -> [TheoryItem p ProofSkeleton s]
-addAutoSourcesLemma crc rules items =
+addAutoSourcesLemma :: MaudeHandle
+                    -> ClosedRuleCache
+                    -> [TheoryItem OpenProtoRule ProofSkeleton s]
+                    -> [TheoryItem OpenProtoRule ProofSkeleton s]
+addAutoSourcesLemma hnd (ClosedRuleCache _ raw _ _) items =
+  -- We only add the lemma if there is no lemma of the same name
   case find lemma items of
-    Nothing  -> LemmaItem l:items
-    (Just _) -> items
+    Nothing  -> LemmaItem l:items'
+    (Just _) -> items'
   where
+    runMaude   = (`runReader` hnd)
+
+    -- searching for the lemma
     lemma (LemmaItem (Lemma name _ _ _ _)) | name == lemmaName = True
     lemma _                                                    = False
 
-    l = unprovenLemma lemmaName [SourceLemma] AllTraces ltrue
+    -- Name of the auto-generated lemma
+    lemmaName = "AUTO_typing"
 
-    lemmaName = "typing"
+    -- build the lemma
+    l = unprovenLemma lemmaName [SourceLemma] AllTraces formula
+
+    -- extract all rules from theory items
+    rules = mapMaybe itemToRule items
+
+    -- compute all encrypted subterms that are output by protocol rules
+    allOutConcs :: [(OpenProtoRule, Int, LNTerm)]
+    allOutConcs = do
+        ru                         <- rules
+        (_, outFactView -> Just t) <- enumConcs ru
+        (nr, m)                    <- zip [1::Int ..] $ allEncSubterms t
+        return (ru, nr, m)
+
+    -- We use the raw sources here to generate one lemma to rule them all...
+    (items', formula, _) = foldl computeFormula (items, ltrue, []) chains
+
+    -- Generate a list of all cases that contain open chains
+    chains = zip [1::Int ..] $ concatMap (multiply unsolvedChains . duplicate) $
+                   concatMap (map snd . getDisj . L.get cdCases) raw
+
+    -- Given a list of theory items, a formula, a source with an open chain,
+    -- return an updated list of theory items and an update formula for the sources lemma.
+    computeFormula :: ([TheoryItem OpenProtoRule ProofSkeleton s], LNFormula, [(OpenProtoRule, Position)])
+                   -> (Int, ((NodeConc, NodePrem), System))
+                   -> ([TheoryItem OpenProtoRule ProofSkeleton s], LNFormula, [(OpenProtoRule, Position)])
+    computeFormula (its, form, done) (nr, ((conc,_), source)) = (its', form', done')
+      where
+        -- The new items are the old ones but with added labels
+        its'  = addLabels inputsAndOutputs its
+        -- The new formula is the old one AND the new formula
+        form' = addFormula inputsAndOutputs form
+        -- The new list of treated cases
+        done' = addCases inputsAndOutputs done
+
+        -- Variable causing the open chain
+        v     = head $ getFactTerms $ nodeConcFact conc source
+
+        -- Compute all input rules that contain v, and the position of v inside the input term
+        inputRules :: [(OpenProtoRule, LNTerm, Position)]
+        inputRules = concat $ mapMaybe g $ allInPrems source
+          where
+            g (nodeid, pid, term) = do
+              position  <- findPos v term
+              ruleSys   <- nodeRuleSafe nodeid source
+              rule      <- find ((ruleName ruleSys ==).ruleName) rules
+              premise   <- lookupPrem pid rule
+              t         <- inFactView premise
+              return $ do
+                -- iterate over all positions found
+                pos     <- position
+                guard $ notElem (rule, pos) done
+                return (rule, t, pos)
+
+        -- a list of all encrypted input subterms to unify
+        encryptedSubterms :: [(OpenProtoRule, LNTerm, LNTerm, Position)]
+        encryptedSubterms = mapMaybe f inputRules
+          where
+            f (x, y, z) = do
+              v' <- y `atPosMay` z
+              return (x, deepestEncSubterm y z, v', z)
+
+        -- compute matching outputs
+        -- returns a list of inputs together with their list of matching outputs
+        inputsAndOutputs :: [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)])]
+        inputsAndOutputs = do
+            -- iterate over all inputs
+            (rin, tin, vin, pos) <- encryptedSubterms
+            -- find matching conclusions
+            let matches = matchingConclusions rin tin
+            return (rin, tin, vin, pos, matches)
+          where
+            matchingConclusions rin tin = do
+              (rout, n, tout) <- allOutConcs
+              -- generate fresh instance of conclusion, avoiding the premise variables
+              let fout = tout `renameAvoiding` tin
+              -- we ignore outputs of the same rule
+              guard (ruleName rin /= ruleName rout)
+              -- check whether input and output are unifiable
+              guard (runMaude $ unifiableLNTerms tin fout)
+              return (rout, n, tout)
+
+        -- construct action facts for the rule annotations and formula
+        inputFact k r m n = Fact {factTag = ProtoFact Linear
+              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName r) 2,
+              factAnnotations = S.empty, factTerms = [m, n]}
+        outputFact k r m  = Fact {factTag = ProtoFact Linear
+              ("AUTO_OUT_" ++ show k ++ "_" ++ getRuleName r) 1,
+              factAnnotations = S.empty, factTerms = [m]}
+
+        -- add labels to rules for typing lemma
+        addLabels matches = map update
+          where
+            update (RuleItem r) = RuleItem $ foldr up r $
+                   filter ((ruleName r ==). ruleName . fst) acts
+              where
+                up (n, Left (k, y, z)) r' = addAction r' (inputFact k n y z)
+                up (n, Right (k, y))   r' = addAction r' (outputFact k n y)
+            update it           = it
+
+            acts = inputActs ++ outputActs
+            inputActs =
+                zipWith (\k (x, y, z, _, _) -> (x, Left (k, y, z))) [1::Int ..] matches
+            outputActs =
+                map (\(x, k, y) -> (x, Right (k, y))) $ concatMap (\(_, _, _, _, x) -> x) matches
+
+        -- add formula to lemma
+        addFormula ::
+             [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)])]
+          -> LNFormula
+          -> LNFormula
+        addFormula matches f = foldr addForm f $ zip [1..] matches
+          where
+            addForm ::
+                 (Int, (OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)]))
+              -> LNFormula
+              -> LNFormula
+            addForm (k, (n, _, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
+              (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
+              (Conn Imp (Ato (Action (varTerm (Bound 0))
+              (inputFact k n (varTerm (Bound 1)) (varTerm (Bound 2)))))
+              (foldl toFacts orKU outs))))
+            orKU = Qua Ex ("j",LSortNode)
+                   (Conn And (Ato (Action (varTerm (Bound 0))
+                    Fact {factTag = KUFact, factAnnotations = S.empty,
+                          factTerms = [varTerm (Bound 3)]} ))
+                   (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1)))))
+            toFacts f'' (n, k, _) =
+              Conn Or f''
+              (Qua Ex ("j",LSortNode)
+              (Conn And (Ato (Action (varTerm (Bound 0))
+              (outputFact k n (varTerm (Bound 2))) ))
+              (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1))))))
+
+        -- add all cases (identified by rule name and input variable position) to the list of treated cases
+        addCases matches d = d ++ map (\(r, _, _, p, _) -> (r, p)) matches
 
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
@@ -1080,6 +1223,13 @@ addFormalComment c = modify thyItems (++ [TextItem c])
 addFormalCommentDiff :: FormalComment -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
 addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 
+isRuleItem :: TheoryItem r p s -> Bool
+isRuleItem (RuleItem _) = True
+isRuleItem _            = False
+
+itemToRule :: TheoryItem r p s -> Maybe r
+itemToRule (RuleItem r) = Just r
+itemToRule _            = Nothing
 
 ------------------------------------------------------------------------------
 -- Open theory construction / modification
@@ -1546,7 +1696,7 @@ closeDiffTheoryWithMaude sig thy0 = do
 -- the given theory.
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> ClosedTheory
 closeTheoryWithMaude sig thy0 autoSources =
-  if (autoSources && (containsPartialDeconstructions (cache items)))
+  if autoSources && containsPartialDeconstructions (cache items)
     then
         proveTheory (const True) checkProof
       $ Theory (L.get thyName thy0) h sig (cache items') items' (L.get thyOptions thy0)
@@ -1575,7 +1725,7 @@ closeTheoryWithMaude sig thy0 autoSources =
        PredicateItem
        SapicItem
 
-    modifiedTheoryItems = addAutoSourcesLemma (cache items) (rules items) $ L.get thyItems thy0
+    modifiedTheoryItems = addAutoSourcesLemma hnd (cache items) $ L.get thyItems thy0
 
     -- Close all theory items: in parallel (especially useful for variants)
     --
@@ -1633,9 +1783,6 @@ applyPartialEvaluation evalStyle autosources thy0 =
 
           ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
       | otherwise        = item : replaceProtoRules items
-
-    isRuleItem (RuleItem _) = True
-    isRuleItem _            = False
 
     ppAbsState =
       (text $ " the abstract state after partial evaluation"

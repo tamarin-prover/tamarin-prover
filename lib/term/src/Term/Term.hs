@@ -37,8 +37,12 @@ module Term.Term (
     , isEMap
     , isNullaryPublicFunction
     , isPrivateFunction
+    , isAC
     , getLeftTerm
     , getRightTerm
+
+    -- ** "Encrypted" subterms
+    , allEncSubterms
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -62,7 +66,7 @@ module Term.Term (
     , multSymString
     , zeroSymString
     , xorSymString
-    
+
     -- ** Function symbols
     , diffSym
     , expSym
@@ -176,6 +180,11 @@ isPrivateFunction :: Term a -> Bool
 isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
 isPrivateFunction _                                            = False
 
+-- | 'True' iff the term is an AC-operator.
+isAC :: Show a => Term a -> Bool
+isAC (viewTerm -> FApp (AC _) _) = True
+isAC _                           = False
+
 ----------------------------------------------------------------------
 -- Convert Diff Terms
 ----------------------------------------------------------------------
@@ -195,6 +204,18 @@ getLeftTerm t = getSide DiffLeft t
 
 getRightTerm :: Term a -> Term a
 getRightTerm t = getSide DiffRight t
+
+----------------------------------------------------------------------
+-- "Encrypted" subterms
+-- NB: here anything but a pair is an encryption!
+----------------------------------------------------------------------
+
+-- Given a term, compute all encrypted subterms, i.e. all terms
+-- which top symbol is function, but not a pair
+allEncSubterms :: Show a => Term a -> [Term a]
+allEncSubterms t@(viewTerm -> FApp _ as) | isPair t  = concatMap allEncSubterms as
+allEncSubterms t@(viewTerm -> FApp _ as) | otherwise = t:concatMap allEncSubterms as
+allEncSubterms _                                     = []
 
 ----------------------------------------------------------------------
 -- Pretty printing

@@ -53,12 +53,14 @@ module Theory.Model.Fact (
   , termFact
   , kFactView
   , dedFactView
+  , inFactView
+  , outFactView
 
   , isKFact
   , isKUFact
   , isKDFact
   , isKDXorFact
-  
+
   , convertKUtoKD
   , convertKDtoKU
 
@@ -127,7 +129,7 @@ data FactTag = ProtoFact Multiplicity String Int
              | KDFact     -- ^ Down-knowledge fact in message deduction.
              | DedFact    -- ^ Log-fact denoting that the intruder deduced
                           -- a message using a construction rule.
-             | TermFact   -- ^ internal fact, only used to convert terms to facts 
+             | TermFact   -- ^ internal fact, only used to convert terms to facts
                           -- to simplify computations. should never occur in a graph.
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
@@ -355,6 +357,20 @@ isSolveLastFact (Fact tag ann _)  = SolveLast `S.member` ann  || (isPrefixOf "L_
 isNoSourcesFact :: Fact t -> Bool
 isNoSourcesFact (Fact _ ann _) = NoSources `S.member` ann
 
+-- | View an IN fact.
+inFactView :: LNFact -> Maybe LNTerm
+inFactView fa = case fa of
+    Fact InFact _ [m] -> Just m
+    Fact InFact _ _   -> errMalformed "inFactView" fa
+    _                 -> Nothing
+
+-- | View an OUT fact.
+outFactView :: LNFact -> Maybe LNTerm
+outFactView fa = case fa of
+    Fact OutFact _ [m] -> Just m
+    Fact OutFact _ _   -> errMalformed "outFactView" fa
+    _                  -> Nothing
+
 ------------------------------------------------------------------------------
 -- NFact
 ------------------------------------------------------------------------------
@@ -398,7 +414,7 @@ matchFact t p =
     matchOnlyIf (factTag t == factTag p &&
                  length (factTerms t) == length (factTerms p))
     <> mconcat (zipWith matchWith (factTerms t) (factTerms p))
-    
+
 -- | Get "left" variant of a diff fact
 getLeftFact :: LNFact -> LNFact
 getLeftFact (Fact tag an ts) =
@@ -424,9 +440,9 @@ isTrivialFact (Fact _ _ ts) = case ts of
       combine Nothing    _        = Nothing
       combine (Just _ )  Nothing  = Nothing
       combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
-      
+
       noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
-   
+
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------
