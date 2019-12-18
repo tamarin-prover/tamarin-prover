@@ -1,0 +1,117 @@
+/*
+ * Protocol:  Whodunit protocol - Fixed
+              - uses unbounded accountability implementation
+              - fixed set of parties
+ * Modeler:   Robert Künnemann, Kevin Morio
+ * Date:
+ * Source:
+ * Status:
+ * Note:
+ * */
+
+theory WhoDunit_Fixed_NewImpl
+begin
+
+functions:
+    pk/1,sk/1[private],
+    sign/2, verify/3,
+    true/0,
+    extract/1
+
+equations:
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    extract(sign(m,sk(i))) = m
+
+// predicates:
+//  and3(x,y,z) <=> ( x=true() & y=true() & z=true() )
+
+
+
+/*
+ * Processes
+ */
+
+let S =
+    let m = <a,sign(a,sk('S'))> in
+    in (a); out(c_SA,m); out(c_SJ,m)
+
+let A =
+    let pkS = pk(sk('S')) in
+    in(c_SA,<a,asig>);
+    if verify(asig,a,pkS)=true() then
+        out (c_AJ,<a,asig,sign(a,sk('A'))>)
+
+let Tr =
+    let pkS = pk(sk('S'))
+        pkA = pk(sk('A'))
+    in
+    in(c_SJ,<a1,a1sig>); in(c_AJ,<a2,a2sigS,a2sigA>);
+    if verify(a1sig,a1,pkS) = true() then
+        if verify(a2sigS,a2,pkS) = true() then
+            if verify(a2sigA,a2,pkA) = true() then
+                if a1 = a2 then
+                    event Equal()
+                else
+                    event Blame('S');
+                    event Unequal()
+
+
+new c_SA; new c_AJ; new c_SJ;
+(S || A || Tr ||
+    out(pk(sk('S'))); out(pk(sk('A')))
+||
+ !( in('c',<'corrupt',$x>);
+    event Corrupted($x);
+    out('c',sk($x));
+    !(
+        (if $x='S' then out(c_SA); out (c_SJ))
+     ||
+        (if $x='A' then out(c_SA); out (c_AJ))
+     )
+  )
+)
+
+
+
+/*
+ * Lemmas
+ */
+
+lemma sanity:
+    exists-trace
+    "Ex #i. Equal()@i"
+
+
+
+/*
+ * Case Tests & Accountability Lemma
+ */
+
+test unequal:
+  "Ex #i #j. Unequal()@i & Blame(x)@j"
+
+
+lemma acc:
+    unequal accounts for "not (Ex #i.  Unequal()@i)"
+
+
+
+/*
+ * Results
+ */
+
+/*==============================================================================
+
+  sanity (exists-trace): verified (8 steps)
+  acc_unequal_suff (exists-trace): verified (8 steps)
+  acc_verif_empty (all-traces): verified (6 steps)
+  acc_unequal_verif_nonempty (all-traces): verified (2 steps)
+  acc_unequal_min (all-traces): verified (2 steps)
+  acc_unequal_uniq (all-traces): verified (235 steps)
+  acc_unequal_inj (all-traces): verified (1 steps)
+  acc_unequal_rel_ter (exists-trace): verified (8 steps)
+
+==============================================================================*/
+
+
+end
