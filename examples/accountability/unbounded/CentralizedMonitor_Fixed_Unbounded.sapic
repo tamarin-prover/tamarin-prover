@@ -1,0 +1,226 @@
+/*
+ * Protocol:    Centralized monitor protocol - Fixed
+                - uses unbounded accountability implementation
+                - unbounded set of parties
+ * Modeler:   Robert Künnemann, Ilkan Esiyok, Kevin Morio
+ * Date:
+ * Source:
+ * Status:
+ * Note:  execute with --heuristic=p
+ * */
+
+theory CentralizedMonitor_Fixed_Unbounded
+begin
+
+functions:
+    pk/1,sk/1[private],
+    sign/2, verify/3,
+    true/0,
+    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
+
+equations:
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    isAct(NormalAct) = true,
+    isAct(SpecialAct) = true,
+    isAct(UnusualAct) = true
+
+// predicates:
+// isSpecial(a) <=> a=SpecialAct(),
+// isNormal(a) <=> a=NormalAct()
+
+
+
+/*
+ * Processes
+ */
+
+let D =
+    in($x);
+    lookup <'register', $x> as role in
+    if role = 'D' then
+        let m1 = <'Do',a>
+            m2 = <'Permit',a>
+        in
+      ( in(a);
+        if a = NormalAct() then
+            out(<m1,sign(m1,sk($x))>)
+        else if a = SpecialAct() then
+            out(<m2,sign(m2,sk($x))>)
+      )
+
+let C =
+    in($x);
+    lookup <'register', $x> as role in
+    if role = 'C' then
+        let m2x = <'Permit',a>
+            m3 = <m2x,m2xsign>
+        in
+      ( in(<m2x,m2xsign>);
+        if verify( m2xsign, m2x, pk(sk($x))) = true() then
+            if a = SpecialAct() then
+                out(<m3,sign(m3,sk($x))>)
+      )
+
+let M =
+    let m1 = <'Do',a>
+        m2 = <'Permit',a>
+        m3 = <m2,m2sign>
+    in
+  ( in($x);
+    in(<m1,m1sign>);
+    if verify(m1sign, m1, pk(sk($x))) = true() then
+        lookup <'register', $x> as role in
+            if role = 'D' then
+                new id;
+                event Control(id, '0');
+                event Log($x, a, id);
+                event Execute(a, id)
+  )
+  +
+  ( in($x);
+    in($y);
+    in(<m3,m3sign>);
+    if verify(m3sign, m3, pk(sk($y))) = true() then
+        if verify(m2sign, m2, pk(sk($x))) = true() then
+            lookup <'register', $y> as role_y in
+                if role_y = 'C' then
+                    lookup <'register', $x> as role_x in
+                        if role_x = 'D' then
+                            new id;
+                            event Control(id, '1');
+                            event Log($x, a, id);
+                            event Log($y, a, id);
+                            event Execute(a, id)
+  )
+
+let Register = in($x);
+               lookup <'register', $x> as role in
+                 0
+               else
+                 out(pk(sk($x)));
+                 (insert <'register', $x>, 'D' + insert <'register', $x>, 'C')
+
+let Proto = !(D || C || M || Register)
+
+let Adv = !( in('c',<'corrupt',$x>);
+             event Corrupted($x);
+             out('c',sk($x))
+           )
+
+ !(Proto || Adv)
+
+
+
+/*
+ * Lemmas
+ */
+
+lemma exist_role_D:
+  exists-trace
+  "Ex x #i. Insert(<'register', x>, 'D')@i"
+
+lemma exist_role_C:
+  exists-trace
+  "Ex x #i. Insert(<'register', x>, 'C')@i"
+
+lemma sanity_role_D:
+  all-traces
+  "All id x a #i #j. Control(id, '0')@i & Log(x, a, id)@j ==> Ex #k. Insert(<'register', x>, 'D')@k"
+
+lemma sanity_role_C:
+  all-traces
+  "All id x y a #i #j #k. Control(id, '1')@i & Log(x, a, id)@j & Log(y, a, id)@k & not(x = y)
+     ==> Ex role_x role_y #l #m. Insert(<'register', x>, role_x)@l & Insert(<'register', y>, role_y)@m & not(role_x = role_y)"
+
+lemma sanity_register_once:
+  all-traces
+  "All x role1 role2 #i #j. Insert(<'register', x>, role1)@i & Insert(<'register', x>, role2)@j ==> role1 = role2"
+
+lemma ex_two_D:
+  exists-trace
+  "Ex id1 id2 a1 a2 x y #i #j #k #l. Control(id1, '0')@i & Log(x, a1, id1)@j & Control(id2, '0')@k & Log(y, a2, id2)@l & not(x = y)"
+
+lemma sanity_logD_not_misbehaving:
+    exists-trace
+    "Ex a id #i #j. (a = NormalAct()) & Log('D', a, id)@i & Execute(a, id)@j"
+
+lemma sanity_logDC_not_misbehaving:
+    exists-trace
+    "Ex a id #i #j #k. (a = SpecialAct()) & Log('D', a, id)@i & Log('C', a, id)@j & Execute(a, id)@k"
+
+lemma sanity_logD:
+    exists-trace
+    "Ex a id #i #j. Log('D', a, id)@i & Execute(a, id)@j"
+
+lemma sanity_logDC:
+    exists-trace
+    "Ex a id #i #j #k. Log('D', a, id)@i & Log('C', a, id)@j & Execute(a, id)@k"
+
+lemma verdict_AXY:
+  exists-trace
+  "Ex x y z a1 a2 id1 id2 #i #j #k #l #m #n #o. Control(id1, '0')@i & Log(x, a1, id1)@j & Execute(a1, id1)@k & #i < #j & #j < #k & not(a1=NormalAct() | a1=SpecialAct()) &
+                                                Control(id2, '1')@l & Log(y, a2, id2)@m & Log(z, a2, id2)@n & Execute(a2, id2)@o & not(y = z) & #l < #m & #m < #n & #n < #o & not(a2=NormalAct() | a2=SpecialAct()) & (not(x = y) | not(x = z))"
+
+
+
+/*
+ * Case Tests & Accountability Lemma
+ */
+
+test specialAct_D:
+  "Ex a id #i #j #k. Control(id, '0')@i & Log(x, a, id)@j & Execute(a, id)@k & #i < #j & #j < #k & not(a=NormalAct() | a=SpecialAct())"
+
+test specialAct_DC:
+  "Ex a id #i #j #k #l. Control(id, '1')@i & Log(x, a, id)@j & Log(y, a, id)@k & Execute(a, id)@l & not(x = y) & #i < #j & #j < #k & #k < #l & not(a=NormalAct() | a=SpecialAct()) &
+    (All id z a #m #n #o. Control(id, '0')@m & Log(z, a, id)@n & Execute(a, id)@o & #m < #n & #n < #o & not(a=NormalAct() | a=SpecialAct()) ==> not(z = x | z = y))"
+
+lemma acc:
+  specialAct_D, specialAct_DC accounts for "All a id #i. Execute(a, id)@i ==> (a=SpecialAct()) | (a=NormalAct())"
+
+
+
+/*
+ * Restrictions
+ */
+
+restriction register_once:
+  "All x role1 role2 #i #j. Insert(<'register', x>, role1)@i & Insert(<'register', x>, role2)@j ==> #i = #j"
+
+
+
+/*
+ * Results
+ */
+
+/*==============================================================================
+
+  exist_role_D (exists-trace): verified (4 steps)
+  exist_role_C (exists-trace): verified (4 steps)
+  sanity_role_D (all-traces): verified (8 steps)
+  sanity_role_C (all-traces): verified (17 steps)
+  sanity_register_once (all-traces): verified (8 steps)
+  ex_two_D (exists-trace): verified (16 steps)
+  sanity_logD_not_misbehaving (exists-trace): verified (10 steps)
+  sanity_logDC_not_misbehaving (exists-trace): verified (16 steps)
+  sanity_logD (exists-trace): verified (10 steps)
+  sanity_logDC (exists-trace): verified (16 steps)
+  verdict_AXY (exists-trace): verified (29 steps)
+  acc_specialAct_D_suff (exists-trace): verified (12 steps)
+  acc_specialAct_DC_suff (exists-trace): verified (18 steps)
+  acc_verif_empty (all-traces): verified (25 steps)
+  acc_specialAct_D_verif_nonempty (all-traces): verified (4 steps)
+  acc_specialAct_DC_verif_nonempty (all-traces): verified (4 steps)
+  acc_specialAct_D_min (all-traces): verified (4 steps)
+  acc_specialAct_DC_min (all-traces): verified (16 steps)
+  acc_specialAct_D_uniq (all-traces): verified (14 steps)
+  acc_specialAct_DC_uniq (all-traces): verified (53 steps)
+  acc_specialAct_D_inj (all-traces): verified (1 steps)
+  acc_specialAct_DC_inj (all-traces): verified (4 steps)
+  acc_specialAct_D_rel_ter (exists-trace): verified (12 steps)
+  acc_specialAct_DC_rel_ter (exists-trace): verified (18 steps)
+
+==============================================================================*/
+
+
+
+end
