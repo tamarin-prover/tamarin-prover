@@ -15,13 +15,13 @@ module Sapic.Exceptions (
     WFerrror(..),
     SapicException(..)
 ) where
-import Control.Exception
-import Data.Typeable
-import Data.Set
-import qualified Data.List as List
-import Theory
-import Theory.Sapic
-import Theory.Sapic.Print
+import           Control.Exception
+import           Data.Typeable
+import qualified Data.Set as S
+import           Data.List
+import           Theory
+import           Theory.Sapic
+import           Theory.Sapic.Print
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -32,8 +32,8 @@ prettyWFLockTag WFPar = "a parallel"
 
 -- | Wellformedness errors, see instance of show below for explanation.
 data WFerrror a = WFLock WFLockTag (AnProcess a)
-                | WFUnboundProto (Set LVar)
-                | WFUnbound (Set LVar) (AnProcess a)
+                | WFUnboundProto (S.Set LVar)
+                | WFUnbound (S.Set LVar) (AnProcess a)
                 | WFReliable
     deriving (Typeable, Show)
 
@@ -43,6 +43,7 @@ data SapicException a = NotImplementedError String
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
                     -- | UnAnnotatedLock String
+                    | CaseTestsUndefined [(String, [String])]
                     | ProcessNotWellformed (WFerrror a)
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
@@ -54,11 +55,15 @@ data SapicException a = NotImplementedError String
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
-prettyVarSet :: Set LVar -> [Char]
-prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
+prettyVarSet :: S.Set LVar -> [Char]
+prettyVarSet = (intercalate ", " ) . (map show) . S.toList
 
 instance Show (SapicException a) where
     -- show SomethingBad = "Something bad happened"
+    show (CaseTestsUndefined el) =
+        "The following case tests are undefined but are required in a lemma: \n" ++
+        intercalate "\n" (map (\(a, c) -> "  " ++ (intercalate ", " c) ++ " required by the lemma '" ++ a ++ "'") el)
+
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
     show (LemmaNameExists s) = "Lemma name already exists:" ++ s

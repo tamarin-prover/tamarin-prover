@@ -45,14 +45,11 @@ module Theory (
   , pFact
   , addPredicate
 
-  -- * Verdicts
-  , ProtoVerdictMapping(..)
-  , ProtoVerdictf
-
   -- * Case Tests
   , CaseTest(..)
   , cName
   , cFormula
+  , defineCaseTests
 
   -- * Lemmas
   , LemmaAttribute(..)
@@ -60,9 +57,7 @@ module Theory (
   , CaseIdentifier
   , AccKind(..)
   , Lemma
-  , AccLemma
-  , AccLemmaSkeleton
-  , AccLemmaGeneral(..)
+  , AccLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -75,6 +70,7 @@ module Theory (
   , aName
   , aAccKind
   , aAttributes
+  , aCaseIdentifiers
   , aCaseTests
   , aFormula
   , unprovenLemma
@@ -85,7 +81,6 @@ module Theory (
 --   , isBothLemma
   , addLeftLemma
   , addRightLemma
-  , skeletonToAccLemma
 
   -- * Theories
   , Theory(..)
@@ -129,6 +124,8 @@ module Theory (
   , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
+  , lookupAccLemma
+  , lookupCaseTest
   , lookupLemmaDiff
   , addComment
   , addDiffComment
@@ -497,34 +494,6 @@ $(mkLabels [''Option])
 
 
 ------------------------------------------------------------------------------
--- Verdict
-------------------------------------------------------------------------------
-type Causes = S.Set LVar
-
-data ProtoCauses = ProtoCauses
-        { _VerdictPart    :: S.Set LVar
-        , _Ref            :: String
-        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-type Verdict = [Causes]
-
-type ProtoVerdict = [ProtoCauses]
-
-type VerdictMapping = (LNFormula,Verdict)
-
-type Verdictf = [VerdictMapping]
-
-data ProtoVerdictMapping =
-        RefCase String LNFormula ProtoVerdict
-        | Case LNFormula ProtoVerdict
-        | Otherwise ProtoVerdict
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-type ProtoVerdictf = [ProtoVerdictMapping]
-
-
-------------------------------------------------------------------------------
 -- Case Tests
 ------------------------------------------------------------------------------
 
@@ -597,22 +566,20 @@ $(mkLabels [''DiffLemma])
 
 
 -- | An accountability lemma describes an accountabilty property that holds in the context of a theory
-data AccLemmaGeneral c = AccLemma
+data AccLemma = AccLemma
        { _aName            :: String
        , _aAttributes      :: [LemmaAttribute]
-       , _aCaseTests       :: c
+       , _aCaseIdentifiers :: [CaseIdentifier]
+       , _aCaseTests       :: [CaseTest]
        , _aAccKind         :: AccKind
        , _aFormula         :: LNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''AccLemmaGeneral])
+$(mkLabels [''AccLemma])
 
-type AccLemmaSkeleton = AccLemmaGeneral [CaseIdentifier]
-type AccLemma = AccLemmaGeneral [CaseTest]
-
-skeletonToAccLemma :: [CaseTest] -> AccLemmaSkeleton -> AccLemma
-skeletonToAccLemma cTests accLem = accLem { _aCaseTests = cTests }
+defineCaseTests :: AccLemma -> [CaseTest] -> AccLemma
+defineCaseTests accLem caseTests = accLem { _aCaseTests = caseTests }
 
 
 -- Instances

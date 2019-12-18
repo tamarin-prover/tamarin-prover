@@ -35,6 +35,7 @@ import qualified Data.Text.Encoding         as TE
 -- import qualified Data.List                  as L
 import           Data.Color
 import           Data.Either
+import           Data.Maybe
 
 import qualified Extension.Data.Label                as L
 
@@ -637,19 +638,19 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
 -- | Parse an accountability lemma.
-lemmaAcc :: Parser AccLemmaSkeleton
+lemmaAcc :: Parser AccLemma
 lemmaAcc = try $ do
                _ <-  symbol "lemma"
                name <- identifier
                attributes <- option [] $ list (try (Left <$> lemmaAttribute False) <|> (Right <$> accKind))
                _ <-  colon
-               tests <- commaSep1 identifier
+               identifiers <- commaSep1 $ identifier
                _ <-  try (symbol "accounts for") <|> symbol "account for"
                -- kind <- brackets accKind
                formula <-  doubleQuoted standardFormula
                case rights attributes of
-                [] -> return $ AccLemma name (lefts attributes) tests defaultKind formula
-                [kind] -> return $ AccLemma name (lefts attributes) tests kind formula
+                [] -> return $ AccLemma name (lefts attributes) identifiers [] defaultKind formula
+                [kind] -> return $ AccLemma name (lefts attributes) identifiers [] kind formula
                 list -> fail $ "An accountability lemma can only have one of " ++ show list ++ "."
                where
                 defaultKind = Coarse
@@ -1208,10 +1209,10 @@ theory flags0 = do
       , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
            addItems flags thy'
       , do 
-           lemSkel <- lemmaAcc
-           let testsIdentifier = S.fromList $ get aCaseTests lemSkel
-           let tests = filter (\c -> (get cName c) `S.member` testsIdentifier) (theoryCaseTests thy)
-           thy' <- liftedAddAccLemma thy (skeletonToAccLemma tests lemSkel)
+           accLem <- lemmaAcc
+           let tests = catMaybes $ map (\name -> lookupCaseTest name thy) (get aCaseIdentifiers accLem)
+
+           thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
            addItems flags thy'
       , do thy' <- ((liftedAddLemma thy) =<<) lemma
            addItems flags thy'

@@ -25,7 +25,7 @@ import           Theory
 
 -- | Create a lemma from a formula with quantifier. Copies accLemma's name
 -- (plus suffix) and attributes.
-toLemma :: AccLemmaGeneral c -> TraceQuantifier -> String -> LNFormula -> Lemma ProofSkeleton
+toLemma :: AccLemma -> TraceQuantifier -> String -> LNFormula -> Lemma ProofSkeleton
 toLemma accLemma quantifier suffix formula = 
         skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
 
@@ -71,7 +71,7 @@ strictSubsetOf :: [LVar] -> [LVar] -> LNFormula
 strictSubsetOf lhs rhs = subset lhs rhs .&&. strict lhs rhs
     where
         subset xs ys = foldr1 (.&&.) (map (\x -> foldr1 (.||.) (map (\y -> eq x y) ys)) xs)
-        strict xs ys = foldr1 (.||.) (map (\x -> foldr1 (.&&.) (map (\y -> Not $ eq y x) ys)) xs)
+        strict xs ys = foldr1 (.||.) (map (\y -> foldr1 (.&&.) (map (\x -> Not $ eq y x) xs)) ys)
         eq x y = Ato $ EqE (varTerm $ Free x) (varTerm $ Free y)
 
 ntuple :: [LVar] -> VTerm Name (BVar LVar)
@@ -84,7 +84,7 @@ noOther :: [LNFormula] -> LNFormula
 noOther fms = foldr1 (.&&.) (map (Not . quantifyFrees exists) fms)
 
 andIf :: Bool -> Formula a s v -> Formula a s v -> Formula a s v
-andIf p a b = if p then a .&&. b else b
+andIf p a b = if p then a .&&. b else a
 
 -- | FIXME: Why do we need the second rename?
 singleMatch :: MonadFresh m => LNFormula -> m LNFormula
@@ -96,6 +96,10 @@ singleMatch t = do
 caseTestFormulasExcept :: AccLemma -> CaseTest -> [LNFormula]
 caseTestFormulasExcept accLemma caseTest = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) (L.get aCaseTests accLemma))
 
+foldConn :: (LNFormula -> LNFormula -> LNFormula) -> [LNFormula] -> LNFormula
+foldConn _ [fm] = fm
+foldConn op fms = foldl1 op fms
+
 
 
 ------------------------------------------------------------------------------
@@ -106,7 +110,7 @@ sufficiency :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
 sufficiency accLemma caseTest = do
     t1 <- singleMatch tau
 
-    let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (noOther taus) (corruptSubsetFrees (frees t1)))
+    let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (corruptSubsetFrees (frees t1)) (noOther taus))
 
     return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
     where
@@ -114,14 +118,22 @@ sufficiency accLemma caseTest = do
         tau = L.get cFormula caseTest
         taus = caseTestFormulasExcept accLemma caseTest
 
-verifiability :: MonadFresh m => AccLemma -> m (Lemma ProofSkeleton)
-verifiability accLemma = return $ toLemma accLemma AllTraces name (toIntermediate formula)
+verifiabilityEmpty :: MonadFresh m => AccLemma -> m (Lemma ProofSkeleton)
+verifiabilityEmpty accLemma = return $ toLemma accLemma AllTraces name formula
     where
-        name = "_verif"
+        name = "_verif_empty"
         taus = map (L.get cFormula) (L.get aCaseTests accLemma)
-        lhs = foldl (.&&.) (TF True) $ map (Not . quantifyFrees exists) taus
+        lhs = Not $ foldConn (.||.) $ map (quantifyFrees exists) taus
         phi = L.get aFormula accLemma
-        formula = quantifyFrees forall $ lhs .<=>. phi
+        formula = quantifyFrees forall $ lhs .==>. phi
+
+verifiabilityNonEmpty :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
+verifiabilityNonEmpty accLemma caseTest = return $ toLemma accLemma AllTraces name (toIntermediate formula)
+    where
+        name = "_" ++ L.get cName caseTest ++ "_verif_nonempty"
+        tau = L.get cFormula caseTest
+        phi = L.get aFormula accLemma
+        formula = quantifyFrees forall $ tau .==>. Not phi
 
 minimality :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
 minimality accLemma caseTest = do
@@ -129,7 +141,7 @@ minimality accLemma caseTest = do
     tts <- mapM rename taus
 
     let rhs = map (\t -> Not (quantifyVars exists (frees t) $ t .&&. strictSubsetOf (frees t) (frees t1))) tts
-    let formula = quantifyFrees forall $ t1 .==>. foldl (.&&.) (TF True) rhs
+    let formula = quantifyFrees forall $ t1 .==>. foldConn (.&&.) rhs
 
     return $ toLemma accLemma AllTraces name (toIntermediate formula)
     where
@@ -142,7 +154,7 @@ uniqueness accLemma caseTest = return $ toLemma accLemma AllTraces name (toInter
     where
         name = "_" ++ L.get cName caseTest ++ "_uniq"
         tau = L.get cFormula caseTest
-        formula = quantifyFrees forall (tau .==>. (freesSubsetCorrupt $ frees tau))
+        formula = quantifyFrees forall (tau .==>. freesSubsetCorrupt (frees tau))
 
 -- | :TODO: : Avoid duplicates
 injective :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
@@ -150,13 +162,13 @@ injective accLemma caseTest = return $ toLemma accLemma AllTraces name (toInterm
     where
         name = "_" ++ L.get cName caseTest ++ "_inj"
         tau = L.get cFormula caseTest
-        formula = quantifyFrees forall (tau .==>. foldr (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- (frees tau), x /= y ])
+        formula = quantifyFrees forall (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
 
 terminating :: MonadFresh m => AccLemma -> CaseTest -> m (Lemma ProofSkeleton)
 terminating accLemma caseTest = do
     t1 <- singleMatch tau
 
-    let formula = quantifyFrees exists $ andIf (not $ null taus) (noOther taus) t1
+    let formula = quantifyFrees exists $ andIf (not $ null taus) t1 (noOther taus)
 
     return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
     where
@@ -173,13 +185,14 @@ terminating accLemma caseTest = do
 casesLemmas :: MonadFresh m => AccLemma -> m [Lemma ProofSkeleton]
 casesLemmas accLemma = do
         s <- mapM (sufficiency accLemma) caseTests
-        v <- verifiability accLemma
+        ve <- verifiabilityEmpty accLemma
+        vne <- mapM (verifiabilityNonEmpty accLemma) caseTests
         m <- mapM (minimality  accLemma) caseTests
         u <- mapM (uniqueness  accLemma) caseTests
         i <- mapM (injective   accLemma) caseTests
         t <- mapM (terminating accLemma) caseTests
 
-        return $ s ++ [v] ++ m ++ u ++ i ++ t
+        return $ s ++ [ve] ++ vne ++ m ++ u ++ i ++ t
     where
         caseTests = L.get aCaseTests accLemma
 
@@ -199,8 +212,8 @@ pullQuantifiers :: (Ord c, Ord v, Eq s) => [Quantifier] -> Formula s c v -> Form
 pullQuantifiers quans fm = case fm of
     Conn And (Qua All x p) (Qua All x' q)   | x == x' -> pull_2 All (.&&.) x p q
     Conn Or  (Qua Ex  x p) (Qua Ex  x' q)   | x == x' -> pull_2 Ex  (.||.) x p q
-    Conn And (Qua qua x p) (Qua qua' x' q)  | qua == qua' -> Qua qua x (pull_r qua (.&&.) x' p q)
-    Conn Or  (Qua qua  x p) (Qua qua' x' q) | qua == qua' -> Qua qua x (pull_r qua (.||.) x' p q)
+    -- Conn And (Qua qua x p) (Qua qua' x' q)  | qua == qua' -> Qua qua x (Qua qua' x' (p .&&. q))
+    -- Conn Or  (Qua qua  x p) (Qua qua' x' q) | qua == qua' -> Qua qua x (Qua qua' x' (p .||. q))
 
     Conn And (Qua qua x p) q             | qua `elem` quans -> pull_l qua (.&&.) x p q
     Conn And p             (Qua qua x q) | qua `elem` quans -> pull_r qua (.&&.) x p q
@@ -208,7 +221,8 @@ pullQuantifiers quans fm = case fm of
     Conn Or  p             (Qua qua x q) | qua `elem` quans -> pull_r qua (.||.) x p q
 
     Conn Imp (Qua Ex x p) q  | All `elem` quans -> pull_l All (.==>.) x p q
-    Conn Imp (Qua All x p) q | Ex  `elem` quans -> pull_l Ex  (.==>.) x p q
+    -- Are there any examples where this makes sense? (All a) => b --> Ex (a => b)
+    -- Conn Imp (Qua All x p) q | Ex  `elem` quans -> pull_l Ex  (.==>.) x p q
 
     _ -> fm
   where

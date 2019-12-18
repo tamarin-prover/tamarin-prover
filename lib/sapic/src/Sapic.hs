@@ -15,27 +15,28 @@
 module Sapic (
     translate
 ) where
-import Control.Exception hiding (catch)
-import Control.Monad.Fresh
-import Control.Monad.Catch
-import Sapic.Exceptions
-import Theory
-import Theory.Sapic
-import Data.Typeable
-import Data.Maybe
+import           Control.Exception hiding (catch)
+import           Control.Monad.Fresh
+import           Control.Monad.Catch
+import           Sapic.Exceptions
+import           Theory
+import           Theory.Sapic
+import           Data.Typeable
+import           Data.Maybe
+import           Data.List
 import qualified Data.Set              as S
 import qualified Extension.Data.Label                as L
-import Control.Monad.Trans.FastFresh   ()
-import Sapic.Annotation
-import Sapic.SecretChannels
-import Sapic.Facts
-import Sapic.Locks
-import Sapic.ProcessUtils
+import           Control.Monad.Trans.FastFresh   ()
+import           Sapic.Annotation
+import           Sapic.SecretChannels
+import           Sapic.Facts
+import           Sapic.Locks
+import           Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
-import Sapic.Restrictions
-import Sapic.ProgressFunction
-import Sapic.Accountability
-import Theory.Text.Pretty
+import           Sapic.Restrictions
+import           Sapic.ProgressFunction
+import           Sapic.Accountability
+import           Theory.Text.Pretty
 
 
 -- Translates the process (singular) into a set of rules and adds them to the theory
@@ -57,6 +58,8 @@ translate th = case theoryProcesses th of
                 sapic_restrictions <- generateSapicRestrictions restr_option an_proc
                 th2 <- foldM liftedAddRestriction th1 sapic_restrictions
                 -- add accountability lemma
+                let undef = mapMaybe verifyAccLemma (theoryAccLemmas th2)
+                unless (null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
                 accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
                 th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
                 -- add heuristic, if not already defined:
@@ -64,6 +67,15 @@ translate th = case theoryProcesses th of
                 return (removeSapicItems th4)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
+    verifyAccLemma accLem =
+      if required /= defined then
+        Just (L.get aName accLem, required \\ defined)
+      else
+        Nothing
+      where
+        required =  L.get aCaseIdentifiers accLem
+        defined = map (L.get cName) (L.get aCaseTests accLem)
+
     liftedAddProtoRule thy ru = case addProtoRule ru thy of
         Just thy' -> return thy'
         Nothing   -> throwM (RuleNameExists (render (prettyRuleName ru))  :: SapicException AnnotatedProcess)
