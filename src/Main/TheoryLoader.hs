@@ -289,14 +289,14 @@ closeDiffThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2)
+  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
-        Just "verbose" -> applyPartialEvaluationDiff Tracing
-        Just _         -> applyPartialEvaluationDiff Summary
+        Just "verbose" -> applyPartialEvaluationDiff Tracing (argExists "auto-sources" as)
+        Just _         -> applyPartialEvaluationDiff Summary (argExists "auto-sources" as)
         _              -> id
 
       -- wellformedness check
