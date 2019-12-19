@@ -1,22 +1,24 @@
-theory RunningExample
+theory DecWrapDestr
+
 begin
 
 builtins: symmetric-encryption
 
-predicates:
-sencSucc (c,k) <=> Ex m . senc(m,k)=c
+predicate: EncSucc(c,k) <=> Ex m. senc(m,k) = c
 
 !(
 	(  new h; new k; event NewKey(h,k); 
 		insert <'key',h>,k; 
 	 	insert <'att',h>, 'dec'; out(h) )
   || //allow wrap
-	(  in(h);  insert <'att',h>, 'wrap' )
+	(  in(h); lock h; insert <'att',h>, 'wrap'; unlock h)
   || //Dec
 	( in(<h,c>);
-	  lookup <'att',h> as a in if a='dec' then 
-            lookup <'key',h> as k in if sencSucc(c,k) then
-                event DecUsing(k,sdec(c,k)); out(sdec(c,k)) 
+	  lookup <'att',h> as a in 
+			if a='dec' then lookup <'key',h> as k in
+				if EncSucc(c,k) then
+                                    event DecUsing(k,sdec(c,k));
+                                    out(sdec(c,k)) 
 	)
   || //Wrap
 	( in(<h1,h2>); lookup <'att',h1> as a1 in 
@@ -27,11 +29,12 @@ sencSucc (c,k) <=> Ex m . senc(m,k)=c
 	)
 )
 
-lemma can_create_key: //sanity check
+
+lemma can_create_key: //for sanity
 	exists-trace
 	"Ex #t h k. NewKey(h,k)@t"
 
-lemma can_obtain_wrapping: //sanity check
+lemma can_obtain_wrapping: //for sanity
 	exists-trace
 	"Ex #t k1 k2. Wrap(k1,k2)@t"
 
@@ -41,13 +44,22 @@ lemma dec_limits[reuse,sources]:
 	// not a valid enc
 	"All k m #t1. DecUsing(k,m)@t1 ==> 
 	( Ex h k2 #t2 #t3. NewKey(h, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+	/* | not (encSucc(m)=true()) */
 	"
 
 lemma cannot_obtain_key_ind[reuse,use_induction]:
 	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
 
-lemma cannot_obtain_key: 
-      // it is not possible to learn a key created on the device
+lemma cannot_obtain_key:
 	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
 
 end
+
+/* analyzed: examples/sapic/feature-predicates/decwrap-destr-manual.spthy */
+
+/*   can_create_key (exists-trace): verified (3 steps) */
+/*   can_obtain_wrapping (exists-trace): verified (11 steps) */
+/*   dec_limits (all-traces): verified (59 steps) */
+/*   cannot_obtain_key_ind (all-traces): verified (37 steps) */
+/*   cannot_obtain_key (all-traces): verified (2 steps) */
+

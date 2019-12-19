@@ -192,7 +192,7 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/ccs15/*.spthy
 
 
-REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy issue324.spthy issue331.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy
@@ -349,6 +349,8 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
 
 SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
+basic/running-example.spthy \
+basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy basic/operator-precedence-5.spthy \
 feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
 statVerifLeftRight/stateverif_left_right.spthy \
 MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
@@ -356,51 +358,45 @@ fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/m
 SCADA/opc_ua_secure_conversation.spthy \
 feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
-GJM-contract/contract.spthy
-# not working because of missing support for predicates
-# basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
-# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
-# Yubikey/Yubikey.spthy NOTE commented out previously need to verify
-# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
-# feature-predicates/decwrap_destr.spthy feature-predicates/simple_example.spthy \
+GJM-contract/contract.spthy \
+feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
+feature-predicates/binding.spthy \
+feature-let-bindings/let-blocks.spthy
+
+
+# SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
+SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+NSL/nsl-no_as-untagged.spthy \
+Yubikey/Yubikey.spthy \
+encWrapDecUnwrap/encwrapdecunwrap.spthy
+
+# SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
+SAPIC_CASE_STUDIES_SUPER_SLOW= fairexchange-km/km.spthy \
+fairexchange-asw/aswAB.spthy \
+examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
+examples/sapic/fairexchange-asw/aswAB-mod.spthy \
+fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
+fairexchange-gjm/gjm-locks-unfairness-A.spthy
+
+# # case studies that cannot be proven automatically or are in fact nor working
+# # exceptional cases, that are left out on purpose, with explanations:
+# SAPIC_CASE_STUDIES_NO_PROOF = \
+# PKCS11/pkcs11-templates.spthy \ # heavy use of manual lemmas, not part of regresstion tests
+# PKCS11/pkcs11-dynamic-policy.spthy \ # not working 
+# xor/NSLPK3xor.spthy \ # attack finding relies on sources lemma which is untrue. it is acceptable for
+# # this model, because the attacks found despite an incorrect sources lemma are
+# # correct by definition, but negating it would defeat its purpose, and removing
+# # it would inhibit the attack finding. 
+# envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
+# # these examples were never completed and are here for reference only
+
+# not working because of missing support for locations
+#
 # location stuff: not tested so far
 # feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
 # feature-locations/SOC.spthy  -> commented out before
 # examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
-# pkcs11-example were previously commented out because they took so long, but should check if they can be completed.
-# examples/sapic/PKCS11/pkcs11-templates.sapic
-# examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic
-#
-# exceptional cases, that are left out on purpose, with explanations:
-# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model, 
-# 		because the attacks found despite an incorrect sources lemma
-# 		are correct by definition, but negating it would defeat its
-# 		purpose, and removing it would inhibit the attack finding. 
-#
-# missing (but also before): fairexchange stuff...-> check how long they take on fast machines
-# examples/sapic/fairexchange-km/km.sapic
-# examples/sapic/fairexchange-km/km-with-comments.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-A.sapic
-# examples/sapic/fairexchange-asw/asw-mod-weak-locks.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
-# examples/sapic/fairexchange-asw/aswAB.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-magic.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.sapic
-# examples/sapic/fairexchange-gjm/gjm.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks.sapic#
 
-# envelope examples (this example was never completed and is for reference only)
-# examples/sapic/envelope/envelope.sapic
-# examples/sapic/envelope/envelope_simpler.sapic
-# examples/sapic/envelope/envelope_allowsattack.sapic
-
-# SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
-NSL/nsl-no_as-untagged.spthy 
-SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
 SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
@@ -414,7 +410,7 @@ sapic-case-studies:	$(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) # used for
 	grep "verified\|falsified\|processing time" $^
 sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during development
 	grep "verified\|falsified\|processing time" $^
-sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPERSLOW) # used to heat in winter
+sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
 ## All case studies

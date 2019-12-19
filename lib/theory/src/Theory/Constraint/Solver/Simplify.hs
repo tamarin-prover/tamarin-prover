@@ -377,6 +377,8 @@ partialAtomValuation ctxt sys =
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
 
+          Syntactic _                            -> Nothing
+
 
 
 -- | CR-rule *S_∀*: insert all newly implied formulas.

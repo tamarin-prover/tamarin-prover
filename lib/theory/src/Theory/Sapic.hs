@@ -41,9 +41,10 @@ import Data.List
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Theory.Model.Fact
+import Theory.Model.Formula
 import Term.LTerm
-import Theory.Text.Pretty
 import Term.Substitution
+import Theory.Text.Pretty
 import Control.Monad.Catch
 
 -- | A process data structure
@@ -61,13 +62,13 @@ data SapicAction =
                  | Lock SapicTerm 
                  | Unlock SapicTerm 
                  | Event LNFact 
-                 | MSR ([LNFact], [LNFact], [LNFact])
+                 | MSR ([LNFact], [LNFact], [LNFact], [SyntacticLNFormula])
         deriving( Show, Eq, Ord, Generic, NFData, Binary, Data )
 
 -- | When the process tree splits, it is connected with one of these connectives
-data ProcessCombinator = Parallel | NDC | Cond LNFact 
+data ProcessCombinator = Parallel | NDC | Cond SyntacticLNFormula
         | CondEq SapicTerm SapicTerm | Lookup SapicTerm LVar
-    deriving (Generic, NFData, Binary, Show, Eq, Data )
+    deriving (Generic, NFData, Binary, Show, Eq, Data, Ord )
 
 -- | The process tree is terminated with null processes, and either splits
 -- (parallel and other combinators) or describes a sequence of actions with
@@ -78,13 +79,11 @@ data AnProcess ann =
     -- |   ProcessIdentifier String ann 
     |   ProcessAction SapicAction ann (AnProcess ann)
      deriving(Generic, Data )
-instance (Ord ann) => Ord (AnProcess ann)
+deriving instance (Ord ann) => Ord (AnProcess ann)
 deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
-deriving instance (Semigroup ann) => Semigroup (AnProcess ann)
-deriving instance (Monoid ann) => Monoid (AnProcess ann)
 deriving instance Foldable (AnProcess)
 deriving instance Traversable (AnProcess)
 
@@ -108,7 +107,7 @@ data LetExceptions = CapturedEx CapturedTag LVar
     -- deriving (Typeable)
 
 prettyLetExceptions :: LetExceptions -> [Char]
-prettyLetExceptions (CapturedEx tag v) = "Problem with let expression. Variable "++ show v ++ " captured in " ++ pretty tag ++ ". Please rename." 
+prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ " throughout."
     where pretty CapturedIn = "input"
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
@@ -132,7 +131,7 @@ instance Apply SapicAction where
         | (Lock t) <- ac       = Lock (apply subst t)
         | (Unlock t) <- ac     = Unlock (apply subst t)
         | (Event f) <- ac      = Event (apply subst f)
-        | (MSR (l,a,r)) <- ac  = MSR (apply subst (l,a,r))
+        | (MSR (l,a,r,rest)) <- ac  = MSR (apply subst (l,a,r,rest))
         | Rep <- ac            = Rep
 
 applySapicActionError :: MonadThrow m =>
@@ -194,6 +193,7 @@ rhsP :: [Int] -> ProcessPosition
 rhsP p = (p++[2]) :: ProcessPosition
 -- rhs :: ProcessPosition = 2
 
+descendant :: Eq a => [a] -> [a] -> Bool
 descendant child parent = parent `isPrefixOf` child 
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
@@ -224,7 +224,7 @@ prettyPosition = foldl (\ s n -> s ++ show n ) ""
 -- we would have circular dependencies.
 -- Instantiated in Theory.Sapic.Print later
 prettySapicAction' :: 
-                   ( [LNFact] -> [LNFact] -> [LNFact] -> String)
+                   ( [LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String)
                     -> SapicAction  -> String
 prettySapicAction' _ (New n) = "new "++ show n
 prettySapicAction' _ Rep  = "!"
@@ -237,12 +237,12 @@ prettySapicAction' _ (Delete t )  = "delete " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Lock t )  = "lock " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettyLNTerm t)
 prettySapicAction' _ (Event a )  = "event " ++ render (prettyLNFact a)
-prettySapicAction' prettyRule' (MSR (p,a,c)) = prettyRule' p a c
+prettySapicAction' prettyRule' (MSR (p,a,c,r)) = prettyRule' p a c r
 
 prettySapicComb :: ProcessCombinator -> [Char]
 prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
-prettySapicComb (Cond a) = "if "++ render (prettyLNFact a)
+prettySapicComb (Cond a) = "if "++ render (prettySyntacticLNFormula a)
 prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
                                     where p = render . prettyLNTerm
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
@@ -252,7 +252,7 @@ prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
 -- TODO At the moment, the process structure is not used to properly print how
 -- elements are associated.
 -- Should do it, but then we cannot use pfoldMap anymore.
-prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapic' :: ([LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String) -> AnProcess ann -> String
 prettySapic' prettyRule = pfoldMap f 
     where f (ProcessNull _) = "0"
           f (ProcessComb c _ _ _)  = prettySapicComb c 
@@ -260,9 +260,9 @@ prettySapic' prettyRule = pfoldMap f
           f (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
 
 -- | Printer for the top-level process, used, e.g., for rule names.
-prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> String) -> AnProcess ann -> String
+prettySapicTopLevel' :: ([LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String) -> AnProcess ann -> String
 prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 
-prettySapicTopLevel' prettyRule (ProcessAction Rep _ _)  = prettySapicAction' prettyRule Rep 
-prettySapicTopLevel' prettyRule (ProcessAction a _ _)  = prettySapicAction' prettyRule a ++ ";"
+prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
 

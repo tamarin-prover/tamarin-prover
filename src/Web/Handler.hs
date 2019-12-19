@@ -86,7 +86,7 @@ import           Data.Maybe
 import           Data.String                  (fromString)
 import           Data.List                    (intersperse)
 -- import           Data.Monoid                  (mconcat)
-import           Data.Conduit                 as C ( ($$) )
+import           Data.Conduit                 as C (runConduit,(.|))
 import           Data.Conduit.List            (consume)
 
 import qualified Blaze.ByteString.Builder     as B
@@ -481,7 +481,8 @@ postRootR = do
         setMessage "Post request failed."
       Just fileinfo -> do
           -- content <- liftIO $ LBS.fromChunks <$> (fileSource fileinfo $$ consume)
-          content <- liftIO $ runResourceT (fileSource fileinfo C.$$ consume)
+          -- content <- liftIO $ runResourceT (fileSource fileinfo C.$$ consume)
+          content <- liftIO $ runResourceT $ C.runConduit (fileSource fileinfo C..| consume)
           if null content
             then setMessage "No theory file given."
             else do

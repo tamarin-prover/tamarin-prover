@@ -8,7 +8,7 @@ section{* GM Protocol for Contract signing *}
  * Modeler:     Robert Kunnemann 
  * Date:    	October 2013
  *
- * Status:		 
+ * Status:      not working
  * [1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel,
  * "Formal Analysis of Protocols Based on TPM State Registers," csf,
  * pp.66-80, 2011 IEEE 24th Computer Security Foundations Symposium,
@@ -66,7 +66,7 @@ let envelope =
                 out(pk(bindkey));
                 out(aenc(secret,pk(bindkey)));
                 in(sign(<'certpcr', h(h('zero',n),'deny')>,aik));
-                event Denied(s)
+                event Denied(secret)
     )
 
 
