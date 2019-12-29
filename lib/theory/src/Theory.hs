@@ -103,6 +103,7 @@ module Theory (
   , theoryLemmas
   , theoryRestrictions
   , theoryProcesses
+  , theoryFunctionTypingInfos
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
@@ -442,11 +443,11 @@ data ProtoRestriction f = Restriction
 type Restriction = ProtoRestriction LNFormula
 type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
 
-deriving instance Eq Restriction 
-deriving instance Ord Restriction 
-deriving instance Show Restriction 
-deriving instance NFData Restriction 
-deriving instance Binary Restriction 
+deriving instance Eq Restriction
+deriving instance Ord Restriction
+deriving instance Show Restriction
+deriving instance NFData Restriction
+deriving instance Binary Restriction
 
 $(mkLabels [''ProtoRestriction])
 
@@ -498,7 +499,7 @@ $(mkLabels [''Option])
 ------------------------------------------------------------------------------
 -- Lemmas
 ------------------------------------------------------------------------------
-  
+
 -- | An attribute for a 'Lemma'.
 data LemmaAttribute =
          SourceLemma
@@ -521,7 +522,7 @@ data TraceQuantifier = ExistsTrace | AllTraces
 data ProtoLemma f p = Lemma
        { _lName            :: String
        , _lTraceQuantifier :: TraceQuantifier
-       , _lFormula         :: f 
+       , _lFormula         :: f
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
@@ -832,11 +833,13 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
 
 -- fold a sapic item.
 foldSapicItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a)
+    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> ( (String, String) -> a)
     -> SapicElement -> a
-foldSapicItem fProcess fProcessDef i = case i of
+foldSapicItem fProcess fProcessDef fFunSym fIncludeInfo i = case i of
     ProcessItem     proc  -> fProcess proc
     ProcessDefItem     pDef  -> fProcessDef pDef
+    FunctionTypingInfo t -> fFunSym t
+    IncludeInfo f -> fIncludeInfo f
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -898,12 +901,16 @@ theoryLemmas =
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
-theoryProcesses = foldSapicItem return (const []) <=< sapicElements
+theoryProcesses = foldSapicItem return (const []) (const [])  (const [])  <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return <=< sapicElements
+theoryProcessDefs = foldSapicItem (const []) return (const [])  (const [])  <=< sapicElements
+  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
+
+theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
+theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const [])  <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All process definitions of a theory.
@@ -944,22 +951,22 @@ expandFormula thy = traverseFormulaAtom f
   where
         f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
         f x | Syntactic (Pred fa)   <- x
-            , Just pr <- lookupPredicate fa thy 
-              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
+            , Just pr <- lookupPredicate fa thy
+              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr)
 
             | (Syntactic (Pred fa))   <- x
             , Nothing <- lookupPredicate fa thy = Left $ factTag fa
 
-            | otherwise = return $ Ato $ toAtom x 
+            | otherwise = return $ Ato $ toAtom x
         apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula
         apply' subst = mapAtoms (\i a -> fmap (applyVTerm $ subst i) a)
         compSubst (Fact _ _ ts1) (Fact _ _ ts2) i = substFromList $ zip ts1' ts2'
         -- ts1 varTerms that are free in the predicate definition
-        -- ts2 terms used in reference, need to add the number of quantifiers we added 
+        -- ts2 terms used in reference, need to add the number of quantifiers we added
         -- to correctly dereference.
-            where 
+            where
                   ts1':: [BVar LVar]
-                  ts1' = map Free ts1 
+                  ts1' = map Free ts1
                   ts2' = map (fmap $ fmap up) ts2
                   up (Free v) = Free v
                   up (Bound i') = Bound $ i' + i

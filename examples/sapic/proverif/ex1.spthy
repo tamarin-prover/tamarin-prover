@@ -10,7 +10,7 @@ begin
 
 builtins: symmetric-encryption
 
-functions: bij/1, unbij/1
+functions: bij/1, unbij/1, kdf(bitstring):skey
 /* Check for communication on private channels */
 /*  - communication is private */
 /*  - communication is possible */
