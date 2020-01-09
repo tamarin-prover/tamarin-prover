@@ -46,12 +46,14 @@ runDisjT = runListT . unDisjT
 ------------
 
 instance Monad m => Monad (DisjT m) where
-    -- Ensure that contradictions are not reported via fail!
-    fail    = error
     {-# INLINE return #-}
     return  = DisjT . return
     {-# INLINE (>>=) #-}
     m >>= f = DisjT $ (unDisjT . f) =<< unDisjT m
+
+instance Monad m => MonadFail (DisjT m) where
+-- Ensure that contradictions are not reported via fail!
+    fail    = error
 
 instance Monad m => MonadDisj (DisjT m) where
     contradictoryBecause _ = DisjT mzero
