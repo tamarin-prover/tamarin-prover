@@ -224,7 +224,7 @@ naturalSubscript = T.lexeme spthy $ do
   where
     subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
-    
+
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
 commaSep = T.commaSep spthy
@@ -324,16 +324,12 @@ pubName = singleQuoted identifier
 --   is not
 sapicvar :: Parser SapicLVar
 sapicvar = do
-        s <- option LSortMsg $ asum $ map mkPrefixParser [LSortFresh, LSortPub, LSortMsg]
-        (n, i) <- indexedIdentifier
+        v <- lvar
         t <- option Nothing $ colon *> (Just <$> identifier)
-        return (SapicLVar (LVar n s i) t ) 
-    where mkPrefixParser s = do
-                _ <- symbol (sortSuffix s)
-                return s
+        return (SapicLVar v t )
 
 sapicnodevar :: Parser SapicLVar
-sapicnodevar = do 
+sapicnodevar = do
     v <- nodevar
     return (SapicLVar v defaultSapicNodeType)
 
