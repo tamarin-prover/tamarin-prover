@@ -96,16 +96,18 @@ prettyProVerifTheory thy =  template hd [] proc
   where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
         (proc,prochd) = loadProc thy
 
+ppTypeVar (Var (SapicLVar (LVar n s i)  Nothing)) = text n <> text ":bitstring"
+ppTypeVar (Var (SapicLVar (LVar n s i)  (Just t))) = text n <> text ":" <> (text t)
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
 pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
 pppSapicTerm b t = (ppTerm t, getHdTerm t)
   where
     ppTerm t = case viewTerm t of
-        Lit  (Con (Name FreshName n))             -> text $ show n
+        Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (t)              | b                 -> text $ show t
-        Lit  (Var (SapicLVar n t))                -> text $ show n
+        Lit  (Var (SapicLVar (LVar n s i)  t)) | b-> ppTypeVar (Var (SapicLVar (LVar n s i)  t))
+        Lit  (Var (SapicLVar (LVar n s i)  t))    -> (text n)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -193,7 +195,7 @@ ppFact (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New n) = (text "new " <> (text $ show n), S.empty)
+ppAction (New (SapicLVar (LVar n s i) t)) = (text "new " <> (ppTypeVar (Var (SapicLVar (LVar n s i)  t))), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1
