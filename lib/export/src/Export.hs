@@ -67,7 +67,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   ),
   (S.fromList [expSym], [
       Sym "const g:bitstring.",
-      Fun "fun exp(bitstring,bitstring):bitstring",
+      Fun "fun exp(bitstring,bitstring):bitstring.",
       Eq "equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a)."
       ]
   ),
