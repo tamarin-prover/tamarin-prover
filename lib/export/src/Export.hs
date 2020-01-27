@@ -33,7 +33,6 @@ import qualified Data.Label as L
 import Data.List as List
 import qualified Data.ByteString.Char8 as BC
 
-
 template :: Document d => [d] -> [d] -> d -> d
 template headers queries process =
   (vcat headers)
@@ -66,7 +65,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Eq "reduc forall m:bitstring,sk:bitstring; verify(sign(m,sk),m,pk(sk)) = true."
       ]
   ),
-  (S.fromList [ expSym, oneSym], [
+  (S.fromList [expSym], [
       Sym "const g:bitstring.",
       Fun "fun exp(bitstring,bitstring):bitstring",
       Eq "equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a)."
@@ -108,7 +107,7 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
         Lit  (t)              | b                 -> text $ show t
         Lit  (Var (SapicLVar n t))                -> text $ show n
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
-        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
@@ -128,7 +127,11 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
     ppFun f ts =
       text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm t =  case viewTerm t of
-        Lit  (Con (Name PubName n))               -> S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+        Lit  (Con (Name PubName n))               ->
+          if show n=="g" then
+            S.empty
+          else
+            S.singleton   (Sym ("free " ++ show n ++":bitstring."))
         Lit  (t)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
@@ -166,7 +169,11 @@ pppLNTerm b t = (ppTerm t, getHdTerm t)
     ppFun f ts =
       text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm t =  case viewTerm t of
-        Lit  (Con (Name PubName n))               -> S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+        Lit  (Con (Name PubName n))               ->
+          if show n=="g" then
+            S.empty
+          else
+            S.singleton   (Sym ("free " ++ show n ++":bitstring."))
         Lit  (t)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
@@ -289,9 +296,10 @@ loadHeaders thy =
   (S.map  typedHeaderOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule y)) S.empty sigRules)
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- generating headers for function symbols, both for builtins and user defined functions
-        sigFunSyms = stFunSyms sig
-        funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf y sigFunSyms then  x `S.union` z else x )) S.empty builtins)
-        funSymsNoBuiltin = sigFunSyms S.\\ ((foldl (\x (y,z) -> x `S.union` y  )) S.empty builtins)
+        sigFunSyms = funSyms sig
+        sigStFunSyms = stFunSyms sig
+        funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf (S.map NoEq y) sigFunSyms then  x `S.union` z else x )) S.empty builtins)
+        funSymsNoBuiltin = sigStFunSyms S.\\ ((foldl (\x (y,z) -> x `S.union` y)) S.empty builtins)
         typedHeaderOfFunSym = headerOfFunSym (theoryFunctionTypingInfos thy)
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
