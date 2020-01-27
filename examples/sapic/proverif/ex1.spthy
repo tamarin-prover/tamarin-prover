@@ -17,7 +17,8 @@ functions: bij/1, unbij/1, kdf(bitstring):skey
 equations: bij(unbij(x))=x
 
 let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
-let Q = in( m:bitstring); let md = sdec(m,sk) in if snd(md)='test' then event Received(fst(md))
+let Q = in( m:bitstring); let md = sdec(m,sk) in
+            if snd(md)='test' then event Received(fst(md))
 
 new sk:skey; (P || Q)
 

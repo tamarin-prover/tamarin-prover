@@ -464,6 +464,7 @@ bltermNodeId' t =
 
 instance Eq LVar where
   (LVar n1 s1 i1) == (LVar n2 s2 i2) = i1 == i2 && s1 == s2 && n1 == n2
+  -- x == y  =  compare x y == EQ -- slower, but consistent with Ord.
 
 -- An ord instance that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
