@@ -57,6 +57,7 @@ module Theory (
   , CaseTest(..)
   , cName
   , cFormula
+  , caseTestToPredicate
   , defineCaseTests
 
   -- * Lemmas
@@ -529,6 +530,12 @@ data CaseTest = CaseTest
 
 $(mkLabels [''CaseTest])
 
+caseTestToPredicate :: CaseTest -> Maybe Predicate
+caseTestToPredicate caseTest = fmap (Predicate fact) formula
+  where
+    fact = protoFact Linear name (frees formula)
+    name = L.get cName caseTest
+    formula = toLNFormula (L.get cFormula caseTest)
 
 ------------------------------------------------------------------------------
 -- Lemmas

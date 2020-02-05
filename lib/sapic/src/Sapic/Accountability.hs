@@ -164,15 +164,15 @@ injective accLemma caseTest = return $ toLemma accLemma AllTraces name (toInterm
         tau = L.get cFormula caseTest
         formula = quantifyFrees forall (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
 
-terminating :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
-terminating accLemma caseTest = do
+singlematched :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
+singlematched accLemma caseTest = do
     t1 <- singleMatch tau
 
     let formula = quantifyFrees exists $ andIf (not $ null taus) t1 (noOther taus)
 
     return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
     where
-        name = "_" ++ L.get cName caseTest ++ "_rel_ter" 
+        name = "_" ++ L.get cName caseTest ++ "_single" 
         tau = L.get cFormula caseTest
         taus = caseTestFormulasExcept accLemma caseTest
 
@@ -190,7 +190,7 @@ casesLemmas accLemma = do
         m <- mapM (minimality  accLemma) caseTests
         u <- mapM (uniqueness  accLemma) caseTests
         i <- mapM (injective   accLemma) caseTests
-        t <- mapM (terminating accLemma) caseTests
+        t <- mapM (singlematched accLemma) caseTests
 
         return $ s ++ [ve] ++ vne ++ m ++ u ++ i ++ t
     where

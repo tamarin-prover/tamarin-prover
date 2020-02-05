@@ -1389,8 +1389,13 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- ((liftedAddCaseTest thy) =<<) caseTest
-           addItems flags thy'
+      , do -- | TODO: add predicate at the beginning of the theory
+           test <- caseTest
+           thy1 <- liftedAddCaseTest thy test
+           thy2 <- case caseTestToPredicate test of
+              Just p -> liftedAddPredicate thy1 p
+              Nothing -> return thy1
+           addItems flags thy2
       , do 
            accLem <- lemmaAcc
            let tests = catMaybes $ map (\name -> lookupCaseTest name thy) (get aCaseIdentifiers accLem)
