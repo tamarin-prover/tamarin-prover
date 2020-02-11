@@ -67,6 +67,7 @@ The syntax for specifying security properties is defined as follows:
 
  * `#i = #j`  for an equality between temporal variables 'i' and 'j'
  * `x = y`    for an equality between message variables 'x' and 'y'
+ * `Pred(t1,..,tn)` as syntactic sugar for instantiating a predicate Pred for the terms `t1` to `tn`
 
 
 All action fact symbols may be used in formulas. The terms (as
@@ -76,6 +77,19 @@ delimited using single-quotes), and free function symbols including
 pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be 
 guarded. If they are not guarded, Tamarin will produce an error.
+
+**Predicates.** Are defined using the `predicates` construct, and substituted
+while parsing trace properties, whether they are part of lemmas, restrictions or embedded restrictions:
+
+```
+builtins: multiset
+predicates: Smaller(x,y) <=> Ex z. x + z = y
+
+[..] 
+
+lemma one_smaller_two:
+    "All x y #i. B(x,y)@i ==> Smaller(x,y)"
+```
 
 **Guardedness. **
 To ensure guardedness, for universally quantified variables, one has to check 
@@ -345,7 +359,7 @@ tries not to resolve parts of the execution that are irrelevant, but this is
 not always sufficient.
 
 
-Restrictions
+Restrictions{#sec:restrictions}
 ------
 
 Restrictions restrict the set of traces to be considered in the protocol
@@ -380,13 +394,13 @@ essentially removes degenerate cases.
 
 <!-- Finally, one can use also use restrictions to simplify the writing of lemmas. -->
 
-## Common restrictions ##
+### Common restrictions 
 
 Here is a list of common restrictions. Do note that you need to add the
 appropriate action facts to your rules for these restrictions to have
 impact. 
 
-### Unique ###
+#### Unique 
 
 First, let us show a restriction forcing an action (with a
 particular value) to be unique:
@@ -400,7 +414,7 @@ We call the action `UniqueFact` and give it one argument. If it
 appears on the trace twice, it actually is only once, as the two time
 points are identified.
 
-### Equality ###
+#### Equality 
 
 Next, let us consider an equality restriction. This is useful if you do not
 want to use pattern-matching explicitly, but maybe want to ensure that
@@ -415,7 +429,7 @@ which means that all instances of the `Eq` action on the trace have
 the same value as both its arguments.
 
 
-### Inequality ###
+#### Inequality 
 
 Now, let us consider an inequality restriction, which ensures that the two arguments of `Neq` are different:
 
@@ -426,7 +440,7 @@ restriction Inequality:
 
 This is very useful to ensure that certain arguments are different.
 
-### OnlyOnce ###
+#### OnlyOnce 
 
 If you have a rule that should only be executed once, put `OnlyOnce()`
 as an action fact for that rule and add this restriction:
@@ -452,7 +466,7 @@ restriction OnlyOnceV:
   "All #i #j x. OnlyOnceV(x)@#i & OnlyOnceV(x)@#j ==> #i = #j"
 ```
 
-### Less than ###
+#### Less than 
 
 If we use the `multiset` built-in we can construct numbers as
 "1+1+...+1", and have a restriction enforcing that one number is less than
@@ -471,6 +485,49 @@ Similarly you can use a `GreaterThan` where we want `x` to be strictly larger th
 ```
 restriction GreaterThan:
   "All x y #i. GreaterThan(x,y)@#i ==> Ex z. x = y + z"
+```
+
+
+### Embedded restrictions
+
+Restrictions can be [embedded into rules](005_protocol-specification-rules.html#sec:embeddedrestrictions).
+This is syntactic sugar:
+```
+rule X:
+    [ left-facts] --[_restrict(formula)]-> [right-facts]
+```
+translates to
+```
+rule X:
+    [ left-facts] --[ NewActionFact(fv) ]-> [right-facts]
+
+restriction Xrestriction:
+   "All fv #NOW. NewActionFact(fv)@NOW ==> formula
+
+```
+where `fv` are the free variables in `formula` appropriatly renamed.
+
+Note that form can refer to the timepoint #NOW, which will be bound to the
+time-point of the current instantiation of this rule. Consider the following example:
+
+```
+builtins: multiset
+
+predicates: Smaller(x,y) <=> Ex z. x + z = y
+          , Equal(x,y)   <=> x = y
+          , Added(x,y)   <=> Ex #a. A(x,y)@a & #a < #NOW
+
+rule A:
+  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(x,y), B('1','1'+'1')]-> [ X('A')]
+
+rule B:
+    [In(x), In(y)] --[ _restrict(Added(x,y))]-> []
+
+lemma one_smaller_two:
+    "All x y #i. B(x,y)@i ==> Smaller(x,y)"
+
+lemma unequal:
+    "All x y #i. A(x,y)@i ==> not (Equal(x,y))"
 ```
 
 
