@@ -107,9 +107,9 @@ from this repository. The instructions below should be translatable to other plu
 Plugin 'tamarin-prover/tamarin-prover', {'rtp', 'etc/vim'}
 ```
 3. Restart Vim or reload the configuration
-4. Run the Vim command `:VundleInstall` (or equivalent)
+4. Run the Vim command `:PluginInstall` (or equivalent)
 
-You can install updates through `:VundleUpdate`.
+You can install updates through `:PluginUpdate`.
 
 ##### Manual installation (not recommended)
 
