@@ -110,7 +110,7 @@ and we will see some examples of allowed equations in the next
 section.
 
 
-Built-in message theories {#sec:builtin-theories}
+Built-in message theories and other built-in features {#sec:builtin-theories}
 ------------------------
 
 In the following, we write `f/n` to denote that the function symbol `f` is
@@ -202,7 +202,8 @@ x ⊕ x       = zero
 
 ``reliable-channel`:
 
-: This theory introduces support for reliable channel in the progress calculus.
+: This theory introduces support for reliable channel in the [process
+calculus](006_protocol-specification-processes.md).
 Messages on the channel (i.e., public name) `'r'` are guaranteed to arrive
 eventually. There is only one other channel, the public and unreliable channel
 `'c'`. Note that multiple reliable channels can be modelled using pattern matchting:
@@ -212,7 +213,6 @@ eventually. There is only one other channel, the public and unreliable channel
 | in('r',<'channelA',x); event PrepareTea()
 | in('r',<'channelB',x); event PrepareCoffee()
 ```
-
 
 Reserved function symbol names {#sec:reserved-names}
 ------------------------
