@@ -52,6 +52,7 @@ data ProverifHeader =
   deriving (Ord, Show, Eq)
 
 -- We declare some base headers. Notably, we need a dedicated attacker channel.
+base_headers :: S.Set ProverifHeader
 base_headers = S.fromList [
   Sym ("free attacker_channel:channel.")
   ]

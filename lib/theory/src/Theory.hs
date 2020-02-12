@@ -54,6 +54,13 @@ module Theory (
   , pFact
   , addPredicate
 
+  -- * Export blocks
+  , ExportInfo(..)
+  , addExportInfo
+  , lookupExportInfo
+  , eTag
+  , eText
+
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
@@ -480,6 +487,20 @@ data Predicate = Predicate
 $(mkLabels [''Predicate])
 
 ------------------------------------------------------------------------------
+-- Export Info
+------------------------------------------------------------------------------
+
+data ExportInfo = ExportInfo
+        { _eTag            :: String
+        , _eText           :: String
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+
+-- generate accessors for Predicate data structure records
+$(mkLabels [''ExportInfo])
+
+------------------------------------------------------------------------------
 -- Options
 ------------------------------------------------------------------------------
 -- | Options for translation and, maybe in the future, also msrs itself.
@@ -666,7 +687,7 @@ data SapicElement=
       ProcessItem PlainProcess
       | ProcessDefItem ProcessDef
       | FunctionTypingInfo SapicFunSym
-      | IncludeInfo (String, String)
+      | ExportInfoItem ExportInfo
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -833,13 +854,13 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
 
 -- fold a sapic item.
 foldSapicItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> ( (String, String) -> a)
+    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a)
     -> SapicElement -> a
-foldSapicItem fProcess fProcessDef fFunSym fIncludeInfo i = case i of
+foldSapicItem fProcess fProcessDef fFunSym fExportInfo i = case i of
     ProcessItem     proc  -> fProcess proc
     ProcessDefItem     pDef  -> fProcessDef pDef
     FunctionTypingInfo t -> fFunSym t
-    IncludeInfo f -> fIncludeInfo f
+    ExportInfoItem ei -> fExportInfo ei
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -899,23 +920,27 @@ theoryLemmas :: Theory sig c r p s -> [Lemma p]
 theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
 
+sapicElements :: Theory sig c1 b p c2 -> [c2]
+sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
+
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
 theoryProcesses = foldSapicItem return (const []) (const [])  (const [])  <=< sapicElements
-  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
 theoryProcessDefs = foldSapicItem (const []) return (const [])  (const [])  <=< sapicElements
-  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
 theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const [])  <=< sapicElements
-  where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
 theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
+
+-- | All export info definitions of a theory.
+theoryExportInfos :: Theory sig c b p SapicElement -> [ExportInfo]
+theoryExportInfos =  foldSapicItem (const []) (const []) (const []) return  <=< sapicElements
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -997,12 +1022,18 @@ addLemma l thy = do
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
 addProcess :: PlainProcess -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
-addProcess l thy = modify thyItems (++ [SapicItem (ProcessItem l)]) thy
+addProcess l = modify thyItems (++ [SapicItem (ProcessItem l)]) 
 
--- | Add a new process expression.  since expression (and not definitions)
+-- | Add a new process expression.  Since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
 addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
 addFunctionTypingInfo l = modify thyItems (++ [SapicItem $ FunctionTypingInfo l])
+
+-- | Add a new process expression.  
+addExportInfo :: ExportInfo -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addExportInfo eInfo thy = do
+    guard (isNothing $ lookupExportInfo (L.get eTag eInfo) thy)
+    return $ modify thyItems (++ [SapicItem (ExportInfoItem eInfo)]) thy
 
 -- search process
 findProcess :: String -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
@@ -1114,6 +1145,10 @@ lookupPredicate :: Fact t  -> Theory sig c r p s -> Maybe (Predicate)
 lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
     where
         sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
+
+-- | Find the export info for the given tag.
+lookupExportInfo :: String -> Theory sig c r p SapicElement -> Maybe ExportInfo
+lookupExportInfo tag = find ((tag ==) . L.get eTag) . theoryExportInfos
 
 
 -- | Find the restriction with the given name.

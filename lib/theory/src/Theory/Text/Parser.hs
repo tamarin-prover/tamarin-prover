@@ -943,13 +943,35 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
-                    <?> "predicates"
+                    <?> "predicate block"
+
+-- | parse a export declaration
+
+export :: OpenTheory -> Parser OpenTheory
+export thy = do
+                    _          <- try (symbol "export")
+                    tag          <- identifier
+                    _          <- colon
+                    text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
+                    thy'       <- let ei = ExportInfo tag text
+                                  in liftMaybeToEx (DuplicateItem (SapicItem (ExportInfoItem ei))) (addExportInfo ei thy)
+                                  
+                    return thy'
+                    <?> "export block"
+              where
+                bodyChar = try $ do
+                  c <- anyChar
+                  case c of
+                    '\\' -> char '\\' <|> char '"'
+                    '"'  -> mzero
+                    _    -> return c
 
 -- used for debugging 
 -- println :: String -> ParsecT String u Identity ()          
 -- println str = traceShowM str
 
--- parse a process definition (let block)
+
+-- | parse a process definition (let P = .. )
 processDef :: OpenTheory -> Parser ProcessDef
 processDef thy= do
                 letIdentifier
@@ -1377,6 +1399,8 @@ theory flags0 = do
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
       , do thy' <- preddeclaration thy             
+           addItems flags (thy')    
+      , do thy'  <- export thy
            addItems flags (thy')    
       , do ifdef flags thy
       , do define flags thy
