@@ -371,7 +371,7 @@ feature-locations/AC_counter_with_attack.spthy \
 feature-locations/AC_sid_with_attack.spthy
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+SAPIC_CASE_STUDIES_SLOW= encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 NSL/nsl-no_as-untagged.spthy \
 Yubikey/Yubikey.spthy \
 encWrapDecUnwrap/encwrapdecunwrap.spthy
@@ -391,7 +391,7 @@ fairexchange-gjm/gjm-locks-unfairness-A.spthy
 # PKCS11/pkcs11-dynamic-policy.spthy \ 
 # # not working 
 #
-# xor/NSLPK3xor.spthy \
+# feature-xor/NSLPK3xor.spthy \
 # # attack finding relies on sources lemma which is untrue. it is acceptable for
 # # this model, because the attacks found despite an incorrect sources lemma are
 # # correct by definition, but negating it would defeat its purpose, and removing
