@@ -1,0 +1,171 @@
+theory LD07_UK2_proof begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k0 ), Fr( ~k1 ), Fr( ~k2 ), Fr( ~r ), Fr( ~secondTag ) ]
+  --[ Setup( diff(~k0, ~secondTag) ), OnlyOnce( 'setup' ) ]->
+   [
+   Out( <~r, h((~k0⊕~k1⊕~r)), (~k1⊕~k2), h((~k0⊕~k2))> ),
+   Tag( diff(~k0, ~secondTag), diff((~k0⊕~k2), (~k2⊕~secondTag)) )
+   ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyOnce( 'tag1' )
+  ]->
+   [ Out( h((r1⊕x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ In( <newkey, newhash> ), TagRunning( ~k, x ) ]
+  --[
+  Update( ~k, (newkey⊕x), 'Tag' ), Eq( h((newkey⊕x)), newhash ),
+  Alive( ~k, 'Reader' ), OnlyOnce( 'tag2' )
+  ]->
+   [ Tag( ~k, (newkey⊕x) ) ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  by sorry // removed
+next
+  case Rule_Destrd_0_snd
+  by sorry // removed
+next
+  case Rule_Destrd_union
+  by sorry // removed
+next
+  case Rule_Destrd_xor
+  by sorry // removed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Setup
+      by sorry
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( Tag( ~k, x ) ▶₁ #vr ) )
+          case Setup
+          step( solve( !KU( r1 ) @ #vk.1 ) )
+            case c_fst
+            by sorry
+          next
+            case c_h
+            by sorry // removed
+          next
+            case c_pair
+            by sorry
+          next
+            case c_snd
+            by sorry
+          next
+            case c_union
+            by sorry
+          next
+            case c_xor
+            step( solve( !KU( (x⊕y) ) @ #vk ) )
+              case c_xor
+              step( solve( !KU( h(z) ) @ #vk.1 ) )
+                case Setup
+                step( solve( splitEqs(0) ) )
+                  case split_case_6
+                  step( solve( !KU( ~x ) @ #vk.2 ) )
+                    case Setup_case_1
+                    step( solve( !KU( (~k1⊕~k2) ) @ #vk.3 ) )
+                      case coerce
+                      step( solve( !KD( (~k1⊕~k2) ) ▶₀ #vk.3 ) )
+                        case Setup
+                        step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                          case d_0_snd
+                          step( solve( (#vr.5, 0) ~~> (#vk.3, 0) ) )
+                            case d_0_snd
+                            step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                              case d_0_fst
+                              step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                                case Xor
+                                by ATTACK // trace found
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case c_zero
+            by sorry // removed
+          next
+            case coerce
+            by sorry // removed
+          next
+            case fresh
+            by sorry // removed
+          next
+            case pub
+            by sorry
+          qed
+        next
+          case tag1
+          by sorry
+        next
+          case tag2
+          by sorry
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    by sorry
+  qed
+next
+  case Rule_Send
+  by sorry
+next
+  case Rule_Setup
+  by sorry
+next
+  case Rule_tag1
+  by sorry
+next
+  case Rule_tag2
+  by sorry
+qed
+
+/* All well-formedness checks were successful. */
+
+end
