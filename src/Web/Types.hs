@@ -65,7 +65,7 @@ import           Data.Ord            (comparing)
 import qualified Data.Text           as T
 import           Data.Time.LocalTime
 import qualified Data.Binary         as Bin
-import           Data.Binary.Orphans()
+import           Data.Binary.Instances()
 
 import           Control.DeepSeq
 import           GHC.Generics (Generic)

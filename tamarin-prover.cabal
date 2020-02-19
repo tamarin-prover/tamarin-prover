@@ -126,7 +126,7 @@ executable tamarin-prover
         HUnit
       , base
       , binary
-      , binary-orphans
+      , binary-instances
       , blaze-builder
       , blaze-html
       , bytestring
