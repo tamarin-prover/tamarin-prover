@@ -15,11 +15,11 @@ the proofs we obtained.
 
 It contains the following theories:
 
-OIDC_Implicit.spthy: Standard OpenID Connect implicit flow
-OIDC_CodeFlow_no_ClientSecret.spthy: Standard OpenID Connect code flow without client authentication
-OIDC_CodeFlow_with_ClientSecret.spthy: Standard OpenID Connect code flow with client authentication using a client_secret
+- OIDC_Implicit.spthy: Standard OpenID Connect implicit flow
+- OIDC_CodeFlow_no_ClientSecret.spthy: Standard OpenID Connect code flow without client authentication
+- OIDC_CodeFlow_with_ClientSecret.spthy: Standard OpenID Connect code flow with client authentication using a client_secret
 
-POIDC.spthy: POIDC using public subject identifiers
-POIDC_pairwise.spthy: Pairwise POIDC, i.e., POIDC using pairwise subject identifiers
+- POIDC.spthy: POIDC using public subject identifiers
+- POIDC_pairwise.spthy: Pairwise POIDC, i.e., POIDC using pairwise subject identifiers
 
 We obtained the proofs using Tamarin version 1.4.1, git revision d2e1c57311ce4ed0ef46d0372c4995b8fdc25323.
