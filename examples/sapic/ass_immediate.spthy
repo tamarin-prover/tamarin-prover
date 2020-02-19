@@ -1,0 +1,18 @@
+theory AssImmediateYes
+begin
+
+event A()
+
+// need ass_immediate
+
+// L+ & not L- (AllTraces, (True, False))
+lemma lplus_notlminus_all:
+  all-traces
+  "Ex x #i. K(x)@i"
+
+// not L+ & L- (ExistsTraces, (False, True))
+lemma notlplus_lminus_ex:
+  exists-trace
+  "Ex x #i. not K(x)@i"
+
+end
