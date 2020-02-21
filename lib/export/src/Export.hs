@@ -58,6 +58,7 @@ base_headers = S.fromList [
   ]
 
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
+builtins :: [(NoEqFunSig, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
   (hashFunSig, [Fun "fun hash(bitstring):bitstring."] ),
   (signatureFunSig, [
@@ -82,7 +83,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   )
   ]
 
-
+builtins_rules :: S.Set CtxtStRule
 builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules]
 
 -- utility function, generate a sequence of type arguments, for events and function declaration
@@ -93,26 +94,34 @@ make_args n = "bitstring,"++(make_args (n-1))
 
 -- main pp function
 prettyProVerifTheory :: OpenTheory -> Doc
-prettyProVerifTheory thy =  template hd [] proc
+prettyProVerifTheory thy =  template hd queries proc
   where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
-        (proc,prochd) = loadProc thy
+        (proc, prochd) = loadProc thy
+        queries = loadQueries thy
 
-ppTypeVar (Var (SapicLVar (LVar n s i)  Nothing)) = text n <> text ":bitstring"
-ppTypeVar (Var (SapicLVar (LVar n s i)  (Just t))) = text n <> text ":" <> (text t)
+loadQueries :: Theory sig c b p SapicElement -> [Doc]
+loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
+  where get_text Nothing = ""
+        get_text (Just m) = L.get eText m
+
+ppTypeVar :: Document p => Lit c SapicLVar -> p
+ppTypeVar (Var (SapicLVar (LVar n _ _ )  Nothing)) = text n <> text ":bitstring"
+ppTypeVar (Var (SapicLVar (LVar n _ _ )  (Just t))) = text n <> text ":" <> (text t)
+
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
 pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
 pppSapicTerm b t = (ppTerm t, getHdTerm t)
   where
-    ppTerm t = case viewTerm t of
+    ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (Var (SapicLVar (LVar n s i)  t)) | b-> ppTypeVar (Var (SapicLVar (LVar n s i)  t))
-        Lit  (Var (SapicLVar (LVar n s i)  t))    -> (text n)
+        Lit  (Var (SapicLVar (LVar n s i)  ty)) | b-> ppTypeVar (Var (SapicLVar (LVar n s i)  ty))
+        Lit  (Var (SapicLVar (LVar n _ _)  _))    -> (text n)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq s)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split t)
+        FApp (NoEq _)      _       | isPair tm -> ppTerms ", " 1 "(" ")" (split tm)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
@@ -125,17 +134,17 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
         fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
-    split t                          = [t]
+    split tm                          = [tm]
 
     ppFun f ts =
       text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
-    getHdTerm t =  case viewTerm t of
+    getHdTerm tm =  case viewTerm tm of
         Lit  (Con (Name PubName n))               ->
           if show n=="g" then
             S.empty
           else
             S.singleton   (Sym ("free " ++ show n ++":bitstring."))
-        Lit  (t)                                  -> S.empty
+        Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
 ppSapicTerm :: SapicTerm -> (Doc, S.Set ProverifHeader)
@@ -146,15 +155,15 @@ ppSapicTerm = pppSapicTerm False
 pppLNTerm :: Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
 pppLNTerm b t = (ppTerm t, getHdTerm t)
   where
-    ppTerm t = case viewTerm t of
+    ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             -> text $ show n
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (t)              | b                 -> text $ show t <> ":bitstring"
-        Lit  (t)                                  -> text $ show t
+        Lit  (tm2)              | b                 -> text $ show tm2 <> ":bitstring"
+        Lit  (tm2)                                  -> text $ show tm2
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq s)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split t)
+        FApp (NoEq _)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split tm)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
@@ -167,17 +176,17 @@ pppLNTerm b t = (ppTerm t, getHdTerm t)
         fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
-    split t                          = [t]
+    split tm                          = [tm]
 
     ppFun f ts =
       text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
-    getHdTerm t =  case viewTerm t of
+    getHdTerm tm =  case viewTerm tm of
         Lit  (Con (Name PubName n))               ->
           if show n=="g" then
             S.empty
           else
             S.singleton   (Sym ("free " ++ show n ++":bitstring."))
-        Lit  (t)                                  -> S.empty
+        Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
 ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
@@ -189,9 +198,9 @@ ppFact (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
   | otherwise                     = sppFact (showFactTag tag) ts
   where
-    sppFact name ts =
+    sppFact name ts2 =
       (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
-      where (pts, shs) = unzip $ map ppSapicTerm ts
+      where (pts, shs) = unzip $ map ppSapicTerm ts2
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared
@@ -229,7 +238,7 @@ ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic pl
         (pa, sh) = ppFact' a
-        ppFact' formula@(Ato (Syntactic (Pred f))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
+        ppFact' formula@(Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
                                                     --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
         ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
 
@@ -269,11 +278,12 @@ loadProc :: OpenTheory -> (Doc, S.Set ProverifHeader)
 loadProc thy = case theoryProcesses thy of
   []  -> (text "", S.empty)
   [p] -> ppSapic p
-  ps  -> (text "Multiple sapic processes detected, error", S.empty)
+  _  -> (text "Multiple sapic processes detected, error", S.empty)
 
 
-
+make_str :: (BC.ByteString, Int) -> [Char]
 make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
+
 make_argtypes :: [SapicType] -> String
 make_argtypes [] = ""
 make_argtypes [Just t] = t
@@ -302,11 +312,12 @@ loadHeaders thy =
         sigFunSyms = funSyms sig
         sigStFunSyms = stFunSyms sig
         funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf (S.map NoEq y) sigFunSyms then  x `S.union` z else x )) S.empty builtins)
-        funSymsNoBuiltin = sigStFunSyms S.\\ ((foldl (\x (y,z) -> x `S.union` y)) S.empty builtins)
+        funSymsNoBuiltin = sigStFunSyms S.\\ ((foldl (\x (y, _) -> x `S.union` y)) S.empty builtins)
         typedHeaderOfFunSym = headerOfFunSym (theoryFunctionTypingInfos thy)
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
 
+headersOfRule :: CtxtStRule -> S.Set ProverifHeader
 headersOfRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> (S.singleton hrule)  `S.union` lsh `S.union` rsh
     where (plhs,lsh) = ppLNTerm lhs
