@@ -43,6 +43,8 @@ module Theory.Sapic (
     , foldProcess
     , applyProcess
     , pfoldMap
+    , mapTermsAction
+    , mapTermsComb
     , ProcessPosition
     , lhsP
     , rhsP
@@ -210,9 +212,26 @@ foldProcess fNull fAct fComb gAct gComb a p
 -- ProcessAction (mapTermsAction f ac) ann p'
 -- foldProcess fNull fAct fComb a (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
 
-mapTerms f (ProcessNull ann)  = ProcessNull ann 
+mapTerms _ (ProcessNull ann)  = ProcessNull ann 
 mapTerms f (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ac) ann p'
 mapTerms f (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
+
+-- foldMapAction f ::  Monoid m => (SapicNTerm v -> m) -> SapicAction v -> m 
+-- foldTermsAction f ac
+--         | (New v) <- ac, v' <- termVar' (f (varTerm v)) = v'
+--         | (ChIn  mt t) <- ac   = (fmap f mt) `mappend` (f t)
+--         | (ChOut mt t) <- ac   = (fmap f mt) `mappend` (f t)
+--         | (Insert t1 t2) <- ac = (f t1)  `mappend` (f t2)
+--         | (Delete t) <- ac     = (f t)
+--         | (Lock t) <- ac       = (f t)
+--         | (Unlock t) <- ac     = (f t)
+--         | (Event fa) <- ac      = Event (fmap f fa)
+--         | (MSR (l,a,r,rest)) <- ac  = MSR $ (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
+--         | Rep <- ac            = Rep
+--             where f2mapf = fmap $ fmap f
+--                   -- something like
+--                   -- formulaMap = mapAtoms $ const $ fmap $ fmap f
+--                   formulaMap = undefined
 
 mapTermsAction f ac 
         | (New v) <- ac, v' <- termVar' (f (varTerm v)) = New v'

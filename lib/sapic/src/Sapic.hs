@@ -3,6 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
 -- License     : GPL v3 (see LICENSE)
@@ -75,13 +76,21 @@ typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
         fAct a _ _ = a -- TODO: handle other cases later
         fComb a _ (Lookup _ v) = insertVar v a
         fComb a _ _ = a -- TODO: check other cases
-        gAct a' ann r ac = ProcessAction (fmap (typeWith  a') ac) ann r
+        gAct a' ann r ac = ProcessAction (mapTermsAction (typeWith  a') ac) ann r
                        -- a' is map variables to types
                        -- r is typed subprocess
                        -- type terms with variables and reconstruct process
-        gComb a' ann rl rr c = ProcessComb (fmap (typeWith  a') c) ann rl rr
-        -- typeWith a' t = foldMap $ 
-        typeWith a' t = t
+        gComb a' ann rl rr c = ProcessComb (mapTermsComb (typeWith  a') c) ann rl rr
+        -- typeWith a t = t
+            -- | lvar <- slvar v
+            -- , stype'::SapicType <- Map.lookup lvar a = SapicLVar lvar stype'
+            -- | otherwise = v
+        typeWith a' t 
+            | Lit (Var v) <- viewTerm t
+            , lvar <- slvar v
+            , stype <- Map.lookup lvar a' = t
+            -- termViewToTerm $ Lit (Var (SapicVar lvar stype))
+            | otherwise = t
         insertVar v a =  Map.insert (slvar v) (stype v) a
         freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars
 
