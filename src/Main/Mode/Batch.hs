@@ -153,7 +153,7 @@ run thisMode as
             Pretty.$--$ prettyClosedDiffSummary thy
 
         choosePretty Nothing = return . prettyOpenTheory -- output as is, including SAPIC elements
-        choosePretty (Just "spthy") = return . prettyOpenTheory -- output as is, including SAPIC elements
+        choosePretty (Just "spthy") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- output as is, including SAPIC elements
         choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate <=< Sapic.typeTheory
         choosePretty (Just "proverif") = (return . prettyProVerifTheory) <=< Sapic.typeTheory
         choosePretty _ = error "output mode not supported."

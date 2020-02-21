@@ -1090,10 +1090,6 @@ addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTh
 addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
 addDiffHeuristic _ _ = Nothing
 
--- | fold over processes
--- foldMapProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
-foldMapProcesses f z = foldSapicItem return (const []) (const [])  (const [])  <=< sapicElements
-
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 removeLemma lemmaName thy = do
@@ -2046,7 +2042,13 @@ emptyString :: HighlightDocument d => () -> d
 emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement _ = text ("TODO prettyPrint SapicItems")
+prettySapicElement (ProcessItem p) = prettyProcess p
+prettySapicElement (ProcessDefItem p) = 
+    (text (L.get pName p))
+    <->
+    (text "=")
+    <->
+    (nest 2 $ prettyProcess $ L.get pBody p)
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)

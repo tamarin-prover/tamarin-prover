@@ -185,13 +185,22 @@ deriving instance Foldable (Process ann)
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
 -- to subprocess. @gAct@ and @gComb@ reconstruct result, e.g., process from
 -- accumulator and result of subprocess(es). @fNulL@ directly outputs result.
-foldProcess fNull fAct fComb gAct gComb a (ProcessNull ann)  = fNull a ann
-foldProcess fNull fAct fComb gAct gComb a (ProcessAction ac ann p') = 
+foldProcess :: (t1 -> t2 -> t3)
+               -> (t1 -> t2 -> SapicAction v -> t1)
+               -> (t1 -> t2 -> ProcessCombinator v -> t1)
+               -> (t1 -> t2 -> t3 -> SapicAction v -> t3)
+               -> (t1 -> t2 -> t3 -> t3 -> ProcessCombinator v -> t3)
+               -> t1
+               -> Process t2 v
+               -> t3
+foldProcess fNull fAct fComb gAct gComb a p
+    | (ProcessNull ann) <- p = fNull a ann
+    | (ProcessAction ac ann p') <- p =
             let a' = fAct a ann ac -- 1. update accumulator
                 r = foldProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
             in
                gAct a' ann r ac -- 3. reconstruct result from accumulator and subtree's result
-foldProcess fNull fAct fComb gAct gComb a (ProcessComb c ann pl pr) = 
+    | (ProcessComb c ann pl pr) <- p = 
             let a' = fComb a ann c
                 rl = foldProcess fNull fAct fComb gAct gComb a' pl
                 rr = foldProcess fNull fAct fComb gAct gComb a' pr
