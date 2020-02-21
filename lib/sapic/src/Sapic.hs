@@ -36,6 +36,34 @@ import qualified Sapic.Basetranslation as BT
 -- import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
 
+-- | type processes: fold over all pieces and see if we get a consistent
+-- mapping from vars to types. 
+--  
+-- TODO: a consistent naming would be nice here.
+--
+-- Idea: gather giant map from things to their datatypes and then consolidate
+-- typeProcess = subst sigma
+--     sigma = pfoldMap f
+--     where f (ProcessNull _) = emptySubst
+--           f (ProcessAction a _ _)     = fa a 
+--           f (ProcessComb c _ _ _)     = fc c
+--           fa Rep = emptySubst
+--           fa (New v) = singleton v v
+--           fa (ChIn mt t) = 
+--
+-- Better idea: probagate atomic types down the process tree
+-- then do type induction per term
+-- typeProcess = propagate emptySubst 
+--     propagate _ p@(ProcessNull ann) = p
+--     propagate s (ProcessAction a ann p) = ProcessAction (apply s a) ann (propagate (extend s) p)
+                
+
+-- typeProcess p@(ProcessNull an) = p
+-- typeProcess (ProcessComb c ann pl pr) =
+--             ProcessComb (typeCond c) ann (typeProcess pl) (typeProcess pr)
+-- typeProcess (ProcessAction ac ann p') =
+--             ProcessAction (typeAct ac) ann (typeProcess p')
+    
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>

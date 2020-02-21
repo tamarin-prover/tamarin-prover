@@ -177,6 +177,16 @@ deriving instance Functor (Process ann)
 deriving instance Foldable (Process ann)
 
 
+-- foldProcess fNull fAct fComb a (ProcessNull ann)  = fAct a ann
+-- foldProcess fNull fAct fComb a (ProcessAction ac ann p') = 
+--             let a' = fAct' a ac -- ann?
+--             in
+--                 let a'' = foldProcess fNull fAct fComb ' p'  
+--                 in 
+                
+-- ProcessAction (mapTermsAction f ac) ann p'
+-- foldProcess fNull fAct fComb a (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
+
 mapTerms f (ProcessNull ann)  = ProcessNull ann 
 mapTerms f (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ac) ann p'
 mapTerms f (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
@@ -194,8 +204,8 @@ mapTermsAction f ac
         | Rep <- ac            = Rep
             where f2mapf = fmap $ fmap f
                   -- something like
-                  -- formulaMap = mapAtoms $ const $ fmap $ fmap f
-                  formulaMap = undefined
+                  formulaMap = mapAtoms $ const $ fmap $ fmap f
+                  -- formulaMap = undefined
     
 mapTermsComb f c
         | (Cond fa) <- c = Cond $ undefined -- same problem as above
