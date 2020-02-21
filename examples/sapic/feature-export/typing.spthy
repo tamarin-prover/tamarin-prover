@@ -3,4 +3,6 @@ begin
 
 let P = new x; out(x)
 
+P
+
 end

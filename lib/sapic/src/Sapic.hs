@@ -66,7 +66,7 @@ import Theory.Text.Parser
 -- typeProcess (ProcessAction ac ann p') =
 --             ProcessAction (typeAct ac) ann (typeProcess p')
     
-typeProcess :: Process p SapicLVar -> Process p v
+typeProcess :: Process p SapicLVar -> Process p SapicLVar
 typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
     where
         fNull _ ann = ProcessNull ann
@@ -80,7 +80,8 @@ typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
                        -- r is typed subprocess
                        -- type terms with variables and reconstruct process
         gComb a' ann rl rr c = ProcessComb (fmap (typeWith  a') c) ann rl rr
-        typeWith = undefined
+        -- typeWith a' t = foldMap $ 
+        typeWith a' t = t
         insertVar v a =  Map.insert (slvar v) (stype v) a
         freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars
 
