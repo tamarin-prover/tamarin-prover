@@ -87,9 +87,10 @@ typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
             -- | otherwise = v
         typeWith a' t 
             | Lit (Var v) <- viewTerm t
-            , lvar <- slvar v
-            , stype <- Map.lookup lvar a' = t
-            -- termViewToTerm $ Lit (Var (SapicVar lvar stype))
+            , lvar' <- slvar v
+            , Just stype' <- Map.lookup lvar' a' = 
+            -- t
+            termViewToTerm $ Lit (Var (SapicLVar lvar' stype'))
             | otherwise = t
         insertVar v a =  Map.insert (slvar v) (stype v) a
         freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars

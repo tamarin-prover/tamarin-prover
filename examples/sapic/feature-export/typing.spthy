@@ -1,7 +1,7 @@
 theory Typing
 begin
 
-let P = new x; out(x)
+let P = new x:lol; out(x)
 
 P
 
