@@ -891,7 +891,7 @@ function =  do
                        " for `" ++ BC.unpack f
               _ -> do
                     setState (addFunSym (f,(k,priv)) sig)
-                    return (NoEq (f,(k,priv)),argTypes,outType)
+                    return ((f,(k,priv)),argTypes,outType)
 
 functions :: Parser [SapicFunSym]
 functions =

@@ -1,7 +1,9 @@
 theory Typing
 begin
 
-let P = new x:lol; out(x)
+builtins: multiset
+
+let P = new x:lol; new y; out(x); out(y); out(<x,y>); out(x + y)
 
 P
 

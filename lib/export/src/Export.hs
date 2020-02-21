@@ -293,11 +293,11 @@ make_argtypes ((Just p):t) = p ++ "," ++ (make_argtypes t)
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
 headerOfFunSym []  (f,(k,Public))  =  Fun (make_str (f,k) ++ ".")
 headerOfFunSym []  (f,(k,Private)) =  Fun ((make_str (f,k))  ++ " [private].")
-headerOfFunSym  ((NoEq (f,(k,Public)),inTypes,Just outType):rem)  (f2,(k2,Public)) =
+headerOfFunSym  (((f,(k,Public)),inTypes,Just outType):rem)  (f2,(k2,Public)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
   else headerOfFunSym rem (f2,(k2,Public))
-headerOfFunSym  ((NoEq (f,(k,Private)),inTypes,Just outType):rem)  (f2,(k2,Private)) =
+headerOfFunSym  (((f,(k,Private)),inTypes,Just outType):rem)  (f2,(k2,Private)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
   else headerOfFunSym rem (f2,(k2,Public))

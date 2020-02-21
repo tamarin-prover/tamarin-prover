@@ -67,8 +67,8 @@ import Theory.Text.Parser
 -- typeProcess (ProcessAction ac ann p') =
 --             ProcessAction (typeAct ac) ann (typeProcess p')
     
-typeProcess :: Process p SapicLVar -> Process p SapicLVar
-typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
+-- typeProcess :: Process p SapicLVar -> Process p SapicLVar
+typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
     where
         fNull _ ann = ProcessNull ann
         fAct  a _ (New v) = insertVar v a
@@ -89,14 +89,22 @@ typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
             | Lit (Var v) <- viewTerm t
             , lvar' <- slvar v
             , Just stype' <- Map.lookup lvar' a' = 
-            -- t
-            termViewToTerm $ Lit (Var (SapicLVar lvar' stype'))
+                        termViewToTerm $ Lit (Var (SapicLVar lvar' stype'))
+            | FApp (NoEq fs) ts   <- viewTerm t 
+            , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
+            = t --TODO has got to give out term and type
+            | FApp fs ts <- viewTerm t =  -- list, AC or C symbol: ignore, i.e., assume polymorphic
+                termViewToTerm $ FApp fs (map (typeWith a') ts)
+                -- termViewToTerm $ FApp (AC Mult) (map (typeWith a') ts) -- TODO For testing! 
             | otherwise = t
-        insertVar v a =  Map.insert (slvar v) (stype v) a
+
+        insertVar v a 
+               | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
+               | otherwise          =  Map.insert (slvar v) (stype v) a
         freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars
 
 typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
-typeTheory = return . mapProcesses typeProcess
+typeTheory th = return $ mapProcesses (typeProcess th) th
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>

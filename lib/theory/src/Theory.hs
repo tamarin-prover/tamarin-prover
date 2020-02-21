@@ -39,6 +39,7 @@ module Theory (
   , mapProcesses
   , addProcessDef
   , lookupProcessDef
+  , lookupFunctionTypingInfo
   , pName
   , pBody
   , addFunctionTypingInfo
@@ -1149,6 +1150,10 @@ lookupPredicate :: Fact t  -> Theory sig c r p s -> Maybe (Predicate)
 lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
     where
         sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
+
+-- | Find the function typing info for a given function symbol.
+lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p SapicElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo tag = find (\(fs,_,_) -> (tag == fs)) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
 lookupExportInfo :: String -> Theory sig c r p SapicElement -> Maybe ExportInfo
