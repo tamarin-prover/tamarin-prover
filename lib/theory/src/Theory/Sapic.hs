@@ -204,8 +204,8 @@ mapTermsAction f ac
         | Rep <- ac            = Rep
             where f2mapf = fmap $ fmap f
                   -- something like
-                  formulaMap = mapAtoms $ const $ fmap $ fmap f
-                  -- formulaMap = undefined
+                  -- formulaMap = mapAtoms $ const $ fmap $ fmap f
+                  formulaMap = undefined
     
 mapTermsComb f c
         | (Cond fa) <- c = Cond $ undefined -- same problem as above
