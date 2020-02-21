@@ -1,0 +1,6 @@
+theory Typing
+begin
+
+new x; out(x)
+
+end

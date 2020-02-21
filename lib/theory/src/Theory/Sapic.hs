@@ -19,6 +19,7 @@ module Theory.Sapic (
     Process(..)
     , ProcessCombinator(..)
     , SapicType
+    , defaultSapicTypeS
     , defaultSapicType
     , defaultSapicNodeType
     , SapicAction(..)
@@ -39,6 +40,7 @@ module Theory.Sapic (
     , toLFormula
     -- utitlities 
     , paddAnn
+    , foldProcess
     , applyProcess
     , pfoldMap
     , ProcessPosition
@@ -86,8 +88,10 @@ type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 -- | Function symbol (f,l,r) with argument types l and return type r
 type SapicFunSym = (FunSym, [SapicType], SapicType) 
 
+defaultSapicTypeS :: String
+defaultSapicTypeS = "bitstring"
 defaultSapicType :: SapicType
-defaultSapicType = Just "bitstring"
+defaultSapicType = Just defaultSapicTypeS
 
 defaultSapicNodeType :: SapicType
 defaultSapicNodeType = Just "node"
@@ -177,12 +181,22 @@ deriving instance Functor (Process ann)
 deriving instance Foldable (Process ann)
 
 
--- foldProcess fNull fAct fComb a (ProcessNull ann)  = fAct a ann
--- foldProcess fNull fAct fComb a (ProcessAction ac ann p') = 
---             let a' = fAct' a ac -- ann?
---             in
---                 let a'' = foldProcess fNull fAct fComb ' p'  
---                 in 
+-- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
+-- annotation and nothing/action/combinator to obtain new accumulator to apply
+-- to subprocess. @gAct@ and @gComb@ reconstruct result, e.g., process from
+-- accumulator and result of subprocess(es). @fNulL@ directly outputs result.
+foldProcess fNull fAct fComb gAct gComb a (ProcessNull ann)  = fNull a ann
+foldProcess fNull fAct fComb gAct gComb a (ProcessAction ac ann p') = 
+            let a' = fAct a ann ac -- 1. update accumulator
+                r = foldProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
+            in
+               gAct a' ann r ac -- 3. reconstruct result from accumulator and subtree's result
+foldProcess fNull fAct fComb gAct gComb a (ProcessComb c ann pl pr) = 
+            let a' = fComb a ann c
+                rl = foldProcess fNull fAct fComb gAct gComb a' pl
+                rr = foldProcess fNull fAct fComb gAct gComb a' pr
+            in
+                gComb a' ann rl rr c
                 
 -- ProcessAction (mapTermsAction f ac) ann p'
 -- foldProcess fNull fAct fComb a (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr

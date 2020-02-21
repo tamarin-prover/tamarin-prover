@@ -13,7 +13,8 @@
 -- Translation from Theories with Processes to multiset rewrite rules
 
 module Sapic (
-    translate
+    typeTheory
+  , translate
 ) where
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
@@ -23,6 +24,7 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
@@ -64,6 +66,26 @@ import Theory.Text.Parser
 -- typeProcess (ProcessAction ac ann p') =
 --             ProcessAction (typeAct ac) ann (typeProcess p')
     
+typeProcess :: Process p SapicLVar -> Process p v
+typeProcess = foldProcess fNull fAct fComb gAct gComb Map.empty
+    where
+        fNull _ ann = ProcessNull ann
+        fAct  a _ (New v) = insertVar v a
+        fAct  a _ (ChIn _ t) = foldr insertVar a (freesSapicTerm t)
+        fAct a _ _ = a -- TODO: handle other cases later
+        fComb a _ (Lookup _ v) = insertVar v a
+        fComb a _ _ = a -- TODO: check other cases
+        gAct a' ann r ac = ProcessAction (fmap (typeWith  a') ac) ann r
+                       -- a' is map variables to types
+                       -- r is typed subprocess
+                       -- type terms with variables and reconstruct process
+        gComb a' ann rl rr c = ProcessComb (fmap (typeWith  a') c) ann rl rr
+        typeWith = undefined
+        insertVar v a =  Map.insert (slvar v) (stype v) a
+        freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars
+
+typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory = return . mapProcesses typeProcess
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>

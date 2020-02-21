@@ -36,6 +36,7 @@ module Theory (
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
+  , mapProcesses
   , addProcessDef
   , lookupProcessDef
   , pName
@@ -798,7 +799,7 @@ removeSapicItems thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = map removeSapicElement (filter isNoSapicItem (L.get thyItems thy))
+      newThyItems = map removeSapicElement $ L.get thyItems thy
       removeSapicElement :: TheoryItem r p SapicElement -> TheoryItem r p ()
       removeSapicElement (SapicItem _) = SapicItem ()
       removeSapicElement (RuleItem r) = RuleItem r
@@ -806,8 +807,6 @@ removeSapicItems thy =
       removeSapicElement (RestrictionItem rl) = RestrictionItem rl
       removeSapicElement (TextItem t) = TextItem t
       removeSapicElement (PredicateItem predi) = PredicateItem predi
-      isNoSapicItem (SapicItem _) = False
-      isNoSapicItem _             = True
 
 
 --open translated theory again
@@ -850,18 +849,6 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i 
     PredicateItem     p  -> fPredicate p
     SapicItem s -> fSapicItem s
 
-
-
--- fold a sapic item.
-foldSapicItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a)
-    -> SapicElement -> a
-foldSapicItem fProcess fProcessDef fFunSym fExportInfo i = case i of
-    ProcessItem     proc  -> fProcess proc
-    ProcessDefItem     pDef  -> fProcessDef pDef
-    FunctionTypingInfo t -> fFunSym t
-    ExportInfoItem ei -> fExportInfo ei
-
 -- | Fold a theory item.
 foldDiffTheoryItem
     :: (r -> a) -> ((Side, r2) -> a) -> (DiffLemma p -> a) -> ((Side, Lemma p2) -> a) -> ((Side, Restriction) -> a) -> (FormalComment -> a)
@@ -874,6 +861,16 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
     EitherRestrictionItem (side, rstr)  -> fRestriction (side, rstr)
     DiffTextItem txt  -> fText txt
 
+-- fold a sapic item.
+foldSapicItem
+    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a)
+    -> SapicElement -> a
+foldSapicItem fProcess fProcessDef fFunSym fExportInfo i = case i of
+    ProcessItem     proc  -> fProcess proc
+    ProcessDefItem     pDef  -> fProcessDef pDef
+    FunctionTypingInfo t -> fFunSym t
+    ExportInfoItem ei -> fExportInfo ei
+
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
 mapTheoryItem f g =
@@ -883,6 +880,13 @@ mapTheoryItem f g =
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
 mapDiffTheoryItem f g h i =
     foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffTextItem
+
+-- | Map a process
+mapProcesses :: (PlainProcess -> PlainProcess) -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+mapProcesses f = L.modify  thyItems (map f')
+    where
+        f' (SapicItem (ProcessItem p)) = SapicItem $ ProcessItem $ f p
+        f' other                       = other
 
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p s -> [r]
@@ -1085,6 +1089,10 @@ addHeuristic _ _ = Nothing
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
 addDiffHeuristic _ _ = Nothing
+
+-- | fold over processes
+-- foldMapProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
+foldMapProcesses f z = foldSapicItem return (const []) (const [])  (const [])  <=< sapicElements
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
