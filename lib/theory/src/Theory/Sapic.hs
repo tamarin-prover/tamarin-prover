@@ -243,7 +243,7 @@ mapTermsAction f ac
         | (Lock t) <- ac       = Lock (f t)
         | (Unlock t) <- ac     = Unlock (f t)
         | (Event fa) <- ac      = Event (fmap f fa)
-        | (MSR (l,a,r,rest)) <- ac  = MSR $ (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
+        | (MSR (l,a,r,rest)) <- ac  = MSR (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
         | Rep <- ac            = Rep
             where f2mapf = fmap $ fmap f
                   -- something like

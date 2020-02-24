@@ -243,7 +243,7 @@ import           GHC.Generics                        (Generic)
 import           Data.Binary
 import           Data.List
 import           Data.Maybe
-import           Data.Monoid                         (Sum(..))
+import           Data.Monoid                         (Sum (..))
 import qualified Data.Set                            as S
 
 import           Control.Basics
@@ -253,24 +253,26 @@ import           Control.Monad.Reader
 import qualified Control.Monad.State                 as MS
 import           Control.Parallel.Strategies
 
-import           Extension.Data.Label                hiding (get)
-import qualified Extension.Data.Label                as L
+import qualified Data.ByteString.Char8               as BC
+
 import qualified Data.Label.Point
 import qualified Data.Label.Poly
+import           Extension.Data.Label                hiding (get)
+import qualified Extension.Data.Label                as L
 -- import qualified Data.Label.Total
 
 import           Safe                                (headMay)
 
 import           Theory.Model
+import           Theory.Proof
 import           Theory.Sapic
 import           Theory.Sapic.Print
-import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
+import           Theory.Tools.IntruderRules
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
 
 import           Term.Positions
 
@@ -2049,11 +2051,30 @@ emptyString _ = text ("")
 prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement (ProcessItem p) = prettyProcess p
 prettySapicElement (ProcessDefItem p) = 
+    (text "let ")
+    <->
     (text (L.get pName p))
     <->
     (text "=")
     <->
     (nest 2 $ prettyProcess $ L.get pBody p)
+prettySapicElement (FunctionTypingInfo ((fsn,(_,priv)), intypes, outtype)) = 
+    (text "function:")
+    <->
+    text (BC.unpack fsn)
+    <->
+    (parens $ fsep $ punctuate comma $ map printType intypes)
+    <->
+    text ":"
+    <->
+    printType outtype
+    <->
+    text (showPriv priv)
+    where
+        printType = maybe (text defaultSapicTypeS) text
+        showPriv Private = " [private]"
+        showPriv Public  = ""
+
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)

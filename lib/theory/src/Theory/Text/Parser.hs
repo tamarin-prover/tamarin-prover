@@ -895,7 +895,7 @@ function =  do
 
 functions :: Parser [SapicFunSym]
 functions =
-    symbol "functions" *> colon *> commaSep1 function 
+    (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function 
 
 equations :: Parser ()
 equations =

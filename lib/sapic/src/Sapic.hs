@@ -67,10 +67,11 @@ import Theory.Text.Parser
 -- typeProcess (ProcessAction ac ann p') =
 --             ProcessAction (typeAct ac) ann (typeProcess p')
     
--- typeProcess :: Process p SapicLVar -> Process p SapicLVar
+typeProcess :: Theory sig c r p1 SapicElement
+                        -> Process p2 SapicLVar -> Process p2 SapicLVar
 typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
     where
-        fNull _ ann = ProcessNull ann
+        fNull _ = ProcessNull 
         fAct  a _ (New v) = insertVar v a
         fAct  a _ (ChIn _ t) = foldr insertVar a (freesSapicTerm t)
         fAct a _ _ = a -- TODO: handle other cases later
@@ -85,23 +86,30 @@ typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
             -- | lvar <- slvar v
             -- , stype'::SapicType <- Map.lookup lvar a = SapicLVar lvar stype'
             -- | otherwise = v
-        typeWith a' t 
+        typeWith a' t = let (t',_) = typeWith' a' t in t'
+        typeWith' a' t 
             | Lit (Var v) <- viewTerm t
             , lvar' <- slvar v
             , Just stype' <- Map.lookup lvar' a' = 
-                        termViewToTerm $ Lit (Var (SapicLVar lvar' stype'))
+                        (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
             | FApp (NoEq fs) ts   <- viewTerm t 
             , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
-            = t --TODO has got to give out term and type
+            = let 
+                intypes' = map (snd . typeWith' a') ts
+                interms  = map (fst . typeWith' a') ts
+              in
+                if intypes' == intypes then
+                    (termViewToTerm $ FApp (NoEq fs) interms, outtype)
+                else
+                    undefined -- TODO give out error
             | FApp fs ts <- viewTerm t =  -- list, AC or C symbol: ignore, i.e., assume polymorphic
-                termViewToTerm $ FApp fs (map (typeWith a') ts)
-                -- termViewToTerm $ FApp (AC Mult) (map (typeWith a') ts) -- TODO For testing! 
-            | otherwise = t
-
+                (termViewToTerm $ FApp fs (map (typeWith a') ts)
+                , defaultSapicType) -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
+            | otherwise = (t, defaultSapicType) -- TODO no idea how to type here...
         insertVar v a 
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a
-        freesSapicTerm = foldMap $ foldMap (\x -> [x]) -- frees from HasFrees only returns LVars
+        freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
 
 typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = return $ mapProcesses (typeProcess th) th
