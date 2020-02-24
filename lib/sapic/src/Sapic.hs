@@ -27,6 +27,7 @@ import Data.Typeable
 import Data.Maybe
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
+import qualified Data.List as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -72,11 +73,12 @@ typeProcess :: Theory sig c r p1 SapicElement
 typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
     where
         fNull _ = ProcessNull 
-        fAct  a _ (New v) = insertVar v a
-        fAct  a _ (ChIn _ t) = foldr insertVar a (freesSapicTerm t)
-        fAct a _ _ = a -- TODO: handle other cases later
+        fAct  a _ (New v)       = insertVar v a
+        fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
+        fAct  a _ (MSR (l,_,r,_)) = foldr insertVar a (freesSapicFact r List.\\ freesSapicFact l)
+        fAct  a _ _             = a 
         fComb a _ (Lookup _ v) = insertVar v a
-        fComb a _ _ = a -- TODO: check other cases
+        fComb a _ _ = a 
         gAct a' ann r ac = ProcessAction (mapTermsAction (typeWith  a') ac) ann r
                        -- a' is map variables to types
                        -- r is typed subprocess
@@ -110,6 +112,7 @@ typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a
         freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
+        freesSapicFact = foldMap $ foldMap freesSapicTerm -- fold over terms in fact and use freesSapicTerm to get list monoid 
 
 typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = return $ mapProcesses (typeProcess th) th
