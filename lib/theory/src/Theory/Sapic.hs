@@ -249,6 +249,39 @@ mapTermsAction f ac
                   -- something like
                   -- formulaMap = mapAtoms $ const $ fmap $ fmap f
                   formulaMap = undefined
+
+-- Notes:
+-- 1. It would be nicer if the type was
+-- SapicAction  t
+-- not v. Then we could have Sapic processes as foldeable, traversable etc. over terms
+-- Problem are the restrictions, which are terms over bound variables and variables in new and lookup.
+--
+-- 2. We could solve it via a sapic view that outputs such a view from a term.
+--    But what would we do for a term over bound variable? We would have to introduce a second view
+-- 
+-- 3. we will now implement traverse as a standalone function, but it would be nice to cleane this later
+
+traverseTermsAction f ac 
+        | (New v) <- ac = (New . termVar') <$> f (varTerm v)
+        | (ChIn  mt t) <- ac   = ChIn <$> traverse f mt <*> f t
+        | (ChOut mt t) <- ac   = ChOut<$> traverse f mt <*> f t
+        | (Insert t1 t2) <- ac = Insert <$> f t1 <*> (f t2)
+        | (Delete t) <- ac     = Delete <$> f t
+        | (Lock t) <- ac       = Lock   <$> f t
+        | (Unlock t) <- ac     = Unlock <$> f t
+        | (Event fa) <- ac      = Event <$> traverse f fa
+        | (MSR (l,a,r,rest)) <- ac  = MSR <$> (f2mapf l, f2mapf a, f2mapf r, traverse formulaMap rest)
+        | Rep <- ac            = pure Rep
+            where f2mapf = traverse <$> traverse f
+            --       -- something like
+            --       -- formulaMap = mapAtoms $ const $ fmap $ fmap f
+                  formulaMap = undefined
+    
+mapTermsComb f c
+        | (Cond fa) <- c = Cond $ undefined -- same problem as above
+        | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
+        | (Lookup t v) <- c = Lookup (f t) v
+        | otherwise = c 
     
 mapTermsComb f c
         | (Cond fa) <- c = Cond $ undefined -- same problem as above
