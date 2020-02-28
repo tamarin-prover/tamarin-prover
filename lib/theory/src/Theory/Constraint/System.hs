@@ -100,6 +100,7 @@ module Theory.Constraint.System (
   , sNodes
   , allKDConcs
   , allInPrems
+  , allPrems
 
   , nodeRule
   , nodeRuleSafe
@@ -513,6 +514,15 @@ allInPrems sys = do
     (i, ru)                   <- M.toList $ L.get sNodes sys
     (j, inFactView -> Just m) <- enumPrems ru
     return (i, j, m)
+
+-- | A list of all In- and Protocol premises in the 'System'.
+allPrems :: System -> [(NodeId, PremIdx, Int, LNTerm)]
+allPrems sys = do
+    (i, ru)                           <- M.toList $ L.get sNodes sys
+    (j, protoOrInFactView -> Just m') <- enumPrems ru
+    (k, m)                            <- zip [0..] m'
+    return (i, j, k, m)
+
 
 -- | @nodeRule v@ accesses the rule label of node @v@ under the assumption that
 -- it is present in the sequent.

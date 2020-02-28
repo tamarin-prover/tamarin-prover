@@ -55,6 +55,9 @@ module Theory.Model.Fact (
   , dedFactView
   , inFactView
   , outFactView
+  , protoFactView
+  , protoOrInFactView
+  , protoOrOutFactView
 
   , isKFact
   , isKUFact
@@ -295,6 +298,28 @@ annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 isProtoFact :: Fact t -> Bool
 isProtoFact (Fact (ProtoFact _ _ _) _ _) = True
 isProtoFact _                            = False
+
+-- | View a protocol fact.
+protoFactView :: LNFact -> Maybe [LNTerm]
+protoFactView fa = case fa of
+    Fact (ProtoFact _ _ _) _ m -> Just m
+    _                          -> Nothing
+
+-- | View a protocol or in fact.
+protoOrInFactView :: LNFact -> Maybe [LNTerm]
+protoOrInFactView fa = case fa of
+    Fact (ProtoFact _ _ _) _  m  -> Just m
+    Fact InFact            _ [m] -> Just [m]
+    Fact InFact            _  _  -> errMalformed "protoOrInFactView" fa
+    _                            -> Nothing
+
+-- | View a protocol or out fact.
+protoOrOutFactView :: LNFact -> Maybe [LNTerm]
+protoOrOutFactView fa = case fa of
+    Fact (ProtoFact _ _ _) _  m  -> Just m
+    Fact OutFact           _ [m] -> Just [m]
+    Fact OutFact           _  _  -> errMalformed "protoOrOutFactView" fa
+    _                            -> Nothing
 
 -- | True if the fact is a linear fact.
 isLinearFact :: Fact t -> Bool

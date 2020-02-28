@@ -236,7 +236,7 @@ import qualified Data.Label.Point
 import qualified Data.Label.Poly
 -- import qualified Data.Label.Total
 
-import           Safe                                (headMay)
+import           Safe                                (headMay, atMay)
 
 import           Theory.Model
 import           Theory.Sapic
@@ -1029,16 +1029,17 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         -- Variable causing the open chain
         v     = head $ getFactTerms $ nodeConcFact conc source
 
-        -- Compute all input rules that contain v, and the position of v inside the input term
+        -- Compute all rules that contain v, and the position of v inside the input term
         inputRules :: [(OpenProtoRule, LNTerm, Position)]
-        inputRules = concat $ mapMaybe g $ allInPrems source
+        inputRules = concat $ mapMaybe g $ allPrems source
           where
-            g (nodeid, pid, term) = do
+            g (nodeid, pid, tidx, term) = do
               position  <- findPos v term
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
               premise   <- lookupPrem pid rule
-              t         <- inFactView premise
+              t'        <- protoOrInFactView premise
+              t         <- atMay t' tidx
               return $ do
                 -- iterate over all positions found
                 pos     <- position
