@@ -36,7 +36,7 @@ module Theory (
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
-  , mapProcesses
+  , mapMProcesses
   , addProcessDef
   , lookupProcessDef
   , lookupFunctionTypingInfo
@@ -885,11 +885,14 @@ mapDiffTheoryItem f g h i =
     foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffTextItem
 
 -- | Map a process
-mapProcesses :: (PlainProcess -> PlainProcess) -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
-mapProcesses f = L.modify  thyItems (map f')
+mapMProcesses :: Monad m => (PlainProcess -> m(PlainProcess)) -> Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+mapMProcesses f thy = do
+        itms' <- mapM f' itms
+        return $ L.set thyItems itms' thy
     where
-        f' (SapicItem (ProcessItem p)) = SapicItem $ ProcessItem $ f p
-        f' other                       = other
+        itms =  L.get thyItems thy
+        f' (SapicItem (ProcessItem p)) = SapicItem . ProcessItem <$> f p
+        f' other                       = return other
 
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p s -> [r]

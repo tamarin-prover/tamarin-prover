@@ -70,47 +70,49 @@ import Theory.Text.Parser
     
 typeProcess :: Monad m => Theory sig c r p1 SapicElement
                         -> Process p2 SapicLVar -> m (Process p2 SapicLVar)
-typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
+typeProcess th = traverseProcess fNull (lift fAct) (lift fComb) gAct gComb Map.empty
     where
+        lift f a b c = return $ f a b c -- compose ternary function with return
         fNull _  = return . ProcessNull
         fAct  a _ (New v)       = insertVar v a
         fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
-        fAct  a _ (MSR (l,_,r,_)) = foldr insertVar a (freesSapicFact r List.\\ freesSapicFact l)
+        fAct  a _ (MSR (l,_,r,_)) =  foldr insertVar a (freesSapicFact r List.\\ freesSapicFact l)
         fAct  a _ _             =  a 
         fComb a _ (Lookup _ v) = insertVar v a
         fComb a _ _ = a 
         gAct a' ann r ac = do
-            ac' <- mapTermsAction (typeWith  a') ac
-            p' <- r
-            return $ ProcessAction ac' ann p'
-
                        -- a' is map variables to types
-                       -- r is typed subprocess (in a monad)
+                       -- r is typed subprocess 
                        -- type terms with variables and reconstruct process
-        gComb = undefined
-        -- gComb a' ann rl rr c = return $ ProcessComb (mapTermsComb (typeWith  a') c) ann rl rr
-        -- typeWith a' t = do
-        --     (t',_) <- typeWith' a' t
-        --     return t'
-        -- typeWith' a' t 
-        --     -- | Lit (Var v) <- viewTerm t
-        --     -- , lvar' <- slvar v
-        --     -- , Just stype' <- Map.lookup lvar' a' = 
-        --     --             (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
-        --     -- | FApp (NoEq fs) ts   <- viewTerm t 
-        --     -- , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
-        --     -- = let 
-        --     --     intypes' = map (snd . typeWith' a') ts
-        --     --     interms  = map (fst . typeWith' a') ts
-        --     --   in
-        --     --     if intypes' == intypes then
-        --     --         (termViewToTerm $ FApp (NoEq fs) interms, outtype)
-        --     --     else
-        --     --         undefined -- TODO give out error
-        --     -- | FApp fs ts <- viewTerm t =  -- list, AC or C symbol: ignore, i.e., assume polymorphic
-        --     --     (termViewToTerm $ FApp fs (map (typeWith a') ts)
-        --     --     , defaultSapicType) -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
-        --     | otherwise = (t, defaultSapicType) -- TODO no idea how to type here...
+            ac' <- traverseTermsAction (typeWith  a') ac
+            return $ ProcessAction ac' ann r
+        gComb a' ann rl rr c = do
+            ac' <- traverseTermsComb (typeWith a') c
+            return $ ProcessComb ac' ann rl rr
+        typeWith a' t = do
+            (t',_) <- typeWith' a' t
+            return t'
+        typeWith' a' t 
+            | Lit (Var v) <- viewTerm t
+            , lvar' <- slvar v
+            , Just stype' <- Map.lookup lvar' a' = 
+                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
+            | FApp (NoEq fs) ts   <- viewTerm t 
+            , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
+            = do 
+                ts' <- mapM (typeWith' a') ts
+                let interms  = map fst ts'
+                let intypes' = map snd ts'
+                if intypes' == intypes 
+                    then
+                        return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
+                    else
+                        undefined -- TODO give out error
+            | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
+                ts' <- mapM (typeWith a') ts
+                return (termViewToTerm $ FApp fs ts', defaultSapicType) 
+                        -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
+            | otherwise = return $ (t, defaultSapicType) -- TODO no idea how to type here...
         insertVar v a 
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a
@@ -118,7 +120,7 @@ typeProcess th = foldProcess fNull fAct fComb gAct gComb Map.empty
         freesSapicFact = foldMap $ foldMap freesSapicTerm -- fold over terms in fact and use freesSapicTerm to get list monoid 
 
 typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
-typeTheory th = return $ mapProcesses (typeProcess th) th
+typeTheory th = mapMProcesses (typeProcess th) th
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
