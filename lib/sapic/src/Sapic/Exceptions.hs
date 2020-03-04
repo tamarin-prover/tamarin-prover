@@ -51,6 +51,7 @@ data SapicException p = NotImplementedError String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
+                    | TypingErrorArgument SapicTerm [SapicType]
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
@@ -90,4 +91,11 @@ instance (Show a) => Show (SapicException a) where
                               ++ " in definition of predicate: "
                               ++ get rstrName rstr
                               ++ "."
+    show (TypingErrorArgument t types) = "Typing error: subterm "
+                              ++ show t
+                              ++ " should have input types "
+                              ++ List.intercalate ", " (List.map (maybe defaultSapicTypeS id) types)
+                              ++ "."
+
+
 instance (Typeable a, Show a) => Exception (SapicException a)

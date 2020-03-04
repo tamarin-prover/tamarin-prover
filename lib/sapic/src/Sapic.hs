@@ -68,11 +68,11 @@ import Theory.Text.Parser
 -- typeProcess (ProcessAction ac ann p') =
 --             ProcessAction (typeAct ac) ann (typeProcess p')
     
-typeProcess :: Monad m => Theory sig c r p1 SapicElement
+typeProcess :: MonadThrow m => Theory sig c r p1 SapicElement
                         -> Process p2 SapicLVar -> m (Process p2 SapicLVar)
-typeProcess th = traverseProcess fNull (lift fAct) (lift fComb) gAct gComb Map.empty
+typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
     where
-        lift f a b c = return $ f a b c -- compose ternary function with return
+        lift3 f a b c = return $ f a b c -- compose ternary function with return
         fNull _  = return . ProcessNull
         fAct  a _ (New v)       = insertVar v a
         fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
@@ -107,7 +107,7 @@ typeProcess th = traverseProcess fNull (lift fAct) (lift fComb) gAct gComb Map.e
                     then
                         return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
                     else
-                        undefined -- TODO give out error
+                        throwM ((TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM (typeWith a') ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
@@ -119,7 +119,7 @@ typeProcess th = traverseProcess fNull (lift fAct) (lift fComb) gAct gComb Map.e
         freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
         freesSapicFact = foldMap $ foldMap freesSapicTerm -- fold over terms in fact and use freesSapicTerm to get list monoid 
 
-typeTheory :: Monad m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
