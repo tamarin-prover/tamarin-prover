@@ -1000,9 +1000,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     -- compute all encrypted subterms that are output by protocol rules
     allOutConcs :: [(OpenProtoRule, Int, LNTerm)]
     allOutConcs = do
-        ru                         <- rules
-        (_, outFactView -> Just t) <- enumConcs ru
-        (nr, m)                    <- zip [1::Int ..] $ allEncSubterms t
+        ru                                <- rules
+        (_, protoOrOutFactView -> Just t) <- enumConcs ru
+        (nr, m)                           <- zip [1::Int ..] $ concatMap allEncSubterms t
         return (ru, nr, m)
 
     -- We use the raw sources here to generate one lemma to rule them all...
