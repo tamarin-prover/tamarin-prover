@@ -1051,8 +1051,20 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         encryptedSubterms = mapMaybe f inputRules
           where
             f (x, y, z) = do
-              v' <- y `atPosMay` z
-              return (x, deepestEncSubterm y z, v', z)
+              v'      <- y `atPosMay` z
+              let encTerm' = deepestEncSubterm y z
+              -- We do not consider the case where the deepest encrypted subterm
+              -- is the variable in question, as this
+              -- 1. often leads to false lemmas as we do not unify with all
+              --    conclusion facts, in particular not with fresh facts
+              -- 2. blows up the lemma as a variable unifies with all outputs
+              -- 3. typically only happens if a value is stored in a state fact,
+              --    but appears in other premises where the algorithm works as
+              --    expected (hence we do not loose anything)
+              encTerm <- if encTerm' == v'
+                then Nothing
+                else Just encTerm'
+              return (x, encTerm, v', z)
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs

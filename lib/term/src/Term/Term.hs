@@ -211,7 +211,7 @@ getRightTerm t = getSide DiffRight t
 ----------------------------------------------------------------------
 
 -- Given a term, compute all encrypted subterms, i.e. all terms
--- which top symbol is function, but not a pair
+-- which top symbol is a function, but not a pair
 allEncSubterms :: Show a => Term a -> [Term a]
 allEncSubterms t@(viewTerm -> FApp _ as) | isPair t  = concatMap allEncSubterms as
 allEncSubterms t@(viewTerm -> FApp _ as) | otherwise = t:concatMap allEncSubterms as
