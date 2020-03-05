@@ -998,12 +998,12 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     rules = mapMaybe itemToRule items
 
     -- compute all encrypted subterms that are output by protocol rules
-    allOutConcs :: [(OpenProtoRule, Int, LNTerm)]
+    allOutConcs :: [(OpenProtoRule, ConcIdx, Int, LNTerm)]
     allOutConcs = do
-        ru                                <- rules
-        (_, protoOrOutFactView -> Just t) <- enumConcs ru
-        (nr, m)                           <- zip [1::Int ..] $ concatMap allEncSubterms t
-        return (ru, nr, m)
+        ru                                   <- rules
+        (cidx, protoOrOutFactView -> Just t) <- enumConcs ru
+        (nr, m)                              <- zip [1::Int ..] $ concatMap allEncSubterms t
+        return (ru, cidx, nr, m)
 
     -- We use the raw sources here to generate one lemma to rule them all...
     (items', formula, _) = foldl computeFormula (items, ltrue, []) chains
@@ -1068,7 +1068,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
-        inputsAndOutputs :: [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)])]
+        inputsAndOutputs :: [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)])]
         inputsAndOutputs = do
             -- iterate over all inputs
             (rin, tin, vin, pos) <- encryptedSubterms
@@ -1077,21 +1077,21 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             return (rin, tin, vin, pos, matches)
           where
             matchingConclusions rin tin = do
-              (rout, n, tout) <- allOutConcs
+              (rout, cidx, n, tout) <- allOutConcs
               -- generate fresh instance of conclusion, avoiding the premise variables
               let fout = tout `renameAvoiding` tin
               -- we ignore outputs of the same rule
               guard (ruleName rin /= ruleName rout)
               -- check whether input and output are unifiable
               guard (runMaude $ unifiableLNTerms tin fout)
-              return (rout, n, tout)
+              return (rout, cidx, n, tout)
 
         -- construct action facts for the rule annotations and formula
         inputFact k r m n = Fact {factTag = ProtoFact Linear
               ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName r) 2,
               factAnnotations = S.empty, factTerms = [m, n]}
-        outputFact k r m  = Fact {factTag = ProtoFact Linear
-              ("AUTO_OUT_" ++ show k ++ "_" ++ getRuleName r) 1,
+        outputFact k c r m = Fact {factTag = ProtoFact Linear
+              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName r) 1,
               factAnnotations = S.empty, factTerms = [m]}
 
         -- add labels to rules for typing lemma
@@ -1101,24 +1101,24 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                    filter ((ruleName r ==). ruleName . fst) acts
               where
                 up (n, Left (k, y, z)) r' = addAction r' (inputFact k n y z)
-                up (n, Right (k, y))   r' = addAction r' (outputFact k n y)
+                up (n, Right (k, cidx, y))   r' = addAction r' (outputFact k cidx n y)
             update it           = it
 
             acts = inputActs ++ outputActs
             inputActs =
                 zipWith (\k (x, y, z, _, _) -> (x, Left (k, y, z))) [1::Int ..] matches
             outputActs =
-                map (\(x, k, y) -> (x, Right (k, y))) $ concatMap (\(_, _, _, _, x) -> x) matches
+                map (\(x, cidx, k, y) -> (x, Right (k, cidx, y))) $ concatMap (\(_, _, _, _, x) -> x) matches
 
         -- add formula to lemma
         addFormula ::
-             [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)])]
+             [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)])]
           -> LNFormula
           -> LNFormula
         addFormula matches f = foldr addForm f $ zip [1..] matches
           where
             addForm ::
-                 (Int, (OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, Int, LNTerm)]))
+                 (Int, (OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)]))
               -> LNFormula
               -> LNFormula
             addForm (k, (n, _, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
@@ -1131,11 +1131,11 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                     Fact {factTag = KUFact, factAnnotations = S.empty,
                           factTerms = [varTerm (Bound 3)]} ))
                    (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1)))))
-            toFacts f'' (n, k, _) =
+            toFacts f'' (n, c, k, _) =
               Conn Or f''
               (Qua Ex ("j",LSortNode)
               (Conn And (Ato (Action (varTerm (Bound 0))
-              (outputFact k n (varTerm (Bound 2))) ))
+              (outputFact k c n (varTerm (Bound 2))) ))
               (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1))))))
 
         -- add all cases (identified by rule name and input variable position) to the list of treated cases
