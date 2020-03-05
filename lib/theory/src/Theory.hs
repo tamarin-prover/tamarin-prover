@@ -2012,33 +2012,15 @@ prettyFormalComment :: HighlightDocument d => String -> String -> d
 prettyFormalComment "" body = multiComment_ [body]
 prettyFormalComment header body = text $ header ++ "{*" ++ body ++ "*}"
 
--- | Pretty print a theory.
-prettyTheoryWithSapic :: HighlightDocument d
-             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (SapicElement -> d)
-             -> Theory sig c r p SapicElement -> d
-prettyTheoryWithSapic ppSig ppCache ppRule ppPrf ppSap thy = vsep $
-    [ kwTheoryHeader $ text $ L.get thyName thy
-    , lineComment_ "Function signature and definition of the equational theory E"
-    , ppSig $ L.get thySignature thy
-    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
-    , ppCache $ L.get thyCache thy
-    ] ++
-    parMap rdeepseq ppItem (L.get thyItems thy) ++
-    [ kwEnd ]
-  where
-    ppItem = foldTheoryItem
-        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
-    thyH = L.get thyHeuristic thy
-
 --Pretty print a theory
 prettyTheory :: HighlightDocument d
-             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (() -> d)
-             -> Theory sig c r p () -> d
+             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (s -> d)
+             -> Theory sig c r p s -> d
 prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
-    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
+    , if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
     parMap rdeepseq ppItem (L.get thyItems thy) ++
@@ -2282,7 +2264,7 @@ prettyClosedProtoRule cru =
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
 prettyOpenTheory =
-    prettyTheoryWithSapic prettySignaturePure
+    prettyTheory prettySignaturePure
                  (const emptyDoc) prettyOpenProtoRule prettyProof prettySapicElement
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
