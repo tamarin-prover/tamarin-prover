@@ -104,9 +104,13 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
   where get_text Nothing = ""
         get_text (Just m) = L.get eText m
 
-ppTypeVar :: Document p => Lit c SapicLVar -> p
-ppTypeVar (Var (SapicLVar (LVar n _ _ )  Nothing)) = text n <> text ":bitstring"
-ppTypeVar (Var (SapicLVar (LVar n _ _ )  (Just t))) = text n <> text ":" <> (text t)
+ppTypeVar :: Document p => SapicLVar -> p
+ppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
+ppTypeVar (SapicLVar (LVar n _ _ ) (Just t)) = text n <> text ":" <> (text t)
+
+ppTypeLit :: (Show c, Document p) => Lit c SapicLVar -> p
+ppTypeLit (Var v) = ppTypeVar v
+ppTypeLit (Con c) = text $ show c
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
@@ -116,7 +120,7 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (Var (SapicLVar (LVar n s i)  ty)) | b-> ppTypeVar (Var (SapicLVar (LVar n s i)  ty))
+        Lit  v                    |    b          -> ppTypeLit v
         Lit  (Var (SapicLVar (LVar n _ _)  _))    -> (text n)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -205,7 +209,7 @@ ppFact (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New (SapicLVar (LVar n s i) t)) = (text "new " <> (ppTypeVar (Var (SapicLVar (LVar n s i)  t))), S.empty)
+ppAction (New v@(SapicLVar (LVar n s i) t)) = (text "new " <> (ppTypeVar v), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1

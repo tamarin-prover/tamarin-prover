@@ -40,34 +40,6 @@ import qualified Sapic.Basetranslation as BT
 -- import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
 
--- | type processes: fold over all pieces and see if we get a consistent
--- mapping from vars to types. 
---  
--- TODO: a consistent naming would be nice here.
---
--- Idea: gather giant map from things to their datatypes and then consolidate
--- typeProcess = subst sigma
---     sigma = pfoldMap f
---     where f (ProcessNull _) = emptySubst
---           f (ProcessAction a _ _)     = fa a 
---           f (ProcessComb c _ _ _)     = fc c
---           fa Rep = emptySubst
---           fa (New v) = singleton v v
---           fa (ChIn mt t) = 
---
--- Better idea: probagate atomic types down the process tree
--- then do type induction per term
--- typeProcess = propagate emptySubst 
---     propagate _ p@(ProcessNull ann) = p
---     propagate s (ProcessAction a ann p) = ProcessAction (apply s a) ann (propagate (extend s) p)
-                
-
--- typeProcess p@(ProcessNull an) = p
--- typeProcess (ProcessComb c ann pl pr) =
---             ProcessComb (typeCond c) ann (typeProcess pl) (typeProcess pr)
--- typeProcess (ProcessAction ac ann p') =
---             ProcessAction (typeAct ac) ann (typeProcess p')
-    
 typeProcess :: MonadThrow m => Theory sig c r p1 SapicElement
                         -> Process p2 SapicLVar -> m (Process p2 SapicLVar)
 typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
@@ -84,10 +56,10 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
                        -- a' is map variables to types
                        -- r is typed subprocess 
                        -- type terms with variables and reconstruct process
-            ac' <- traverseTermsAction (typeWith  a') ac
+            ac' <- traverseTermsAction (typeWith  a') typeWithVar typeWithFact ac
             return $ ProcessAction ac' ann r
         gComb a' ann rl rr c = do
-            ac' <- traverseTermsComb (typeWith a') c
+            ac' <- traverseTermsComb (typeWith a') typeWithVar typeWithFact c
             return $ ProcessComb ac' ann rl rr
         typeWith a' t = do
             (t',_) <- typeWith' a' t
@@ -113,6 +85,8 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
             | otherwise = return $ (t, defaultSapicType) -- TODO no idea how to type here...
+        typeWithVar  v = return v -- variables are correctly typed, as we just inserted them 
+        typeWithFact f = return f -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a 
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a

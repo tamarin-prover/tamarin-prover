@@ -46,6 +46,7 @@ module Theory.Sapic (
     , traverseTermsComb
     , applyProcess
     , pfoldMap
+    , mapTerms
     , mapTermsAction
     , mapTermsComb
     , ProcessPosition
@@ -112,7 +113,7 @@ instance Show SapicLVar where
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
 
--- conversion function
+-- conversion functions for sapic types
 toLVar:: SapicLVar -> LVar
 toLVar = slvar
 
@@ -125,7 +126,6 @@ toLNTerm = fmap f
 toLNFact:: SapicLNFact -> LNFact 
 toLNFact = fmap toLNTerm
 
--- toLFormua:: SapicFormula -> LFormula
 toLFormula:: (Functor syn) => ProtoFormula syn (String, LSort) c SapicLVar -> ProtoFormula syn (String, LSort) c LVar
 toLFormula = mapAtoms f
     where f _ = fmap $ fmap $ fmap $ fmap toLVar 
@@ -186,6 +186,48 @@ deriving instance (Show ann, Show v) => Show (Process ann v)
 deriving instance Functor (Process ann)
 deriving instance Foldable (Process ann)
 
+-- | map over a process: @mapTerms ft ff fv@ applies @ft@ to terms, @ff@ to formulas and @fv@ to variables
+mapTerms :: (SapicNTerm t -> SapicNTerm v)
+            -> (SapicNFormula t -> SapicNFormula v)
+            -> (t -> v)
+            -> Process ann t
+            -> Process ann v
+mapTerms _ _  _  (ProcessNull ann)  = ProcessNull ann 
+mapTerms f ff fv (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ff fv ac) ann (mT p')
+    where mT = mapTerms f ff fv
+mapTerms f ff fv (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f ff fv c) ann (mT pl) (mT pr)
+    where mT = mapTerms f ff fv
+
+mapTermsAction :: (SapicNTerm t -> SapicNTerm v)
+                  -> (SapicNFormula t -> SapicNFormula v)
+                  -> (t -> v)
+                  -> SapicAction t
+                  -> SapicAction v
+mapTermsAction f ff fv ac 
+        | (New v) <- ac        = New (fv v)
+        | (ChIn  mt t) <- ac   = ChIn (fmap f mt) (f t)
+        | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
+        | (Insert t1 t2) <- ac = Insert (f t1) (f t2)
+        | (Delete t) <- ac     = Delete (f t)
+        | (Lock t) <- ac       = Lock (f t)
+        | (Unlock t) <- ac     = Unlock (f t)
+        | (Event fa) <- ac      = Event (fmap f fa)
+        | (MSR (l,a,r,rest)) <- ac  = MSR (f2mapf l, f2mapf a, f2mapf r, fmap ff rest)
+        | Rep <- ac            = Rep
+            where f2mapf = fmap $ fmap f
+
+mapTermsComb :: (SapicNTerm t -> SapicNTerm v)
+                -> (SapicNFormula t -> SapicNFormula v)
+                -> (t -> v)
+                -> ProcessCombinator t
+                -> ProcessCombinator v
+mapTermsComb f ff fv c
+        | (Cond fa) <- c = Cond $ ff fa
+        | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
+        | (Lookup t v) <- c = Lookup (f t) (fv v)
+        | Parallel <- c = Parallel
+        | NDC    <- c   = NDC
+
 
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
@@ -212,93 +254,17 @@ foldProcess fNull fAct fComb gAct gComb a p
                 rr = foldProcess fNull fAct fComb gAct gComb a' pr
             in
                 gComb a' ann rl rr c
-                
--- ProcessAction (mapTermsAction f ac) ann p'
--- foldProcess fNull fAct fComb a (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
 
-mapTerms :: Show v => (VTerm Name v -> VTerm Name v) -> Process ann v -> Process ann v
-mapTerms _ (ProcessNull ann)  = ProcessNull ann 
-mapTerms f (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ac) ann p'
-mapTerms f (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f c) ann pl pr
-
--- foldMapAction f ::  Monoid m => (SapicNTerm v -> m) -> SapicAction v -> m 
--- foldTermsAction f ac
---         | (New v) <- ac, v' <- termVar' (f (varTerm v)) = v'
---         | (ChIn  mt t) <- ac   = (fmap f mt) `mappend` (f t)
---         | (ChOut mt t) <- ac   = (fmap f mt) `mappend` (f t)
---         | (Insert t1 t2) <- ac = (f t1)  `mappend` (f t2)
---         | (Delete t) <- ac     = (f t)
---         | (Lock t) <- ac       = (f t)
---         | (Unlock t) <- ac     = (f t)
---         | (Event fa) <- ac      = Event (fmap f fa)
---         | (MSR (l,a,r,rest)) <- ac  = MSR $ (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
---         | Rep <- ac            = Rep
---             where f2mapf = fmap $ fmap f
---                   -- something like
---                   -- formulaMap = mapAtoms $ const $ fmap $ fmap f
---                   formulaMap = undefined
-
-mapTermsAction :: Show v1 => (VTerm Name v2 -> VTerm Name v1) -> SapicAction v2 -> SapicAction v1
-mapTermsAction f ac 
-        | (New v) <- ac, v' <- termVar' (f (varTerm v)) = New v'
-        | (ChIn  mt t) <- ac   = ChIn (fmap f mt) (f t)
-        | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
-        | (Insert t1 t2) <- ac = Insert (f t1) (f t2)
-        | (Delete t) <- ac     = Delete (f t)
-        | (Lock t) <- ac       = Lock (f t)
-        | (Unlock t) <- ac     = Unlock (f t)
-        | (Event fa) <- ac      = Event (fmap f fa)
-        | (MSR (l,a,r,rest)) <- ac  = MSR (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
-        | Rep <- ac            = Rep
-            where f2mapf = fmap $ fmap f
-                  -- something like
-                  -- formulaMap = mapAtoms $ const $ fmap $ fmap f
-                  formulaMap = undefined
-
--- Notes:
--- 1. It would be nicer if the type was
--- SapicAction  t
--- not v. Then we could have Sapic processes as foldeable, traversable etc. over terms
--- Problem are the restrictions, which are terms over bound variables and variables in new and lookup.
---
--- 2. We could solve it via a sapic view that outputs such a view from a term.
---    But what would we do for a term over bound variable? We would have to introduce a second view
--- 
--- 3. we will now implement traverse as a standalone function, but it would be nice to cleane this later
-
-traverseTermsAction :: (Show v1, Applicative f) => (VTerm Name v2 -> f (VTerm Name v1)) -> SapicAction v2 -> f (SapicAction v1)
-traverseTermsAction f ac 
-        | (New v) <- ac = (New . termVar') <$> f (varTerm v)
-        | (ChIn  mt t) <- ac   = ChIn <$> traverse f mt <*> f t
-        | (ChOut mt t) <- ac   = ChOut<$> traverse f mt <*> f t
-        | (Insert t1 t2) <- ac = Insert <$> f t1 <*> (f t2)
-        | (Delete t) <- ac     = Delete <$> f t
-        | (Lock t) <- ac       = Lock   <$> f t
-        | (Unlock t) <- ac     = Unlock <$> f t
-        | (Event fa) <- ac      = Event <$> traverse f fa
-        -- | (MSR (l,a,r,rest)) <- ac  = MSR <$> (f2mapf l, f2mapf a, f2mapf r, traverse formulaMap rest)
-        | (MSR (l,a,r,rest)) <- ac  = do
-                    (\l' a' r' rest' -> MSR (l',a',r',rest'))
-                    <$>
-                         t2f l
-                     <*> t2f a
-                     <*> t2f r
-                     <*> formulaMap rest
-        | Rep <- ac            = pure Rep
-            where t2f = traverse (traverse f)
-            --       -- something like
-            --       -- formulaMap = mapAtoms $ const $ fmap $ fmap f
-                  formulaMap = undefined
-
-traverseTermsComb :: Applicative f =>
-                        (SapicNTerm a -> f (SapicNTerm a))
-                        -> ProcessCombinator a -> f (ProcessCombinator a)
-traverseTermsComb f c
-        | (Cond fa) <- c = Cond <$> undefined -- same problem as above
-        | (CondEq t1 t2) <- c = CondEq <$> f t1 <*> f t2
-        | (Lookup t v) <- c = Lookup <$> f t <*> pure v -- TODO deal with v
-        | otherwise = pure c 
-
+-- | Traverses process. @traverseProcess@ works just like @foldProcess@, but allows functions with side-effects.
+traverseProcess :: Monad m =>
+                   (t1 -> t2 -> m t3)
+                   -> (t1 -> t2 -> SapicAction v -> m t1)
+                   -> (t1 -> t2 -> ProcessCombinator v -> m t1)
+                   -> (t1 -> t2 -> t3 -> SapicAction v -> m t3)
+                   -> (t1 -> t2 -> t3 -> t3 -> ProcessCombinator v -> m t3)
+                   -> t1
+                   -> Process t2 v
+                   -> m t3
 traverseProcess fNull fAct fComb gAct gComb a p
     | (ProcessNull ann) <- p = fNull a ann
     | (ProcessAction ac ann p') <- p = do
@@ -313,25 +279,53 @@ traverseProcess fNull fAct fComb gAct gComb a p
             r  <- gComb a' ann rl rr c
             return r
                 
+                
+traverseTermsAction :: Applicative f =>
+                       (SapicNTerm t -> f (SapicNTerm v))
+                       -> (SapicNFormula t -> f (SapicNFormula v))
+                       -> (t -> f v)
+                       -> SapicAction t
+                       -> f (SapicAction v)
+traverseTermsAction f ff fv ac 
+        -- | (New v) <- ac = (New . termVar') <$> f (varTerm v)
+        | (New v) <- ac = New <$> fv v
+        | (ChIn  mt t) <- ac   = ChIn <$> traverse f mt <*> f t
+        | (ChOut mt t) <- ac   = ChOut<$> traverse f mt <*> f t
+        | (Insert t1 t2) <- ac = Insert <$> f t1 <*> (f t2)
+        | (Delete t) <- ac     = Delete <$> f t
+        | (Lock t) <- ac       = Lock   <$> f t
+        | (Unlock t) <- ac     = Unlock <$> f t
+        | (Event fa) <- ac      = Event <$> traverse f fa
+        | (MSR (l,a,r,rest)) <- ac  = do
+                    (\l' a' r' rest' -> MSR (l',a',r',rest'))
+                    <$>
+                         t2f l
+                     <*> t2f a
+                     <*> t2f r
+                     <*> traverse ff rest
+        | Rep <- ac            = pure Rep
+            where t2f = traverse (traverse f)
 
+traverseTermsComb :: Applicative f =>
+                     (SapicNTerm t -> f (SapicNTerm a))
+                     -> (SapicNFormula t -> f (SapicNFormula a))
+                     -> (t -> f a)
+                     -> ProcessCombinator t
+                     -> f (ProcessCombinator a)
+traverseTermsComb f ff fv c
+        | (Cond fa)      <- c = Cond <$> ff fa
+        | (CondEq t1 t2) <- c = CondEq <$> f t1 <*> f t2
+        | (Lookup t v)   <- c = Lookup <$> f t <*> fv v
+        | Parallel       <- c = pure Parallel
+        | NDC            <- c = pure NDC
 
--- ||       traverseTerms :: (Monad m, Show v1) =>
--- ||                        (VTerm Name v2 -> m (VTerm Name v1))
--- ||                        -> Process a v2 -> m (Process a v1)
--- TODO instantiate from traverseTermsComb
-mapTermsComb f c
-        | (Cond fa) <- c = Cond $ undefined -- same problem as above
-        | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
-        | (Lookup t v) <- c = Lookup (f t) v
-        | otherwise = c 
+------------------------- 
+-- Applying substitutions
+------------------------- 
 
 instance (IsVar v) => Apply (Subst Name v) (ProcessCombinator v) where
     apply subst c 
-            = mapTermsComb (apply subst) c
-        -- | (Cond f) <- c = Cond $ apply subst f
-        -- | (CondEq t1 t2) <- c = CondEq (apply subst t1) (apply subst t2)
-        -- | (Lookup t v) <- c = Lookup (apply subst t) v
-        -- | otherwise = c 
+            = mapTermsComb (apply subst) (apply subst) (apply subst) c
 
 data CapturedTag = CapturedIn | CapturedLookup | CapturedNew
     deriving (Typeable, Show)
@@ -345,6 +339,7 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
 
+-- | Apply a substitution, but raise an error if necessary
 applyProcessCombinatorError :: MonadThrow m => Subst Name SapicLVar 
             -> ProcessCombinator SapicLVar -> m (ProcessCombinator SapicLVar)
 applyProcessCombinatorError subst c 
@@ -356,18 +351,9 @@ applyProcessCombinatorError subst c
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst ac 
-        = mapTermsAction (apply subst) ac
-    --     | (New v) <- ac        = New v
-    --     | (ChIn  mt t) <- ac   = ChIn (apply subst mt) (apply subst t)
-    --     | (ChOut mt t) <- ac   = ChOut (apply subst mt) (apply subst t)
-    --     | (Insert t1 t2) <- ac = Insert (apply subst t1) (apply subst t2)
-    --     | (Delete t) <- ac     = Delete (apply subst t)
-    --     | (Lock t) <- ac       = Lock (apply subst t)
-    --     | (Unlock t) <- ac     = Unlock (apply subst t)
-    --     | (Event f) <- ac      = Event (apply subst f)
-    --     | (MSR (l,a,r,rest)) <- ac  = MSR $ apply subst (l,a,r,rest)
-    --     | Rep <- ac            = Rep
+        = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
+-- | Apply a substitution, but raise an error if necessary
 applySapicActionError :: MonadThrow m =>
     Subst Name SapicLVar -> SapicAction SapicLVar -> m (SapicAction SapicLVar)
 applySapicActionError subst ac
@@ -394,6 +380,7 @@ instance Apply SapicSubst (LProcess ann) where
     apply subst (ProcessAction ac ann p') =
                 ProcessAction (apply subst ac) ann (apply subst p')
 
+-- | Apply a substitution, but raise an error if necessary
 applyProcess :: MonadThrow m => SapicSubst -> LProcess ann -> m (LProcess ann)
 applyProcess _ (ProcessNull ann) = return $ ProcessNull ann
 applyProcess subst (ProcessComb c ann pl pr) = do
