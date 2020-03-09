@@ -2059,6 +2059,12 @@ prettySapicElement (FunctionTypingInfo ((fsn,(_,priv)), intypes, outtype)) =
         printType = maybe (text defaultSapicTypeS) text
         showPriv Private = " [private]"
         showPriv Public  = ""
+prettySapicElement (ExportInfoItem eInfo) = 
+    (text "export")
+    <->
+    (text $ L.get eTag eInfo)
+    <->
+    (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
 
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
@@ -2263,10 +2269,14 @@ prettyClosedProtoRule cru =
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
-prettyOpenTheory =
-    prettyTheory prettySignaturePure
-                 (const emptyDoc) prettyOpenProtoRule prettyProof prettySapicElement
+prettyOpenTheory thy =
+    prettyTheory (prettySignaturePureExcept funsyms)
+                 (const emptyDoc) prettyOpenProtoRule prettyProof prettySapicElement thy
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
+                 where
+                    funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
+                        -- function symbols that are printed by sapic printer already
+                    fst' (a,_,_) = a
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: HighlightDocument d => OpenDiffTheory -> d

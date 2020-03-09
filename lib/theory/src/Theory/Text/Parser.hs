@@ -1451,7 +1451,8 @@ diffTheory flags0 = do
            diffbuiltins 
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
-      , do functions -- TODO have to do something with this functions...
+      , do _ <- functions -- typing affects only SAPIC translation, hence functions
+                          -- are only added to maude signature, but not to theory.
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do equations

@@ -45,6 +45,7 @@ module Term.Maude.Signature (
 
   -- * pretty printing
   , prettyMaudeSig
+  , prettyMaudeSigExcept
   ) where
 
 import Term.Term
@@ -178,10 +179,10 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
-prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
-prettyMaudeSig sig = P.vcat
+prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set NoEqSym -> d
+prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
+    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig S.\\ excl)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
@@ -202,3 +203,5 @@ prettyMaudeSig sig = P.vcat
       where showPriv Private = " [private]"
             showPriv Public  = ""
 
+prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
+prettyMaudeSig sig  = prettyMaudeSigExcept sig S.empty
