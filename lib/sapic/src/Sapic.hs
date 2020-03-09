@@ -56,10 +56,10 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
                        -- a' is map variables to types
                        -- r is typed subprocess 
                        -- type terms with variables and reconstruct process
-            ac' <- traverseTermsAction (typeWith  a') typeWithVar typeWithFact ac
+            ac' <- traverseTermsAction (typeWith  a') typeWithFact typeWithVar ac
             return $ ProcessAction ac' ann r
         gComb a' ann rl rr c = do
-            ac' <- traverseTermsComb (typeWith a') typeWithVar typeWithFact c
+            ac' <- traverseTermsComb (typeWith a') typeWithFact typeWithVar c
             return $ ProcessComb ac' ann rl rr
         typeWith a' t = do
             (t',_) <- typeWith' a' t
@@ -85,7 +85,9 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
             | otherwise = return $ (t, defaultSapicType) -- TODO no idea how to type here...
-        typeWithVar  v = return v -- variables are correctly typed, as we just inserted them 
+        typeWithVar  v -- variables are correctly typed, as we just inserted them 
+            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
+            | otherwise = return v  
         typeWithFact f = return f -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a 
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a

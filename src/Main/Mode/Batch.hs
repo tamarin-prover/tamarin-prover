@@ -68,7 +68,12 @@ batchMode = tamarinMode
     outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
-      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|msr|proverif" "What to output:  spthy (including SAPIC), pure msrs or ProVerif."
+      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|spthytyped|msr|proverif" 
+        "What to output:\
+\- spthy (including processes),\
+\- spthy with explicit types,\
+\- pure msrs (processes translated to msrs) or\
+\- ProVerif."
       ]
 
 -- | Process a theory file.
@@ -153,7 +158,8 @@ run thisMode as
             Pretty.$--$ prettyClosedDiffSummary thy
 
         choosePretty Nothing = return . prettyOpenTheory -- output as is, including SAPIC elements
-        choosePretty (Just "spthy") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- output as is, including SAPIC elements
+        choosePretty (Just "spthy") = (return . prettyOpenTheory)  -- output as is, including SAPIC elements
+        choosePretty (Just "spthytyped") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- additionally type
         choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate <=< Sapic.typeTheory
         choosePretty (Just "proverif") = (return . prettyProVerifTheory) <=< Sapic.typeTheory
         choosePretty _ = error "output mode not supported."
