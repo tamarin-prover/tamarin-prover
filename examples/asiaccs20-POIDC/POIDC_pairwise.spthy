@@ -1,5 +1,13 @@
 theory POIDC_pairwise
-// POIDC with pairwise subject identifiers H(H(global_user_id, client_id), user_rp_nonce_2)
+/*
+ * Protocol:     Pairwise Privacy-Preserving OpenID Connect (Pairwise POIDC)
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: Privacy-Preserving OpenID Connect [ASIACCS' 20]
+ * Date:      March 2020
+ *
+ * Status:      working
+// User authentication is proven automatically in (roughly) 15min using 10 threads.
+ */
 
 
 /*Color Coding: blue:    Browser
@@ -363,6 +371,7 @@ lemma executable:
     "
 
 // Called "user authentication" in the paper
+// Runtime (roughly) 15min using 10 threads
 lemma Intent_Consent_and_Correct_Browser:
     "All rp uid cid idp #finish. (RP_gets_IDToken(rp, h(<uid, cid>), idp)@finish
        & not (Ex #j. Is_Compromised(idp)@j) 

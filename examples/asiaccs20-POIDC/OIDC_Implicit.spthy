@@ -1,5 +1,14 @@
 theory OIDC_Implicit
-// Standard OIDC Implicit flow
+/*
+ * Protocol:     Standard OpenID Connect Implicit Flow
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: Privacy-Preserving OpenID Connect [ASIACCS' 20]
+ * Date:      March 2020
+ *
+ * Status:      working
+// User authentication is proven automatically in < 1min using 10 threads.
+ */
+
 
 /*Color Coding: blue:    Browser
                 yellow:  Initializations
@@ -341,6 +350,7 @@ lemma executable:
     "
 
 // Called "user authentication" in the paper
+// Runtime < 1min using 10 threads
 lemma Intent_Consent_and_Correct_Browser:
     "All rp uid idp #finish. (RP_gets_IDToken(rp, uid, idp)@finish
        & not (Ex #j. Is_Compromised(idp)@j) 
