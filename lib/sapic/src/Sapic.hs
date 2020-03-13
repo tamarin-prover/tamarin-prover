@@ -76,7 +76,7 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
                     then
                         return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
                     else
-                        throwM (TypingErrorArgument t intypes' :: SapicException AnnotatedProcess)
+                        throwM (ProcessNotWellformed (TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM (typeWith a') ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
