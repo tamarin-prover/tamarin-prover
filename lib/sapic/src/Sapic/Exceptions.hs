@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -22,7 +20,6 @@ import Control.Exception
 import Theory
 import Theory.Sapic
 import Data.Label
-import Sapic.Annotation
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -32,20 +29,20 @@ prettyWFLockTag WFRep = "replication"
 prettyWFLockTag WFPar = "a parallel"
 
 -- | Wellformedness errors, see instance of show below for explanation.
-data WFerrror   = WFLock WFLockTag AnnotatedProcess
+data WFerrror p = WFLock WFLockTag p
                 | WFUnboundProto (Set LVar)
-                | WFUnbound (Set LVar) AnnotatedProcess
+                | WFUnbound (Set LVar) p
                 | WFReliable
                 | WFBoundTwice SapicLVar
     deriving (Typeable, Show)
 
 -- | SapicExceptions see instance of show below for explanation.
-data SapicException = NotImplementedError String
+data SapicException p = NotImplementedError String
                     -- SomethingBad
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
                     -- | UnAnnotatedLock String
-                    | ProcessNotWellformed WFerrror
+                    | ProcessNotWellformed (WFerrror p)
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
                     | MoreThanOneProcess
@@ -56,10 +53,10 @@ data SapicException = NotImplementedError String
                     | TypingErrorArgument SapicTerm [SapicType]
     deriving (Typeable)
 
-prettyVarSet :: Set LVar -> [Char]
-prettyVarSet = (List.intercalate ", " ) . (List.map show) . toList
+prettyVarSet :: Set LVar -> String
+prettyVarSet = List.intercalate ", "  . List.map show . toList
 
-instance Show SapicException where
+instance (Show a) => Show (SapicException a) where
     -- show SomethingBad = "Something bad happened"
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
@@ -100,4 +97,5 @@ instance Show SapicException where
                               ++ List.intercalate ", " (List.map (maybe defaultSapicTypeS id) types)
                               ++ "."
 
-instance Exception SapicException
+
+instance (Typeable a, Show a) => Exception (SapicException a)

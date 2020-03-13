@@ -1,10 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PatternGuards #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
 -- License     : GPL v3 (see LICENSE)
@@ -31,7 +27,6 @@ import qualified Data.Set as S
 import qualified Data.List as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
-import Control.Monad.Bind
 import Sapic.Annotation
 import Sapic.SecretChannels
 import Sapic.Facts
@@ -81,16 +76,16 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
                     then
                         return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
                     else
-                        throwM (TypingErrorArgument t intypes')
+                        throwM (TypingErrorArgument t intypes' :: SapicException AnnotatedProcess)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM (typeWith a') ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
-            | otherwise = return $ (t, defaultSapicType) -- TODO no idea how to type here...
+            | otherwise = return (t, defaultSapicType) -- TODO no idea how to type here...
         typeWithVar  v -- variables are correctly typed, as we just inserted them 
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v  
-        typeWithFact f = return f -- typing facts is hard because of quantified variables. We skip for now.
+        typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a 
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a
@@ -106,26 +101,28 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
-                    throwM ReliableTransmissionButNoProcess
+                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else 
                     return (removeSapicItems th)
-      [p] -> do
-                unless (allUnique $ pfoldMap bindings p) $ throwM $ ProcessNotWellformed $ WFBoundTwice $ repeater $ pfoldMap bindings p
-                -- annotate
-                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
-                -- compute initial rules
-                (initRules,initTx) <- initialRules an_proc
-                -- generate protocol rules, starting from variables in initial tilde x
-                protoRule <-  gen (trans an_proc) an_proc [] initTx
-                -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
-                -- add restrictions
-                rest<- restrictions an_proc
-                th2 <- foldM liftedAddRestriction th1 rest
-                -- add heuristic, if not already defined:
-                th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return (removeSapicItems th3)
-      _   -> throw MoreThanOneProcess
+      [p] -> if allUnique $ pfoldMap bindings p then do
+                    -- annotate
+                    an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
+                    -- compute initial rules
+                    (initRules,initTx) <- initialRules an_proc
+                    -- generate protocol rules, starting from variables in initial tilde x
+                    protoRule <-  gen (trans an_proc) an_proc [] initTx
+                    -- add these rules
+                    th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
+                    -- add restrictions
+                    rest<- restrictions an_proc
+                    th2 <- foldM liftedAddRestriction th1 rest
+                    -- add heuristic, if not already defined:
+                    let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                    return (removeSapicItems th3)
+                else
+                    throw ( ProcessNotWellformed ( WFBoundTwice $ repeater $ pfoldMap bindings p)
+                            :: SapicException AnnotatedProcess)
+      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     bindings (ProcessComb (Lookup _ v) _ _ _) = [v]
     bindings (ProcessAction (New v) _ _) = [v]
@@ -197,7 +194,7 @@ gen :: (MonadCatch m) =>
         (BT.TransFNull (m BT.TranslationResultNull),
          BT.TransFAct (m BT.TranslationResultAct),
          BT.TransFComb (m BT.TranslationResultComb))
-       -> AnnotatedProcess -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
+       -> LProcess (ProcessAnnotation LVar) -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
@@ -235,6 +232,6 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
-        -- handler::  AnnotatedProcess ->  SapicException -> a
+        handler:: (Typeable ann, Show ann) => LProcess ann ->  SapicException ann -> a
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
         handler _ e = throw e

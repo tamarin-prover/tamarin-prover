@@ -133,11 +133,11 @@ baseTransAction ac an p tildex
           let tx' = v `insert` tildex in
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'], [])], tx')
-    | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock")
+    | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
     | (Unlock t') <- ac, (Just (AnVar v)) <- unlock an 
       , t <- toLNTerm t' =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
-    | (Unlock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated unlock")
+    | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f' ) <- ac 
       , f <- toLNFact f' =
           ([([def_state], [TamarinAct f], [def_state' tildex], [])], tildex)
@@ -145,7 +145,7 @@ baseTransAction ac an p tildex
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') = 
           let tx' = freeset' r `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r, res)], tx')
-    | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac))
+    | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
@@ -179,7 +179,8 @@ baseTransComb c _ p tildex
                      , tildex, tildex )
         else
                     throw ( 
-                    ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex))
+                    ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
+                        :: SapicException AnnotatedProcess)
     | CondEq t1 t2 <- c =
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
@@ -188,7 +189,9 @@ baseTransComb c _ p tildex
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
-                    throw $ ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
+                    throw ( 
+                    ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
+                        :: SapicException AnnotatedProcess)
     | Lookup t' v' <- c 
       , t <- toLNTerm t', v <- toLVar v' =
            let tx' = v `insert` tildex in
@@ -196,7 +199,7 @@ baseTransComb c _ p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
-    | otherwise = throw $ NotImplementedError "baseTransComb"
+    | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
@@ -221,9 +224,9 @@ baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r [] 0
 toEx :: MonadThrow m => String -> m SyntacticRestriction
 toEx s
     | (Left  err) <- parseRestriction s =
-        throwM ( ImplementationError ( "Error parsing hard-coded restriction: " ++ s ++ show err ))
+        throwM ( ImplementationError ( "Error parsing hard-coded restriction: " ++ s ++ show err )::SapicException AnnotatedProcess)
     | (Right res) <- parseRestriction s = return res
-    | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler")
+    | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
 resSetIn :: String
 resSetIn = [QQ.r|restriction set_in: 

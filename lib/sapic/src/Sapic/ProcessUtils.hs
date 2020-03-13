@@ -36,15 +36,16 @@ import Sapic.Exceptions
 -- positions. 
 processAt :: forall ann m v. (Show ann, MonadThrow m, MonadCatch m, Typeable ann, Typeable v, Show v) =>  Process ann v -> ProcessPosition -> m (Process ann v)
 processAt p [] = return p
-processAt (ProcessNull _) (x:xs) = throwM $ InvalidPosition (x:xs) 
+processAt (ProcessNull _) (x:xs) = throwM (InvalidPosition (x:xs) :: SapicException (Process ann v))
 processAt pro pos 
     | (ProcessAction _ _ p ) <- pro,  1:xl <- pos =  catch (processAt p xl) (h pos)
     | (ProcessComb _ _ pl _) <- pro,  1:xl <- pos =  catch (processAt pl xl) (h pos)
     | (ProcessComb _ _ _ pr) <- pro,  2:xl <- pos =  catch (processAt pr xl) (h pos)
     where --- report original position by catching exception at each level in error case.
-        h p (InvalidPosition _) = throwM $ InvalidPosition p 
+        h:: ProcessPosition -> SapicException (Process ann v) -> m (Process ann v)
+        h p (InvalidPosition _) = throwM ( InvalidPosition p :: SapicException (Process ann v))
         h _ e = throwM e
-processAt _ p = throwM $ InvalidPosition p
+processAt _ p = throwM (InvalidPosition p :: SapicException (Process ann v))
 
 processContains :: Process ann v -> (Process ann v -> Bool) -> Bool
 processContains anP f = M.getAny $ pfoldMap  (M.Any . f) anP
