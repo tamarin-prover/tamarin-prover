@@ -874,6 +874,25 @@ functionType = try (do
                     return (argTypes, outType)
                     )
 
+-- | Parse a 'FunctionAttribute'.
+functionAttribute :: Bool -> Parser functionAttribute
+functionAttribute = asum
+  [ symbol "private"       *> pure SourceLemma
+  , symbol "destructor"         *> pure ReuseLemma
+  , symbol "diff_reuse"    *> pure ReuseDiffLemma
+  , symbol "use_induction" *> pure InvariantLemma
+  , symbol "hide_lemma="   *> (HideLemma <$> identifier)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
+  , symbol "left"          *> pure LHSLemma
+  , symbol "right"         *> pure RHSLemma
+--   , symbol "both"          *> pure BothLemma
+  ]
+  where
+    parseGoalRanking = case diff of
+        True  -> map charToGoalRankingDiff <$> many1 letter
+        False -> map charToGoalRanking     <$> many1 letter
+
+
 function :: Parser SapicFunSym
 function =  do
         f   <- BC.pack <$> identifier

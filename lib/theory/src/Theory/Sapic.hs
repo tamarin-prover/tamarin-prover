@@ -93,9 +93,25 @@ type SapicLNFact = Fact SapicTerm
 type SapicNFormula v = ProtoFormula SyntacticSugar (String, LSort) Name v
 type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 
+-- | An attribute for a SAPIC function
+data FunctionAttribute =
+      PrivateFunction
+    | DestructorFunction
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
 -- | Function symbol (f,l,r) with argument types l and return type r
 -- define only on NoEqSyms, as we will assume the others to be polymorphic
-type SapicFunSym = (NoEqSym, [SapicType], SapicType) 
+type SapicFunSym = 
+(NoEqSym, [SapicType], SapicType) 
+
+data SapicFunSym = SapicFunSym
+       { _sfSym            :: NoEqSym
+       , _sfOutType        :: SapicType
+       , _sfInType         :: [SapicType]
+       , _sfAttributes     :: [FunctionAttribute]
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
 
 defaultSapicTypeS :: String
 defaultSapicTypeS = "bitstring"
