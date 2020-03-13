@@ -875,42 +875,34 @@ functionType = try (do
                     )
 
 -- | Parse a 'FunctionAttribute'.
-functionAttribute :: Bool -> Parser functionAttribute
+functionAttribute :: Bool -> Parser (Either Privacy Constructability)
 functionAttribute = asum
-  [ symbol "private"       *> pure SourceLemma
-  , symbol "destructor"         *> pure ReuseLemma
-  , symbol "diff_reuse"    *> pure ReuseDiffLemma
-  , symbol "use_induction" *> pure InvariantLemma
-  , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
-  , symbol "left"          *> pure LHSLemma
-  , symbol "right"         *> pure RHSLemma
---   , symbol "both"          *> pure BothLemma
+  [ symbol "private"       *> pure (Left Private)
+  , symbol "destructor"    *> pure (Right Destructor)
   ]
-  where
-    parseGoalRanking = case diff of
-        True  -> map charToGoalRankingDiff <$> many1 letter
-        False -> map charToGoalRanking     <$> many1 letter
 
 
 function :: Parser SapicFunSym
 function =  do
         f   <- BC.pack <$> identifier
         (argTypes,outType) <- functionType
-        priv <- option Public (symbol "[private]" *> pure Private)
+        atts <- option [] $ list functionAttribute
         if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
           then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
           else return ()
         sig <- getState
-        let k = length argTypes  in
+        let k = length argTypes  
+            priv <-   if Private `elem` lefts atts then Private else Public
+            destr <-  if Destructor `elem` rights atts then Destructor else Constructor
+        in
             case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-              Just kp' | kp' /= (k,priv) ->
+              Just kp' | kp' /= (k,priv,destr) ->
                 fail $ "conflicting arities/private " ++
-                       show kp' ++ " and " ++ show (k,priv) ++
+                       show kp' ++ " and " ++ show (k,priv,destr) ++
                        " for `" ++ BC.unpack f
               _ -> do
-                    setState (addFunSym (f,(k,priv)) sig)
-                    return ((f,(k,priv)),argTypes,outType)
+                    setState (addFunSym (f,(k,priv,destr)) sig)
+                    return ((f,(k,priv,destr)),argTypes,outType)
 
 functions :: Parser [SapicFunSym]
 functions =

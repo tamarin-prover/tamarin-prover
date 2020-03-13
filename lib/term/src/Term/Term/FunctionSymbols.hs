@@ -85,8 +85,13 @@ data ACSym = Union | Mult | Xor
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | A function symbol can be either a constructor or a destructor in which
+-- case it only applies if it reduces.
+data Constructability = Constructor | Destructor
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, (Int, Privacy)) -- ^ operator name, arity, private
+type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
 
 -- | C(ommutative) function symbols
 data CSym = EMap
