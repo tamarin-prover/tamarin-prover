@@ -48,10 +48,9 @@ module Term.Maude.Signature (
   , prettyMaudeSigExcept
   ) where
 
-import Term.Term
-import Term.LTerm
-import Term.Builtin.Rules
-import Term.SubtermRule
+import           Term.Builtin.Rules
+import           Term.LTerm
+import           Term.SubtermRule
 
 import Control.Monad.Fresh
 -- import Control.Applicative
@@ -199,9 +198,10 @@ prettyMaudeSigExcept sig excl = P.vcat
       , (enableXor,  "xor")
       ]
 
-    ppFunSymb (f,(k,priv)) = P.text $ BC.unpack f ++ "/" ++ show k ++ showPriv priv
-      where showPriv Private = " [private]"
-            showPriv Public  = ""
+    ppFunSymb (f,(k,priv,constr)) = P.text $ BC.unpack f ++ "/" ++ show k 
+                                             ++ showAttr (priv,constr)
+      where 
+            showAttr (p,c)= "[" ++ show p ++ "," ++ show c ++ "]"
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig  = prettyMaudeSigExcept sig S.empty

@@ -17,6 +17,7 @@ module Term.Term.FunctionSymbols (
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
+    , Constructability(..)
     , NoEqSym
 
     -- ** Signatures
@@ -132,23 +133,23 @@ pmultSymString = "pmult"
 
 pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",(2,Public))
+pairSym  = ("pair",(2,Public,Constructor))
 -- | Diff.
-diffSym  = (diffSymString,(2,Private))
+diffSym  = (diffSymString,(2,Private,Constructor))
 -- | Exponentiation.
-expSym   = (expSymString,(2,Public))
+expSym   = (expSymString,(2,Public,Constructor))
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,(1,Public))
+invSym   = (invSymString,(1,Public,Constructor))
 -- | The one in the group of exponents.
-oneSym   = (oneSymString,(0,Public))
+oneSym   = (oneSymString,(0,Public,Constructor))
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,Public))
+fstSym   = ("fst",(1,Public,Constructor))
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,Public))
+sndSym   = ("snd",(1,Public,Constructor))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,(2,Public))
+pmultSym = (pmultSymString,(2,Public,Constructor))
 -- | The zero for XOR.
-zeroSym  = (zeroSymString,(0,Public))
+zeroSym  = (zeroSymString,(0,Public,Constructor))
 
 ----------------------------------------------------------------------
 -- Fixed signatures

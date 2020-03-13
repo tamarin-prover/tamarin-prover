@@ -329,14 +329,14 @@ niFactors t = case viewTerm2 t of
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
     Lit _                          -> False
-    FApp (NoEq (_,(_,Private))) _  -> True
+    FApp (NoEq (_,(_,Private,_))) _  -> True
     FApp _                      as -> any containsPrivate as
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
 containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
     Lit _                          -> True
-    FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
+    FApp (NoEq (f,(_,Private,_))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
     

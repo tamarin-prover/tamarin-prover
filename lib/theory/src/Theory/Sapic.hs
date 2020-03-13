@@ -95,8 +95,7 @@ type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 
 -- | Function symbol (f,l,r) with argument types l and return type r
 -- define only on NoEqSyms, as we will assume the others to be polymorphic
-type SapicFunSym = 
-(NoEqSym, [SapicType], SapicType) 
+type SapicFunSym = (NoEqSym, [SapicType], SapicType) 
 
 -- TODO alternative definition.
 -- 1. If we need to extend, switch to this tyoe

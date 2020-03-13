@@ -45,6 +45,7 @@ module Term.Term (
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
+    , Constructability(..)
     , NoEqSym
 
     -- ** Signatures
@@ -169,11 +170,11 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public))) _) = True
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_))) _) = True
 isNullaryPublicFunction _                                            = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_))) _) = True
 isPrivateFunction _                                            = False
 
 ----------------------------------------------------------------------

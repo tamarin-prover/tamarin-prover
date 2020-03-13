@@ -111,7 +111,7 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
     go _      _                       []     _ _                     = []
     -- term already in premises, but necessary for constant conclusions
     go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
-    go uprems (viewTerm -> FApp (NoEq (f,(_,Public))) as) (i:p) n pd =
+    go uprems (viewTerm -> FApp (NoEq (f,(_,Public,_))) as) (i:p) n pd =
         irule ++ go uprems' t' p funs posname
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
@@ -124,7 +124,7 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] [] ]
                 else []
-    go _      (viewTerm -> FApp (NoEq (_,(_,Private))) _) _     _ _  = []
+    go _      (viewTerm -> FApp (NoEq (_,(_,Private,_))) _) _     _ _  = []
     go _      (viewTerm -> Lit _)                         (_:_) _ _  =
         error "IntruderRules.destructionRules: impossible, position invalid"   
      
