@@ -41,7 +41,9 @@ module Theory.Sapic (
     -- utitlities 
     , paddAnn
     , foldProcess
+    , foldMProcess
     , traverseProcess
+    , traverseProcess'
     , traverseTermsAction
     , traverseTermsComb
     , applyProcess
@@ -255,47 +257,72 @@ foldProcess fNull fAct fComb gAct gComb a p
             in
                 gComb a' ann rl rr c
 
--- | Traverses process. @traverseProcess@ works just like @foldProcess@, but allows functions with side-effects.
-traverseProcess :: Monad m =>
-                   (t1 -> t2 -> m t3)
-                   -> (t1 -> t2 -> SapicAction v -> m t1)
-                   -> (t1 -> t2 -> ProcessCombinator v -> m t1)
-                   -> (t1 -> t2 -> t3 -> SapicAction v -> m t3)
-                   -> (t1 -> t2 -> t3 -> t3 -> ProcessCombinator v -> m t3)
-                   -> t1
-                   -> Process t2 v
-                   -> m t3
-traverseProcess fNull fAct fComb gAct gComb a p
+-- | fold process with side-effect. Just like @foldProcess@, but allows functions with side-effects.
+foldMProcess :: Monad m =>
+                (t1 -> t2 -> m t3)
+                -> (t1 -> t2 -> SapicAction v -> m t1)
+                -> (t1 -> t2 -> ProcessCombinator v -> m t1)
+                -> (t1 -> SapicAction v -> t2 -> t3 -> m t3)
+                -> (t1 -> ProcessCombinator v -> t2 -> t3 -> t3 -> m t3)
+                -> t1
+                -> Process t2 v
+                -> m t3
+foldMProcess fNull fAct fComb gAct gComb a p
     | (ProcessNull ann) <- p = fNull a ann
     | (ProcessAction ac ann p') <- p = do
             a' <- fAct a ann ac -- 1. update accumulator
-            r  <- traverseProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
-            f  <- gAct a' ann r ac -- 3. reconstruct result from accumulator and subtree's result
+            p''<- foldMProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
+            f  <- gAct a' ac ann p'' -- 3. reconstruct result from accumulator and subtree's result
             return f
     | (ProcessComb c ann pl pr) <- p = do
             a' <- fComb a ann c
-            rl <- traverseProcess fNull fAct fComb gAct gComb a' pl
-            rr <- traverseProcess fNull fAct fComb gAct gComb a' pr
-            r  <- gComb a' ann rl rr c
+            rl <- foldMProcess fNull fAct fComb gAct gComb a' pl
+            rr <- foldMProcess fNull fAct fComb gAct gComb a' pr
+            r  <- gComb a' c ann rl rr 
             return r
+
+-- | Traverses process. Simplified variant of @foldMProcces@ that avoids accumulator (can store in monad)
+traverseProcess :: Monad m =>
+                   (t2 -> m t3)
+                   -> (SapicAction v -> t2 -> t3 -> m t3)
+                   -> (ProcessCombinator v -> t2 -> t3 -> t3 -> m t3)
+                   -> Process t2 v
+                   -> m t3
+traverseProcess gNull gAct gComb = foldMProcess (const gNull) nothing nothing (const gAct) (const gComb) ()
+        where nothing = const $ const $ const $ return ()
                 
-                
+traverseProcess' :: Monad m =>
+                       (SapicNTerm t -> m (SapicNTerm v))
+                       -> (SapicNFormula t -> m (SapicNFormula v))
+                       -> (t -> m v)
+                       -> Process ann t
+                       -> m (Process ann v)
+traverseProcess' ft ff fv = traverseProcess gN gA gC
+    where
+        gN = return . ProcessNull
+        gA ac ann p = do
+             ac' <- traverseTermsAction ft ff fv ac
+             return $ ProcessAction ac' ann p
+        gC c ann pl pr = do
+             c'  <- traverseTermsComb ft ff fv c
+             return $ ProcessComb c' ann pl pr
+
 traverseTermsAction :: Applicative f =>
                        (SapicNTerm t -> f (SapicNTerm v))
                        -> (SapicNFormula t -> f (SapicNFormula v))
                        -> (t -> f v)
                        -> SapicAction t
                        -> f (SapicAction v)
-traverseTermsAction f ff fv ac 
-        -- | (New v) <- ac = (New . termVar') <$> f (varTerm v)
+traverseTermsAction ft ff fv ac 
+        -- | (New v) <- ac = (New . termVar') <$> ft (varTerm v)
         | (New v) <- ac = New <$> fv v
-        | (ChIn  mt t) <- ac   = ChIn <$> traverse f mt <*> f t
-        | (ChOut mt t) <- ac   = ChOut<$> traverse f mt <*> f t
-        | (Insert t1 t2) <- ac = Insert <$> f t1 <*> (f t2)
-        | (Delete t) <- ac     = Delete <$> f t
-        | (Lock t) <- ac       = Lock   <$> f t
-        | (Unlock t) <- ac     = Unlock <$> f t
-        | (Event fa) <- ac      = Event <$> traverse f fa
+        | (ChIn  mt t) <- ac   = ChIn <$> traverse ft mt <*> ft t
+        | (ChOut mt t) <- ac   = ChOut<$> traverse ft mt <*> ft t
+        | (Insert t1 t2) <- ac = Insert <$> ft t1 <*> (ft t2)
+        | (Delete t) <- ac     = Delete <$> ft t
+        | (Lock t) <- ac       = Lock   <$> ft t
+        | (Unlock t) <- ac     = Unlock <$> ft t
+        | (Event fa) <- ac      = Event <$> traverse ft fa
         | (MSR (l,a,r,rest)) <- ac  = do
                     (\l' a' r' rest' -> MSR (l',a',r',rest'))
                     <$>
@@ -304,7 +331,7 @@ traverseTermsAction f ff fv ac
                      <*> t2f r
                      <*> traverse ff rest
         | Rep <- ac            = pure Rep
-            where t2f = traverse (traverse f)
+            where t2f = traverse (traverse ft)
 
 traverseTermsComb :: Applicative f =>
                      (SapicNTerm t -> f (SapicNTerm a))
@@ -312,10 +339,10 @@ traverseTermsComb :: Applicative f =>
                      -> (t -> f a)
                      -> ProcessCombinator t
                      -> f (ProcessCombinator a)
-traverseTermsComb f ff fv c
+traverseTermsComb ft ff fv c
         | (Cond fa)      <- c = Cond <$> ff fa
-        | (CondEq t1 t2) <- c = CondEq <$> f t1 <*> f t2
-        | (Lookup t v)   <- c = Lookup <$> f t <*> fv v
+        | (CondEq t1 t2) <- c = CondEq <$> ft t1 <*> ft t2
+        | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
 

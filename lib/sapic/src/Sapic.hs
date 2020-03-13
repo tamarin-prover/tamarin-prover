@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -30,6 +31,7 @@ import qualified Data.Set as S
 import qualified Data.List as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
+import Control.Monad.Bind
 import Sapic.Annotation
 import Sapic.SecretChannels
 import Sapic.Facts
@@ -42,7 +44,7 @@ import Theory.Text.Parser
 
 typeProcess :: MonadThrow m => Theory sig c r p1 SapicElement
                         -> Process p2 SapicLVar -> m (Process p2 SapicLVar)
-typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
+typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
     where
         lift3 f a b c = return $ f a b c -- compose ternary function with return
         fNull _  = return . ProcessNull
@@ -52,15 +54,15 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
         fAct  a _ _             =  a 
         fComb a _ (Lookup _ v) = insertVar v a
         fComb a _ _ = a 
-        gAct a' ann r ac = do
+        gAct a' ac ann r = do
                        -- a' is map variables to types
                        -- r is typed subprocess 
                        -- type terms with variables and reconstruct process
             ac' <- traverseTermsAction (typeWith  a') typeWithFact typeWithVar ac
             return $ ProcessAction ac' ann r
-        gComb a' ann rl rr c = do
-            ac' <- traverseTermsComb (typeWith a') typeWithFact typeWithVar c
-            return $ ProcessComb ac' ann rl rr
+        gComb a' c ann rl rr = do
+            c' <- traverseTermsComb (typeWith a') typeWithFact typeWithVar c
+            return $ ProcessComb c' ann rl rr
         typeWith a' t = do
             (t',_) <- typeWith' a' t
             return t'
@@ -79,7 +81,7 @@ typeProcess th = traverseProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map
                     then
                         return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
                     else
-                        throwM ((TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
+                        throwM (TypingErrorArgument t intypes')
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM (typeWith a') ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType) 
@@ -104,10 +106,11 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
-                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+                    throwM ReliableTransmissionButNoProcess
              else 
                     return (removeSapicItems th)
       [p] -> do
+                unless (allUnique $ pfoldMap bindings p) $ throwM $ ProcessNotWellformed $ WFBoundTwice $ repeater $ pfoldMap bindings p
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
                 -- compute initial rules
@@ -122,8 +125,15 @@ translate th = case theoryProcesses th of
                 -- add heuristic, if not already defined:
                 th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
-      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
+      _   -> throw MoreThanOneProcess
   where
+    bindings (ProcessComb (Lookup _ v) _ _ _) = [v]
+    bindings (ProcessAction (New v) _ _) = [v]
+    bindings _ = []
+
+    allUnique = all ( (==) 1 . length) . List.group . List.sort
+    repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
+
     ops = L.get thyOptions th
     checkOps lens x   
         | L.get lens ops = Just x
@@ -187,7 +197,7 @@ gen :: (MonadCatch m) =>
         (BT.TransFNull (m BT.TranslationResultNull),
          BT.TransFAct (m BT.TranslationResultAct),
          BT.TransFComb (m BT.TranslationResultComb))
-       -> LProcess (ProcessAnnotation LVar) -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
+       -> AnnotatedProcess -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
 gen (trans_null, trans_action, trans_comb) anP p tildex  =
     do
         proc' <- processAt anP p
@@ -225,6 +235,6 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
-        handler:: (Typeable ann, Show ann) => LProcess ann ->  SapicException ann -> a
+        -- handler::  AnnotatedProcess ->  SapicException -> a
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
         handler _ e = throw e
