@@ -2043,7 +2043,7 @@ prettySapicElement (ProcessDefItem p) =
     (text "=")
     <->
     (nest 2 $ prettyProcess $ L.get pBody p)
-prettySapicElement (FunctionTypingInfo ((fsn,(_,priv)), intypes, outtype)) = 
+prettySapicElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) = 
     (text "function:")
     <->
     text (BC.unpack fsn)

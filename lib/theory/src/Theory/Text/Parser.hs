@@ -168,18 +168,18 @@ ltypedlit = vlit sapicvar
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy)
+lookupArity :: String -> Parser (Int, Privacy,Constructability)
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public))]) of
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv) -> return (k,priv)
+        Just (k,priv,cnstr) -> return (k,priv,cnstr)
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
 naryOpApp plit = do
     op <- identifier
-    (k,priv) <- lookupArity op
+    ar@(k,priv,_) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
                      else commaSep (msetterm plit)
@@ -188,18 +188,18 @@ naryOpApp plit = do
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,priv)) ts
+    return $ app (BC.pack op, ar) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
 binaryAlgApp plit = do
     op <- identifier
-    (k,priv) <- lookupArity op
+    ar@(k,_,_) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
     when (k /= 2) $ fail 
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, ar) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
@@ -232,8 +232,8 @@ term plit eqn = asum
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
-           | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) *> pure (fApp fs [])
+           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Parser (Term l) -> Parser (Term l)
@@ -875,7 +875,7 @@ functionType = try (do
                     )
 
 -- | Parse a 'FunctionAttribute'.
-functionAttribute :: Bool -> Parser (Either Privacy Constructability)
+functionAttribute :: Parser (Either Privacy Constructability)
 functionAttribute = asum
   [ symbol "private"       *> pure (Left Private)
   , symbol "destructor"    *> pure (Right Destructor)
@@ -892,17 +892,16 @@ function =  do
           else return ()
         sig <- getState
         let k = length argTypes  
-            priv <-   if Private `elem` lefts atts then Private else Public
-            destr <-  if Destructor `elem` rights atts then Destructor else Constructor
-        in
-            case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-              Just kp' | kp' /= (k,priv,destr) ->
-                fail $ "conflicting arities/private " ++
-                       show kp' ++ " and " ++ show (k,priv,destr) ++
-                       " for `" ++ BC.unpack f
-              _ -> do
-                    setState (addFunSym (f,(k,priv,destr)) sig)
-                    return ((f,(k,priv,destr)),argTypes,outType)
+        let priv = if Private `elem` lefts atts then Private else Public
+        let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
+          Just kp' | kp' /= (k,priv,destr) ->
+            fail $ "conflicting arities/private " ++
+                   show kp' ++ " and " ++ show (k,priv,destr) ++
+                   " for `" ++ BC.unpack f
+          _ -> do
+                setState (addFunSym (f,(k,priv,destr)) sig)
+                return ((f,(k,priv,destr)),argTypes,outType)
 
 functions :: Parser [SapicFunSym]
 functions =

@@ -295,16 +295,16 @@ make_argtypes ((Just p):t) = p ++ "," ++ (make_argtypes t)
 
 
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
-headerOfFunSym []  (f,(k,Public))  =  Fun (make_str (f,k) ++ ".")
-headerOfFunSym []  (f,(k,Private)) =  Fun ((make_str (f,k))  ++ " [private].")
-headerOfFunSym  (((f,(k,Public)),inTypes,Just outType):rem)  (f2,(k2,Public)) =
+headerOfFunSym []  (f,(k,Public,_))  =  Fun (make_str (f,k) ++ ".")
+headerOfFunSym []  (f,(k,Private,_)) =  Fun ((make_str (f,k))  ++ " [private].")
+headerOfFunSym  (((f,(k,Public,_)),inTypes,Just outType):rem)  fs2@(f2,(k2,Public,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
-  else headerOfFunSym rem (f2,(k2,Public))
-headerOfFunSym  (((f,(k,Private)),inTypes,Just outType):rem)  (f2,(k2,Private)) =
+  else headerOfFunSym rem fs2
+headerOfFunSym  (((f,(k,Private,_)),inTypes,Just outType):rem)  fs2@(f2,(k2,Private,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
-  else headerOfFunSym rem (f2,(k2,Public))
+  else headerOfFunSym rem fs2
 
 
 -- Load the proverif headers from the OpenTheory
