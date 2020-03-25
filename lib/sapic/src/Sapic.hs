@@ -24,6 +24,7 @@ import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Set as S
+import qualified Data.List as List
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -46,7 +47,7 @@ translate th = case theoryProcesses th of
                     throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
                     return (removeSapicItems th)
-      [p] -> do
+      [p] -> if all allUnique (bindings p) then do
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
                 -- compute initial rules
@@ -59,10 +60,29 @@ translate th = case theoryProcesses th of
                 rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
-                th3 <- return $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
+             else
+                throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p)
+                            :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
+    bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr) 
+    bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p) 
+    bindings (ProcessNull _) = [[]]
+    -- bindings = foldProcess undefined undefined undefined gA gC () 
+    -- gA = a' 
+    -- -- (\_ _ -> [a])
+    -- --                        (\a _ ac -> a ++ bindingsAct ac)
+    -- --                        (\a _ c  -> bindingsComb (\a' _ _ _ -> )
+
+    bindingsComb (Lookup _ v) = [v]
+    bindingsComb _            = []
+    bindingsAct (New v) = [v]
+    bindingsAct _       = []
+
+    allUnique = all ( (==) 1 . length) . List.group . List.sort
+    repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
     ops = L.get thyOptions th
     translateReport anp =
       if L.get transReport ops then
