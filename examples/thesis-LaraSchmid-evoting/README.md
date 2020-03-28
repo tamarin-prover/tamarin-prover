@@ -1,7 +1,7 @@
 This directory contains the Tamarin models of the following thesis:
 [1] Advancing the Formal Foundations for Voting Protocols, Lara Schmid, ETH Zürich, 2020.
 
-The directory consists of three sub-directories, respectively containing the Tamarin files that model the protocols and the properties of Chapters 3 to Chapter 5 in [1]. 
+The directory consists of three sub-directories, respectively containing the Tamarin files that model the protocols and the properties of Chapters 3 to 5 in [1]. 
 All files have been modeled by Lara Schmid and were successfully proved with the Tamarin prover version 1.5.1
 
 We first describe some notation and other conventions, then we list all the files in each sub-directory, and finally we describe how the protocols can be proven using Tamarin.
@@ -165,7 +165,7 @@ Thereby, we use both the constant 'b' and 'bs' to denote the ballots (similarly 
 
  \* Tamarin allows the use of "reuse lemmas", i.e., lemmas labeled with [reuse]. These lemmas are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct. The files aletheaDR_ShHh_RF.spthy and aletheaDR_ShHh_RF_reuseAsRestriction.spthy model the same protocol under the same adversary model. The only difference is that the reuse lemmas in aletheaDR_ShHh_RF.spthy are modeled as restrictions in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. We proved all reuse lemmas as well as lemmas in aletheaDR_ShHh_RF.spthy, except for observational equivalence which we proved in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. As we proved in the former that all reuse lemmas hold, we can safely use them as restriction in the latter (the reuse lemmas and restrictions exclude the same set of traces), which helps in proving the observational equivalence property.
 
-### Proof Files
+#### Proof Files
 
 - aletheaDR_ShHh_RF_functional_LHS.spthy: 
 	the proof produced by Tamarin for "lemma functional" in the model aletheaDR_ShHh_RF.spthy,
