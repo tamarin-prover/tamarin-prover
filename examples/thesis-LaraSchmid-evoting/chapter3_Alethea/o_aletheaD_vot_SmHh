@@ -1,0 +1,152 @@
+#!/usr/bin/python
+#oracle_RF
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global priorities, plist, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         break
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         break
+
+
+if lemma == "indivVerif_v": 
+  match = False
+  priorities = ["AgSt","In_S","!KU( ~skS","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "indivVerif_b": 
+  match = False
+  priorities = ["AgSt","In_S","!KU( ~skS","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "vsFromBB": 
+  match = False
+  priorities = ["'v'"]
+
+if lemma == "bsFromBB": 
+  match = False
+  priorities = ["'b'"]
+
+if lemma == "fromBB": 
+  match = False
+  priorities = ["AgSt","In_S","!KU( ~skS","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "vsFromAdversary": 
+  match = False
+  priorities = ["In_S","skS","AgSt","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "secretRandomness": 
+  match = False
+  priorities = ["D0","In_S","skS","AgSt","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "ballotsFromVoters": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+
+if lemma == "EligVerif_1": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_2": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_3": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_4": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_5": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_6": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_7": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "EligVerif_8": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(8)","splitEqs(10)"]
+
+if lemma == "Tall_As_Rec_D_1": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+if lemma == "Tall_As_Rec_D_2": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+if lemma == "Tall_As_Rec_D_3": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+if lemma == "Tall_As_Rec_D_4": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+
+if lemma == "Tall_As_Rec_D_5": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+
+if lemma == "Tall_As_Rec_D_6": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+
+if lemma == "Tall_As_Rec_D_7": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+
+if lemma == "Tall_As_Rec_D_8": 
+  match = False
+  priorities = ["!KU( sg(bPrime","In_S","!KU( ~r","!KU( ~sskD","AgSt_BB","splitEqs(12)","~sskD","<'b',","<'bPrime',","In_A","'bPrime'","AgSt_BB","AgSt_A","'b'","'zkp'","'spkDSG'","'v'","!KU( ~x","!KU( ~r","zkp(","splitEqs(12)","splitEqs(10)"]
+
+
+
+
+
+
+#j
+plist = [ [] for i in priorities ]
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+#  if lemma == "secret":
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+print 1
