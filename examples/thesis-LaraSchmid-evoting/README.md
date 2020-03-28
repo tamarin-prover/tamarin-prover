@@ -8,7 +8,7 @@ We first describe some notation and other conventions, then we list all the file
 As the models of the phone-based authentication protocols from Section 5.3 [1] require different explanations, they are in a separate folder [chapter5_HumanErrors/AuthenticationProtocols](chapter5_HumanErrors/AuthenticationProtocols) together with a [chapter5_HumanErrors/AuthenticationProtocols/README.md](README) file explaining these protocols.
 
 
-### NOTATION / CONVENTIONS:
+### NOTATION / CONVENTIONS
 
 
 #### File Types
@@ -163,7 +163,7 @@ Thereby, we use both the constant 'b' and 'bs' to denote the ballots (similarly 
 - PR7_ShHm.spthy: models the protocol Pr_7 with an honest authority and a dishonest voter
 - PR7_SmHh.spthy: models the protocol Pr_7 with a dishonest authority and an honest voter
 
-* Tamarin allows the use of "reuse lemmas", i.e., lemmas labeled with [reuse]. These lemmas are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct. The files aletheaDR_ShHh_RF.spthy and aletheaDR_ShHh_RF_reuseAsRestriction.spthy model the same protocol under the same adversary model. The only difference is that the reuse lemmas in aletheaDR_ShHh_RF.spthy are modeled as restrictions in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. We proved all reuse lemmas as well as lemmas in aletheaDR_ShHh_RF.spthy, except for observational equivalence which we proved in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. As we proved in the former that all reuse lemmas hold, we can safely use them as restriction in the latter (the reuse lemmas and restrictions exclude the same set of traces), which helps in proving the observational equivalence property.
+ \* Tamarin allows the use of "reuse lemmas", i.e., lemmas labeled with [reuse]. These lemmas are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct. The files aletheaDR_ShHh_RF.spthy and aletheaDR_ShHh_RF_reuseAsRestriction.spthy model the same protocol under the same adversary model. The only difference is that the reuse lemmas in aletheaDR_ShHh_RF.spthy are modeled as restrictions in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. We proved all reuse lemmas as well as lemmas in aletheaDR_ShHh_RF.spthy, except for observational equivalence which we proved in aletheaDR_ShHh_RF_reuseAsRestriction.spthy. As we proved in the former that all reuse lemmas hold, we can safely use them as restriction in the latter (the reuse lemmas and restrictions exclude the same set of traces), which helps in proving the observational equivalence property.
 
 ### Proof Files
 
@@ -182,7 +182,7 @@ Thereby, we use both the constant 'b' and 'bs' to denote the ballots (similarly 
 - o_aletheaDR_SmHh:	the oracle file used in the proofs of aletheaDR_SmHh.spthy
 
 
-### LIST OF FILES WITH DESCRIPTION IN [chapter5_HumanErrors](chapter5_HumanErrors/)
+### LIST OF FILES WITH DESCRIPTION IN [chapter5_HumanErrors/](chapter5_HumanErrors/)
 
 - AuthenticationProtocol/:
 	this directory contains all Tamarin files that model the different authentication protocols analyzed in Section 5.3. We refer to AuthenticationProtocol/README.txt for more details.
@@ -199,7 +199,7 @@ Thereby, we use both the constant 'b' and 'bs' to denote the ballots (similarly 
 	models the protocol HPagree from Example 7
 
 
-#### PROVING THE FILES WITH TAMARIN
+### PROVING THE FILES WITH TAMARIN
 
 In almost all protocol files, all properties can be automatically proven by Tamarin.
 The only exception are some functional properties, which we proved by hand and whose proof we provide in a proof files (see proof files listed above).
