@@ -23,7 +23,7 @@ We first present some of most important differences and then list all the files.
         but no rule has such an action.
     *****************************************************
     ```
-    Such warnings were not issued in the old version of Tamarin and can safely be ignored as they just mean that certain guidelines will not take effect (see first point in 2))
+    Such warnings were not issued in the old version of Tamarin and can safely be ignored as they just mean that certain guidelines will not take effect (see first point in 2.)
 
 2. Optimizations for the human error model:
 
