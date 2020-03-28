@@ -67,9 +67,9 @@ List of all protocol model files with description
 File				Protocol Name in Paper 		Analyzed Property
 ------------------------------------------------------------------------------------------------
 Cronto_EA.spthy			Cronto				Entity and Device Authentication	
-Cronto_MA.spthy			Cronto				Message Authentication
-Google2Step_EA.spthy		Google-2Step			Entity and Device Authentication	
-Google2Step_MA.spthy		Google-2Step			Message Authentication
+Cronto_MA.spthy			Cronto_MA			Message Authentication
+Google2Step_EA.spthy		Google 2-Step			Entity and Device Authentication	
+Google2Step_MA.spthy		Google 2-Step			Message Authentication
 MPAuth_EA.spthy			MP-Auth 			Entity and Device Authentication	
 MPAuth_MA.spthy			MP-Auth_MA			Message Authentication	
 MPAuth_MA_NoTellExceptOK.spthy	MP-Auth_MA			Func_Commit (for Lemma 55 in [1])
