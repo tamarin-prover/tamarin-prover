@@ -5,7 +5,7 @@ The directory consists of three sub-directories, respectively containing the Tam
 All files have been modeled by Lara Schmid and were successfully proved with the Tamarin prover version 1.5.1
 
 We first describe some notation and other conventions, then we list all the files in each sub-directory, and finally we describe how the protocols can be proven using Tamarin.
-As the models of the phone-based authentication protocols from Section 5.3 [1] require different explanations, they are in a separate folder [chapter5_HumanErrors/AuthenticationProtocols](chapter5_HumanErrors/AuthenticationProtocols) together with a [chapter5_HumanErrors/AuthenticationProtocols/README.md](README) file explaining these protocols.
+As the models of the phone-based authentication protocols from Section 5.3 [1] require different explanations, they are in a separate folder [chapter5_HumanErrors/AuthenticationProtocols](chapter5_HumanErrors/AuthenticationProtocols) together with a [README](chapter5_HumanErrors/AuthenticationProtocols/README.md) file explaining these protocols.
 
 
 ### NOTATION / CONVENTIONS
