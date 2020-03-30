@@ -70,6 +70,7 @@ data TransAction =  InitEmpty
   | UnlockUnnamed SapicTerm LVar
   | UnlockNamed SapicTerm LVar
   | TamarinAct LNFact
+  | Report LVar LVar
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -97,15 +98,18 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
+    , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
 -- | applies function acting on rule taple on annotated rule.
-mapAct :: (([TransFact], [TransAction], [TransFact])
-           -> ([TransFact], [TransAction], [TransFact]))
+mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
+           -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
-mapAct f anrule = let (l',a',r') = f (prems anrule, acts anrule, concs anrule) in
-                  anrule { prems = l', acts = a', concs = r'  }
+mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
+                                           concs anrule, restr anrule) 
+                  in
+                  anrule { prems = l', acts = a', concs = r', restr = res' }
 
 isSemiState :: StateKind -> Bool
 isSemiState LState = False
@@ -191,6 +195,7 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
+actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
@@ -279,7 +284,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s

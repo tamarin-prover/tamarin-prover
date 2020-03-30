@@ -22,6 +22,7 @@ import qualified Data.List as List
 import Theory
 import Theory.Sapic
 import Theory.Sapic.Print
+import Data.Label
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -50,6 +51,7 @@ data SapicException a = NotImplementedError String
                     | RuleNameExists String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
+                    | CannotExpandPredicate FactTag SyntacticRestriction
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
@@ -84,4 +86,9 @@ instance Show (SapicException a) where
                    "Process " ++ prettySapic pr ++ " contains lock that extends over " 
                    ++ prettyWFLockTag tag ++ " which is not allowed."
     show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
+    show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
+                              ++ showFactTagArity facttag
+                              ++ " in definition of predicate: "
+                              ++ get rstrName rstr
+                              ++ "."
 instance (Typeable a, Show a) => Exception (SapicException a)

@@ -700,6 +700,7 @@ sapicRanking ctxt sys =
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
         , isStandardActionGoalButNotInsertOrReceive  . fst
+        , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         -- , isFreshKnowsGoal . fst

@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -17,14 +18,21 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
+  -- * Formulas
+    expandFormula
+
   -- * Restrictions
-    Restriction(..)
+  , ProtoRestriction(..)
+  , Restriction
+  , SyntacticRestriction
   , RestrictionAttribute(..)
   , rstrName
   , rstrFormula
+  , expandRestriction
 
   -- * Processes
   , ProcessDef(..)
+  , SapicElement(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
@@ -37,6 +45,7 @@ module Theory (
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
+  , transReport
   , thyOptions
   , setOption
 
@@ -49,6 +58,8 @@ module Theory (
   , LemmaAttribute(..)
   , TraceQuantifier(..)
   , Lemma
+  , SyntacticLemma
+  , ProtoLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -66,6 +77,7 @@ module Theory (
 --   , isBothLemma
   , addLeftLemma
   , addRightLemma
+  , expandLemma
 
   -- * Theories
   , Theory(..)
@@ -119,6 +131,7 @@ module Theory (
 
   -- ** Open theories
   , OpenTheory
+  , OpenTheoryItem
   , OpenTranslatedTheory
   , OpenDiffTheory
   , removeSapicItems
@@ -148,6 +161,7 @@ module Theory (
   , openTranslatedTheory
   , openDiffTheory
 
+  , OpenProtoRule
   , ClosedProtoRule(..)
 
   , getLemmas
@@ -419,13 +433,22 @@ data RestrictionAttribute =
 
 -- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
-data Restriction = Restriction
+data ProtoRestriction f = Restriction
        { _rstrName    :: String
-       , _rstrFormula :: LNFormula
+       , _rstrFormula :: f
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Generic )
 
-$(mkLabels [''Restriction])
+type Restriction = ProtoRestriction LNFormula
+type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
+
+deriving instance Eq Restriction
+deriving instance Ord Restriction
+deriving instance Show Restriction
+deriving instance NFData Restriction
+deriving instance Binary Restriction
+
+$(mkLabels [''ProtoRestriction])
 
 ------------------------------------------------------------------------------
 -- Processes
@@ -446,7 +469,7 @@ $(mkLabels [''ProcessDef])
 ------------------------------------------------------------------------------
 
 data Predicate = Predicate
-        { _pFact            :: LNFact
+        { _pFact            :: Fact LVar
         , _pFormula         :: LNFormula
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -465,6 +488,7 @@ data Option = Option
           _transAllowPatternMatchinginLookup   :: Bool
         , _transProgress            :: Bool
         , _transReliable            :: Bool
+        , _transReport            :: Bool
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -495,16 +519,25 @@ data TraceQuantifier = ExistsTrace | AllTraces
 
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
-data Lemma p = Lemma
+data ProtoLemma f p = Lemma
        { _lName            :: String
        , _lTraceQuantifier :: TraceQuantifier
-       , _lFormula         :: LNFormula
+       , _lFormula         :: f
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+       deriving( Generic)
 
-$(mkLabels [''Lemma])
+type Lemma = ProtoLemma LNFormula
+type SyntacticLemma = ProtoLemma SyntacticLNFormula
+
+deriving instance Eq p => Eq (Lemma p)
+deriving instance Ord p => Ord (Lemma p)
+deriving instance Show p => Show (Lemma p)
+deriving instance NFData p => NFData (Lemma p)
+deriving instance Binary p => Binary  (Lemma p)
+
+$(mkLabels [''ProtoLemma])
 
 -- | A diff lemma describes a correspondence property that holds in the context of a theory
 -- together with a proof of its correctness.
@@ -570,12 +603,12 @@ isSourceLemma lem =
   && (SourceLemma `elem` L.get lAttributes lem)
 
 -- | True iff the lemma is a LHS lemma.
-isLeftLemma :: Lemma p -> Bool
+isLeftLemma :: ProtoLemma f p -> Bool
 isLeftLemma lem =
      (LHSLemma `elem` L.get lAttributes lem)
 
 -- | True iff the lemma is a RHS lemma.
-isRightLemma :: Lemma p -> Bool
+isRightLemma :: ProtoLemma f p -> Bool
 isRightLemma lem =
      (RHSLemma `elem` L.get lAttributes lem)
 
@@ -592,8 +625,7 @@ unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
               -> Lemma ProofSkeleton
 unprovenLemma name atts qua fm = Lemma name qua fm atts (unproven ())
 
-skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
-              -> ProofSkeleton -> Lemma ProofSkeleton
+skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> f -> p -> ProtoLemma f p
 skeletonLemma name atts qua fm = Lemma name qua fm atts
 
 -- | Create a new unproven diff lemma.
@@ -612,12 +644,12 @@ lemmaSourceKind lem
   | otherwise                                = RefinedSource
 
 -- | Adds the LHS lemma attribute.
-addLeftLemma :: Lemma p -> Lemma p
+addLeftLemma :: ProtoLemma f p -> ProtoLemma f p
 addLeftLemma lem =
      L.set lAttributes (LHSLemma:(L.get lAttributes lem)) lem
 
 -- | Adds the RHS lemma attribute.
-addRightLemma :: Lemma p -> Lemma p
+addRightLemma :: ProtoLemma f p -> ProtoLemma f p
 addRightLemma lem =
      L.set lAttributes (RHSLemma:(L.get lAttributes lem)) lem
 
@@ -695,6 +727,9 @@ $(mkLabels [''DiffTheory])
 --   1. Lemma names are unique.
 type OpenTheory =
     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton SapicElement
+
+type OpenTheoryItem = TheoryItem OpenProtoRule ProofSkeleton SapicElement
+
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
@@ -871,7 +906,7 @@ theoryProcessDefs = foldSapicItem (const []) return <=< sapicElements
   where sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return  <=< L.get thyItems
 
 -- | All process definitions of a theory.
-theoryPredicates :: Theory sig c r p SapicElement -> [Predicate]
+theoryPredicates :: Theory sig c r p s -> [Predicate]
 theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All restrictions of a theory.
@@ -899,7 +934,46 @@ diffTheoryDiffLemmas :: DiffTheory sig c r r2 p p2 -> [DiffLemma p]
 diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
-    -- | Add a new restriction. Fails, if restriction with the same name exists.
+-- | expand predicaates in formalua with those defined in theory. If this
+-- fails, return FactTag of the predicate we could not find.
+expandFormula :: Theory sig c r p s
+                    -> SyntacticLNFormula
+                    -> Either FactTag LNFormula
+expandFormula thy = traverseFormulaAtom f
+  where
+        f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
+        f x | Syntactic (Pred fa)   <- x
+            , Just pr <- lookupPredicate fa thy
+              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr)
+
+            | (Syntactic (Pred fa))   <- x
+            , Nothing <- lookupPredicate fa thy = Left $ factTag fa
+
+            | otherwise = return $ Ato $ toAtom x
+        apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula
+        apply' subst = mapAtoms (\i a -> fmap (applyVTerm $ subst i) a)
+        compSubst (Fact _ _ ts1) (Fact _ _ ts2) i = substFromList $ zip ts1' ts2'
+        -- ts1 varTerms that are free in the predicate definition
+        -- ts2 terms used in reference, need to add the number of quantifiers we added
+        -- to correctly dereference.
+            where
+                  ts1':: [BVar LVar]
+                  ts1' = map Free ts1
+                  ts2' = map (fmap $ fmap up) ts2
+                  up (Free v) = Free v
+                  up (Bound i') = Bound $ i' + i
+
+
+expandRestriction :: Theory sig c r p s -> ProtoRestriction SyntacticLNFormula
+    -> Either FactTag (ProtoRestriction LNFormula)
+expandRestriction thy (Restriction n f) =  (Restriction n) <$> expandFormula thy f
+
+expandLemma :: Theory sig c r p1 s
+               -> ProtoLemma SyntacticLNFormula p2
+               -> Either FactTag (ProtoLemma LNFormula p2)
+expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormula thy f
+
+-- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addRestriction l thy = do
     guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
@@ -1024,8 +1098,11 @@ lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the predicate with the fact name.
-lookupPredicate :: LNFact -> Theory sig c r p SapicElement -> Maybe (Predicate)
-lookupPredicate fact = find ((fact ==) . L.get pFact) . theoryPredicates
+lookupPredicate :: Fact t  -> Theory sig c r p s -> Maybe (Predicate)
+lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
+    where
+        sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
+
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -1062,7 +1139,7 @@ addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False
+defaultOption = Option False False False False
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
@@ -1115,14 +1192,15 @@ lookupOpenDiffProtoDiffRule name =
     find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
 
 -- | Add new protocol rules. Fails, if a protocol rule with the same name
--- exists.
+-- exists. Ignore _restrict construct.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
     guard nameNotUsedForDifferentRule
     return $ modify thyItems (++ [RuleItem ruE]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
+        maybe True (ruE ==) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
+
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
@@ -1916,9 +1994,9 @@ prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
-prettyPredicate p = text (factstr ++ "<->" ++ formulastr)
+prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)
     where
-        factstr = render $ prettyLNFact $ L.get pFact p
+        factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => Process -> d
@@ -1969,6 +2047,7 @@ prettyLemmaName l = case L.get lAttributes l of
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
+
 
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d
