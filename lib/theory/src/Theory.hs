@@ -333,6 +333,27 @@ openRuleCache = intruderRules . L.get crcRules
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
 openProtoRule = L.get cprRuleE
 
+-- | Unfold rule variants, i.e., return one ClosedProtoRule for each
+-- variant
+unfoldRuleVariants :: ClosedProtoRule -> [ClosedProtoRule]
+unfoldRuleVariants (ClosedProtoRule ruE@(Rule (ProtoRuleEInfo rEName rEAttrs) _ _ _ _) ruAC@(Rule ruACInfoOld ps cs as nvs))
+   | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
+   | otherwise = map toClosedRule variants
+        where
+          ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
+          rAttributes = L.get pracAttributes ruACInfoOld
+          loopBreakers = L.get pracLoopBreakers ruACInfoOld
+          ruEInfo i = ProtoRuleEInfo (rName i rEName) rEAttrs
+          rName i oldName = case oldName of
+            FreshRule -> FreshRule
+            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
+
+          toClosedRule (i, (ps', cs', as', nvs'))
+            = ClosedProtoRule (Rule (ruEInfo i) ps' cs' as' nvs')
+                (Rule (ruACInfo i) ps' cs' as' nvs')
+          variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
+          substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
+
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
@@ -414,6 +435,10 @@ containsPartialDeconstructions :: ClosedRuleCache    -- ^ Cached rules and case 
                      -> Bool               -- ^ Result
 containsPartialDeconstructions (ClosedRuleCache _ _ cases _) =
       sum (map (sum . unsolvedChainConstraints) cases) /= 0
+
+addActionClosedProtoRule :: ClosedProtoRule -> LNFact -> ClosedProtoRule
+addActionClosedProtoRule (ClosedProtoRule e ac) f
+   = ClosedProtoRule (addAction e f) (addAction ac f)
 
 ------------------------------------------------------------------------------
 -- Restrictions (Trace filters)
@@ -930,8 +955,8 @@ addAutoSourcesLemmaDiff :: MaudeHandle
                         -> String
                         -> ClosedRuleCache
                         -> ClosedRuleCache
-                        -> [DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton]
-                        -> [DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton]
+                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
 addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
     diffPart ++ lhsPart ++ rhsPart
   where
@@ -977,8 +1002,8 @@ addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
 addAutoSourcesLemma :: MaudeHandle
                     -> String
                     -> ClosedRuleCache
-                    -> [TheoryItem OpenProtoRule ProofSkeleton s]
-                    -> [TheoryItem OpenProtoRule ProofSkeleton s]
+                    -> [TheoryItem ClosedProtoRule IncrementalProof s]
+                    -> [TheoryItem ClosedProtoRule IncrementalProof s]
 addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
   -- We only add the lemma if there is no lemma of the same name
   case find lemma items of
@@ -992,16 +1017,16 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     lemma _                                                    = False
 
     -- build the lemma
-    l = unprovenLemma lemmaName [SourceLemma] AllTraces formula
+    l = fmap skeletonToIncrementalProof $ unprovenLemma lemmaName [SourceLemma] AllTraces formula
 
     -- extract all rules from theory items
     rules = mapMaybe itemToRule items
 
     -- compute all encrypted subterms that are output by protocol rules
-    allOutConcs :: [(OpenProtoRule, ConcIdx, Int, LNTerm)]
+    allOutConcs :: [(ClosedProtoRule, ConcIdx, Int, LNTerm)]
     allOutConcs = do
         ru                                   <- rules
-        (cidx, protoOrOutFactView -> Just t) <- enumConcs ru
+        (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
         (nr, m)                              <- zip [1::Int ..] $ concatMap allEncSubterms t
         return (ru, cidx, nr, m)
 
@@ -1014,9 +1039,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 
     -- Given a list of theory items, a formula, a source with an open chain,
     -- return an updated list of theory items and an update formula for the sources lemma.
-    computeFormula :: ([TheoryItem OpenProtoRule ProofSkeleton s], LNFormula, [(OpenProtoRule, Position)])
+    computeFormula :: ([TheoryItem ClosedProtoRule IncrementalProof s], LNFormula, [(ClosedProtoRule, Position)])
                    -> (Int, ((NodeConc, NodePrem), System))
-                   -> ([TheoryItem OpenProtoRule ProofSkeleton s], LNFormula, [(OpenProtoRule, Position)])
+                   -> ([TheoryItem ClosedProtoRule IncrementalProof s], LNFormula, [(ClosedProtoRule, Position)])
     computeFormula (its, form, done) (nr, ((conc,_), source)) = (its', form', done')
       where
         -- The new items are the old ones but with added labels
@@ -1030,14 +1055,14 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         v     = head $ getFactTerms $ nodeConcFact conc source
 
         -- Compute all rules that contain v, and the position of v inside the input term
-        inputRules :: [(OpenProtoRule, LNTerm, Position)]
+        inputRules :: [(ClosedProtoRule, LNTerm, Position)]
         inputRules = concat $ mapMaybe g $ allPrems source
           where
             g (nodeid, pid, tidx, term) = do
               position  <- findPos v term
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
-              premise   <- lookupPrem pid rule
+              premise   <- lookupPrem pid $ L.get cprRuleE rule
               t'        <- protoOrInFactView premise
               t         <- atMay t' tidx
               return $ do
@@ -1047,7 +1072,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 return (rule, t, pos)
 
         -- a list of all encrypted input subterms to unify
-        encryptedSubterms :: [(OpenProtoRule, LNTerm, LNTerm, Position)]
+        encryptedSubterms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
         encryptedSubterms = mapMaybe f inputRules
           where
             f (x, y, z) = do
@@ -1068,7 +1093,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
-        inputsAndOutputs :: [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)])]
+        inputsAndOutputs :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
         inputsAndOutputs = do
             -- iterate over all inputs
             (rin, tin, vin, pos) <- encryptedSubterms
@@ -1088,20 +1113,23 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 
         -- construct action facts for the rule annotations and formula
         inputFact k r m n = Fact {factTag = ProtoFact Linear
-              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName r) 2,
+              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleE r)) 2,
               factAnnotations = S.empty, factTerms = [m, n]}
         outputFact k c r m = Fact {factTag = ProtoFact Linear
-              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName r) 1,
+              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleE r)) 1,
               factAnnotations = S.empty, factTerms = [m]}
 
         -- add labels to rules for typing lemma
+        addLabels :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
+                  -> [TheoryItem ClosedProtoRule IncrementalProof s]
+                  -> [TheoryItem ClosedProtoRule IncrementalProof s]
         addLabels matches = map update
           where
             update (RuleItem r) = RuleItem $ foldr up r $
                    filter ((ruleName r ==). ruleName . fst) acts
               where
-                up (n, Left (k, y, z)) r' = addAction r' (inputFact k n y z)
-                up (n, Right (k, cidx, y))   r' = addAction r' (outputFact k cidx n y)
+                up (n, Left (k, y, z))     r' = addActionClosedProtoRule r' (inputFact k n y z)
+                up (n, Right (k, cidx, y)) r' = addActionClosedProtoRule r' (outputFact k cidx n y)
             update it           = it
 
             acts = inputActs ++ outputActs
@@ -1112,13 +1140,13 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 
         -- add formula to lemma
         addFormula ::
-             [(OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)])]
+             [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
           -> LNFormula
           -> LNFormula
         addFormula matches f = foldr addForm f $ zip [1..] matches
           where
             addForm ::
-                 (Int, (OpenProtoRule, LNTerm, LNTerm, Position, [(OpenProtoRule, ConcIdx, Int, LNTerm)]))
+                 (Int, (ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)]))
               -> LNFormula
               -> LNFormula
             addForm (k, (n, _, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
@@ -1736,15 +1764,13 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
 
-    modifiedTheoryItems = addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft items) (cacheRight items) theoryItems
+    itemsModAC = unfoldRules items
 
-    -- Close all theory items: in parallel (especially useful for variants)
-    --
-    -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
-    -- and therefore no constraint systems will be unnecessarily cached.
-    (items', _solveRel', _breakers') = (`runReader` hnd) $ addSolvingLoopBreakers
-      ((closeDiffTheoryItem <$> modifiedTheoryItems) `using` parList rdeepseq)
+    unfoldRules (EitherRuleItem (s,r):is) = map (\x -> EitherRuleItem (s,x)) (unfoldRuleVariants r) ++ unfoldRules is
+    unfoldRules                    (i:is) = i:unfoldRules is
+    unfoldRules                        [] = []
 
+    items' = addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
 
     -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
@@ -1768,8 +1794,8 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
         (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
         addBreakers
       where
-        liftToItem f (EitherRuleItem (_, ru)) = (f ru)
-        liftToItem _ _                   = []
+        liftToItem f (EitherRuleItem (_, ru)) = f ru
+        liftToItem _ _                        = []
 
         addBreakers bs (EitherRuleItem (s, ru)) =
             EitherRuleItem (s, L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
@@ -1813,14 +1839,13 @@ closeTheoryWithMaude sig thy0 autoSources =
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
 
-    modifiedTheoryItems = addAutoSourcesLemma hnd lemmaName (cache items) $ L.get thyItems thy0
+    itemsModAC = unfoldRules items
 
-    -- Close all theory items: in parallel (especially useful for variants)
-    --
-    -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
-    -- and therefore no constraint systems will be unnecessarily cached.
-    (items', _solveRel', _breakers') = (`runReader` hnd) $ addSolvingLoopBreakers
-       ((closeTheoryItem <$> modifiedTheoryItems) `using` parList rdeepseq)
+    unfoldRules (RuleItem r:is) = map RuleItem (unfoldRuleVariants r) ++ unfoldRules is
+    unfoldRules          (i:is) = i:unfoldRules is
+    unfoldRules              [] = []
+
+    items' = addAutoSourcesLemma hnd lemmaName (cache itemsModAC) itemsModAC
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
