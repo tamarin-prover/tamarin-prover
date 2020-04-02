@@ -1,13 +1,13 @@
+{-# LANGUAGE DeriveAnyClass       #-}
 {-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE PatternGuards        #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TupleSections        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2020 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -28,41 +28,41 @@ module Theory.Model.Restriction (
   , fromRuleRestriction
 ) where
 
-import           Prelude                             hiding (id)
-import           GHC.Generics                        (Generic)
+import           Control.DeepSeq
 import qualified Control.Monad.State           as State
 import           Control.Monad.Trans.FastFresh (evalFreshT)
-import           Control.DeepSeq
-import           Extension.Data.Label                hiding (get)
+import           Extension.Data.Label          hiding (get)
+import           GHC.Generics                  (Generic)
+import           Prelude                       hiding (id)
 -- import qualified Extension.Data.Label                as L
 import qualified Data.List                     as L
+import qualified Data.Map                      as M
 import qualified Data.Set                      as S
-import qualified Data.Map                   as M
 import           Term.LTerm
 -- import           Term.Unification
-import           Theory.Model.Atom
-import           Theory.Model.Formula
-import           Theory.Model.Fact
+import           Term.Substitution
 import           Data.Binary
+import           Theory.Model.Atom
+import           Theory.Model.Fact
+import           Theory.Model.Formula
 
 ------------------------------------------------------------------------------
 -- Restrictions (Trace filters)
 ------------------------------------------------------------------------------
 
 -- | An attribute for a 'Restriction'.
-data RestrictionAttribute =
-         LHSRestriction
-       | RHSRestriction
-       | BothRestriction
-       deriving( Eq, Ord, Show )
+data RestrictionAttribute = LHSRestriction
+    | RHSRestriction
+    | BothRestriction
+    deriving (Eq, Ord, Show)
 
 -- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
 data ProtoRestriction f = Restriction
-       { _rstrName    :: String
-       , _rstrFormula :: f
-       }
-       deriving( Generic )
+    { _rstrName    :: String
+    , _rstrFormula :: f
+    }
+    deriving (Generic)
 
 type Restriction = ProtoRestriction LNFormula
 type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
@@ -85,54 +85,55 @@ varNow :: LVar
 varNow = LVar "NOW" LSortNode 0
 
 -- | rewrite f so all formulas with free variables are substituted by fresh
--- free variables.  | output modified formula and substitution
--- rewrite :: Traversable syn2 =>
---            ProtoFormula syn2 s c2 LVar
---            -> (ProtoFormula syn2 s c2 LVar, M.Map LVar (VTerm c2 (BVar LVar)))
+-- | free variables.  outputs modified formula and substitution
+rewrite :: Traversable syn2 =>
+           ProtoFormula syn2 s c2 LVar
+           -> (ProtoFormula syn2 s c2 LVar,
+               M.Map LVar (Term (Lit c2 LVar)))
 rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
     where
-                -- fAt' ::ProtoAtom syn1 (VTerm Name (BVar v1))
-                --     -> State.StateT (Subst c v) Identity (ProtoFormula syn2 s c2 LNTerm)
                 fAt' atom = Ato <$> traverse fAt atom
-                -- fAt :: State.MonadState (Subst c v) m => LNTerm -> m LNTerm
-                fAt t -- traverse into term and substitute all subterms 
+                fAt t -- traverse into term and substitute all subterms
                    |  Lit (Var bv) <- viewTerm t , isFree bv   = substitute t
-                   |  Lit (Var bv) <- viewTerm t               = return t
-                   |  FApp _ as    <- viewTerm t 
-                    , any containsFree as 
+                   |  Lit (Var _ ) <- viewTerm t               = return t
+                   |  FApp _ as    <- viewTerm t
+                    , any containsFree as
                     , all (not . containsBound) as             = substitute t
-                   |  FApp fs as    <- viewTerm t 
-                    , any containsFree as 
+                   |  FApp fs as    <- viewTerm t
+                    , any containsFree as
                     , any containsBound as                     = do
                                 as' <- traverse fAt as
                                 return $ termViewToTerm $ FApp fs as'
                                     -- here we have a problem with reducible symbols
                    | otherwise                                 = return t
-                   where 
-                    substitute t = do
-                                v <- freshLVar "par" LSortMsg
+                   where
+                    substitute t' = do
+                                v <- freshLVar "x" LSortMsg
                                 m <- State.get
-                                State.put (M.insert v t m)
+                                let t'' =  fmap (fmap fromFree) t'
+                                -- remove bvar
+                                State.put (M.insert v t'' m)
                                 return $ varTerm  $ Free v
-                -- (f,emptySubst)
                 containsVar p t = case viewTerm t of
                     Lit (Var bv) -> p bv
-                    Lit _               -> False
-                    FApp _ as           -> any containsFree as 
+                    Lit _        -> False
+                    FApp _ as    -> any containsFree as
                 containsFree  = containsVar isFree
                 containsBound = containsVar (not . isFree)
                 isFree (Bound _) = False
-                isFree (Free  _) = True
-
+                isFree (Free  v) = if v == varNow then False
+                                   else True
 
 -- | From f, create restriction with rname and an action to insert in some protocol rule
--- fromRuleRestriction :: (Show a, HasFrees t) =>
---                        String
---                        -> p
---                        -> ((Int, LNFormula) -> Restriction, (a, t) -> Fact (VTerm c LVar))
-fromRuleRestriction :: String -> LNFormula -> (Restriction, Fact (VTerm c LVar))
+fromRuleRestriction :: String -> LNFormula -> (Restriction, Fact LNTerm)
+-- fromRuleRestriction :: (Apply (VTerm c LVar), Traversable syn2,
+--                         HasFrees (ProtoFormula syn2 (String, LSort) Name LVar)) =>
+--                        [Char]
+--                        -> ProtoFormula syn2 (String, LSort) Name LVar
+--                        -> (ProtoRestriction (ProtoFormula syn2 (String, LSort) Name LVar),
+--                            Fact (VTerm c LVar))
 fromRuleRestriction rname f =
-                (mkRestriction,  mkFact getVarTerms f)
+                (mkRestriction,  mkFact (getVarTerms $ rewrSubst f) f)
             where
                 --- canot handle predicates with reducible function symbols
                 -- what we should do:
@@ -153,16 +154,14 @@ fromRuleRestriction rname f =
                                             facts = mkFact getBVarTerms
 
 
-                rewrF = fst . rewrite -- rewritten formula
-                -- rewrSubst = snd . rewrite -- substitution
-
+                rewrF     = fst . rewrite -- rewritten formula
+                rewrSubst = substFromMap . snd . rewrite -- rewritten formula
                 frees' formula = frees formula `L.union` [varNow]
-
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
-                getVarTerms =   map (varTerm) . frees 
+                getVarTerms subst =   map (varTerm . apply subst) . L.delete varNow . freesList
                 mkFact  getTerms formula  =
-                        protoFactAnn 
-                            Linear ("_rstr_"++ rname) 
+                        protoFactAnn
+                            Linear ("restr_"++ rname)
                             S.empty  -- no annotations
-                            (getTerms formula) -- TODO apply substitution
-                            -- (apply (rewrSubst f) getTerms f) -- does not work need to get expanded formula
+                            -- (getTerms formula) -- TODO apply substitution
+                            ( (getTerms formula)) -- does not work need to get expanded formula
