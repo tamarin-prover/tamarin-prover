@@ -368,7 +368,8 @@ feature-locations/licensing.spthy \
 feature-locations/SOC.spthy \
 feature-locations/OTP.spthy \
 feature-locations/AC_counter_with_attack.spthy \
-feature-locations/AC_sid_with_attack.spthy
+feature-locations/AC_sid_with_attack.spthy \
+feature-ass-immediate/test-all.spthy 
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
 SAPIC_CASE_STUDIES_SLOW= encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \

@@ -78,7 +78,7 @@ translate th = case theoryProcesses th of
                         , checkOps transReliable (RCT.reliableChannelInit anP)
                         , checkOps transReport (reportInit anP)
                       ]
-    trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+    trans anP = foldr ($) (BT.baseTrans needsAssImmediate)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
@@ -88,20 +88,21 @@ translate th = case theoryProcesses th of
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
-                                                                -- if op.accountability then
-                                                                  --   (* if an accountability lemma with control needs to be shown, we use a
-                                                                  --    * more complex variant of the restritions, that applies them to only one execution *)
-                                                                  --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
-                                                                  --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                -- else
-                                                                  --   restrs
-                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP True] ++
+                                                                 -- if op.accountability then
+                                                                 --   (* if an accountability lemma with control needs to be shown, we use a
+                                                                 --    * more complex variant of the restritions, that applies them to only one execution *)
+                                                                 --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+                                                                 --   @ (if op.progress then [progress_init_lemma_acc] else [])
+                                                                 -- else
+                                                                 --   restrs
+                                                                 --    @ (if op.progress then [progress_init_lemma] else [])
+                        $ [BT.baseRestr anP needsAssImmediate True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
+    needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
@@ -172,3 +173,31 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp
         handler _ e = throw e
+
+
+isPosNegFormula :: LNFormula -> (Bool, Bool)
+isPosNegFormula fm = case fm of
+    TF  _            -> (True, True)
+    Ato (Action _ f) -> isActualKFact $ factTag f
+    Ato _            -> (True, True)
+    Not p            -> not2 $ isPosNegFormula p
+    Conn And p q     -> isPosNegFormula p `and2` isPosNegFormula q
+    Conn Or  p q     -> isPosNegFormula p `and2` isPosNegFormula q
+    Conn Imp p q     -> isPosNegFormula $ Not p .||. q
+    Conn Iff p q     -> isPosNegFormula $ p .==>. q .&&. q .==>. p
+    Qua  _   _ p     -> isPosNegFormula p
+    where
+      isActualKFact (ProtoFact _ "K" _) = (True, False)
+      isActualKFact _ = (True, True)
+
+      and2 (x, y) (p, q) = (x && p, y && q)
+      not2 (x, y) = (not x, not y)
+
+
+checkAssImmediate :: Lemma p -> Bool
+checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
+  (AllTraces,   (_, True))     -> True  -- L- for all-traces
+  (ExistsTrace, (True, _))     -> True  -- L+ for exists-trace
+  (ExistsTrace, (False, True)) -> False -- L- for exists-trace
+  (AllTraces,   (True, False)) -> False -- L+ for all-traces
+  _                            -> False -- not in L- and L+ should not be possible
