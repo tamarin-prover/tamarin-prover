@@ -70,12 +70,6 @@ translate th = case theoryProcesses th of
     bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr) 
     bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p) 
     bindings (ProcessNull _) = [[]]
-    -- bindings = foldProcess undefined undefined undefined gA gC () 
-    -- gA = a' 
-    -- -- (\_ _ -> [a])
-    -- --                        (\a _ ac -> a ++ bindingsAct ac)
-    -- --                        (\a _ c  -> bindingsComb (\a' _ _ _ -> )
-
     bindingsComb (Lookup _ v) = [v]
     bindingsComb _            = []
     bindingsAct (New v) = [v]
@@ -83,6 +77,7 @@ translate th = case theoryProcesses th of
 
     allUnique = all ( (==) 1 . length) . List.group . List.sort
     repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
+
     ops = L.get thyOptions th
     translateReport anp =
       if L.get transReport ops then
