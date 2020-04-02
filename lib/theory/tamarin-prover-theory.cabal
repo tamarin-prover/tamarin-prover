@@ -94,7 +94,7 @@ library
       Theory.Model.Formula
       Theory.Model.Rule
       Theory.Model.Signature
-
+      Theory.Model.Restriction
 
       Theory.Text.Pretty
       Theory.Text.Parser
