@@ -130,28 +130,25 @@ rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
 --    All #now u v . rname(u,v)@now => u = v 
 --    and
 --    ranme(f(x,y), z)
+--
 fromRuleRestriction :: String -> LNFormula -> (Restriction, Fact LNTerm)
 fromRuleRestriction rname f =
-                (mkRestriction,  mkFact (getVarTerms $ rewrSubst f) f)
+                ( mkRestriction (rewrF f)
+                , mkFact $ getVarTerms (rewrSubst f) $ rewrF f)
             where
                 -- creates restriction with f quantified over free variables
                 -- and varnow
-                mkRestriction = Restriction
+                mkRestriction f' = Restriction
                                         ("restr_"++ rname)
-                                        (foldr (hinted forall) f'' (frees' f'))
+                                        (foldr (hinted forall) f'' (frees f''))
                                         where
-                                            f'' = Ato (Action timepoint (facts f')) .==>. f'
-                                            f' = rewrF f
+                                            f'' = Ato (Action timepoint fact) .==>. f'
                                             timepoint = varTerm $ Free varNow
-                                            facts = mkFact getBVarTerms
+                                            fact = mkFact (getBVarTerms f')
 
-                rewrF     = fst . rewrite -- rewritten formula
+                rewrF     = fst . rewrite                -- rewritten formula
                 rewrSubst = substFromMap . snd . rewrite -- substitution from rewritten formula
-                frees' formula = frees formula `L.union` [varNow]
-                getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
-                getVarTerms subst =   map (varTerm . apply subst) . L.delete varNow . freesList
-                mkFact  getTerms formula  =
-                        protoFactAnn
-                            Linear ("restr_"++ rname)
-                            S.empty  -- no annotations
-                            (getTerms formula)
+                getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
+                getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
+                -- produce fact from set of terms
+                mkFact ts  = protoFactAnn Linear ("restr_"++ rname) S.empty ts
