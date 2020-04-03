@@ -359,7 +359,7 @@ SCADA/opc_ua_secure_conversation.spthy \
 feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy \
-feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
+feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy feature-predicates/pub.spthy feature-predicates/simple_example.spthy feature-predicates/binding.spthy \
 feature-predicates/binding.spthy \
 feature-let-bindings/let-blocks.spthy \
 feature-locations/AC.spthy \
