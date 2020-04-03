@@ -194,7 +194,7 @@ subtermIntruderRules diff maudeSig =
 -- function signature @fSig@
 constructionRules :: NoEqFunSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (s,(k,Public,_)) <- S.toList fSig ]
+    [ createRule s k | (s,(k,Public,Constructor)) <- S.toList fSig ]
   where
     createRule s k = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact] [concfact] []
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]

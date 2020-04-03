@@ -68,11 +68,16 @@ parseLSortSym s = case s of
 -- | Used to prevent clashes with predefined Maude function symbols
 --   like @true@
 funSymPrefix :: ByteString
-funSymPrefix = "tamX"
+funSymPrefix = "tam"
 
--- | Prefix for private function symbols.
-funSymPrefixPriv :: ByteString
-funSymPrefixPriv = "tamP"
+-- | Suffix for attributes
+funSymSuffix priv constr  = f priv <> g constr
+    where
+        f Private = "P"
+        f Public  = "X"
+        g Constructor = ""
+        g Destructor = "D"
+         
 
 -- | Replace underscores "_" with minus "-" for Maude.
 replaceUnderscore :: ByteString -> ByteString
@@ -106,8 +111,7 @@ ppMaudeACSym o =
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,Private,_)) = funSymPrefixPriv <> replaceUnderscore o
-ppMaudeNoEqSym (o,(_,Public,_))  = funSymPrefix     <> replaceUnderscore o
+ppMaudeNoEqSym (o,(_,prv,cnstr))  = funSymPrefix <> funSymSuffix prv cnstr <> replaceUnderscore o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -187,11 +191,11 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    theoryOpNoEq priv fsort =
-        "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
+    theoryOpNoEq priv cnstr fsort =
+        "  op " <> funSymPrefix <> funSymSuffix priv constr <> fsort <>" ."
     theoryOp = theoryOpNoEq Public
-    theoryFunSym (s,(ar,priv,_)) =
-        theoryOpNoEq priv (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+    theoryFunSym (s,(ar,priv,cnstr)) =
+        theoryOpNoEq priv cnstr (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -284,8 +288,11 @@ parseTerm msig = choice
             special        = ident `elem` ["list", "cons", "nil" ]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
                                then Private else Public
+                               Destructor
+            -- TODO decode, see funSymSuffix above
+            constr         = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
             op             = (if special then ident else BC.drop prefixLen ident
-                             , ( length args, priv, Constructor))
+                             , ( length args, priv, cnstr))
             allowedfunSyms = [consSym, nilSym]
                 ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
