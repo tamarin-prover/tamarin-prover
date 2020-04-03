@@ -1,0 +1,21 @@
+theory pubInRestr
+begin
+
+predicates:
+  	True(x) <=> x='true'
+
+// Test if we can have public names in predicates used in restrictions.
+// Fixed a bug in the parser that disallowed this legitimate use.
+
+in(x);
+/* if True(x) then 0 */
+if True('true') then 0
+
+rule testA:
+    [] --[_restrict(True('true'))]-> [] 
+
+rule testB:
+    [In(x)] --[_restrict(True(x))]-> [] 
+
+end
+

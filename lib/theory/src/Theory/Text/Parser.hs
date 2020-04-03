@@ -496,7 +496,7 @@ blatom :: Parser (SyntacticAtom BLTerm)
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact (varTerm <$> lvar))                    <?> "predicate atom"
+  , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
