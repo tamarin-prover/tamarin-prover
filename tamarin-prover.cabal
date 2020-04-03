@@ -110,7 +110,7 @@ executable tamarin-prover
     
     -- -XFlexibleInstances
 
-    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing
+    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
     ghc-prof-options:  -auto-all
 
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
@@ -127,6 +127,7 @@ executable tamarin-prover
       , base
       , binary
       , binary-orphans
+      , binary-instances
       , blaze-builder
       , blaze-html
       , bytestring
@@ -165,7 +166,7 @@ executable tamarin-prover
     other-modules:
       Paths_tamarin_prover
 
-      Main
+      -- Main
       Main.Console
       Main.Environment
       Main.TheoryLoader
