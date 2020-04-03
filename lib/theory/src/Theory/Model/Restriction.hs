@@ -117,7 +117,7 @@ rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
                 containsVar p t = case viewTerm t of
                     Lit (Var bv) -> p bv
                     Lit _        -> False
-                    FApp _ as    -> any containsFree as
+                    FApp _ as    -> any (containsVar p) as
                 containsFree  = containsVar isFree
                 containsBound = containsVar (not . isFree)
                 isFree (Bound _) = False
@@ -151,4 +151,4 @@ fromRuleRestriction rname f =
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
-                mkFact ts  = protoFactAnn Linear ("restr_"++ rname) S.empty ts
+                mkFact = protoFactAnn Linear ("restr_"++ rname) S.empty
