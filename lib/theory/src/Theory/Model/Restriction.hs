@@ -7,7 +7,6 @@
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TupleSections        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 -- |
 -- Copyright   : (c) 2020 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -93,7 +92,8 @@ rewrite :: Traversable syn2 =>
 rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
     where
                 fAt' atom = Ato <$> traverse fAt atom
-                fAt t -- traverse into term and substitute all subterms
+                fAt t -- traverse into term and substitute all subterms that
+                      -- contain only free variables
                    |  Lit (Var bv) <- viewTerm t , isFree bv   = substitute t
                    |  Lit (Var _ ) <- viewTerm t               = return t
                    |  FApp _ as    <- viewTerm t
@@ -121,29 +121,21 @@ rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
                 containsFree  = containsVar isFree
                 containsBound = containsVar (not . isFree)
                 isFree (Bound _) = False
-                isFree (Free  v) = if v == varNow then False
-                                   else True
+                isFree (Free  v) = v /= varNow
 
--- | From f, create restriction with rname and an action to insert in some protocol rule
+-- | From f, create restriction with rname and an action that we insert in the
+-- protocol rule that had this restriction.
+--
+-- Ex: rule had restriction: f(x,y) = z, we return 
+--    All #now u v . rname(u,v)@now => u = v 
+--    and
+--    ranme(f(x,y), z)
 fromRuleRestriction :: String -> LNFormula -> (Restriction, Fact LNTerm)
--- fromRuleRestriction :: (Apply (VTerm c LVar), Traversable syn2,
---                         HasFrees (ProtoFormula syn2 (String, LSort) Name LVar)) =>
---                        [Char]
---                        -> ProtoFormula syn2 (String, LSort) Name LVar
---                        -> (ProtoRestriction (ProtoFormula syn2 (String, LSort) Name LVar),
---                            Fact (VTerm c LVar))
 fromRuleRestriction rname f =
                 (mkRestriction,  mkFact (getVarTerms $ rewrSubst f) f)
             where
-                --- canot handle predicates with reducible function symbols
-                -- what we should do:
-                -- 1. find those in f
-                -- 2. substitute by variables
-                -- 3. quantify over variables in restriction
-                -- 3. in actions, create fact with these terms
-
-                -- creates restriction with prefix "restr_"++rname and counter n
-                -- and formula f quantified over free variables and varnow
+                -- creates restriction with f quantified over free variables
+                -- and varnow
                 mkRestriction = Restriction
                                         ("restr_"++ rname)
                                         (foldr (hinted forall) f'' (frees' f'))
@@ -153,9 +145,8 @@ fromRuleRestriction rname f =
                                             timepoint = varTerm $ Free varNow
                                             facts = mkFact getBVarTerms
 
-
                 rewrF     = fst . rewrite -- rewritten formula
-                rewrSubst = substFromMap . snd . rewrite -- rewritten formula
+                rewrSubst = substFromMap . snd . rewrite -- substitution from rewritten formula
                 frees' formula = frees formula `L.union` [varNow]
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
                 getVarTerms subst =   map (varTerm . apply subst) . L.delete varNow . freesList
@@ -163,5 +154,4 @@ fromRuleRestriction rname f =
                         protoFactAnn
                             Linear ("restr_"++ rname)
                             S.empty  -- no annotations
-                            -- (getTerms formula) -- TODO apply substitution
-                            ( (getTerms formula)) -- does not work need to get expanded formula
+                            (getTerms formula)
