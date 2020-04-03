@@ -1,0 +1,11 @@
+theory pubInRestr
+begin
+
+predicates:
+  	True(x) <=> x='true'
+
+in(x);
+if True('true') then 0
+
+end
+
