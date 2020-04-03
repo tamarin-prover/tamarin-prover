@@ -84,8 +84,8 @@ $(mkLabels [''ProtoRestriction])
 varNow :: LVar
 varNow = LVar "NOW" LSortNode 0
 
--- | rewrite f so all formulas with free variables are substituted by fresh
--- | free variables.  outputs modified formula and substitution
+-- | @rewrite f@ returns f where all terms  with free variables are substituted
+-- by fresh free variables.  outputs modified formula and substitution
 rewrite :: Traversable syn2 =>
            ProtoFormula syn2 s c2 LVar
            -> (ProtoFormula syn2 s c2 LVar,
