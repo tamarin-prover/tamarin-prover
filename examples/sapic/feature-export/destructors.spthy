@@ -1,0 +1,24 @@
+theory Typing
+begin
+
+functions: senc/2,sdec/2[destructor], test/1, true/0
+
+equations: sdec(k,senc(k,m))=m
+          ,test(sdec(x,y))=true()
+
+builtins: multiset
+
+new k; out(k);
+in(c);
+/* if test(x) = true() then event A() */
+/* if sdec(k,c) = */ 
+out (sdec(k,c));
+event A()
+
+/* lemma bla: */
+/*     "Ex #i k c. KU(sdec(k,c))@i" */
+
+lemma a:
+    "Ex #i . A()@i"
+
+end
