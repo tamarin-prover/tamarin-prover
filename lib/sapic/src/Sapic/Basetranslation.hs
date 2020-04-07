@@ -313,7 +313,7 @@ resInEv :: String
 resInEv = [QQ.r|restriction ass_immediate:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
-                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t3 < #t1))"
+                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t3 < #t1 | #t1 = #t2))"
 |]
 
 
