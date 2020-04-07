@@ -164,12 +164,10 @@ Sometimes partial deconstructions can be removed by applying some modelling tric
 
    ```
 
-
-2. Give fresh or public type if you know some values are atomic, but see that
-   pre-computation tries to deduce non-atomic terms from them. Beware that this
-   is not necessarily sound. Can your implementation ensure that bitstring
-   represented as atomic values cannot be confused with bitstring represented
-   by terms? e.g., keys from cypher texts?
+2. Give fresh or public type if you know some values are atomic, but you see
+   that pre-computation tries to deduce non-atomic terms from them.  This works
+   only under the assumption that the implementation can enforce the correct
+   assignment, e.g., by appropriate tagging.
 
 3. Using pattern matching instead of destructor functions can help distill the
    main argument of a proof in the design phase or in first stages of
