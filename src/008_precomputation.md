@@ -145,5 +145,34 @@ In such a case, we can explicitly exclude this application of the rule
 with a restriction. But, we should ensure that the resulting model is the
 one we want; so use this with care.
 
+## Modelling tricks to Mitigate Partial Deconstructions
+
+Sometimes partial deconstructions can be removed by applying some modelling tricks:
+
+1. If the deconstruction reveals a term `t` that, intuitively, can be made
+   public anyway, you can add `In(t)` to the lhs of the rule. If you are not
+   sure if this transformation is sound, you may write a lemma to ensure that
+   the rule can still fire.
+
+   Example: Counter values are public knowledge, so adding `In(c)` to the
+   second rule helps here:
+
+   ```
+   [] --> [Counter('1')]
+
+   [Counter(c)] --> [Counter(c+'1'), Out(c+'1')]
+
+   ```
 
 
+2. Give fresh or public type if you know some values are atomic, but see that
+   pre-computation tries to deduce non-atomic terms from them. Beware that this
+   is not necessarily sound. Can your implementation ensure that bitstring
+   represented as atomic values cannot be confused with bitstring represented
+   by terms? e.g., keys from cypher texts?
+
+3. Using pattern matching instead of destructor functions can help distill the
+   main argument of a proof in the design phase or in first stages of
+   modelling. It is valid, and often successful strategy to start with
+   a simplistic modelling and formulate provable lemmas first, and then proceed
+   to refine the model step by step.
