@@ -70,19 +70,22 @@ parseLSortSym s = case s of
 funSymPrefix :: ByteString
 funSymPrefix = "tam"
 
--- | Suffix for attributes
-funSymEncodeAttr priv constr  = funSymPrefix <> f priv <> g constr
+-- | Encode attributes in additional prefix
+funSymEncodeAttr :: Privacy -> Constructability -> ByteString
+funSymEncodeAttr priv constr  = f priv <> g constr
     where
         f Private = "P"
         f Public  = "X"
         g Constructor = "C"
         g Destructor = "D"
 
+-- | Decode string @funSymPrefix || funSymEncodeAttr p c || ident@ into
+--   @(ident,p,c)@
+funSymDecode :: ByteString -> (ByteString, Privacy, Constructability)
 funSymDecode s = (ident,priv,constr)
     where
         prefixLen      = BC.length funSymPrefix
-        w_o_prefix     = BC.drop prefixLen s
-        (eAttr,ident)  = BC.splitAt 2 w_o_prefix
+        (eAttr,ident)  = BC.splitAt 2 (BC.drop prefixLen s) 
         (priv,constr)  = case eAttr of
                             "PD" -> (Private,Destructor)
                             "PC" -> (Private,Constructor)
