@@ -41,8 +41,8 @@ module Term.Term (
     , getLeftTerm
     , getRightTerm
 
-    -- ** "Encrypted" subterms
-    , allEncSubterms
+    -- ** "Protected" subterms
+    , allProtSubterms
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -206,16 +206,18 @@ getRightTerm :: Term a -> Term a
 getRightTerm t = getSide DiffRight t
 
 ----------------------------------------------------------------------
--- "Encrypted" subterms
--- NB: here anything but a pair is an encryption!
+-- "protected" subterms
+-- NB: here anything but a pair or an AC symbol is protected!
 ----------------------------------------------------------------------
 
--- Given a term, compute all encrypted subterms, i.e. all terms
--- which top symbol is a function, but not a pair
-allEncSubterms :: Show a => Term a -> [Term a]
-allEncSubterms t@(viewTerm -> FApp _ as) | isPair t  = concatMap allEncSubterms as
-allEncSubterms t@(viewTerm -> FApp _ as) | otherwise = t:concatMap allEncSubterms as
-allEncSubterms _                                     = []
+-- Given a term, compute all protected subterms, i.e. all terms
+-- which top symbol is a function, but not a pair, nor an AC symbol
+allProtSubterms :: Show a => Term a -> [Term a]
+allProtSubterms t@(viewTerm -> FApp _ as) | isPair t || isAC t
+        = concatMap allProtSubterms as
+allProtSubterms t@(viewTerm -> FApp _ as) | otherwise
+        = t:concatMap allProtSubterms as
+allProtSubterms _                                     = []
 
 ----------------------------------------------------------------------
 -- Pretty printing

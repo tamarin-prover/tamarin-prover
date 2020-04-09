@@ -121,14 +121,16 @@ positions =
     position i len | i == len - 1 = replicate i 1
                    | otherwise    = replicate i 1 ++ [0]
 
--- Return the deepest "encrypted" subterm with respect to a given position
--- NB: here anything but a pair is an "encryption"!
-deepestEncSubterm :: Show a => Term a -> Position -> Term a
-deepestEncSubterm term pos = f term term pos
+-- Return the deepest "protected" subterm with respect to a given position
+-- NB: here anything but a pair or an AC symbol is an "encryption"!
+deepestProtSubterm :: (Show a, Eq a) => Term a -> Position -> Maybe (Term a)
+deepestProtSubterm term = f term term
   where
-    f st _                         []     = st
+    f st _                         []
+       | st == term && (isPair term || isAC term) = Nothing
+       -- If there is no protected subterm, return Nothig!
+    f st _                         []
+       | otherwise                                = Just st
     f st t@(viewTerm -> FApp _ as) (i:is) = case atMay as i of
-          Nothing -> error "encSubterm: invalid position given"
-          Just a  -> f (if isPair t then st else t) a is
-    f _  _                         _      =
-          error "encSubterm: invalid position given"
+          Nothing -> error "deepestProtSubterm: invalid position given"
+          Just a  -> f (if isPair t || isAC t then st else t) a is

@@ -1027,7 +1027,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     allOutConcs = do
         ru                                   <- rules
         (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
-        (nr, m)                              <- zip [1::Int ..] $ concatMap allEncSubterms t
+        (nr, m)                              <- zip [1::Int ..] $ concatMap allProtSubterms t
         return (ru, cidx, nr, m)
 
     -- We use the raw sources here to generate one lemma to rule them all...
@@ -1071,32 +1071,34 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 guard $ notElem (rule, pos) done
                 return (rule, t, pos)
 
-        -- a list of all encrypted input subterms to unify
-        encryptedSubterms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
-        encryptedSubterms = mapMaybe f inputRules
+        -- a list of all protected input subterms to unify
+        protectedSubterms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        protectedSubterms = mapMaybe f inputRules
           where
             f (x, y, z) = do
-              v'      <- y `atPosMay` z
-              let encTerm' = deepestEncSubterm y z
-              -- We do not consider the case where the deepest encrypted subterm
-              -- is the variable in question, as this
+              v'        <- y `atPosMay` z
+              protTerm' <- deepestProtSubterm y z
+              -- We do not consider the case where the computed deepest
+              -- protected subterm is the variable in question, as this
+              -- against the definition (a variable is not a function).
+              -- Moreover, this case
               -- 1. often leads to false lemmas as we do not unify with all
               --    conclusion facts, in particular not with fresh facts
               -- 2. blows up the lemma as a variable unifies with all outputs
               -- 3. typically only happens if a value is stored in a state fact,
               --    but appears in other premises where the algorithm works as
               --    expected (hence we do not loose anything)
-              encTerm <- if encTerm' == v'
+              protTerm  <- if protTerm' == v'
                 then Nothing
-                else Just encTerm'
-              return (x, encTerm, v', z)
+                else Just protTerm'
+              return (x, protTerm, v', z)
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
         inputsAndOutputs :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
         inputsAndOutputs = do
             -- iterate over all inputs
-            (rin, tin, vin, pos) <- encryptedSubterms
+            (rin, tin, vin, pos) <- protectedSubterms
             -- find matching conclusions
             let matches = matchingConclusions rin tin
             return (rin, tin, vin, pos, matches)
