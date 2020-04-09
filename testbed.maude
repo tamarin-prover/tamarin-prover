@@ -1,0 +1,9 @@
+fmod SENC is
+sorts Msg .
+op senc : Msg Msg -> Msg .
+op sdec : Msg Msg -> Msg .
+vars K M C : [Msg] .
+eq sdec(K,senc(K,M)) = M [variant] .
+endfm
+
+get variants in SENC : sdec(K,C).

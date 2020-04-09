@@ -1,4 +1,4 @@
-theory Typing
+theory Destructors
 begin
 
 functions: senc/2,sdec/2[destructor], test/1, true/0
@@ -19,6 +19,7 @@ event A()
 /*     "Ex #i k c. KU(sdec(k,c))@i" */
 
 lemma a:
+    exists-trace
     "Ex #i . A()@i"
 
 end
