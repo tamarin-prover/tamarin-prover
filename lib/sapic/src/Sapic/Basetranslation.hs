@@ -126,7 +126,7 @@ baseTransAction needsAssImmediate ac an p tildex
     | (Event f ) <- ac =
           ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
     | (MSR (l,a,r,res)) <- ac =
-          let tx' = freeset' r `union` tildex in
+          let tx' = freeset' l `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
