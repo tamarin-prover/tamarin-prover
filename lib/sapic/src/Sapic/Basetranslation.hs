@@ -333,7 +333,7 @@ baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++
-        addIf needsAssImmediate [resInEv]
+        addIf (needsAssImmediate && contains isChIn) [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l
