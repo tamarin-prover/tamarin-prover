@@ -195,7 +195,7 @@ isPosNegFormula fm = case fm of
     TF  _            -> (True, True)
     Ato (Action _ f) -> isActualKFact $ factTag f
     Ato _            -> (True, True)
-    Not p            -> not2 $ isPosNegFormula p
+    Not p            -> swap $ isPosNegFormula p
     Conn And p q     -> isPosNegFormula p `and2` isPosNegFormula q
     Conn Or  p q     -> isPosNegFormula p `and2` isPosNegFormula q
     Conn Imp p q     -> isPosNegFormula $ Not p .||. q
@@ -206,9 +206,9 @@ isPosNegFormula fm = case fm of
       isActualKFact _ = (True, True)
 
       and2 (x, y) (p, q) = (x && p, y && q)
-      not2 (x, y) = (not x, not y)
+      swap (x, y) = (y, x)
 
-
+-- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is not needed.
 checkAssImmediate :: Lemma p -> Bool
 checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
   (AllTraces,   (_, True))     -> True  -- L- for all-traces
