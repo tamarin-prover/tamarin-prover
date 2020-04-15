@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts          #-}
 
 
 {-# LANGUAGE PatternGuards          #-}
@@ -13,8 +14,7 @@
 -- Parsing protocol theories. See the MANUAL for a high-level description of
 -- the syntax.
 module Theory.Text.Parser (
-    varNow
-  , parseOpenTheory
+    parseOpenTheory
   , parseOpenTheoryString
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
@@ -39,7 +39,6 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -63,15 +62,6 @@ import           Theory.Text.Parser.Token
 import           Debug.Trace
 
 import           Data.Functor.Identity
-
-------------------------------------------------------------------------------
--- Constants
-------------------------------------------------------------------------------
-
--- | Used in liftedAddProtoRule to expand restriction, used in process
--- translation
-varNow :: LVar
-varNow = LVar "NOW" LSortNode 0
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -506,7 +496,7 @@ blatom :: Parser (SyntacticAtom BLTerm)
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact (varTerm <$> lvar))                    <?> "predicate atom"
+  , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
@@ -1263,45 +1253,22 @@ liftedAddLemma thy lem = do
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> Rule ProtoRuleEInfo -> m (OpenTheory)
 liftedAddProtoRule thy ru
     | (StandRule rname) <- get (preName . rInfo) ru = do
-        rforms <- mapM (liftedExpandFormula thy) (rfacts ru)
-        thy'  <- foldM addExpandedRestriction thy (restrictions rname rforms)
-        thy'' <- liftedAddProtoRuleNoExpand thy' (addActions rname ru)
+        rformulas <- mapM (liftedExpandFormula thy) (rfacts ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulas)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulas) -- TODO was ru instead of rformulas
         return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
                 rfacts = get (preRestriction . rInfo)
-
-                restrictions rname rforms = restrictionItems rname rforms
-
-                restrictionItems rname r =
-                    map (mkRestriction rname) (counter r)
-
-                counter = zip [1..]
-
-                mkRestriction:: String -> (Int,LNFormula) -> Restriction
-                mkRestriction rname (n,f) = Restriction
-                                        ("restr_"++ nameSuffix rname n)
-                                        (foldr (hinted forall) f' (frees' f))
-                                        where
-                                            f' = Ato (Action timepoint (facts (n,f))) .==>. f
-                                            timepoint = varTerm $ Free varNow
-                                            facts = mkFact rname getBVarTerms
-
                 addExpandedRestriction thy' xrstr = liftMaybeToEx
                                                      (DuplicateItem $ RestrictionItem xrstr)
                                                      (addRestriction xrstr thy')
+                addActions   rname rformulas = modify rActs (++ actions rname rformulas) ru
 
-                nameSuffix rname n = rname ++ "_" ++ show n
-                frees' f = frees f `L.union` [varNow]
-
-                getBVarTerms =  map (varTerm . Free) . L.delete varNow . frees
-                getVarTerms =   map (varTerm) . frees
-                mkFact  rname getTerms (n,f)  =
-                        protoFactAnn Linear ("_rstr_"++ nameSuffix rname n) S.empty (getTerms f)
-
-
-                actions rname r = map (mkFact rname getVarTerms) (counter r)
-                addActions rname r = modify rActs (++ actions rname (rfacts ru)) r
+                restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
+                actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
+                fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
+                counter = zip [1::Int ..]
 
 
 -- | checks if process exists, if not -> error

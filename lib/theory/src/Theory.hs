@@ -22,13 +22,8 @@ module Theory (
     expandFormula
 
   -- * Restrictions
-  , ProtoRestriction(..)
-  , Restriction
-  , SyntacticRestriction
-  , RestrictionAttribute(..)
-  , rstrName
-  , rstrFormula
   , expandRestriction
+
 
   -- * Processes
   , ProcessDef(..)
@@ -419,36 +414,6 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
       , _crProtocol   = proto
       }
 
-
-------------------------------------------------------------------------------
--- Restrictions (Trace filters)
-------------------------------------------------------------------------------
-
--- | An attribute for a 'Restriction'.
-data RestrictionAttribute =
-         LHSRestriction
-       | RHSRestriction
-       | BothRestriction
-       deriving( Eq, Ord, Show )
-
--- | A restriction describes a property that must hold for all traces. Restrictions are
--- always used as lemmas in proofs.
-data ProtoRestriction f = Restriction
-       { _rstrName    :: String
-       , _rstrFormula :: f
-       }
-       deriving( Generic )
-
-type Restriction = ProtoRestriction LNFormula
-type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
-
-deriving instance Eq Restriction
-deriving instance Ord Restriction
-deriving instance Show Restriction
-deriving instance NFData Restriction
-deriving instance Binary Restriction
-
-$(mkLabels [''ProtoRestriction])
 
 ------------------------------------------------------------------------------
 -- Processes
