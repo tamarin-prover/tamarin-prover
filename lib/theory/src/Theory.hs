@@ -313,7 +313,7 @@ data ClosedRuleCache = ClosedRuleCache
 $(mkLabels [''ClosedProtoRule, ''ClosedRuleCache])
 
 instance HasRuleName ClosedProtoRule where
-    ruleName = ruleName . L.get cprRuleE
+    ruleName = ruleName . L.get cprRuleAC
 
 
 -- Relation between open and closed rule sets
@@ -336,20 +336,19 @@ openProtoRule = L.get cprRuleE
 -- | Unfold rule variants, i.e., return one ClosedProtoRule for each
 -- variant
 unfoldRuleVariants :: ClosedProtoRule -> [ClosedProtoRule]
-unfoldRuleVariants (ClosedProtoRule ruE@(Rule (ProtoRuleEInfo rEName rEAttrs) _ _ _ _) ruAC@(Rule ruACInfoOld ps cs as nvs))
+unfoldRuleVariants (ClosedProtoRule ruE@(Rule ruEInfo _ _ _ _) ruAC@(Rule ruACInfoOld ps cs as nvs))
    | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
    | otherwise = map toClosedRule variants
         where
           ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
           rAttributes = L.get pracAttributes ruACInfoOld
           loopBreakers = L.get pracLoopBreakers ruACInfoOld
-          ruEInfo i = ProtoRuleEInfo (rName i rEName) rEAttrs
           rName i oldName = case oldName of
             FreshRule -> FreshRule
             StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
 
           toClosedRule (i, (ps', cs', as', nvs'))
-            = ClosedProtoRule (Rule (ruEInfo i) ps' cs' as' nvs')
+            = ClosedProtoRule (Rule ruEInfo ps' cs' as' nvs')
                 (Rule (ruACInfo i) ps' cs' as' nvs')
           variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
           substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
@@ -1108,17 +1107,17 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               -- generate fresh instance of conclusion, avoiding the premise variables
               let fout = tout `renameAvoiding` tin
               -- we ignore outputs of the same rule
-              guard (ruleName rin /= ruleName rout)
+              guard ((ruleName . L.get cprRuleE) rin /= (ruleName . L.get cprRuleE) rout)
               -- check whether input and output are unifiable
               guard (runMaude $ unifiableLNTerms tin fout)
               return (rout, cidx, n, tout)
 
         -- construct action facts for the rule annotations and formula
         inputFact k r m n = Fact {factTag = ProtoFact Linear
-              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleE r)) 2,
+              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleAC r)) 2,
               factAnnotations = S.empty, factTerms = [m, n]}
         outputFact k c r m = Fact {factTag = ProtoFact Linear
-              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleE r)) 1,
+              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleAC r)) 1,
               factAnnotations = S.empty, factTerms = [m]}
 
         -- add labels to rules for typing lemma
@@ -2393,8 +2392,11 @@ prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
 -- | Pretty print an closed rule.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
+  if ruleName ruAC == ruleName ruE then
     (prettyProtoRuleE ruE) $--$
     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
+  else
+    (prettyProtoRuleAC ruAC)
   where
     ruAC = L.get cprRuleAC cru
     ruE  = L.get cprRuleE cru
