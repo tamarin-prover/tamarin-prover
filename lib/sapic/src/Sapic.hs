@@ -57,7 +57,7 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
                 -- add restrictions
-                rest<- restrictions an_proc
+                rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
@@ -98,8 +98,8 @@ translate th = case theoryProcesses th of
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ]
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction]
-    restrictions anP = foldM (flip ($)) []  --- fold from left to right
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> [AnnotatedRule ProcessAnnotation] -> m1 [SyntacticRestriction]
+    restrictions anP pRules = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
@@ -111,13 +111,14 @@ translate th = case theoryProcesses th of
                                                                  -- else
                                                                  --   restrs
                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP needsAssImmediate True] ++
+                        $ [BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
     needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
+    containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:

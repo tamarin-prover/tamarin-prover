@@ -1,0 +1,14 @@
+theory AssImmediateChannelIn
+begin
+
+new x; out(x);
+in(x); 
+event A()
+
+// should verifiy and NOT trigger addition of ass_immediate
+// since no ChannelIn event is present
+lemma intuitiveTest:
+  all-traces
+  "All #a. A()@a ==> Ex #i x. K(x)@i & #i<#a"
+
+end
