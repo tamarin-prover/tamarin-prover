@@ -5,7 +5,7 @@ packages:
 - lib/term/
 - lib/utils/
 - lib/sapic/
-extra-deps: [ binary-instances-1 ]
-resolver: lts-14.27
+extra-deps: [ binary-instances-1, fclabels-2.0.4 ]
+resolver: lts-15.9
 nix:
   packages: [ zlib ]
