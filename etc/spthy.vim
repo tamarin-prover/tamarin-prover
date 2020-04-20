@@ -39,7 +39,7 @@ syn match spthyLAtom	        "@"
 syn match spthyLAtom	        "<"
 syn match spthyLAtom	        ">"
 
-syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing multiset
+syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing multiset revealSign revealVerify getMessage true
 syn match spthyConstr           "\<h("he=e-1
 syn match spthyConstr           "\<sk("he=e-1
 syn match spthyConstr           "\<pk("he=e-1
@@ -51,6 +51,7 @@ syn match spthyConstr           "\^"
 syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
+syn match spthyConstr           "\<revealing-signing"
 
 syn keyword spthyDecl           axiom restriction equations functions builtins protocol property in let theory begin end subsection section text
 syn match spthyDecl             "\<lemma\>"
