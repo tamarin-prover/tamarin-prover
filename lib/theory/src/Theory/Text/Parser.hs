@@ -44,6 +44,7 @@ import           Data.Color
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+import qualified Control.Monad.Fail         as Fail
 import qualified Control.Monad.Catch        as Catch
 
 import           Text.Parsec                hiding ((<|>))
@@ -1189,6 +1190,10 @@ instance Show (ParsingException) where
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException
+
+instance Fail.MonadFail (Either Catch.SomeException) where
+  fail = Fail.fail
+
 
 liftEitherToEx :: (Catch.MonadThrow m, Catch.Exception e) => (t -> e) -> Either t a -> m a
 liftEitherToEx _ (Right r)     = return r
