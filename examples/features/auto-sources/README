@@ -1,0 +1,19 @@
+EXAMPLES AUTO-SOURCES
+=====================
+
+To run the examples, run Tamarin with the option "--auto-sources", e.g.,
+
+
+  tamarin-prover interactive --auto-sources examples/features/auto-sources/spore
+
+
+for the interactive mode or
+
+
+  tamarin-prover --prove --auto-sources examples/features/auto-sources/spore/Nssk.spthy
+
+
+to directly prove the lemmas in the command line.
+
+The directory "running-example" contains the running example from the paper, "spore" the examples from the SPORE library, and "tamarin-repo" the examples from the Tamarin repository where our algorithms succeeds in generating the sources lemma (please use the files XXX-withoutSL.spthy, otherwise no sources lemma will be generated as one is already present).
+
