@@ -313,14 +313,14 @@ resInEv :: String
 resInEv = [QQ.r|restriction ass_immediate:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
-                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t3 < #t1))"
+                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
 |]
 
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
+baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -333,7 +333,7 @@ baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++
-        addIf needsAssImmediate [resInEv]
+        addIf (needsAssImmediate && containChannelIn) [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l
