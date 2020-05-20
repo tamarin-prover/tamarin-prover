@@ -1,0 +1,251 @@
+theory HPagree
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	HPagree
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+========
+RESULTS:
+========
+// for -D=infallible
+- lemma functional:  	verified (9 steps)
+- lemma agree_HE: 	verified (5 steps)	
+- lemma agree_HE2: 	verified (5 steps)
+
+//for -D=untrained
+- lemma functional:  	verified (10 steps)
+- lemma agree_HE: 	falsified - found trace (5 steps)
+- lemma agree_HE2: 	falsified - found trace (5 steps)
+
+//for -D=ruleBased with rules NoOverwrite($H,'m') 
+- lemma functional:  	verified (10 steps)
+- lemma agree_HE: 	falsified - found trace (6 steps)
+- lemma agree_HE2: 	verified (6 steps)
+
+
+//for -D=ruleBased with rules NoOverwrite($H,'m') and DoClaimBeforeSend($H,'m')	
+- lemma functional:  	verified (13 steps)
+- lemma agree_HE: 	verified (8 steps)
+- lemma agree_HE2: 	verified (8 steps)
+
+
+*/
+
+
+/*============
+SPECIFICATION:
+============== */
+/*====================
+Human model selection:
+====================== */
+
+#ifdef infallible
+// The distinguished human 'H1' is modeled by the human agent rules.
+restriction DistinguishedHuman_Infallible:
+	"not (Ex #i. Untrained('H1') @i)"
+#endif
+
+#ifdef ruleBased
+// The distinguished human 'H1' is modeled by the untrained human rules (as are all other humans)
+restriction DistinguishedHuman_RuleBased:
+	"not (Ex H #i. Infallible(H) @i)"
+#endif
+
+#ifdef untrained
+// The distinguished human 'H1' is modeled by the untrained human rules (as are all other humans)
+restriction DistinguishedHuman_Untrained:
+	"not (Ex H #i. Infallible(H) @i)"
+#endif
+
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: hashing, asymmetric-encryption
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+//overwriting verification equation that it returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all pks). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+/* ==================
+Untrained human rules
+===================== */
+
+rule H_Fresh:
+    [ Fr(~x) ] --[ Fresh($H,$t,~x), !HK($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
+
+rule H_Send_I:
+    [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), Untrained($H) ]-> [ Out(<$t,x>) ]
+
+rule H_Receive_I:
+    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Send_S:
+    [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), To($A), Untrained($H) ]-> [ Out_S($H,$A,<$t,x>) ]
+
+rule H_Receive_S:
+    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Receive_A:
+    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Claim:
+    [  ] --[ Claim($H,$goal), Untrained($H) ]-> [  ]
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ Fr(~m) ] 
+  	--[ 	Setup(),
+		Human($H),
+		Goal($H,'running',<<'P','m'>,<$P,~m>>),
+		!HK($H,'P',$P), !HK($H,'m',~m),
+	
+		//rule-based human:
+		InitK($H,'P',$P), InitK($H,'m',~m)
+		//, NoTellExcept($H,'m','P')
+		, NoOverwrite($H,'m')	
+		, DoClaimBeforeSend($H,'m')	
+	]-> 
+  	[ AgSt_H0($H,<$P,~m>)
+			
+	, AgSt_P($P, <$H>)
+	, !HK($H,'P',$P), !HK($H,'m',~m)
+		
+  	]
+
+/* Agent rules */
+
+rule H_1:
+	[ AgSt_H0($H,<$P,~m>) ]
+	--[	Infallible($H)		
+		, Send($H,$P,<'m',~m>)
+		, To($P)
+		, Claim($H,'running')		
+	]->
+	[ Out_S($H,$P,<'m',~m>)
+	]
+
+rule P_1:
+	[ AgSt_P($P, <$H>), In_S($H,$P,<'m',m>) ]
+	--[  	Commit($P,$H,m) ]->
+	[ 
+	]
+
+
+/* ================================================
+RESTRICTIONS MODELING RULE-BASED HUMAN's GUIDELINES
+================================================ */
+
+#ifdef ruleBased // only listing rules that are needed for this protocol
+
+// do not overwrite an already known term with the tag 'tag' by another term.
+restriction NoOverwrite:
+	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & !HK('H1',tag,m) @i & !HK('H1',tag,n) @j ==> m = n"
+
+// make a claim 'running' before sending the message with tag 'tag'
+restriction DoClaimBeforeSend:
+	"All #s tag m #i P. 
+		DoClaimBeforeSend('H1',tag) @s 
+		& Send('H1',P,<tag,m>) @i 
+		==> (Ex #j. Claim('H1','running') @j & j<i)"
+		
+#endif
+
+/* ==============================
+RESTRICTIONS MODELING ASSUMPTIONS
+================================= */
+
+// Every Human starts in the initial state (also no device or so can run the untrained human rules)
+restriction UntrainedOnlyHuman:
+	"All H #i. Untrained(H) @i ==> Ex #j. Human(H) @j & j < i "
+
+/* No secure channels between humans exist. Humans
+   must communicate over incecure channels.         
+   This assumption is necessary to remove unsolved chains
+   in the protocol model. It is not a strong restriction
+   because the protocols do not rely on human to human 
+   for security. */
+restriction NoSecureChannelHumanToHuman:
+	"All H1 H2 x #i #j1 #j2. ChanOut_S(H1,H2,x) @i & Untrained(H1) @j1 & Untrained(H2) @j2 ==> F "
+
+/* ====
+LEMMAS 
+======= */
+
+/* ==================
+Functional properties
+=================== */
+
+lemma functional: exists-trace
+	" Ex P m #i #j #k #l
+		.
+
+		Goal('H1','running',<<'P','m'>,<P,m>>) @i 
+		& Send('H1',P,<'m',m>) @j
+		& To(P) @j
+		& Commit(P,'H1',m) @k
+		& Claim('H1','running') @l
+		"
+
+/*=======
+Agreement
+=========*/
+
+lemma agree_HE: 
+	"All P m #i.
+		Commit(P,'H1',m) @i 		
+	==> Ex #s #j . 
+		Goal('H1','running',<<'P','m'>,<P,m>>) @s 
+		& Claim('H1','running') @j 	
+		& j<i " 	
+
+lemma agree_HE2: //an alternative variant of the property not appearing in [1]
+	"All P m #i.
+		Commit(P,'H1',m) @i 		
+	==> Ex #s . 
+		Goal('H1','running',<<'P','m'>,<P,m>>) @s 
+	" 
+
+end
+
+	     			   
+
+
