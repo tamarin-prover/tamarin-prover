@@ -1,0 +1,185 @@
+theory PR6_ShHh
+begin
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Protocol PR_6
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+* Disclaimer:	The pupose of this protocl is to establish a possibility result.
+		We specify a simple protocol with one voter, as this is sufficeint for demonstrating possibility.
+
+========
+RESULTS:
+========
+
+- lemma functional: verified
+- lemma DRvoterT: verified 
+- lemma DRauth: verified 
+
+        
+
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: signing, multiset
+
+functions: sg/2, ver/2 //new signing function
+
+equations:
+// our equation for modeling the verification of signatures
+ver(sg(m, sk), pk(sk)) = m 
+// the function models that given a signature, one can also see the signed plaintext (only if one has the public key, but adversary has all public keys). With this, we do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+
+
+/* ==========
+Channel rules
+============= */
+
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+//undeniable insecure channel: all messages sent on a undeniable channel, are received unchanged
+
+rule ChanOut_IU:   	[ Out_IU($A,$B,m) ] --[ ChanOut_IU($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IU:   	[ In(<$A,$B,m>) ] --[ ChanIn_IU($A,$B,m) ]-> [ In_IU($A,$B,m) ] 
+restriction Chan_U: 
+	"All A B m #i. Send_U(A,B,m) @i ==> Ex #j. Receive_U(A,B,m) @j "
+ 
+/* ======================
+Adversary's fake evidence
+====================== */
+// the adversary can claim any term that he knows to be evidence
+rule fakeEvidence:
+	[ In(<ballot,evidence>) ] --[ Evidence(ballot,evidence) ]-> [ ] 
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ ] 
+  	--[ 	Setup(),
+		Voter('H'),
+		Server('S'), Honest('S')
+	]-> 
+  	[ AgSt_H0('H',< 'BB',$v,'S'>)
+	, AgSt_BB0('BB',<'S'>)
+	, AgSt_S0('S',<'empty'>)
+			
+  	]
+
+rule H_1:
+	[ AgSt_H0($H, <$BB, $v, $S>) ]
+	--[	Vote($H,$v), 
+		Ballot($H,<$v,$H>),
+		Send_U($H,$S,<$v,$H>),
+		Pub($H,$S,<$v,$H>)
+	]->
+	[ AgSt_H1($H, <$BB, $v, $S>), Out_IU($H,$S,<$v,$H>)
+	]
+
+rule S_1: 
+	[ AgSt_S0($S, <'empty'>), 
+	  In_IU($H,$S,<$v,$H>)  // S implicitly (by pattern matching) only accepts ballots of the right format
+	 ] 
+	--[ Receive_U($H,$S,<$v,$H>),
+	    Pub($H,$S,<$v,$H>)
+	]->
+	[ Out_A($S, <'bs', <$v,$H> >),
+	  Out_A($S, <'vs', $v >)
+	]
+
+rule BB: 
+	[ AgSt_BB0($BB,<$S>)
+	, In_A($S, <'bs', bs >)
+	, In_A($S, <'vs', vs >)
+	]
+ 	--[  	BB_recorded($BB,<'bs', bs >),
+		BB_tallied($BB,<'vs', vs >),
+		End()
+	]->  
+	[ Out_A($BB, <'bs', bs >)
+	, Out_A($BB, <'vs', vs >)
+	]
+	
+rule H_5: 
+	[ AgSt_H1($H, <$BB, $v, $S>),
+	  In_A($BB, <'bs', bRecorded >)
+	]
+	--[	Verify($H,<$v,$H>, bRecorded) //this corresponds to the signal verifyC(H, <v,H>) in the thesis
+	]->
+	[ ]
+
+
+
+/* =========
+RESTRICTIONS
+============ */
+// there is only one setup
+restriction OneSetup: 
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+
+lemma functional: exists-trace
+ 	" Ex  #i #j BB #k #l
+		.
+		Vote('H','v') @i
+		& Ballot('H',<'v','H'>) @j		
+		& BB_recorded(BB,<'bs', <'v','H'> >) @k
+		& BB_tallied(BB,<'vs','v' >) @k
+		& Verify('H',<'v','H'>, <'v','H'>) @l
+		"
+/*===========================
+Dispute Resolution Properties
+===========================*/
+// As BB is honest, BB_recorded is always executed before End(), i.e., k<j holds as required by the Definition of DRvoterT. We thus leave this away for optimization.
+lemma DRvoterT: 
+	"All H b #i #j.
+		Ballot(H,b) @i & End() @j & i<j 
+	==> ( Ex BB #k .					
+		BB_recorded(BB,<'bs', b >) @k )	
+	|   //Faulty 
+	    ( Ex BB H2 S b1 #k #l v.
+		BB_recorded(BB,<'bs', b1 >) @k
+		& not (b1=b)
+		& Pub(H2,S,b) @l
+		& b= <v,H2>
+		)"
+
+lemma DRauth: 
+	"All  S #i.
+		Honest(S) @i 
+	==> // not Faulty 
+	not (Ex b BB H2 b1 #k #l v.
+		BB_recorded(BB,<'bs', b1 >) @k
+		& not (b1=b)
+		& Pub(H2,S,b) @l
+		& b= <v,H2>
+		)"	
+
+end
+

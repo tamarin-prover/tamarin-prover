@@ -9,6 +9,14 @@
 -- Utilities for processes
 module Sapic.ProcessUtils (
    processAt 
+,  processContains
+,  isLookup
+,  isEq
+,  isDelete
+,  isLock
+,  isUnlock
+,  isChIn
+,  isChOut
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -16,6 +24,7 @@ module Sapic.ProcessUtils (
 -- import Control.Monad.Fresh
 import Data.Typeable
 import Control.Monad.Catch
+import qualified Data.Monoid            as M
 -- import Sapic.Exceptions
 -- import Theory
 import Theory.Sapic
@@ -39,3 +48,34 @@ processAt pro pos
         h p (InvalidPosition _) = throwM ( InvalidPosition p :: SapicException (AnProcess ann))
         h _ e = throwM e
 processAt _ p = throwM (InvalidPosition p :: SapicException (AnProcess ann))
+
+processContains :: AnProcess ann -> (AnProcess ann -> Bool) -> Bool
+processContains anP f = M.getAny $ pfoldMap  (M.Any . f) anP
+
+isLookup :: AnProcess ann -> Bool
+isLookup (ProcessComb (Lookup _ _) _ _ _) = True
+isLookup _  = False
+
+isDelete :: AnProcess ann -> Bool
+isDelete (ProcessAction (Delete _) _ _) = True
+isDelete _  = False
+
+isLock :: AnProcess ann -> Bool
+isLock (ProcessAction (Lock _) _ _) = True
+isLock _  = False
+
+isUnlock :: AnProcess ann -> Bool
+isUnlock (ProcessAction (Unlock _) _ _) = True
+isUnlock _  = False
+
+isChIn :: AnProcess ann -> Bool
+isChIn (ProcessAction (ChIn _ _) _ _) = True
+isChIn _  = False
+
+isChOut :: AnProcess ann -> Bool
+isChOut (ProcessAction (ChOut _ _) _ _) = True
+isChOut _  = False
+
+isEq :: AnProcess ann -> Bool
+isEq (ProcessComb (CondEq _ _) _ _ _) = True
+isEq _  = False

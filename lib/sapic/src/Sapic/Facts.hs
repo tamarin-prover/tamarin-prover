@@ -48,28 +48,39 @@ import Data.Color
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
-data TransAction =  InitEmpty
-  -- to implement with accountability extension
-  -- | InitId
-  -- | StopId 
-  -- | EventEmpty
-  -- | EventId
-  | PredicateA LNFact
-  | NegPredicateA LNFact
-  | ProgressFrom ProcessPosition
-  | ProgressTo ProcessPosition ProcessPosition
-  | Receive ProcessPosition SapicTerm
+data TransAction = 
+  -- base translation
+  InitEmpty
+  --    storage
   | IsIn SapicTerm LVar
   | IsNotSet SapicTerm
   | InsertA SapicTerm SapicTerm
   | DeleteA SapicTerm
-  | ChannelIn SapicTerm
-  | Send ProcessPosition SapicTerm
+  --    locks
   | LockUnnamed SapicTerm LVar
   | LockNamed SapicTerm LVar
   | UnlockUnnamed SapicTerm LVar
   | UnlockNamed SapicTerm LVar
+  --     ass_immedeate
+  | ChannelIn SapicTerm
+  | EventEmpty
+  --    support for msrs
   | TamarinAct LNFact
+  --    predicate support
+  | PredicateA LNFact
+  | NegPredicateA LNFact
+  -- progress translation 
+  | ProgressFrom ProcessPosition
+  | ProgressTo ProcessPosition ProcessPosition
+  -- reliable channels
+  | Send ProcessPosition SapicTerm
+  | Receive ProcessPosition SapicTerm
+  -- location
+  | Report LVar LVar
+  -- to implement with accountability extension
+  -- | InitId
+  -- | StopId 
+  -- | EventId
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -97,15 +108,18 @@ data AnnotatedRule ann = AnnotatedRule {
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
     , concs        :: [TransFact]
+    , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
 
 -- | applies function acting on rule taple on annotated rule.
-mapAct :: (([TransFact], [TransAction], [TransFact])
-           -> ([TransFact], [TransAction], [TransFact]))
+mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
+           -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
-mapAct f anrule = let (l',a',r') = f (prems anrule, acts anrule, concs anrule) in
-                  anrule { prems = l', acts = a', concs = r'  }
+mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
+                                           concs anrule, restr anrule) 
+                  in
+                  anrule { prems = l', acts = a', concs = r', restr = res' }
 
 isSemiState :: StateKind -> Bool
 isSemiState LState = False
@@ -182,6 +196,7 @@ actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
 actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
+actionToFact (EventEmpty)   =   protoFact Linear "Event" []
 actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
 actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
@@ -191,6 +206,7 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
+actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
@@ -279,7 +295,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name) attr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s

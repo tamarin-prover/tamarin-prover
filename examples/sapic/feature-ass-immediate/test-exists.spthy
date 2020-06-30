@@ -1,0 +1,16 @@
+theory AssImmediateTestExists
+begin
+
+new x; out(x);
+event A();
+in(x,x); 
+event B()
+
+// ass_immediate guarantees that K(x) is between A() and B()
+
+// should falsify and trigger addition of ass_immediate
+lemma intuitiveTestPositive:
+  exists-trace
+  "Ex #a #b . A()@a & B()@b & (All #i x. K(x)@i ==> (#i<#a | #b<#i))"
+
+end

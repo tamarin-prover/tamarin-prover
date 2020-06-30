@@ -1,0 +1,29 @@
+theory function_application begin
+
+functions: true/0,eq/2
+equations: eq(x,x)=x
+Host key fingerprint is SHA256:lAzbmKiN8Mv+Znaex7mpIGuKq5JFmeKkCDin3defGlw
++--[ED25519 256]--+
+|      .          |
+|     . B .       |
+|o  o. + =        |
+|=+=+   .         |
+|*B+..  .S E      |
+|+oo.. ....       |
+| o+ .. .oo .     |
+|+..o+...+oo      |
+|B+o=.o+o+o       |
++----[SHA256]-----+
+From projects.cispa.saarland:cc/tamarin-prover
+   1913bd99..ae15a8d0  feature-predicates-function-symbols -> origin/feature-predicates-function-symbols
+Updating 1913bd99..ae15a8d0
+Fast-forward
+ examples/sapic/feature-predicates/long-and.spthy | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 examples/sapic/feature-predicates/long-and.spthy
+
+rule A:
+  [In(x)] --[ _restrict(True(eq(x,x))) ]-> []
+
+end
+

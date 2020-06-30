@@ -1,0 +1,593 @@
+theory aletheaD_vot_ShHh
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-D's voting phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+========
+RESULTS:
+========
+
+- lemma functional: 	verified by hand (see file) 
+
+- lemma indivVerif_v:   verified (36 steps) (fastest if called without oracle)
+- lemma indivVerif_b:  	verified (20 steps) (fastest if called without oracle)
+	
+- lemma secretSskD [reuse]:  verified (1152 steps)
+- lemma ballotsFromVoters [reuse]: verified (198 steps)
+
+- lemma Tall_As_Rec_D_1: verified (183 steps)
+- lemma Tall_As_Rec_D_2: verified (155 steps)
+- lemma Tall_As_Rec_D_3: verified (155 steps)
+- lemma Tall_As_Rec_D_4: verified (155 steps)
+- lemma Tall_As_Rec_D_5: verified (155 steps)
+- lemma Tall_As_Rec_D_6: verified (155 steps)
+- lemma Tall_As_Rec_D_7: verified (155 steps)
+- lemma Tall_As_Rec_D_8: verified (155 steps)
+
+- lemma EligVerif_1: verified (159 steps)
+- lemma EligVerif_2: verified (159 steps)
+- lemma EligVerif_3: verified (159 steps)
+- lemma EligVerif_4: verified (159 steps)
+- lemma EligVerif_5: verified (159 steps)
+- lemma EligVerif_6: verified (159 steps)
+- lemma EligVerif_7: verified (159 steps)
+- lemma EligVerif_8: verified (159 steps)
+
+
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: hashing, multiset, asymmetric-encryption
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+// verification equation that returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all pks). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+
+rule Setup: 
+  	[ !Ltk('S',~skS), Fr(~sskD1), Fr(~sskD2) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkDSG', pk(~sskD1)+ pk(~sskD2) >), //corresponds to signal BB_SG in thesis
+		Voter('H1'),
+		Voter('H2'),
+		SecretKeyD(~sskD1),
+		SecretKeyD(~sskD2),
+		Pseudonym('H1',	pk(~sskD1)),
+		Pseudonym('H2',	pk(~sskD2))
+	]-> 
+  	[ AgSt_H0('H1',< 'D1','BB',$v1>)
+	, AgSt_H0('H2',< 'D2','BB',$v2>)
+	
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),~sskD1 >)
+	, AgSt_D0('D2',< 'H2','S',pk(~skS),~sskD2 >)
+
+	, AgSt_A0('A',<'S','BB',pk(~skS)>)
+	
+	, AgSt_BB0('BB', <'S','spkDSG', pk(~sskD1)+ pk(~sskD2)>) // corresponds to list [pk_D^SG] in thesis
+	, Out_A('BB',<'spkDSG', pk(~sskD1)+ pk(~sskD2)>) 
+	
+	, AgSt_S0('S', <~skS, pk(~sskD1)+ pk(~sskD2)>)
+		
+  	]
+
+rule H_1:
+	[ AgSt_H0($H, <$D, $BB, $v>) ]
+	--[	Vote($H,$v),
+		Send($H,$D,$v)
+	]->
+	[ AgSt_H1($H, <$D, $BB, $v>), Out_S($H,$D,$v)
+	]
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,~sskD >), In_S($H,$D,v), Fr(~r) ]
+	--[  ]->
+	[ Out_S($D,$H, sg(encp(v,~r,pkS),~sskD) )
+	]
+
+rule H_2:
+	[ AgSt_H1($H, <$D, $BB, $v>), In_S($D,$H, b) ]
+	--[	Comm_H_vote($H,$S,$v),
+		Comm_H_ballot($H,$S,b)
+	   	
+	]->
+	[ AgSt_H2($H, <$D, $BB, $v, b>),
+	  Out(b)
+	]
+
+rule S_1:
+	[ AgSt_S0($S, <~skS, pk(~sskDa)+ pk(~sskDb)>), 
+	  //implicitly (by pattern matching) only accept correct signatures and all of them only once
+	  In(sg(encp(va,ra,pk(~skS)),~sskDa)), 
+   	  In(sg(encp(vb,rb,pk(~skS)),~sskDb))
+        ]
+	--[  	Learn_S_ballot($S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+		Learn_S_ballot($S,sg(encp(vb,rb,pk(~skS)),~sskDb))
+	]->
+	[ AgSt_S1($S, <~skS, pk(~sskDa)+ pk(~sskDb), sg(encp(va,ra,pk(~skS)),~sskDa) 
+					   	   + sg(encp(vb,rb,pk(~skS)),~sskDb)>)
+	, Out_A($S, <'b', sg(encp(va,ra,pk(~skS)),~sskDa) +
+			  sg(encp(vb,rb,pk(~skS)),~sskDb)>)
+	, Out_A($S, <'bPrime', encp(va,ra,pk(~skS)) +
+			       encp(vb,rb,pk(~skS))  >) //corresponds to [\tilde(b)] in thesis
+	, Out_A($S, <'v', va+vb>)
+	, Out_A($S, <'zkp', zkp(<encp(va,ra,pk(~skS)), encp(vb,rb,pk(~skS))>,
+				<va,vb>,~skS)>) ]
+
+rule BB: 
+	[ AgSt_BB0($BB, <$S,'spkDSG', spkDa + spkDb>)
+	, In_A($S, <'b', ba+bbb >)
+	, In_A($S, <'bPrime', bPrimea+bPrimeb >)
+	, In_A($S, <'v', va+vb>)
+	, In_A($S, <'zkp', p >)
+	]
+ 	--[ 	BB_rec($BB,<'b', ba+bbb>),
+		BB_woS($BB,<'bPrime', bPrimea+bPrimeb>),
+		BB_tal($BB,<'v', va+vb>),
+		BB_zkp($BB,<'zkp', p >)
+	]->  
+	[ Out_A($BB, <'b', ba+bbb >)
+	, Out_A($BB, <'bPrime', bPrimea+bPrimeb >)
+	, Out_A($BB, <'v', va+vb>)
+	, Out_A($BB, <'zkp', p >)
+	]
+	
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,pkS>)
+	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really corresponds to b without signatures:
+	, In_A($BB, <'b', sg(bPrimea,sskDa)+sg(bPrimeb,sskDb) >)
+	, In_A($BB, <'bPrime', bPrimea+bPrimeb >)
+	, In_A($BB, <'v', va+vb>)
+	, In_A($BB, <'zkp', p >)
+	, In_A($BB, <'spkDSG', pk(sskDa)+pk(sskDb) >) 
+	]
+	--[   Learn_A_proof($A, <'zkp', p >),
+	      Learn_A_spkDSG($A, <'spkDSG', pk(sskDa)+pk(sskDb) >),
+	      Learn_A_Vs($A,<'v', va+vb>),
+	      Learn_A_Bs($A,<'b', sg(bPrimea,sskDa)+sg(bPrimeb,sskDb) >),
+	      Learn_A_bPrimes($A,<'bPrime', bPrimea+bPrimeb >),
+	      VerifyA2($A,verzkp( p, <bPrimea,bPrimeb>,<va,vb>,pkS) )
+	]->
+	[]
+
+rule H_3: 
+	[ AgSt_H2($H, <$D, $BB, $v, b>),
+	  In_A($BB, <'b', ba + bbb >)
+	]
+	--[	Verify($H,b,ba + bbb) //corresponds to signal verify_H(H,b\in [b]) in thesis
+	]->
+	[   ]
+
+
+
+/* =========
+RESTRICTIONS
+========== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+
+lemma functional: exists-trace
+	" Ex H1 H2 v1 v2
+		S #i b1
+		#j b2		
+		BB #k #l #m #n 
+		A  p bPrimea bPrimeb pkS #o
+		.
+		not (H1 = H2) & not (v1 = v2)
+		& Comm_H_vote(H1,S,v1) @i
+		& Comm_H_ballot(H1,S,b1) @i
+		& Comm_H_vote(H2,S,v2) @j
+		& Comm_H_ballot(H2,S,b2) @j
+		
+		& BB_rec(BB,<'b', b1+b2 >) @k
+		& BB_tal(BB,<'v', v1+v2>) @l
+
+		& Verify(H1,b1,b1 + b2) @m
+		& Verify(H2,b2,b1 + b2) @n
+		& VerifyA2(A, verzkp(p,<bPrimea,bPrimeb>,<v1,v2>,pkS )) @o
+
+		"
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_v: 
+	"All H v #i b #j bOther .
+		Vote(H,v) @i 			
+		& Verify(H,b,b + bOther) @j	
+	==> Ex BB b2 #l r pkS sskD . 
+		BB_rec(BB,<'b', b + b2 >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) " 	
+
+lemma indivVerif_b: 
+	"All H b #j bOther .
+		Verify(H,b,b + bOther) @j
+	==> Ex BB b2 #l . 
+		BB_rec(BB,<'b', b + b2 >) @l 
+  	" 
+
+
+
+/*================================
+Universal verifiability properties
+================================*/
+lemma secretSskD [reuse]:
+"All sskD #i.
+	SecretKeyD(sskD) @i
+==> not (Ex #j. K(sskD) @j)"
+
+
+lemma ballotsFromVoters [reuse]:
+"All S b #i.
+	Learn_S_ballot(S,b) @i
+==> (Ex H S2 #j.
+	Comm_H_ballot(H,S2,b) @j)"
+
+
+lemma Tall_As_Rec_D_1:
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the values bPrimes, votes, and p are input to the VerifyA2
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"
+
+lemma Tall_As_Rec_D_2:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"
+
+lemma Tall_As_Rec_D_3:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"	
+
+lemma Tall_As_Rec_D_4:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"	
+
+lemma Tall_As_Rec_D_5:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"	
+
+lemma Tall_As_Rec_D_6:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"
+
+lemma Tall_As_Rec_D_7:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"	
+
+lemma Tall_As_Rec_D_8:  
+"All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG = pk(sskD1) + pk(sskD2)	
+	& votes = v1 + v2 		
+	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
+     )"	
+
+
+lemma EligVerif_1:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the value votes is input to the VerifyA2. Since it should hold for any b, b',p, and they don't appear on the right side of the implication, they must not be listed (they are reflected in the "forall xa...").
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_2:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_3:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"		
+
+lemma EligVerif_4:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_5:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_6:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_7:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xa,xb>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"	
+
+lemma EligVerif_8:  
+"All A #a votes spkDSG sk xa ra xb rb. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk)),encp(xb,rb,pk(sk))>,<xb,xa>,sk) 
+				,<encp(xb,rb,pk(sk)),encp(xa,ra,pk(sk))>,<xb,xa>,pk(sk))) @a
+==> (Ex #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2 .
+	BB_tal(BB,<'v', votes>) @b
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& votes = v1 + v2	
+	& Send(H1,A1,v1) @h1
+	& Send(H2,A2,v2) @h2
+	& not (H1 = H2)	
+	& spkDSG = pkD1 + pkD2
+	& Pseudonym(H1,pkD1) @s1
+	& Pseudonym(H2,pkD2) @s2
+     )"		
+
+end
+
+	     			   
+
+

@@ -1,0 +1,24 @@
+theory AssImmediateYes
+begin
+
+new x; out(x);
+event A();
+in(x,x); 
+event B()
+
+// ass_immediate guarantees that K(x) is between A() and B()
+
+// the following lemmas are not well formed and cannot be proven. They should
+// only ensure that ass_immediate is added.
+
+// L+ & not L- (AllTraces, (True, False))
+lemma lplus_notlminus_all:
+  all-traces
+  "Ex x #i. K(x)@i"
+
+// not L+ & L- (ExistsTraces, (False, True))
+lemma notlplus_lminus_ex:
+  exists-trace
+  "Ex x #i. not K(x)@i"
+
+end

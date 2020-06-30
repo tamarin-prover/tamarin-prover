@@ -1,0 +1,511 @@
+theory aletheaD_vot_HE_SmHh
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-D's voting phase with human error
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+========
+RESULTS:
+========
+// for -D=infallible
+- lemma onlyonce1 [reuse]:	verified (8 steps)
+- lemma onlyonce2 [reuse]: 	verified (10 steps)
+- lemma onlyonce3 [reuse]: 	verified (10 steps)
+- lemma onlyonce4 [reuse]: 	verified (8 steps)
+- lemma onlyonce6 [reuse]: 	verified (8 steps)
+- lemma onlyonce7 [reuse]: 	verified (18 steps)
+
+- lemma functional: 		verified (29 steps)
+- lemma functional2: 		verified (19 steps)
+
+- lemma indivVerif_HE: 		verified (14 steps)
+- lemma indivVerif_HE2: 	verified (9 steps)
+- lemma indivVerif_HE3: 	verified (11 steps)
+- lemma indivVerif_HE4: 	verified (23 steps)
+
+- lemma secretSskD [reuse]: 	verified (7 steps)
+- lemma ballotsFromVoters_HE [reuse]:
+			 	verified (16 steps)
+- lemma Tall_As_Rec_D: 		verified (16 steps)
+- lemma EligVerif: 		verified (67 steps)
+
+//for -D=untrained
+- lemma onlyonce1 [reuse]:	verified (2 steps)
+- lemma onlyonce2 [reuse]: 	verified (2 steps)
+- lemma onlyonce3 [reuse]: 	verified (2 steps)
+- lemma onlyonce4 [reuse]: 	verified (8 steps)
+- lemma onlyonce6 [reuse]: 	verified (8 steps)
+- lemma onlyonce7 [reuse]: 	verified (18 steps)
+
+- lemma functional: 		verified (28 steps)
+- lemma functional2: 		verified (17 steps)
+
+- lemma indivVerif_HE: 		falsified - found trace (7 steps)
+- lemma indivVerif_HE2: 	falsified - found trace (6 steps)
+- lemma indivVerif_HE3: 	falsified - found trace (7 steps)
+- lemma indivVerif_HE4: 	falsified - found trace (10 steps)
+
+- lemma secretSskD [reuse]: 	verified (9 steps)
+- lemma ballotsFromVoters_HE [reuse]:
+			 	verified (20 steps)
+- lemma Tall_As_Rec_D: 		verified (10 steps)
+- lemma EligVerif: 		verified (237 steps)
+
+//for -D=ruleBased, with NoOverwrite('H1','v'), GetFrom('H1','bs','BB'), GetFrom('H1','b','D'), Compare('H1','b','bs')
+
+- lemma onlyonce1 [reuse]:	verified (2 steps)
+- lemma onlyonce2 [reuse]: 	verified (2 steps)
+- lemma onlyonce3 [reuse]: 	verified (2 steps)
+- lemma onlyonce4 [reuse]: 	verified (8 steps)
+- lemma onlyonce6 [reuse]: 	verified (8 steps)
+- lemma onlyonce7 [reuse]: 	verified (18 steps)
+
+- lemma functional: 		verified (34 steps)
+- lemma functional2: 		verified (26 steps)
+
+- lemma indivVerif_HE: 		verified (74 steps)
+- lemma indivVerif_HE2: 	verified (32 steps)
+- lemma indivVerif_HE3: 	verified (101 steps)
+- lemma indivVerif_HE4: 	verified (218 steps)
+
+- lemma secretSskD [reuse]: 	verified (20 steps)
+- lemma ballotsFromVoters_HE [reuse]: 
+				verified (24 steps)
+- lemma Tall_As_Rec_D: 		verified (10 steps)
+- lemma EligVerif: 		verified (153 steps)
+
+
+*/
+
+
+/*============
+SPECIFICATION:
+============== */
+/*====================
+Human model selection:
+====================== */
+
+#ifdef infallible
+// The distinguished human 'H1' is modeled by the human agent rules.
+restriction DistinguishedHuman_Infallible:
+	"not (Ex #i. Untrained('H1') @i)"
+#endif
+
+#ifdef ruleBased
+// The distinguished human 'H1' is modeled by the untrained human rules (as are all other humans)
+restriction DistinguishedHuman_RuleBased:
+	"not (Ex H #i. Infallible(H) @i)"
+#endif
+
+#ifdef untrained
+// The distinguished human 'H1' is modeled by the untrained human rules (as are all other humans)
+restriction DistinguishedHuman_Untrained:
+	"not (Ex H #i. Infallible(H) @i)"
+#endif
+
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: hashing, asymmetric-encryption
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+//overwriting verification equation that it returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all pks). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+/* ==================
+Untrained human rules
+===================== */
+
+rule H_Fresh:
+    [ Fr(~x) ] --[ Fresh($H,$t,~x), !HK($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
+
+rule H_Send_I:
+    [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), Untrained($H) ]-> [ Out(<$t,x>) ]
+
+rule H_Receive_I:
+    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Send_S:
+    [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), To($A), Untrained($H) ]-> [ Out_S($H,$A,<$t,x>) ]
+
+rule H_Receive_S:
+    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Receive_A:
+    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+
+rule H_Claim:
+    [  ] --[ Claim($H,$goal), Untrained($H) ]-> [  ]
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~sskD1) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkD', pk(~sskD1) >), //corresponds to signal BB_SG in thesis
+		SecretKeyD(~sskD1),
+		
+		DeviceKey('D1','H1',~sskD1),
+		Pseudonym('H1',pk(~sskD1)),
+		
+		Human('H1'),
+		// we use the goal name 'IVHEx' for differentiating different goals that are all denoted by 'IV' in the thesis
+		Goal('H1','IVHE',<<'v','b'>,<$v1,'ukn'>>),
+		Goal('H1','IVHE2',<'v',$v1>),
+		Goal('H1','vote',<'v',$v1>),
+		Goal('H1','ballot',<'b','ukn'>),
+		Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>),
+
+		!HK('H1','D','D1'), !HK('H1','BB','BB'), !HK('H1','v',$v1),
+		InitK('H1','D','D1'), InitK('H1','BB','BB'), InitK('H1','v',$v1)
+
+		// rule-based human guidelines that are "activated":
+		, NoOverwrite('H1','v')
+		, GetFrom('H1','bs','BB')
+		//, NoOverwrite('H1','b')	
+		, GetFrom('H1','b','D')	
+		, Compare('H1','b','bs')
+	]-> 
+  	[ AgSt_H0('H1',< 'D1','BB',$v1>)
+		
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),~sskD1 >)
+	
+	, AgSt_A0('A',<'S','BB',pk(~skS)>)
+	
+	, AgSt_BB0('BB', <'S', pk(~sskD1)>)
+	, Out_A('BB',<'spkD', pk(~sskD1)>) // corresponds to list [pk_D^SG] in thesis
+	
+	, Out(<'S', <~skS, pk(~sskD1)>>)
+	, !HK('H1','D','D1'), !HK('H1','BB','BB'), !HK('H1','v',$v1)
+		
+  	]
+
+/* Agent rules */
+
+rule H_1:
+	[ AgSt_H0($H, <$D, $BB, $v>) ]
+	--[	H1()
+		, Infallible($H)		
+		, Send($H,$D,<'v',$v>)
+		, To($D)	
+		, Claim($H,'vote')	
+	]->
+	[ AgSt_H1($H, <$D, $BB, $v>), Out_S($H,$D,<'v',$v>)
+	]
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,~sskD >), In_S($H,$D,<'v',v>), Fr(~r) ]
+	--[  	D1() ]->
+	[ Out_S($D,$H, <'b',sg(encp(v,~r,pkS),~sskD)> )
+	]
+
+rule H_2:
+	[ AgSt_H1($H, <$D, $BB, $v>), In_S($D,$H,<'b',b>) ]
+	--[	Comm_H_vote($H,$S,$v),
+		Comm_H_ballot($H,$S,b)
+		, H2()
+		, Infallible($H)
+		, Receive($D,$H,<'b',b>)
+		, From($D)
+		, !HK($H,'b', b)
+		, Send($H,$P,<'b', b>)
+		, Claim($H,'ballot')	
+	]->
+	[ AgSt_H2($H, <$D, $BB, $v, b>),
+	  Out(<'b', b>)
+	]
+
+/* omit rule S_1a, as S is dishonest and modeled by the adversary rules */
+
+rule BB: 
+	[ AgSt_BB0($BB, <$S, spkDa>)
+	, In(<$S, <'bs', ba >>)
+	, In(<$S, <'bPrime', bPrimea >>)
+	, In(<$S, <'vs', va >>)
+	, In(<$S, <'zkp', p >>)
+	]
+ 	--[ 	BB(),
+		BB_rec($BB,<'bs', ba >),
+		BB_woS($BB,<'bPrime', bPrimea >),
+		BB_tal($BB,<'vs', va >),
+		BB_zkp($BB,<'zkp', p >)
+	]->  
+	[ Out_A($BB, <'bs', ba >)
+	, Out_A($BB, <'bPrime', bPrimea >)
+	, Out_A($BB, <'vs', va >)
+	, Out_A($BB, <'zkp', p >)
+	]
+	
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,pkS>)
+	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key and since bPrime really corresponds to b without signatures:
+	, In_A($BB, <'bs', sg(bPrimea,sskDa) >)
+	, In_A($BB, <'bPrime', bPrimea >)
+	, In_A($BB, <'vs', va>)
+	, In_A($BB, <'zkp', p >)
+	, In_A($BB, <'spkD', pk(sskDa) >) 
+	]
+	--[   Learn_A_proof($A, <'zkp', p >),
+	      Learn_A_spkDSG($A, <'spkD', pk(sskDa) >),
+	      Learn_A_Vs($A,<'vs', va >),
+	      Learn_A_Bs($A,<'bs', sg(bPrimea,sskDa) >),
+	      Learn_A_bPrimes($A,<'bPrime', bPrimea >),
+	      VerifyA2($A,verzkp( p, <bPrimea>,<va>,pkS) ),
+	      Learn_A_ballot($A, sg(bPrimea,sskDa)),	
+	      A1()
+	]->
+	[]
+
+rule H_3: 
+	[ AgSt_H2($H, <$D, $BB, $v, b>),
+	  In_A($BB, <'bs', b >) //implicitly (by pattern matching) do the check that b \in [b] and only proceed with this role if this is the case
+	]
+	--[	H3()
+		, Infallible($H)
+		, Receive($BB,$H,<'bs', b>)
+		, From($BB)
+		, !HK($H,'bs', b)
+		, Claim($H,'IVHE')
+		, Claim($H,'IVHE2')
+		, Claim($H,'IVHE3')
+		, Claim($H,'IVHE4')
+	]->
+	[   ]
+
+
+/* ================================================
+RESTRICTIONS MODELING RULE-BASED HUMAN's GUIDELINES
+================================================ */
+
+#ifdef ruleBased // only listing rules that are needed for this protocol
+
+// do not overwrite an already known term with the tag 'tag' by another term.
+restriction NoOverwrite:
+	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & !HK('H1',tag,m) @i & !HK('H1',tag,n) @j ==> m = n"
+
+// do receive a message with tag 'tag' from an agent 'R' with tag 'rtag' in H's initial knowledge.
+restriction GetFrom:
+	"All tag rtag R #s #i. GetFrom('H1',tag,rtag) @s & InitK('H1',rtag,R) @i ==> Ex m #j. Receive(R,'H1',<tag,m>) @j & From(R) @j " 
+
+// only accept the receipt of a messag with tag 'tag2' if it is equal to the message with tag 'tag' in the knowledge
+restriction Compare:
+	"All tag tag2 #s m #i R n #j. Compare('H1',tag,tag2) @s 
+			& !HK('H1',tag,m) @i 
+			& Receive(R,'H1',<tag2,n>) @j ==> m=n" 
+
+
+#endif
+
+/* ==============================
+RESTRICTIONS MODELING ASSUMPTIONS
+================================= */
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+// Every Human starts in the initial state (where rules might be initiated), also no other agent (non-human) can execute the untrained human rules
+restriction UntrainedHumanSetup:
+	"All H #i. Untrained(H) @i ==> Ex #j. Human(H) @j & j < i "
+
+/* No secure channels between humans exist. Humans
+   must communicate over incecure channels.         
+   This assumption is necessary to remove unsolved chains
+   in the protocol model. It is not a strong restriction
+   because the protocols do not rely on human to human 
+   for security. */
+restriction NoSecureChannelHumanToHuman:
+	"All H1 H2 x #i #j1 #j2. ChanOut_S(H1,H2,x) @i & Untrained(H1) @j1 & Untrained(H2) @j2 ==> F "
+
+/* ====
+LEMMAS 
+======= */
+
+lemma onlyonce1 [reuse]: " All #i #j. H1() @i & H1() @j ==> #i = #j "
+lemma onlyonce2 [reuse]: " All #i #j. H2() @i & H2() @j ==> #i = #j "
+lemma onlyonce3 [reuse]: " All #i #j. H3() @i & H3() @j ==> #i = #j "
+lemma onlyonce4 [reuse]: " All #i #j. D1()  @i & D1()  @j ==> #i = #j "
+lemma onlyonce6 [reuse]: " All #i #j. BB()@i & BB()@j ==> #i = #j " 
+lemma onlyonce7 [reuse]: " All #i #j. A1()@i & A1()@j ==> #i = #j " 
+
+
+/* ==================
+Functional properties
+=================== */
+
+lemma functional: exists-trace
+	" Ex H v #s #i #i2 D P #d b #h #h2 #k #l BB #m
+		A r skS #o #p
+		.
+		InitK(H,'v',v) @s
+		& Send(H,D,<'v',v>) @i	
+		& Claim(H,'vote') @i2	
+		& D1() @d
+		& Send(H,P,<'b',b>)  @h
+		& Claim(H,'ballot') @h2	
+
+		& BB_rec(BB,<'bs', b  >) @k
+		& BB_tal(BB,<'vs', v >) @l
+
+		& Receive(BB,H,<'bs',b>) @m
+		& From('BB')@m
+		& VerifyA2(A, verzkp(zkp(<encp(v,r,pk(skS))>,<v>,skS),<encp(v,r,pk(skS))>,<v>,pk(skS))) @o
+		& Claim(H,'IVHE4') @p
+		"
+lemma functional2: exists-trace
+	" Ex v #i b #j #k #l #m #n bs
+		#i2 #j2 #i3 #j3 #i4 #j4 A .
+		Claim('H1','vote') @i 		
+		& Goal('H1','vote',<'v',v>) @j
+		& Claim('H1','IVHE4') @k 		
+		& Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>) @l
+		& !HK('H1','b',b) @m
+		& !HK('H1','bs',bs) @n
+		
+		& Claim('H1','IVHE') @i2		
+		& Goal('H1','IVHE',<<'v','b'>,<v,'ukn'>>) @j2	
+		
+		& Claim('H1','IVHE2') @i3 		
+		& Goal('H1','IVHE2',<'v',v>) @j3
+
+		& Claim('H1','IVHE3') @i4 		
+		& Send('H1',A,<'v',v>) @j4
+		"
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_HE:
+		"All v #i b #j #k.
+		Claim('H1','IVHE') @i 		
+		& Goal('H1','IVHE',<<'v','b'>,<v,'ukn'>>) @j	
+		& !HK('H1','b',b) @k
+	==> Ex BB #l r pkS sskD . 
+		BB_rec(BB,<'bs', b  >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) "
+
+lemma indivVerif_HE2:
+	"All v #i #j .
+		Claim('H1','IVHE2') @i 		
+		& Goal('H1','IVHE2',<'v',v>) @j	
+	==> Ex b BB #l r pkS sskD D #d. 
+		BB_rec(BB,<'bs', b  >) @l 	
+		& b = sg(encp(v,r,pkS),sskD)
+		& DeviceKey(D,'H1',sskD) @d" 
+
+lemma indivVerif_HE3:
+	"All v #i #j A.
+		Claim('H1','IVHE3') @i 		
+		& Send('H1',A,<'v',v>) @j	
+	==> Ex b BB #l r pkS sskD D #d. 
+		BB_rec(BB,<'bs', b  >) @l 	
+		& b = sg(encp(v,r,pkS),sskD)
+		& DeviceKey(D,'H1',sskD) @d" 
+
+lemma indivVerif_HE4:
+	"All v #i b #j #k #l #m #n bs.
+		Claim('H1','vote') @i 		
+		& Goal('H1','vote',<'v',v>) @j
+		& Claim('H1','IVHE4') @k 		
+		& Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>) @l
+		& !HK('H1','b',b) @m
+		& !HK('H1','bs',bs) @n
+	==> Ex BB #l r pkS sskD . 
+		BB_rec(BB,<'bs', b  >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) " 
+
+
+
+/*================================
+Universal verifiability properties
+================================*/
+lemma secretSskD [reuse]:
+"All sskD #i.
+	SecretKeyD(sskD) @i
+==> not (Ex #j. K(sskD) @j)"
+
+lemma ballotsFromVoters_HE [reuse]:
+"All S b #i.
+	Learn_A_ballot(S,b) @i
+==> (Ex H S2 #j.
+	Comm_H_ballot(H,S2,b) @j)
+ | (Ex H #j A.
+	Send(H,A,<'b', b>) @j)"
+
+
+lemma Tall_As_Rec_D:
+"All A #a  spkD p votes ballots bPrimes sk xa ra
+	. 
+	Learn_A_spkDSG(A, <'spkD', spkD >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'vs', votes >) @a
+	& Learn_A_Bs(A,<'bs', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the values bPrimes, votes, and p are input to the VerifyA2
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk))>,<xa>,sk) 
+				,<encp(xa,ra,pk(sk))>,<xa>,pk(sk))) @a
+==> (Ex #b BB r1 sskD1 #b2.
+	BB_rec(BB,<'bs', ballots >) @b	
+	& BB_tal(BB,<'vs', votes>) @b	
+	& BB_pskDs(BB,<'spkD', spkD >) @b2		
+	& spkD = pk(sskD1) 
+	& ballots = sg(encp(votes,r1,pk(sk)),sskD1)	
+     )"	
+
+lemma EligVerif:  
+"All A #a spkD votes sk xa ra . 
+	Learn_A_spkDSG(A, <'spkD', spkD >) @a
+	& Learn_A_Vs(A,<'vs', votes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the value votes is input to the VerifyA2. Since it should hold for any b, b',p, and they don't appear on the right side of the implication, they must not be listed (they are reflected in the "forall xa...").
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk))>,<xa>,sk) 
+				,<encp(xa,ra,pk(sk))>,<xa>,pk(sk))) @a
+==> (Ex #b BB H1 #h1 A #b2 #s.
+	BB_tal(BB,<'vs', votes>) @b
+	& BB_pskDs(BB,<'spkD', spkD >) @b2
+	& Send(H1,A,<'v',votes>) @h1
+	& Pseudonym(H1,spkD) @s
+     )"
+
+end
+

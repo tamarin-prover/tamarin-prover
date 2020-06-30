@@ -1,0 +1,108 @@
+theory EnvelopeSimple
+begin
+
+section{* GM Protocol for Contract signing *}
+
+/*
+ * Protocol:    Envelope Protocol [1]
+ * Modeler:     Robert Kunnemann 
+ * Date:    	October 2013
+ *
+ * Status:      not working
+ * [1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel,
+ * "Formal Analysis of Protocols Based on TPM State Registers," csf,
+ * pp.66-80, 2011 IEEE 24th Computer Security Foundations Symposium,
+ * 2011. 
+ *
+ */
+
+builtins: signing, asymmetric-encryption, hashing
+
+/* functions: h/2 */
+
+let extend = 
+    !( in(m); lookup 'pcr' as prev in 
+            event PCR_Write(h(prev,m));
+            insert 'pcr', h(prev,m)
+     )
+
+let quote=
+    !( lookup 'pcr' as pcrvalue in 
+            event PCR_Read(pcrvalue);
+            out (sign(<'certpcr',pcrvalue>,aik))
+     )
+
+let reboot =  0
+    /* disabled for testing */
+    /* !( insert 'pcr','zero') */
+
+let unbind =
+    !( in(<h,aenc(m, pk)>);
+       /* incomplete, simplified model of a sealed blob */
+       lookup <'keyvalue',h> as sk in
+       lookup <'keypcr',h> as pcrvalue in
+       lookup 'pcr' as actualvalue in
+            if pcrvalue=actualvalue then
+                if pk(sk)=pk then
+                    event PCR_Unbind(actualvalue,pk(sk),m);
+                    event PCR_Read(actualvalue);
+                    out(m)
+     )
+                
+let envelope =
+    !( lookup 'pcr' as value in
+            if value = 'zero' then
+                new n;
+                event PCR_Write(h('zero',n));
+                insert 'pcr', h('zero',n);
+                new secret;
+                new bindkey;
+                event Secret(secret);
+                event AttestValue(h(h('zero',n),'deny'));
+                new h;
+                insert <'keyvalue',h>, bindkey;
+                insert <'keypcr',h>, h(h('zero',n),'deny');
+                out(h);
+                out(pk(bindkey));
+                out(aenc(secret,pk(bindkey)));
+                in(sign(<'certpcr', h(h('zero',n),'deny')>,aik));
+                event Denied(secret)
+    )
+
+
+
+insert 'pcr', 'zero';
+event PCR_Write('zero');
+new aik;
+out (pk(aik));
+new tpmkey;
+out (pk(tpmkey));
+( extend || reboot ||  envelope || unbind || quote )
+
+lemma sanity1:
+// Adv. can learn the secret, if he wants to
+exists-trace
+    "Ex s #i #j . Secret(s)@i & K(s)@j"
+
+lemma sanity2:
+// Adv. can learn the secret, if he wants to
+exists-trace
+    "Ex s #i #j . Secret(s)@i & Denied(s)@j"
+
+lemma source [sources]:
+  " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
+        (Ex #j. KU(m) @ j & j < i)
+      | (Ex #j. Secret(m) @ j)
+    )
+  "
+
+lemma PCR_Write_chain [reuse, use_induction]:
+  " (All x #i. PCR_Read(x) @ i ==>
+      (Ex #j. PCR_Write(x) @ j)
+    )
+  "
+
+lemma Secret_and_Denied_exclusive:
+   "not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
+
+end

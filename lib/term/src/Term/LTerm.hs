@@ -406,7 +406,7 @@ ltermNodeId' = ltermVar' LSortNode
 -- | Bound and free variables.
 data BVar v = Bound Integer  -- ^ A bound variable in De-Brujin notation.
             | Free  v        -- ^ A free variable.
-            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary )
+            deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary, IsVar)
 
 -- | 'LVar's combined with quantified variables. They occur only in 'LFormula's.
 type BLVar = BVar LVar

@@ -1,0 +1,286 @@
+#!/usr/bin/python
+
+import re
+import os
+import sys
+import time
+debug = True
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+
+# INPUT:
+# - lines contain a list of "%i:goal" where "%i" is the index of the goal
+# - lemma contain the name of the lemma under scrutiny
+# OUTPUT:
+# - (on stdout) a list of ordered index separated by EOL
+
+rank = []             # list of list of goals, main list is ordered by priority
+maxPrio = 65
+for i in range(0,maxPrio):
+  rank.append([])
+
+if lemma in ["helping_keys_reader_are_secret"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*induction.*', line):
+      rank[49].append(num)
+    elif re.match('.*~~>.*', line):
+      rank[48].append(num)
+    elif (re.match('.*!K.\( ~k.*', line) or
+          re.match('.*!K.\( \(~k.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*Setup\(.*', line)):
+      rank[46].append(num) 
+    elif (re.match('.*Reader\( ~k, ~kp \).*', line)):
+      rank[46].append(num)
+    elif (re.match('.*!K.\( h\(~k.*', line) or
+          re.match('.*!K.\( \(h\(~k.*', line) or
+          re.match('.*!K.\( h\(\(~k.*', line) or
+          re.match('.*!K.\(.*~k.*', line) #experimental!
+    ):
+      rank[44].append(num)
+    elif (re.match('.*Challenge\(', line) or
+          re.match('.*TagRunning\(', line) or
+          re.match('.*Response\(', line)):
+      rank[45].append(num)
+    elif (re.match('.*!K.\( h\(k.*', line)):
+      rank[43].append(num)
+    elif re.match('.*Initiated.*', line):
+      rank[45].append(num)
+    elif (re.match('.*splitEqs\(0\.*', line)):
+      rank[42].append(num)
+      # elif (re.match('.*splitEqs\(4\)*', line)):
+      rank[41].append(num)
+    elif re.match('.*Update.*\( ~.*', line):
+      rank[28].append(num)
+    elif (re.match('.*!K.\( ~r.*', line)):
+      rank[40].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[32].append(num)
+    elif (re.match('.*splitEqs\(2\.*', line)):
+      rank[17].append(num)
+    elif (re.match('.*splitEqs\(3\.*', line)):
+      rank[15].append(num)
+    elif re.match('.*Update.*\(.*', line):
+      rank[2].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["helping_keys_disjoint_XX","helping_keys_disjoint_OutX"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*induction.*', line):
+      rank[49].append(num)
+    elif re.match('.*#i < #j.*', line):
+      rank[48].append(num)
+    elif re.match('.*~~>.*', line):
+      rank[48].append(num)
+    elif (re.match('.*!K.\( ~k.*', line) or
+          re.match('.*!K.\( \(~k.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*Setup\(.*', line)):
+      rank[46].append(num) 
+    elif (re.match('.*Reader\( ~k, ~kp \).*', line)):
+      rank[46].append(num)
+    elif (re.match('.*Reader\( ~k, ~kp.1 \).*', line)):
+      rank[46].append(num)
+    elif (re.match('.*!K.\( h\(~k.*', line) or
+          re.match('.*!K.\( \(h\(~k.*', line) or
+          re.match('.*!K.\( h\(\(~k.*', line) or
+          re.match('.*!K.\(.*~k.*', line) #experimental!
+    ):
+      rank[40].append(num)
+    elif (re.match('.*Challenge\(', line) or
+          re.match('.*TagRunning\(', line) or
+          re.match('.*Response\(', line)):
+      rank[45].append(num)
+    elif (re.match('.*!K.\( h\(k.*', line)):
+      rank[43].append(num)
+    elif re.match('.*Initiated.*', line):
+      rank[46].append(num)
+    elif (re.match('.*splitEqs\(0\.*', line)):
+      rank[42].append(num)
+    elif (re.match('.*splitEqs\(1\.*', line)):
+      rank[41].append(num)
+      # elif (re.match('.*splitEqs\(4\)*', line)):
+      rank[41].append(num)
+    elif re.match('.*Update.*\( ~.*', line):
+      rank[28].append(num)
+    elif (re.match('.*!K.\( ~r.*', line)):
+      rank[40].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[32].append(num)
+    elif (re.match('.*splitEqs\(2\.*', line)):
+      rank[17].append(num)
+    elif (re.match('.*splitEqs\(3\.*', line)):
+      rank[15].append(num)
+    elif re.match('.*Update.*\(.*', line):
+      rank[2].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["helping_keys_disjoint_challenge"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*induction.*', line):
+      rank[49].append(num)
+    elif re.match('.*~~>.*', line):
+      rank[48].append(num)
+    elif (re.match('.*last\(#i\).*', line)):
+      rank[47].append(num)
+    elif (re.match('.*!K.\( ~k.*', line) or
+          re.match('.*!K.\( \(~k.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*Setup\(.*', line)):
+      rank[46].append(num) 
+    elif (re.match('.*Reader\( ~k, ~kp \).*', line)):
+      rank[44].append(num)
+    elif (re.match('.*!K.\( h\(~k.*', line) or
+          re.match('.*!K.\( \(h\(~k.*', line) or
+          re.match('.*!K.\( h\(\(~k.*', line) or
+          re.match('.*!K.\(.*~k.*', line) #experimental!
+    ):
+      rank[44].append(num)
+    elif (re.match('.*Challenge\(', line) or
+          re.match('.*TagRunning\(', line) or
+          re.match('.*Response\(', line)):
+      rank[45].append(num)
+    elif (re.match('.*!K.\( h\(k.*', line)):
+      rank[43].append(num)
+    elif re.match('.*Initiated.*', line):
+      rank[45].append(num)
+    elif re.match('.*Ch\( ~.*', line):
+      rank[44].append(num)
+    elif (re.match('.*splitEqs\(0\.*', line)):
+      rank[42].append(num)
+      # elif (re.match('.*splitEqs\(4\)*', line)):
+      rank[41].append(num)
+    elif re.match('.*Update.*\( ~.*', line):
+      rank[28].append(num)
+    elif (re.match('.*!K.\( ~r.*', line)):
+      rank[40].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[32].append(num)
+    elif (re.match('.*splitEqs\(2\.*', line)):
+      rank[17].append(num)
+    elif (re.match('.*splitEqs\(3\.*', line)):
+      rank[15].append(num)
+    elif re.match('.*Update.*\(.*', line):
+      rank[2].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["helping_keys_disjoint_DD","helping_reader_start"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if re.match('.*induction.*', line):
+      rank[49].append(num)
+    if (re.match('.*Reader\(.*', line)):
+      rank[49].append(num)
+    if (re.match('.*Tag\(.*', line)):
+      rank[48].append(num)
+    if re.match('.*~~>.*', line):
+      rank[48].append(num)
+    if (re.match('.*!K.\( ~k.*', line) or
+          re.match('.*!K.\( \(~k.*', line)):
+      rank[46].append(num)
+    if (re.match('.*Setup\(.*', line)):
+      rank[46].append(num) 
+    if (re.match('.*!K.\( h\(~k.*', line) or
+          re.match('.*!K.\( \(h\(~k.*', line) or
+          re.match('.*!K.\( h\(\(~k.*', line) or
+          re.match('.*!K.\(.*~k.*', line) #experimental!
+    ):
+      rank[44].append(num)
+
+elif lemma in ["alive_reader"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if (re.match('.*Tag\(.*', line)):
+      rank[49].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["recentalive_reader"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if (re.match('.*TagRunning\(.*', line)):
+      rank[49].append(num)
+    elif (re.match('.*Tag\(.*#vr.*', line)):
+      rank[48].append(num)
+    elif (re.match('.*Tag\(.*#i.*', line)):
+      rank[47].append(num)
+    elif (re.match('.*Tag\(.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[40].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["executable"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if (re.match('.*Initiated\(.*', line)):
+      rank[60].append(num)
+    elif (re.match('.*TagRunning\(.*', line)):
+      rank[59].append(num)
+    elif (re.match('.*Response\(.*', line)):
+      rank[58].append(num)
+    elif (re.match('.*Reader\(.*', line)):
+      rank[57].append(num)
+    elif (re.match('.*Tag\(.*', line)):
+      rank[46].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[40].append(num)
+    else:
+      rank[5].append(num)
+
+elif lemma in ["recentalive_tag_bounded"]:
+  for line in lines:
+    num = line.split(':')[0]
+    if debug: sys.stderr.write(line)
+
+    if (re.match('.*Tag1rule\(.*', line)):
+      rank[50].append(num)
+    elif (re.match('.*<.*', line)):
+      rank[49].append(num)
+    elif (re.match('.*Initiated\(.*', line)):
+      rank[40].append(num)
+    elif (re.match('.*Tag\( ~k,.*', line)):
+      rank[39].append(num)
+    elif (re.match('.*splitEqs\(.*', line)):
+      rank[38].append(num)
+    elif (re.match('.*Reader\(.*', line)):
+      rank[37].append(num)
+    elif (re.match('.*!K.\( h\(.*', line)):
+      rank[20].append(num)
+    else:
+      rank[5].append(num)
+
+else:
+  if debug:
+    sys.stderr.write("No lemma found")
+  exit(0)
+
+# Ordering all goals by ranking (higher first)
+for listGoals in reversed(rank):
+  for goal in listGoals:
+    if debug:
+      sys.stderr.write(goal)
+    print goal
+

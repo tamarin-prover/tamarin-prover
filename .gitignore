@@ -32,3 +32,5 @@ unit
 client_session_key.aes
 
 .DS_Store
+tags
+stack.yaml.lock
