@@ -1,0 +1,206 @@
+theory EncWrapDecUnwrap
+
+/*
+ * Protocol:    Enc/Wrap/Dec/Unwrap 
+ * Modelaler:     Robert Kunnemann 
+ * Date:    	November 2014
+ *
+ * Status:      working 
+ */
+
+/* Some more comments: This is supposed to model typical problems that
+ * arise from keys having the roles wrap and dec in PKCS\#11. We model
+ * four commands, besides the creation of a key: Encryption of userdata,
+ * Decryption of arbitrary Cyphertexts, Key-wrapping and Unwrapping, that
+ * is: re-importing of keys. The configuration allows to move from 'init'
+ * to 'wrap', or to move from 'init' to 'dec'. 
+ *
+ * 'dec' allows to encrypt/decrypt
+ * 'wrap' allows to wrap/unwrap
+ *
+ * Locking is on a per-handle basis. This is more liberal than a global device
+ * locking. The same model without any locks produces an attack, as
+ * encwrapdecunwrap-nolocks.sapic witnesses.
+ */
+
+begin
+
+builtins: symmetric-encryption
+
+functions: key/1,att/1,sencSucc/2, true/0
+
+equations:
+     key (<k,a>) = k
+   , att (<k,a>) = a
+   , sencSucc(senc(m,k),k)=true()
+
+
+!(
+	( in('create'); 
+            new L_h; 
+            lock L_h;
+            new k; 
+            event NewKey(L_h,k); 
+            insert L_h,<k,'init'>; 
+            out(L_h);
+            unlock L_h
+        )
+  ||
+	( in(<'set_wrap',L_h>);
+          lock L_h;
+                lookup L_h as v in
+		if att(v)='init' then 
+			event WrapKey(L_h,key(v)); 
+			insert L_h, <key(v),'wrap'>; 
+			event WrapHandle(L_h); 
+                        unlock L_h
+)
+  ||
+	( in(<'set_dec',L_h>);
+          lock L_h;
+                lookup L_h as v in
+		if att(v)='init' then 
+			event DecKey(L_h,key(v)); 
+			insert L_h, <key(v),'dec'>; 
+                        unlock L_h
+)
+  || //Dec
+	( in(<L_h,c>);
+          lock L_h;
+        lookup L_h as v in 
+	if att(v)='dec' then 
+            if sencSucc(c,key(v)) = true() then
+                let m = sdec(c,key(v)) in
+		event DecUsing(key(v),m);
+                out(m);
+                unlock L_h
+			)
+  || //Enc
+	( in(<L_h,m>); 
+          lock L_h;
+        lookup L_h as v in 
+            if att(v)='dec' then 
+                event EncUsing(key(v),m); 
+                out(senc(m,key(v))) ;
+                unlock L_h
+        )
+  || //Wrap
+	( in(<L_h1,L_h2>); 
+          lock L_h1;
+        lookup L_h1 as v1 in 
+            if att(v1)='wrap' then
+                lookup L_h2 as v2 in 
+                    if att(v2)='wrap' then
+                        event Wrap(key(v1),key(v2));
+                        out(senc(key(v2),key(v1)));
+                        unlock L_h1
+			)
+  || //Unwrap
+	( in(<L_h,senc(m,k)>); 
+          lock L_h;
+          lookup L_h as v in 
+            if att(v)='wrap' then 
+                if key(v)=k then
+                    new L_h2;
+                    event Unwrapped(L_h2,m);
+                    insert L_h2,<m,'wrap'>;
+                    out (L_h2);
+                    unlock L_h
+        )
+)
+
+// Sanity lemmas to be shown manually.
+
+/* manually verified Tue Dec 20 12:54:01 CET 2016 */
+/* lemma can_create_key: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k. NewKey(h,k)@t" */
+
+/* manually verified Tue Dec 20 12:54:01 CET 2016 */
+/* lemma can_set_wrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h .WrapHandle(h)@t" */
+
+/* (this sanity test is not automatic ) */
+/* manually verified Tue Dec 20 12:54:01 CET 2016 */
+/* see EncWrapDecUnwrap/encwrapdecunwrap_can_unwrap_manual.spthy */
+/* lemma can_unwrap: //for sanity */
+/* 	exists-trace */
+/* 	"Ex #t h k.Unwrapped(h,k )@t" */
+
+lemma dec_limits[sources]: 
+// a message that can be decrypted was either encrypted on the device, or some key leaked.
+// Also, every key that is unwrapped at some point was created earlier.
+	"( 
+          All k m #t1. DecUsing(k,m)@t1 ==> 
+          ( Ex h2  k2 #t2 #t3. NewKey(h2, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+	| ( Ex #t2 . EncUsing(k,m)@t2 & t2<t1 )
+        | ( Ex h2  k2 #t2 #t3. Unwrapped(h2, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+        | ( Ex #t2 #t3 h1 h2 k2 .  WrapKey(h2, k2) @ t2 & DecKey(h1,k2) @ t3 
+                                  & t2<t1 & t3<t1 
+          )
+        | ( Ex #t2 #t3 h1 h2 k2 .  Unwrapped(h2, k2) @ t2 & DecKey(h1,k2) @ t3 
+                                  & t2<t1 & t3<t1 
+          )
+        )
+"
+
+lemma wrap_key_origins [use_induction,reuse]: 
+"All h2 k #t2 . Unwrapped (h2,k)@t2 ==>
+         (Ex h1 #t1. NewKey (h1,k)@t1 & t1<t2 )
+          & 
+          (Ex hp #t0 . WrapKey(hp,k)@t0
+             &   (#t0 = #t2 | #t0 < #t2)
+             &   (All hpp #t1 . Unwrapped(hpp,k)@#t1 ==>  #t0 < #t1 )
+             )
+        | ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 & t1<t2 & t0<t2)
+        | ( Ex #t0 #t1 h1 h2 k.  WrapKey(h2, k)@ t0 & DecKey(h1,k) @ t1 
+                & t0<t2 & t1<t2 
+                )
+        | ( Ex #t0 #t1 h1 h2 k.  Unwrapped(h2, k)@ t0 & DecKey(h1,k) @ t1 
+                & t0<t2 & t1<t2 
+                )
+         "
+
+lemma no_key_is_wrap_and_dec_ind[use_induction,reuse]: 
+        "All #t2 #t3 h1 h2 k .  (DecKey(h1,k) @ t2 & WrapKey(h2, k) @ t3)
+        ==>
+          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 
+              & 
+             (  ( t1<t3 & t0<t3)
+              | ( t1<t2 & t0<t2) )
+          )
+        "
+
+lemma no_key_is_wrap_and_dec_ind2[use_induction,reuse]: 
+        "All #t2 #t3 h1 h2 k .  (DecKey(h1,k) @ t2 & Unwrapped(h2, k) @ t3)
+        ==>
+          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 
+              & 
+             (  ( t1<t3 & t0<t3)
+              | ( t1<t2 & t0<t2) )
+          )
+        "
+
+lemma cannot_obtain_key_ind[reuse,use_induction]:
+	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
+
+lemma cannot_obtain_key:
+	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+
+end
+
+/* ============================================================================== */
+/* summary of summaries: */
+
+/* analyzed: encWrapDecUnwrap/encwrapdecunwrap.spthy */
+
+/*   dec_limits (all-traces): verified (290 steps) */
+/*   wrap_key_origins (all-traces): verified (1236 steps) */
+/*   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps) */
+/*   no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps) */
+/*   cannot_obtain_key_ind (all-traces): verified (422 steps) */
+/*   cannot_obtain_key (all-traces): verified (2 steps) */
+
+/* ============================================================================== */
+/* tamarin-prover --prove encWrapDecUnwrap/encwrapdecunwrap.spthy  447.84s user 45.80s system 148% cpu 5:31.39 total */

@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveTraversable       #-}
-{-# LANGUAGE DeriveAnyClass       #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -34,15 +28,16 @@ module Theory.Sapic.Print (
 -- import           Data.Foldable
 import           Theory.Model.Fact
 import           Theory.Model.Rule
+import           Theory.Model.Formula
 import           Theory.Sapic
 -- import           Term.LTerm
 import           Theory.Text.Pretty
 
 
-rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> String
-rulePrinter l a r = render $ prettyRule l a r
+rulePrinter :: [LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String
+rulePrinter l a r res = render $ prettyRuleRestr l a r res
 
--- | Instantiate prenters with rulePrinter from Theory.Text.Pretty
+-- | Instantiate printers with rulePrinter from Theory.Text.Pretty
 prettySapicAction :: SapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
 

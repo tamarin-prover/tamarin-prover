@@ -563,6 +563,7 @@ formulaFacts =
       (const mappend) (const $ const id)
   where
     atomFacts (Action _ fa)   = [fa]
+    atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
     atomFacts (EqE _ _)       = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
@@ -572,10 +573,12 @@ formulaTerms :: Formula s c v -> [VTerm c (BVar v)]
 formulaTerms =
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
   where
-    atomTerms (Action i fa)   = i : factTerms fa
-    atomTerms (EqE t s)       = [t, s]
-    atomTerms (Less i j)      = [i, j]
-    atomTerms (Last i)        = [i]
+    atomTerms (Action i fa)        = i : factTerms fa
+    atomTerms (Syntactic _)       = []
+    -- atomTerms (Syntactic (Pred p)) = factTerms p
+    atomTerms (EqE t s)            = [t, s]
+    atomTerms (Less i j)           = [i, j]
+    atomTerms (Last i)             = [i]
 
 -- TODO: Perhaps a lot of errors would be captured when making the signature
 -- of facts, term, and atom constructors explicit.

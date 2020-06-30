@@ -56,6 +56,7 @@ module Term.Unification (
   , symEncMaudeSig
   , asymEncMaudeSig
   , signatureMaudeSig
+  , locationReportMaudeSig
   , revealSignatureMaudeSig
   , hashMaudeSig
   , rrulesForMaudeSig
@@ -133,7 +134,7 @@ unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
 
 -- | Flatten a factored substitution to a list of substitutions.
 flattenUnif :: IsConst c => (LSubst c, [LSubstVFresh c]) -> [LSubstVFresh c]
-flattenUnif (subst, substs) = 
+flattenUnif (subst, substs) =
     (\res -> trace (show ("flattenUnif",subst, substs,res )) res) $ map (`composeVFresh` subst) substs
 
 -- Unification without AC

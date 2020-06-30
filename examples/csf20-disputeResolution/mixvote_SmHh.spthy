@@ -1,0 +1,462 @@
+theory mixvote_SmHh
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	MixVote
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Dispute Resolution in Voting", David Basin, Sasa Radomirovic, and Lara Schmid, CSF20.
+
+========
+RESULTS:
+========
+lemmas labeled with "reuse" are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct
+
+- lemma functional: 	verified 
+
+- lemma onlyonce1 [reuse]: verified
+- lemma onlyonce2 [reuse]: verified
+- lemma onlyonce3 [reuse]: verified
+- lemma onlyonce4 [reuse]: verified
+- lemma onlyonce5 [reuse]: verified
+- lemma onlyonce6 [reuse]: verified
+- lemma onlyonce7 [reuse]: verified
+- lemma onlyonce8 [reuse]: verified
+- lemma onlyonce9 [reuse]: verified
+- lemma onlyonce10 [reuse]: verified 
+
+- lemma indivVerif: 	verified 
+- lemma VoterC: 	verified 
+- lemma TimelyP: 	verified 
+- lemma Uniqueness:	verified 
+		
+- lemma secretSskD [reuse]: 	   verified 
+- lemma ballotsFromVoters [reuse]: verified 
+
+- lemma TalliedAsRecorded: verified 
+- lemma EligVerif: verified when restrictions of channels are disabled (since this shows that a superset of the original protocol is a subset of the trace property, so is the original protocol)
+
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: hashing, asymmetric-encryption
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+// the function models that given a signature, one can also see the signed plaintext (only if one has the public key, but adversary has all public keys). With this, we do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+
+
+/* ==========
+Channel rules
+============= */
+
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+//reliable insecure channel from H to P: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_HP:  	[ Out_IR_HP($A,$B,m) ]--[ ChanOut_IR_HP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_HP:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_HP($A,$B,m) ]->[ In_IR_HP($A,$B,m) ] 
+restriction Chan_R_HP:
+	"All A B m #i. Send_R_HP(A,B,m) @i ==> Ex #j. Receive_R_HP(A,B,m) @j "
+ 
+//reliable insecure channel from P to S: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_PS:  	[ Out_IR_PS($A,$B,m) ]--[ ChanOut_IR_PS($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PS:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PS($A,$B,m) ]->[ In_IR_PS($A,$B,m) ] 
+restriction Chan_R_PS:
+	"All A B m #i. Send_R_PS(A,B,m) @i ==> Ex #j. Receive_R_PS(A,B,m) @j "
+ 
+//reliable insecure channel from S to P: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_SP:  	[ Out_IR_SP($A,$B,m) ]--[ ChanOut_IR_SP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_SP:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_SP($A,$B,m) ]->[ In_IR_SP($A,$B,m) ] 
+restriction Chan_R_SP:
+	"All A B m #i. Send_R_SP(A,B,m) @i ==> Ex #j. Receive_R_SP(A,B,m) @j "
+ 
+
+//reliable insecure channel from P to H: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_PH:  	[ Out_IR_PH($A,$B,m) ]--[ ChanOut_IR_PH($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PH:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PH($A,$B,m) ]->[ In_IR_PH($A,$B,m) ] 
+restriction Chan_R_PH:
+	"All A B m #i. Send_R_PH(A,B,m) @i ==> Ex #j. Receive_R_PH(A,B,m) @j "
+ 
+
+
+/* ======================
+Adversary's fake evidence
+====================== */
+// the adversary can claim any term that he knows to be evidence
+rule fakeEvidence:
+	[ In(<ballot,evidence>) ] --[ Evidence(ballot,evidence) ]-> [ ] 
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~sskD1) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkD', pk(~sskD1)>), //corresponds to signal BBpkD in [1]
+		BB_pkS('BB',<'spkS', pk(~skS)>), //corresponds to signal BBpk in [1]
+		BB_H('BB',<'H','H1'>),
+		// castBy is defined over the relation of the voters and their devices' keys
+		CastByCorresp('H1', pk(~sskD1)), //corresponds to signal "Corr" in [1]
+		Voter('H1'),
+		SecretKeyD(~sskD1),
+		Server('S')
+	]-> 
+  	[ AgSt_H0('H1',< 'D1','P','BB',$v1>)
+		
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),~sskD1 >)
+	
+	, AgSt_A0('A',<'S','BB',pk(~skS)>)
+	
+	, AgSt_P0('P',<'S'>)
+	, AgSt_P1('P',<'H1'>)
+	
+	, AgSt_BB0('BB', <'S', pk(~sskD1), pk(~skS),'H1'>)
+	, Out_A('BB',<'spkD', pk(~sskD1)>)
+	, Out_A('BB',<'spkS', pk(~skS)>)
+	, Out_A('BB',<'H','H1'>)
+	
+	, AgSt_S0('S', <~skS, pk(~sskD1)>)
+	, Out(<'S', <~skS, pk(~sskD1)>>)
+		
+  	]
+
+rule H_1:
+	[ AgSt_H0($H, <$D, $P, $BB, $v>) ]
+	--[	Vote($H,$v),
+		Send($H,$D,$v),
+		H1()
+	]->
+	[ AgSt_H1($H, <$D, $P, $BB, $v>), Out_S($H,$D,$v)
+	]
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,~sskD >), In_S($H,$D,v), Fr(~r) ]
+	--[  	D1() ]->
+	[ Out_S($D,$H, sg(encp(v,~r,pkS),~sskD) )
+	]
+
+rule H_2:
+	[ AgSt_H1($H, <$D, $P, $BB, $v>), In_S($D,$H, b) ]
+	--[	Ballot($H,b),
+		Send($H,$P,b),
+		Comm_H_vote($H,$S,$v),
+		Comm_H_ballot($H,$S,b),
+		Send_R_HP($H,$P,b),
+		H2()	
+	]->
+	[ AgSt_H2($H, <$D, $P, $BB, $v, b>),
+	  Out_IR_HP($H,$P,b)
+	]
+
+rule P: // P is partially trusted to forward messages from H to S
+	[ AgSt_P0($P,<$S>), In_IR_HP($H,$P,b)] 
+	--[ Receive_R_HP($H,$P,b),
+	    Send_R_PS($P,$S,b),
+	    P1()
+	]->
+	[  Out_IR_PS($P,$S,b) ]
+
+rule S_1a: // S is partially trusted to answer with a confirmation when receiving a valid ballot
+	[ AgSt_S0($S, < ~skS, pk(~sskDa)>), 
+	  In_IR_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)) ]
+	--[ Learn_S_ballot($S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Receive_R_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Send_R_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS)),
+	    S1()
+	]->
+	[ Out_IR_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS))
+	]
+
+rule P_2: // P is partially trusted to forward messages from S to H
+	[ AgSt_P1($P,<$H>), In_IR_SP($S,$P,c) ] 
+	--[ Receive_R_SP($S,$P,c),
+	    Send_R_PH($P,$H,c),
+	    P2()
+	]->
+	[  Out_IR_PH($P,$H,c) ]
+
+rule H_3:
+	[ AgSt_H2($H, <$D, $P, $BB, $v, b>), In_IR_PH($P,$H,c)]
+	--[ Receive_R_PH($P,$H,c),
+	    Evidence(b,c),
+	    H3()
+	]->
+	[ AgSt_H3($H, <$D, $P, $BB, $v, b, c>)
+	]
+
+rule BB: 
+	[ AgSt_BB0($BB, <$S, spkDa, pkS,Ha>)
+	, In(<$S, <'b', ba >>)
+	, In(<$S, <'bPrime', bPrimea >>)
+	, In(<$S, <'v', va >>)
+	, In(<$S, <'zkp', p >>)
+	]
+ 	--[	BB_rec($BB,<'b', ba >),
+		BB_woS($BB,<'bPrime', bPrimea >),
+		BB_tal($BB,<'v', va >),
+		BB_zkp($BB,<'zkp', p >),
+		End()
+	]->  
+	[ Out_A($BB, <'b', ba>)
+	, Out_A($BB, <'bPrime', bPrimea >)
+	, Out_A($BB, <'v', va>)
+	, Out_A($BB, <'zkp', p >)
+	]
+	
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,pkS>)
+	// implicitly do verifyA1 (by pattern matching) since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really corresponds to b without signatures:
+	, In_A($BB, <'b', sg(bPrimea,sskDa) >)
+	, In_A($BB, <'bPrime', bPrimea >)
+	, In_A($BB, <'v', va>)
+	, In_A($BB, <'zkp', p >)
+	, In_A($BB, <'spkD', pk(sskDa) >) 
+	]
+	--[   Learn_A_proof($A, <'zkp', p >),
+	      Learn_A_spkDSG($A, <'spkD', pk(sskDa) >),
+	      Learn_A_Vs($A,<'v', va >),
+	      Learn_A_Bs($A,<'b', sg(bPrimea,sskDa) >),
+	      Learn_A_bPrimes($A,<'bPrime', bPrimea >),
+	      VerifyA2($A,verzkp( p, <bPrimea>,<va>,pkS) ),
+	      A1()
+	]->
+	[]
+
+rule H_4: 
+	[ AgSt_H3($H, <$D, $P, $BB, $v, b, c>),
+	  In_A($BB, <'b', ba >)
+	]
+	--[	Verify($H,b,ba), //captures both VerifyC and VerifyH from [1]
+	  	H4()
+	]->
+	[   ]
+
+
+
+/* =========
+RESTRICTIONS
+========= */
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+
+/* ====
+LEMMAS 
+======= */
+
+lemma onlyonce1 [reuse]: " All #i #j. H1() @i & H1() @j ==> #i = #j "
+lemma onlyonce2 [reuse]: " All #i #j. H2() @i & H2() @j ==> #i = #j "
+lemma onlyonce3 [reuse]: " All #i #j. H3() @i & H3() @j ==> #i = #j "
+lemma onlyonce4 [reuse]: " All #i #j. H4() @i & H4() @j ==> #i = #j "
+lemma onlyonce5 [reuse]: " All #i #j. P1()  @i & P1()  @j ==> #i = #j "
+lemma onlyonce6 [reuse]: " All #i #j. P2() @i & P2() @j ==> #i = #j "
+lemma onlyonce7 [reuse]: " All #i #j. D1()  @i & D1()  @j ==> #i = #j "
+lemma onlyonce8 [reuse]: " All #i #j. S1() @i & S1() @j ==> #i = #j "
+lemma onlyonce9 [reuse]: " All #i #j. End()@i & End()@j ==> #i = #j " 
+lemma onlyonce10 [reuse]: " All #i #j. A1()@i & A1()@j ==> #i = #j " 
+
+
+/* ================
+FUNCTIONAL PROPERTY
+=================== */
+
+lemma functional: exists-trace
+	" Ex H1 v
+		 #i #d #h b P #p S #s c #p2 #i2 #k #l BB #m
+		A bPrimea skS #o
+		.
+		Vote(H1,v) @i	
+		& D1() @d
+		& Ballot(H1,b) @h
+		& Receive_R_HP(H1,P,b)	@p
+
+		& Receive_R_PS(P,S,b) @s
+		& Send_R_SP(S,P,c) @s
+		& Receive_R_SP(S,P,c) @p2
+		& Send_R_PH(P,H1,c) @p2
+		& Evidence(b,c) @i2
+
+		& BB_rec(BB,<'b', b  >) @k
+		& BB_tal(BB,<'v', v >) @l
+
+		& Verify(H1,b,b ) @m
+		& VerifyA2(A, verzkp( zkp(<bPrimea>,<v>,skS)  ,<bPrimea>,<v>,pk(skS) )) @o
+		"
+
+
+/*======================
+INDIVIDUAL VERIFIABILITY:
+=======================*/
+
+lemma indivVerif: 
+	"All H v #i b #j .
+		Vote(H,v) @i 			
+		& Verify(H,b,b) @j	
+	==> Ex BB #l r pkS sskD . 
+		BB_rec(BB,<'b', b >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) " 	
+
+
+
+/*================
+DISPUTE RESOLUTION
+==================*/
+
+lemma VoterC: 
+	"All H b #j b1  .
+		Verify(H,b,b1 ) @j 
+	==> ( Ex BB #k .					
+		BB_rec(BB,<'b', b >) @k )	
+	|   //Faulty(S,b)
+	    ( Ex BB skS #k #l #m ba . 
+		BB_rec(BB,<'b', ba >) @k
+		& not (b=ba) 
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)
+	|   //Faulty's second disjunct
+	    ( Ex BB ba bPrimea sskDa #k #l #m. 
+		BB_rec(BB,<'b', ba >) @k
+		& BB_woS(BB,<'bPrime', bPrimea >)@l
+		& BB_pskDs(BB,<'spkD', pk(sskDa) >)@m 	 
+		& not ba = sg(bPrimea,sskDa) 
+		)"
+
+// As BB is honest, BB_recorded is always executed before End(), i.e., k<j holds as required by Definition 2 [1]. We thus omit this for optimization.
+lemma TimelyP: 
+	"All H b #i #j.
+		Ballot(H,b) @i & End() @j & i<j 
+	==> (  Ex BB #k .					
+		BB_rec(BB,<'b', b >) @k )	
+	|   //Faulty(S,b)
+	    ( Ex BB skS #k #l #m ba . 
+		BB_rec(BB,<'b', ba >) @k
+		& not (b=ba) 
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)	
+	|   //Faulty's second disjunct
+	    ( Ex BB ba bPrimea sskDa #k #l #m. 
+		BB_rec(BB,<'b', ba >) @k
+		& BB_woS(BB,<'bPrime', bPrimea >)@l
+		& BB_pskDs(BB,<'spkD', pk(sskDa) >)@m 	 
+		& not ba = sg(bPrimea,sskDa) 
+		)"
+
+
+
+lemma Uniqueness:  
+"All #i bs BB
+	. 
+	// not exists b. Faulty(S,b)
+	not (Ex b BB skS #k #l #m ba . 
+		BB_rec(BB,<'b', ba >) @k
+		& not (b=ba) 
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)	
+	&    //Faulty's second disjunct
+	not (Ex BB ba bPrimea sskDa #k #l #m. 
+		BB_rec(BB,<'b', ba >) @k
+		& BB_woS(BB,<'bPrime', bPrimea >)@l
+		& BB_pskDs(BB,<'spkD', pk(sskDa) >)@m 	 
+		& not ba = sg(bPrimea,sskDa) 
+		)
+	& BB_rec(BB,<'b', bs >) @i
+==> (Ex BB H1 bPrime1 sskD1 #bb #s #h1 P .
+	BB_H(BB,<'H', H1 >) @bb	
+	//castby(b1)= H1 when:
+	& bs = sg(bPrime1,sskD1) 
+	& CastByCorresp(H1,pk(sskD1)) @s
+ 	& Send(H1,P,bs) @h1 
+     )"
+
+
+/*=====================
+UNIVERSAL VERIFIABILITY
+=====================*/
+lemma secretSskD [reuse]:
+"All sskD #i.
+	SecretKeyD(sskD) @i
+==> not (Ex #j. K(sskD) @j)"
+
+
+lemma ballotsFromVoters [reuse]:
+"All S b #i.
+	Learn_S_ballot(S,b) @i
+==> (Ex H S2 #j.
+	Comm_H_ballot(H,S2,b) @j)"
+
+
+lemma TalliedAsRecorded:  
+"All A #a spkD p votes ballots bPrimes sk xa ra
+	. 
+	Learn_A_spkDSG(A, <'spkD', spkD >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the values bPrimes, votes, and p are input to the VerifyA2
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk))>,<xa>,sk) 
+				,<encp(xa,ra,pk(sk))>,<xa>,pk(sk))) @a
+==> (Ex #b BB r1 sskD1 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkD', spkD >) @b2		
+	& spkD =  pk(sskD1)
+	& ballots = sg(encp(votes,r1,pk(sk)),sskD1)	
+     )"	
+
+lemma EligVerif:  
+"All A #a votes sk xa ra . 
+	Learn_A_Vs(A,<'v', votes >) @a
+	//by application of rule, A1 is checked
+	//by application of rule, it is made sure that the value 'votes' are input to the VerifyA2
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk))>,<xa>,sk) 
+				,<encp(xa,ra,pk(sk))>,<xa>,pk(sk))) @a
+==> (Ex #b #b2 BB H1 #h1 A1.
+	BB_tal(BB,<'v', votes>) @b
+	& BB_H(BB,<'H', H1 >) @b2
+	& Send(H1,A1,votes) @h1
+     )"	
+
+end
+
+	     			   
+
+
