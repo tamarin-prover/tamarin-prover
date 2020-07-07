@@ -1125,12 +1125,17 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 else Just protTerm'
               return (x, protTerm, v', z)
 
+        -- notInTerm :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+
+        -- allToAddTerms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        -- allToAddTerms = protectedSubterms ++ notInTerm
+
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
         inputsAndOutputs :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
         inputsAndOutputs = do
             -- iterate over all inputs
-            (rin, tin, vin, pos) <- protectedSubterms
+            (rin, tin, vin, pos) <- protectedSubterms -- TODO : remplacer protectedSubterms par allToAddTerms
             -- find matching conclusions
             let matches = matchingConclusions rin tin
             return (rin, tin, vin, pos, matches)
