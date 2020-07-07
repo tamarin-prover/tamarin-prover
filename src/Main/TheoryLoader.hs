@@ -268,7 +268,9 @@ closeThy as thy0 = do
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if (last lemmaNames == "*")
+            then any (`isPrefixOf` get lName lem) lemmaNames
+            else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
@@ -305,7 +307,9 @@ closeDiffThy as thy0 = do
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if (last lemmaNames == "*")
+            then any (`isPrefixOf` get lName lem) lemmaNames
+            else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
