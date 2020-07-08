@@ -63,7 +63,6 @@ import           Theory.Text.Parser.Token
 import           Debug.Trace
 
 import           Data.Functor.Identity
-
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
@@ -863,7 +862,13 @@ equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
-        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        ssisse <- term llitNoPub True 
+        sson <- equalSign
+        ssette <- term llitNoPub True
+        traceM $ show ssisse
+        traceM $ show ssette
+        rrule <- RRule <$> ssisse <*> (sson *> ssette)
+        --traceM $ show rrule
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
@@ -1293,7 +1298,7 @@ theory flags0 = do
     msig <- getState
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
-    thyId <- identifier
+    thyId <- identifier   
     symbol_ "begin"
         *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
         <* symbol "end"
@@ -1319,7 +1324,7 @@ theory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
-           -- add legacy deprecation warning output
+           -- add legacy deprecation warning ouflag <- symbol_ "#ifdef" *> identifiertput
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
