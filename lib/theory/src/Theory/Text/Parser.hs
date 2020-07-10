@@ -38,6 +38,7 @@ import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
+import           Data.List                  (isInfixOf)
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
 
@@ -862,13 +863,10 @@ equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
-        ssisse <- term llitNoPub True 
-        sson <- equalSign
-        ssette <- term llitNoPub True
-        traceM $ show ssisse
-        traceM $ show ssette
-        rrule <- RRule <$> ssisse <*> (sson *> ssette)
-        --traceM $ show rrule
+        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        if (or $ map (`isInfixOf` show rrule) ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+          then fail $ "`" ++ show rrule ++ "` is a reserved function name for builtins."
+          else return ()
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
