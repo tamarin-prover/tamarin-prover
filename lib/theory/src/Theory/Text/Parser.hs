@@ -40,7 +40,6 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
-import           Data.List                  (isInfixOf)
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -273,7 +272,7 @@ fact' pterm = try (
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
        mkProtoFact multi i (S.fromList ann) ts
-    <?> "fact") 
+    <?> "fact" )
   where
     singleTerm _ constr [t] = return $ constr t
     singleTerm f _      ts  = fail $ "fact '" ++ f ++ "' used with arity " ++
@@ -865,9 +864,6 @@ equations =
     where
       equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
-        if (or $ map (`isInfixOf` show rrule) ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-          then fail $ "`" ++ show rrule ++ "` contains a reserved function name for builtins."
-          else return ()
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
@@ -1357,14 +1353,11 @@ theory flags0 = do
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       traceM $ show flag
+       thy' <- addItems flags thy
+       symbol_ "#endif"
        if flag `S.member` flags
-         then do thy' <- addItems flags thy
-                 symbol_ "#endif"
-                 addItems flags thy'
-         else do _ <- manyTill anyChar (try (string "#"))
-                 symbol_ "endif"
-                 addItems flags thy
+         then addItems flags thy'
+         else addItems flags thy
 
     -- check process defined only once
     -- add process to theoryitems
