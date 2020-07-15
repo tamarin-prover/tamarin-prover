@@ -38,9 +38,9 @@ import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
-import           Data.List                  (isInfixOf)
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
+import           Data.List                  (isInfixOf)
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -64,6 +64,7 @@ import           Theory.Text.Parser.Token
 import           Debug.Trace
 
 import           Data.Functor.Identity
+
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
@@ -272,7 +273,7 @@ fact' pterm = try (
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
        mkProtoFact multi i (S.fromList ann) ts
-    <?> "fact" )
+    <?> "fact") 
   where
     singleTerm _ constr [t] = return $ constr t
     singleTerm f _      ts  = fail $ "fact '" ++ f ++ "' used with arity " ++
@@ -865,7 +866,7 @@ equations =
       equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         if (or $ map (`isInfixOf` show rrule) ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-          then fail $ "`" ++ show rrule ++ "` is a reserved function name for builtins."
+          then fail $ "`" ++ show rrule ++ "` contains a reserved function name for builtins."
           else return ()
         case rRuleToCtxtStRule rrule of
           Just str ->
@@ -1296,7 +1297,7 @@ theory flags0 = do
     msig <- getState
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
-    thyId <- identifier   
+    thyId <- identifier
     symbol_ "begin"
         *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
         <* symbol "end"
@@ -1322,7 +1323,7 @@ theory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
-           -- add legacy deprecation warning ouflag <- symbol_ "#ifdef" *> identifiertput
+           -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
