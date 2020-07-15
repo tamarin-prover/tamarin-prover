@@ -13,6 +13,7 @@ module Theory.Model (
   , module Theory.Model.Formula
   , module Theory.Model.Rule
   , module Theory.Model.Signature
+  , module Theory.Model.Restriction
   )
   where
 
@@ -23,3 +24,4 @@ import           Theory.Model.Fact
 import           Theory.Model.Formula
 import           Theory.Model.Rule
 import           Theory.Model.Signature
+import           Theory.Model.Restriction

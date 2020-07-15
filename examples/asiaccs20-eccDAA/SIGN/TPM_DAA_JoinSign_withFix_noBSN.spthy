@@ -1,0 +1,2069 @@
+theory TPM_DAA_JoinSign_withFix_NoBSN
+begin
+
+/*
+  Protocol:	TPM_DAA
+
+time tamarin-prover TPM_DAA_JoinSign_withFix_BSN.spthy\
+ --heuristic=O --oraclename=Oracle_Sign.py\
+ --prove +RTS -N10 -RTS
+
+real    85m14.772s
+user    333m1.244s
+sys     218m59.964s
+==============================================================================
+summary of summaries:
+
+analyzed: TPM_DAA_JoinSign_withFix_noBSN.spthy
+
+Sanity checks:
+
+  auto_bind_restriction (all-traces): verified (14 steps)
+  auto_restriction_one_host_per_tpm (all-traces): verified (14 steps)
+  auto_restriction_one_tpm_per_host (all-traces): verified (12 steps)
+  auto_restricition_pke_comes_from_tpm (all-traces): verified (5 steps)
+  auto_restriction_single_issuer (all-traces): verified (2 steps)
+  auto_verify_multiple_pkes (exists-trace): verified (30 steps)
+
+SP1 - Correctness
+
+  oracle_correctness_two_sigs_same_credentials (exists-trace): verified (62 steps)
+  oracle_correctness_two_sigs_different_credentials (exists-trace): verified (63 steps)
+  oracle_correctness_join_only (exists-trace): verified (54 steps)
+  oracle_correctness_no_verify (exists-trace): verified (69 steps)
+  oracle_correctness_with_verify (exists-trace): verified (78 steps)
+
+SP7 - Authentication
+
+  oracle_auth_aliveness_host_very_weak (all-traces): verified (4 steps)
+  oracle_auth_aliveness_host (all-traces): verified (611 steps)
+  oracle_auth_aliveness_issuer (all-traces): verified (4 steps)
+  oracle_auth_weak_agreement_host (all-traces): verified (1945 steps)
+  oracle_auth_non_injective_agreement_host_issuer (all-traces): verified (1946 steps)
+  oracle_auth_injective_agreement_host_issuer (all-traces): verified (14203 steps)
+  oracle_auth_secrecy_cre (all-traces): verified (720 steps)
+
+SP3 - Unforgeability
+
+  oracle_SP3_Unforgeability (all-traces): verified (1093 steps)
+==============================================================================
+
+*/
+
+builtins:   asymmetric-encryption, symmetric-encryption
+
+functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3,
+			 multp/2, plus/2, minus/2, len16/1, 
+             H_SHA256/1,  H_k_1/1, H_k_4/4, H_k_6/6, H_n_2/2, H_n_8/8, curlyK/1, E/2, E_S/2, L_J/2, RB/2, RD/2, 
+			 calcE/1, calcE_S/1, calcL_J/1, calcRB/1, calcRD/1, Nonce/1,
+			 PkX/2, PkY/2, verifyCre1/4, verifyCre2/5,verifyCre3/4,verifyCre4/5,
+			 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, Message/1
+			 
+
+equations:  
+			
+			calcE( 
+				minus(
+					multp(
+							plus(
+								r_cv,
+								multp(
+										H_n_2(n_J, H_k_1(H_k_4(P1,Q,E(r_cv,P1),str))),
+										f
+									)
+								),
+							P1
+						),
+					multp(
+							H_n_2(n_J, H_k_1(H_k_4(P1, Q, E(r_cv,P1), str))),
+							multp(
+									f,
+									P1
+								)
+						)
+					)
+				) = E(r_cv,P1)
+				,
+
+			calcRB(
+				minus(
+					multp(
+						plus(l,multp(multp(y,r),H_n_8(P1, multp(f,P1), RB(l,P1), RD(l,multp(f,P1)), 
+						 multp(r,P1), 
+						 multp(y,multp(r,P1)), 
+						 plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),Q)), 
+						 multp(multp(r,y),Q)
+						 ))),
+						P1),
+					multp(
+						H_n_8(P1, multp(f,P1), RB(l,P1), RD(l,multp(f,P1)), 
+						 multp(r,P1), 
+						 multp(y,multp(r,P1)), 
+						 plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),Q)), 
+						 multp(multp(r,y),Q)
+						),
+					    multp(y,multp(r,P1))
+						)						
+					)
+				)= RB(l,P1)
+			,
+
+			calcRD(
+				minus(
+					multp(plus(l,multp(multp(y,r),H_n_8(P1, multp(f, P1), RB(l,P1), RD(l,multp(f,P1)),
+						 multp(r,P1), 
+						 multp(y,multp(r,P1)), 
+						 plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),Q)), 
+						 multp(multp(r,y),Q)
+					))),multp(f, P1)),
+					multp(H_n_8(P1, multp(f, P1), RB(l,P1), RD(l,multp(f,P1)), 
+						 multp(r,P1), 
+						 multp(y,multp(r,P1)), 
+						 plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),Q)), 
+						 multp(multp(r,y),Q)
+					), multp(multp(r,y),multp(f, P1)))
+					)
+					
+				)=RD(l,multp(f,P1))
+			,
+			
+			//calcL_J(s, J, h2, K)=sJ-h2K=r_cv1 J
+			calcL_J(minus(multp(
+					plus(
+						r_cv1,
+						multp(
+							H_n_2(
+								n_M,
+								H_k_1(H_k_6(Message(m),R, S, T, W, E))
+								),
+							f
+							)
+						),									//s
+					PointG1(H_p(F1(bsn)),F2(bsn))			//J
+					),multp(			
+					H_n_2(
+						n_M,
+						H_k_1(H_k_6(Message(m),R, S, T, W, E))
+						),							  		//h2
+					multp(f,PointG1(H_p(F1(bsn)),F2(bsn)))))	//K
+				)=L_J(r_cv1, PointG1(H_p(F1(bsn)),F2(bsn))),				
+				
+			
+			
+			
+
+			calcE_S(minus(multp(
+					plus(
+						r_cv1,
+						multp(
+							H_n_2(
+								n_M,
+								H_k_1(H_k_6(Message(m),R, multp(l,multp(y,multp(r,P1))), T, multp(l,multp(multp(r,y),multp(f,P1))), E))
+								),
+							f
+							)
+						),										//s=(r_cv1+h2f)
+					multp(l,multp(y,multp(r,P1)))				//S
+					),multp(
+					H_n_2(
+						n_M,
+						H_k_1(H_k_6(Message(m),R, multp(l,multp(y,multp(r,P1))), T, multp(l,multp(multp(r,y),multp(f,P1))), E))
+						),										//h2
+					multp(l,multp(multp(r,y),multp(f,P1)))		//W=lD=l(ryQ)=l(ryfP1)
+					))
+				)=E_S(r_cv1, multp(l,multp(y,multp(r,P1)))),	//E_S(r_cv1,S)				
+				
+		
+			verifyCre1(
+				multp(r,P1), //A
+				PkY(y,P2),  //Y
+				multp(y,multp(r,P1)),//B
+				P2)=accept
+			,
+								
+			verifyCre2(
+				multp(r,P1), 			//A
+				multp(multp(~r,y),multp(f,P1)), 	//D
+				PkX(x,P2),				//X
+				plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),multp(f,P1))),//C
+				P2)=accept
+				,
+			
+			verifyCre3(
+				multp(l,multp(r,P1)),	//R=lA=l(rP1)
+				PkY(y,P2),				//Y
+				multp(l,multp(y,multp(r,P1))),	//S=lB=l(y(A))
+				P2)=accept
+			,	
+			verifyCre4(
+				multp(l,multp(r,P1)),	//R=lA=l(rP1)
+				multp(l,multp(multp(r,y),multp(f,P1))),	//W=l(D)=l(ryQ)=l(ry(fP1))
+				PkX(x,P2),				//X
+				multp(l,plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),multp(f,P1)))), //T=lC=l(xA+rxyQ)=l(xrP1+rxyfP1)
+				P2)=accept
+			
+// Protocol Restrictions (Axioms)
+
+restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
+
+//restriction inequality: 	 "All #i    x      . Neq( x, x ) @ i ==> F"
+
+
+//the 'Issuer' should only be initialised once
+restriction single_issuer_single_init:
+	"All I1 I2 #i #j . (Issuer_Init(I1) @ i & Issuer_Init(I2) @ j) ==> (#i=#j)"
+	
+//a host should only initialise itself once
+restriction single_host_init:
+	"All Host #i #j . ((Host_Init(Host)@i & Host_Init(Host)@j) ==> (#i=#j))	"
+
+//a TPM should only be initialised once (and hence there is only one aes key and one TPM_EK_SEED):
+restriction single_tpm_init:
+	"All PS #i #j. ((TPM_Init(PS)@i & TPM_Init(PS)@j) ==> (#i=#j))"
+
+//a host_init, tpm_init and issuer_init must have different identities
+restriction every_id_must_be_one_of_tpm_host_issuer:
+	"All Ent1 Ent2 Ent3 #i #j #k. 
+	(Host_Init(Ent1) @ i & TPM_Init(Ent2) @ j & Issuer_Init(Ent3) @ k) 
+	==> 
+	(not(Ent1=Ent2) & not (Ent1=Ent3) & not (Ent2=Ent3))"
+/*
+//an Issuer should only ever see an endorsement key and a specific Q_PD once
+restriction check_endorsement_key:
+
+	"All Q_PD pke #i #j. (Check_Ek(pke)@i & Check_QPD(Q_PD)@i & Check_Ek(pke)@j & Check_QPD(Q_PD)@j )  ==> (#i=#j)"
+*/
+/* 
+
+We need a secure channel between the TPM aka the Principal Signer (PS) 
+and its host aka the Assistant Signer (AS). We refer to the combination 
+of a PS and AS as a Platform.
+
+*/
+
+/* Secure Channel rules
+
+   Communication between the Host or Assistant Signer (AS) and the TPM 
+   or Principal Signer (PS) is done over a 'Secure Channel'. This means 
+   that an adversary can neither modify nor learn messages that are 
+   sent over the channel. Sec( A, B, x ) is a linear fact modelling 
+   that the adversary cannot replay on this channel. Secure channels 
+   have the property of being both confidential and authentic. 
+   Communication between the AS and PS is constrained by the channel 
+   invariant !F_Paired, such that two arbitrary roles cannot communicate 
+   over this channel.
+*/
+
+rule ChanOut_S [colour=ffffff]:
+    [ Out_S( $A, $B, x ), !F_Paired( $A, $B ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+    [ Sec( $A, $B, x ) ]
+
+
+rule ChanIn_S [colour=ffffff]:
+    [ Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+    [ In_S( $A, $B, x ) ]
+
+	
+/*
+Issuer set-up:
+
+Note that we have a restriction single_issuer_single_init which ensures
+that we only ever have one single issuer 'Issuer' being initialised once!
+
+*/
+
+rule Issuer_Init:
+		let 
+			I='Issuer'
+			pkX=PkX(~x,'P2')
+			pkY=PkY(~y,'P2')
+		in
+		[Fr(~x),
+		 Fr(~y)]
+		 
+		--[Issuer_Init(I)
+		   , OnlyOnce('Issuer_Init')]->
+		
+		[
+		!Ltk(I,~x, ~y), !Pk(I, pkX,pkY), 
+		Out(<pkX,pkY>), 
+		!Issuer_Initialised(I)
+		]
+
+// simple key reveal rule for the issuer's secret key pair
+rule Issuer_KeyReveal:
+	[!Ltk(I, ~x, ~y)]
+	
+	--[KeyReveal('Issuer_KeyReveal', I)]->
+	
+	[Out(<~x,~y>)]
+	
+/*
+Platform set-up:
+
+For a platform we need a TPM (the principal signer) and a Host (the assistant signer)
+before binding them together in a platform.
+
+*/
+
+rule TPM_INIT:
+	let
+	
+	//!Assumption that the aes key is derived by a KDF_AES key derivation function
+	aes_key=KDF_AES(~TPM_AES_Seed)
+	
+	in
+		[Fr(~TPM_AES_Seed),
+		 Fr(~TPM_EK_Seed)]
+		
+		--[TPM_Init($PS)
+		   , OnlyOnce('TPM_INIT')]->
+		
+		[!TPM_AES_Key($PS, aes_key), 
+		 TPM_EK_SEED($PS,~TPM_EK_Seed), 
+		 TPM_Initialised($PS)]
+
+//simple rule to allow the TPM's aes key to leak		
+rule TPM_AESReveal:
+	[!TPM_AES_Key(PS, aes_key)]
+	
+	--[KeyReveal('TPM_AESReveal', PS)]->
+	
+	[Out(aes_key)]
+
+
+rule Host_Init:
+	
+	[]
+	
+	--[Host_Init($AS)
+	  , OnlyOnce('Host_Init')]->
+	
+	[Host_Initialised($AS)]
+
+
+//This rule binds an $PS and an $AS to one another.
+
+rule Platform_Setup:
+
+	[
+		TPM_Initialised($PS)
+		, Host_Initialised($AS)
+		, !Issuer_Initialised(I)
+	]
+	 
+	 //Action label used to ensure there is a one-to-one correspondence between AS and PS
+	 --[
+		Bind($PS,$AS,I)
+		,OnlyOnce('Platform_Setup')
+	   ]->
+	 
+	 [
+		Out_S($AS, $PS, < 'createPrimary'>)
+		, !F_Paired($AS,$PS)
+		, !F_Paired($PS,$AS)
+		]
+        	 
+
+//The TPM executes this in response to a request by the host
+//Note this should only be executed by a TPM once!
+rule TPM2_CreatePrimary:
+	let
+	e=KDF_EK(~TPM_EK_Seed)
+	E_PD=<'EK_public_data',pk(e)>
+    in
+	[
+	 In_S($AS, $PS, < 'createPrimary'>)
+	, TPM_EK_SEED($PS,~TPM_EK_Seed)]
+	
+	--[
+		TPM2_EK_Created($PS, $AS, pk(e))
+		, OnlyOnce('TPM2_CreatePrimary')
+	  ]->
+	
+	[Out_S($PS,$AS, < E_PD, 'returnEK'>), 
+	!TPM_ENDORSEMENT_SK($PS, e, pk(e)), 
+	!TPM_ENDORSEMENT_PK($PS,E_PD)]
+
+//simple rule to reveal the TPM's endorsement key
+rule TPM_EKReveal:
+	let
+	e=KDF_EK(~TPM_EK_Seed)
+    in
+
+	[!TPM_ENDORSEMENT_SK(PS, e, pk(e))]
+
+	--[
+		KeyReveal('TPM_EKReveal_tpm', PS)
+		, KeyReveal('TPM_EKReveal_pke', pk(e))
+	  ]->
+
+	[Out(e)]
+
+	
+//The Host should store the public endorsement key	
+rule Host_Store_EK:
+	let 
+	E_PD=<'EK_public_data', pk(KDF_EK(~TPM_EK_Seed))>
+	in
+	[
+		In_S($PS,$AS, < E_PD, 'returnEK'>)
+	]
+	
+	--[
+		  Store_EK($PS, $AS)
+		, OnlyOnce('Host_Store_EK')
+	  ]->
+	
+	[Out_S($AS,$PS, < pk(KDF_EK(~TPM_EK_Seed)), 'createDAAKey'>),
+	 Host_State_01($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)))]
+
+/*
+This rule will create a DAA key
+Note that unlike the TPM2_CreatePrimary rule, this rule can be executed 
+multiple times resulting in a new DAA key
+This is obviously not sensible but allowed.
+*/
+
+
+rule TPM2_Create:
+	let 
+	Q=multp(~f, 'P1')
+	Q_PD=<'DAA_public_data', Q>
+	Q_SD=senc(~f,aes_key)
+	pke=pk(KDF_EK(~TPM_EK_Seed))
+	in
+	[In_S($AS, $PS, < pke, 'createDAAKey'>)
+	 , !TPM_AES_Key($PS, aes_key)
+	 , Fr(~f) //our secret key
+	 ]
+	
+	--[
+		TPM2_DAA_Created($PS, $AS)
+		, DeriveDAAKey($PS, $AS, pke, ~f)
+		, OnlyOnce('TPM2_Create')
+	  ]->
+	
+	[ Out_S($PS, $AS,< Q_SD,Q_PD, 'returnDAAKey'>), 
+	 !TPM_DAA_SK($PS, pk(KDF_EK(~TPM_EK_Seed)), ~f)
+	]
+	
+//simpe rule to leak the DAA key:
+
+rule TPM_DAAReveal:
+	[!TPM_DAA_SK(PS, pk(KDF_EK(~TPM_EK_Seed)), ~f)]
+	
+	--[
+		KeyReveal('TPM_DAAReveal_tpm', PS)
+		, KeyReveal('TPM_DAAReveal_pke', pk(KDF_EK(~TPM_EK_Seed)))
+	  ]->
+	
+	[Out(~f)]
+
+/*
+The host needs to store the keys on behalf of the TPM as it has
+limited memory. The host then sends the endorsement key and the public DAA key to issuer
+for verification
+*/
+
+rule Host_Store_DAA_Key:
+	let 
+	I='Issuer'
+	Q=multp(~f, 'P1')
+	Q_PD=<'DAA_public_data', Q>
+	aes_key=KDF_AES(~TPM_AES_Seed)
+	Q_SD=senc(~f,aes_key)
+	in
+	[In_S($PS, $AS, < Q_SD,Q_PD, 'returnDAAKey'>)
+	, Host_State_01($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)))
+	]
+	
+	--[
+		Store_DAA($PS, $AS)
+		, PlatformSendKeys($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), Q_PD , I)
+		, Alive($AS)
+		, Role('Platform')
+		, Honest( $PS )
+		, Honest($AS)
+		, Honest( pk(KDF_EK(~TPM_EK_Seed)) )
+		, Honest( I )
+		, OnlyOnce('Host_Store_DAA_Key')
+	  ]->
+	
+	[
+	!EK_FOR_ISSUER(pk(KDF_EK(~TPM_EK_Seed))) //a TPM created the pk(e)
+	, Out(<pk(KDF_EK(~TPM_EK_Seed)), Q_PD, 'join_Issuer_1'>)
+	, Host_State_02($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)]
+
+
+/*
+the issuer checks the endorsement key, Epsilon=pk(e), is not blacklisted 
+and that the DAA key Q is of the appropriate form
+Note that these checks are out of scope for the Tamarin model and assumed to pass.
+The issuer then createsthe necessary inputs for the activate credentials process.
+*/
+
+
+//Note that the values that come from the host (pk(e) and Q_PD) in this rule are not marked as fresh (~)
+//as the issuer does not have that information. 
+rule Issuer_Check_EK_Send_Challenge:
+	let 
+	//inputs
+	I='Issuer'
+	Q=multp(f, 'P1')
+	Q_PD=<'DAA_public_data', Q>
+	
+	//calculations
+	Q_N=<'1', 'SHA256',H_SHA256(Q_PD)>			//the name of the DAA key
+	k_e=KDF_a(<'1',~s>,'STORAGE',Q_N)				
+	k_h=KDF_a(<'1',~s>,'INTEGRITY','NULL')
+	curlyK_1=curlyK(~K_1)
+	curlyK_hat=senc(<'1', curlyK_1>,k_e)
+	curlyH=MAC(<'1',len16(curlyK_hat),curlyK_hat, Q_N>,k_h)
+	s_hat=aenc(<'1', ~s>,pk(KDF_EK(TPM_EK_Seed)))
+	
+	in
+	
+	[
+		In(<pk(KDF_EK(TPM_EK_Seed)), Q_PD, 'join_Issuer_1'>)			//the join request from the host
+		, Fr(~K_1)									//the credential key K
+		, Fr(~s)									//a random seed s
+		, !EK_FOR_ISSUER(pk(KDF_EK(TPM_EK_Seed))) 	//the pk(e) was created by a TPM
+	 ]
+	 
+	
+	--[
+		Check_Ek(pk(KDF_EK(TPM_EK_Seed)))						//assumed to pass
+		, Check_QPD(Q_PD)										//assumed to pass
+		, Associate(curlyK_1, pk(KDF_EK(TPM_EK_Seed)), Q_PD)
+		, Alive(I)												//the issuer is "alive" in the protocol here
+		, Honest(I)
+		, Honest( pk(KDF_EK(TPM_EK_Seed)) )
+		, IssuerReceivedKeys(I, pk(KDF_EK(TPM_EK_Seed)), Q_PD)
+		, OnlyOnce('Issuer_Check_EK_Send_Challenge')
+	   ]->
+	   
+	[Out(<curlyH, len16(curlyK_hat), curlyK_hat, s_hat,'Host_SendChallenge'>)
+	 , Issuer_State_01(I, curlyK_1, pk(KDF_EK(TPM_EK_Seed)), Q_PD)]
+
+// just pass through everything
+rule Host_Passthrough_1:
+	let
+		s_hat=aenc(s,pk(KDF_EK(~TPM_EK_Seed)))
+	in
+	[
+		In(<curlyH, len16(curlyK_hat), curlyK_hat, s_hat,'Host_SendChallenge'>)
+		, Host_State_02($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)
+	]
+	 
+	--[
+		Passthrough_ActivateCred($PS, $AS)
+		, OnlyOnce('Host_Passthrough')
+	  ]->
+	
+	[
+	Out_S($AS, $PS, < Q_SD, Q_PD, curlyH, len16(curlyK_hat), curlyK_hat, s_hat, 'TPM2_ActivateCredentials'>)
+	, Host_State_03($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)
+	]
+
+
+rule TPM2_ActivateCredential:
+	let
+	
+	//actual message terms
+	curlyK_1=curlyK(K_1)
+	curlyK_hat=senc(<'1', curlyK_1>,k_e)
+	s_hat=aenc(<'1',s>,pk(KDF_EK(~TPM_EK_Seed)))
+
+	//inputs needed from the host state
+	Q=multp(~f, 'P1')
+	Q_SD=senc(~f,aes_key)
+	Q_PD=<'DAA_public_data', Q>
+	
+	//recover the details
+	s_rec=snd(adec(s_hat,e)) 						//retrieve s using secrect endorsement key, e, of the TPM
+	Q_N_rec=<'1', 'SHA256',H_SHA256(Q_PD)>			//calculate Q_N_rec which should be the same as Q_N
+	k_e_rec=KDF_a(<'1', s_rec>,'STORAGE',Q_N_rec)		//calculate k_e_1 which should be the same as k_e	
+	k_h_rec=KDF_a(<'1', s_rec>,'INTEGRITY','NULL')		//calculate k_h_1 which should be the same as k_h
+	//recalculate the MAC
+	curlyH_rec=MAC(<'1', len16(curlyK_hat),curlyK_hat,Q_N_rec>,k_h_rec)
+	//retrieve the challenge curlyK
+	curlyK_1_rec=snd(sdec(curlyK_hat,k_e_rec))
+	
+	in
+	[
+	 In_S($AS,$PS,< Q_SD, Q_PD, curlyH, len16(curlyK_hat), curlyK_hat, s_hat, 'TPM2_ActivateCredentials'>) 
+	, !TPM_AES_Key($PS, aes_key)
+	, !TPM_ENDORSEMENT_SK($PS,e, pk(KDF_EK(~TPM_EK_Seed)))
+	]
+	--[
+		Eq(curlyH_rec,curlyH) 					// check that the MACs match
+		, Eq(k_e, k_e_rec) 						// this ensures we can decode curlyK_hat
+ 		, CurlyK_recomputed($PS, $AS)
+		, OnlyOnce('TPM2_ActivateCredential')
+	  ]->
+	
+	[Out_S($PS,$AS, < curlyK_1_rec, 'ret_TPM2_ActivateCredentials'>)]
+
+
+rule Host_ReceiveCurlyK:
+	let 
+		curlyK_1=curlyK(K_1)
+		//inputs needed from the Issuer Pk
+		X=PkX(x,'P2')
+		Y=PkY(y,'P2')
+	
+		str=<X,Y,curlyK_1, pk(KDF_EK(~TPM_EK_Seed))> //included the endorsement key
+        S=BSN('bottom')
+		s_2_bar=BSN('bottom')
+		y_2=BSN('bottom')
+	in
+	
+	[
+		In_S($PS,$AS, < curlyK_1, 'ret_TPM2_ActivateCredentials'>)
+		, !Pk('Issuer', X,Y)
+		, Host_State_03($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)
+	]
+	 
+	 --[
+		Received_CurlyK($PS, $AS)
+		, OnlyOnce('Host_ReceiveCurlyK')
+		]->
+	 
+	[
+		Out_S($AS, $PS,< S,s_2_bar,y_2,'TPM2_Commit'>) 
+		, Host_CurlyK1($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), curlyK_1)
+		, Host_State_04($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD, str)
+	]
+
+
+//TPM2_Commit rule
+
+rule TPM2_Commit:
+	let 
+		S=BSN('bottom')
+		s_2_bar=BSN('bottom')
+		y_2=BSN('bottom')
+		E_commit=E(~r_cv, 'P1')
+		cvval=Nonce(~cv)
+	in
+	
+	[
+		In_S($AS,$PS,< S, s_2_bar, y_2, 'TPM2_Commit'>)
+		, Fr(~cv)
+		, Fr(~r_cv)
+	]
+	
+	--[
+		TPM2_Commited($PS, $AS)
+		, OnlyOnce('TPM2_Commit')
+		]->
+	
+	[
+		Out_S($PS,$AS, < E_commit, cvval, 'retTPM2_commit'>)
+		, TPM_CV_E($PS, cvval, ~r_cv)
+	]
+
+//Host: recieve the E_commit and cv value and to compute the hash of p.
+rule Host_ReceiveEAndCV:
+	let
+		E_commit=E(r_cv, 'P1')
+		Q=multp(~f,'P1')
+		Q_PD=<'DAA_public_data', Q>
+		p=H_k_4('P1', Q, E_commit, str)
+		cvval=Nonce(cv)
+	in
+	
+	[
+		In_S($PS,$AS, < E_commit, cvval, 'retTPM2_commit'>)
+		, Host_State_04($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD, str)
+	]
+	
+	--[
+		Host_Created_p($PS, $AS)
+		, OnlyOnce('Host_ReceiveEAndCV')
+		]->
+	
+	[
+		Out_S($AS,$PS, < p, 'TPM2_Hash'>)
+		, Host_cv($PS, $AS,  cvval)
+		, Host_State_05($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)
+	]
+	
+//TPM: receive p and compute its hash and generate a ticket
+rule TPM2_Hash:
+	let p_tpm=H_k_1(p)
+		ticket=Nonce(~tkt)
+	in
+	[
+	  In_S($AS, $PS, < p, 'TPM2_Hash'>)
+	  , Fr(~tkt)
+	 ]
+	 
+	--[
+		TPM2_Created_P_TPM($PS, $AS)
+		,OnlyOnce('TPM2_Hash')
+		]->
+	
+	[
+		Out_S($PS, $AS, < p_tpm, ticket, 'ret_TPM2_Hash'>)
+		, TPM_tkt($PS, ticket)
+	]
+
+//Host: receive p_tpm, tkt and send it back to be signed
+
+
+rule Host_Receive_P_TPM_TKT:
+	let p_tpm=H_k_1(p)
+		ticket=Nonce(tkt)
+		cvval=Nonce(cv)
+	in
+	[
+	 In_S($PS, $AS, < p_tpm, ticket, 'ret_TPM2_Hash'>)
+	 , Host_cv($PS, $AS,  cvval)
+	 ]
+	 
+	 --[
+		Host_Received_P_TPM($PS, $AS)
+	   , OnlyOnce('Host_Receive_P_TPM_TKT')
+	   ]->
+	 
+	 [
+	  Out_S($AS, $PS, < p_tpm, ticket, cvval, 'TPM2_Sign'>)
+	  , Host_Store_P_TPM($AS,  p_tpm)
+	  ]
+
+//TPM: sign the p_tpm
+
+rule TPM2_Sign:
+	let
+		v=H_n_2(Nonce(~n_J), p_tpm)
+		w=plus(~r_cv,multp(v,~f))
+	in
+	
+	[
+	  In_S($AS, $PS, < p_tpm, ticket_host, cv1, 'TPM2_Sign'>)
+	  , TPM_tkt($PS, ticket)
+	  , !TPM_DAA_SK($PS, pk(KDF_EK(~TPM_EK_Seed)), ~f)
+	  , TPM_CV_E($PS, cvval, ~r_cv)
+	  , Fr(~n_J)
+	]
+	
+	--[
+		TPM2_Signed_P_TPM($PS, $AS)
+		,Eq(cvval,cv1)			//check that the cv1 and cv values match
+		,Eq(ticket_host,ticket)			//check that the tkt and tkt1 values match
+		, OnlyOnce('TPM2_Sign')
+		]->
+	
+	[ Out_S($PS, $AS, < Nonce(~n_J), w, 'ret_TPM2_Sign'>)]
+
+
+//Host: receive signature and initiate the second part of the join process with the issuer
+
+rule Host_Receive_Signature_P_TPM:
+	let 
+		I = 'Issuer'
+		v=H_n_2(Nonce(n_J),p_tpm)
+		curlyK_1_rec=curlyK(K_1)
+		w=plus(r_cv,multp(v,f))
+	in
+	
+	[
+		In_S($PS, $AS, < Nonce(n_J), w, 'ret_TPM2_Sign'>)
+		, Host_Store_P_TPM($AS,  p_tpm)
+		, Host_CurlyK1($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), curlyK_1_rec)
+	]
+	
+	--[
+		Host_Received_Signed_P_TPM($PS, $AS)
+		, Running(pk(KDF_EK(~TPM_EK_Seed)), I , curlyK_1_rec)
+		, Alive($AS)
+		, Honest($AS)
+		, Honest(pk(KDF_EK(~TPM_EK_Seed)))
+		, Honest (I)
+		, Role('Platform')
+		, OnlyOnce('Host_Receive_Signature_P_TPM')
+	   ]->
+	
+	[
+		Out(<curlyK_1_rec, Nonce(n_J), v, w, 'Issuer_SendChallengeResponse'>)]
+		
+
+//==========================================================================================
+		
+		
+
+
+//Issuer: verify the curlyK and the signature before issuing the proper credentials
+rule Issuer_Verify_Challenge_Issue_Credentials:
+	let 
+		I='Issuer'
+		// help unwrap the inputs
+		curlyK_1_rec=curlyK(K_rec)
+		v=H_n_2(n_J_1, p_tpm_1)
+		w=plus(r_cv,multp(v_1,f_1))
+		
+		//inputs from the issuer state
+		curlyK_1=curlyK(K_1)
+		Q=multp(f, 'P1')
+		Q_PD=<'DAA_public_data', Q>
+		
+		//inputs from Issuer PK
+		pkX=PkX(~x,'P2')
+		pkY=PkY(~y,'P2')
+		
+		//values needed for verification
+		str=<pkX, pkY, curlyK_1, pk(KDF_EK(TPM_EK_Seed))>	//included the endorsement key
+		E_dash=calcE(minus(multp(w,'P1'),multp(v,Q)))
+		p_dash=H_k_4('P1', Q, E_dash, str)
+		p_tpm_dash=H_k_1(p_dash)
+		v_dash=H_n_2(Nonce(n_J), p_tpm_dash)
+				
+		//new values to be calculated
+		A=multp(~r,'P1')
+		B=multp(~y,A)
+		C=plus(multp(~x,A),multp(multp(multp(~r,~x),~y),Q))
+		D=multp(multp(~r,~y),Q)
+		
+		R_B=RB(~l,'P1')
+		R_D=RD(~l,Q)
+		
+		u=H_n_8('P1', Q, R_B, R_D, A, B, C, D)
+		j=plus(~l,multp(multp(~y,~r),u))
+		
+		Q_N=<'SHA256',H_SHA256(Q_PD)>			//the name of the DAA key
+		k_e=KDF_a(~s_2,'STORAGE',Q_N)				
+		k_h=KDF_a(~s_2,'INTEGRITY','NULL')
+		curlyK_2=curlyK(~K_2)
+		curlyK_2_hat=senc(curlyK_2,k_e)
+		curlyH=MAC(<len16(curlyK_2_hat),curlyK_2_hat, Q_N>,k_h)
+		s_2_hat=aenc(~s_2,pk(KDF_EK(TPM_EK_Seed)))
+		C_hat=senc(<A,B,C,D,u,j>,curlyK_2)
+		
+		
+	in
+	
+     [
+	 In(
+		<curlyK_1_rec, Nonce(n_J), v, w, 'Issuer_SendChallengeResponse'>)
+		, Issuer_State_01(I, curlyK_1, pk(KDF_EK(TPM_EK_Seed)), Q_PD)
+		, !Pk(I,pkX,pkY)
+		, !Ltk(I,~x,~y)
+		, Fr(~r)
+		, Fr(~l)
+		, Fr(~s_2)
+		, Fr(~K_2)
+	 ]
+	 
+	 --[Eq(curlyK_1_rec,curlyK_1)
+		, Eq(v,v_dash)
+		, Commit(I, pk(KDF_EK(TPM_EK_Seed)), curlyK_1)
+		, Running(I, pk(KDF_EK(TPM_EK_Seed)), <A, B, C, D>)
+	    , Alive(I)							//the issuer is "alive" in the protocol here
+		, Honest ( I )
+		, Honest ( pk(KDF_EK(TPM_EK_Seed)) )
+		, Issuer_VerifyChallengeIssueCredentials(I, pk(KDF_EK(TPM_EK_Seed)))
+		, OnlyOnce('Issuer_Verify_Challenge')
+		]->
+	 
+	 [Out(<curlyH, len16(curlyK_2_hat), curlyK_2_hat, s_2_hat, C_hat, 'Host_CompleteJoin'>) ]	
+
+	 
+
+rule Host_Passthrough_2:
+	let
+		s_2_hat=aenc(~s_2,pk(KDF_EK(~TPM_EK_Seed)))
+	in
+	[
+		In(<curlyH, len16(curlyK_2_hat), curlyK_2_hat, s_2_hat, C_hat,'Host_CompleteJoin'>)
+		, Host_State_05($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, Q_SD)
+	 ]
+	 
+	--[
+		Passthrough_ActivateCred2($PS, $AS)
+		, OnlyOnce('Host_Passthrough_2')
+	  ]->
+	
+	[
+	Out_S($AS,$PS,< Q_SD, Q_PD, curlyH, len16(curlyK_2_hat), curlyK_2_hat, s_2_hat, 'TPM2_ActivateCredentials_2'>)
+	, Host_State_06($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, C_hat)
+	]
+
+
+rule TPM2_ActivateCredential_2:
+	let
+		//unwrap the inputs where needed
+		curlyK_2_hat=senc(curlyK(K_2),k_e)
+		s_2_hat=aenc(s_2,pk(KDF_EK(~TPM_EK_Seed)))	
+		Q=multp(~f, 'P1')
+		Q_PD=<'DAA_public_data', Q>
+		
+			
+		//recompute
+		s_2_rec=adec(s_2_hat,e) 					//retrieve s
+		Q_N_rec=<'SHA256',H_SHA256(Q_PD)>			//calculate Q_N_rec which should be the same as Q_N
+		k_e_1=KDF_a(s_2,'STORAGE',Q_N_rec)		//calculate k_e_1 which should be the same as k_e	
+		k_h_1=KDF_a(s_2,'INTEGRITY','NULL')		//calculate k_h_1 which should be the same as k_h
+		curlyH_1=MAC(<len16(curlyK_2_hat),curlyK_2_hat,Q_N_rec>,k_h_1)
+		curlyK_2_rec=sdec(curlyK_2_hat,k_e_1)		
+	
+	
+	in
+	
+	[
+		In_S($AS,$PS,< Q_SD, Q_PD, curlyH, len16(curlyK_2_hat), curlyK_2_hat, s_2_hat, 'TPM2_ActivateCredentials_2'>) 
+		, !TPM_AES_Key($PS, aes_key)
+		, !TPM_ENDORSEMENT_SK($PS,e, pk(KDF_EK(~TPM_EK_Seed)))
+	]
+	--[
+		Eq(curlyH_1,curlyH)
+		, Eq(k_e, k_e_1)
+		, CurlyK2_recomputed($PS, $AS)
+		, OnlyOnce('TPM2_ActivateCredential_2')
+	  ]->
+	
+	[
+		Out_S($PS,$AS, < curlyK_2_rec, 'ret_TPM2_ActivateCredentials_2'>)
+	]
+
+
+rule Host_JoinComplete:
+	let 
+		I='Issuer'
+		//unwrap the inputs where needed
+		curlyK_2_rec=curlyK(K_2_rec)
+		
+		//inputs from the issuer
+		pkX=PkX(x,'P2')
+		pkY=PkY(y,'P2')
+		
+		//input from Host_State
+		Q=multp(~f, 'P1')
+		Q_PD=<'DAA_public_data', Q>
+		C_hat=senc(<A,B,C,D,u,j>,curlyK_2) //we decrypt these credentials by checking that curlyK_2_rec = curlyK_2
+
+		//recompute the hash
+		R_B_dash=calcRB(minus(multp(j,'P1'), multp(u,B)))
+		R_D_dash=calcRD(minus(multp(j,Q),multp(u,D)))
+		u_dash=H_n_8('P1',Q,R_B_dash,R_D_dash, A, B, C, D)
+		
+	in 
+
+	[
+		In_S($PS,$AS, < curlyK_2_rec, 'ret_TPM2_ActivateCredentials_2'>)
+		, !Pk(I, pkX,pkY)
+		, Host_State_06($PS, $AS,  pk(KDF_EK(~TPM_EK_Seed)), Q_PD, C_hat)
+	]
+	 
+	 --[ 
+	     Eq(curlyK_2, curlyK_2_rec) //this allows C_hat to be decrypted
+		, Eq(u,u_dash) 
+		, Eq(verifyCre1(A,pkY,B,'P2'),accept)
+		, Eq(verifyCre2(A,D,pkX,C,'P2'),accept)
+		, JoinCompleted($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		, Commit(pk(KDF_EK(~TPM_EK_Seed)), I, <A, B, C, D>)
+		, Role ('Platform')
+		, Secret(pk(KDF_EK(~TPM_EK_Seed)), I, <A, B, C, D> )
+		, Honest ( $PS )
+		, Honest ( $AS )
+		, Honest ( pk(KDF_EK(~TPM_EK_Seed)) )
+		, Honest ( I )
+		, OnlyOnce('Host_JoinComplete')
+		]->
+	 
+	 [
+	  !Host_State_RNDCreds($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), A, B, C, D)
+	  , !Host_Join_Complete($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+	  , Host_Org_Creds($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), A, B, C, D)
+	 ]
+
+
+	 
+// The following rule allows a host to leak the credentials
+rule Host_CredentialsReveal:
+	let 
+		pke=pk(KDF_EK(TPM_EK_Seed))
+	in
+	[Host_Org_Creds($PS, $AS, pke, A, B, C, D)]
+	
+	--[
+	   KeyReveal('Host_OrgCred_Reveal', $AS)
+	   , KeyReveal('TPM_OrgCred_Reveal', $PS)
+	   , KeyReveal('PKE_OrgCred_Reveal', pke)
+	  ]->
+	  
+	[Out(<A, B, C, D>)]
+
+	 
+	 
+//=============================================================	 
+// Join Completed
+//=============================================================	 
+
+
+//let's randomise A, B, C, D
+
+rule Host_Randomise_Credentials:
+	let
+		R=multp(~l,A)
+		S=multp(~l,B)
+		T=multp(~l,C)
+		W=multp(~l,D)
+	in
+	[
+	 !Host_State_RNDCreds($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), A, B, C, D)
+	, Fr(~l)
+	]
+	
+	--[
+		RandomisedCredentials($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+	]->
+	
+	[
+	 !Host_State_07($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), R, S, T, W)
+	]
+
+
+//=============================================================	 
+// Signature starts here
+//=============================================================	 
+
+//as Host we randomise the credentials
+rule Host_Process_Credentials:
+	let 
+		A=multp(r,'P1')
+		B=multp(y,A)
+		C=plus(multp(x,A),multp(multp(multp(r,x),y),Q))
+		D=multp(multp(r,y),Q)
+	
+		bsn=BSN('bottom')
+		R=multp(~l,A)
+		S=multp(~l,B)
+		T=multp(~l,C)
+		W=multp(~l,D)
+		
+		//note that F1 and F2 are assumed to be KDFs such that (H_p(s_2_bar),y_2) is a point in G1
+		//however since bsn=bottom these values are also bottom
+		s_2_bar=BSN('bottom')
+		y_2=BSN('bottom')
+		//J=BSN('bottom')
+	in
+	
+	[ 
+		!Host_State_07($PS,$AS, pk(KDF_EK(~TPM_EK_Seed)), R, S, T, W)
+	]
+	
+	--[
+		ProcessRandomisedCredentials($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		, SignOnlyOnce ('Host_Randomise_Credentials')
+	   ]->
+
+	[
+	 Out_S($AS,$PS,< s_2_bar,y_2,S, 'TPM2_Commit_rand'>)
+	 , Host_State_08( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), bsn, R, S, T, W)
+	 , Host_Rnd_Creds($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), bsn, R, S, T, W)
+	]
+
+// The following rule allows a host to leak the randomised credentials
+rule Host_RandomCredentialsReveal:
+	let 
+		pke=pk(KDF_EK(TPM_EK_Seed))
+	in
+	[
+	  Host_Rnd_Creds($PS, $AS, pke, bsn, R, S, T, W)
+	]
+	
+	--[
+	   KeyReveal('Host_RndCred_Reveal', $AS)
+	   , KeyReveal('TPM_RndCred_Reveal', $PS)
+	   , KeyReveal('PKE_RndCred_Reveal', pke)
+	  ]->
+	  
+	[
+	 Out(<bsn, R, S, T, W>)
+	]
+
+	
+	
+//as TPM we create some more elements
+rule TPM2_Commit_2:
+	let 
+		//J=BSN('bottom')	// bsn=bottom and hence J is bottom
+		//K=BSN('bottom')	// should be multp(~f,J) but J is bottom
+		//L=BSN('bottom')	// should be L_J(~r_cv1,J) but J is bottom
+		E=E_S(~r_cv1,S)
+		cv1val=Nonce(~cv1)
+	in
+	
+	[
+		In_S($AS,$PS,< s_2_bar,y_2,S, 'TPM2_Commit_rand'>)
+		, !TPM_DAA_SK($PS, pk(KDF_EK(~TPM_EK_Seed)), ~f)
+		, Fr(~cv1)
+		, Fr(~r_cv1)
+	]
+	
+	--[
+		TPMCommitRandomised($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		, SignOnlyOnce('TPM2_Commit_2')
+	  ]->
+	  
+	[
+		Out_S($PS,$AS, < E,cv1val, 'ret_TPM2_Commit_rand'>)
+		, TPM_Commit_RCV1( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), cv1val, ~r_cv1)
+	]
+
+rule Host_Generate_Message_for_Signing:
+	let //received values
+		cv1val=Nonce(cv1) //explicitly stating this prevents partial deconstructions
+		//existing values
+		A=multp(r,'P1')
+		B=multp(y,A)
+		C=plus(multp(x,A),multp(multp(multp(r,x),y),Q))
+		D=multp(multp(r,y),Q)
+	
+		bsn=BSN(basename)
+		R=multp(sl,A)
+		S=multp(sl,B)
+		T=multp(sl,C)
+		W=multp(sl,D)
+	
+	    //computed values
+		msg=Message(~m)
+		c=H_k_6(msg,R,S,T,W,E)
+	in
+	
+	[In_S($PS,$AS, < E, cv1val, 'ret_TPM2_Commit_rand'>)
+	, Fr(~m)
+	, Host_State_08( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), bsn, R, S, T, W)]
+	
+	--[GeneratedMessageForSigning($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+	, SignOnlyOnce('Host_Generate_Message_for_Signing')]->
+	
+	[Out_S($AS, $PS, < pk(KDF_EK(~TPM_EK_Seed)), c, cv1val, 'TPM2_Hash_2'>), 
+	Host_cv1( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), c, cv1val), 
+	Host_State_09( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), msg, bsn, R, S, T, W, E)]
+	
+
+//TPM: receive c and cv1 and compute hash of c and generate a ticket
+rule TPM2_Hash_2:
+	let 
+		c=H_k_6(msg,R,S,T,W,E)
+		c_tpm=H_k_1(c)
+		c_ticket=Nonce(~c_tkt)
+	in
+	[
+	  In_S($AS, $PS, < pk(KDF_EK(~TPM_EK_Seed)), c, cv1val_in, 'TPM2_Hash_2'>)
+	  , Fr(~c_tkt)
+	  , TPM_Commit_RCV1( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), cv1val, ~r_cv1)
+	 ]
+	 
+	--[
+		TPM2_Created_C_TPM($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		, Eq(cv1val, cv1val_in) //check that cv1 and cv1_in are the same
+		, SignOnlyOnce('TPM2_Hash_2')
+	]->
+	
+	[Out_S($PS, $AS, < c_tpm, c_ticket, 'ret_TPM2_Hash_2'>), TPM_c_tkt( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), c_ticket, ~r_cv1)]
+
+	
+rule Host_Receive_C_TPM_TKT:
+	let
+		c_ticket=Nonce(c_tkt) //need to explicit state this
+		h1=H_k_1(c) //ensure we agree on the hash of the c
+	in
+	[
+	 In_S($PS, $AS, < c_tpm, c_ticket, 'ret_TPM2_Hash_2'>)
+	 , Host_cv1( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), c, cv1)
+	 ]
+	 
+	 --[
+		Host_Received_C_TPM($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		, Eq(h1, c_tpm)
+		, SignOnlyOnce('Host_Receive_C_TPM_TKT')
+	   ]->
+	 
+	 [
+	  Out_S($AS, $PS, < c_tpm, c_ticket, 'TPM2_Sign_2'>)
+	  , Host_Store_C_TPM( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)),  c_tpm)
+	  ]
+
+//TPM: sign the c_tpm
+
+rule TPM2_Sign_2:
+	let
+		n_M=Nonce(~rnd_n_M)
+		h2=H_n_2(n_M, c_tpm)
+		small_s=plus(~r_cv1,multp(h2,~f))
+	in
+	
+	[
+	  In_S($AS, $PS, < c_tpm, c_ticket_in, 'TPM2_Sign_2'>)
+	  , !TPM_DAA_SK($PS, pk(KDF_EK(~TPM_EK_Seed)), ~f)
+	  , TPM_c_tkt( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), c_ticket, ~r_cv1)
+	  , Fr(~rnd_n_M)
+	]
+	
+	--[
+		TPM2_Signed_C_TPM($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)))
+		,Eq(c_ticket,c_ticket_in)			//check that the tkt and tkt1 values match
+		, SignOnlyOnce('TPM2_Sign_2')
+		]->
+	
+	[ Out_S($PS, $AS, < n_M, small_s, 'ret_TPM2_Sign_2'>)]
+
+
+//Host: receive signature and completes the signature
+
+rule Host_Receive_Signature_C_TPM:
+	let //existing values
+		bsn=BSN(basename)	//basename='bottom'
+		s_2_bar=BSN('bottom')	// F1(bsn)
+		y_2=BSN('bottom')		// F2(bsn)
+		//J=BSN('bottom')			// PointG1(H_p(s_2_bar),y_2) 
+		//K=BSN('bottom')			// multp(f,J)
+		//L=BSN('bottom')			//L_J(r_cv1,J)
+		E=E_S(r_cv1,S)
+		msg=Message(m)
+		R=multp(sl,A)
+		S=multp(sl,B)
+		T=multp(sl,C)
+		W=multp(sl,D)
+
+		//received value
+		n_M=Nonce(~rnd_n_M)
+		small_s=plus(r_cv1,multp(h2,f))
+		
+		//computed values
+		h2_host=H_n_2(n_M, c_tpm)
+
+		sigma= <bsn, R, S, T, W, h2_host, small_s, n_M, msg, 'TPM_Signature_Of_m'>
+	in
+	
+	[
+		In_S($PS, $AS, < n_M, small_s, 'ret_TPM2_Sign_2'>)
+		, Host_Store_C_TPM( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), c_tpm)
+		, Host_State_09( $PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), msg, bsn, R, S, T, W, E)
+	]
+	
+	--[
+		Host_Received_Signed_C_TPM($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), msg)
+		, Host_Sends_Sigma($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), sigma)
+		, Host_Sends_Sigma_cred($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), R, S, T, W, sigma)
+		, Honest ($PS)
+		, Honest ($AS)
+		, Honest (pk(KDF_EK(~TPM_EK_Seed)))
+		, SignOnlyOnce('Host_Receive_Signature_C_TPM')
+	   ]->
+	
+	[Out(sigma)]
+
+
+rule Verifier_Check_TPM_Message:
+	let 
+		//ensure the right format
+		//of the received values
+		bsn_in=BSN('bottom') //basename='bottom'
+		R=multp(sl,A)
+		S=multp(sl,B)
+		T=multp(sl,C)
+		W=multp(sl,D)
+		//J=BSN('bottom')		// PointG1(H_p(s_2_bar),y_2) 
+		//K=BSN('bottom')		// multp(f,J)
+		h2_host=H_n_2(n_M, c_tpm)
+		small_s=plus(r_cv1, multp(h2,f))
+		n_M=Nonce(rnd_n_M)
+		msg=Message(m_in)
+		
+		I='Issuer'
+		//computed values
+		s_2_bar_v=BSN('bottom')	// F1(bsn_in)
+		y_2_v=BSN('bottom')		// F2(bsn_in)
+		//J_v=BSN('bottom')		//PointG1(H_p(s_2_bar_v),y_2_v) 
+		//L_dash=multp(r_cv1, J_v)
+		//L_dash=calcL_J(small_s, J, h2_host, K)
+		//L_dash=BSN('bottom')		//calcL_J(minus(multp(small_s, J), multp(h2_host, K)))
+		//E_dash=multp(r_cv1,S)
+		E_dash=calcE_S(minus(multp(small_s, S), multp(h2_host, W)))
+		
+		//generic checks
+		check1=verifyCre3(R,pkY,S,'P2')
+		check2=verifyCre4(R,W,pkX,T,'P2')
+		
+		//signature check
+		
+		c_dash=H_k_6(msg, R, S, T, W, E_dash)
+		h1_dash=H_k_1(c_dash)
+		h2_dash=H_n_2(n_M,h1_dash)
+		sigma= <bsn_in, R, S, T, W, h2_host, small_s, n_M, msg, 'TPM_Signature_Of_m'>
+	in
+	
+	[In(sigma)
+	,
+	!Pk(I, pkX, pkY)]
+	
+	--[	// Eq(J_v,J)					//ensure the bsn results in the same point J
+		Eq(check1,accept)				//check that h_hat(R,Y)=h_hat(lA,yP2)=h_hat(lyA,P2)=h_hat(lB,P2)=h_hat(S,P2)
+		, Eq(check2,accept)				//check that h_hat(R+W,X)=h_hat(T,P2)
+		, Eq(h2_dash, h2_host)			//ensure that the recomputed hash matches the one provided
+		, VerifiedSignature($V, sigma)  // allows us to reason about valid/verified signatures
+		, VerifiedSignatureDeAnonymised(sigma, f) //allows us to reason about the secret key used in signatures
+		, SignOnlyOnce('Verifier_Check_TPM_Signature')]->
+	
+	[
+	//no output needed
+	]
+	 
+
+	 
+
+
+//======================================================================================
+// This concludes the description of the scheme using Tamarin rules
+// The next section contains the lemmas encapsulating the various properties that we
+// want the scheme to have.
+//======================================================================================
+
+//======================================================================================
+// We start off with some general checks that verify some of the restriction/assumptions
+// which we have imposed on our scheme.
+//======================================================================================
+
+// The three entities used in the Platform setup are all different from each other
+lemma auto_bind_restriction:
+"
+	All Ent1 Ent2 Ent3 #i . 
+		(Bind(Ent1, Ent2, Ent3) @ i)
+		==>
+		(not(Ent1=Ent2) & not(Ent1=Ent3) & not(Ent2=Ent3))
+"
+
+//a TPM is associated with one and only one host:
+lemma auto_restriction_one_host_per_tpm:
+"
+	All TPM Host1 Host2 #i #j. 
+		(Bind(Host1,TPM, 'Issuer')@i & Bind(Host2,TPM, 'Issuer')@j)
+		==> 
+		((#i=#j))
+"
+
+//a host has only one TPM:
+lemma auto_restriction_one_tpm_per_host:
+"
+	All TPM1 TPM2 Host #i #j. 
+		((Bind(Host,TPM1, 'Issuer')@i & Bind(Host,TPM2, 'Issuer')@j)
+		==>
+		(#i=#j))
+"
+
+// any endorsement key that is presented to the issuer must have been generated
+// by a TPM. This restrictions represents the fact that the issuer will check
+// each endorsement key and only allow ones that were created by a TPM
+
+lemma auto_restricition_pke_comes_from_tpm:
+	"All pke #i . 
+		Check_Ek(pke) @ i 
+		==>
+		(
+			(Ex TPM Host #j . TPM2_EK_Created(TPM, Host, pke) @ j)
+		)
+	"
+	
+
+//we only want one Issuer 'Issuer' to keep the model simple. This should
+//be relaxed in a future model to see whether it makes a difference.
+lemma auto_restriction_single_issuer:
+	"All I1 I2 #i #j . (Issuer_Init(I1) @ i & Issuer_Init(I2) @ j) ==> (I1=I2)"
+
+	
+
+// the issuer should be able to check at least 2 pkes
+lemma auto_verify_multiple_pkes: exists-trace
+	"Ex TPM1 TPM2 Host1 Host2 pke1 qpd1 pke2 qpd2  #t1 #t2 #t3 #t4 .
+		PlatformSendKeys(TPM1, Host1, pke1, qpd1, 'Issuer') @ t1
+		& 
+		PlatformSendKeys(TPM2, Host2, pke2, qpd2, 'Issuer') @ t2
+		&
+		IssuerReceivedKeys('Issuer', pke1, qpd1) @ t3
+		& 
+		IssuerReceivedKeys('Issuer', pke2, qpd2) @ t4
+		& 
+		not(pke1=pke2) & not(qpd1=qpd2) & not(Host1=Host2) & not(TPM1=TPM2)
+
+		//we had no key reveal
+		& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+	"
+// we should be able to get two sets of sigs using the same 
+// randomised credentials
+
+lemma oracle_correctness_two_sigs_same_credentials: exists-trace
+	"Ex TPM Host pke R S T W sigma1 sigma2 #t01 #t02 .
+	Host_Sends_Sigma_cred(TPM, Host, pke, R, S, T, W, sigma1) @ t01
+	&
+	Host_Sends_Sigma_cred(TPM, Host, pke, R, S, T, W, sigma2) @ t02
+	& 
+	#t01<#t02
+	&
+	not(sigma1=sigma2)
+	&//we had no key reveal
+	not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+	& //we only join once
+	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+	"
+	
+// we should be able to get two sets of certs using different 
+// randomised credentials
+
+lemma oracle_correctness_two_sigs_different_credentials: exists-trace
+	"Ex TPM Host pke 
+	    R1 S1 T1 W1 sigma1 
+		R2 S2 T2 W2 sigma2 
+		#t01 #t02 .
+	Host_Sends_Sigma_cred(TPM, Host, pke, R1, S1, T1, W1, sigma1) @ t01
+	&
+	Host_Sends_Sigma_cred(TPM, Host, pke, R2, S2, T2, W2, sigma2) @ t02
+	& 
+	not(#t01=#t02)
+	&//credentials are different
+	not(R1=R2) & not(S1=S2) & not(T1=T2) & not(W1=W2)
+	&
+	not(sigma1=sigma2)
+	&//we had no key reveal
+	not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+	& //we only join once
+	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j) 
+	"
+	
+	 
+	 
+//======================================================================================
+// In the following section we look at the different security properties that
+// our protocol should have.
+// We will list all the properties and indicate whether they were proved in this
+// model, in another model or cannot be shown in Tamarin
+//======================================================================================
+
+// ********************************* SP1 Correctness *****************************************
+ 
+// The following correctness lemmas aim to show the security property
+// SP1 Correctness - They were split into separate lemmas to allow for
+// checking different parts independently.
+// This model only covers the case where bsn=bottom.
+
+
+
+// SP1_Correctness of the JOIN process only
+lemma oracle_correctness_join_only: exists-trace
+" Ex TPM Host pke qpd
+					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10 
+					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
+					#t21 #t22
+.
+					
+	//we initiated at least 3 entities
+	
+	Issuer_Init('Issuer') @ t01 
+	& Host_Init(Host) @ t02 
+	& TPM_Init(TPM) @ t03 
+	
+	
+	//we had no key reveal
+	& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+		
+
+	//we had a successful Platform set-up
+	 & Bind(TPM, Host, 'Issuer') @ t04 
+	 
+	//created an endorsement key EK
+	& TPM2_EK_Created(TPM, Host, pke) @ t05 
+	
+	//stored the EK with the host	
+	& Store_EK(TPM, Host) @ t06
+
+	//created a DAA key
+	& TPM2_DAA_Created(TPM, Host) @ t07
+	
+	//stored the DAA key with the host	
+	& Store_DAA(TPM, Host) @ t08
+	
+	//check the EK and Q_PD as the issuer
+	& IssuerReceivedKeys('Issuer', pke, qpd) @ t09
+	
+	//host passthrough of credentail activation params
+	& Passthrough_ActivateCred(TPM, Host) @ t10
+
+	//recompute curlyK using TPM2_ActivateCredential
+	& CurlyK_recomputed(TPM, Host) @ t11
+
+	//receive the curlyK_1 and compute str
+	& Received_CurlyK(TPM, Host)@t12
+	
+	//start the commit
+	& TPM2_Commited(TPM, Host)@t13
+	
+	//receive the E_commit and cv and compute p
+	& Host_Created_p(TPM, Host)@t14
+	
+	//create the p_tpm value and associated tkt
+	& TPM2_Created_P_TPM(TPM, Host)@t15
+
+	//receive and store the p_tpm
+	& Host_Received_P_TPM(TPM, Host)@t16
+	
+	//sign the p_tpm by returning n_J and w
+	& TPM2_Signed_P_TPM(TPM, Host)@t17
+	
+	//receive the signature and forward the details to the Issuer
+	& Host_Received_Signed_P_TPM(TPM, Host)@t18
+	
+	//receive and verify challenge response and send credentials
+	& Issuer_VerifyChallengeIssueCredentials('Issuer', pke) @ t19
+
+	& Passthrough_ActivateCred2(TPM, Host) @ t20
+	
+	& CurlyK2_recomputed(TPM, Host) @ t21
+	
+	& JoinCompleted(TPM, Host, pke) @ t22
+
+		
+	& t01<t02 //Issuer gets created before Host
+	& t02<t04 //Host gets created before Bind
+	& t03<t04 //TPM get created before Bind
+	& t04<t05 
+	& t05<t06 
+	& t06<t07 
+	& t07<t08 
+	& t08<t09 
+	& t09<t10
+	& t10<t11
+	& t11<t12
+	& t12<t13
+	& t13<t14
+	& t14<t15
+	& t15<t16
+	& t16<t17
+	& t17<t18
+	& t18<t19
+	& t19<t20
+	& t20<t21
+	& t21<t22
+
+  //restrict the trace further by preventing each rule from firing more than once
+	
+	& 	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+"
+
+// SP1_Correctness up to generating a signature 
+// using the basename=bottom (without checking the signature)
+
+lemma oracle_correctness_no_verify: exists-trace
+" Ex TPM Host pke qpd
+					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10 
+					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
+					#t21 #t22
+					//sign and verify steps
+					#t23 #t24 #t25 #t26 #t27 #t28 #t29 #t30 sigma
+.
+					
+	//we initiated at least 3 entities
+	
+	Issuer_Init('Issuer') @ t01 
+	& Host_Init(Host) @ t02 
+	& TPM_Init(TPM) @ t03 
+	
+	
+	//we had no key reveal
+	& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+		
+
+	//we had a successful Platform set-up
+	 & Bind(TPM, Host, 'Issuer') @ t04 
+	 
+	//created an endorsement key EK
+	& TPM2_EK_Created(TPM, Host, pke) @ t05 
+	
+	//stored the EK with the host	
+	& Store_EK(TPM, Host) @ t06
+
+	//created a DAA key
+	& TPM2_DAA_Created(TPM, Host) @ t07
+	
+	//stored the DAA key with the host	
+	& Store_DAA(TPM, Host) @ t08
+	
+	//check the EK and Q_PD as the issuer
+	& IssuerReceivedKeys('Issuer', pke, qpd) @ t09
+	
+	//host passthrough of credentail activation params
+	& Passthrough_ActivateCred(TPM, Host) @ t10
+
+	//recompute curlyK using TPM2_ActivateCredential
+	& CurlyK_recomputed(TPM, Host) @ t11
+
+	//receive the curlyK_1 and compute str
+	& Received_CurlyK(TPM, Host)@t12
+	
+	//start the commit
+	& TPM2_Commited(TPM, Host)@t13
+	
+	//receive the E_commit and cv and compute p
+	& Host_Created_p(TPM, Host)@t14
+	
+	//create the p_tpm value and associated tkt
+	& TPM2_Created_P_TPM(TPM, Host)@t15
+
+	//receive and store the p_tpm
+	& Host_Received_P_TPM(TPM, Host)@t16
+	
+	//sign the p_tpm by returning n_J and w
+	& TPM2_Signed_P_TPM(TPM, Host)@t17
+	
+	//receive the signature and forward the details to the Issuer
+	& Host_Received_Signed_P_TPM(TPM, Host)@t18
+	
+	//receive and verify challenge response and send credentials
+	& Issuer_VerifyChallengeIssueCredentials('Issuer', pke) @ t19
+
+	& Passthrough_ActivateCred2(TPM, Host) @ t20
+	
+	& CurlyK2_recomputed(TPM, Host) @ t21
+	
+	& JoinCompleted(TPM, Host, pke) @ t22
+	
+	//Sign starts here
+
+	& RandomisedCredentials(TPM, Host, pke) @ t23
+
+	& ProcessRandomisedCredentials(TPM, Host,pke) @ t24
+	
+	& TPMCommitRandomised(TPM, Host, pke) @ t25
+
+	& GeneratedMessageForSigning(TPM, Host, pke) @ t26
+	
+	& TPM2_Created_C_TPM(TPM, Host, pke) @ t27
+	
+	& Host_Received_C_TPM(TPM, Host, pke) @ t28
+	
+	& TPM2_Signed_C_TPM (TPM, Host, pke) @ t29
+	
+	& Host_Sends_Sigma(TPM, Host, pke, sigma) @ t30
+	
+	& t01<t02 //Issuer gets created before Host
+	& t02<t04 //Host gets created before Bind
+	& t03<t04 //TPM get created before Bind
+	& t04<t05 
+	& t05<t06 
+	& t06<t07 
+	& t07<t08 
+	& t08<t09 
+	& t09<t10
+	& t10<t11
+	& t11<t12
+	& t12<t13
+	& t13<t14
+	& t14<t15
+	& t15<t16
+	& t16<t17
+	& t17<t18
+	& t18<t19
+	& t19<t20
+	& t20<t21
+	& t21<t22
+	//sign and verify
+	& t22<t23
+	& t23<t24
+	& t24<t25
+	& t25<t26
+	& t26<t27
+	& t27<t28
+	& t28<t29
+	& t29<t30
+
+
+ 
+  //restrict the trace further by preventing each rule from firing more than once
+	
+	& 	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+	& 	(All event #i #j . SignOnlyOnce(event)@i & SignOnlyOnce(event)@j ==> #i=#j)
+
+"
+
+
+// SP1_Correctness up to generating a signature 
+// with a basename=bottom which is then verified.
+
+lemma oracle_correctness_with_verify: exists-trace
+" Ex TPM Host pke qpd
+					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10 
+					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
+					#t21 #t22
+					//sign and verify steps
+					#t23 #t24 #t25 #t26 #t27 #t28 #t29 sigma #t30  #t31 Verifier
+.
+					
+	//we initiated at least 3 entities
+	
+	Issuer_Init('Issuer') @ t01 
+	& Host_Init(Host) @ t02 
+	& TPM_Init(TPM) @ t03 
+	
+	
+	//we had no key reveal
+	& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+		
+
+	//we had a successful Platform set-up
+	 & Bind(TPM, Host, 'Issuer') @ t04 
+	 
+	//created an endorsement key EK
+	& TPM2_EK_Created(TPM, Host, pke) @ t05 
+	
+	//stored the EK with the host	
+	& Store_EK(TPM, Host) @ t06
+
+	//created a DAA key
+	& TPM2_DAA_Created(TPM, Host) @ t07
+	
+	//stored the DAA key with the host	
+	& Store_DAA(TPM, Host) @ t08
+	
+	//check the EK and Q_PD as the issuer
+	& IssuerReceivedKeys('Issuer', pke, qpd) @ t09
+	
+	//host passthrough of credentail activation params
+	& Passthrough_ActivateCred(TPM, Host) @ t10
+
+	//recompute curlyK using TPM2_ActivateCredential
+	& CurlyK_recomputed(TPM, Host) @ t11
+
+	//receive the curlyK_1 and compute str
+	& Received_CurlyK(TPM, Host)@t12
+	
+	//start the commit
+	& TPM2_Commited(TPM, Host)@t13
+	
+	//receive the E_commit and cv and compute p
+	& Host_Created_p(TPM, Host)@t14
+	
+	//create the p_tpm value and associated tkt
+	& TPM2_Created_P_TPM(TPM, Host)@t15
+
+	//receive and store the p_tpm
+	& Host_Received_P_TPM(TPM, Host)@t16
+	
+	//sign the p_tpm by returning n_J and w
+	& TPM2_Signed_P_TPM(TPM, Host)@t17
+	
+	//receive the signature and forward the details to the Issuer
+	& Host_Received_Signed_P_TPM(TPM, Host)@t18
+	
+	//receive and verify challenge response and send credentials
+	& Issuer_VerifyChallengeIssueCredentials('Issuer', pke) @ t19
+
+	& Passthrough_ActivateCred2(TPM, Host) @ t20
+	
+	& CurlyK2_recomputed(TPM, Host) @ t21
+	
+	& JoinCompleted(TPM, Host, pke) @ t22
+	
+	//Sign and verify starts here
+
+	& RandomisedCredentials(TPM, Host, pke) @ t23
+
+	& ProcessRandomisedCredentials(TPM, Host,pke) @ t24
+
+	& TPMCommitRandomised(TPM, Host, pke) @ t25
+
+	& GeneratedMessageForSigning(TPM, Host, pke) @ t26
+	
+	& TPM2_Created_C_TPM(TPM, Host, pke) @ t27
+	
+	& Host_Received_C_TPM(TPM, Host, pke) @ t28
+	
+	& TPM2_Signed_C_TPM (TPM, Host, pke) @ t29
+	
+	& Host_Sends_Sigma(TPM, Host, pke, sigma) @ t30
+	
+	& VerifiedSignature(Verifier, sigma) @ t31
+	
+		
+	& t01<t02 //Issuer gets created before Host
+	& t02<t04 //Host gets created before Bind
+	& t03<t04 //TPM get created before Bind
+	& t04<t05 
+	& t05<t06 
+	& t06<t07 
+	& t07<t08 
+	& t08<t09 
+	& t09<t10
+	& t10<t11
+	& t11<t12
+	& t12<t13
+	& t13<t14
+	& t14<t15
+	& t15<t16
+	& t16<t17
+	& t17<t18
+	& t18<t19
+	& t19<t20
+	& t20<t21
+	& t21<t22
+	//sign and verify
+	& t22<t23
+	& t23<t24
+	& t24<t25
+	& t25<t26
+	& t26<t27
+	& t27<t28
+	& t28<t29
+	& t29<t30
+	& t30<t31
+
+
+ 
+  //restrict the trace further by preventing each rule from firing more than once
+	
+	& 	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+	& 	(All event #i #j . SignOnlyOnce(event)@i & SignOnlyOnce(event)@j ==> #i=#j)
+
+"	
+
+
+// ********************************* SP7 Agreement during Join *****************************************
+
+// The following lemmas go through aspects of Lowe's Authentication hierarchy. 
+
+//Aliveness of Host
+
+// This lemma simply shows that at the end of a run of the protocol, an issuer must have been created previously.
+// But it does not require the issuer to have been involved in the running of the protocol at all.
+// This is a very weak requirement.
+
+lemma oracle_auth_aliveness_host_very_weak:
+"
+All pke n #i .
+   // For all commited JOIN sessions running between a platform and issuer on the term(s) n 
+	(
+		Commit( pke, 'Issuer', n ) @ i
+		==>
+		(
+			(Ex #j . Issuer_Init ('Issuer') @ j)
+			|
+			// or there has been a key reveal 
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+		)
+	)
+"
+
+//this lemma shows that the issuer was involved in a run of the protocol (at least one of its rules fired) 
+//or that some of the keys of the entities involved were revealed
+
+lemma oracle_auth_aliveness_host:
+"
+All pke n1 #i .
+   // For all commited JOIN sessions running between a platform and issuer on the term(s) n 
+	(
+		Commit( pke, 'Issuer', n1 ) @ i 
+
+	==> // Implies that an issuer has previously been involved in a protocol run 
+       
+		(	(Ex #k . Alive ('Issuer') @ k)
+			|
+			// or there has been a key reveal of the entities involved in the Commit 
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+		)
+	)
+
+"
+
+// This lemma simply shows that at the end of a run of the protocol for the issuer with a host, 
+// the host must have been involved in a run of a protocol that lead up to the final Issuer rule firing
+
+lemma oracle_auth_aliveness_issuer:
+
+"
+All pke curlyK1 #i .
+	// For all JOIN sessions running between an issuer and a host, Host, on the term(s) n
+	(
+		( Commit('Issuer', pke,  curlyK1) @ i)
+		==>
+		(	//the host was involved in a run of the protocol that 
+			//resulted in a message exchange between the host and the issuer
+			(Ex Host2 #k . Alive(Host2) @ k & Role('Platform') @ k)
+			//or there was a key reveal
+			|
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)	
+		)
+	)
+	"
+
+// Agreement checks 
+
+// This lemma guarantees that whenever the host completes a run of the protocol, apparently with the issuer, 
+// then the issuer has previously been running the protocol, apparently with the host.
+// This lemma (and also the subsequent agreement lemmas) fails if the endorsement key is not included in
+// the str constructed in the Host_ReceiveCurlyK rule which then forms part of the hash p computed in
+// Host_ReceiveEAndCV.
+
+lemma oracle_auth_weak_agreement_host:
+"
+All TPM Host pke n1 #i .
+	(
+		(
+			// For all commited JOIN sessions running between a platform and issuer on the term(s) n 
+			Commit( pke, 'Issuer', n1 ) @ i & JoinCompleted(TPM, Host, pke) @ i
+		)
+		==>
+        ( 
+			// Implies there exists a running issuer on some term(s) n2 
+			(Ex n2 #j . Running( 'Issuer', pke, n2 ) @ j) 
+			|
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+		)
+	)
+"
+
+// This lemma shows that the Host is in a non-injective agreement with the issuer on
+// the credentials if, whenever the Host completes a run of the protocol, apparently with the Issuer, 
+// then the Issuer has previously been running the protocol, apparently with the Host, and b was acting in role B in his run, and
+//the two principals agreed on the message t
+
+lemma oracle_auth_non_injective_agreement_host_issuer:
+"
+All pke n #i .
+	(
+		(
+			// For all commited JOIN sessions running between a platform and issuer on the term(s) n 
+			Commit( pke, 'Issuer', n ) @ i 
+		)
+		==>
+        ( 
+			// Implies there exists a running issuer on the same term
+			(Ex #j . Running( 'Issuer', pke, n ) @ j) 
+			|
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+		)
+	)
+"
+
+lemma oracle_auth_injective_agreement_host_issuer:
+"
+All pke n #i .
+	(
+		(
+			// For all commited JOIN sessions running between a platform and issuer on the term(s) n 
+			Commit( pke, 'Issuer', n ) @ i 
+		)
+		==>
+		(
+			(
+				(Ex #j . 
+					(
+						Running( 'Issuer', pke, n ) @ j
+						& 
+						(#j<#i) 
+						&
+						( not(
+							Ex pke2 #i2 . ( Commit( pke2, 'Issuer', n) @ i2 & not(#i2=#i) )
+							)
+						)
+					)
+				)
+			)
+			|
+			(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+		)
+	)
+"
+
+// ********************************* SECRECY *****************************************
+
+
+// CRE secrecy from the perspective of both the Issuer and the TPM/Host.
+lemma oracle_auth_secrecy_cre:
+"
+  All pke cred #i. 
+    // somebody claims to have setup a shared secret, 
+    Secret( pke, 'Issuer', cred ) @ i
+    ==>
+		// implies the adversary does not know it 
+		not( Ex #k. K( cred ) @ k )
+		|
+		// or it is the case that a key has been revealed 
+		(Ex RevealEvent Entity #kr . KeyReveal(RevealEvent, Entity) @ kr & Honest(Entity) @ i)
+"
+
+// ********************************* SP2 UserControlledLinkability *****************************************
+
+// Informal description:
+// Given a single basename bsn/=bottom an adversary finds it hard to create two different messages
+// under the same secret key with both messages associated with that bsn, but the messages are not 
+// linked.
+// This lemma does not apply as this model only deals with unset basenames
+
+
+// ********************************* SP3 Unforgeability *****************************************
+
+lemma oracle_SP3_Unforgeability:
+// Informal description:
+// An adversary, who is in the possession of a set of Platforms’ secret keys and associated credentials,
+// finds it hard to forge a valid message for a secret key and credential, which is not in that set.
+// We restate this as follows: The only way a valid signature  using the secret key f 
+// (and hence the associcated credentials) was not created by the platform is if its key or 
+// set of credentials was leaked.
+"
+  All TPM Host pke f sigma #t01 #t02 .
+  
+  //Assume that a platform's TPM created a secret DAA key,f
+  DeriveDAAKey(TPM, Host, pke, f) @ t01
+  &
+  // and we have a valid deanonymised signature which used this secret f
+  VerifiedSignatureDeAnonymised(sigma, f) @ t02
+  &
+  //the platform's keys were not revealed
+  not ( Ex Event #r1 . KeyReveal(Event, TPM ) @ r1)
+  &
+  not ( Ex Event #r2 . KeyReveal(Event, Host ) @ r2)
+  &
+  not ( Ex Event #r3 . KeyReveal(Event, pke ) @ r3)
+  &
+  //and neither were the issuer's keys leaked
+  not ( Ex Event #ir . KeyReveal(Event, 'Issuer' ) @ ir)
+  ==>
+  //then the platform must have sent out the message
+  (Ex #t03 . Host_Sends_Sigma(TPM, Host, pke, sigma) @ t03)
+
+"
+// ********************************* SP4 NonFrameability *****************************************
+
+//lemma oracle_SP4_NonFrameability:
+// Informal description:
+// No combination of dishonest issuers and Platforms can create a valid message m0 
+// which can be linked to some given message m1 generated by an honest Platform , 
+// unless that Platform really did produce the message m0
+//This property does not apply in this model which only looks at unset basenames.
+
+
+//********************************* SP5 Anonymity *****************************************
+/*
+lemma auto_SP5_Anonymity_ObsEquiv:
+
+// Informal description:
+// An adversary, who does not know a Platform ’s secret key, finds it hard to recover the
+// identity of the Tpm used by the Platform from a given message.
+// NB: This is proved by the Observational Equivalence models
+
+*/
+
+// ********************************* SP6 UserControlledUnlinkability *****************************************
+
+// lemma oracle_SP6_UserControlledUnlinkability: 
+// Informal description:
+// Given two messages m0 and m1 associated with two basenames bsn0 and bsn1 respectively, where
+// bsn0/=bsn1, an adversary, who does not know the secret key(s) of the associated Platforms, 
+// finds it hard to tell whether or not the two messages originated from the same Platform.
+// NB: This is proved by the Observational Equivalence models
+
+end

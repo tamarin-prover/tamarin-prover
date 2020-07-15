@@ -31,7 +31,7 @@ let rec big_or = function
                 | [] -> raise (VerdictNotWellFormed "Verdict should contain at least one case which is not \"otherwise\"")
 
 let deref' vf r = 
-    let filter r i = function RefCase(r',_,v) -> if (String.compare r r' = 0) then Some(i,v) else None
+    let filter r i = function RefCase(r',_,v) -> if String.equal r r' then Some(i,v) else None
                              | _ -> None
     in
     match mapi_opt (filter r) vf with

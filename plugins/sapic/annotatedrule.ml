@@ -36,7 +36,9 @@ let rec print_msr (msr: annotated_rule list) = match msr with
                     let c = (try Hashtbl.find color_table p
                              with Not_found -> let n = (rgb2string (random_rgb ())) in Hashtbl.add color_table p n; n)
                     in (sprintf " [process=%s] " p, sprintf " [color=%s]" c)
-              | None -> (" [process=top-level] ", "")
+              | None -> (" [process=top-level] ", "") in
+            let facts2string factlist= String.concat ", " (List.map fact2string factlist)
+            and action_list2string al = String.concat ", " (List.map action2string al)
             in
             sprintf "rule %s%s: //%s%s \n [%s] --[%s]-> [%s]\n\n" rulename color process_name comment (facts2string head.left) (action_list2string head.actions) (facts2string head.right) 
             ^ ( print_msr tail)

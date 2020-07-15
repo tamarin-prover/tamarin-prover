@@ -359,13 +359,20 @@ SCADA/opc_ua_secure_conversation.spthy \
 feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy \
-feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy \
+feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy feature-predicates/pub.spthy feature-predicates/simple_example.spthy feature-predicates/binding.spthy \
 feature-predicates/binding.spthy \
-feature-let-bindings/let-blocks.spthy
-
+feature-let-bindings/let-blocks.spthy \
+feature-locations/AC.spthy \
+feature-locations/AKE.spthy  \
+feature-locations/licensing.spthy \
+feature-locations/SOC.spthy \
+feature-locations/OTP.spthy \
+feature-locations/AC_counter_with_attack.spthy \
+feature-locations/AC_sid_with_attack.spthy \
+feature-ass-immediate/test-all.spthy 
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
+SAPIC_CASE_STUDIES_SLOW= encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
 NSL/nsl-no_as-untagged.spthy \
 Yubikey/Yubikey.spthy \
 encWrapDecUnwrap/encwrapdecunwrap.spthy
@@ -378,24 +385,23 @@ examples/sapic/fairexchange-asw/aswAB-mod.spthy \
 fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
 fairexchange-gjm/gjm-locks-unfairness-A.spthy
 
-# # case studies that cannot be proven automatically or are in fact nor working
-# # exceptional cases, that are left out on purpose, with explanations:
-# SAPIC_CASE_STUDIES_NO_PROOF = \
-# PKCS11/pkcs11-templates.spthy \ # heavy use of manual lemmas, not part of regresstion tests
-# PKCS11/pkcs11-dynamic-policy.spthy \ # not working 
-# xor/NSLPK3xor.spthy \ # attack finding relies on sources lemma which is untrue. it is acceptable for
+# The following case studies are in the repository, but cannot be proven automatically.
+# PKCS11/pkcs11-templates.spthy 
+# # heavy use of manual lemmas, not part of regresstion tests
+#
+# PKCS11/pkcs11-dynamic-policy.spthy \ 
+# # not working 
+#
+# feature-xor/NSLPK3xor.spthy \
+# # attack finding relies on sources lemma which is untrue. it is acceptable for
 # # this model, because the attacks found despite an incorrect sources lemma are
 # # correct by definition, but negating it would defeat its purpose, and removing
 # # it would inhibit the attack finding. 
+#
 # envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
 # # these examples were never completed and are here for reference only
 
 # not working because of missing support for locations
-#
-# location stuff: not tested so far
-# feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
-# feature-locations/SOC.spthy  -> commented out before
-# examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
 
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))

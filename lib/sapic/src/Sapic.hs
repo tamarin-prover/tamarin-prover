@@ -25,19 +25,20 @@ import Data.Typeable
 import Data.Maybe
 import Data.List
 import qualified Data.Set as S
+import qualified Data.List as List
 import qualified Extension.Data.Label                as L
-import           Control.Monad.Trans.FastFresh   ()
-import           Sapic.Annotation
-import           Sapic.SecretChannels
-import           Sapic.Facts
-import           Sapic.Locks
-import           Sapic.ProcessUtils
+import Control.Monad.Trans.FastFresh   ()
+import Sapic.Annotation
+import Sapic.SecretChannels
+import Sapic.Report
+import Sapic.Facts
+import Sapic.Locks
+import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
 import           Sapic.Accountability
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
-
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
@@ -46,11 +47,11 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
                     throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
-             else 
+             else
                     return (removeSapicItems th)
-      [p] -> do
+      [p] -> if all allUnique (bindings p) then do
                 -- annotate
-                an_proc <- evalFreshT (annotateLocks (annotateSecretChannels (propagateNames $ toAnProcess p))) 0
+                an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
@@ -58,7 +59,7 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
                 -- add restrictions
-                rest<- restrictions an_proc
+                rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add accountability lemma
                 let undef = mapMaybe verifyAccLemma (theoryAccLemmas th2)
@@ -66,10 +67,21 @@ translate th = case theoryProcesses th of
                 accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
                 th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
                 -- add heuristic, if not already defined:
-                th4 <- return $ fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
+                let th4 = fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
                 return (removeSapicItems th4)
+             else
+                throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p)
+                            :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
+    bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr) 
+    bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p) 
+    bindings (ProcessNull _) = [[]]
+    bindingsComb (Lookup _ v) = [v]
+    bindingsComb _            = []
+    bindingsAct (New v) = [v]
+    bindingsAct _       = []
+
     verifyAccLemma accLem =
       if required /= defined then
         Just (L.get aName accLem, required \\ defined)
@@ -79,39 +91,50 @@ translate th = case theoryProcesses th of
         required =  L.get aCaseIdentifiers accLem
         defined = map (L.get cName) (L.get aCaseTests accLem)
 
+    allUnique = all ( (==) 1 . length) . List.group . List.sort
+    repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
+
     ops = L.get thyOptions th
-    checkOps lens x   
+    translateReport anp =
+      if L.get transReport ops then
+        translateTermsReport anp
+      else
+        anp
+    checkOps lens x
         | L.get lens ops = Just x
         | otherwise = Nothing
     initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
-                        $ catMaybes [ 
+                        $ catMaybes [
                         checkOps transProgress (PT.progressInit anP)
-                      , checkOps transReliable (RCT.reliableChannelInit anP)
-                      ] 
-    trans anP = foldr ($) BT.baseTrans  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+                        , checkOps transReliable (RCT.reliableChannelInit anP)
+                        , checkOps transReport (reportInit anP)
+                      ]
+    trans anP = foldr ($) (BT.baseTrans needsAssImmediate)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
-                      ] 
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction] 
-    restrictions anP = foldM (flip ($)) []  --- fold from left to right
+                      ]
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> [AnnotatedRule ProcessAnnotation] -> m1 [SyntacticRestriction]
+    restrictions anP pRules = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
-                                                                -- if op.accountability then
-                                                                  --   (* if an accountability lemma with control needs to be shown, we use a 
-                                                                  --    * more complex variant of the restritions, that applies them to only one execution *)
-                                                                  --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
-                                                                  --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                -- else 
-                                                                  --   restrs
-                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP True] ++
+                                                                 -- if op.accountability then
+                                                                 --   (* if an accountability lemma with control needs to be shown, we use a
+                                                                 --    * more complex variant of the restritions, that applies them to only one execution *)
+                                                                 --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+                                                                 --   @ (if op.progress then [progress_init_lemma_acc] else [])
+                                                                 -- else
+                                                                 --   restrs
+                                                                 --    @ (if op.progress then [progress_init_lemma] else [])
+                        $ [BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
-                          , (transReliable, RCT.reliableChannelRestr anP) 
+                          , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
+    needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
+    containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
@@ -180,5 +203,33 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
         handler:: (Typeable ann, Show ann) => AnProcess ann ->  SapicException ann -> a
-        handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp 
+        handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp
         handler _ e = throw e
+
+
+isPosNegFormula :: LNFormula -> (Bool, Bool)
+isPosNegFormula fm = case fm of
+    TF  _            -> (True, True)
+    Ato (Action _ f) -> isActualKFact $ factTag f
+    Ato _            -> (True, True)
+    Not p            -> swap $ isPosNegFormula p
+    Conn And p q     -> isPosNegFormula p `and2` isPosNegFormula q
+    Conn Or  p q     -> isPosNegFormula p `and2` isPosNegFormula q
+    Conn Imp p q     -> isPosNegFormula $ Not p .||. q
+    Conn Iff p q     -> isPosNegFormula $ p .==>. q .&&. q .==>. p
+    Qua  _   _ p     -> isPosNegFormula p
+    where
+      isActualKFact (ProtoFact _ "K" _) = (True, False)
+      isActualKFact _ = (True, True)
+
+      and2 (x, y) (p, q) = (x && p, y && q)
+      swap (x, y) = (y, x)
+
+-- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is not needed.
+checkAssImmediate :: Lemma p -> Bool
+checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
+  (AllTraces,   (_, True))     -> True  -- L- for all-traces
+  (ExistsTrace, (True, _))     -> True  -- L+ for exists-trace
+  (ExistsTrace, (False, True)) -> False -- L- for exists-trace
+  (AllTraces,   (True, False)) -> False -- L+ for all-traces
+  _                            -> False -- not in L- and L+ should not be possible

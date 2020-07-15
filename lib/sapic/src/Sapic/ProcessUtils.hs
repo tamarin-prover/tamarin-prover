@@ -15,6 +15,8 @@ module Sapic.ProcessUtils (
 ,  isDelete
 ,  isLock
 ,  isUnlock
+,  isChIn
+,  isChOut
 ) where
 -- import Data.Maybe
 -- import Data.Foldable
@@ -66,7 +68,14 @@ isUnlock :: AnProcess ann -> Bool
 isUnlock (ProcessAction (Unlock _) _ _) = True
 isUnlock _  = False
 
+isChIn :: AnProcess ann -> Bool
+isChIn (ProcessAction (ChIn _ _) _ _) = True
+isChIn _  = False
+
+isChOut :: AnProcess ann -> Bool
+isChOut (ProcessAction (ChOut _ _) _ _) = True
+isChOut _  = False
+
 isEq :: AnProcess ann -> Bool
 isEq (ProcessComb (CondEq _ _) _ _ _) = True
 isEq _  = False
-

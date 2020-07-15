@@ -22,13 +22,8 @@ module Theory (
     expandFormula
 
   -- * Restrictions
-  , ProtoRestriction(..)
-  , Restriction
-  , SyntacticRestriction
-  , RestrictionAttribute(..)
-  , rstrName
-  , rstrFormula
   , expandRestriction
+
 
   -- * Processes
   , ProcessDef(..)
@@ -45,6 +40,7 @@ module Theory (
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
+  , transReport
   , thyOptions
   , setOption
 
@@ -442,36 +438,6 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
 
 
 ------------------------------------------------------------------------------
--- Restrictions (Trace filters)
-------------------------------------------------------------------------------
-
--- | An attribute for a 'Restriction'.
-data RestrictionAttribute =
-         LHSRestriction
-       | RHSRestriction
-       | BothRestriction
-       deriving( Eq, Ord, Show )
-
--- | A restriction describes a property that must hold for all traces. Restrictions are
--- always used as lemmas in proofs.
-data ProtoRestriction f = Restriction
-       { _rstrName    :: String
-       , _rstrFormula :: f
-       }
-       deriving( Generic )
-
-type Restriction = ProtoRestriction LNFormula
-type SyntacticRestriction = ProtoRestriction SyntacticLNFormula
-
-deriving instance Eq Restriction 
-deriving instance Ord Restriction 
-deriving instance Show Restriction 
-deriving instance NFData Restriction 
-deriving instance Binary Restriction 
-
-$(mkLabels [''ProtoRestriction])
-
-------------------------------------------------------------------------------
 -- Processes
 ------------------------------------------------------------------------------
 
@@ -509,6 +475,7 @@ data Option = Option
           _transAllowPatternMatchinginLookup   :: Bool
         , _transProgress            :: Bool
         , _transReliable            :: Bool
+        , _transReport            :: Bool
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -573,7 +540,7 @@ data AccKind =
 data ProtoLemma f p = Lemma
        { _lName            :: String
        , _lTraceQuantifier :: TraceQuantifier
-       , _lFormula         :: f 
+       , _lFormula         :: f
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
@@ -1023,22 +990,22 @@ expandFormula thy = traverseFormulaAtom f
   where
         f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
         f x | Syntactic (Pred fa)   <- x
-            , Just pr <- lookupPredicate fa thy 
-              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr) 
+            , Just pr <- lookupPredicate fa thy
+              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr)
 
             | (Syntactic (Pred fa))   <- x
             , Nothing <- lookupPredicate fa thy = Left $ factTag fa
 
-            | otherwise = return $ Ato $ toAtom x 
+            | otherwise = return $ Ato $ toAtom x
         apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula
         apply' subst = mapAtoms (\i a -> fmap (applyVTerm $ subst i) a)
         compSubst (Fact _ _ ts1) (Fact _ _ ts2) i = substFromList $ zip ts1' ts2'
         -- ts1 varTerms that are free in the predicate definition
-        -- ts2 terms used in reference, need to add the number of quantifiers we added 
+        -- ts2 terms used in reference, need to add the number of quantifiers we added
         -- to correctly dereference.
-            where 
+            where
                   ts1':: [BVar LVar]
-                  ts1' = map Free ts1 
+                  ts1' = map Free ts1
                   ts2' = map (fmap $ fmap up) ts2
                   up (Free v) = Free v
                   up (Bound i') = Bound $ i' + i
@@ -1236,7 +1203,7 @@ addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False
+defaultOption = Option False False False False
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory

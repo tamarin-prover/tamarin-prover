@@ -282,10 +282,9 @@ let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
   (* Printf.printf "%s\n" (annotatedtree2string annotated_process); *)
   let options = 
-      (* if input.op.progress *) 
-      (* then "\nheuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ \n\n" *)
-      (* else *) 
-          "\nheuristic: p /* heuristic for SAPIC */\n\n"
+      if input.op.progress 
+      then "\nheuristic: l /* heuristic for SAPIC in liveness mode, i.e., with progress) */ \n\n"
+      else "\nheuristic: p /* heuristic for SAPIC */\n\n"
   in
   let msr =  
       if input.op.progress 
@@ -299,6 +298,6 @@ let translation input =
              then annotate_eventId msr 
              else msr
   in
-  input.sign ^ options ^( print_msr msr' ) ^( String.concat "\n\n" (List.map print_rule input.rules)) ^ sapic_restrictions ^
+  input.sign ^ options ^ ( print_msr msr' ) ^ sapic_restrictions ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

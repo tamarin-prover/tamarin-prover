@@ -1,0 +1,16 @@
+theory AssImmediateTestAll
+begin
+
+new x; out(x);
+event A();
+in(x,x); 
+event B()
+
+// ass_immediate guarantees that K(x) is between A() and B()
+
+// should verifiy and trigger addition of ass_immediate
+lemma intuitiveTest:
+  all-traces
+  "All #a #b . A()@a & B()@b ==> Ex #i x. K(x)@i & #a<#i & #i<#b"
+
+end

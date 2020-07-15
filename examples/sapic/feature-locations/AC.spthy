@@ -1,14 +1,13 @@
 theory AttestedComputation
 
-// NOTE Robert: syntax check fails, but I am not sure if construct
-// if <o,i,lio>= check_rep(r,'l') then // verification of the validity of the report 
-// ever worked.
-
 begin
+
+builtins: locations-report
+
 functions: prog/3,list/2
 
 predicates:
-pred_rep(x,y) <=> not  (y= 'l')
+Report(x,y) <=> not  (y= 'l')
 
 let r =                                        // The remote server who runs the code
 	(lock state; lookup state as lio in

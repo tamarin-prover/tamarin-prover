@@ -1,0 +1,321 @@
+/*
+ * Protocol:    Wireguard protocol
+ * Modeler:     Kevin Milner & Jason Donenfeld
+ * Date:        2017
+ * Source:      Original
+ * Status:      Basically complete? Use the 'i' heuristic to autoprove.
+ *
+ * TODO:
+ * - Implement identity hiding using observational equivalence, instead of the weaker surrogate-based property.
+ * - Prove indistinguishability using observational equivalence.
+ * - Model ECDH(private, NULL) = NULL
+ */
+
+theory WireGuard
+begin
+
+builtins: hashing, diffie-hellman
+/* Normally an aead would be arity 4, but in the handshake the nonce is always
+ * the fixed value 0 so for legibility we do not include it */
+functions: aead/3, decrypt/2, verify/3, true/0
+/* The plaintext can be recovered with the key */
+equations: decrypt(aead(k, p, a), k) = p
+/* The authentication can be checked with the key and AAD */
+equations: verify(aead(k, p, a), a, k) = true
+heuristic: i
+
+/* This restriction tells Tamarin that whenever an Eq( ) fact occurs,
+ * the terms in it must be equal. This allows us to model rules that
+ * only trigger if e.g. the AEAD correctly verifies */
+restriction Eq_testing: "All x y #i. Eq(x, y) @ i ==> x = y"
+
+/* === Setup and key reveal rules === */
+
+/* Keygen is separate from pairing to allow keys to be paired
+ * more than once (if they were generated fresh in the pairing
+ * this would not be possible */
+rule AgentKeyGen:
+    [ Fr(~ltk) ]
+    --[DHKey(~ltk)]->
+    [!F_AgentKey(~ltk), Out('g'^~ltk)]
+
+/* Semi-malicious or ignorant agents might share a PSK with multiple
+ * parties, so we overapproximate this by allowing the same PSK to be reused
+ * arbitrarily. If this finds an attack then it may not be a 'real'
+ * attack, but if it doesn't then there is no problem with PSK reuse. */
+rule PSKKeyGen:
+    [ Fr(~psk) ]
+    --[PSKey(~psk)]->
+    [ !F_AgentPSK(~psk) ]
+
+/* Key Reveals for our adversary model. These allow the adversary to reveal
+ * any of the keys below at any time, unless restricted in the lemma we wish
+ * to prove. */
+rule PSK_reveal: 
+   [ !F_AgentPSK(k) ] --[ Reveal_PSK(k) ]-> [ Out(k) ]
+
+rule AgentKey_reveal:
+   [ !F_AgentKey(k) ] --[ Reveal_AK('g'^k) ]-> [ Out(k) ]
+
+rule EphKey_reveal:
+   [ !EphKeytoReveal(k) ] --[ Reveal_EphK('g'^k) ]-> [ Out(k) ]
+
+/* Models an agent adding anothers public key out-of-band, we assume that
+ * all relationships set up this way are 'sane' and both of the keys involved
+ * were generated fresh. */
+rule AddPublicKey:
+    let pkB = 'g'^~ltkB in
+    [ !F_AgentKey(~ltkA)
+    , !F_AgentKey(~ltkB)
+    , !F_AgentPSK(~psk)
+    , Fr(~id)
+    ]-->
+    [ /* For search efficiency, state is divided into
+       * an invariant portion and a variant portion. This
+       * allows tamarin to immediately bind the keys back
+       * to this initial pairing rule. The fresh ~id is used
+       * to identify this pairing. We cache the SiSr in the
+       * invariant to reduce Tamarin's variant precomputation time. */
+      L_State(~id,'no_message_state')
+    , !F_StateInvariants(~id,~psk,~ltkA,pkB,pkB^~ltkA)
+    ]
+
+/* === Message Rules === */
+
+rule Handshake_Init:
+    let pkI   = 'g'^~ltkI
+        pekI  = 'g'^~ekI
+        eisr  = pkR^~ekI
+        /* Constructing the init message m1: */
+        cii   = h('noise')
+        hii   = h(<cii, 'id', pkR, pekI>)
+        ci0   = h(<cii, pekI, '1'>)
+        ci1   = h(<ci0, eisr, '1'>)
+        ki1   = h(<ci0, eisr, '2'>)
+        astat = aead(ki1, <pkI, ~pkISurrogate>, hii)
+        hi0   = h(<hii, astat>)
+        ci2   = h(<ci1, sisr, '1'>)
+        ki2   = h(<ci1, sisr, '2'>)
+        ats   = aead(ki2, $ts, hi0)
+        hi1   = h(<hi0, ats>)
+        /* NOTE: MACs used in the DDoS protection are not modeled, so we assume they are
+         * some arbitrary public values (i.e. known to the adversary, like a fixed string). */
+        m1    = <'1', ~sidI, pekI, astat, ats, $mac1, $mac2> in
+    [ /* Init can be triggered at any time, even when currently performing
+       * another role or on another stage. This could happen e.g. because of a timeout.
+       * As such we bind the previous state as 'anything' and discard it. */
+      L_State(~id,anything)
+    , !F_StateInvariants(~id,~psk,~ltkI,pkR,sisr)
+    , Fr(~sidI)
+    , Fr(~ekI)
+    /* The pkISurrogate is used later to approximate identity hiding. */
+    , Fr(~pkISurrogate)
+    ]-->
+    [ L_State(~id,<'init',~sidI,~ekI,ci2,ki2,hi1>)
+      /* F_SolveInit is a bit of a hack to help with Tamarin's heuristics. It allows Tamarin to
+       * prioritize solving backwards from the Handshake_Complete rule even though the L_State()
+       * fact is deprioritized by the m4 definitions above. This will not be necessary in a
+       * future version of Tamarin. */
+    , F_SolveInit(~id, ~psk, <'init', ~sidI, ~ekI, ci2, ki2, hi1>)
+    , !EphKeytoReveal(~ekI)
+    , Out(m1)
+    ]
+
+rule Handshake_Resp:
+    let pkR   = 'g'^~ltkR
+        pekR  = 'g'^~ekR
+        eisr  = pekI^~ltkR
+        eier  = pekI^~ekR
+        sier  = pkI^~ekR
+        /* Reconstructing what should be in m1: */
+        cri   = h('noise')
+        hri   = h(<cri, 'id', pkR, pekI>)
+        cr0   = h(<cri, pekI, '1'>)
+        cr1   = h(<cr0, eisr, '1'>)
+        kr1   = h(<cr0, eisr, '2'>)
+        astat = aead(kr1, <pkI, pkISurrogate>, hri)
+        hr0   = h(<hri, astat>)
+        cr2   = h(<cr1, sisr, '1'>)
+        kr2   = h(<cr1, sisr, '2'>)
+        ats   = aead(kr2, $ts, hr0)
+        hr1   = h(<hr0, ats>)
+        m1    = <'1', sidI, pekI, astat, ats, $mac1, $mac2> /* NOTE: MACs used in DDoS protection are not modeled. */
+        /* Constructing the response message m2: */
+        cr3   = h(<cr2, pekR, '1'>)
+        hr2   = h(<hr1, pekR>)
+        cr4   = h(<cr3, eier, '1'>)
+        cr5   = h(<cr4, sier, '1'>)
+        cr6   = h(<cr5, ~psk, '1'>)
+        hrt   = h(<cr5, ~psk, '2'>)
+        kr6   = h(<cr5, ~psk, '3'>)
+        hr3   = h(<hr2, hrt>)
+        aempt = aead(kr6, 'e', hr3)
+        hr4   = h(<hr3, aempt>)
+        m2    = <'2', sidI, ~sidR, pekR, aempt, $mac1, $mac2> in /* NOTE: MACs used in DDoS protection are not modeled. */
+    [ L_State(~id,anything)
+    , !F_StateInvariants(~id,~psk,~ltkR,pkI,sisr)
+    , Fr(~ekR)
+    , Fr(~sidR)
+    , In(m1)
+    ]--[
+        /* In the real protocol, this isn't actually cr6, but is rather derived from it
+         * via some more hashing, but it doesn't make a difference here -- if the adversary knows cr6,
+         * it can compute the derived key. */
+        RKeys(<pkI, pkR, pekI, pekR, ~psk, cr6>)
+      , Identity_Surrogate(pkISurrogate)
+    ]->
+    [ L_State(~id,<'transport_unconfirmed',~sidR,pekI,pekR,cr6>)
+    , F_SolveResp(~id, ~psk, <'transport_unconfirmed', ~sidR, pekI, pekR, cr6>) /* This is used for the same purpose as F_SolveInit above */
+    , !EphKeytoReveal(~ekR)
+    , Out(m2)
+    ]
+
+rule Handshake_Complete:
+    let pkI   = 'g'^~ltkI
+        pekI  = 'g'^~ekI
+        eier  = pekR^~ekI
+        sier  = pekR^~ltkI
+        /* Reconstruct what should be in m2: */
+        ci3   = h(<ci2, pekR, '1'>)
+        hi2   = h(<hi1, pekR>)
+        ci4   = h(<ci3, eier, '1'>)
+        ci5   = h(<ci4, sier, '1'>)
+        ci6   = h(<ci5, ~psk, '1'>)
+        hit   = h(<ci5, ~psk, '2'>)
+        ki6   = h(<ci5, ~psk, '3'>)
+        hi3   = h(<hi2, hit>)
+        aempt = aead(ki6, 'e', hi3)
+        hi4   = h(<hi3, aempt>)
+        m2    = <'2', sidI, sidR, pekR, aempt, $mac1, $mac2>
+        /* We assume the first transport message is 'as weak as possible', that is, all values
+         * in it are public other than the key used to encrypt. */
+        mtr   = <'4', sidR, aead(ci6, 'message', '0')> in
+    [ L_State(~id,<'init',sidI,~ekI,ci2,ki2,hi1>)
+    , F_SolveInit(~id, ~psk, <'init', sidI, ~ekI, ci2, ki2, hi1>)
+    , !F_StateInvariants(~id,~psk,~ltkI,pkR,sisr)
+    , In(m2)
+    ]--[
+      /* In the real protocol, this isn't actually ci6, but is rather derived from it
+       * via some more hashing, but it doesn't make a difference here (as with cr6 above). */
+      IKeys(<pkI, pkR, pekI, pekR, ~psk, ci6>)
+    ]->
+    [ L_State(~id,<'transport',sidI,ci6>)
+    , Out(mtr)
+    ]
+
+/* === Key Confirmation ===
+ *
+ * For proving agreement properties after the first transport message
+ * This is not faithfully modelled, since we don't care about the contents
+ * of the transport message--instead it's generically 'anything encrypted
+ * with the transport key I just set up'. */
+
+rule R_ConfirmedTransportMessage:
+    let mtr = <'4', sid, data> in
+    [ L_State(~id,<'transport_unconfirmed',sidR,pekI,pekR,cr>)
+    , F_SolveResp(~id, ~psk, <'transport_unconfirmed', sidR, pekI, pekR, cr>)
+    , !F_StateInvariants(~id,~psk,~ltkR,pkI,sisr)
+    , In(mtr)
+    ]--[
+      RConfirm(<pkI, 'g'^~ltkR, pekI, pekR, ~psk, cr>)
+      //We manually verify this instead of the recomputation used for other terms above, since
+      //morally R may not know the contents of the message.
+    , Eq(verify(data, '0', cr), true)
+    ]->
+    [ L_State(~id,<'transport',sidR,cr>) ]
+    
+/* === Session Traces ===
+ *
+ * We show that at least the protocol works. */
+
+lemma exists_session: exists-trace
+    "Ex pki pkr peki pekr psk ck #i #j.
+        IKeys(<pki, pkr, peki, pekr, psk, ck>) @ i
+        & RConfirm(<pki, pkr, peki, pekr, psk, ck>) @ j & #i < #j"
+
+/* There are only three numbers, 0, 1, and infinity. So 2 == infinity */
+lemma exists_two_sessions: exists-trace
+    "Ex pki pkr sesskeys sesskeys2 #i #j #i2 #j2.
+        IKeys(<pki, pkr, sesskeys>) @ i
+        & RConfirm(<pki, pkr, sesskeys>) @ j & #i < #j
+        & IKeys(<pki, pkr, sesskeys2>) @ i2 & RConfirm(<pki, pkr, sesskeys2>) @ j2 & #i2 < #j2
+        & #i < #i2 & not(sesskeys = sesskeys2)"
+
+
+/* === Agreement Properties === */
+
+lemma I_disagreement_implies_Sr_or_SiEi_compromise_and_PSK_compromise[reuse]:
+    "All pki pkr peki pekr psk ck #i.
+        /* If I believes they have completed a handshake with R */
+        IKeys(<pki, pkr, peki, pekr, psk, ck>) @ i
+        /* but R doesn't have a matching session */
+        & not(Ex #j. #j < #i & RKeys(<pki, pkr, peki, pekr, psk, ck>) @ j)
+    ==> /* Then the PSK was compromised (or not in use) and */
+        (Ex #j. Reveal_PSK(psk) @ j & #j < #i) & (
+        /* either R's static was compromised */
+        (Ex #j. Reveal_AK(pkr) @ j & #j < #i)
+        /* or both I's static and ephemeral were already compromised */
+        | (Ex #j #j2. Reveal_AK(pki) @ j & #j < #i & Reveal_EphK(peki) @ j2 & #j2 < #i)
+        )"
+
+lemma R_disagreement_implies_Si_or_SrEr_compromise_and_PSK_compromise[reuse]:
+    "All pki pkr peki pekr psk ck #i.
+        /* If R believes they have a confirmed session with I */
+        RConfirm(<pki, pkr, peki, pekr, psk, ck>) @ i
+        /* but I doesn't have a matching session */
+        & not(Ex #j. #j < #i & IKeys(<pki, pkr, peki, pekr, psk, ck>) @ j)
+    ==> /* Then the PSK was compromised (or not in use) and */
+        (Ex #j. Reveal_PSK(psk) @ j & #j < #i) & (
+        /* either I's static was compromised */
+        (Ex #j. Reveal_AK(pki) @ j & #j < #i)
+        /* or both R's static and ephemeral were already compromised */
+        | (Ex #j #j2. Reveal_AK(pkr) @ j & Reveal_EphK(pekr) @ j2 & #j2 < #i & #j < #i)
+        )"
+
+lemma UKS_resistance:
+    "All pki1 pki2 pkr1 pkr2 peki1 peki2 pekr1 pekr2 psk1 psk2 ck #i #j.
+        IKeys(<pki1, pkr1, peki1, pekr1, psk1, ck>) @ i
+        & RKeys(<pki2, pkr2, peki2, pekr2, psk2, ck>) @ j
+    ==> pki1 = pki2 & pkr1 = pkr2 & peki1 = peki2 & pekr1 = pekr2 & psk1 = psk2"
+
+lemma session_uniqueness:
+    /* For both I and R, a 'confirmed session key' will always be unique (even if all keys are compromised)
+     * This follows from I and R generating random ephemeral values. Note that this could be violated if the
+     * RNG can be controlled instead of just revealed, which we do not model. */
+    "(All pki pkr peki pekr psk ck #i.
+        IKeys(<pki, pkr, peki, pekr, psk, ck>) @ i
+    ==> not(Ex peki2 pekr2 #k. IKeys(<pki, pkr, peki2, pekr2, psk, ck>) @ k & not(#k = #i)))
+    &(All pki pkr peki pekr psk ck #i.
+        RConfirm(<pki, pkr, peki, pekr, psk, ck>) @ i
+    ==> not(Ex peki2 pekr2 psk2 #k. RConfirm(<pki, pkr, peki2, pekr2, psk2, ck>) @ k & not(#k = #i)))"
+
+/* === Secrecy Properties === */
+
+lemma key_secrecy[reuse]:
+    "(All pki pkr peki pekr psk ck #i #i2.
+        /* If I and R agree on keys */
+        IKeys(<pki, pkr, peki, pekr, psk, ck>) @ i & RKeys(<pki, pkr, peki, pekr, psk, ck>) @ i2
+    ==> /* Either the adversary doesn't know the keys */
+        not(Ex #j. K(ck) @ j) 
+        /* or the psk was compromised (or not in use) */
+        | ((Ex #j. Reveal_PSK(psk) @ j) & (
+           /* and pair of keys from the same agent was revealed (at any time) */
+           (Ex #j #j2. Reveal_AK(pki) @ j & Reveal_EphK(peki) @ j2)
+         | (Ex #j #j2. Reveal_AK(pkr) @ j & Reveal_EphK(pekr) @ j2))
+        ))"
+
+lemma identity_hiding:
+    /* Since the public static is always symbolically known to the adversary, we represent identity
+     * hiding by whether the adversary could learn some other value that is put in the first message at the
+     * same position as the public static. */
+    "All pki pkr peki pekr ck surrogate #i #j.
+        /* If R received a handshake init with a particular identity surrogate */
+        RKeys(<pki, pkr, peki, pekr, ck>) @ i & Identity_Surrogate(surrogate) @ i
+        /* And the adversary knows that surrogate for the identity */
+        & K(surrogate) @ j
+    ==> /* Then the adversary compromised at least one of R's static, I's static, or I's ephemeral */
+        (Ex #j. Reveal_AK(pkr) @ j) | (Ex #j. Reveal_AK(pki) @ j) | (Ex #j. Reveal_EphK(peki) @ j)"
+
+end
+
+// vim: ft=spthy

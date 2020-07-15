@@ -645,12 +645,12 @@ isNotReceiveAction :: Goal -> Bool
 isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _ _)) = False
 isNotReceiveAction  _                                 = True
 
-isStandardActionGoalButNotInsertOrReceiveOrEvent :: Goal -> Bool
-isStandardActionGoalButNotInsertOrReceiveOrEvent g = 
-   (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g) && (not $ isEventAction g)
+isStandardActionGoalButNotInsertOrReceive :: Goal -> Bool
+isStandardActionGoalButNotInsertOrReceive g = 
+   (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
 
-isStandardActionGoalButNotInsertorEvent :: Goal -> Bool
-isStandardActionGoalButNotInsertorEvent g = 
+isStandardActionGoalButNotInsert :: Goal -> Bool
+isStandardActionGoalButNotInsert g = 
        (isStandardActionGoal g) &&  (isNotInsertAction g) && (not $ isEventAction g)
 
 -- | A ranking function tuned for the automatic verification of
@@ -699,7 +699,7 @@ sapicRanking ctxt sys =
         , isKnowsFirstNameGoal . fst
         , isFirstInsertAction . fst
         , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsertOrReceiveOrEvent  . fst
+        , isStandardActionGoalButNotInsertOrReceive  . fst
         , isProgressDisj . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
@@ -774,7 +774,7 @@ sapicPKCS11Ranking ctxt sys =
         , isUnlockAction . fst
         , isInsertTemplateAction . fst
         , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsertorEvent  . fst
+        , isStandardActionGoalButNotInsert  . fst
         , isNotAuthOut . fst
         , isPrivateKnowsGoal . fst
         -- , isFreshKnowsGoal . fst

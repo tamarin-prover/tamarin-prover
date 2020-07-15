@@ -28,8 +28,6 @@ let action2string = function
   | Receive(p,t) -> "Receive(mid_"^(pos2string p)^","^(term2string t)^")"
   | Send(p,t) -> "Send(mid_"^(pos2string p)^","^(term2string t)^")" 
 
-let action_list2string al = String.concat ", " (List.map action2string al)
-
 
 let rec substitute_a v t (a:action) = 
         let f = (subs_t v t) in

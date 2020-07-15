@@ -1,29 +1,29 @@
-theory minimal_predicates begin
+theory function_application begin
 
-builtins: multiset
-
-predicates: Smaller(x,y) <=> Ex z. x + z = y
-          , Equal(x,y)   <=> x = y
-          , Added(x,y)   <=> Ex #a. A(x,y)@a & #a < #NOW
+functions: true/0,eq/2
+equations: eq(x,x)=x
+Host key fingerprint is SHA256:lAzbmKiN8Mv+Znaex7mpIGuKq5JFmeKkCDin3defGlw
++--[ED25519 256]--+
+|      .          |
+|     . B .       |
+|o  o. + =        |
+|=+=+   .         |
+|*B+..  .S E      |
+|+oo.. ....       |
+| o+ .. .oo .     |
+|+..o+...+oo      |
+|B+o=.o+o+o       |
++----[SHA256]-----+
+From projects.cispa.saarland:cc/tamarin-prover
+   1913bd99..ae15a8d0  feature-predicates-function-symbols -> origin/feature-predicates-function-symbols
+Updating 1913bd99..ae15a8d0
+Fast-forward
+ examples/sapic/feature-predicates/long-and.spthy | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 examples/sapic/feature-predicates/long-and.spthy
 
 rule A:
-  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(x,y), B('1','1'+'1')]-> [ X('A')]
-
-rule B:
-    [In(x), In(y)] --[ _restrict(Added(x,y))]-> []
-
-rule C:
-    [In(<x,x>)] --[ _restrict(Equal(x,x)), C() ]-> []
-
-lemma one_smaller_two:
-    "All x y #i. B(x,y)@i ==> Smaller(x,y)"
-
-lemma unequal:
-    "All x y #i. A(x,y)@i ==> not (Equal(x,y))"
-
-lemma equal:
-    exists-trace
-    "Ex #i. C()@i"
+  [In(x)] --[ _restrict(True(eq(x,x))) ]-> []
 
 end
 

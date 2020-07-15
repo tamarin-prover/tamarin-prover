@@ -60,12 +60,12 @@ type TransFComb t = ProcessCombinator
 -- | The basetranslation has three functions, one for translating the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
-baseTrans :: MonadThrow m =>
+baseTrans :: MonadThrow m => Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction ac an p tx,
+baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction needsAssImmediate ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -73,8 +73,8 @@ baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
 baseTransNull :: TransFNull TranslationResultNull
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [], [])]
 
-baseTransAction :: TransFAct TranslationResultAct
-baseTransAction ac an p tildex
+baseTransAction :: Bool -> TransFAct TranslationResultAct
+baseTransAction needsAssImmediate ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -89,7 +89,7 @@ baseTransAction ac an p tildex
           let tx' = freeset tc `union` freeset t `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
-          ([def_state, In ts], [ ChannelIn ts], [def_state' tx'], []),
+          ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
     | (ChIn Nothing t) <- ac =
           let tx' = freeset t `union` tildex in
@@ -102,7 +102,7 @@ baseTransAction ac an p tildex
     | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state, In tc], [ ChannelIn tc], [Out t, def_state' tildex], []),
+          ([def_state, In tc], if needsAssImmediate then [ ChannelIn tc] else [], [Out t, def_state' tildex], []),
           ([def_state], [], [Message tc t,semistate], []),
           ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
     | (ChOut Nothing t) <- ac =
@@ -124,10 +124,10 @@ baseTransAction ac an p tildex
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
-          ([([def_state], [TamarinAct f], [def_state' tildex], [])], tildex)
+          ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
     | (MSR (l,a,r,res)) <- ac =
-          let tx' = freeset' r `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r, res)], tx')
+          let tx' = freeset' l `union` tildex in
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
@@ -308,10 +308,19 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
+
+resInEv :: String
+resInEv = [QQ.r|restriction ass_immediate:
+"All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
+                                & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
+                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
+|]
+
+
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
+baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -323,6 +332,8 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
         addIf (contains isEq) [resEq, resNotEq]
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
+        ++
+        addIf (needsAssImmediate && containChannelIn) [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l
@@ -340,11 +351,5 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
             | otherwise  = []
         getLockPositions = pfoldMap getLock
 
-        -- TODO add feature checking lemmas for wellformedness, adding ass_immeadiate_in if necessary 
         -- This is what SAPIC did
           -- @ (if op.accountability then [] else [res_single_session_l])
-        -- (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
-         -- *                  it would be better if we would actually check whether each lemma
-         -- *                  is of the right form so we can leave it out...
-         -- *                  *)
-    -- in

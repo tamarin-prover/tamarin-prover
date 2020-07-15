@@ -52,5 +52,3 @@ let fact2string (f:fact) = match f with
   |  MessageIDReceiver p -> "MID_Receiver(mid_"^(pos2string p)^")"
   |    PFact(s,t)->  "!"^s^"("^ (flatten_termlist t) ^ ")"
   |    LFact(s,t)->  s^"("^ (flatten_termlist t) ^ ")"
-
-let facts2string factlist= String.concat ", " (List.map fact2string factlist)
