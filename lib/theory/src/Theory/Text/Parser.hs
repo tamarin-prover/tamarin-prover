@@ -39,6 +39,7 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import           Data.List                  (isInfixOf)
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -864,6 +865,9 @@ equations =
     where
       equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        if (or $ map (`isInfixOf` show rrule) ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+          then fail $ "`" ++ show rrule ++ "` contains a reserved function name for builtins."
+          else return ()
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
