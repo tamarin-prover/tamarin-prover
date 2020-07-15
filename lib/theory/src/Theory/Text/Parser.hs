@@ -1357,11 +1357,14 @@ theory flags0 = do
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
+       traceM $ show flag
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+         then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+         else do _ <- manyTill anyChar (try (string "#"))
+                 symbol_ "endif"
+                 addItems flags thy
 
     -- check process defined only once
     -- add process to theoryitems
