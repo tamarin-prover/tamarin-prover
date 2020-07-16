@@ -62,8 +62,8 @@ translate th = case theoryProcesses th of
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add accountability lemma
-                let undef = mapMaybe verifyAccLemma (theoryAccLemmas th2)
-                unless (null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
+                let undef = mapMaybe undefinedCaseTests (theoryAccLemmas th2)
+                when (not $ null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
                 accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
                 th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
                 -- add heuristic, if not already defined:
@@ -82,11 +82,7 @@ translate th = case theoryProcesses th of
     bindingsAct (New v) = [v]
     bindingsAct _       = []
 
-    verifyAccLemma accLem =
-      if required /= defined then
-        Just (L.get aName accLem, required \\ defined)
-      else
-        Nothing
+    undefinedCaseTests accLem = (L.get aName accLem, required \\ defined) <$ guard (required /= defined)
       where
         required =  L.get aCaseIdentifiers accLem
         defined = map (L.get cName) (L.get aCaseTests accLem)

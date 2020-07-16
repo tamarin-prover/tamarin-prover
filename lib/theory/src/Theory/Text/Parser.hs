@@ -41,10 +41,7 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
-import           Data.Either
 import           Data.Maybe
-
-import qualified Extension.Data.Label                as L
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -1371,16 +1368,13 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do -- | TODO: add predicate at the beginning of the theory
-           test <- caseTest
+      , do test <- caseTest
            thy1 <- liftedAddCaseTest thy test
-           thy2 <- case caseTestToPredicate test of
-              Just p -> liftedAddPredicate thy1 p
-              Nothing -> return thy1
+           thy2 <- maybe (return thy1) (liftedAddPredicate thy1) (caseTestToPredicate test)
            addItems flags thy2
       , do 
            accLem <- lemmaAcc
-           let tests = catMaybes $ map (\name -> lookupCaseTest name thy) (get aCaseIdentifiers accLem)
+           let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
 
            thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
            addItems flags thy'

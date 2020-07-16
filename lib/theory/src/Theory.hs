@@ -657,6 +657,7 @@ unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
 skeletonDiffLemma name atts = DiffLemma name atts
 
+
 -- | The source kind allowed for a lemma.
 lemmaSourceKind :: Lemma p -> SourceKind
 lemmaSourceKind lem
@@ -819,27 +820,14 @@ openTranslatedTheory thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
--- <<<<<<< HEAD
-      newThyItems = createNewThyItems (L.get thyItems thy)
-      createNewThyItems :: [TheoryItem r p ()] -> [TheoryItem r p SapicElement]
-      createNewThyItems [] = []
-      createNewThyItems (x:xs) = addSapicElement(x) : createNewThyItems(xs)
-      addSapicElement :: TheoryItem r p () -> TheoryItem r p SapicElement
-      addSapicElement (RuleItem r) = (RuleItem r)
-      addSapicElement (LemmaItem l) = (LemmaItem l)
-      addSapicElement (RestrictionItem rl) = (RestrictionItem rl)
-      addSapicElement (TextItem t) = (TextItem t)
-      addSapicElement (PredicateItem p) = (PredicateItem p)
--- =======
---       newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
---       addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
---       addSapicElement (RuleItem r) = Just $ RuleItem r
---       addSapicElement (LemmaItem l) = Just $ LemmaItem l
---       addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
---       addSapicElement (TextItem t) = Just $ TextItem t
---       addSapicElement (PredicateItem predi) = Just $ PredicateItem predi
---       addSapicElement (SapicItem _) = Nothing
--- >>>>>>> feature-sapic-integration
+       newThyItems = mapMaybe addSapicElement (L.get thyItems thy)
+       addSapicElement :: TheoryItem r p () -> Maybe (TheoryItem r p s)
+       addSapicElement (RuleItem r) = Just $ RuleItem r
+       addSapicElement (LemmaItem l) = Just $ LemmaItem l
+       addSapicElement (RestrictionItem rl) = Just $ RestrictionItem rl
+       addSapicElement (TextItem t) = Just $ TextItem t
+       addSapicElement (PredicateItem predi) = Just $ PredicateItem predi
+       addSapicElement (SapicItem _) = Nothing
 
 -- Shared theory modification functions
 ---------------------------------------
