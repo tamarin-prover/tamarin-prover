@@ -1062,6 +1062,14 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         (nr, m)                              <- zip [1::Int ..] $ concatMap allProtSubterms t
         return (ru, cidx, nr, m)
 
+    -- compute all encrypted subterms that are output by protocol rules (not in OutFact and not just protected subterm)
+    allOutConcsNotProt :: [(ClosedProtoRule, ConcIdx, Int, LNTerm)]
+    allOutConcsNotProt = do
+        ru                                   <- rules
+        (cidx, protoFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
+        (nr, m)                              <- zip [(1+(length allOutConcs))::Int ..] t
+        return (ru, cidx, nr, m)
+
     -- We use the raw sources here to generate one lemma to rule them all...
     (items', formula, _) = foldl computeFormula (items, ltrue, []) chains
 
@@ -1103,6 +1111,25 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 guard $ notElem (rule, pos) done
                 return (rule, t, pos)
 
+
+        -- Compute all rules that contain v, and the position of v inside the input term if the fact isn't a InFact
+        inputNotInRules :: [(ClosedProtoRule, LNTerm, Position)]
+        inputNotInRules = concat $ mapMaybe g $ allPrems source
+          where
+            g (nodeid, pid, tidx, term) = do
+              position  <- findPos v term
+              ruleSys   <- nodeRuleSafe nodeid source
+              rule      <- find ((ruleName ruleSys ==).ruleName) rules
+              premise   <- lookupPrem pid $ L.get cprRuleE rule
+              t'        <- protoFactView premise
+              t         <- atMay t' tidx
+              return $ do
+                -- iterate over all positions found
+                pos     <- position
+                guard $ notElem (rule, pos) done
+                guard $ (isPair t || isAC t) -- interested in the case with non-protected term which is not subterm of InFact
+                return (rule, t, pos)
+
         -- a list of all protected input subterms to unify
         protectedSubterms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
         protectedSubterms = mapMaybe f inputRules
@@ -1125,23 +1152,33 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 else Just protTerm'
               return (x, protTerm, v', z)
 
-        -- notInTerm :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        -- a list of all input subterms to unify that aren't in a InFact
+        notInTerm :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        notInTerm = mapMaybe f inputNotInRules
+          where
+            f (x, y, z) = do
+              v'        <- y `atPosMay` z
+              protTerm' <- Just y -- a revoir peut-etre
+              protTerm  <- if protTerm' == v'
+                then Nothing
+                else Just protTerm'
+              return (x, protTerm, v', z)
 
-        -- allToAddTerms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
-        -- allToAddTerms = protectedSubterms ++ notInTerm
+        allToAddTerms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        allToAddTerms = protectedSubterms `union` notInTerm
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
         inputsAndOutputs :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
         inputsAndOutputs = do
             -- iterate over all inputs
-            (rin, tin, vin, pos) <- protectedSubterms -- TODO : remplacer protectedSubterms par allToAddTerms
+            (rin, tin, vin, pos) <- allToAddTerms
             -- find matching conclusions
             let matches = matchingConclusions rin tin
             return (rin, tin, vin, pos, matches)
           where
             matchingConclusions rin tin = do
-              (rout, cidx, n, tout) <- allOutConcs
+              (rout, cidx, n, tout) <- if (isPair tin || isAC tin) then allOutConcsNotProt else allOutConcs
               -- generate fresh instance of conclusion, avoiding the premise variables
               let fout = tout `renameAvoiding` tin
               -- we ignore outputs of the same rule
