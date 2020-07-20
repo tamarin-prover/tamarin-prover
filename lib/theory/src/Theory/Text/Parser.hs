@@ -161,9 +161,12 @@ lookupArity op = do
         Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
-naryOpApp plit = do
+naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp eqn plit = do
     op <- identifier
+    traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
@@ -176,9 +179,12 @@ naryOpApp plit = do
     return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
-binaryAlgApp plit = do
+binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp eqn plit = do
     op <- identifier
+    --traceM $ show op ++ " " ++ show eqn
+    -- when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      -- $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
@@ -207,14 +213,14 @@ term plit eqn = asum
     , parens (msetterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
-    , nullaryApp
+    , nullaryApp (eqn)
     , plit
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
+    application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm plit)
-    nullaryApp = do
+    nullaryApp eqn = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
@@ -421,7 +427,6 @@ tlit = asum
     [ constTerm <$> singleQuoted identifier
     , varTerm  <$> identifier
     ]
-
 -- | Parse a single transfer.
 transfer :: Parser Transfer
 transfer = do
@@ -475,8 +480,6 @@ transfer = do
                      <|> pure []
         types     <- typeAssertions
         return $ \a -> TransferDesc a ts moreConcs types
-
-
 -- | Parse a protocol in transfer notation
 transferProto :: Parser [ProtoRuleE]
 transferProto = do
@@ -485,7 +488,6 @@ transferProto = do
   where
     abbrevs = (symbol "let" *> many1 abbrev) <|> pure []
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
-
 -}
 
 ------------------------------------------------------------------------------
