@@ -182,9 +182,9 @@ naryOpApp eqn plit = do
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 binaryAlgApp eqn plit = do
     op <- identifier
-    --traceM $ show op ++ " " ++ show eqn
-    -- when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-      -- $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
+    -- traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
@@ -222,6 +222,7 @@ term plit eqn = asum
     pairing = angled (tupleterm plit)
     nullaryApp eqn = do
       maudeSig <- getState
+      --traceM $ show eqn ++ " on est la hein "++ show ((symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
