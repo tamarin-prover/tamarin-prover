@@ -1359,8 +1359,12 @@ theory flags0 = do
        thy' <- addItems flags thy
        symbol_ "#endif"
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+          then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+          else do _ <- manyTill anyChar (try (string "#"))
+                 symbol_ "endif"
+                 addItems flags thy
 
     -- check process defined only once
     -- add process to theoryitems
@@ -1432,8 +1436,12 @@ diffTheory flags0 = do
        thy' <- addItems flags thy
        symbol_ "#endif"
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+          then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+          else do _ <- manyTill anyChar (try (string "#"))
+                 symbol_ "endif"
+                 addItems flags thy
 
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
