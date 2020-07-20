@@ -39,7 +39,6 @@ import qualified Data.Map                   as M
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Data.List                  (isInfixOf)
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
@@ -162,9 +161,12 @@ lookupArity op = do
         Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
-naryOpApp plit = do
+naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp eqn plit = do
     op <- identifier
+    traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm plit
@@ -177,9 +179,12 @@ naryOpApp plit = do
     return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
-binaryAlgApp plit = do
+binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp eqn plit = do
     op <- identifier
+    -- traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
@@ -208,15 +213,16 @@ term plit eqn = asum
     , parens (msetterm plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
-    , nullaryApp
+    , nullaryApp (eqn)
     , plit
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
+    application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm plit)
-    nullaryApp = do
+    nullaryApp eqn = do
       maudeSig <- getState
+      --traceM $ show eqn ++ " on est la hein "++ show ((symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
@@ -229,7 +235,7 @@ expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
 multterm plit = do
     dh <- enableDH <$> getState
-    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+    if dh && not eqn-- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit False
 
@@ -237,7 +243,7 @@ multterm plit = do
 xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
 xorterm plit = do
     xor <- enableXor <$> getState
-    if xor -- if xor is not enabled, do not accept 'xorterms's
+    if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
         then chainl1 (multterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else multterm plit
 
@@ -245,7 +251,7 @@ xorterm plit = do
 msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
 msetterm plit = do
     mset <- enableMSet <$> getState
-    if mset -- if multiset is not enabled, do not accept 'msetterms's
+    if mset && not eqn -- if multiset is not enabled, do not accept 'msetterms's
         then chainl1 (xorterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
         else xorterm plit
 
@@ -268,12 +274,12 @@ fact' pterm = try (
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
-         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
+         (c:_) | isUpper c -> (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
        mkProtoFact multi i (S.fromList ann) ts
-    <?> "fact") 
+    <?> "fact" )
   where
     singleTerm _ constr [t] = return $ constr t
     singleTerm f _      ts  = fail $ "fact '" ++ f ++ "' used with arity " ++
@@ -422,7 +428,6 @@ tlit = asum
     [ constTerm <$> singleQuoted identifier
     , varTerm  <$> identifier
     ]
-
 -- | Parse a single transfer.
 transfer :: Parser Transfer
 transfer = do
@@ -476,8 +481,6 @@ transfer = do
                      <|> pure []
         types     <- typeAssertions
         return $ \a -> TransferDesc a ts moreConcs types
-
-
 -- | Parse a protocol in transfer notation
 transferProto :: Parser [ProtoRuleE]
 transferProto = do
@@ -486,7 +489,6 @@ transferProto = do
   where
     abbrevs = (symbol "let" *> many1 abbrev) <|> pure []
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
-
 -}
 
 ------------------------------------------------------------------------------
@@ -865,9 +867,6 @@ equations =
     where
       equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
-        if (or $ map (`isInfixOf` show rrule) ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-          then fail $ "`" ++ show rrule ++ "` contains a reserved function name for builtins."
-          else return ()
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
