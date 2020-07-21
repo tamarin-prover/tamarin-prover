@@ -274,7 +274,7 @@ fact' pterm = try (
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
-         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
+         (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
@@ -1355,12 +1355,15 @@ theory flags0 = do
 
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
-       flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
-       if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+      flag <- symbol_ "#ifdef" *> identifier
+      traceM $ show flag
+      if flag `S.member` flags
+        then do thy' <- addItems flags thy
+                symbol_ "#endif"
+                addItems flags thy'
+        else do _ <- manyTill anyChar (try (string "#"))
+                symbol_ "endif"
+                addItems flags thy
 
     -- check process defined only once
     -- add process to theoryitems
@@ -1426,14 +1429,17 @@ diffTheory flags0 = do
        flag <- try (symbol "#define") *> identifier
        addItems (S.insert flag flags) thy
 
-    ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
+    ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
-       flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
-       if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+      flag <- symbol_ "#ifdef" *> identifier
+      traceM $ show flag
+      if flag `S.member` flags
+        then do thy' <- addItems flags thy
+                symbol_ "#endif"
+                addItems flags thy'
+        else do _ <- manyTill anyChar (try (string "#"))
+                symbol_ "endif"
+                addItems flags thy
 
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
