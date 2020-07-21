@@ -169,7 +169,7 @@ naryOpApp eqn plit = do
       $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
-                     then return <$> tupleterm plit
+                     then return <$> tupleterm eqn plit
                      else commaSep (msetterm plit)
     let k' = length ts
     when (k /= k') $
@@ -186,7 +186,7 @@ binaryAlgApp eqn plit = do
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
-    arg1 <- braced (tupleterm plit)
+    arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit False
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
@@ -219,7 +219,7 @@ term plit eqn = asum
     <?> "term"
   where
     application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
-    pairing = angled (tupleterm plit)
+    pairing = angled (tupleterm eqn plit)
     nullaryApp eqn = do
       maudeSig <- getState
       --traceM $ show eqn ++ " on est la hein "++ show ((symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
@@ -228,36 +228,36 @@ term plit eqn = asum
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+expterm eqn plit = chainl1 (term eqn plit) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Parser (Term l) -> Parser (Term l)
-multterm plit = do
+multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+multterm eqn plit = do
     dh <- enableDH <$> getState
-    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
-        then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else term plit False
+    if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+        then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
+        else term eqn plit
 
 -- | A left-associative sequence of xors.
-xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
-xorterm plit = do
+xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+xorterm eqn plit = do
     xor <- enableXor <$> getState
-    if xor -- if xor is not enabled, do not accept 'xorterms's
-        then chainl1 (multterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
-        else multterm plit
+    if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
+        else multterm eqn plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
-msetterm plit = do
+msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+msetterm eqn plit = do
     mset <- enableMSet <$> getState
-    if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else xorterm plit
+    if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
+        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else xorterm eqn plit
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+tupleterm eqn plit = chainr1 (msetterm eqn plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact annotation
 factAnnotation :: Parser FactAnnotation
