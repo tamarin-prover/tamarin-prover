@@ -274,7 +274,7 @@ fact' pterm = try (
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
-         (c:_) | isUpper c -> return ()
+         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
