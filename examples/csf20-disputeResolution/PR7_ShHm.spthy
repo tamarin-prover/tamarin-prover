@@ -1,0 +1,171 @@
+theory PR7_ShHm
+begin
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Protocol PR_7
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Dispute Resolution in Voting", David Basin, Sasa Radomirovic, and Lara Schmid, CSF20.
+* Disclaimer:	The pupose of this protocl is to establish a possibility result.
+		We specify a simple protocol with one voter, as this is sufficeint for demonstrating possibility.
+
+========
+RESULTS:
+========
+lemmas labeled with "reuse" are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct
+
+- lemma [reuse] onlyonce3: verified
+- lemma [reuse] onlyonce5: verified
+- lemma functional: 	   verified 
+- lemma AuthP: 		   verified 
+
+
+  	
+
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: signing, multiset
+
+functions: sg/2, ver/2 //new signing function
+
+equations:
+// our equation for modeling the verification of signatures
+ver(sg(m, sk), pk(sk)) = m 
+// the function models that given a signature, one can also see the signed plaintext (only if one has the public key, but adversary has all public keys). With this, we do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+
+
+/* ==========
+Channel rules
+============= */
+
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+//reliable insecure channel from H to S: all messages sent on a reliable channel, are received unchanged
+
+rule ChanOut_IR_HS:  	[ Out_IR_HS($A,$B,m) ]--[ ChanOut_IR_HS($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_HS:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_HS($A,$B,m) ]->[ In_IR_HS($A,$B,m) ] 
+
+
+//reliable insecure channel from S to P: all messages sent on a reliable channel, are received unchanged
+
+rule ChanOut_IR_SH:  	[ Out_IR_SH($A,$B,m) ]--[ ChanOut_IR_SH($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_SH:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_SH($A,$B,m) ]->[ In_IR_SH($A,$B,m) ] 
+
+
+
+/* ======================
+Adversary's fake evidence
+====================== */
+// the adversary can claim any term that he knows to be evidence
+rule fakeEvidence:
+	[ In(<ballot,evidence>) ] --[ Evidence(ballot,evidence) ]-> [ ] 
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ !Ltk('S',~skS) ] 
+  	--[ 	Setup(),
+		Voter('H'),
+		Server('S'), Honest('S'),
+		BBpkS('BB',<'pkS', pk(~skS)>)
+	]-> 
+  	[ Out(<'H',< 'BB', $v,'S'>>)
+	, AgSt_BB0('BB',<'S'>)
+	, AgSt_S0('S',<~skS>)
+	, Out_A('BB',<'pkS', pk(~skS)>)
+  	]
+
+/* rule H_1 omitted as H is dishonest and modeled by the adversary rules */ 
+
+rule S_1: 
+	[ AgSt_S0($S, <~skS>), 
+	  In_IR_HS($H,$S,<$v,$H>)  // S implicitly (by pattern matching) only accepts ballots of the right format
+	 ] 
+	--[ Receive_R_HS($H,$S,<$v,$H>),
+	    Send_R_SH($S,$H,sg(<$v,$H>,~skS)),
+	    S1()
+	]->
+	[ Out_IR_SH($S,$H,sg(<$v,$H>,~skS)),
+	  Out_A($S, <'bs', <$v,$H>>),
+	  Out_A($S, <'vs', $v>)
+	]
+ 
+/* rule H_2  omitted as H is dishonest and modeled by the adversary rules */ 
+
+rule BB: 
+	[ AgSt_BB0($BB,<$S>)
+	, In_A($S, <'bs', bs >)
+	, In_A($S, <'vs', vs >)
+	]
+ 	--[ 	BB_recorded($BB,<'bs', bs >),
+		BB_tallied($BB,<'vs', vs >),
+		End()
+	]->  
+	[ Out_A($BB, <'bs', bs >)
+	, Out_A($BB, <'vs', vs >)
+	]
+	
+/* rule H_5 omitted as H is dishonest and modeled by the adversary rules */ 
+
+
+
+/* =========
+RESTRICTIONS
+============ */
+// there is only one setup
+restriction OneSetup: 
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+
+lemma onlyonce3 [reuse]: " All #i #j. S1() @i & S1() @j ==> #i = #j "
+lemma onlyonce5 [reuse]: " All #i #j. End()@i & End()@j ==> #i = #j " 
+
+
+
+lemma functional: exists-trace
+ 	" Ex  #i BB
+		.
+		BB_recorded(BB,<'bs', <'v','H'> >) @i
+		& BB_tallied(BB,<'vs', 'v' >) @i
+	"
+
+/*===========================
+Dispute Resolution Properties
+===========================*/
+lemma AuthP: 
+	"All  S #i.
+		Honest(S) @i 
+	==> // not Faulty 
+	not (Ex b BB b1 skS #k #l #m . 
+		BB_recorded(BB,<'bs', b1>) @k
+		& not (b1=b) 
+		& Evidence(b,sg(b,skS)) @l
+		& BBpkS(BB,<'pkS', pk(skS)>) @m
+		)"	
+
+end
+
