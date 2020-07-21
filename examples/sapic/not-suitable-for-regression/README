@@ -1,0 +1,8 @@
+The follow case studies are not suitable for regression tests:
+
+feature-xor/NSLPK3xor.spthy
+
+attack finding relies on sources lemma which is untrue. it is acceptable for
+this model, because the attacks found despite an incorrect sources lemma are
+correct by definition, but negating it would defeat its purpose, and removing
+it would inhibit the attack finding. 

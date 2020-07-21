@@ -380,66 +380,17 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 ##########################
 
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
-
-SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
-basic/running-example.spthy \
-basic/operator-precedence-1.spthy basic/operator-precedence-2.spthy basic/operator-precedence-3.spthy basic/operator-precedence-4.spthy basic/operator-precedence-5.spthy \
-feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
-statVerifLeftRight/stateverif_left_right.spthy \
-MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
-fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
-SCADA/opc_ua_secure_conversation.spthy \
-feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
-feature-secret-channel/secret-channel.spthy \
-GJM-contract/contract.spthy \
-feature-predicates/decwrap-destr-manual.spthy feature-predicates/decwrap-destr-restrict.spthy feature-predicates/decwrap-destr-restrict-variant.spthy feature-predicates/pub.spthy feature-predicates/simple_example.spthy feature-predicates/binding.spthy \
-feature-predicates/binding.spthy \
-feature-let-bindings/let-blocks.spthy \
-feature-locations/AC.spthy \
-feature-locations/AKE.spthy  \
-feature-locations/licensing.spthy \
-feature-locations/SOC.spthy \
-feature-locations/OTP.spthy \
-feature-locations/AC_counter_with_attack.spthy \
-feature-locations/AC_sid_with_attack.spthy \
-feature-ass-immediate/test-all.spthy 
+SAPIC_CASE_STUDIES_FAST=$(subst examples/sapic/,,$(wildcard examples/sapic/fast/*/*.spthy))
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW= encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
-NSL/nsl-no_as-untagged.spthy \
-Yubikey/Yubikey.spthy \
-encWrapDecUnwrap/encwrapdecunwrap.spthy
+SAPIC_CASE_STUDIES_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/slow/*/*.spthy))
 
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
-SAPIC_CASE_STUDIES_SUPER_SLOW= fairexchange-km/km.spthy \
-fairexchange-asw/aswAB.spthy \
-examples/sapic/fairexchange-asw/asw-mod-weak-locks.spthy \
-examples/sapic/fairexchange-asw/aswAB-mod.spthy \
-fairexchange-gjm/gjm-locks-fakepcsbranch.spthy \
-fairexchange-gjm/gjm-locks-unfairness-A.spthy
-
-# The following case studies are in the repository, but cannot be proven automatically.
-# PKCS11/pkcs11-templates.spthy 
-# # heavy use of manual lemmas, not part of regresstion tests
-#
-# PKCS11/pkcs11-dynamic-policy.spthy \ 
-# # not working 
-#
-# feature-xor/NSLPK3xor.spthy \
-# # attack finding relies on sources lemma which is untrue. it is acceptable for
-# # this model, because the attacks found despite an incorrect sources lemma are
-# # correct by definition, but negating it would defeat its purpose, and removing
-# # it would inhibit the attack finding. 
-#
-# envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
-# # these examples were never completed and are here for reference only
-
-# not working because of missing support for locations
-
+SAPIC_CASE_STUDIES_SUPER_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/super-slow/*/*.spthy))
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
 SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
-SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
+SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SUPER_SLOW)))
 
 # lol:
 # 	$(info $$var is [${SAPIC_CS_TARGETS}])
