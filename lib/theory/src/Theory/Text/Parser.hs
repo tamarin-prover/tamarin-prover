@@ -1429,7 +1429,7 @@ diffTheory flags0 = do
        flag <- try (symbol "#define") *> identifier
        addItems (S.insert flag flags) thy
 
-    ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
+    ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     ifdef flags thy = do
       flag <- symbol_ "#ifdef" *> identifier
       traceM $ show flag
