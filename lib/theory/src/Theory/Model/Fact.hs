@@ -40,6 +40,7 @@ module Theory.Model.Fact (
   , getFactVariables
   , getFactTerms
   , getFactAnnotations
+  , getFactTag
   , isTrivialFact
   , isSolveFirstFact
   , isSolveLastFact
@@ -365,6 +366,9 @@ factMultiplicity = factTagMultiplicity . factTag
 -- | The terms of a 'Fact'.
 getFactTerms :: Fact t -> [t]
 getFactTerms (Fact _ _ ts) = ts
+
+getFactTag :: Fact t -> FactTag
+getFactTag (Fact tag _ _) = tag
 
 -- | Get the set of fact annotations
 getFactAnnotations :: Fact t -> S.Set FactAnnotation
