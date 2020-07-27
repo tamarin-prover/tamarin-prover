@@ -80,8 +80,8 @@ import           Text.Parsec                hiding ((<|>),try)
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX*|LEMMANAME"
-      "Attempt to prove all lemmas that start with LEMMAPREFIX or the lemma which name is LEMMANAME"
+  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
+      "Attempt to prove a lemma "
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
@@ -268,9 +268,7 @@ closeThy as thy0 = do
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else any ( == get lName lem) lemmaNames
+          any (`isPrefixOf` get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
@@ -312,11 +310,9 @@ closeDiffThy as thy0 = do
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
-      lemmaSelector :: Lemma p -> Bool
-      lemmaSelector lem =
-          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else any ( == get lName lem) lemmaNames
+      diffLemmaSelector :: DiffLemma p -> Bool
+      diffLemmaSelector lem =
+          any (`isPrefixOf` get lDiffName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
