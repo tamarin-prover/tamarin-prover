@@ -1061,13 +1061,13 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     allOutConcs = do
         ru                                   <- rules
         (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
-        (nr, unifyProtC)                              <- zip [1::Int ..] $ concatMap allProtSubterms t
+        (nr, unifyProtC)                     <- zip [1::Int ..] $ concatMap allProtSubterms t
         return (ru, cidx, nr, unifyProtC)
 
     -- compute all fact that are conclusions in protocol rules (not OutFact)
     allOutConcsNotProt :: [(ClosedProtoRule, ConcIdx, Int, LNFact)]
     allOutConcsNotProt = do
-        ru                                   <- rules
+        ru                     <- rules
         (n,(cidx, unifyFactC)) <- zip [(length allOutConcs)::Int ..] $ enumConcs $ L.get cprRuleE ru
         guard ((getFactTag unifyFactC) /= OutFact)
         return (ru, cidx, n, unifyFactC)
@@ -1097,7 +1097,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         v     = head $ getFactTerms $ nodeConcFact conc source
 
         -- Compute all rules that contain v, and the position of v inside the input term : for case with protected subterm
-        inputProtRules :: [(ClosedProtoRule, LNTerm, Position)]
+        inputProtRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)] -- ce truc ne trouve pas de protected subterm... -> à vérifier ?
         inputProtRules = concat $ mapMaybe g $ allPrems source
           where
             g (nodeid, pid, tidx, term) = do
@@ -1111,10 +1111,10 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 -- iterate over all positions found
                 pos     <- position
                 guard $ notElem (rule, pos) done
-                return (rule, unifyProtTerm, pos)
+                return (rule, Left unifyProtTerm, pos)
 
         -- Compute all rules that contain v, and the position of v inside the input term if the fact isn't a InFact and the term is non-protected
-        inputNotProtRules :: [(ClosedProtoRule, LNFact, Position)]
+        inputNotProtRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
         inputNotProtRules = concat $ mapMaybe g $ allPrems source
           where
             g (nodeid, pid, tidx, term) = do
@@ -1130,15 +1130,16 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 guard $ notElem (rule, pos) done
                 guard (isPair t || isAC t)
                 guard ((getFactTag premise) /= InFact)
-                return (rule, premise, pos)
+                return (rule, Right (premise,t), pos)
 
-        inputRules :: [(ClosedProtoRule, Either LNTerm LNFact, Position)]
-        inputRules = concat $ zipWith (sortEither) inputProtRules inputNotProtRules
-          where
-            sortEither (rp, up, pp) (rn, un, pn) = [(rp, Left up, pp), (rn, Right un, pn)]
+        inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
+        inputRules = inputProtRules `union` inputNotProtRules
+        -- inputRules = concat $ zipWith (sortEither) inputProtRules inputNotProtRules
+        --   where
+        --     sortEither (rp, up, pp) (rn, (un,tn), pn) = [(rp, Left up, pp), (rn, Right (un,tn), pn)]
 
         -- a list of all input subterms to unify that aren't : Left for protected subterm Right for non protected subterm
-        premiseTermU :: [(ClosedProtoRule, Either LNTerm LNFact, LNTerm, Position)] -- on peut fusionner avec celle du dessus avec Either mais faut faire une 2e fonction deepestProtSubterm
+        premiseTermU :: [(ClosedProtoRule, Either LNTerm LNFact, LNTerm, Position)]
         premiseTermU = mapMaybe f inputRules
           where
             f (x, Left y, z) = do
@@ -1157,9 +1158,11 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               protTerm  <- if protTerm' == v'
                 then Nothing
                 else Just protTerm'
+              traceM $ ("COUCOU "++(show protTerm))
               return (x, Left protTerm, v', z)
-            f (x, Right y, z) = do
-              return (x, Right y, v, z)
+            f (x, Right (y,t), z) = do
+              v' <- t `atPosMay` z
+              return (x, Right y, v', z)
 
         zipUnifyList :: [LNTerm] -> [LNTerm] -> [Bool]
         zipUnifyList inlist outlist = do
@@ -1175,6 +1178,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             (rin, unify, vin, pos) <- premiseTermU
             -- find matching conclusions
             let matches = matchingConclusions rin unify
+
             return (rin, unify, vin, pos, matches)
           where
             matchingConclusions rin (Left unify) = do
@@ -1239,7 +1243,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                  (Int, (ClosedProtoRule, Either LNTerm LNFact, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, Either LNTerm LNFact)]))
               -> LNFormula
               -> LNFormula
-            addForm (k, (n, Left m, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
+            addForm (k, (n, Left _, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
               (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
               (Conn Imp (Ato (Action (varTerm (Bound 0))
               (inputFact k n [(varTerm (Bound 1))] (varTerm (Bound 2)))))
