@@ -918,7 +918,7 @@ processDef thy= do
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
-sapicAction :: Parser SapicAction --Sapic -> False
+sapicAction :: Parser SapicAction
 sapicAction = try (do
                         _ <- symbol "new"
                         s <- msgvar
@@ -1010,7 +1010,7 @@ sapicAction = try (do
 --     | IDENTIFIER
 --     | msr
 process :: OpenTheory -> Parser Process
-process thy= --False
+process thy=
             -- left-associative NDC and parallel using chainl1.
             -- Note: this roughly encodes the following grammar:
             -- <|>   try   (do
@@ -1050,7 +1050,7 @@ process thy= --False
                         return p
 
 actionprocess :: OpenTheory -> Parser Process
-actionprocess thy= --False
+actionprocess thy= 
             try (do         -- replication parser
                         _ <- symbol "!"
                         p <- process thy
