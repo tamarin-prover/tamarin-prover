@@ -55,10 +55,11 @@ following message theories:
 `revealing-signing`,
 `symmetric-encryption`,
 `diffie-hellman`,
-`bilinear-pairing`, and
+`bilinear-pairing`,
+`xor`, and
 `multiset`.
 
-To activate message theories `t1`, ..., `tn`, include the line 
+To activate message theories `t1`, ..., `tn`, include the line
 `builtins: t1, ..., tn` in your file.
 The definitions of the built-in message theories are given in Section
 [Built-in message theories](#sec:builtin-theories).
@@ -91,17 +92,17 @@ the same key. The syntax for adding equations to the context is:
 
 Both `lhs` and `rhs` can contain variables, but no public constants, and all variables on the right hand
 side must also appear on the left hand side. The symbolic proof search
-used by Tamarin supports a certain class of user-defined equations, namely 
+used by Tamarin supports a certain class of user-defined equations, namely
 *convergent* equational theories that have the *finite variant property*
-[@Comon-LundhD05]. Note that Tamarin does *not* check whether the given equations 
-belong to this class, so writing equations outside this class can cause 
+[@Comon-LundhD05]. Note that Tamarin does *not* check whether the given equations
+belong to this class, so writing equations outside this class can cause
 non-termination or incorrect results *without any warning*.
 
 Also note that Tamarin's reasoning is particularly efficient when considering only
 subterm-convergent equations, i.e., if the right-hand-side is either a ground
 term (i.e., it does not contain any variables) or a proper subterm of the
 left-hand-side. These equations are thus preferred if they are sufficient to model
-the required properties. However, for example the equations modeled by the 
+the required properties. However, for example the equations modeled by the
 built-in message theories `diffie-hellman`, `bilinear-pairing`, `xor`, and `multiset`
 do not belong to this restricted class since they include for example
 associativity and commutativity. All other built-in message theories can
@@ -126,7 +127,7 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a public key encryption scheme. It defines the
   function symbols `aenc/2`, `adec/2`, and `pk/1`, which are
   related by the equation `adec(aenc(m, pk(sk)), sk) = m`.
-  Note that as described in [Syntax Description](014_syntax_description.html), 
+  Note that as described in [Syntax Description](014_syntax_description.html),
   `aenc{x,y}pkB` is syntactic sugar for `aenc(<x,y>, pkB)`.
   <!-- This is otherwise not mentioned until Ch14: Syntax Description -->
 
@@ -139,7 +140,7 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 `revealing-signing`:
 
 : This theory models a message-revealing signature scheme. It defines the function
-  symbols `revealSign/2`, `revealVerify/3`, `getMessage/1`, `pk/1`, and 
+  symbols `revealSign/2`, `revealVerify/3`, `getMessage/1`, `pk/1`, and
   `true`, which are related by the equations
   `revealVerify(revealSign(m,sk),m,pk(sk)) = true`
   and `getMessage(revealSign(m,sk)) = m`.
