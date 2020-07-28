@@ -1349,7 +1349,6 @@ theory flags0 = do
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       traceM $ show flag
        if flag `S.member` flags
          then do thy' <- addItems flags thy
                  symbol_ "#endif"
@@ -1425,7 +1424,6 @@ diffTheory flags0 = do
     ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       traceM $ show flag
        if flag `S.member` flags
          then do thy' <- addItems flags thy
                  symbol_ "#endif"
