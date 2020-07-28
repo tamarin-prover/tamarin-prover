@@ -164,13 +164,13 @@ lookupArity op = do
 naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 naryOpApp eqn plit = do
     op <- identifier
-    traceM $ show op ++ " " ++ show eqn
+    --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
-                     else commaSep (msetterm plit)
+                     else commaSep (msetterm eqn plit)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
@@ -182,9 +182,9 @@ naryOpApp eqn plit = do
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 binaryAlgApp eqn plit = do
     op <- identifier
-    -- traceM $ show op ++ " " ++ show eqn
+    --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-      $ traceM $ "`" ++ show op ++ "` is a reserved function name for builtins."
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit False
@@ -194,7 +194,7 @@ binaryAlgApp eqn plit = do
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
-  ts <- symbol "diff" *> parens (commaSep (msetterm plit))
+  ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
@@ -210,7 +210,7 @@ diffOp eqn plit = do
 term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
-    , parens (msetterm plit)
+    , parens (msetterm eqn plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp (eqn)
@@ -222,14 +222,13 @@ term plit eqn = asum
     pairing = angled (tupleterm eqn plit)
     nullaryApp eqn = do
       maudeSig <- getState
-      --traceM $ show eqn ++ " on est la hein "++ show ((symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
-expterm eqn plit = chainl1 (term eqn plit) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm eqn plit = chainl1 (term plit eqn) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -237,7 +236,7 @@ multterm eqn plit = do
     dh <- enableDH <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else term eqn plit
+        else term plit eqn
 
 -- | A left-associative sequence of xors.
 xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -296,7 +295,7 @@ fact' pterm = try (
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = fact' (msetterm plit)
+fact plit = fact' (msetterm True plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
@@ -366,7 +365,7 @@ letBlock :: Parser LNSubst
 letBlock = toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm False llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -502,7 +501,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
+  , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
@@ -934,55 +933,55 @@ sapicAction = try (do
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut Nothing t)
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "insert"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         return (Insert t t')
                    )
                <|> try (do
                         _ <- symbol "delete"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Delete t)
                    )
                <|> try (do
                         _ <- symbol "lock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Lock t)
                    )
                <|> try (do
                         _ <- symbol "unlock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Unlock t)
                    )
                <|> try (do
@@ -1035,7 +1034,7 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
                         -- TODO SAPIC parser: multterm return
@@ -1064,7 +1063,7 @@ actionprocess thy=
                         return (ProcessAction Rep mempty p))
             <|> try (do     -- lookup / if with and w/o else branches
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1075,7 +1074,7 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1084,9 +1083,9 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "if"
-                        t1 <- msetterm llit
+                        t1 <- msetterm False llit
                         _ <- opEqual
-                        t2 <- msetterm llit
+                        t2 <- msetterm False llit
                         _ <- symbol "then"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
@@ -1148,7 +1147,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
             <|> try (do        -- parens parser
