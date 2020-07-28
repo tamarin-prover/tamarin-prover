@@ -70,6 +70,8 @@ import           Main.Console
 import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
+import           Safe
+import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -270,7 +272,10 @@ closeThy as thy0 = do
       lemmaSelector lem =
           if ((lastMay $ headDef "" lemmaNames) == Just('*'))
             then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else any ( == get lName lem) lemmaNames
+            else
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
@@ -309,16 +314,22 @@ closeDiffThy as thy0 = do
       lemmaSelector lem =
           if ((lastMay $ headDef "" lemmaNames) == Just('*'))
             then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else any ( == get lName lem) lemmaNames
+            else 
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
-      lemmaSelector :: Lemma p -> Bool
-      lemmaSelector lem =
+      diffLemmaSelector :: DiffLemma p -> Bool
+      diffLemmaSelector lem =
           if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else any ( == get lName lem) lemmaNames
+            then any (`isPrefixOf` get lDiffName lem) [init $ head lemmaNames]
+            else 
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lDiffName lem) lemmaNames
+                else any ( == get lDiffName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
