@@ -71,7 +71,6 @@ import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
-import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
