@@ -1105,9 +1105,13 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position       <- findPos v term
               ruleSys        <- nodeRuleSafe nodeid source
               rule           <- find ((ruleName ruleSys ==).ruleName) rules
+              --traceM $ "Rule Left : "++(show ruleSys)
               premise        <- lookupPrem pid $ L.get cprRuleE rule
+              --traceM $ "Premise Left : "++(show premise)
               t'             <- protoOrInFactView premise
+              --traceM $ "Term 1L : "++(show t')
               unifyProtTerm  <- atMay t' tidx
+              --traceM $ "Term 2L : "++(show unifyProtTerm)
               return $ do
                 -- iterate over all positions found
                 pos     <- position
@@ -1122,15 +1126,21 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position  <- findPos v term
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
+              --traceM $ "Rule Right : "++(show ruleSys)
               premise   <- lookupPrem pid $ L.get cprRuleE rule
+              --traceM $ "Premise Right : "++(show premise)
               t'        <- protoFactView premise
+              --traceM $ "Term 1R : "++(show t')
               t         <- atMay t' tidx
+              --traceM $ "Term 2R : "++(show t)
               return $ do
                 -- iterate over all positions found
                 pos     <- position
                 guard $ notElem (rule, pos) done
-                guard (isPair t || isAC t)
+                guard (isPair t || isAC t || isMsgVar t)
+                --traceM $ "Term 3R : "++(show t)
                 guard ((getFactTag premise) /= InFact)
+                --traceM $ "Fact :"++(show premise)
                 return (rule, Right (premise,t), pos)
 
         inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
@@ -1143,6 +1153,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             -- cases for protected subterms : we consider the Term
             f (x, Left y, z) = do
               v'        <- y `atPosMay` z
+              traceM $ "Variable "++(show v')++" in Term "++(show y)
               protTerm' <- deepestProtSubterm y z
               -- We do not consider the case where the computed deepest
               -- protected subterm is the variable in question, as this
@@ -1157,17 +1168,16 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               protTerm  <- if protTerm' == v'
                 then Nothing
                 else Just protTerm'
+              traceM $ "Variable guarded "++(show v')
               return (x, Left protTerm, v', z)
             -- cases for non-protected subterms : we consider the Fact
             f (x, Right (y,t), z) = do
               v' <- t `atPosMay` z
+              traceM $ "Variable "++(show v')++" in Fact "++(show y)
               return (x, Right y, v', z)
 
-        -- zipUnifyList :: [LNTerm] -> [LNTerm] -> [Bool]
-        -- zipUnifyList inlist outlist = do
-        --   tin <- inlist
-        --   tout <- outlist
-        --   return (runMaude $ unifiableLNTerms tin (tout `renameAvoiding` tin))
+        zipUnifyList :: [LNTerm] -> [LNTerm] -> [LNTerm]
+        zipUnifyList inlist outlist = zipWith (renameAvoiding) outlist inlist
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
@@ -1194,8 +1204,8 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               guard ((ruleName . L.get cprRuleE) rin /= (ruleName . L.get cprRuleE) rout)
               -- we ignore cases where the output fact and the input fact have different name
               guard (factTagName (getFactTag unify) == factTagName (getFactTag fout))
-              -- check whether input and output are unifiable : we unify Term by Term
-              guard (runMaude $ unifiableLNFacts unify fout)
+              -- check whether input and output are unifiable
+              guard (runMaude $ unifiableLNFacts unify (Fact { factTag = (getFactTag fout), factAnnotations = (getFactAnnotations fout), factTerms = (zipUnifyList (getFactTerms fout) (getFactTerms unify))}))
               return (rout, cidx, n, Right fout)
 
         -- construct action facts for the rule annotations and formula
