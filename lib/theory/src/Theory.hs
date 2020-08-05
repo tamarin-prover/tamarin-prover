@@ -1105,13 +1105,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position       <- findPos v term
               ruleSys        <- nodeRuleSafe nodeid source
               rule           <- find ((ruleName ruleSys ==).ruleName) rules
-              --traceM $ "Rule Left : "++(show ruleSys)
               premise        <- lookupPrem pid $ L.get cprRuleE rule
-              --traceM $ "Premise Left : "++(show premise)
               t'             <- protoOrInFactView premise
-              --traceM $ "Term 1L : "++(show t')
               unifyProtTerm  <- atMay t' tidx
-              --traceM $ "Term 2L : "++(show unifyProtTerm)
               return $ do
                 -- iterate over all positions found
                 pos     <- position
@@ -1126,21 +1122,15 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position  <- findPos v term
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
-              --traceM $ "Rule Right : "++(show ruleSys)
               premise   <- lookupPrem pid $ L.get cprRuleE rule
-              --traceM $ "Premise Right : "++(show premise)
               t'        <- protoFactView premise
-              --traceM $ "Term 1R : "++(show t')
               t         <- atMay t' tidx
-              --traceM $ "Term 2R : "++(show t)
               return $ do
                 -- iterate over all positions found
                 pos     <- position
                 guard $ notElem (rule, pos) done
                 guard (isPair t || isAC t || isMsgVar t)
-                --traceM $ "Term 3R : "++(show t)
                 guard ((getFactTag premise) /= InFact)
-                --traceM $ "Fact :"++(show premise)
                 return (rule, Right (premise,t), pos)
 
         inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
@@ -1201,11 +1191,8 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               -- we ignore cases where the output fact and the input fact have different name
               guard (factTagName (getFactTag unify) == factTagName (getFactTag fout))
               -- check whether input and output are unifiable
-              traceM $ "Unification : "++(show unify)++" WITH "++(show fout)
               let unifout = fout `renameAvoiding` unify
-              traceM $ "RENAME : "++(show unifout)
               guard (runMaude $ unifiableLNFacts unify unifout)
-              traceM $ "REUSSI : "++(show cidx)
               return (rout, cidx, n, Right fout)
 
         -- construct action facts for the rule annotations and formula
@@ -1255,17 +1242,17 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
               (Conn Imp (Ato (Action (varTerm (Bound 0))
               (inputFact k n [(varTerm (Bound 1))] (varTerm (Bound 2)))))
-              (foldl toFacts (orKU 1) outs))))
+              (foldl toFacts orKU outs))))
             addForm (k, (n, Right m, _, _, outs)) f' = f' .&&. formulaMultArity (factArity m)
               where formulaMultArity nb = Qua All ("x", LSortMsg) (formulaArity nb (listOfM nb))
-                    formulaArity 0 _ = (Qua All ("i", LSortNode) (Conn Imp (Ato (Action (varTerm (Bound 0)) (inputFact k n (listVarTerm (read (show $ factArity m)::Integer)) (varTerm (Bound (1+(read (show $ factArity m)::Integer)))) ) ) ) (foldl toFacts (orKU (factArity m)) outs)) )
+                    formulaArity 0 _ = (Qua All ("i", LSortNode) (Conn Imp (Ato (Action (varTerm (Bound 0)) (inputFact k n (listVarTerm (read (show $ factArity m)::Integer)) (varTerm (Bound (1+(read (show $ factArity m)::Integer)))) ) ) ) (foldl toFacts lfalse outs)) )
                     formulaArity p (h:t) = Qua All (h,LSortMsg) (formulaArity (p-1) t)
                     listVarTerm 1 = [varTerm (Bound 1)]
                     listVarTerm q = [varTerm (Bound q)] ++ (listVarTerm (q-1))
-            orKU nb = Qua Ex ("j",LSortNode)
+            orKU = Qua Ex ("j",LSortNode)
                    (Conn And (Ato (Action (varTerm (Bound 0))
                     Fact {factTag = KUFact, factAnnotations = S.empty,
-                          factTerms = [varTerm (Bound (2+(read (show $ nb)::Integer)))]} ))
+                          factTerms = [varTerm (Bound 3)]} ))
                    (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1)))))
             toFacts f'' (n, c, k, Left _) =
               Conn Or f''
