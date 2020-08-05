@@ -1153,7 +1153,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             -- cases for protected subterms : we consider the Term
             f (x, Left y, z) = do
               v'        <- y `atPosMay` z
-              traceM $ "Variable "++(show v')++" in Term "++(show y)
+              --traceM $ "Variable "++(show v')++" in Term "++(show y)
               protTerm' <- deepestProtSubterm y z
               -- We do not consider the case where the computed deepest
               -- protected subterm is the variable in question, as this
@@ -1168,16 +1168,12 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               protTerm  <- if protTerm' == v'
                 then Nothing
                 else Just protTerm'
-              traceM $ "Variable guarded "++(show v')
               return (x, Left protTerm, v', z)
             -- cases for non-protected subterms : we consider the Fact
             f (x, Right (y,t), z) = do
               v' <- t `atPosMay` z
-              traceM $ "Variable "++(show v')++" in Fact "++(show y)
+              --traceM $ "Variable "++(show v')++" in Fact "++(show y)
               return (x, Right y, v', z)
-
-        zipUnifyList :: [LNTerm] -> [LNTerm] -> [LNTerm]
-        zipUnifyList inlist outlist = zipWith (renameAvoiding) outlist inlist
 
         -- compute matching outputs
         -- returns a list of inputs together with their list of matching outputs
@@ -1205,7 +1201,11 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               -- we ignore cases where the output fact and the input fact have different name
               guard (factTagName (getFactTag unify) == factTagName (getFactTag fout))
               -- check whether input and output are unifiable
-              guard (runMaude $ unifiableLNFacts unify (Fact { factTag = (getFactTag fout), factAnnotations = (getFactAnnotations fout), factTerms = (zipUnifyList (getFactTerms fout) (getFactTerms unify))}))
+              traceM $ "Unification : "++(show unify)++" WITH "++(show fout)
+              let unifout = fout `renameAvoiding` unify
+              traceM $ "RENAME : "++(show unifout)
+              guard (runMaude $ unifiableLNFacts unify unifout)
+              traceM $ "REUSSI : "++(show cidx)
               return (rout, cidx, n, Right fout)
 
         -- construct action facts for the rule annotations and formula
