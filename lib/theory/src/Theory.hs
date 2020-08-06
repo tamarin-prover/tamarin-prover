@@ -1103,6 +1103,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
           where
             g (nodeid, pid, tidx, term) = do
               position       <- findPos v term
+              --traceM $ "Variable DEPART : "++(show v)
               ruleSys        <- nodeRuleSafe nodeid source
               rule           <- find ((ruleName ruleSys ==).ruleName) rules
               premise        <- lookupPrem pid $ L.get cprRuleE rule
@@ -1130,7 +1131,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 pos     <- position
                 guard $ notElem (rule, pos) done
                 guard (isPair t || isAC t || isMsgVar t)
-                guard ((getFactTag premise) /= InFact)
+                --guard ((getFactTag premise) /= InFact)
                 return (rule, Right (premise,t), pos)
 
         inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
