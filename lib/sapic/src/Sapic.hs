@@ -46,9 +46,10 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
-                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+               throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
-                    return (removeSapicItems th)
+               -- NOTE: fmap f m = m >>= (return . f)
+               fmap removeSapicItems (addAccountabilityLemmas th)
       [p] -> if all allUnique (bindings p) then do
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
@@ -62,10 +63,7 @@ translate th = case theoryProcesses th of
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add accountability lemma
-                let undef = mapMaybe undefinedCaseTests (theoryAccLemmas th2)
-                when (not $ null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
-                accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas th2)
-                th3 <- foldM liftedAddLemma th2 (concat accLemmas) 
+                th3 <- addAccountabilityLemmas th2
                 -- add heuristic, if not already defined:
                 let th4 = fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
                 return (removeSapicItems th4)
@@ -131,6 +129,12 @@ translate th = case theoryProcesses th of
     heuristics = [SapicRanking]
     needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
     containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
+
+    addAccountabilityLemmas thy = do
+      let undef = mapMaybe undefinedCaseTests (theoryAccLemmas thy)
+      when (not $ null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
+      accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas thy)
+      foldM liftedAddLemma thy (concat accLemmas) 
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:

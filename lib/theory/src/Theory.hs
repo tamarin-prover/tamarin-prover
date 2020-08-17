@@ -682,9 +682,9 @@ addRightLemma lem =
 type FormalComment = (String, String)
 
 
--- | SapicItems can be processes and accountability lemmas
-data SapicElement=
-      ProcessItem Process
+-- | SapicItems can be processes, accountability lemmas, and case tests
+data SapicElement =
+        ProcessItem Process
       | ProcessDefItem ProcessDef
       | AccLemmaItem AccLemma
       | CaseTestItem CaseTest

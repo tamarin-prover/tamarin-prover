@@ -64,7 +64,7 @@ instance (Show p) => Show (SapicException p) where
     -- show SomethingBad = "Something bad happened"
     show (CaseTestsUndefined el) =
         "The following case tests are undefined but are required in a lemma: \n" ++
-        List.intercalate "\n" (fmap (\(a, c) -> "  " ++ (List.intercalate ", " c) ++ " required by the lemma '" ++ a ++ "'") el)
+        List.intercalate "\n" (fmap (\(a, c) -> "  '" ++ (List.intercalate "', '" c) ++ "' required by lemma '" ++ a ++ "'") el)
 
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
