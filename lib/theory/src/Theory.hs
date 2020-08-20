@@ -1103,7 +1103,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
           where
             g (nodeid, pid, tidx, term) = do
               position       <- findPos v term
-              --traceM $ "Variable DEPART : "++(show v)
               ruleSys        <- nodeRuleSafe nodeid source
               rule           <- find ((ruleName ruleSys ==).ruleName) rules
               premise        <- lookupPrem pid $ L.get cprRuleE rule
@@ -1131,7 +1130,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 pos     <- position
                 guard $ notElem (rule, pos) done
                 guard (isPair t || isAC t || isMsgVar t)
-                --guard ((getFactTag premise) /= InFact)
                 return (rule, Right (premise,t), pos)
 
         inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact,LNTerm), Position)]
@@ -1144,7 +1142,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             -- cases for protected subterms : we consider the Term
             f (x, Left y, z) = do
               v'        <- y `atPosMay` z
-              --traceM $ "Variable "++(show v')++" in Term "++(show y)
               protTerm' <- deepestProtSubterm y z
               -- We do not consider the case where the computed deepest
               -- protected subterm is the variable in question, as this
@@ -1163,7 +1160,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             -- cases for non-protected subterms : we consider the Fact
             f (x, Right (y,t), z) = do
               v' <- t `atPosMay` z
-              --traceM $ "Variable "++(show v')++" in Fact "++(show y)
               return (x, Right y, v', z)
 
         -- compute matching outputs
