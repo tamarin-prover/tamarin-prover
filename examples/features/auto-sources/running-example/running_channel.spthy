@@ -4,8 +4,9 @@ begin
 
 /* 
 We formalize the following challenge-response protocol
-    1. I -> R: {'req',I, n}pk(R)
-    2. I <- R: {'rep',n}pk(I)
+    1. I -> R: m,{'req',I, n}pk(R)
+    2. I <- R: m,I,R,{'rep',n,m}ltkR
+    3. I -> R: m,{'rep',n,m}ltkR
 */
 
 
