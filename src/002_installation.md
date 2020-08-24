@@ -104,7 +104,7 @@ from this repository. The instructions below should be translatable to other plu
 2. Put the below, or equivalent instructions, into your `.vimrc`:
 
 ```vimrc
-Plugin 'tamarin-prover/tamarin-prover', {'rtp', 'etc/vim'}
+Plugin 'tamarin-prover/editors'
 ```
 3. Restart Vim or reload the configuration
 4. Run the Vim command `:PluginInstall` (or equivalent)
