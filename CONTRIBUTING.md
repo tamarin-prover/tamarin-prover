@@ -129,14 +129,18 @@ desirable to have a separate repository for these files, hence we include this
 directory as a git-subtree. [Here is
 a tutorial](https://www.atlassian.com/git/tutorials/git-subtree). In summary:
 
-1. To merge changes from the outside  repository into `etc` here, run
+1. To merge changes from the outside  repository into `etc` here, run the
+   following command, where $branch is the branch you are in now, which is
+   almost always `develop`.
 ```
- git subtree pull --prefix etc https://github.com/tamarin-prover/editors master --squash
+ git subtree pull --prefix etc https://github.com/tamarin-prover/editors $branch --squash
 ```
 
-2. To contribute changes in `etc` back to that outside repository, run
+2. To contribute changes in `etc` back to that outside repository, run the
+   following, where `$github_user` is your github user name, because you need
+   to fork that directory, too.
 ```
-git subtree push --prefix etc https://github.com/tamarin-prover/editors master
+git subtree push --prefix etc https://github.com/$github_user/editors $branch
 ```
 
 3. FYI: if we ever want to add another subtree, we use:
