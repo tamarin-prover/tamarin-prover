@@ -120,3 +120,27 @@ make -j 6 case-studies
 ```
 
 to run 6 case studies in parallel.
+
+Editor support
+--------------
+
+The directory `etc` holds files for editor support. For the `vim` editor, it is
+desirable to have a separate repository for these files, hence we include this
+directory as a git-subtree. [Here is
+a tutorial](https://www.atlassian.com/git/tutorials/git-subtree). In summary:
+
+1. To merge changes from the outside  repository into `etc` here, run
+```
+ git subtree pull --prefix etc https://github.com/tamarin-prover/editors master --squash
+```
+
+2. To contribute changes in `etc` back to that outside repository, run
+```
+git subtree push --prefix etc https://github.com/tamarin-prover/editors master
+```
+
+3. FYI: if we ever want to add another subtree, we use:
+```
+git subtree add --prefix $local_dir $remote_url $remote_branch --squash
+```
+
