@@ -28,7 +28,7 @@
   '("axiom" "lemma" "restriction" "protocol" "property" "text" "rule" "let" "in" "Fresh" "fresh" "Public" "public" "All" "Ex" "h" "sk" "pk" "Fr" "In" "Out" "fr" "in" "out" "not" "!"))
 
 (defvar spthy-events
-  '("theory" "begin" "end" "subsection" "section" "pb" "lts" "diffie-hellman" "bilinear-pairing" "multiset" "hashing" "symmetric-encryption" "asymmetric-encryption" "exists-trace" "all-traces" "enable" "assertions" "modulo" "default_rules" "anb-proto" "signing"))
+  '("theory" "begin" "end" "subsection" "section" "pb" "lts" "diffie-hellman" "bilinear-pairing" "multiset" "hashing" "symmetric-encryption" "asymmetric-encryption" "exists-trace" "all-traces" "enable" "assertions" "modulo" "default_rules" "anb-proto" "signing" "revealing-signing"))
 
 (defvar spthy-operators
   '("&" "|" "==>" "=" "<=>" "-->" "^" "[" "]->" "-->" "]" "--["))
