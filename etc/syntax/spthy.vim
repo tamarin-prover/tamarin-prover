@@ -39,7 +39,7 @@ syn match spthyLAtom	        "@"
 syn match spthyLAtom	        "<"
 syn match spthyLAtom	        ">"
 
-syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing signing multiset revealSign revealVerify getMessage true
+syn keyword spthyConstr         aenc sdec senc sdec sign verify hashing multiset revealSign revealVerify getMessage true
 syn match spthyConstr           "\<h("he=e-1
 syn match spthyConstr           "\<sk("he=e-1
 syn match spthyConstr           "\<pk("he=e-1
@@ -52,6 +52,7 @@ syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
 syn match spthyConstr           "\<revealing-signing"
+syn match spthyConstr           "\<signing"
 syn match spthyConstr           "\<translation-progress"
 syn match spthyConstr           "\<reliable-channel"
 syn match spthyConstr           "\<multiset"
