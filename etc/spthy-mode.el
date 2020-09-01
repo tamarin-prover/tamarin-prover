@@ -25,16 +25,16 @@
 (add-to-list 'auto-mode-alist '("\\.spthy\\'" . spthy-mode))
 
 (defvar spthy-keywords
-  '("axiom" "lemma" "restriction" "protocol" "property" "text" "rule" "let" "in" "Fresh" "fresh" "Public" "public" "hashing" "All" "Ex" "h" "sk" "pk" "Fr" "In" "Out" "fr" "in" "out" "not" "!"))
+  '("axiom" "lemma" "restriction" "protocol" "property" "text" "rule" "let" "in" "Fresh" "fresh" "Public" "public" "All" "Ex" "h" "sk" "pk" "Fr" "In" "Out" "fr" "in" "out" "not" "!"))
 
 (defvar spthy-events
-  '("theory" "begin" "end" "subsection" "section" "pb" "lts" "diffie-hellman" "bilinear-pairing" "multiset" "symmetric-encryption" "asymmetric-encryption" "exists-trace" "all-traces" "enable" "assertions" "modulo" "default_rules" "anb-proto" "signing"))
+  '("theory" "begin" "end" "subsection" "section" "pb" "lts" "diffie-hellman" "bilinear-pairing" "multiset" "hashing" "symmetric-encryption" "asymmetric-encryption" "exists-trace" "all-traces" "enable" "assertions" "modulo" "default_rules" "anb-proto" "signing"))
 
 (defvar spthy-operators
   '("&" "|" "==>" "=" "<=>" "-->" "^" "[" "]->" "-->" "]" "--["))
 
 (defvar spthy-warnings
-  '("@" "functions" "builtins" "equations" "!")) ; we may want to add ! in operators instead
+  '("@" "functions" "builtins" "equations" "heuristic" "!")) ; we may want to add ! in operators instead
 
 (defvar spthy-quiet
   '("~" "$"))
