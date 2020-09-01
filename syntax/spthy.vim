@@ -51,8 +51,13 @@ syn match spthyConstr           "\^"
 syn match spthyConstr           "\<diffie-hellman"
 syn match spthyConstr           "\<symmetric-encryption"
 syn match spthyConstr           "\<asymmetric-encryption"
+syn match spthyConstr           "\<translation-progress"
+syn match spthyConstr           "\<reliable-channel"
+syn match spthyConstr           "\<multiset"
 
-syn keyword spthyDecl           axiom restriction equations functions builtins heuristic protocol property in let theory begin end subsection section text
+syn keyword spthyDecl           axiom begin builtins end equations functions heuristic in let options predicate predicates property protocol restriction section subsection text theory verdictfunction
+
+
 syn match spthyDecl             "\<lemma\>"
 syn match spthyDecl             "\<exists-trace"
 syn match spthyDecl             "\<all-traces"
@@ -73,6 +78,10 @@ syn match spthyTransfer         "<-"
 syn match spthyDecl             "-->"
 syn match spthyDecl             "--\["
 syn match spthyDecl             "\]->"
+syn keyword spthyTransfer       new in out lookup as in else if lock unlock event insert delete then then account accounts for parties otherwise
+syn match spthyTransfer         "||"
+syn match spthyTransfer         "|"
+syn match spthyTransfer         "!"
 
 syn region spthyLiteral          start="'" end="'"
 
@@ -84,6 +93,7 @@ syn match spthyLogicOp          "<=>"
 syn keyword spthyLogicOp        F T All Ex
 syn match spthyLogicOp          "|"
 syn match spthyLogicOp          "&"
+syn match spthyLogicOp          "@"
 syn match spthyLogicOp          "\."
 
 " The following cluster contains all spthy groups except the contained ones
