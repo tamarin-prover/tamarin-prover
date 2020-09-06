@@ -1,0 +1,258 @@
+theory StatVerif_Security_Device
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+builtins: asymmetric-encryption
+
+heuristic: p /* heuristic for SAPIC */
+
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule Rep_0_: // [process=top-level] Rep, 0 
+ [State_()] --[]-> [!Semistate_1()]
+
+rule Rep_1_: // [process=top-level] Rep, 1 
+ [!Semistate_1()] --[]-> [State_1()]
+
+rule new_sk_1: // [process=top-level] new sk 
+ [State_1(), Fr(sk)] --[]-> [State_11(sk)]
+
+rule new_s_11: // [process=top-level] new s 
+ [State_11(sk), Fr(s)] --[]-> [State_111(s, sk)]
+
+rule insert_s_init__111: // [process=top-level] insert s,'init' 
+ [State_111(s, sk)] --[Insert(s, 'init')]-> [State_1111(s, sk)]
+
+rule Par_1111: // [process=top-level] Par 
+ [State_1111(s, sk)] --[]-> [State_11111(s, sk), State_11112(s, sk)]
+
+rule Par_11111 [color=#569DC0]: // [process=Device] Par 
+ [State_11111(s, sk)] --[]-> [State_111111(s, sk), State_111112(s, sk)]
+
+rule Par_111111 [color=#569DC0]: // [process=Device] Par 
+ [State_111111(s, sk)] --[]-> [State_1111111(s, sk), State_1111112(s, sk)]
+
+rule out_pksk_1111111 [color=#569DC0]: // [process=Device] out pk(sk) 
+ [State_1111111(s, sk)] --[]-> [State_11111111(s, sk), Out(pk(sk))]
+
+rule Zero_11111111 [color=#569DC0]: // [process=Device] Zero 
+ [State_11111111(s, sk)] --[]-> []
+
+rule Rep_0_1111112 [color=#569DC0]: // [process=Device] Rep, 0 
+ [State_1111112(s, sk)] --[]-> [!Semistate_11111121(s, sk)]
+
+rule Rep_1_1111112 [color=#569DC0]: // [process=Device] Rep, 1 
+ [!Semistate_11111121(s, sk)] --[]-> [State_11111121(s, sk)]
+
+rule lock_s_11111121 [color=#569DC0]: // [process=Device] lock s 
+ [State_11111121(s, sk), Fr(~lock10)] --[Lock($10, ~lock10, s), Lock_10($10, ~lock10, s)]-> [State_111111211(~lock10, s, sk)]
+
+rule in_req_111111211 [color=#569DC0]: // [process=Device] in req 
+ [State_111111211(~lock10, s, sk), In(req)] --[]-> [State_1111112111(~lock10, req, s, sk)]
+
+rule lookup_s_as_status_0_1111112111 [color=#569DC0]: // [process=Device] lookup s as status, 0 
+ [State_1111112111(~lock10, req, s, sk)] --[IsIn(s, status)]-> [State_11111121111(~lock10, req, s, sk, status)]
+
+rule lookup_s_as_status_1_1111112111 [color=#569DC0]: // [process=Device] lookup s as status, 1 
+ [State_1111112111(~lock10, req, s, sk)] --[IsNotSet(s)]-> [State_11111121112(~lock10, req, s, sk)]
+
+rule if_eqstatus_init__0_11111121111 [color=#569DC0]: // [process=Device] if eq(status, 'init'), 0 
+ [State_11111121111(~lock10, req, s, sk, status)] --[Pred_eq(status, 'init')]-> [State_111111211111(~lock10, req, s, sk, status)]
+
+rule if_eqstatus_init__1_11111121111 [color=#569DC0]: // [process=Device] if eq(status, 'init'), 1 
+ [State_11111121111(~lock10, req, s, sk, status)] --[Pred_not_eq(status, 'init')]-> [State_111111211112(~lock10, req, s, sk, status)]
+
+rule if_eqreq_left__0_111111211111 [color=#569DC0]: // [process=Device] if eq(req, 'left'), 0 
+ [State_111111211111(~lock10, req, s, sk, status)] --[Pred_eq(req, 'left')]-> [State_1111112111111(~lock10, req, s, sk, status)]
+
+rule if_eqreq_left__1_111111211111 [color=#569DC0]: // [process=Device] if eq(req, 'left'), 1 
+ [State_111111211111(~lock10, req, s, sk, status)] --[Pred_not_eq(req, 'left')]-> [State_1111112111112(~lock10, req, s, sk, status)]
+
+rule event_InitDevices_1111112111111 [color=#569DC0]: // [process=Device] event InitDevice(s) 
+ [State_1111112111111(~lock10, req, s, sk, status)] --[Event(), InitDevice(s)]-> [State_11111121111111(~lock10, req, s, sk, status)]
+
+rule insert_s_req_11111121111111 [color=#569DC0]: // [process=Device] insert s,req 
+ [State_11111121111111(~lock10, req, s, sk, status)] --[Insert(s, req)]-> [State_111111211111111(~lock10, req, s, sk, status)]
+
+rule unlock_s_111111211111111 [color=#569DC0]: // [process=Device] unlock s 
+ [State_111111211111111(~lock10, req, s, sk, status)] --[Unlock($10, ~lock10, s), Unlock_10($10, ~lock10, s)]-> [State_1111112111111111(~lock10, req, s, sk, status)]
+
+rule Zero_1111112111111111 [color=#569DC0]: // [process=Device] Zero 
+ [State_1111112111111111(~lock10, req, s, sk, status)] --[]-> []
+
+rule if_eqreq_right__0_1111112111112 [color=#569DC0]: // [process=Device] if eq(req, 'right'), 0 
+ [State_1111112111112(~lock10, req, s, sk, status)] --[Pred_eq(req, 'right')]-> [State_11111121111121(~lock10, req, s, sk, status)]
+
+rule if_eqreq_right__1_1111112111112 [color=#569DC0]: // [process=Device] if eq(req, 'right'), 1 
+ [State_1111112111112(~lock10, req, s, sk, status)] --[Pred_not_eq(req, 'right')]-> [State_11111121111122(~lock10, req, s, sk, status)]
+
+rule event_InitDevices_11111121111121 [color=#569DC0]: // [process=Device] event InitDevice(s) 
+ [State_11111121111121(~lock10, req, s, sk, status)] --[Event(), InitDevice(s)]-> [State_111111211111211(~lock10, req, s, sk, status)]
+
+rule insert_s_req_111111211111211 [color=#569DC0]: // [process=Device] insert s,req 
+ [State_111111211111211(~lock10, req, s, sk, status)] --[Insert(s, req)]-> [State_1111112111112111(~lock10, req, s, sk, status)]
+
+rule unlock_s_1111112111112111 [color=#569DC0]: // [process=Device] unlock s 
+ [State_1111112111112111(~lock10, req, s, sk, status)] --[Unlock($10, ~lock10, s), Unlock_10($10, ~lock10, s)]-> [State_11111121111121111(~lock10, req, s, sk, status)]
+
+rule Zero_11111121111121111 [color=#569DC0]: // [process=Device] Zero 
+ [State_11111121111121111(~lock10, req, s, sk, status)] --[]-> []
+
+rule Zero_11111121111122 [color=#569DC0]: // [process=Device] Zero 
+ [State_11111121111122(~lock10, req, s, sk, status)] --[]-> []
+
+rule Zero_111111211112 [color=#569DC0]: // [process=Device] Zero 
+ [State_111111211112(~lock10, req, s, sk, status)] --[]-> []
+
+rule Zero_11111121112 [color=#569DC0]: // [process=Device] Zero 
+ [State_11111121112(~lock10, req, s, sk)] --[]-> []
+
+rule Rep_0_111112 [color=#569DC0]: // [process=Device] Rep, 0 
+ [State_111112(s, sk)] --[]-> [!Semistate_1111121(s, sk)]
+
+rule Rep_1_111112 [color=#569DC0]: // [process=Device] Rep, 1 
+ [!Semistate_1111121(s, sk)] --[]-> [State_1111121(s, sk)]
+
+rule lock_s_1111121 [color=#569DC0]: // [process=Device] lock s 
+ [State_1111121(s, sk), Fr(~lock9)] --[Lock($9, ~lock9, s), Lock_9($9, ~lock9, s)]-> [State_11111211(~lock9, s, sk)]
+
+rule in_aenc_x_y_pksk_11111211 [color=#569DC0]: // [process=Device] in aenc(<x, y>, pk(sk)) 
+ [State_11111211(~lock9, s, sk), In(aenc(<x, y>, pk(sk)))] --[]-> [State_111112111(~lock9, s, sk, x, y)]
+
+rule lookup_s_as_status_0_111112111 [color=#569DC0]: // [process=Device] lookup s as status, 0 
+ [State_111112111(~lock9, s, sk, x, y)] --[IsIn(s, status)]-> [State_1111121111(~lock9, s, sk, status, x, y)]
+
+rule lookup_s_as_status_1_111112111 [color=#569DC0]: // [process=Device] lookup s as status, 1 
+ [State_111112111(~lock9, s, sk, x, y)] --[IsNotSet(s)]-> [State_1111121112(~lock9, s, sk, x, y)]
+
+rule if_eqstatus_left__0_1111121111 [color=#569DC0]: // [process=Device] if eq(status, 'left'), 0 
+ [State_1111121111(~lock9, s, sk, status, x, y)] --[Pred_eq(status, 'left')]-> [State_11111211111(~lock9, s, sk, status, x, y)]
+
+rule if_eqstatus_left__1_1111121111 [color=#569DC0]: // [process=Device] if eq(status, 'left'), 1 
+ [State_1111121111(~lock9, s, sk, status, x, y)] --[Pred_not_eq(status, 'left')]-> [State_11111211112(~lock9, s, sk, status, x, y)]
+
+rule event_Accessx_11111211111 [color=#569DC0]: // [process=Device] event Access(x) 
+ [State_11111211111(~lock9, s, sk, status, x, y)] --[Event(), Access(x)]-> [State_111112111111(~lock9, s, sk, status, x, y)]
+
+rule out_x_111112111111 [color=#569DC0]: // [process=Device] out x 
+ [State_111112111111(~lock9, s, sk, status, x, y)] --[]-> [State_1111121111111(~lock9, s, sk, status, x, y), Out(x)]
+
+rule unlock_s_1111121111111 [color=#569DC0]: // [process=Device] unlock s 
+ [State_1111121111111(~lock9, s, sk, status, x, y)] --[Unlock($9, ~lock9, s), Unlock_9($9, ~lock9, s)]-> [State_11111211111111(~lock9, s, sk, status, x, y)]
+
+rule Zero_11111211111111 [color=#569DC0]: // [process=Device] Zero 
+ [State_11111211111111(~lock9, s, sk, status, x, y)] --[]-> []
+
+rule if_eqstatus_right__0_11111211112 [color=#569DC0]: // [process=Device] if eq(status, 'right'), 0 
+ [State_11111211112(~lock9, s, sk, status, x, y)] --[Pred_eq(status, 'right')]-> [State_111112111121(~lock9, s, sk, status, x, y)]
+
+rule if_eqstatus_right__1_11111211112 [color=#569DC0]: // [process=Device] if eq(status, 'right'), 1 
+ [State_11111211112(~lock9, s, sk, status, x, y)] --[Pred_not_eq(status, 'right')]-> [State_111112111122(~lock9, s, sk, status, x, y)]
+
+rule event_Accessy_111112111121 [color=#569DC0]: // [process=Device] event Access(y) 
+ [State_111112111121(~lock9, s, sk, status, x, y)] --[Event(), Access(y)]-> [State_1111121111211(~lock9, s, sk, status, x, y)]
+
+rule out_y_1111121111211 [color=#569DC0]: // [process=Device] out y 
+ [State_1111121111211(~lock9, s, sk, status, x, y)] --[]-> [State_11111211112111(~lock9, s, sk, status, x, y), Out(y)]
+
+rule unlock_s_11111211112111 [color=#569DC0]: // [process=Device] unlock s 
+ [State_11111211112111(~lock9, s, sk, status, x, y)] --[Unlock($9, ~lock9, s), Unlock_9($9, ~lock9, s)]-> [State_111112111121111(~lock9, s, sk, status, x, y)]
+
+rule Zero_111112111121111 [color=#569DC0]: // [process=Device] Zero 
+ [State_111112111121111(~lock9, s, sk, status, x, y)] --[]-> []
+
+rule unlock_s_111112111122 [color=#569DC0]: // [process=Device] unlock s 
+ [State_111112111122(~lock9, s, sk, status, x, y)] --[Unlock($9, ~lock9, s), Unlock_9($9, ~lock9, s)]-> [State_1111121111221(~lock9, s, sk, status, x, y)]
+
+rule Zero_1111121111221 [color=#569DC0]: // [process=Device] Zero 
+ [State_1111121111221(~lock9, s, sk, status, x, y)] --[]-> []
+
+rule Zero_1111121112 [color=#569DC0]: // [process=Device] Zero 
+ [State_1111121112(~lock9, s, sk, x, y)] --[]-> []
+
+rule Rep_0_11112: // [process=top-level] Rep, 0 
+ [State_11112(s, sk)] --[]-> [!Semistate_111121(s, sk)]
+
+rule Rep_1_11112: // [process=top-level] Rep, 1 
+ [!Semistate_111121(s, sk)] --[]-> [State_111121(s, sk)]
+
+rule new_lm_111121 [color=#2CD719]: // [process=User] new lm 
+ [State_111121(s, sk), Fr(lm)] --[]-> [State_1111211(lm, s, sk)]
+
+rule new_rm_1111211 [color=#2CD719]: // [process=User] new rm 
+ [State_1111211(lm, s, sk), Fr(rm)] --[]-> [State_11112111(lm, rm, s, sk)]
+
+rule event_Exclusivelm_rm_11112111 [color=#2CD719]: // [process=User] event Exclusive(lm, rm) 
+ [State_11112111(lm, rm, s, sk)] --[Event(), Exclusive(lm, rm)]-> [State_111121111(lm, rm, s, sk)]
+
+rule out_aenc_lm_rm_pksk_111121111 [color=#2CD719]: // [process=User] out aenc(<lm, rm>, pk(sk)) 
+ [State_111121111(lm, rm, s, sk)] --[]-> [State_1111211111(lm, rm, s, sk), Out(aenc(<lm, rm>, pk(sk)))]
+
+rule Zero_1111211111 [color=#2CD719]: // [process=User] Zero 
+ [State_1111211111(lm, rm, s, sk)] --[]-> []
+
+ restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+        (Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+                & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
+                & ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
+)"
+
+restriction set_notin:
+"All x #t3 . IsNotSet(x)@t3 ==> 
+        (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3 
+                &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
+
+
+restriction predicate_eq:
+"All #i a b. Pred_eq(a,b)@i ==> a = b"
+
+
+restriction predicate_not_eq:
+"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
+
+
+restriction single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+ 
+ restriction locking_10: 
+ "All p pp l x lp #t1 #t3 . Lock_10(p,l,x)@t1 & Lock(pp,lp,x)@t3 
+         ==> 
+         ( #t1<#t3 
+                  & (Ex #t2. Unlock_10(p,l,x)@t2 & #t1<#t2 & #t2<#t3  
+                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
+                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) 
+                 )) 
+         | #t3<#t1 | #t1=#t3 " 
+
+  
+ restriction locking_9: 
+ "All p pp l x lp #t1 #t3 . Lock_9(p,l,x)@t1 & Lock(pp,lp,x)@t3 
+         ==> 
+         ( #t1<#t3 
+                  & (Ex #t2. Unlock_9(p,l,x)@t2 & #t1<#t2 & #t2<#t3  
+                  & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
+                  & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 ) 
+                 )) 
+         | #t3<#t1 | #t1=#t3 " 
+
+ lemma source [sources]:
+"	All m #i. Access(m) @ i ==> ( Ex #j. KU(m) @ j & j < i ) | ( Ex x #j. Exclusive(x, m) @ j ) | ( Ex y #j. Exclusive(m, y) @ j )"
+
+lemma reachability_left : exists-trace
+"	Ex x y #i #j. Exclusive(x, y) @ i & K(x) @ j"
+
+lemma reachability_right : exists-trace
+"	Ex x y #i #k. Exclusive(x, y) @ i & K(y) @ k"
+
+lemma secrecy :
+"	not( Ex x y #i #k1 #k2. Exclusive(x, y) @ i & K(x) @ k1 & K(y) @ k2 )"
+
+end

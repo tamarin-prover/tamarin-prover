@@ -1,0 +1,2604 @@
+theory Otway_Rees begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+lemma AUTO_typing [sources]:
+  all-traces
+  "((⊤) ∧
+    (∀ x m #i.
+      (AUTO_IN_1_1_S( m, x ) @ #i) ⇒
+      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+       (∃ #j. (AUTO_OUT_0_1_A_1( m ) @ #j) ∧ (#j < #i))))) ∧
+   (∀ x m #i.
+     (AUTO_IN_2_1_S( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ∧ (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x m #i.
+    (AUTO_IN_1_1_S( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_A_1( m ) @ #j) ⇒ ¬(#j < #i))) ∨
+  (∃ x m #i.
+    (AUTO_IN_2_1_S( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ⇒ ¬(#j < #i))))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ x m #i.
+           (AUTO_IN_1_1_S( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_A_1( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
+         (∃ x m #i.
+           (AUTO_IN_2_1_S( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ⇒ ¬(#j < #i))) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_A_1( senc(<'1', x, m, a, b>, ~kas) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !LongtermKey( ~kas, a ) ▶₁ #i )
+        case Init
+        solve( !LongtermKey( ~kbs, b ) ▶₂ #i )
+          case Init
+          solve( !KU( senc(<'1', x, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+            case A_1
+            by contradiction /* from formulas */
+          next
+            case S_case_1
+            solve( (∃ #j. (!KU( na ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_1( senc(<'1', na, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            qed
+          next
+            case S_case_2
+            solve( (∃ #j. (!KU( na ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_1( senc(<'1', na, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case case_2
+              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            qed
+          next
+            case c_senc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( na ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_A_1( senc(<'1', na, m, a, b>, ~kas) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !LongtermKey( ~kas, a ) ▶₁ #i )
+        case Init
+        solve( !LongtermKey( ~kbs, b ) ▶₂ #i )
+          case Init
+          solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+            case A_1
+            solve( !KU( ~m ) @ #vk.2 )
+              case A_1_case_1
+              solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.8 )
+                case B_1
+                by contradiction /* from formulas */
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.7)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.7)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.7)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.7)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                qed
+              next
+                case c_senc
+                by contradiction /* from formulas */
+              qed
+            next
+              case A_1_case_2
+              solve( !KU( ~kas ) @ #vk.9 )
+                case Reveal_Longterm_Key
+                solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.9 )
+                  case B_1
+                  by contradiction /* from formulas */
+                next
+                  case S_case_1
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.11)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case S_case_2
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.11)) )
+                    case case_1
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.11)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.11)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  qed
+                next
+                  case c_senc
+                  by contradiction /* from formulas */
+                qed
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.10)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.10)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.10)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.10)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                  qed
+                qed
+              qed
+            next
+              case S_case_1
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.6)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case S_case_2
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.6)) )
+                case case_1
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.6)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                qed
+              next
+                case case_2
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.6)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                qed
+              qed
+            qed
+          next
+            case S_case_1
+            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            qed
+          next
+            case S_case_2
+            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case case_2
+              solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            qed
+          next
+            case c_senc
+            solve( !KU( ~kas ) @ #vk.12 )
+              case Reveal_Longterm_Key
+              solve( !KU( senc(<'2', x, m, $X, $X.1>, ~kbs) ) @ #vk.12 )
+                case B_1
+                by contradiction /* from formulas */
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.3)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.3)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                qed
+              next
+                case c_senc
+                by contradiction /* from formulas */
+              qed
+            next
+              case S_case_1
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case S_case_2
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                qed
+              next
+                case case_2
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      solve( (last(#i))  ∥
+             (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+             (∃ #j.
+               (AUTO_OUT_0_1_B_1( senc(<'2', x, m, a, b>, ~kbs) ) @ #j)
+              ∧
+               (¬(last(#j))) ∧ (#j < #i)) )
+        case case_1
+        solve( !LongtermKey( ~kas, a ) ▶₁ #i )
+          case Init
+          solve( !LongtermKey( ~kbs, b ) ▶₂ #i )
+            case Init
+            solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+              case A_1
+              solve( !KU( ~na ) @ #j )
+                case A_1
+                solve( !KU( ~m ) @ #vk.3 )
+                  case A_1_case_1
+                  solve( !KU( ~kas ) @ #vk.9 )
+                    case Reveal_Longterm_Key
+                    solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.9 )
+                      case B_1
+                      by contradiction /* from formulas */
+                    next
+                      case S_case_1
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.11)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    next
+                      case S_case_2
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.11)) )
+                        case case_1
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.11)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      next
+                        case case_2
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.11)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      qed
+                    next
+                      case c_senc
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case S_case_1
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.10)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                    qed
+                  next
+                    case S_case_2
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.10)) )
+                      case case_1
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                      qed
+                    next
+                      case case_2
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.15, 0) ~~> (#vk.2, 0) )
+                      qed
+                    qed
+                  qed
+                next
+                  case A_1_case_2
+                  solve( !KU( ~kas ) @ #vk.9 )
+                    case Reveal_Longterm_Key
+                    solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.9 )
+                      case B_1
+                      by contradiction /* from formulas */
+                    next
+                      case S_case_1
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.12)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    next
+                      case S_case_2
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.12)) )
+                        case case_1
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.12)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      next
+                        case case_2
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.12)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      qed
+                    next
+                      case c_senc
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case S_case_1
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.11)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.16, 0) ~~> (#vk.2, 0) )
+                    qed
+                  next
+                    case S_case_2
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.11)) )
+                      case case_1
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.11)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.16, 0) ~~> (#vk.2, 0) )
+                      qed
+                    next
+                      case case_2
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.11)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.16, 0) ~~> (#vk.2, 0) )
+                      qed
+                    qed
+                  qed
+                next
+                  case S_case_1
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.9)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                  qed
+                next
+                  case S_case_2
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.9)) )
+                    case case_1
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.9)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.9)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                    qed
+                  qed
+                qed
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.6)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  solve( (#vr.11, 0) ~~> (#j, 0) )
+                    case Var_fresh_1_na
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.5))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m, $X, $X.1>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.5)) )
+                      case case_1
+                      solve( !KU( ~m ) @ #vk.7 )
+                        case A_1_case_1
+                        solve( !KU( ~kas ) @ #vk.14 )
+                          case Reveal_Longterm_Key
+                          solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.13 )
+                            case B_1
+                            by contradiction /* from formulas */
+                          next
+                            case S_case_1
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.14)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by contradiction /* impossible chain */
+                            qed
+                          next
+                            case S_case_2
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.14)) )
+                              case case_1
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            next
+                              case case_2
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            qed
+                          next
+                            case c_senc
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case S_case_1
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.13)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                          qed
+                        next
+                          case S_case_2
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.13)) )
+                            case case_1
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.13)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                            qed
+                          next
+                            case case_2
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.13)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                            qed
+                          qed
+                        qed
+                      next
+                        case A_1_case_2
+                        solve( !KU( ~kas ) @ #vk.14 )
+                          case Reveal_Longterm_Key
+                          solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.13 )
+                            case B_1
+                            by contradiction /* from formulas */
+                          next
+                            case S_case_1
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.17)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by contradiction /* impossible chain */
+                            qed
+                          next
+                            case S_case_2
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.17)) )
+                              case case_1
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            next
+                              case case_2
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            qed
+                          next
+                            case c_senc
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case S_case_1
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.16)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                          qed
+                        next
+                          case S_case_2
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.16)) )
+                            case case_1
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.16)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                            qed
+                          next
+                            case case_2
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.16)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                            qed
+                          qed
+                        qed
+                      next
+                        case S_case_1
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.12)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                        qed
+                      next
+                        case S_case_2
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.12)) )
+                          case case_1
+                          solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.12)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                          qed
+                        next
+                          case case_2
+                          solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.12)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                          qed
+                        qed
+                      qed
+                    next
+                      case case_2
+                      solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₁ #j.2 )
+                        case Init
+                        solve( !KU( ~m ) @ #vk.8 )
+                          case A_1_case_1
+                          solve( !KU( ~kas ) @ #vk.17 )
+                            case Reveal_Longterm_Key
+                            solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.16 )
+                              case B_1
+                              by contradiction /* from formulas */
+                            next
+                              case S_case_1
+                              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            next
+                              case S_case_2
+                              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                case case_1
+                                solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                       (∃ #j.
+                                         (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                        ∧
+                                         (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                  case case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case case_2
+                                  by contradiction /* impossible chain */
+                                qed
+                              next
+                                case case_2
+                                solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.14))  ∥
+                                       (∃ #j.
+                                         (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2)
+                                          ) @ #j)
+                                        ∧
+                                         (¬(last(#j))) ∧ (#j < #vr.14)) )
+                                  case case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case case_2
+                                  by contradiction /* impossible chain */
+                                qed
+                              qed
+                            next
+                              case c_senc
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case S_case_1
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.13)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                            qed
+                          next
+                            case S_case_2
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.13)) )
+                              case case_1
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.13)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                              qed
+                            next
+                              case case_2
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.13))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.13)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by solve( (#vr.18, 0) ~~> (#vk.2, 0) )
+                              qed
+                            qed
+                          qed
+                        next
+                          case A_1_case_2
+                          solve( !KU( ~kas ) @ #vk.17 )
+                            case Reveal_Longterm_Key
+                            solve( !KU( senc(<'2', x, ~m, $X, $X.1>, ~kbs) ) @ #vk.16 )
+                              case B_1
+                              by contradiction /* from formulas */
+                            next
+                              case S_case_1
+                              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by contradiction /* impossible chain */
+                              qed
+                            next
+                              case S_case_2
+                              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                case case_1
+                                solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                       (∃ #j.
+                                         (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                        ∧
+                                         (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                  case case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case case_2
+                                  by contradiction /* impossible chain */
+                                qed
+                              next
+                                case case_2
+                                solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.17))  ∥
+                                       (∃ #j.
+                                         (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2)
+                                          ) @ #j)
+                                        ∧
+                                         (¬(last(#j))) ∧ (#j < #vr.17)) )
+                                  case case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case case_2
+                                  by contradiction /* impossible chain */
+                                qed
+                              qed
+                            next
+                              case c_senc
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case S_case_1
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.16)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                            qed
+                          next
+                            case S_case_2
+                            solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.16)) )
+                              case case_1
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.16)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                              qed
+                            next
+                              case case_2
+                              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.16))  ∥
+                                     (∃ #j.
+                                       (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                      ∧
+                                       (¬(last(#j))) ∧ (#j < #vr.16)) )
+                                case case_1
+                                by contradiction /* cyclic */
+                              next
+                                case case_2
+                                by solve( (#vr.21, 0) ~~> (#vk.2, 0) )
+                              qed
+                            qed
+                          qed
+                        next
+                          case S_case_1
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.12)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                          qed
+                        next
+                          case S_case_2
+                          solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.12)) )
+                            case case_1
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.12)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                            qed
+                          next
+                            case case_2
+                            solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.12))  ∥
+                                   (∃ #j.
+                                     (AUTO_OUT_0_1_B_1( senc(<'2', nb.1, ~m.1, $X.2, $X.3>, ~kbs.2) ) @ #j)
+                                    ∧
+                                     (¬(last(#j))) ∧ (#j < #vr.12)) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.6)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.6)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.11, 0) ~~> (#j, 0) )
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.6)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.11, 0) ~~> (#j, 0) )
+                  qed
+                qed
+              qed
+            next
+              case S_case_1
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case S_case_2
+              solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.2)) )
+                case case_1
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case c_senc
+              solve( !KU( ~kas ) @ #vk.13 )
+                case Reveal_Longterm_Key
+                solve( !KU( senc(<'2', x, m, $X, $X.1>, ~kbs) ) @ #vk.13 )
+                  case B_1
+                  by contradiction /* from formulas */
+                next
+                  case S_case_1
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case S_case_2
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  qed
+                next
+                  case c_senc
+                  by contradiction /* from formulas */
+                qed
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X.2, $X.3>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.2)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X.2, $X.3>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.2)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case case_2
+        by contradiction /* from formulas */
+      next
+        case case_3
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_3
+      solve( (last(#i))  ∥
+             (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+             (∃ #j.
+               (AUTO_OUT_0_1_B_1( senc(<'2', x, ~m, $A, $B>, ~kbs) ) @ #j)
+              ∧
+               (¬(last(#j))) ∧ (#j < #i)) )
+        case case_1
+        solve( !LongtermKey( ~kas, $A ) ▶₁ #i )
+          case Init
+          solve( !LongtermKey( ~kbs, $B ) ▶₂ #i )
+            case Init
+            solve( !LongtermKey( ~kas, $A ) ▶₂ #j )
+              case Init
+              solve( !KU( ~m ) @ #vk.1 )
+                case A_1_case_1
+                solve( !KU( senc(<'1', ~na, ~m, $A, $B>, ~kas) ) @ #vk.7 )
+                  case A_1
+                  solve( !KU( senc(<'2', x, ~m, $A, $B>, ~kbs) ) @ #vk.8 )
+                    case B_1
+                    by contradiction /* from formulas */
+                  next
+                    case S_case_1
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.6)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  next
+                    case S_case_2
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.6)) )
+                      case case_1
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.6)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    next
+                      case case_2
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.6))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.6)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    qed
+                  next
+                    case c_senc
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case S_case_1
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case S_case_2
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.3)) )
+                    case case_1
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  qed
+                next
+                  case c_senc
+                  solve( !KU( ~kas ) @ #vk.12 )
+                    case Reveal_Longterm_Key
+                    solve( !KU( ~na ) @ #vk.15 )
+                      case A_1
+                      solve( !KU( senc(<'2', x, ~m, $A, $B>, ~kbs) ) @ #vk.14 )
+                        case B_1
+                        by contradiction /* from formulas */
+                      next
+                        case S_case_1
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      next
+                        case S_case_2
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.10)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by contradiction /* impossible chain */
+                          qed
+                        next
+                          case case_2
+                          solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.10)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by contradiction /* impossible chain */
+                          qed
+                        qed
+                      next
+                        case c_senc
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case S_case_1
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.4)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        solve( (#vr.9, 0) ~~> (#vk.3, 0) )
+                          case Var_fresh_1_na
+                          by contradiction /* cyclic */
+                        qed
+                      qed
+                    next
+                      case S_case_2
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.4)) )
+                        case case_1
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.4)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by solve( (#vr.9, 0) ~~> (#vk.3, 0) )
+                        qed
+                      next
+                        case case_2
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.4)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by solve( (#vr.9, 0) ~~> (#vk.3, 0) )
+                        qed
+                      qed
+                    qed
+                  next
+                    case S_case_1
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.8, 0) ~~> (#vk.2, 0) )
+                    qed
+                  next
+                    case S_case_2
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.3)) )
+                      case case_1
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.3)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.8, 0) ~~> (#vk.2, 0) )
+                      qed
+                    next
+                      case case_2
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.3)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by solve( (#vr.8, 0) ~~> (#vk.2, 0) )
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case A_1_case_2
+                solve( !KU( ~kas ) @ #vk.9 )
+                  case Reveal_Longterm_Key
+                  solve( !KU( senc(<'1', ~na, ~m, $A, $B>, ~kas) ) @ #vk.6 )
+                    case A_1
+                    solve( !KU( senc(<'2', x, ~m, $A, $B>, ~kbs) ) @ #vk.9 )
+                      case B_1
+                      by contradiction /* from formulas */
+                    next
+                      case S_case_1
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    next
+                      case S_case_2
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      next
+                        case case_2
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      qed
+                    next
+                      case c_senc
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case S_case_1
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.10)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by contradiction /* impossible chain */
+                    qed
+                  next
+                    case S_case_2
+                    solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.10)) )
+                      case case_1
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    next
+                      case case_2
+                      solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        by contradiction /* impossible chain */
+                      qed
+                    qed
+                  next
+                    case c_senc
+                    solve( !KU( ~na ) @ #vk.15 )
+                      case A_1
+                      solve( !KU( senc(<'2', x, ~m, $A, $B>, ~kbs) ) @ #vk.14 )
+                        case B_1
+                        by contradiction /* from formulas */
+                      next
+                        case S_case_1
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.11)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by contradiction /* impossible chain */
+                        qed
+                      next
+                        case S_case_2
+                        solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.11)) )
+                          case case_1
+                          solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.11)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by contradiction /* impossible chain */
+                          qed
+                        next
+                          case case_2
+                          solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.11))  ∥
+                                 (∃ #j.
+                                   (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                  ∧
+                                   (¬(last(#j))) ∧ (#j < #vr.11)) )
+                            case case_1
+                            by contradiction /* cyclic */
+                          next
+                            case case_2
+                            by contradiction /* impossible chain */
+                          qed
+                        qed
+                      next
+                        case c_senc
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case S_case_1
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        by contradiction /* cyclic */
+                      next
+                        case case_2
+                        solve( (#vr.15, 0) ~~> (#vk.3, 0) )
+                          case Var_fresh_1_na
+                          by contradiction /* cyclic */
+                        qed
+                      qed
+                    next
+                      case S_case_2
+                      solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                             (∃ #j.
+                               (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                              ∧
+                               (¬(last(#j))) ∧ (#j < #vr.10)) )
+                        case case_1
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by solve( (#vr.15, 0) ~~> (#vk.3, 0) )
+                        qed
+                      next
+                        case case_2
+                        solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.10))  ∥
+                               (∃ #j.
+                                 (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                                ∧
+                                 (¬(last(#j))) ∧ (#j < #vr.10)) )
+                          case case_1
+                          by contradiction /* cyclic */
+                        next
+                          case case_2
+                          by solve( (#vr.15, 0) ~~> (#vk.3, 0) )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case S_case_1
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.9)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                  qed
+                next
+                  case S_case_2
+                  solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.9)) )
+                    case case_1
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.9)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.9))  ∥
+                           (∃ #j.
+                             (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                            ∧
+                             (¬(last(#j))) ∧ (#j < #vr.9)) )
+                      case case_1
+                      by contradiction /* cyclic */
+                    next
+                      case case_2
+                      by solve( (#vr.14, 0) ~~> (#vk.1, 0) )
+                    qed
+                  qed
+                qed
+              next
+                case S_case_1
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( (#vr.7, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case S_case_2
+                solve( (∃ #j. (!KU( na.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                       (∃ #j.
+                         (AUTO_OUT_0_1_A_1( senc(<'1', na.1, m.1, $X, $X.1>, ~kas.1) ) @ #j)
+                        ∧
+                         (¬(last(#j))) ∧ (#j < #vr.2)) )
+                  case case_1
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.2)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.7, 0) ~~> (#vk, 0) )
+                  qed
+                next
+                  case case_2
+                  solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                         (∃ #j.
+                           (AUTO_OUT_0_1_B_1( senc(<'2', nb, ~m.1, $X, $X.1>, ~kbs.1) ) @ #j)
+                          ∧
+                           (¬(last(#j))) ∧ (#j < #vr.2)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    by solve( (#vr.7, 0) ~~> (#vk, 0) )
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case case_2
+        by contradiction /* from formulas */
+      next
+        case case_3
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+rule (modulo E) Init:
+   [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_Longterm_Key:
+   [ !LongtermKey( ~sk, $A ) ] --[ Reveal( $A ) ]-> [ Out( ~sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_1:
+   [ Fr( ~m ), Fr( ~na ), !LongtermKey( ~kas, $A ) ]
+  --[
+  AUTO_OUT_0_1_A_1( senc(<'1', ~na, ~m, $A, $B>, ~kas) ),
+  Running_A( $A, $B, <~m, ~na> )
+  ]->
+   [
+   Out( <~m, $A, $B, senc(<'1', ~na, ~m, $A, $B>, ~kas)> ),
+   StateA( $A, $B, ~m, ~na, ~kas )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_1:
+   [ In( <m, a, $B, c> ), !LongtermKey( ~kbs, $B ), Fr( ~nb ) ]
+  --[
+  AUTO_OUT_0_1_B_1( senc(<'2', ~nb, m, a, $B>, ~kbs) ),
+  Running_B( a, $B, <m, ~nb> )
+  ]->
+   [
+   Out( <m, a, $B, c, senc(<'2', ~nb, m, a, $B>, ~kbs)> ),
+   StateB( a, $B, m, ~nb, ~kbs )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S:
+   [
+   Fr( ~kab ), !LongtermKey( ~kas, a ), !LongtermKey( ~kbs, b ),
+   In( <m, a, b, senc(<'1', na, m, a, b>, ~kas), 
+        senc(<'2', nb, m, a, b>, ~kbs)>
+   )
+   ]
+  --[
+  AUTO_IN_2_1_S( senc(<'2', nb, m, a, b>, ~kbs), nb ),
+  AUTO_IN_1_1_S( senc(<'1', na, m, a, b>, ~kas), na ),
+  Secret( a, b, ~kab ), Running_S( a, b, <m, ~kab> )
+  ]->
+   [ Out( <m, senc(<'3', na, ~kab>, ~kas), senc(<'4', nb, ~kab>, ~kbs)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_2:
+   [
+   !LongtermKey( ~kbs, $B ), In( <m, c, senc(<'4', ~nb, kab>, ~kbs)> ),
+   StateB( a, $B, m, ~nb, ~kbs )
+   ]
+  --[ Commit_B( a, $B, <m, kab> ), Secret( a, $B, kab ) ]->
+   [ Out( <m, c> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_2:
+   [
+   !LongtermKey( ~kas, $A ), In( <~m, senc(<'3', ~na, kab>, ~kas)> ),
+   StateA( $A, $B, ~m, ~na, ~kas )
+   ]
+  --[ Commit_A( $A, $B, <~m, kab> ), Secret( $A, $B, kab ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Secrecy:
+  all-traces
+  "¬(∃ A B m #i.
+      (((Secret( A, B, m ) @ #i) ∧ (∃ #r. K( m ) @ #r)) ∧
+       (¬(∃ #r. Reveal( B ) @ #r))) ∧
+      (¬(∃ #r. Reveal( A ) @ #r)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B m #i.
+  (Secret( A, B, m ) @ #i)
+ ∧
+  (∃ #r. (K( m ) @ #r)) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( Secret( A, B, m ) @ #i )
+  case A_2
+  solve( !LongtermKey( ~kas, $A ) ▶₀ #i )
+    case Init
+    solve( StateA( $A, $B, ~m, ~na, ~kas ) ▶₂ #i )
+      case A_1
+      solve( !KU( senc(<'3', ~na, m.1>, ~kas) ) @ #vk.3 )
+        case S
+        solve( !KU( ~kab ) @ #vk.1 )
+          case S_case_1
+          solve( !KU( ~kas ) @ #vk.13 )
+            case Reveal_Longterm_Key
+            by contradiction /* from formulas */
+          qed
+        next
+          case S_case_2
+          solve( !KU( ~kbs ) @ #vk.13 )
+            case Reveal_Longterm_Key
+            solve( !KU( senc(<'1', ~na, m.1, $A, $X>, ~kas) ) @ #vk.12 )
+              case A_1
+              by contradiction /* from formulas */
+            next
+              case c_senc
+              solve( !KU( ~kas ) @ #vk.17 )
+                case Reveal_Longterm_Key
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case c_senc
+        solve( !KU( ~kas ) @ #vk.6 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case B_2
+  solve( !LongtermKey( ~kbs, $B ) ▶₀ #i )
+    case Init
+    solve( StateB( A, $B, m, ~nb, ~kbs ) ▶₂ #i )
+      case B_1
+      solve( !KU( senc(<'4', ~nb, m.1>, ~kbs) ) @ #vk.6 )
+        case S
+        solve( !KU( ~kab ) @ #vk.1 )
+          case S_case_1
+          solve( !KU( ~kas ) @ #vk.20 )
+            case Reveal_Longterm_Key
+            solve( !KU( senc(<'1', na, m.1, $X, $B>, ~kas) ) @ #vk.19 )
+              case A_1
+              solve( !KU( senc(<'2', ~nb, ~m.1, $X, $B>, ~kbs) ) @ #vk.20 )
+                case B_1
+                by contradiction /* from formulas */
+              next
+                case c_senc
+                solve( !KU( ~kbs ) @ #vk.24 )
+                  case Reveal_Longterm_Key
+                  by contradiction /* from formulas */
+                qed
+              qed
+            next
+              case c_senc
+              solve( !KU( senc(<'2', ~nb, m.1, $X, $B>, ~kbs) ) @ #vk.22 )
+                case B_1
+                by contradiction /* from formulas */
+              next
+                case c_senc
+                solve( !KU( ~kbs ) @ #vk.29 )
+                  case Reveal_Longterm_Key
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        next
+          case S_case_2
+          solve( !KU( ~kbs ) @ #vk.20 )
+            case Reveal_Longterm_Key
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case c_senc
+        solve( !KU( ~kbs ) @ #vk.14 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case S
+  solve( !LongtermKey( ~kas, A ) ▶₁ #i )
+    case Init
+    solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
+      case Init
+      solve( !KU( ~kab ) @ #vk )
+        case S_case_1
+        solve( !KU( ~kas ) @ #vk.10 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
+        qed
+      next
+        case S_case_2
+        solve( !KU( ~kbs ) @ #vk.10 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma injectiveagreement_B:
+  all-traces
+  "∀ A B t #i.
+    (Commit_B( A, B, t ) @ #i) ⇒
+    (((∃ #j.
+        ((Running_A( A, B, t ) @ #j) ∧ (#j < #i)) ∧
+        (¬(∃ A2 B2 #i2. (Commit_B( A2, B2, t ) @ #i2) ∧ (¬(#i2 = #i))))) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_B( A, B, t ) @ #i)
+ ∧
+  (∀ #j.
+    (Running_A( A, B, t ) @ #j)
+   ⇒
+    ((¬(#j < #i)) ∨
+     (∃ A2 B2 #i2. (Commit_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !LongtermKey( ~kbs, $B ) ▶₀ #i )
+  case Init
+  solve( StateB( A, $B, m, ~nb, ~kbs ) ▶₂ #i )
+    case B_1
+    solve( !KU( senc(<'4', ~nb, kab>, ~kbs) ) @ #vk.5 )
+      case S
+      solve( !KU( senc(<'1', na, m.1, $X, $B>, ~kas) ) @ #vk.17 )
+        case A_1
+        solve( !KU( senc(<'2', ~nb, ~m.1, $X, $B>, ~kbs) ) @ #vk.18 )
+          case B_1
+          solve( !KU( ~m ) @ #vk.6 )
+            case A_1_case_1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma agreement_B:
+  all-traces
+  "∀ A B t #i.
+    (Commit_B( A, B, t ) @ #i) ⇒
+    (((∃ #j. (Running_A( A, B, t ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_B( A, B, t ) @ #i)
+ ∧
+  (∀ #j. (Running_A( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !LongtermKey( ~kbs, $B ) ▶₀ #i )
+  case Init
+  solve( StateB( A, $B, m, ~nb, ~kbs ) ▶₂ #i )
+    case B_1
+    solve( !KU( senc(<'4', ~nb, kab>, ~kbs) ) @ #vk.5 )
+      case S
+      solve( !KU( senc(<'1', na, m.1, $X, $B>, ~kas) ) @ #vk.17 )
+        case A_1
+        solve( !KU( senc(<'2', ~nb, ~m.1, $X, $B>, ~kbs) ) @ #vk.18 )
+          case B_1
+          solve( !KU( ~m ) @ #vk.6 )
+            case A_1_case_1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma injectiveagreement_A:
+  all-traces
+  "∀ A B t #i.
+    (Commit_A( A, B, t ) @ #i) ⇒
+    (((∃ #j.
+        ((Running_B( A, B, t ) @ #j) ∧ (#j < #i)) ∧
+        (¬(∃ A2 B2 #i2. (Commit_A( A2, B2, t ) @ #i2) ∧ (¬(#i2 = #i))))) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_A( A, B, t ) @ #i)
+ ∧
+  (∀ #j.
+    (Running_B( A, B, t ) @ #j)
+   ⇒
+    ((¬(#j < #i)) ∨
+     (∃ A2 B2 #i2. (Commit_A( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !LongtermKey( ~kas, $A ) ▶₀ #i )
+  case Init
+  solve( StateA( $A, $B, ~m, ~na, ~kas ) ▶₂ #i )
+    case A_1
+    solve( !KU( senc(<'3', ~na, kab>, ~kas) ) @ #vk.2 )
+      case S
+      solve( !KU( senc(<'1', ~na, m.1, $A, $X>, ~kas) ) @ #vk.10 )
+        case A_1
+        solve( !KU( senc(<'2', nb, ~m, $A, $B>, ~kbs) ) @ #vk.10 )
+          case B_1
+          solve( !KU( ~m ) @ #vk.5 )
+            case A_1_case_1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma agreement_A:
+  all-traces
+  "∀ A B t #i.
+    (Commit_A( A, B, t ) @ #i) ⇒
+    (((∃ #j. (Running_B( A, B, t ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_A( A, B, t ) @ #i)
+ ∧
+  (∀ #j. (Running_B( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !LongtermKey( ~kas, $A ) ▶₀ #i )
+  case Init
+  solve( StateA( $A, $B, ~m, ~na, ~kas ) ▶₂ #i )
+    case A_1
+    solve( !KU( senc(<'3', ~na, kab>, ~kas) ) @ #vk.2 )
+      case S
+      solve( !KU( senc(<'1', ~na, m.1, $A, $X>, ~kas) ) @ #vk.10 )
+        case A_1
+        solve( !KU( senc(<'2', nb, ~m, $A, $B>, ~kbs) ) @ #vk.10 )
+          case B_1
+          solve( !KU( ~m ) @ #vk.5 )
+            case A_1_case_1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executability:
+  exists-trace
+  "(((((∀ A A2 B B2 t t2 #i #j.
+         ((Running_A( A, B, t ) @ #i) ∧ (Running_A( A2, B2, t2 ) @ #j)) ⇒
+         (#i = #j)) ∧
+       (∀ A A2 B B2 t t2 #i #j.
+         ((Running_B( A, B, t ) @ #i) ∧ (Running_B( A2, B2, t2 ) @ #j)) ⇒
+         (#i = #j))) ∧
+      (∀ A A2 B B2 t t2 #i #j.
+        ((Running_S( A, B, t ) @ #i) ∧ (Running_S( A2, B2, t2 ) @ #j)) ⇒
+        (#i = #j))) ∧
+     (∀ A A2 B B2 t t2 #i #j.
+       ((Commit_A( A, B, t ) @ #i) ∧ (Commit_A( A2, B2, t2 ) @ #j)) ⇒
+       (#i = #j))) ∧
+    (∀ A A2 B B2 t t2 #i #j.
+      ((Commit_B( A, B, t ) @ #i) ∧ (Commit_B( A2, B2, t2 ) @ #j)) ⇒
+      (#i = #j))) ∧
+   (∃ A B t t2 t3 #i #j #k #l #m.
+     ((((((((((Running_A( A, B, t ) @ #i) ∧ (Running_B( A, B, t2 ) @ #j)) ∧
+             (#i < #j)) ∧
+            (Running_S( A, B, t3 ) @ #k)) ∧
+           (#j < #k)) ∧
+          (Commit_B( A, B, t3 ) @ #l)) ∧
+         (#k < #l)) ∧
+        (Commit_A( A, B, t3 ) @ #m)) ∧
+       (#l < #m)) ∧
+      (¬(∃ #r1. Reveal( A ) @ #r1))) ∧
+     (¬(∃ #r2. Reveal( B ) @ #r2)))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ A A2 B B2 t t2 #i #j.
+   (Running_A( A, B, t ) @ #i) ∧ (Running_A( A2, B2, t2 ) @ #j) ⇒ #i = #j) ∧
+ (∀ A A2 B B2 t t2 #i #j.
+   (Running_B( A, B, t ) @ #i) ∧ (Running_B( A2, B2, t2 ) @ #j) ⇒ #i = #j) ∧
+ (∀ A A2 B B2 t t2 #i #j.
+   (Running_S( A, B, t ) @ #i) ∧ (Running_S( A2, B2, t2 ) @ #j) ⇒ #i = #j) ∧
+ (∀ A A2 B B2 t t2 #i #j.
+   (Commit_A( A, B, t ) @ #i) ∧ (Commit_A( A2, B2, t2 ) @ #j) ⇒ #i = #j) ∧
+ (∀ A A2 B B2 t t2 #i #j.
+   (Commit_B( A, B, t ) @ #i) ∧ (Commit_B( A2, B2, t2 ) @ #j) ⇒ #i = #j) ∧
+ (∃ A B t t2 t3 #i #j #k #l #m.
+   (Running_A( A, B, t ) @ #i) ∧
+   (Running_B( A, B, t2 ) @ #j) ∧
+   (Running_S( A, B, t3 ) @ #k) ∧
+   (Commit_B( A, B, t3 ) @ #l) ∧
+   (Commit_A( A, B, t3 ) @ #m)
+  ∧
+   (#i < #j) ∧
+   (#j < #k) ∧
+   (#k < #l) ∧
+   (#l < #m) ∧
+   (∀ #r1. (Reveal( A ) @ #r1) ⇒ ⊥) ∧
+   (∀ #r2. (Reveal( B ) @ #r2) ⇒ ⊥))"
+*/
+simplify
+solve( !LongtermKey( ~kas, $A ) ▶₂ #i )
+  case Init
+  solve( !LongtermKey( ~kbs, $B ) ▶₁ #j )
+    case Init
+    solve( !LongtermKey( ~kas.1, $A ) ▶₁ #k )
+      case Init
+      solve( !LongtermKey( ~kbs.1, $B ) ▶₂ #k )
+        case Init
+        solve( !LongtermKey( ~kbs.2, $B ) ▶₀ #l )
+          case Init
+          solve( StateB( $A, $B, ~m.2, ~nb.2, ~kbs.2 ) ▶₂ #l )
+            case B_1
+            solve( !LongtermKey( ~kas.2, $A ) ▶₀ #m.2 )
+              case Init
+              solve( StateA( $A, $B, ~m.1, ~na.2, ~kas.2 ) ▶₂ #m.2 )
+                case A_1
+                solve( !KU( senc(<'1', na.1, ~m, $A, $B>, ~kas.1) ) @ #vk.13 )
+                  case A_1
+                  solve( !KU( senc(<'2', nb.1, ~m, $A, $B>, ~kbs.1) ) @ #vk.14 )
+                    case B_1
+                    solve( !KU( ~m ) @ #vk.4 )
+                      case A_1_case_1
+                      solve( !KU( senc(<'4', ~nb, ~kab>, ~kbs) ) @ #vk.17 )
+                        case S
+                        solve( !KU( senc(<'3', ~na, ~kab>, ~kas) ) @ #vk.18 )
+                          case S
+                          SOLVED // trace found
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/features/auto-sources/spore/Otway-Rees.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
+
+  output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
+  processing time: 7.88810957s
+  AUTO_typing (all-traces): verified (475 steps)
+  Secrecy (all-traces): verified (40 steps)
+  injectiveagreement_B (all-traces): falsified - found trace (8 steps)
+  agreement_B (all-traces): falsified - found trace (8 steps)
+  injectiveagreement_A (all-traces): falsified - found trace (8 steps)
+  agreement_A (all-traces): falsified - found trace (8 steps)
+  executability (exists-trace): verified (15 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
+
+  output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
+  processing time: 7.88810957s
+  AUTO_typing (all-traces): verified (475 steps)
+  Secrecy (all-traces): verified (40 steps)
+  injectiveagreement_B (all-traces): falsified - found trace (8 steps)
+  agreement_B (all-traces): falsified - found trace (8 steps)
+  injectiveagreement_A (all-traces): falsified - found trace (8 steps)
+  agreement_A (all-traces): falsified - found trace (8 steps)
+  executability (exists-trace): verified (15 steps)
+
+==============================================================================
+*/
