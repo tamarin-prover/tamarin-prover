@@ -161,13 +161,16 @@ lookupArity op = do
         Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
-naryOpApp plit = do
+naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp eqn plit = do
     op <- identifier
+    --traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
-                     then return <$> tupleterm plit
-                     else commaSep (msetterm plit)
+                     then return <$> tupleterm eqn plit
+                     else commaSep (msetterm eqn plit)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
@@ -176,19 +179,21 @@ naryOpApp plit = do
     return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
-binaryAlgApp plit = do
+binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp eqn plit = do
     op <- identifier
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
-    arg1 <- braced (tupleterm plit)
-    arg2 <- term plit False
+    arg1 <- braced (tupleterm eqn plit)
+    arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
-  ts <- symbol "diff" *> parens (commaSep (msetterm plit))
+  ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
@@ -204,53 +209,53 @@ diffOp eqn plit = do
 term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
-    , parens (msetterm plit)
+    , parens (msetterm eqn plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
-    , nullaryApp
+    , nullaryApp (eqn)
     , plit
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
-    pairing = angled (tupleterm plit)
-    nullaryApp = do
+    application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
+    pairing = angled (tupleterm eqn plit)
+    nullaryApp eqn = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+expterm eqn plit = chainl1 (term plit eqn) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Parser (Term l) -> Parser (Term l)
-multterm plit = do
+multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+multterm eqn plit = do
     dh <- enableDH <$> getState
-    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
-        then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else term plit False
+    if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+        then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
+        else term plit eqn
 
 -- | A left-associative sequence of xors.
-xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
-xorterm plit = do
+xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+xorterm eqn plit = do
     xor <- enableXor <$> getState
-    if xor -- if xor is not enabled, do not accept 'xorterms's
-        then chainl1 (multterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
-        else multterm plit
+    if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
+        else multterm eqn plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
-msetterm plit = do
+msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+msetterm eqn plit = do
     mset <- enableMSet <$> getState
-    if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else xorterm plit
+    if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
+        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else xorterm eqn plit
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+tupleterm eqn plit = chainr1 (msetterm eqn plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact annotation
 factAnnotation :: Parser FactAnnotation
@@ -289,7 +294,7 @@ fact' pterm = try (
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = fact' (msetterm plit)
+fact plit = fact' (msetterm False plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
@@ -359,7 +364,7 @@ letBlock :: Parser LNSubst
 letBlock = toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm False llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -495,7 +500,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
+  , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
@@ -927,55 +932,55 @@ sapicAction = try (do
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut Nothing t)
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "insert"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         return (Insert t t')
                    )
                <|> try (do
                         _ <- symbol "delete"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Delete t)
                    )
                <|> try (do
                         _ <- symbol "lock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Lock t)
                    )
                <|> try (do
                         _ <- symbol "unlock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Unlock t)
                    )
                <|> try (do
@@ -1028,7 +1033,7 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
                         -- TODO SAPIC parser: multterm return
@@ -1057,7 +1062,7 @@ actionprocess thy=
                         return (ProcessAction Rep mempty p))
             <|> try (do     -- lookup / if with and w/o else branches
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1068,7 +1073,7 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1077,9 +1082,9 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "if"
-                        t1 <- msetterm llit
+                        t1 <- msetterm False llit
                         _ <- opEqual
-                        t2 <- msetterm llit
+                        t2 <- msetterm False llit
                         _ <- symbol "then"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
@@ -1141,7 +1146,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
             <|> try (do        -- parens parser
