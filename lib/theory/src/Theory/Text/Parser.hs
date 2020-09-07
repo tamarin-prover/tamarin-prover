@@ -182,12 +182,11 @@ naryOpApp eqn plit = do
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 binaryAlgApp eqn plit = do
     op <- identifier
-    --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
-    arg2 <- term plit False
+    arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
@@ -295,7 +294,7 @@ fact' pterm = try (
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = fact' (msetterm True plit)
+fact plit = fact' (msetterm False plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
