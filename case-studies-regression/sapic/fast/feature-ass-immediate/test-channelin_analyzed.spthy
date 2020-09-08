@@ -1,0 +1,86 @@
+theory AssImmediateChannelIn begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma intuitiveTest:
+  all-traces "∀ #a. (A( ) @ #a) ⇒ (∃ #i x. (K( x ) @ #i) ∧ (#i < #a))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #a. (A( ) @ #a) ∧ ∀ #i x. (K( x ) @ #i) ⇒ ¬(#i < #a)"
+*/
+simplify
+solve( state_111( x ) ▶₀ #a )
+  case inx_0_11
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) Init[color=#ffffff process=new x;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_[color=#ffffff process=new x;]:
+   [ state_( ), Fr( x ) ] --> [ state_1( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outx_0_1[color=#ffffff process=out(x);]:
+   [ state_1( x ) ] --> [ state_11( x ), Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_11[color=#ffffff process=in(x);]:
+   [ state_11( x ), In( x ) ] --> [ state_111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_111[color=#ffffff process=event A( );]:
+   [ state_111( x ) ] --[ A( ), Event( ) ]-> [ state_1111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1111[color=#ffffff process=0]:
+   [ state_1111( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
+
+  output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
+  processing time: 0.066264s
+  intuitiveTest (all-traces): verified (3 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
+
+  output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
+  processing time: 0.066264s
+  intuitiveTest (all-traces): verified (3 steps)
+
+==============================================================================
+*/
