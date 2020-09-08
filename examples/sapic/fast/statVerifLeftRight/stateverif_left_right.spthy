@@ -85,8 +85,6 @@ let User=new lm; new rm; event Exclusive(lm,rm); out(aenc{<lm,rm>}pk(sk))
 
 !( new sk; new s; insert <'F_status',s>,'init'; ( Device || ! User ))
 
-// Source lemma, taken from Tamarin's example directory:
-
 // As we use a backwards search, we must specify the possible structure of
 // messages sent in 'UseLeftDevice' and 'UseRightDevice' precise enough such
 // that we can solve all chain constraints starting from the sent message. We
