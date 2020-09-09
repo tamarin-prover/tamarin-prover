@@ -32,14 +32,14 @@ pdf:	$(TMP) $(TEMPLATE_LATEX) latex_macros
 	sed 's,[0-9]*_.*.html#,#,' < $(TMP) > tex/all.md
 	echo "\n# References\n\n" >> tex/all.md
 	$(PANDOC) -f $(IFORMAT) \
-	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  --template $(TEMPLATE_TEX) --pdf-engine=xelatex $(FLAGS) \
 	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
 
 simple: $(TMP) $(TEMPLATE_LATEX) latex_macros
 	$(PANDOC) -f $(IFORMAT) \
-	  --template $(TEMPLATE_TEX) --latex-engine=xelatex $(FLAGS) \
+	  --template $(TEMPLATE_TEX) --pdf-engine=xelatex $(FLAGS) \
 	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex $(TMP)
 	make -C tex
