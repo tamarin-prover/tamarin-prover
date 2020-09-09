@@ -1,7 +1,7 @@
 cabal-version:      >= 1.10
 build-type:         Simple
 name:               tamarin-prover
-version:            1.6.0
+version:            1.7.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -158,10 +158,10 @@ executable tamarin-prover
       , yesod-core
       , yesod-static
 
-      , tamarin-prover-utils  == 1.6.0
-      , tamarin-prover-term   == 1.6.0
-      , tamarin-prover-theory == 1.6.0
-      , tamarin-prover-sapic == 1.6.0
+      , tamarin-prover-utils  == 1.7.0
+      , tamarin-prover-term   == 1.7.0
+      , tamarin-prover-theory == 1.7.0
+      , tamarin-prover-sapic == 1.7.0
 
     other-modules:
       Paths_tamarin_prover
