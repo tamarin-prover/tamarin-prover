@@ -95,11 +95,28 @@ Notepad++. Below we details the steps required to install your preferred plug-in
 
 #### VIM
 
+##### Using Vim plugin managers
+
+This example will use [Vundle](https://github.com/VundleVim/Vundle.vim) to install the plugin directly
+from this repository. The instructions below should be translatable to other plugin managers.
+
+1. Make sure you installed Vundle (or your favorite plugin manager)
+2. Put the below, or equivalent instructions, into your `.vimrc`:
+
+```vimrc
+Plugin 'tamarin-prover/editors'
+```
+3. Restart Vim or reload the configuration
+4. Run the Vim command `:PluginInstall` (or equivalent)
+
+You can install updates through `:PluginUpdate`.
+
+##### Manual installation (not recommended)
+
+If you install the Vim support files using this method, you will need to keep the files up-to-date yourself.
+
 1. Create `~/.vim/` directory if not already existing, which is the typical location for `$VIMRUNTIME`
-2. Change directory to `~/.vim/`
-3. Place the [filetype.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/filetype.vim) file
-4. Create another directory `syntax` within `~/.vim/` directory and change directory to it.
-5. Place the [spthy.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy.vim) and [sapic.vim](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/sapic.vim) files in `~/.vim/syntax`
+2. Copy the contents of `etc/vim` to `~/.vim/`, including the folders.
 
 #### Sublime Text 3
 
@@ -135,6 +152,11 @@ Follow steps from the [Notepad++ Wiki](http://docs.notepad-plus-plus.org/index.p
 The [spthy.el](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy-mode.el)
 implements a SPTHY major mode. You can load it with `M-x load-file`, or add it to your `.emacs` in
 your favourite way.
+
+#### Atom
+
+The [language-tamarin](https://atom.io/packages/language-tamarin) package provides Tamarin syntax
+highlighting for Atom. To install it, run `apm install language-tamarin`.
 
 FAQ
 ---

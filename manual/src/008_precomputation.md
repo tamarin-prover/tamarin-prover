@@ -1,6 +1,6 @@
 
 Precomputation: refining sources {#sec:precomputation}
-============== 
+==============
 
 In this section, we will explain some of the aspects of the
 precomputation performed by Tamarin.  This is relevant for users that
@@ -74,7 +74,7 @@ To get a better understanding of the problem, consider  what happens if
 we try to prove the lemma `nonce_secrecy`.  If we manually always choose
 the first case for the proof, we can see that Tamarin derives the secret key to
 decrypt the output of rule `I_2` by repeatedly using this rule `I_2`.
-More specifically, in `a)` the output of rule `I_2` is decrypted by the 
+More specifically, in `a)` the output of rule `I_2` is decrypted by the
 adversary. To get the relevant key for this, in part `b)` again the output
 from rule `I_2` is decrypted by the adversary. This is done with a key coming
 from part `c)` where the same will happen repeatedly.
@@ -145,5 +145,73 @@ In such a case, we can explicitly exclude this application of the rule
 with a restriction. But, we should ensure that the resulting model is the
 one we want; so use this with care.
 
+## Modelling tricks to Mitigate Partial Deconstructions
 
+Sometimes partial deconstructions can be removed by applying some modelling tricks:
 
+1. If the deconstruction reveals a term `t` that, intuitively, can be made
+   public anyway, you can add `In(t)` to the lhs of the rule. If you are not
+   sure if this transformation is sound, you may write a lemma to ensure that
+   the rule can still fire.
+
+   Example: Counter values are public knowledge, so adding `In(c)` to the
+   second rule helps here:
+
+   ```
+   [] --> [Counter('1')]
+
+   [Counter(c)] --> [Counter(c+'1'), Out(c+'1')]
+
+   ```
+
+2. Give fresh or public type if you know some values are atomic, but you see
+   that pre-computation tries to deduce non-atomic terms from them.  This works
+   only under the assumption that the implementation can enforce the correct
+   assignment, e.g., by appropriate tagging.
+
+3. Using pattern matching instead of destructor functions can help distill the
+   main argument of a proof in the design phase or in first stages of
+   modelling. It is valid, and often successful strategy to start with
+   a simplistic modelling and formulate provable lemmas first, and then proceed
+   to refine the model step by step.
+
+Auto-Sources {#sec:autosources}
+-----------
+
+Tamarin can also try to automatically generate sources lemmas [@esorics2020]. To
+enable this feature, Tamarin needs to be started using the command line
+parameter ``--auto-sources``.
+
+When Tamarin is called using ``--auto-sources``, it will check, for each theory
+it loads, whether the theory contains partial deconstructions, and whether there
+is a sources lemma. If there are partial deconstructions and there is no sources
+lemma, it will try to automatically generate a suitable lemma, called
+``AUTO_typing``, and added to the theory's list of lemmas.
+
+This works in many cases, note however that there is no guarantee that the
+generated lemma is (i) sufficient to remove all partial deconstructions and (ii)
+correct - so you still need to check whether all partial deconstructions are
+resolved, and to prove the lemma's correctness in Tamarin, as usual.
+
+Cases where Tamarin may fail to generate a sufficient or correct sources lemma
+include in particular theories using non subterm convergent equations or AC
+symbols, or cases where partial deconstruction stem from state facts rather
+than inputs and outputs.
+
+To be able to add the sources lemma, Tamarin needs to modify the protocol rules
+of the loaded theory in two ways:
+
+1. By adding the necessary annotations which will be used in the lemma to the
+   protocol rules. All added annotations start with ``AUTO_IN_`` or
+   ``AUTO_OUT_``, and can be seen, e.g., by clicking on
+   ``Multiset rewriting rules`` in interactive mode.
+2. By splitting protocol rules into their variants w.r.t. the equational theory,
+   if these variants exists. This is necessary to be able to place the
+   annotations. Unfortunately, at the moment, this prevents exporting and
+   re-importing such a theory as Tamarin's parser does not (yet) handle explicit
+   rule variants.
+<!-- Will soon be :
+  When exporting such a theory from Tamarin using, e.g., the
+   ``Download`` button in the interactive mode, Tamarin will export the rule(s)
+    together with their (annotated) variants.
+-->
