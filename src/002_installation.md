@@ -132,7 +132,7 @@ Follow steps from the [Notepad++ Wiki](http://docs.notepad-plus-plus.org/index.p
 
 #### Emacs
 
-The [spthy.el](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy.el)
+The [spthy.el](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/spthy-mode.el)
 implements a SPTHY major mode. You can load it with `M-x load-file`, or add it to your `.emacs` in
 your favourite way.
 
