@@ -1358,8 +1358,7 @@ theory flags0 = do
          then do thy' <- addItems flags thy
                  symbol_ "#endif"
                  addItems flags thy'
-         else do _ <- manyTill anyChar (try (string "#"))
-                 symbol_ "endif"
+         else do _ <- manyTill anyChar (try (symbol_ "#endif"))
                  addItems flags thy
 
     -- check process defined only once
