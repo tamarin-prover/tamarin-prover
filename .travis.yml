@@ -4,7 +4,7 @@ script: bash ./deploy.sh
 # This is the Official Way to get travis to run a 18.04 build.
 # We need sudo to install texlive-xetex for the pdf.
 sudo: required
-dist: bionic
+dist: xenial
 
 # pandoc is in the apt repositories but the version is too old---specifically, it doesn't
 # support the {width=100%} syntax used in the manual. Hence, download a later release and
