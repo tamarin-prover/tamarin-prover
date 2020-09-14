@@ -1,0 +1,315 @@
+theory pubInRestr begin
+
+// Function signature and definition of the equational theory E
+
+functions: eq/2, fst/1, pair/2, snd/1, true/0
+equations: eq(x, x) = true, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: True( x )<->x = true
+
+predicate: And2( x, y )<->(x = true) ∧ (y = true)
+
+restriction restr_testA_1:
+  "∀ #NOW. (restr_testA_1( ) @ #NOW) ⇒ ('true' = true)"
+  // safety formula
+
+rule (modulo E) testA:
+   [ ] --[ restr_testA_1( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_testB_1:
+  "∀ x #NOW. (restr_testB_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) testB:
+   [ In( x ) ] --[ restr_testB_1( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=in(x);]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff process=in(x);]:
+   [ state_( ), In( x ) ] --> [ state_1( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTruex_0_1_1:
+  "∀ x #NOW. (restr_ifTruex_0_1_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) ifTruex_0_1[color=#ffffff process=if True( x )]:
+   [ state_1( x ) ] --[ restr_ifTruex_0_1_1( x ) ]-> [ state_11( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTruex_1_1_1:
+  "∀ x #NOW. (restr_ifTruex_1_1_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTruex_1_1[color=#ffffff process=if True( x )]:
+   [ state_1( x ) ] --[ restr_ifTruex_1_1_1( x ) ]-> [ state_12( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTruetrue_0_11_1:
+  "∀ #NOW. (restr_ifTruetrue_0_11_1( ) @ #NOW) ⇒ (true = true)"
+  // safety formula
+
+rule (modulo E) ifTruetrue_0_11[color=#ffffff process=if True( true )]:
+   [ state_11( x ) ] --[ restr_ifTruetrue_0_11_1( ) ]-> [ state_111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTruetrue_1_11_1:
+  "∀ #NOW. (restr_ifTruetrue_1_11_1( ) @ #NOW) ⇒ (¬(true = true))"
+  // safety formula
+
+rule (modulo E) ifTruetrue_1_11[color=#ffffff process=if True( true )]:
+   [ state_11( x ) ] --[ restr_ifTruetrue_1_11_1( ) ]-> [ state_112( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTrueeqxx_0_111_1:
+  "∀ x #NOW. (restr_ifTrueeqxx_0_111_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) ifTrueeqxx_0_111[color=#ffffff process=if True( eq(x, x) )]:
+   [ state_111( x ) ]
+  --[ restr_ifTrueeqxx_0_111_1( eq(x, x) ) ]->
+   [ state_1111( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxx_0_111[color=#ffffff process=if True( eq(x, x) )]:
+     [ state_111( x ) ]
+    --[ restr_ifTrueeqxx_0_111_1( true ) ]->
+     [ state_1111( x ) ]
+  */
+
+restriction restr_ifTrueeqxx_1_111_1:
+  "∀ x #NOW. (restr_ifTrueeqxx_1_111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxx_1_111[color=#ffffff process=if True( eq(x, x) )]:
+   [ state_111( x ) ]
+  --[ restr_ifTrueeqxx_1_111_1( eq(x, x) ) ]->
+   [ state_1112( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxx_1_111[color=#ffffff process=if True( eq(x, x) )]:
+     [ state_111( x ) ]
+    --[ restr_ifTrueeqxx_1_111_1( true ) ]->
+     [ state_1112( x ) ]
+  */
+
+restriction restr_ifTrueeqxtest_0_1111_1:
+  "∀ x #NOW. (restr_ifTrueeqxtest_0_1111_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_0_1111[color=#ffffff process=if True( eq(x, 'test') )]:
+   [ state_1111( x ) ]
+  --[ restr_ifTrueeqxtest_0_1111_1( eq(x, 'test') ) ]->
+   [ state_11111( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_0_1111[color=#ffffff process=if True( eq(x, 'test') )]:
+     [ state_1111( x ) ]
+    --[ restr_ifTrueeqxtest_0_1111_1( z ) ]->
+     [ state_11111( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+restriction restr_ifTrueeqxtest_1_1111_1:
+  "∀ x #NOW. (restr_ifTrueeqxtest_1_1111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_1_1111[color=#ffffff process=if True( eq(x, 'test') )]:
+   [ state_1111( x ) ]
+  --[ restr_ifTrueeqxtest_1_1111_1( eq(x, 'test') ) ]->
+   [ state_11112( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_1_1111[color=#ffffff process=if True( eq(x, 'test') )]:
+     [ state_1111( x ) ]
+    --[ restr_ifTrueeqxtest_1_1111_1( z ) ]->
+     [ state_11112( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+restriction restr_ifAndeqxtesttrue_0_11111_1:
+  "∀ x #NOW.
+    (restr_ifAndeqxtesttrue_0_11111_1( x ) @ #NOW) ⇒
+    ((x = true) ∧ (true = true))"
+  // safety formula
+
+rule (modulo E) ifAndeqxtesttrue_0_11111[color=#ffffff process=if And2( eq(x, 'test'), true )]:
+   [ state_11111( x ) ]
+  --[ restr_ifAndeqxtesttrue_0_11111_1( eq(x, 'test') ) ]->
+   [ state_111111( x ) ]
+
+  /*
+  rule (modulo AC) ifAndeqxtesttrue_0_11111[color=#ffffff process=if And2( eq(x, 'test'), true )]:
+     [ state_11111( x ) ]
+    --[ restr_ifAndeqxtesttrue_0_11111_1( z ) ]->
+     [ state_111111( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+restriction restr_ifAndeqxtesttrue_1_11111_1:
+  "∀ x #NOW.
+    (restr_ifAndeqxtesttrue_1_11111_1( x ) @ #NOW) ⇒
+    (¬((x = true) ∧ (true = true)))"
+  // safety formula
+
+rule (modulo E) ifAndeqxtesttrue_1_11111[color=#ffffff process=if And2( eq(x, 'test'), true )]:
+   [ state_11111( x ) ]
+  --[ restr_ifAndeqxtesttrue_1_11111_1( eq(x, 'test') ) ]->
+   [ state_111112( x ) ]
+
+  /*
+  rule (modulo AC) ifAndeqxtesttrue_1_11111[color=#ffffff process=if And2( eq(x, 'test'), true )]:
+     [ state_11111( x ) ]
+    --[ restr_ifAndeqxtesttrue_1_11111_1( z ) ]->
+     [ state_111112( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+restriction restr_ifTrueeqxtest_0_111111_1:
+  "∀ x #NOW. (restr_ifTrueeqxtest_0_111111_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_0_111111[color=#ffffff process=if True( eq(x, 'test') )]:
+   [ state_111111( x ) ]
+  --[ restr_ifTrueeqxtest_0_111111_1( eq(x, 'test') ) ]->
+   [ state_1111111( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_0_111111[color=#ffffff process=if True( eq(x, 'test') )]:
+     [ state_111111( x ) ]
+    --[ restr_ifTrueeqxtest_0_111111_1( z ) ]->
+     [ state_1111111( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+restriction restr_ifTrueeqxtest_1_111111_1:
+  "∀ x #NOW. (restr_ifTrueeqxtest_1_111111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_1_111111[color=#ffffff process=if True( eq(x, 'test') )]:
+   [ state_111111( x ) ]
+  --[ restr_ifTrueeqxtest_1_111111_1( eq(x, 'test') ) ]->
+   [ state_1111112( x ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_1_111111[color=#ffffff process=if True( eq(x, 'test') )]:
+     [ state_111111( x ) ]
+    --[ restr_ifTrueeqxtest_1_111111_1( z ) ]->
+     [ state_1111112( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.3
+       z     = eq(x.3, 'test')
+  */
+
+rule (modulo E) __0_1111111[color=#ffffff process=0]:
+   [ state_1111111( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1111112[color=#ffffff process=0]:
+   [ state_1111112( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111112[color=#ffffff process=0]:
+   [ state_111112( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11112[color=#ffffff process=0]:
+   [ state_11112( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1112[color=#ffffff process=0]:
+   [ state_1112( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_112[color=#ffffff process=0]:
+   [ state_112( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_12[color=#ffffff process=0]:
+   [ state_12( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-predicates/pub.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-predicates/pub.spthy
+
+  output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
+  processing time: 0.074594s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-predicates/pub.spthy
+
+  output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
+  processing time: 0.074594s
+
+
+==============================================================================
+*/

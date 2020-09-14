@@ -70,6 +70,7 @@ import           Main.Console
 import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
+import           Safe
 
 
 ------------------------------------------------------------------------------
@@ -80,8 +81,8 @@ import           Text.Parsec                hiding ((<|>),try)
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
-      "Attempt to prove a lemma "
+  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX*|LEMMANAME"
+      "Attempt to prove all lemmas that start with LEMMAPREFIX or the lemma which name is LEMMANAME"
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
@@ -104,6 +105,9 @@ theoryLoadFlags =
 
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
       "Strict mode that quits on any warning that is emitted."
+
+  , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
+      "Try to auto-generate sources lemmas."
 
   , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
       "Path to the oracle heuristic (default './oracle')."
@@ -249,14 +253,14 @@ closeThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheck thy1
   -- close and prove
-  cthy <- closeTheory (maudePath as) thy2
+  cthy <- closeTheory (maudePath as) thy2 (argExists "auto-sources" as)
   return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
-        Just "verbose" -> applyPartialEvaluation Tracing
-        Just _         -> applyPartialEvaluation Summary
+        Just "verbose" -> applyPartialEvaluation Tracing (argExists "auto-sources" as)
+        Just _         -> applyPartialEvaluation Summary (argExists "auto-sources" as)
         _              -> id
 
       -- wellformedness check
@@ -268,7 +272,12 @@ closeThy as thy0 = do
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
+            else
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
@@ -286,14 +295,14 @@ closeDiffThy as thy0 = do
   -- fine-grained.
   let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2)
+  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
-        Just "verbose" -> applyPartialEvaluationDiff Tracing
-        Just _         -> applyPartialEvaluationDiff Summary
+        Just "verbose" -> applyPartialEvaluationDiff Tracing (argExists "auto-sources" as)
+        Just _         -> applyPartialEvaluationDiff Summary (argExists "auto-sources" as)
         _              -> id
 
       -- wellformedness check
@@ -305,14 +314,24 @@ closeDiffThy as thy0 = do
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
+            else 
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
       diffLemmaSelector :: DiffLemma p -> Bool
       diffLemmaSelector lem =
-          any (`isPrefixOf` get lDiffName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lDiffName lem) [init $ head lemmaNames]
+            else 
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lDiffName lem) lemmaNames
+                else any ( == get lDiffName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as

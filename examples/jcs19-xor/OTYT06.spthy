@@ -159,7 +159,7 @@ lemma alive_reader:
   all-traces "∀ x #i. (AliveReader( x ) @ #i) ⇒ (∃ #j. Response( x, 'Reader' ) @ #j)"
 
 // Autofalsification using BFS, the oracle, AND a max proof depth of 12. Attack found in about 2m.
-// Command used: tamarin-prover --bound=12 --prove=desynch --heuristic=O --stop-on-trace=BFS --oraclename=oracle_OTYT06_trace.py +RTS -N10 -M800000m -RTS OTYT06_trace.spthy
+// Command used: tamarin-prover --bound=12 --prove=desynch* --heuristic=O --stop-on-trace=BFS --oraclename=oracle_OTYT06_trace.py +RTS -N10 -M800000m -RTS OTYT06_trace.spthy
 lemma desynch_impossible:
   all-traces
   "not Ex k #i. Desynch(k)@i"

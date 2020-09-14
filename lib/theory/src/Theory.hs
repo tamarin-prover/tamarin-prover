@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
@@ -266,7 +267,7 @@ import qualified Data.Label.Point
 import qualified Data.Label.Poly
 -- import qualified Data.Label.Total
 
-import           Safe                                (headMay)
+import           Safe                                (headMay, atMay)
 
 import           Theory.Model
 import           Theory.Sapic
@@ -280,6 +281,8 @@ import           Theory.Tools.RuleVariants
 import           Theory.Tools.IntruderRules
 
 import           Term.Positions
+
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -341,7 +344,7 @@ data ClosedRuleCache = ClosedRuleCache
 $(mkLabels [''ClosedProtoRule, ''ClosedRuleCache])
 
 instance HasRuleName ClosedProtoRule where
-    ruleName = ruleName . L.get cprRuleE
+    ruleName = ruleName . L.get cprRuleAC
 
 
 -- Relation between open and closed rule sets
@@ -360,6 +363,26 @@ openRuleCache = intruderRules . L.get crcRules
 -- | Open a protocol rule; i.e., drop variants and proof annotations.
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
 openProtoRule = L.get cprRuleE
+
+-- | Unfold rule variants, i.e., return one ClosedProtoRule for each
+-- variant
+unfoldRuleVariants :: ClosedProtoRule -> [ClosedProtoRule]
+unfoldRuleVariants (ClosedProtoRule ruE@(Rule ruEInfo _ _ _ _) ruAC@(Rule ruACInfoOld ps cs as nvs))
+   | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
+   | otherwise = map toClosedRule variants
+        where
+          ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
+          rAttributes = L.get pracAttributes ruACInfoOld
+          loopBreakers = L.get pracLoopBreakers ruACInfoOld
+          rName i oldName = case oldName of
+            FreshRule -> FreshRule
+            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
+
+          toClosedRule (i, (ps', cs', as', nvs'))
+            = ClosedProtoRule (Rule ruEInfo ps' cs' as' nvs')
+                (Rule (ruACInfo i) ps' cs' as' nvs')
+          variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
+          substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
@@ -436,6 +459,16 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
       , _crProtocol   = proto
       }
 
+
+-- | Returns true if the REFINED sources contain open chains.
+containsPartialDeconstructions :: ClosedRuleCache    -- ^ Cached rules and case distinctions.
+                     -> Bool               -- ^ Result
+containsPartialDeconstructions (ClosedRuleCache _ _ cases _) =
+      sum (map (sum . unsolvedChainConstraints) cases) /= 0
+
+addActionClosedProtoRule :: ClosedProtoRule -> LNFact -> ClosedProtoRule
+addActionClosedProtoRule (ClosedProtoRule e ac) f
+   = ClosedProtoRule (addAction e f) (addAction ac f)
 
 ------------------------------------------------------------------------------
 -- Processes
@@ -832,7 +865,6 @@ openTranslatedTheory thy =
 -- Shared theory modification functions
 ---------------------------------------
 
-
 filterSide :: Side -> [(Side, a)] -> [a]
 filterSide s l = case l of
                     x:xs -> if (fst x) == s then (snd x):(filterSide s xs) else (filterSide s xs)
@@ -1020,6 +1052,227 @@ addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
+-- | Add an auto-generated sources lemma if possible
+addAutoSourcesLemmaDiff :: MaudeHandle
+                        -> String
+                        -> ClosedRuleCache
+                        -> ClosedRuleCache
+                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
+    diffPart ++ lhsPart ++ rhsPart
+  where
+    -- We split items into three. DiffRules, DiffLemmas, and DiffTextItems are
+    -- kept as is. We apply addAutoSourcesLemma on each side (rules, lemmas and
+    -- restrictions), and recompose everything.
+    diffPart = mapMaybe f items
+      where
+        f (DiffRuleItem r)  = Just (DiffRuleItem r)
+        f (DiffLemmaItem l) = Just (DiffLemmaItem l)
+        f (DiffTextItem t)  = Just (DiffTextItem t)
+        f _                 = Nothing
+
+    lhsPart = if containsPartialDeconstructions crcLeft
+        then mapMaybe (toSide LHS) $
+                addAutoSourcesLemma hnd (lemmaName ++ "_LHS") crcLeft $
+                  mapMaybe (filterItemSide LHS) items
+        else mapMaybe (toSide LHS) $
+                  mapMaybe (filterItemSide LHS) items
+    rhsPart = if containsPartialDeconstructions crcRight
+        then mapMaybe (toSide RHS) $
+                addAutoSourcesLemma hnd (lemmaName ++ "_RHS") crcRight $
+                  mapMaybe (filterItemSide RHS) items
+        else mapMaybe (toSide RHS) $
+                  mapMaybe (filterItemSide RHS) items
+
+    filterItemSide s (EitherRuleItem (s', r))        | s == s' = Just (RuleItem r)
+    filterItemSide s (EitherLemmaItem (s', l))       | s == s' = Just (LemmaItem l)
+    filterItemSide s (EitherRestrictionItem (s', r)) | s == s' = Just (RestrictionItem r)
+    filterItemSide _ _                                         = Nothing
+
+    toSide s (RuleItem r)        = Just $ EitherRuleItem (s, r)
+    toSide LHS (LemmaItem l)     = Just $ EitherLemmaItem (LHS, addLeftLemma  l)
+    toSide RHS (LemmaItem l)     = Just $ EitherLemmaItem (RHS, addRightLemma l)
+    toSide s (RestrictionItem r) = Just $ EitherRestrictionItem (s, r)
+    toSide _ (TextItem t)        = Just $ DiffTextItem t
+    -- FIXME: We currently ignore predicates and sapic stuff as they should not
+    --        be generated by addAutoSourcesLemma
+    toSide _ (PredicateItem _)   = Nothing
+    toSide _ (SapicItem _)       = Nothing
+
+-- | Add an auto-generated sources lemma if possible
+addAutoSourcesLemma :: MaudeHandle
+                    -> String
+                    -> ClosedRuleCache
+                    -> [TheoryItem ClosedProtoRule IncrementalProof s]
+                    -> [TheoryItem ClosedProtoRule IncrementalProof s]
+addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
+  -- We only add the lemma if there is no lemma of the same name
+  case find lemma items of
+    Nothing  -> LemmaItem l:items'
+    (Just _) -> items'
+  where
+    runMaude   = (`runReader` hnd)
+
+    -- searching for the lemma
+    lemma (LemmaItem (Lemma name _ _ _ _)) | name == lemmaName = True
+    lemma _                                                    = False
+
+    -- build the lemma
+    l = fmap skeletonToIncrementalProof $ unprovenLemma lemmaName [SourceLemma] AllTraces formula
+
+    -- extract all rules from theory items
+    rules = mapMaybe itemToRule items
+
+    -- compute all encrypted subterms that are output by protocol rules
+    allOutConcs :: [(ClosedProtoRule, ConcIdx, Int, LNTerm)]
+    allOutConcs = do
+        ru                                   <- rules
+        (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
+        (nr, m)                              <- zip [1::Int ..] $ concatMap allProtSubterms t
+        return (ru, cidx, nr, m)
+
+    -- We use the raw sources here to generate one lemma to rule them all...
+    (items', formula, _) = foldl computeFormula (items, ltrue, []) chains
+
+    -- Generate a list of all cases that contain open chains
+    chains = zip [1::Int ..] $ concatMap (multiply unsolvedChains . duplicate) $
+                   concatMap (map snd . getDisj . L.get cdCases) raw
+
+    -- Given a list of theory items, a formula, a source with an open chain,
+    -- return an updated list of theory items and an update formula for the sources lemma.
+    computeFormula :: ([TheoryItem ClosedProtoRule IncrementalProof s], LNFormula, [(ClosedProtoRule, Position)])
+                   -> (Int, ((NodeConc, NodePrem), System))
+                   -> ([TheoryItem ClosedProtoRule IncrementalProof s], LNFormula, [(ClosedProtoRule, Position)])
+    computeFormula (its, form, done) (nr, ((conc,_), source)) = (its', form', done')
+      where
+        -- The new items are the old ones but with added labels
+        its'  = addLabels inputsAndOutputs its
+        -- The new formula is the old one AND the new formula
+        form' = addFormula inputsAndOutputs form
+        -- The new list of treated cases
+        done' = addCases inputsAndOutputs done
+
+        -- Variable causing the open chain
+        v     = head $ getFactTerms $ nodeConcFact conc source
+
+        -- Compute all rules that contain v, and the position of v inside the input term
+        inputRules :: [(ClosedProtoRule, LNTerm, Position)]
+        inputRules = concat $ mapMaybe g $ allPrems source
+          where
+            g (nodeid, pid, tidx, term) = do
+              position  <- findPos v term
+              ruleSys   <- nodeRuleSafe nodeid source
+              rule      <- find ((ruleName ruleSys ==).ruleName) rules
+              premise   <- lookupPrem pid $ L.get cprRuleE rule
+              t'        <- protoOrInFactView premise
+              t         <- atMay t' tidx
+              return $ do
+                -- iterate over all positions found
+                pos     <- position
+                guard $ notElem (rule, pos) done
+                return (rule, t, pos)
+
+        -- a list of all protected input subterms to unify
+        protectedSubterms :: [(ClosedProtoRule, LNTerm, LNTerm, Position)]
+        protectedSubterms = mapMaybe f inputRules
+          where
+            f (x, y, z) = do
+              v'        <- y `atPosMay` z
+              protTerm' <- deepestProtSubterm y z
+              -- We do not consider the case where the computed deepest
+              -- protected subterm is the variable in question, as this
+              -- against the definition (a variable is not a function).
+              -- Moreover, this case
+              -- 1. often leads to false lemmas as we do not unify with all
+              --    conclusion facts, in particular not with fresh facts
+              -- 2. blows up the lemma as a variable unifies with all outputs
+              -- 3. typically only happens if a value is stored in a state fact,
+              --    but appears in other premises where the algorithm works as
+              --    expected (hence we do not loose anything)
+              protTerm  <- if protTerm' == v'
+                then Nothing
+                else Just protTerm'
+              return (x, protTerm, v', z)
+
+        -- compute matching outputs
+        -- returns a list of inputs together with their list of matching outputs
+        inputsAndOutputs :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
+        inputsAndOutputs = do
+            -- iterate over all inputs
+            (rin, tin, vin, pos) <- protectedSubterms
+            -- find matching conclusions
+            let matches = matchingConclusions rin tin
+            return (rin, tin, vin, pos, matches)
+          where
+            matchingConclusions rin tin = do
+              (rout, cidx, n, tout) <- allOutConcs
+              -- generate fresh instance of conclusion, avoiding the premise variables
+              let fout = tout `renameAvoiding` tin
+              -- we ignore outputs of the same rule
+              guard ((ruleName . L.get cprRuleE) rin /= (ruleName . L.get cprRuleE) rout)
+              -- check whether input and output are unifiable
+              guard (runMaude $ unifiableLNTerms tin fout)
+              return (rout, cidx, n, tout)
+
+        -- construct action facts for the rule annotations and formula
+        inputFact k r m n = Fact {factTag = ProtoFact Linear
+              ("AUTO_IN_" ++ show nr ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleAC r)) 2,
+              factAnnotations = S.empty, factTerms = [m, n]}
+        outputFact k c r m = Fact {factTag = ProtoFact Linear
+              ("AUTO_OUT_" ++ show (getConcIdx c) ++ "_" ++ show k ++ "_" ++ getRuleName (L.get cprRuleAC r)) 1,
+              factAnnotations = S.empty, factTerms = [m]}
+
+        -- add labels to rules for typing lemma
+        addLabels :: [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
+                  -> [TheoryItem ClosedProtoRule IncrementalProof s]
+                  -> [TheoryItem ClosedProtoRule IncrementalProof s]
+        addLabels matches = map update
+          where
+            update (RuleItem r) = RuleItem $ foldr up r $
+                   filter ((ruleName r ==). ruleName . fst) acts
+              where
+                up (n, Left (k, y, z))     r' = addActionClosedProtoRule r' (inputFact k n y z)
+                up (n, Right (k, cidx, y)) r' = addActionClosedProtoRule r' (outputFact k cidx n y)
+            update it           = it
+
+            acts = inputActs ++ outputActs
+            inputActs =
+                zipWith (\k (x, y, z, _, _) -> (x, Left (k, y, z))) [1::Int ..] matches
+            outputActs =
+                map (\(x, cidx, k, y) -> (x, Right (k, cidx, y))) $ concatMap (\(_, _, _, _, x) -> x) matches
+
+        -- add formula to lemma
+        addFormula ::
+             [(ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)])]
+          -> LNFormula
+          -> LNFormula
+        addFormula matches f = foldr addForm f $ zip [1..] matches
+          where
+            addForm ::
+                 (Int, (ClosedProtoRule, LNTerm, LNTerm, Position, [(ClosedProtoRule, ConcIdx, Int, LNTerm)]))
+              -> LNFormula
+              -> LNFormula
+            addForm (k, (n, _, _, _, outs)) f' = f' .&&. Qua All ("x", LSortMsg)
+              (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
+              (Conn Imp (Ato (Action (varTerm (Bound 0))
+              (inputFact k n (varTerm (Bound 1)) (varTerm (Bound 2)))))
+              (foldl toFacts orKU outs))))
+            orKU = Qua Ex ("j",LSortNode)
+                   (Conn And (Ato (Action (varTerm (Bound 0))
+                    Fact {factTag = KUFact, factAnnotations = S.empty,
+                          factTerms = [varTerm (Bound 3)]} ))
+                   (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1)))))
+            toFacts f'' (n, c, k, _) =
+              Conn Or f''
+              (Qua Ex ("j",LSortNode)
+              (Conn And (Ato (Action (varTerm (Bound 0))
+              (outputFact k c n (varTerm (Bound 2))) ))
+              (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1))))))
+
+        -- add all cases (identified by rule name and input variable position) to the list of treated cases
+        addCases matches d = d ++ map (\(r, _, _, p, _) -> (r, p)) matches
+
 -- | Add a new process expression.  since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
 addProcess :: Process -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
@@ -1186,6 +1439,13 @@ addFormalComment c = modify thyItems (++ [TextItem c])
 addFormalCommentDiff :: FormalComment -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
 addFormalCommentDiff c = modify diffThyItems (++ [DiffTextItem c])
 
+isRuleItem :: TheoryItem r p s -> Bool
+isRuleItem (RuleItem _) = True
+isRuleItem _            = False
+
+itemToRule :: TheoryItem r p s -> Maybe r
+itemToRule (RuleItem r) = Just r
+itemToRule _            = Nothing
 
 ------------------------------------------------------------------------------
 -- Open theory construction / modification
@@ -1563,10 +1823,11 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 -- theory the signature may not change any longer.
 closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenTranslatedTheory
+            -> Bool             -- ^ Try to auto-generate sources lemmas
             -> IO ClosedTheory
-closeTheory maudePath thy0 = do
+closeTheory maudePath thy0 autosources = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
-    return $ closeTheoryWithMaude sig thy0
+    return $ closeTheoryWithMaude sig thy0 autosources
 
 -- | Close a theory by closing its associated rule set and checking the proof
 -- skeletons and caching AC variants as well as precomputed case distinctions.
@@ -1576,22 +1837,30 @@ closeTheory maudePath thy0 = do
 -- theory the signature may not change any longer.
 closeDiffTheory :: FilePath         -- ^ Path to the Maude executable.
             -> OpenDiffTheory
+            -> Bool
             -> IO ClosedDiffTheory
-closeDiffTheory maudePath thy0 = do
+closeDiffTheory maudePath thy0 autoSources = do
     sig <- toSignatureWithMaude maudePath $ L.get diffThySignature thy0
-    return $ closeDiffTheoryWithMaude sig thy0
+    return $ closeDiffTheoryWithMaude sig thy0 autoSources
 
 -- | Close a diff theory given a maude signature. This signature must be valid for
 -- the given theory.
-closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> ClosedDiffTheory
-closeDiffTheoryWithMaude sig thy0 = do
-    proveDiffTheory (const True) (const True) checkProof checkDiffProof (DiffTheory (L.get diffThyName thy0) h sig cacheLeft cacheRight diffCacheLeft diffCacheRight items)
+closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> Bool -> ClosedDiffTheory
+closeDiffTheoryWithMaude sig thy0 autoSources =
+  if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
+    then
+      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+        (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items')
+    else
+      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+        (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items)
   where
     h              = L.get diffThyHeuristic thy0
-    diffCacheLeft  = closeRuleCache restrictionsLeft  typAsms sig leftClosedRules  (L.get diffThyDiffCacheLeft  thy0) True
-    diffCacheRight = closeRuleCache restrictionsRight typAsms sig rightClosedRules (L.get diffThyDiffCacheRight thy0) True
-    cacheLeft  = closeRuleCache restrictionsLeft  typAsms sig leftClosedRules  (L.get diffThyCacheLeft  thy0) False
-    cacheRight = closeRuleCache restrictionsRight typAsms sig rightClosedRules (L.get diffThyCacheRight thy0) False
+    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
+    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
+    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
+    cacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
+
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
@@ -1601,36 +1870,48 @@ closeDiffTheoryWithMaude sig thy0 = do
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
 
+    theoryItems = L.get diffThyItems thy0 ++ map (\x -> EitherRuleItem (LHS, x)) leftOpenRules ++ map (\x -> EitherRuleItem (RHS, x)) rightOpenRules
     -- Close all theory items: in parallel (especially useful for variants)
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
-       ((closeDiffTheoryItem <$> ( (L.get diffThyItems thy0) ++ (map (\x -> EitherRuleItem (LHS, x)) leftOpenRules) ++ (map (\x -> EitherRuleItem (RHS, x)) rightOpenRules))) `using` parList rdeepseq)
-          where
-            closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
-            closeDiffTheoryItem = foldDiffTheoryItem
-              DiffRuleItem
-              (EitherRuleItem . closeEitherProtoRule hnd)
-              (\l -> DiffLemmaItem (fmap skeletonToIncrementalDiffProof l))
-              (\(s, l) -> EitherLemmaItem (s, (fmap skeletonToIncrementalProof l)))
-              EitherRestrictionItem
-              DiffTextItem
+       ((closeDiffTheoryItem <$> theoryItems) `using` parList rdeepseq)
+
+    closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
+    closeDiffTheoryItem = foldDiffTheoryItem
+      DiffRuleItem
+      (EitherRuleItem . closeEitherProtoRule hnd)
+      (DiffLemmaItem . fmap skeletonToIncrementalDiffProof)
+      (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
+      EitherRestrictionItem
+      DiffTextItem
+
+    -- Name of the auto-generated lemma
+    lemmaName = "AUTO_typing"
+
+    itemsModAC = unfoldRules items
+
+    unfoldRules (EitherRuleItem (s,r):is) = map (\x -> EitherRuleItem (s,x)) (unfoldRuleVariants r) ++ unfoldRules is
+    unfoldRules                    (i:is) = i:unfoldRules is
+    unfoldRules                        [] = []
+
+    items' = addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
 
     -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     restrictionsRight = do EitherRestrictionItem (RHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms = do EitherLemmaItem (_, lem) <- items
-                 guard (isSourceLemma lem)
-                 return $ formulaToGuarded_ $ L.get lFormula lem
+    typAsms its = do EitherLemmaItem (_, lem) <- its
+                     guard (isSourceLemma lem)
+                     return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    leftClosedRules  :: [ClosedProtoRule]
-    leftClosedRules  = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose items)
-    rightClosedRules :: [ClosedProtoRule]
-    rightClosedRules = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose items)
+    leftClosedRules  :: [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
+    leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose its)
+    rightClosedRules :: [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
+    rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose its)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1639,8 +1920,8 @@ closeDiffTheoryWithMaude sig thy0 = do
         (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
         addBreakers
       where
-        liftToItem f (EitherRuleItem (_, ru)) = (f ru)
-        liftToItem _ _                   = []
+        liftToItem f (EitherRuleItem (_, ru)) = f ru
+        liftToItem _ _                        = []
 
         addBreakers bs (EitherRuleItem (s, ru)) =
             EitherRuleItem (s, L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
@@ -1650,13 +1931,18 @@ closeDiffTheoryWithMaude sig thy0 = do
 
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
-closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> ClosedTheory
-closeTheoryWithMaude sig thy0 = do
-      proveTheory (const True) checkProof
-    $ Theory (L.get thyName thy0) h sig cache items (L.get thyOptions thy0)
+closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> ClosedTheory
+closeTheoryWithMaude sig thy0 autoSources =
+  if autoSources && containsPartialDeconstructions (cache items)
+    then
+        proveTheory (const True) checkProof
+      $ Theory (L.get thyName thy0) h sig (cache items') items' (L.get thyOptions thy0)
+    else
+        proveTheory (const True) checkProof
+      $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
-    cache      = closeRuleCache restrictions typAsms sig rules (L.get thyCache thy0) False
+    cache its  = closeRuleCache restrictions (typAsms its) sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -1676,16 +1962,27 @@ closeTheoryWithMaude sig thy0 = do
        PredicateItem
        SapicItem
 
+    -- Name of the auto-generated lemma
+    lemmaName = "AUTO_typing"
+
+    itemsModAC = unfoldRules items
+
+    unfoldRules (RuleItem r:is) = map RuleItem (unfoldRuleVariants r) ++ unfoldRules is
+    unfoldRules          (i:is) = i:unfoldRules is
+    unfoldRules              [] = []
+
+    items' = addAutoSourcesLemma hnd lemmaName (cache itemsModAC) itemsModAC
+
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
                       return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms      = do LemmaItem lem <- items
+    typAsms its  = do LemmaItem lem <- its
                       guard (isSourceLemma lem)
                       return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    rules :: [ClosedProtoRule]
-    rules = theoryRules (Theory errClose errClose errClose errClose items errClose)
+    rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
+    rules its = theoryRules (Theory errClose errClose errClose errClose its errClose)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -1707,10 +2004,11 @@ closeTheoryWithMaude sig thy0 = do
 -----------------------------------------------
 
 -- | Apply partial evaluation.
-applyPartialEvaluation :: EvaluationStyle -> ClosedTheory -> ClosedTheory
-applyPartialEvaluation evalStyle thy0 =
-    closeTheoryWithMaude sig $
-    removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0))
+applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheory
+applyPartialEvaluation evalStyle autosources thy0 =
+    closeTheoryWithMaude sig
+      (removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
+      autosources
   where
     sig          = L.get thySignature thy0
     ruEs         = getProtoRuleEs thy0
@@ -1725,9 +2023,6 @@ applyPartialEvaluation evalStyle thy0 =
           ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
       | otherwise        = item : replaceProtoRules items
 
-    isRuleItem (RuleItem _) = True
-    isRuleItem _            = False
-
     ppAbsState =
       (text $ " the abstract state after partial evaluation"
               ++ " contains " ++ show (S.size st') ++ " facts:") $--$
@@ -1738,10 +2033,10 @@ applyPartialEvaluation evalStyle thy0 =
               ++ show (length ruEs) ++ ".\n\n")
 
 -- | Apply partial evaluation.
-applyPartialEvaluationDiff :: EvaluationStyle -> ClosedDiffTheory -> ClosedDiffTheory
-applyPartialEvaluationDiff evalStyle thy0 =
-    closeDiffTheoryWithMaude sig $
-    L.modify diffThyItems replaceProtoRules (openDiffTheory thy0)
+applyPartialEvaluationDiff :: EvaluationStyle -> Bool -> ClosedDiffTheory -> ClosedDiffTheory
+applyPartialEvaluationDiff evalStyle autoSources thy0 =
+    closeDiffTheoryWithMaude sig
+      (L.modify diffThyItems replaceProtoRules (openDiffTheory thy0)) autoSources
   where
     sig            = L.get diffThySignature thy0
     ruEs s         = getProtoRuleEsDiff s thy0
@@ -2246,8 +2541,11 @@ prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
 -- | Pretty print an closed rule.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
+  if ruleName ruAC == ruleName ruE then
     (prettyProtoRuleE ruE) $--$
     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
+  else
+    (prettyProtoRuleAC ruAC)
   where
     ruAC = L.get cprRuleAC cru
     ruE  = L.get cprRuleE cru

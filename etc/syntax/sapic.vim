@@ -1,0 +1,1 @@
+syntax/spthy.vim

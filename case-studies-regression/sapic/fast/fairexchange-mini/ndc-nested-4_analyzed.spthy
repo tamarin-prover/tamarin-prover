@@ -1,0 +1,215 @@
+theory nestedNDC3 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+heuristic: p
+
+section{* small example for progression function *}
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( state_( ~prog_ ) ▶₀ #t )
+  case Init
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_1
+    solve( state_( ~prog_ ) ▶₀ #t.2 )
+      case Init
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( state_211( ~prog_ ) ▶₀ #t )
+  case __1_21
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_2
+    solve( state_211( ~prog_ ) ▶₀ #t.2 )
+      case __1_21
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma C_possible:
+  exists-trace "∃ #t. C( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (C( ) @ #t)"
+*/
+simplify
+solve( state_221( ~prog_ ) ▶₀ #t )
+  case __1_22
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_3
+    solve( state_221( ~prog_ ) ▶₀ #t.2 )
+      case __1_22
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma oneEventAlways:
+  all-traces "((∃ #t. A( ) @ #t) ∨ (∃ #t. B( ) @ #t)) ∨ (∃ #t. C( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #t. (A( ) @ #t) ⇒ ⊥) ∧
+ (∀ #t. (B( ) @ #t) ⇒ ⊥) ∧
+ (∀ #t. (C( ) @ #t) ⇒ ⊥)"
+*/
+simplify
+solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+       (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+       (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+next
+  case case_3
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) MessageID-rule[color=#ffffff process=+]:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=+]:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ state_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_1[color=#ffffff process=event A( );]:
+   [ state_( ~prog_ ) ]
+  --[ ProgressTo_11( ~prog_ ), A( ) ]->
+   [ state_11( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11[color=#ffffff process=0]:
+   [ state_11( ~prog_ ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_21[color=#ffffff process=!]:
+   [ state_( ~prog_ ) ] --> [ !semistate_211( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_21[color=#ffffff process=!]:
+   [ !semistate_211( ~prog_ ) ] --> [ state_211( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventB_0_211[color=#ffffff process=event B( );]:
+   [ state_211( ~prog_ ) ]
+  --[ ProgressTo_2111( ~prog_ ), B( ) ]->
+   [ state_2111( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_2111[color=#ffffff process=0]:
+   [ state_2111( ~prog_ ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_22[color=#ffffff process=!]:
+   [ state_( ~prog_ ) ] --> [ !semistate_221( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_22[color=#ffffff process=!]:
+   [ !semistate_221( ~prog_ ) ] --> [ state_221( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventC_0_221[color=#ffffff process=event C( );]:
+   [ state_221( ~prog_ ) ]
+  --[ ProgressTo_2211( ~prog_ ), C( ) ]->
+   [ state_2211( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_2211[color=#ffffff process=0]:
+   [ state_2211( ~prog_ ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress_[]_to_[1,1]_or_[2,1,1,1]_or_[2,2,1,1]:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_11( prog_ ) @ #t.1) ∨
+     ((∃ #t.1. ProgressTo_2111( prog_ ) @ #t.1) ∨
+      (∃ #t.1. ProgressTo_2211( prog_ ) @ #t.1)))"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/fairexchange-mini/ndc-nested-4.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested-4.spthy
+
+  output:          examples/sapic/fast/fairexchange-mini/ndc-nested-4.spthy.tmp
+  processing time: 0.090491s
+  A_possible (exists-trace): verified (5 steps)
+  B_possible (exists-trace): verified (5 steps)
+  C_possible (exists-trace): verified (5 steps)
+  oneEventAlways (all-traces): verified (5 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested-4.spthy
+
+  output:          examples/sapic/fast/fairexchange-mini/ndc-nested-4.spthy.tmp
+  processing time: 0.090491s
+  A_possible (exists-trace): verified (5 steps)
+  B_possible (exists-trace): verified (5 steps)
+  C_possible (exists-trace): verified (5 steps)
+  oneEventAlways (all-traces): verified (5 steps)
+
+==============================================================================
+*/
