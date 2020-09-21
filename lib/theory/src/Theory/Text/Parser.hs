@@ -55,7 +55,7 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
--- import           Data.Functor.Identity 
+-- import           Data.Functor.Identity
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
@@ -98,7 +98,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = do 
+parseOpenTheory flags file = do
           parseFile (theory flags) file
 
 -- | Parse a security protocol theory file.
@@ -291,8 +291,8 @@ modulo :: String -> Parser ()
 modulo thy = parens $ symbol_ "modulo" *> symbol_ thy
 
 moduloE, moduloAC :: Parser ()
-moduloE  = modulo "E"
-moduloAC = modulo "AC"
+moduloE   = modulo "E"
+moduloAC  = modulo "AC"
 
 {- -- This has not been renamed from typing to source, as it is unclear.
 -- | Parse a typing assertion modulo E.
@@ -331,9 +331,43 @@ protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
-protoRule :: Parser (ProtoRuleE)
+diffRule :: Parser (DiffProtoRule)
+diffRule = do
+    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0) <- genericRule
+    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
+    return $ DiffProtoRule (Rule ri ps cs as (newVariables ps cs)) leftRight
+
+-- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
+-- 'Knows', and 'Learn' no rule is returned as the default theory already
+-- contains them
+protoRule :: Parser (OpenProtoRule)
 protoRule = do
     ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0) <- genericRule
+    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
+    return $ OpenProtoRule (Rule ri ps cs as (newVariables ps cs)) variants
+
+-- | Parse RuleInfo
+protoRuleACInfo :: Parser ProtoRuleACInfo
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
+                                        (symbol "rule" *> moduloAC *> identifier))
+                               <*> (option [] $ list ruleAttribute))
+                               <*> pure (Disj [emptySubstVFresh]) <*> pure []
+                               <*  colon
+
+-- | Parse a protocol rule variant modulo AC.
+protoRuleAC :: Parser ProtoRuleAC
+protoRuleAC = do
+    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -626,7 +660,7 @@ diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
 
-                      
+
 ------------------------------------------------------------------------------
 -- Parsing Proofs
 ------------------------------------------------------------------------------
@@ -709,7 +743,7 @@ diffProofMethod = asum
   , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
   , symbol "ATTACK"           *> pure DiffAttack
   ]
-    
+
 -- | Parse a diff proof skeleton.
 diffProofSkeleton :: Parser DiffProofSkeleton
 diffProofSkeleton =
@@ -717,7 +751,7 @@ diffProofSkeleton =
   where
     solvedProof =
         symbol "MIRRORED" *> pure (LNode (DiffProofStep DiffMirrored ()) M.empty)
-        
+
     finalProof = do
         method <- symbol "by" *> diffProofMethod
         return (LNode (DiffProofStep method ()) M.empty)
@@ -738,7 +772,7 @@ diffProofSkeleton =
 builtins :: OpenTheory -> Parser OpenTheory
 builtins thy0 =do
             _  <- symbol "builtins"
-            _  <- colon 
+            _  <- colon
             l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
@@ -833,7 +867,7 @@ equations =
 options :: OpenTheory -> Parser OpenTheory
 options thy0 =do
             _  <- symbol "options"
-            _  <- colon 
+            _  <- colon
             l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
@@ -862,14 +896,14 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
-                where 
-                liftedAddPredicate thy' pr  = 
-                    case addPredicate pr thy' of 
+                where
+                liftedAddPredicate thy' pr  =
+                    case addPredicate pr thy' of
                         (Just thy'') -> return (thy''::OpenTheory)
                         Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
 
--- used for debugging 
--- println :: String -> ParsecT String u Identity ()          
+-- used for debugging
+-- println :: String -> ParsecT String u Identity ()
 -- println str = traceShowM str
 
 -- parse a process definition (let block)
@@ -877,7 +911,7 @@ processDef :: OpenTheory -> Parser ProcessDef
 processDef thy= do
                 letIdentifier
                 i <- BC.pack <$> identifier
-                equalSign 
+                equalSign
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p )
 
@@ -885,19 +919,19 @@ processDef thy= do
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
 sapicAction :: Parser SapicAction
-sapicAction = try (do 
+sapicAction = try (do
                         _ <- symbol "new"
-                        s <- msgvar 
+                        s <- msgvar
                         return (New s)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
                         t <- msetterm llit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
                         t <- msetterm llit
@@ -906,14 +940,14 @@ sapicAction = try (do
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
                         t <- msetterm llit
                         _ <- symbol ")"
                         return (ChOut Nothing t)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
                         t <- msetterm llit
@@ -922,34 +956,34 @@ sapicAction = try (do
                         _ <- symbol ")"
                         return (ChOut (Just t) t')
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "insert"
                         t <- msetterm llit
                         _ <- comma
                         t' <- msetterm llit
                         return (Insert t t')
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "delete"
                         t <- msetterm llit
                         return (Delete t)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "lock"
                         t <- msetterm llit
                         return (Lock t)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "unlock"
                         t <- msetterm llit
                         return (Unlock t)
                    )
-               <|> try (do 
+               <|> try (do
                         _ <- symbol "event"
                         f <- fact llit
                         return (Event f)
                    )
-               <|> try (do 
+               <|> try (do
                         r <- genericRule
                         return (MSR r)
                    )
@@ -959,29 +993,29 @@ sapicAction = try (do
 -- This is the grammar, more or less. (Process definition is written down in
 -- a way that you can read of the precise definition from there
 -- process:
---     | LP process RP                                  
---     | LP process RP AT multterm                      
---     | actionprocess PARALLEL process      
---     | actionprocess PLUS process                           
+--     | LP process RP
+--     | LP process RP AT multterm
+--     | actionprocess PARALLEL process
+--     | actionprocess PLUS process
 --     null
 
 -- actionprocess:
---     | sapic_action optprocess                        
---     | NULL                                           
---     | REP process                                    
---     | IF if_cond THEN process ELSE process           
---     | IF if_cond THEN process                        
---     | LOOKUP term AS literal IN process ELSE process 
---     | LOOKUP term AS literal IN process              
---     | LET id_eq_termseq IN process          
---     | LET id_not_res EQ REPORT LP multterm RP IN process 
---     | IDENTIFIER                                     
+--     | sapic_action optprocess
+--     | NULL
+--     | REP process
+--     | IF if_cond THEN process ELSE process
+--     | IF if_cond THEN process
+--     | LOOKUP term AS literal IN process ELSE process
+--     | LOOKUP term AS literal IN process
+--     | LET id_eq_termseq IN process
+--     | LET id_not_res EQ REPORT LP multterm RP IN process
+--     | IDENTIFIER
 --     | msr
 process :: OpenTheory -> Parser Process
-process thy= 
+process thy=
             -- left-associative NDC and parallel using chainl1.
             -- Note: this roughly encodes the following grammar:
-            -- <|>   try   (do  
+            -- <|>   try   (do
             --             p1 <- actionprocess thy
             --             opParallel
             --             p2 <- process thy
@@ -997,7 +1031,7 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
-                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of 
+                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
@@ -1011,7 +1045,7 @@ process thy=
             <|>    try  (do -- let expression parser
                         subst <- letBlock
                         p <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
@@ -1020,7 +1054,7 @@ process thy=
                         return p
 
 actionprocess :: OpenTheory -> Parser Process
-actionprocess thy= 
+actionprocess thy=
             try (do         -- replication parser
                         _ <- symbol "!"
                         p <- process thy
@@ -1036,7 +1070,7 @@ actionprocess thy=
                         q <- process thy
                         return (ProcessComb (Lookup t v) mempty p q)
                    )
-            <|> try (do 
+            <|> try (do
                         _ <- symbol "lookup"
                         t <- msetterm llit
                         _ <- symbol "as"
@@ -1045,7 +1079,7 @@ actionprocess thy=
                         p <- process thy
                         return (ProcessComb (Lookup t v) mempty p (ProcessNull mempty))
                    )
-            <|> try (do 
+            <|> try (do
                         _ <- symbol "if"
                         t1 <- msetterm llit
                         _ <- opEqual
@@ -1056,7 +1090,7 @@ actionprocess thy=
                         q <- process thy
                         return (ProcessComb (CondEq t1 t2  ) mempty p q)
                    )
-            <|> try (do 
+            <|> try (do
                         _ <- symbol "if"
                         pr <- fact llit
                         _ <- symbol "then"
@@ -1065,7 +1099,7 @@ actionprocess thy=
                         q <- process thy
                         return (ProcessComb (Cond pr) mempty p q)
                    )
-            <|> try (do 
+            <|> try (do
                         _ <- symbol "if"
                         t1 <- msetterm llit
                         _ <- opEqual
@@ -1074,7 +1108,7 @@ actionprocess thy=
                         p <- process thy
                         return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
                    )
-            <|> try (do 
+            <|> try (do
                         _ <- symbol "if"
                         pr <- fact llit
                         _ <- symbol "then"
@@ -1087,22 +1121,22 @@ actionprocess thy=
                         p <- actionprocess thy
                         return (ProcessAction s mempty p))
             <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
-                        s <- sapicAction 
+                        s <- sapicAction
                         return (ProcessAction s mempty (ProcessNull mempty)))
             <|> try (do   -- null process: terminating element
-                        _ <- opNull 
+                        _ <- opNull
                         return (ProcessNull mempty) )
             <|> try   (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         a <- let p = checkProcess (BC.unpack i) thy in
                             (\x -> paddAnn x [BC.unpack i]) <$> p
-                        return a 
+                        return a
                         )
             <|>    try  (do -- let expression parser
                         subst <- letBlock
                         p     <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
@@ -1111,7 +1145,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol ")"
                         return p
-                        
+
 
 heuristic :: Bool -> Parser [GoalRanking]
 heuristic diff = do
@@ -1130,16 +1164,16 @@ heuristic diff = do
 -- checkProcess :: String -> OpenTheory -> Parser OpenTheory
 -- checkProcess i thy= case findProcess i thy of
 --     Just thy' -> return thy
---     Nothing -> fail $ "process not defined: " ++ i    
+--     Nothing -> fail $ "process not defined: " ++ i
 checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
     Just p -> return $ get pBody p
-    Nothing -> fail $ "process not defined: " ++ i    
+    Nothing -> fail $ "process not defined: " ++ i
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
        -> Parser OpenTheory
-theory flags0 = do 
+theory flags0 = do
     msig <- getState
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
@@ -1175,9 +1209,6 @@ theory flags0 = do
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoRule thy ru
-           addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
@@ -1186,8 +1217,8 @@ theory flags0 = do
            addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
-      , do thy' <- preddeclaration thy             
-           addItems flags (thy')    
+      , do thy' <- preddeclaration thy
+           addItems flags (thy')
       , do ifdef flags thy
       , do define flags thy
       , do return thy
@@ -1201,25 +1232,28 @@ theory flags0 = do
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
+       traceM $ show flag
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+         then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+         else do _ <- manyTill anyChar (try (string "#"))
+                 symbol_ "endif"
+                 addItems flags thy
 
-    liftedAddProtoRule thy ru = case addProtoRule ru thy of
+    liftedAddProtoRule thy ru = case addOpenProtoRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule modulo E: " ++ render (prettyRuleName $ get oprRuleE ru)
 
     liftedAddLemma thy lem = case addLemma lem thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem 
+        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
     -- check process defined only once
     -- add process to theoryitems
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate process: " ++ get pName pDef 
+        Nothing   -> fail $ "duplicate process: " ++ get pName pDef
 
     liftedAddRestriction thy rstr = case addRestriction rstr thy of
         Just thy' -> return thy'
@@ -1228,11 +1262,11 @@ theory flags0 = do
     liftedAddHeuristic thy h = case addHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
-        
+
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
        -> Parser OpenDiffTheory
-diffTheory flags0 = do 
+diffTheory flags0 = do
     msig <- getState
     putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
@@ -1245,8 +1279,8 @@ diffTheory flags0 = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
            addItems flags thy'
-      , do 
-           diffbuiltins 
+      , do
+           diffbuiltins
            msig <- getState
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions
@@ -1266,8 +1300,8 @@ diffTheory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoRule thy ru
+      , do ru <- diffRule
+           thy' <- liftedAddDiffRule thy ru
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACsDiffAll [r] thy)
@@ -1296,19 +1330,19 @@ diffTheory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddProtoRule thy ru = case addProtoDiffRule ru thy of
+    liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
-        
+
     liftedAddLemma thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of
                                         Just thy' -> return thy'
                                         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
-                                else if isRightLemma lem 
+                                else if isRightLemma lem
                                      then case addLemmaDiff RHS lem thy of
                                              Just thy' -> return thy'
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem

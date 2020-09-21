@@ -1,4 +1,4 @@
-# Please make sure that you have 'stack' installed. 
+# Please make sure that you have 'stack' installed.
 # https://github.com/commercialhaskell/stack/blob/master/doc/install_and_upgrade.md
 
 TAMARIN=~/.local/bin/tamarin-prover
@@ -16,7 +16,7 @@ tamarin:
 
 # Single-threaded Tamarin
 .PHONY: single
-single: 
+single:
 	stack setup
 	stack install --flag tamarin-prover:-threaded
 
@@ -70,7 +70,7 @@ KEA=KEA_plus_KI_KCI.spthy KEA_plus_KI_KCI_wPFS.spthy
 NAXOS=NAXOS_eCK_PFS.spthy NAXOS_eCK.spthy
 
 SDH=SignedDH_PFS.spthy #SignedDH_eCK.spthy
-# The "SignedDH_eCK.spthy" case study has not been working for a long time, 
+# The "SignedDH_eCK.spthy" case study has not been working for a long time,
 # probably some change in the heuristics somewhere made it run indefinitely.
 
 STS=STS_MAC.spthy STS_MAC_fix1.spthy STS_MAC_fix2.spthy
@@ -358,7 +358,7 @@ feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
 feature-secret-channel/secret-channel.spthy \
 GJM-contract/contract.spthy
 # not working because of missing support for predicates
-# basic/running-example.spthy feature-let-bindings/let-blocks.spthy 
+# basic/running-example.spthy feature-let-bindings/let-blocks.spthy
 # encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
 # Yubikey/Yubikey.spthy NOTE commented out previously need to verify
 # PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
@@ -372,10 +372,10 @@ GJM-contract/contract.spthy
 # examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic
 #
 # exceptional cases, that are left out on purpose, with explanations:
-# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model, 
+# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model,
 # 		because the attacks found despite an incorrect sources lemma
 # 		are correct by definition, but negating it would defeat its
-# 		purpose, and removing it would inhibit the attack finding. 
+# 		purpose, and removing it would inhibit the attack finding.
 #
 # missing (but also before): fairexchange stuff...-> check how long they take on fast machines
 # examples/sapic/fairexchange-km/km.sapic
@@ -399,7 +399,7 @@ GJM-contract/contract.spthy
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
 SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
-NSL/nsl-no_as-untagged.spthy 
+NSL/nsl-no_as-untagged.spthy
 SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
@@ -436,7 +436,7 @@ endif
 
 CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
-case-studies: 	case-studies/system.info $(CS_TARGETS) 
+case-studies: 	case-studies/system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/
 	-grep -iR "warning\|error" case-studies/
 

@@ -92,6 +92,8 @@ module Theory.Model.Rule (
   , getNewVariables
   , getSubstitutionsFixingNewVars
   , compareRulesUpToNewVars
+  , equalUpToAddedActions
+  , equalUpToTerms
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -119,6 +121,9 @@ module Theory.Model.Rule (
   , unifyRuleACInstEqs
   , unifiableRuleACInsts
   , equalRuleUpToRenaming
+  , equalRuleUpToAnnotations
+  , equalRuleUpToDiffAnnotation
+  , equalRuleUpToDiffAnnotationSym
 
   -- * Pretty-Printing
   , reservedRuleNames
@@ -129,6 +134,7 @@ module Theory.Model.Rule (
   , prettyRuleAttribute
   , prettyProtoRuleE
   , prettyProtoRuleAC
+  , prettyProtoRuleACasE
   , prettyIntrRuleAC
   , prettyIntrRuleACInfo
   , prettyRuleAC
@@ -732,14 +738,14 @@ setRemainingRuleApplications rule _
     = rule
 
 -- | Converts a protocol rule to its "left" variant
-getLeftRule :: ProtoRuleE ->  ProtoRuleE
+getLeftRule :: Rule i ->  Rule i
 getLeftRule (Rule ri ps cs as nvs) =
-   (Rule ri (map getLeftFact ps) (map getLeftFact cs) (map getLeftFact as) (map getLeftTerm nvs))
+   Rule ri (map getLeftFact ps) (map getLeftFact cs) (map getLeftFact as) (map getLeftTerm nvs)
 
--- | Converts a protocol rule to its "left" variant
-getRightRule :: ProtoRuleE ->  ProtoRuleE
+-- | Converts a protocol rule to its "right" variant
+getRightRule :: Rule i ->  Rule i
 getRightRule (Rule ri ps cs as nvs) =
-   (Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as) (map getRightTerm nvs))
+   Rule ri (map getRightFact ps) (map getRightFact cs) (map getRightFact as) (map getRightTerm nvs)
 
 -- | Returns a list of all new variables that need to be fixed for mirroring
 getNewVariables :: Bool -> RuleACInst -> [LVar]
@@ -779,6 +785,36 @@ getSubstitutionsFixingNewVars (Rule (ProtoInfo (ProtoRuleACInstInfo _ _ _)) _ _ 
        substList _      _      = error "getSubstitutionsFixingNewVars: different number of new variables"
 getSubstitutionsFixingNewVars _ _
           = error "getSubstitutionsFixingNewVars: not called on a protocol rule" -- FIXME: Nothing?
+
+-- | returns true if the first Rule has the same name, premise, conclusion and
+-- action facts, ignoring terms, and added action facts
+equalUpToAddedActions :: (HasRuleName (Rule i), HasRuleName (Rule i2)) => (Rule i) -> (Rule i2) -> Bool
+equalUpToAddedActions ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
+  ruleName ruE == ruleName ruAC
+    && length ps == length ps' && length cs == length cs'
+    && foldl sameFacts True (zip ps ps') && foldl sameFacts True (zip cs cs')
+    && compareActions as as'
+  where
+    sameFacts b (f1, f2) = b && sameFact f1 f2
+    sameFact (Fact tag _ _) (Fact tag' _ _) = tag == tag'
+
+    compareActions _      []       = True
+    compareActions []     _        = False
+    compareActions (a:ass) (a':ass') = if sameFact a a'
+      then compareActions ass ass'
+      else compareActions ass (a':ass')
+
+-- | returns true if the first Rule has the same name, premise, conclusion and
+-- action facts, ignoring terms
+equalUpToTerms :: (HasRuleName (Rule i), HasRuleName (Rule i2)) => (Rule i) -> (Rule i2) -> Bool
+equalUpToTerms ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
+  ruleName ruE == ruleName ruAC
+    && length ps == length ps' && length cs == length cs' && length as == length as'
+    && foldl sameFacts True (zip ps ps') && foldl sameFacts True (zip cs cs')
+    && foldl sameFacts True (zip as as')
+  where
+    sameFacts b (f1, f2) = b && sameFact f1 f2
+    sameFact (Fact tag _ _) (Fact tag' _ _) = tag == tag'
 
 -- Construction
 ---------------
@@ -963,6 +999,25 @@ equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nv
        matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
                                                     | otherwise = Nothing
 
+-- | Are these two rule instances equal up to added annotations in @ac2@?
+equalRuleUpToAnnotations :: (Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToAnnotations (Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac2 nvs2) =
+  rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
+  S.isSubsetOf (S.fromList ac1) (S.fromList ac2)
+
+-- | Are these two rule instances equal up to an added diff annotation in @ac2@?
+equalRuleUpToDiffAnnotation :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac2 nvs2) =
+  rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
+  ac1 == filter isNotDiffAnnotation ac2
+  where
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
+
+-- | Are these two rule instances equal up to an added diff annotation in @ac2@ or @ac1@?
+equalRuleUpToDiffAnnotationSym :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToDiffAnnotationSym ru1 ru2 = equalRuleUpToDiffAnnotation ru1 ru2
+                                      || equalRuleUpToDiffAnnotation ru2 ru1
+
 ------------------------------------------------------------------------------
 -- Fact analysis
 ------------------------------------------------------------------------------
@@ -1125,6 +1180,10 @@ prettyRuleAC :: HighlightDocument d => RuleAC -> d
 prettyRuleAC =
     prettyNamedRule (kwRuleModulo "AC")
         (ruleInfo prettyProtoRuleACInfo (const emptyDoc))
+
+prettyProtoRuleACasE :: HighlightDocument d => ProtoRuleAC -> d
+prettyProtoRuleACasE =
+    prettyNamedRule (kwRuleModulo "E") (const emptyDoc)
 
 prettyIntrRuleAC :: HighlightDocument d => IntrRuleAC -> d
 prettyIntrRuleAC = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc)
