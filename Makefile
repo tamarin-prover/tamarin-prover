@@ -50,7 +50,7 @@ clean:	tamarin-clean sapic-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.5.1
+VERSION=1.7.0
 
 ###############################################################################
 ## Case Studies
@@ -460,7 +460,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS)
 
 case-studies: 	case-studies/system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/

@@ -9,3 +9,4 @@ tamarin-prover.cabal \
 lib/term/tamarin-prover-term.cabal \
 lib/theory/tamarin-prover-theory.cabal \
 lib/utils/tamarin-prover-utils.cabal \
+lib/sapic/tamarin-prover-sapic.cabal \
