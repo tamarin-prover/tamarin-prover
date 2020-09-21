@@ -1,1 +1,1 @@
-syntax/spthy.vim
+spthy.vim
