@@ -1,5 +1,12 @@
 theory OIDC_Implicit
-// Standard OIDC Implicit flow
+/*
+ * Protocol:     Standard OpenID Connect Implicit Flow
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: "Secure, Private, and Personal: Advancing Digital Identity", doctoral thesis, Sven Hammann
+ * Date:      September 2020
+ *
+ * Status:      working
+ */
 
 /*Color Coding: blue:    Browser
                 yellow:  Initializations

@@ -1,6 +1,12 @@
 theory POIDC_H
-// POIDC (with public subject identifiers)
-// Masking function instantiated as a hash function
+/*
+ * Protocol:     Privacy-preserving OpenID Connect (POIDC) using public subject identifiers, masking function instantiated as a hash function. This corresponds to POIDC.spthy from asiaccs20-POIDC.
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: "Secure, Private, and Personal: Advancing Digital Identity", doctoral thesis, Sven Hammann
+ * Date:      September 2020
+ *
+ * Status:      working
+ */
 
 
 /*Color Coding: blue:    Browser

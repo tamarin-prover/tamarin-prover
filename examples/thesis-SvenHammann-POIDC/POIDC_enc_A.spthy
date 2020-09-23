@@ -1,6 +1,12 @@
 theory POIDC_enc_A
-// POIDC (with public subject identifiers)
-// Masking function instantiated as randomized public-key encryption with the aggregator's public key
+/*
+ * Protocol:     Privacy-preserving OpenID Connect (POIDC) using public subject identifiers, masking function instantiated as randomized public-key encryption with the aggregator's public key
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: "Secure, Private, and Personal: Advancing Digital Identity", doctoral thesis, Sven Hammann
+ * Date:      September 2020
+ *
+ * Status:      working
+ */
 
 
 /*Color Coding: blue:    Browser

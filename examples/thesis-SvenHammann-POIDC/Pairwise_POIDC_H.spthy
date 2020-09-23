@@ -1,6 +1,12 @@
 theory Pairwise_POIDC_H
-// POIDC with pairwise subject identifiers H(H(global_user_id, client_id), rnd_2)
-// Masking function instantiated as a hash function
+/*
+ * Protocol:     Privacy-preserving OpenID Connect (POIDC) using pairwise subject identifiers, masking function instantiated as a cryptographic hash function. This corresponds to POIDC_Pairwise.spthy from asiaccs20-POIDC.
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: "Secure, Private, and Personal: Advancing Digital Identity", doctoral thesis, Sven Hammann
+ * Date:      September 2020
+ *
+ * Status:      working
+ */
 
 
 /*Color Coding: blue:    Browser
