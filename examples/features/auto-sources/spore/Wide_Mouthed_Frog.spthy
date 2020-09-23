@@ -1,0 +1,204 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             April 2020
+  Time:                ?
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/wideMouthedFrog.html)
+
+  Wide Mouthed Frog
+
+  A, S :    principal
+  Kas, Kbs, Kab :    symkey
+  Ta, Ts :    timestamp
+
+  1.    A  ->  S  :    A, {Ta, B, Kab}Kas
+  2.    S  ->  B  :    {Ts, A, Kab}Kbs
+
+  "It is assumed that the encryption is done in such a way that we know the whole message was sent at once.
+  If two separate encrypted sections are included in one message,
+  we treat them as though they arrived in separate messages.
+  A message cannot be understood by a principal who does not know the key
+  (or, in the case of public-key cryptography, by a principal who does not know the inverse of the key);
+  the key cannot be deduced from the encrypted message.
+  Each encrypted message contains sufficient redundancy to allow a principal who decrypts it to verify that he has used the right key.
+  In addition, messages contain sufficient information for a principal to detect (and ignore) his own messages."
+
+  "A sends a session key to S, including a timestamp Ta.
+  S checks that the first message is timely,
+  and if it is, it forwards the message to B, together with its own timestamp Ts.
+  B then checks that the timestamp from S is later than any other it has received from S."
+
+  A sends a session key to S, including a timestamp Ta.
+  S checks that the first message is timely,
+  and if it is, it forwards the message to B, together with its own timestamp Ts.
+  B then checks that the timestamp from S is later than any other it has received from S
+
+  The protocol must guaranty the secrecy of the new shared key Kab: in every session,
+  the value of Kab must be known only by the participants playing the roles of A and B and S.
+
+  The protocol must guaranty the authenticity of Kab: in every session,
+  on reception of message 2, B must be ensured that the key Kab in the message
+  has been created by S in the same session on behalf of A.
+
+  By replaying the second message within an appropriate time window,
+  the intruder I can make the server S update the timestamp of an non-fresh key Kab.
+  This way, he can extend the life time of a (possibly compromised) key Kab as wanted,
+  whereas A and B think that it has expired and has been destroyed.
+   i.1.   	 A 	  -> 	S 	:   	A, {Ta, B, Kab}Kas
+   i.2.   	 S 	  -> 	B 	:   	{Ts, A, Kab}Kbs
+   ii.1.   	I(B) -> 	S 	:   	B, {Ts, A, Kab}Kbs
+   ii.2.   	S 	  -> 	A 	:   	{T's, B, Kab}Kas
+   iii.1.   I(A) -> 	S 	:   	A, {T's, B, Kab}Kas
+   iii.2.   S 	  -> 	B 	:   	{T''s, A, Kab}Kbs
+   ....
+
+  In this attack, B thinks that A has established two sessions with him,
+  when A thinks he has established only one session.
+   i.1.   	A 	-> 	S 	:   	A, {Ta, B, Kab}Kas
+   i.2.   	S 	-> 	B 	:   	{Ts, A, Kab}Kbs
+   ii.2.   S 	-> 	B 	:   	{Ts, A, Kab}Kbs
+
+  We model a variant with tags.
+
+*/
+
+theory WmFrog
+begin
+
+builtins: symmetric-encryption
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[ KeyGen($X) ]->
+  [ !Ltk(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !Ltk(~sk,$A)]
+  --[ Reveal($A)]->
+    [ Out(~sk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+//  1.    A  ->  S  :    A, {Ta, B, Kab}Kas
+rule A_to_S:
+  [
+    !Ltk(~kas,$A)
+    , Fr(~ta)
+    , Fr(~kab)
+  ]
+  --[
+        Secret($A, $B, ~kab)
+      , Running_A($A, $B, <'A', 'B', ~kab>)
+    ]->
+  [
+    Out(<$A, senc(<'1', ~ta, $B, ~kab>, ~kas)>)
+  ]
+
+//  2.    S  ->  B  :    {Ts, A, Kab}Kbs   send
+rule S_to_B:
+  [
+    In(<a, senc(<'1', ta, b, kab>, ~kas)>)
+    , !Ltk(~kas,a)
+    , !Ltk(~kbs,b)
+    , Fr(~ts)
+  ]
+  --[
+        Secret(a, b, kab)
+      , Running_S(a, b, <'A', 'B', kab>)
+      , Commit_S(a, b, <'A', 'B', kab>)
+    ]->
+  [
+    Out(senc(<'2',~ts, a, kab>, ~kbs))
+  ]
+
+// 2.    S  ->  B  :    {Ts, A, Kab}Kbs   receive
+rule B_from_S:
+  [
+      In(senc(<'2',ts, a, kab>, ~kbs))
+    , !Ltk(~kbs,$B)
+  ]
+  --[
+        Secret(a, $B, kab)
+      , Commit_B(a, $B, <'A', 'B', kab>)
+    ]->
+  []
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B t #i #j #k.
+   Commit_B(A,B,t)@#i
+  & Commit_S(A,B,t)@#j & #j<#i
+  & Running_S(A,B,t)@#j
+  & Running_A(A,B,t)@#k & #k<#j
+  & not(Ex #r1. Reveal(A)@#r1)
+  & not(Ex #r2. Reveal(B)@#r2)
+ "
+
+// check the secrecy of a secret x protected by the long-term key of A and B
+lemma Secrecy:
+ "
+   not(
+     Ex A B m #i .
+       Secret(A, B, m)@ #i
+       & (Ex #r. K(m) @ #r)
+       & not(Ex #r. Reveal(B) @ #r)
+       & not(Ex #r. Reveal(A) @ #r)
+   )
+ "
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma agreement_B:
+ "All A B t #i.
+   Commit_B(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity and freshness of the transaction from S's point of view
+lemma injectiveagreement_S:
+  "All A B t #i.
+    Commit_S(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_S(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from S's point of view
+lemma agreement_S:
+ "All A B t #i.
+   Commit_S(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+end

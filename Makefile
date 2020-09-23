@@ -50,7 +50,7 @@ clean:	tamarin-clean sapic-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.5.1
+VERSION=1.7.0
 
 ###############################################################################
 ## Case Studies
@@ -94,6 +94,19 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with auto-sources
+case-studies/%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --auto-sources --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -367,6 +380,26 @@ FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(F
 features-case-studies:	$(FEATURES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
+## Auto-sources
+###############
+
+AUTO_SOURCES_CASE_STUDIES=CCITT_X509_1.spthy CCITT_X509_1c.spthy \
+                   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
+                   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
+                   AS_Modified_RPC.spthy AS_RPC.spthy \
+                   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
+                   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
+                   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
+                   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
+                   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
+                   WooLam_Pi_f.spthy
+
+AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix case-studies/features/auto-sources/spore/,$(AUTO_SOURCES_CASE_STUDIES)))
+
+# case studies
+auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/auto-sources/spore/*.spthy
+
 ## Regression (old issues)
 ##########################
 
@@ -427,7 +460,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS)
 
 case-studies: 	case-studies/system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/

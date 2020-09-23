@@ -1,0 +1,140 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:        Stéphanie Delaune
+  Date:           March 2020
+  Time:             ??
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/denningSacco.html)
+
+  Denning-Sacco shared key
+
+  A, B, S :    principal
+  Kas, Kbs, Kab :    key
+  T :    timestamp
+
+  1.    A  ->  S  :    A, B
+  2.    S  ->  A  :    {B, Kab, T, {Kab, A, T}Kbs}Kas
+  3.    A  ->  B  :    {Kab,A, T}Kbs
+
+  The nonces of Needham Schroeder Symmetric Key (for mutual authentication of A and B) have been replaced by a timestamp T.
+
+  The shared symmetric key established by the protocol is Kab.
+
+  The protocol must guaranty the secrecy of Kab: in every session, the value of Kab must be known only 
+  by the participants playing the roles of A, B and S in that session.
+
+  A must be properly authentified to B
+
+  This protocol is subject to a mutiplicity attack.
+  i.1.    A  ->  S  :    A, B
+  i.2.    S  ->  A  :    {B, Kab, T, {Kab, A, T}Kbs}Kas
+  i.3.    A  ->  B  :    {Kab,A, T}Kbs
+  ii.3.   I(A)  ->  B  :    {Kab,A, T}Kbs
+  In session ii, B thinks that A wants to establish a new shared key and accepts it.
+
+  We consider here the tagged version of this protocol.
+*/
+
+theory Denning_Sacco_SK
+begin
+
+builtins: symmetric-encryption
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[KeyGen($X)]->
+  [ !LongtermKey(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !LongtermKey(~sk,$A)]
+  --[ Compromise($A)]->
+    [ Out(~sk) ]
+
+rule Reveal_Shortterm_Key:
+    [ !ShorttermKey(~kab,$B,$A)]
+  --[ Compromise($A), Compromise($B)]->
+    [ Out(~kab) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1.    A  ->  S  :    A, B
+rule A_1:
+[]  --[]->
+  [Out(<$A, $B>), StateA($A, $B)]
+
+// 2.    S  ->  A  :    {B, Kab, T, {Kab, A, T}Kbs}Kas
+rule S_1:
+  let msg = senc(<'1', y, ~kab, ~t, senc(<'2',~kab, x,~t>,kbs)>,kas) in
+  [In(<x, y>), !LongtermKey(kas,x), !LongtermKey(kbs,y), Fr(~kab), Fr(~t)]
+  -->
+  [Out(msg), !ShorttermKey(~kab,x,y)]
+
+// 3.    A  ->  B  :    {Kab,A, T}Kbs   
+rule A_2:
+  let msg = senc(<'1', B, xkab, xt, xmb>,xkas) in
+  [ StateA(A, B), !LongtermKey(xkas,A), In(msg) ]
+  --[CommitA(A,B,<xkab,xt>),RunningA(A,B,<xkab,xt>),Secret(A, B, xkab)]->
+  [Out(xmb)]
+
+// 4.    
+rule B_1:
+  let msg1 = senc(<'2', ykab,<yA,yt>>,ykbs) in
+  [!LongtermKey(ykbs,B), In(msg1)]
+  --[CommitB(B,yA, <ykab,yt>),Secret(B, yA, ykab)]->
+  []
+
+restriction singlelongtermkeyperuser:
+  "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B t #i #j.
+   CommitB(B,A,t)@#i
+  & CommitA(A,B,t)@#j & #j<#i
+  & not(Ex #r1. Compromise(A)@#r1) 
+  & not(Ex #r2. Compromise(B)@#r2)
+ "
+
+// check the secrecy of the newly generated session key
+lemma secrecy:
+  "All A B k #i. Secret(A,B,k)@i ==> not (Ex #j. K(k)@j ) |  (Ex #j. Compromise(B)@j)  |  (Ex #j. Compromise(A)@j)  "
+
+
+
+// check the authenticity of the transaction from B's point of view
+lemma noninjectiveagreement_B:
+  "All A B t #i.
+    CommitB(B, A, t) @i
+    ==> ((Ex #j. RunningA(A,B,t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+// check the authenticity and freshness of the transaction from B's point of view
+// status: false due to multiplicity attack
+lemma injectiveagreement_B:
+"All A B t #i. CommitB(B,A,t) @i
+  ==> ((Ex #j. RunningA(A,B,t) @j
+      & j < i
+      & not (Ex B2 A2 #i2. CommitB(B2,A2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+end

@@ -425,20 +425,21 @@ factReportsDiff thy = concat
     -- agrees with the arity of the function as given by the signature is
     -- enforced by the parser and implicitly checked in 'factArity'.
 
-    theoryRuleFacts = {- do ruleFacts <$> get diffThyCacheLeft thy
-      <|> do ruleFacts <$> get diffThyDiffCacheLeft thy
-      <|> do ruleFacts <$> get diffThyCacheRight thy
-      <|> do ruleFacts <$> get diffThyDiffCacheRight thy
-      <|>-} do
+    theoryDiffRuleFacts = do
               DiffRuleItem ru <- get diffThyItems thy
               return $ ruleFacts ru
 
+    theoryParsedRuleFacts = do
+              EitherRuleItem (_, ru) <- get diffThyItems thy
+              return $ ruleFacts ru
+
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
-          theoryRuleFacts
+          theoryDiffRuleFacts
+      <|> theoryParsedRuleFacts
       <|> do EitherLemmaItem (s, l) <- get diffThyItems thy
              return $ (,) ("Lemma " ++ show s ++ " " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
-                 return $ (text (show fa), factInfo fa)
+                 return (text (show fa), factInfo fa)
 
     -- we must compute all important information up-front in order to
     -- mangle facts with terms with bound variables and such without them
@@ -464,7 +465,7 @@ factReportsDiff thy = concat
 
     -- Check for usage of protocol facts in rules with reserved prefixes in names
     reservedPrefixReport = do
-        (origin, fas) <- theoryRuleFacts
+        (origin, fas) <- theoryDiffRuleFacts
         case mapMaybe reservedPrefixFactName fas of
           []   -> []
           errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
@@ -511,7 +512,7 @@ factReportsDiff thy = concat
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
+        showInfo (tag, k, multipl) = show (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
@@ -522,12 +523,12 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ru <- get diffThyItems thy; get rActs ru)
-        ++ (do DiffRuleItem ru <- get diffThyItems thy; [Fact {factTag = ProtoFact Linear ("DiffProto" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
-        ++ (do ru <- get diffThyCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
-        ++ (do ru <- get diffThyDiffCacheRight thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
-        ++ (do ru <- get diffThyCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
-        ++ (do ru <- get diffThyDiffCacheLeft thy; [Fact {factTag = ProtoFact Linear ("DiffIntr" ++ (getRuleName ru)) 0, factAnnotations = S.empty, factTerms = []}])
+        : (do DiffRuleItem ru <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ru) <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy

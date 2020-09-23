@@ -1,0 +1,254 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             March 2020
+  Time:
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/nssk_amended.html)
+
+  Amended Needham Schroeder Symmetric Key
+
+  A, B, S :    principal
+  Na, Nb :    number
+  Kas, Kbs, Kab :    key
+  dec :    number -> number
+
+  1.    A  ->  B  :    A
+  2.    B  ->  A  :    {A, Nb}Kbs
+  3.    A  ->  S  :    A, B, Na, {A, Nb}Kbs
+  4.    S  ->  A  :    {Na, B, Kab, {Kab, Nb, A}Kbs}Kas
+  5.    A  ->  B  :    {Kab, Nb, A}Kbs
+  6.    B  ->  A  :    {Nb}Kab
+  7.    A  ->  B  :    {dec(Nb)}Kab
+
+  The extra exchange of the nonce Nb prevents the Denning Sacco freshness attack described in Needham Schroeder Symmetric Key.
+
+  This protocol establishes the fresh shared symmetric key Kab.
+
+  Messages 1-3 perform the distribution of the fresh shared symmetric key Kab
+  and messages 4-5 are for mutual authentification of A and B.
+
+  The operator dec is decrementation.
+
+  The protocol must guaranty the secrecy of Kab: in every session,
+  the value of Kab must be known only by the participants playing the roles of A, B and S in that session.
+
+  If the participant playing B accepts the last message 5,
+  then Kab has been sent in message 3. by A (whose identity is included in the cipher of message 3).
+
+  We use tags and only one server.
+
+*/
+
+theory Nssk_amended
+begin
+
+builtins: symmetric-encryption
+
+functions: dec/1, inc/1
+
+equations: inc(dec(x))=x
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[ KeyGen($X) ]->
+  [ !LongtermKey(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !LongtermKey(~sk,$A)]
+  --[ Reveal($A)]->
+    [ Out(~sk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1.    A  ->  B  :    A
+rule A_to_B1:
+  [
+   !LongtermKey(~kas,$A)
+  ]
+  --[ ]->
+  [
+    Out(<'1', $A>)
+    , StateA1($A, $B, ~kas)
+  ]
+
+// 2.    B  ->  A  :    {A, Nb}Kbs
+rule B_to_A1:
+  let msg = senc(<'2', x, ~nb>,~kbs) in
+  [
+      In(<'1', x>)
+    , !LongtermKey(~kbs,$B)
+    , Fr(~nb)
+  ]
+  --[ ]->
+  [
+      Out(msg)
+    , StateB1(x, $B, ~kbs, ~nb)
+  ]
+
+// 3.    A  ->  S  :    A, B, Na, {A, Nb}Kbs
+rule A_to_S:
+  let msg2 = <'3', $A, $B, ~na, mb> in
+  [
+      StateA1($A, $B, ~kas)
+    , !LongtermKey(~kas,$A)
+    , Fr(~na)
+    , In(mb)
+  ]
+  --[ ]->
+  [
+      Out(msg2)
+    , StateA2($A, $B, ~kas, ~na, mb)
+  ]
+
+// 4.    S  ->  A  :    {Na, B, Kab, {Kab, Nb, A}Kbs}Kas
+rule S_to_A:
+  let msg1 = <'3', a, b, na, senc(<'2', a, nb>,~kbs)>
+      msg2 = senc(<'4', na, b, ~kab, senc(<'5', ~kab, nb, a>,~kbs)>,~kas)
+  in
+  [
+      !LongtermKey(~kbs,b)
+    , !LongtermKey(~kas,a)
+    , In(msg1)
+    , Fr(~kab)
+  ]
+  --[
+      Secret(a, b, ~kab)
+    ]->
+  [
+      Out(msg2)
+  ]
+
+// 5.    A  ->  B  :    {Kab, Nb, A}Kbs
+rule A_to_B2:
+  [
+      StateA2($A, $B, ~kas, ~na, mb)
+    , !LongtermKey(~kas,$A)
+    , In(senc(<'4', ~na, $B, kab, mb2>,~kas))
+  ]
+  --[ ]->
+  [
+      Out(mb2)
+    , StateA3($A, $B, ~kas, ~na, mb, kab, mb2)
+  ]
+
+// 6.    B  ->  A  :    {Nb}Kab
+rule B_to_A2:
+  [
+      StateB1(x, $B, ~kbs, ~nb)
+    , !LongtermKey(~kbs,$B)
+    , In(senc(<'5', kab, ~nb, x>,~kbs))
+  ]
+  --[
+      Running_B(x, $B, <'A', 'B', ~nb, kab>)
+    ]->
+  [
+      Out(senc(<'6', ~nb>,kab))
+    , StateB2(x, $B, ~kbs, ~nb, kab)
+  ]
+
+// 7.    A  ->  B  :    {dec(Nb)}Kab (Send)
+rule A_to_B3:
+  [
+      StateA3($A, $B, ~kas, ~na, mb, kab, mb2)
+    , !LongtermKey(~kas,$A)
+    , In(senc(<'6', nb>,kab))
+  ]
+  --[
+      Commit_A($A, $B, <'A', 'B', nb, kab>)
+    , Running_A($A, $B, <'A', 'B', dec(nb), kab>)
+    ]->
+  [
+      Out(senc(<'7', dec(nb)>, kab))
+  ]
+
+// 7.    A  ->  B  :    {dec(Nb)}Kab (Receive)
+rule B_from_A:
+  [
+      StateB2(x, $B, ~kbs, ~nb, kab)
+    , !LongtermKey(~kbs,$B)
+    , In(senc(<'7', dec(~nb)>, kab))
+  ]
+  --[
+      Commit_B(x, $B, <'A', 'B', dec(~nb), kab>)
+    ]->
+  [ ]
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B nb kab #i #j #k.
+   Commit_B(A,B,<'A', 'B', dec(nb),kab>)@#i
+  & Commit_A(A,B,<'A', 'B', nb,kab>)@#j & #j<#i
+  & Running_A(A,B,<'A', 'B', dec(nb),kab>)@#j
+  & Running_B(A,B,<'A', 'B', nb,kab>)@#k & #k<#j
+  & not(Ex #r1. Reveal(A)@#r1)
+  & not(Ex #r2. Reveal(B)@#r2)
+ "
+
+// check the secrecy of a secret x protected by the long-term key of A and B
+lemma Secrecy:
+ "
+   not(
+     Ex A B m #i .
+       Secret(A, B, m)@ #i
+       & (Ex #r. K(m) @ #r)
+       & not(Ex #r. Reveal(B) @ #r)
+       & not(Ex #r. Reveal(A) @ #r)
+   )
+ "
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma agreement_B:
+ "All A B t #i.
+   Commit_B(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity and freshness of the transaction from A's point of view
+lemma injectiveagreement_A:
+  "All A B t #i.
+    Commit_A(A,B,t) @i
+    ==> (Ex #j. Running_B(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_A(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from A's point of view
+lemma agreement_A:
+ "All A B t #i.
+   Commit_A(A,B,t) @i
+   ==> (Ex #j. Running_B(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+end
