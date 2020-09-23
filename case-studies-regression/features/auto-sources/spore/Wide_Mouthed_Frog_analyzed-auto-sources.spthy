@@ -10,69 +10,6 @@ equations:
 
 
 
-lemma AUTO_typing [sources]:
-  all-traces
-  "(⊤) ∧
-   (∀ x m #i.
-     (AUTO_IN_1_1_S_to_B( m, x ) @ #i) ⇒
-     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ∧ (#j < #i))))"
-/*
-guarded formula characterizing all counter-examples:
-"∃ x m #i.
-  (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
- ∧
-  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ⇒ ¬(#j < #i))"
-*/
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (last(#i))  ∥
-         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-         (∃ #j.
-           (AUTO_OUT_0_1_A_to_S( senc(<'1', ta, b, x>, ~kas) ) @ #j)
-          ∧
-           (¬(last(#j))) ∧ (#j < #i)) )
-    case case_1
-    solve( !Ltk( ~kas, a ) ▶₁ #i )
-      case Init
-      solve( !Ltk( ~kbs, b ) ▶₂ #i )
-        case Init
-        solve( !KU( senc(<'1', ta, $X.1, x>, ~kas) ) @ #vk.2 )
-          case A_to_S
-          by contradiction /* from formulas */
-        next
-          case S_to_B
-          solve( (∃ #j. (!KU( kab ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_1_A_to_S( senc(<'1', ta.1, $X.3, kab>, ~kas.1) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.2)) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* impossible chain */
-          qed
-        next
-          case c_senc
-          by contradiction /* from formulas */
-        qed
-      qed
-    qed
-  next
-    case case_2
-    by contradiction /* from formulas */
-  next
-    case case_3
-    by contradiction /* from formulas */
-  qed
-qed
-
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
 
@@ -431,6 +368,69 @@ qed
 
 /* All well-formedness checks were successful. */
 
+lemma AUTO_typing [sources]:
+  all-traces
+  "(⊤) ∧
+   (∀ x m #i.
+     (AUTO_IN_1_1_S_to_B( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ∧ (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x m #i.
+  (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
+ ∧
+  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ⇒ ¬(#j < #i))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j.
+           (AUTO_OUT_0_1_A_to_S( senc(<'1', ta, b, x>, ~kas) ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (#j < #i)) )
+    case case_1
+    solve( !Ltk( ~kas, a ) ▶₁ #i )
+      case Init
+      solve( !Ltk( ~kbs, b ) ▶₂ #i )
+        case Init
+        solve( !KU( senc(<'1', ta, $X.1, x>, ~kas) ) @ #vk.2 )
+          case A_to_S
+          by contradiction /* from formulas */
+        next
+          case S_to_B
+          solve( (∃ #j. (!KU( kab ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_1_A_to_S( senc(<'1', ta.1, $X.3, kab>, ~kas.1) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_senc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
 end
 /* Output
 maude tool: 'maude'
@@ -444,14 +444,14 @@ analyzing: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.623260403s
-  AUTO_typing (all-traces): verified (14 steps)
+  processing time: 1.21598593s
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): falsified - found trace (9 steps)
   agreement_B (all-traces): verified (9 steps)
   injectiveagreement_S (all-traces): falsified - found trace (9 steps)
   agreement_S (all-traces): verified (7 steps)
+  AUTO_typing (all-traces): verified (14 steps)
 
 ------------------------------------------------------------------------------
 
@@ -461,14 +461,14 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.623260403s
-  AUTO_typing (all-traces): verified (14 steps)
+  processing time: 1.21598593s
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): falsified - found trace (9 steps)
   agreement_B (all-traces): verified (9 steps)
   injectiveagreement_S (all-traces): falsified - found trace (9 steps)
   agreement_S (all-traces): verified (7 steps)
+  AUTO_typing (all-traces): verified (14 steps)
 
 ==============================================================================
 */
