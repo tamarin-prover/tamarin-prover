@@ -1,0 +1,74 @@
+theory LetBlockCharlyOne begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, hash/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+rule (modulo E) Init[color=#6c8040 process=new a;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_[color=#6c8040 process=new a;]:
+   [ state_( ), Fr( a ) ] --> [ state_1( a ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outga_0_1[color=#6c8040 process=out('g'^a);]:
+   [ state_1( a ) ] --> [ state_11( a ), Out( 'g'^a ) ]
+
+  /*
+  rule (modulo AC) outga_0_1[color=#6c8040 process=out('g'^a);]:
+     [ state_1( a ) ] --> [ state_11( a ), Out( z ) ]
+    variants (modulo AC)
+    1. a     = a.3
+       z     = 'g'^a.3
+    
+    2. a     = one
+       z     = 'g'
+  */
+
+rule (modulo E) __0_11[color=#6c8040 process=0]:
+   [ state_11( a ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
+
+  output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
+  processing time: 0.074959s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
+
+  output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
+  processing time: 0.074959s
+
+
+==============================================================================
+*/

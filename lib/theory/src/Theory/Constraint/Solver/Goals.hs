@@ -103,7 +103,8 @@ openGoals sys = do
         ChainG c p     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
-                  not solved && allMsgVarsKnownEarlier c args
+              -- do not solve Union conclusions if they contain only known msg vars
+                  not solved && not (allMsgVarsKnownEarlier c args)
               -- open chains for msg vars are only solved if N5'' is applicable
               Just (DnK,  m) | isMsgVar m          -> (not solved) &&
                                                       (chainToEquality m c p)
@@ -168,9 +169,8 @@ openGoals sys = do
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
-
-    allMsgVarsKnownEarlier (i,_) args =
-        all (`elem` earlierMsgVars) (filter isMsgVar args)
+    allMsgVarsKnownEarlier (i,_) args = (all isMsgVar args) &&
+        (all (`elem` earlierMsgVars) args)
       where earlierMsgVars = do (j, _, t) <- allKUActions sys
                                 guard $ isMsgVar t && alwaysBefore sys j i
                                 return t

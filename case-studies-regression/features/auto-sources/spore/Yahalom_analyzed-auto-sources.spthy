@@ -1133,7 +1133,7 @@ analyzing: examples/features/auto-sources/spore/Yahalom.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom.spthy.tmp
-  processing time: 3.634112476s
+  processing time: 3.611028813s
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (51 steps)
@@ -1150,7 +1150,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom.spthy.tmp
-  processing time: 3.634112476s
+  processing time: 3.611028813s
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (51 steps)

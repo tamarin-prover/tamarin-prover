@@ -1043,7 +1043,7 @@ analyzing: examples/features/auto-sources/spore/Nssk.spthy
 analyzed: examples/features/auto-sources/spore/Nssk.spthy
 
   output:          examples/features/auto-sources/spore/Nssk.spthy.tmp
-  processing time: 3.618617581s
+  processing time: 3.598641233s
   executability (exists-trace): verified (12 steps)
   Secrecy (all-traces): verified (34 steps)
   injectiveagreement_B (all-traces): verified (31 steps)
@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk.spthy
 
   output:          examples/features/auto-sources/spore/Nssk.spthy.tmp
-  processing time: 3.618617581s
+  processing time: 3.598641233s
   executability (exists-trace): verified (12 steps)
   Secrecy (all-traces): verified (34 steps)
   injectiveagreement_B (all-traces): verified (31 steps)

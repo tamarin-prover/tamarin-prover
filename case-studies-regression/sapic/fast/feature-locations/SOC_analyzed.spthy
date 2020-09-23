@@ -1,0 +1,1045 @@
+theory SOC begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, check_rep/2, fst/1, get_rep/1, list/2, pair/2,
+           pk/1, prog/2, rep/2 [private], report/1, sdec/2, senc/2, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    check_rep(rep(x.1, x.2), x.2) = true,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, y )<->¬(∃ z. y = <'loc', z>)
+
+lemma secrecy [reuse]:
+  all-traces
+  "¬(∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
+*/
+simplify
+by solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+
+lemma Input [use_induction, reuse]:
+  all-traces
+  "∀ #t1 ip shared_key.
+    (Input( senc(ip, shared_key) ) @ #t1) ⇒
+    (∃ #t2 pk. (SessionV( pk, shared_key ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 ip shared_key.
+  (Input( senc(ip, shared_key) ) @ #t1)
+ ∧
+  ∀ #t2 pk. (SessionV( pk, shared_key ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ #t1 ip shared_key.
+           (Input( senc(ip, shared_key) ) @ #t1)
+          ⇒
+           ((last(#t1)) ∨
+            (∃ #t2 pk.
+              (SessionV( pk, shared_key ) @ #t2) ∧ (¬(last(#t2))) ∧ (#t2 < #t1))))  ∥
+         (∃ x y #t3.
+           (IsIn( x, y ) @ #t3)
+          ∧
+           (¬(last(#t3))) ∧
+           (∀ #t2.
+             (Insert( x, y ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              (#t2 = #t3) ∨
+              (#t3 < #t2) ∨
+              (∃ #t1 yp.
+                (Insert( x, yp ) @ #t1)
+               ∧
+                (¬(last(#t1))) ∧
+                (((#t1 = #t2) ∨ (#t2 < #t1))) ∧
+                (¬(#t1 = #t2)) ∧
+                (((#t3 = #t1) ∨ (#t1 < #t3)))))))  ∥
+         (∃ p pp l x lp #t1 #t3.
+           (Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)
+          ∧
+           (¬(last(#t3))) ∧
+           (¬(last(#t1))) ∧
+           (((#t1 = #t3) ∨
+             (#t3 < #t1) ∨
+             (∀ #t2.
+               (Unlock_0( p, l, x ) @ #t2)
+              ⇒
+               ((last(#t2)) ∨
+                (#t1 = #t2) ∨
+                (#t2 < #t1) ∨
+                (#t2 = #t3) ∨
+                (#t3 < #t2) ∨
+                (∃ #t0 pp.1.
+                  (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+                (∃ pp.1 lpp #t0.
+                  (Lock( pp.1, lpp, x ) @ #t0)
+                 ∧
+                  (¬(last(#t0))) ∧
+                  (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                  (¬(#t0 = #t1)) ∧
+                  (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+                (∃ pp.1 lpp #t0.
+                  (Unlock( pp.1, lpp, x ) @ #t0)
+                 ∧
+                  (¬(last(#t0))) ∧
+                  (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                  (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                  (¬(#t2 = #t0))))))) ∧
+           (((#t3 = #t1) ∨ (#t1 < #t3))) ∧
+           (¬(#t1 = #t3)))  ∥
+         (∃ p pp l x lp #t1 #t3.
+           (Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)
+          ∧
+           (¬(last(#t3))) ∧
+           (¬(last(#t1))) ∧
+           (((#t1 = #t3) ∨
+             (#t3 < #t1) ∨
+             (∀ #t2.
+               (Unlock_1( p, l, x ) @ #t2)
+              ⇒
+               ((last(#t2)) ∨
+                (#t1 = #t2) ∨
+                (#t2 < #t1) ∨
+                (#t2 = #t3) ∨
+                (#t3 < #t2) ∨
+                (∃ #t0 pp.1.
+                  (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+                (∃ pp.1 lpp #t0.
+                  (Lock( pp.1, lpp, x ) @ #t0)
+                 ∧
+                  (¬(last(#t0))) ∧
+                  (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                  (¬(#t0 = #t1)) ∧
+                  (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+                (∃ pp.1 lpp #t0.
+                  (Unlock( pp.1, lpp, x ) @ #t0)
+                 ∧
+                  (¬(last(#t0))) ∧
+                  (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                  (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                  (¬(#t2 = #t0))))))) ∧
+           (((#t3 = #t1) ∨ (#t1 < #t3))) ∧
+           (¬(#t1 = #t3))) )
+    case case_1
+    solve( (last(#t1))  ∥
+           (∃ #t2 pk.
+             (SessionV( pk, shared_key ) @ #t2) ∧ (¬(last(#t2))) ∧ (#t2 < #t1)) )
+      case case_1
+      by solve( state_1211111111111111( init, ip, old_i, shared_key, signed,
+                                        skV, storeV, lock
+                ) ▶₀ #t1 )
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (#t1.1 = #t2)  ∥ (#t2 < #t1.1) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_3
+    solve( (#t1.1 = #t3)  ∥ (#t3 < #t1.1)  ∥
+           (∀ #t2.
+             (Unlock_0( '0', ~n, x ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              (#t1.1 = #t2) ∨
+              (#t2 < #t1.1) ∨
+              (#t2 = #t3) ∨
+              (#t3 < #t2) ∨
+              (∃ #t0 pp.
+                (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+              (∃ pp lpp #t0.
+                (Lock( pp, lpp, x ) @ #t0)
+               ∧
+                (¬(last(#t0))) ∧
+                (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                (¬(#t0 = #t1.1)) ∧
+                (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+              (∃ pp lpp #t0.
+                (Unlock( pp, lpp, x ) @ #t0)
+               ∧
+                (¬(last(#t0))) ∧
+                (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                (¬(#t2 = #t0))))) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      solve( (#t3 = #t1.1)  ∥ (#t1.1 < #t3) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        solve( (∃ #t0 pp.
+                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
+               (∃ pp lpp #t0.
+                 (Lock( pp, lpp, x ) @ #t0)
+                ∧
+                 (¬(last(#t0))) ∧
+                 (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                 (¬(#t0 = #t1.1)) ∧
+                 (((#t2 = #t0) ∨ (#t0 < #t2))))  ∥
+               (∃ pp lpp #t0.
+                 (Unlock( pp, lpp, x ) @ #t0)
+                ∧
+                 (¬(last(#t0))) ∧
+                 (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                 (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                 (¬(#t2 = #t0))) )
+          case case_1
+          by contradiction /* from formulas */
+        next
+          case case_2
+          solve( (#t0 = #t1.1)  ∥ (#t1.1 < #t0) )
+            case case_1
+            by contradiction /* from formulas */
+          next
+            case case_2
+            by contradiction /* from formulas */
+          qed
+        next
+          case case_3
+          solve( (#t0 = #t1.1)  ∥ (#t1.1 < #t0) )
+            case case_1
+            by contradiction /* from formulas */
+          next
+            case case_2
+            solve( (#t2 = #t0)  ∥ (#t0 < #t2) )
+              case case_1
+              by contradiction /* from formulas */
+            next
+              case case_2
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_4
+    solve( (#t1.1 = #t3)  ∥ (#t3 < #t1.1)  ∥
+           (∀ #t2.
+             (Unlock_1( '1', ~n, x ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              (#t1.1 = #t2) ∨
+              (#t2 < #t1.1) ∨
+              (#t2 = #t3) ∨
+              (#t3 < #t2) ∨
+              (∃ #t0 pp.
+                (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+              (∃ pp lpp #t0.
+                (Lock( pp, lpp, x ) @ #t0)
+               ∧
+                (¬(last(#t0))) ∧
+                (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                (¬(#t0 = #t1.1)) ∧
+                (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+              (∃ pp lpp #t0.
+                (Unlock( pp, lpp, x ) @ #t0)
+               ∧
+                (¬(last(#t0))) ∧
+                (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                (¬(#t2 = #t0))))) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      solve( (#t3 = #t1.1)  ∥ (#t1.1 < #t3) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        solve( (∃ #t0 pp.
+                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
+               (∃ pp lpp #t0.
+                 (Lock( pp, lpp, x ) @ #t0)
+                ∧
+                 (¬(last(#t0))) ∧
+                 (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                 (¬(#t0 = #t1.1)) ∧
+                 (((#t2 = #t0) ∨ (#t0 < #t2))))  ∥
+               (∃ pp lpp #t0.
+                 (Unlock( pp, lpp, x ) @ #t0)
+                ∧
+                 (¬(last(#t0))) ∧
+                 (((#t0 = #t1.1) ∨ (#t1.1 < #t0))) ∧
+                 (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                 (¬(#t2 = #t0))) )
+          case case_1
+          by contradiction /* from formulas */
+        next
+          case case_2
+          solve( (#t0 = #t1.1)  ∥ (#t1.1 < #t0) )
+            case case_1
+            by contradiction /* from formulas */
+          next
+            case case_2
+            by contradiction /* from formulas */
+          qed
+        next
+          case case_3
+          solve( (#t0 = #t1.1)  ∥ (#t1.1 < #t0) )
+            case case_1
+            by contradiction /* from formulas */
+          next
+            case case_2
+            solve( (#t2 = #t0)  ∥ (#t0 < #t2) )
+              case case_1
+              by contradiction /* from formulas */
+            next
+              case case_2
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma secrecy_computes2 [reuse]:
+  all-traces
+  "¬(∃ ip k #t2 #t3. (Input( senc(ip, k) ) @ #t2) ∧ (!KU( ip ) @ #t3))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ ip k #t2 #t3. (Input( senc(ip, k) ) @ #t2) ∧ (!KU( ip ) @ #t3)"
+*/
+simplify
+by solve( state_1211111111111111( init, ip, old_i, k, signed, skV,
+                                  storeV, lock
+          ) ▶₀ #t2 )
+
+lemma secrecy_computes3 [reuse]:
+  all-traces
+  "¬(∃ ip k old_i #t2 #t3.
+      (Input( senc(ip, k) ) @ #t2) ∧ (!KU( prog(ip, old_i) ) @ #t3))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ ip k old_i #t2 #t3.
+  (Input( senc(ip, k) ) @ #t2) ∧ (!KU( prog(ip, old_i) ) @ #t3)"
+*/
+simplify
+by solve( state_1211111111111111( init, ip, old_i, k, signed, skV,
+                                  storeV, lock
+          ) ▶₀ #t2 )
+
+lemma attested_computation:
+  all-traces
+  "∀ #t1 h.
+    (Voutput( h ) @ #t1) ⇒ (∃ #t2. (Poutput( h ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 h.
+  (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( Voutput( h ) @ #t1 )
+  case eventVoutputaencsharedkpkskVsigned_0_12111111
+  by solve( state_12111111( init, shared_k, signed, skV ) ▶₀ #t1 )
+next
+  case eventVoutputsencprogipoldioutputsharedk_0_1211111111111111111
+  by solve( state_1211111111111111111( init, ip, old_i, shared_k, signed,
+                                       skV, storeV, lock
+            ) ▶₀ #t1 )
+qed
+
+rule (modulo E) Report-rule[color=#ffffff process=new init;]:
+   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=new init;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newinit_0_[color=#ffffff process=new init;]:
+   [ state_( ), Fr( init ) ] --> [ state_1( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1[color=#ffffff process=|]:
+   [ state_1( init ) ] --> [ state_11( init ), state_12( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11[color=#ffffff process=!]:
+   [ state_11( init ) ] --> [ !semistate_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_11[color=#ffffff process=!]:
+   [ !semistate_111( init ) ] --> [ state_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inpkskV_0_111[color=#405280 process=in(pk(skV));]:
+   [ state_111( init ), In( pk(skV) ) ] --> [ state_1111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1111[color=#405280 process=!]:
+   [ state_1111( init, skV ) ] --> [ !semistate_11111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1111[color=#405280 process=!]:
+   [ !semistate_11111( init, skV ) ] --> [ state_11111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsharedk_0_11111[color=#405280 process=new shared_k;]:
+   [ state_11111( init, skV ), Fr( shared_k ) ]
+  -->
+   [ state_111111( init, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSessionPpkskVsharedk_0_111111[color=#405280 process=event SessionP( pk(skV), shared_k );]:
+   [ state_111111( init, shared_k, skV ) ]
+  --[ SessionP( pk(skV), shared_k ) ]->
+   [ state_1111111( init, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPoutputaencsharedkpkskVrepaencsharedkpkskVlocpkskV_0_1111111[color=#405280 process=event Poutput( <aenc(shared_k, pk(skV)), 
+          rep(aenc(shared_k, pk(skV)), <'loc', pk(skV)>)>
+);]:
+   [ state_1111111( init, shared_k, skV ) ]
+  --[
+  Poutput( <aenc(shared_k, pk(skV)), 
+            rep(aenc(shared_k, pk(skV)), <'loc', pk(skV)>)>
+  )
+  ]->
+   [ state_11111111( init, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outaencsharedkpkskVrepaencsharedkpkskVlocpkskV_0_11111111[color=#405280 process=out(<aenc(shared_k, pk(skV)), 
+ rep(aenc(shared_k, pk(skV)), <'loc', pk(skV)>)>);]:
+   [ state_11111111( init, shared_k, skV ) ]
+  -->
+   [
+   state_111111111( init, shared_k, skV ),
+   Out( <aenc(shared_k, pk(skV)), 
+         rep(aenc(shared_k, pk(skV)), <'loc', pk(skV)>)>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstoreP_0_111111111[color=#405280 process=new storeP;]:
+   [ state_111111111( init, shared_k, skV ), Fr( storeP ) ]
+  -->
+   [ state_1111111111( init, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstorePinit_0_1111111111[color=#405280 process=insert storeP,init;]:
+   [ state_1111111111( init, shared_k, skV, storeP ) ]
+  --[ Insert( storeP, init ) ]->
+   [ state_11111111111( init, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111111111[color=#405280 process=!]:
+   [ state_11111111111( init, shared_k, skV, storeP ) ]
+  -->
+   [ !semistate_111111111111( init, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_11111111111[color=#405280 process=!]:
+   [ !semistate_111111111111( init, shared_k, skV, storeP ) ]
+  -->
+   [ state_111111111111( init, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstoreP_0_111111111111[color=#405280 process=lock storeP;]:
+   [ state_111111111111( init, shared_k, skV, storeP ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, storeP ), Lock( '0', lock, storeP ) ]->
+   [ state_1111111111111( init, lock, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstorePasoldi_0_1111111111111[color=#405280 process=lookup storeP as old_i]:
+   [ state_1111111111111( init, lock, shared_k, skV, storeP ) ]
+  --[ IsIn( storeP, old_i ) ]->
+   [ state_11111111111111( init, lock, old_i, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstorePasoldi_1_1111111111111[color=#405280 process=lookup storeP as old_i]:
+   [ state_1111111111111( init, lock, shared_k, skV, storeP ) ]
+  --[ IsNotSet( storeP ) ]->
+   [ state_11111111111112( init, lock, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insencipinputsharedk_0_11111111111111[color=#405280 process=in(senc(<ip, 'input'>, shared_k));]:
+   [
+   state_11111111111111( init, lock, old_i, shared_k, skV, storeP ),
+   In( senc(<ip, 'input'>, shared_k) )
+   ]
+  -->
+   [ state_111111111111111( init, ip, lock, old_i, shared_k, skV, storeP ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPoutputsencprogipoldioutputsharedk_0_111111111111111[color=#405280 process=event Poutput( senc(<prog(ip, old_i), 'output'>, shared_k) );]:
+   [ state_111111111111111( init, ip, lock, old_i, shared_k, skV, storeP ) ]
+  --[ Poutput( senc(<prog(ip, old_i), 'output'>, shared_k) ) ]->
+   [ state_1111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsencprogipoldioutputsharedk_0_1111111111111111[color=#405280 process=out(senc(<prog(ip, old_i), 'output'>, shared_k));]:
+   [ state_1111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+  -->
+   [
+   state_11111111111111111( init, ip, lock, old_i, shared_k, skV, storeP ),
+   Out( senc(<prog(ip, old_i), 'output'>, shared_k) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstorePlistipoldi_0_11111111111111111[color=#405280 process=insert storeP,list(ip, old_i);]:
+   [ state_11111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+  --[ Insert( storeP, list(ip, old_i) ) ]->
+   [
+   state_111111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlockstoreP_0_111111111111111111[color=#405280 process=unlock storeP;]:
+   [
+   state_111111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+  --[ Unlock_0( '0', lock, storeP ), Unlock( '0', lock, storeP ) ]->
+   [
+   state_1111111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1111111111111111111[color=#405280 process=0]:
+   [
+   state_1111111111111111111( init, ip, lock, old_i, shared_k, skV, storeP )
+   ]
+  -->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111111111112[color=#405280 process=0]:
+   [ state_11111111111112( init, lock, shared_k, skV, storeP ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_12[color=#ffffff process=!]:
+   [ state_12( init ) ] --> [ !semistate_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_12[color=#ffffff process=!]:
+   [ !semistate_121( init ) ] --> [ state_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newskV_0_121[color=#658040 process=new skV;]:
+   [ state_121( init ), Fr( skV ) ] --> [ state_1211( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventHonestPpkskV_0_1211[color=#658040 process=event HonestP( pk(skV) );]:
+   [ state_1211( init, skV ) ]
+  --[ HonestP( pk(skV) ) ]->
+   [ state_12111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpkskV_0_12111[color=#658040 process=out(pk(skV));]:
+   [ state_12111( init, skV ) ]
+  -->
+   [ state_121111( init, skV ), Out( pk(skV) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inaencsharedkpkskVsigned_0_121111[color=#658040 process=in(<aenc(shared_k, pk(skV)), signed>);]:
+   [ state_121111( init, skV ), In( <aenc(shared_k, pk(skV)), signed> ) ]
+  -->
+   [ state_1211111( init, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 process=if aenc(shared_k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+   [ state_1211111( init, shared_k, signed, skV ) ]
+  --[
+  Pred_Eq( aenc(shared_k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) )
+  ]->
+   [ state_12111111( init, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(shared_k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+   [ state_1211111( init, shared_k, signed, skV ) ]
+  --[
+  Pred_Not_Eq( aenc(shared_k, pk(skV)), check_rep(signed, <'loc', pk(skV)>)
+  )
+  ]->
+   [ state_12111112( init, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventVoutputaencsharedkpkskVsigned_0_12111111[color=#658040 process=event Voutput( <aenc(shared_k, pk(skV)), signed> );]:
+   [ state_12111111( init, shared_k, signed, skV ) ]
+  --[ Voutput( <aenc(shared_k, pk(skV)), signed> ) ]->
+   [ state_121111111( init, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSessionVpkskVsharedk_0_121111111[color=#658040 process=event SessionV( pk(skV), shared_k );]:
+   [ state_121111111( init, shared_k, signed, skV ) ]
+  --[ SessionV( pk(skV), shared_k ) ]->
+   [ state_1211111111( init, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstoreV_0_1211111111[color=#658040 process=new storeV;]:
+   [ state_1211111111( init, shared_k, signed, skV ), Fr( storeV ) ]
+  -->
+   [ state_12111111111( init, shared_k, signed, skV, storeV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstoreVinit_0_12111111111[color=#658040 process=insert storeV,init;]:
+   [ state_12111111111( init, shared_k, signed, skV, storeV ) ]
+  --[ Insert( storeV, init ) ]->
+   [ state_121111111111( init, shared_k, signed, skV, storeV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_121111111111[color=#658040 process=!]:
+   [ state_121111111111( init, shared_k, signed, skV, storeV ) ]
+  -->
+   [ !semistate_1211111111111( init, shared_k, signed, skV, storeV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_121111111111[color=#658040 process=!]:
+   [ !semistate_1211111111111( init, shared_k, signed, skV, storeV ) ]
+  -->
+   [ state_1211111111111( init, shared_k, signed, skV, storeV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstoreV_0_1211111111111[color=#658040 process=lock storeV;]:
+   [
+   state_1211111111111( init, shared_k, signed, skV, storeV ), Fr( lock.1 )
+   ]
+  --[ Lock_1( '1', lock.1, storeV ), Lock( '1', lock.1, storeV ) ]->
+   [ state_12111111111111( init, shared_k, signed, skV, storeV, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lockstoreV_0_1211111111111[color=#658040 process=lock storeV;]:
+     [ state_1211111111111( init, shared_k, signed, skV, storeV ), Fr( lock )
+     ]
+    --[ Lock_1( '1', lock, storeV ), Lock( '1', lock, storeV ) ]->
+     [ state_12111111111111( init, shared_k, signed, skV, storeV, lock ) ]
+  */
+
+rule (modulo E) lookupstoreVasoldi_0_12111111111111[color=#658040 process=lookup storeV as old_i]:
+   [ state_12111111111111( init, shared_k, signed, skV, storeV, lock.1 ) ]
+  --[ IsIn( storeV, old_i ) ]->
+   [
+   state_121111111111111( init, old_i, shared_k, signed, skV, storeV, lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) lookupstoreVasoldi_0_12111111111111[color=#658040 process=lookup storeV as old_i]:
+     [ state_12111111111111( init, shared_k, signed, skV, storeV, lock ) ]
+    --[ IsIn( storeV, old_i ) ]->
+     [
+     state_121111111111111( init, old_i, shared_k, signed, skV, storeV, lock )
+     ]
+  */
+
+rule (modulo E) lookupstoreVasoldi_1_12111111111111[color=#658040 process=lookup storeV as old_i]:
+   [ state_12111111111111( init, shared_k, signed, skV, storeV, lock.1 ) ]
+  --[ IsNotSet( storeV ) ]->
+   [ state_121111111111112( init, shared_k, signed, skV, storeV, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstoreVasoldi_1_12111111111111[color=#658040 process=lookup storeV as old_i]:
+     [ state_12111111111111( init, shared_k, signed, skV, storeV, lock ) ]
+    --[ IsNotSet( storeV ) ]->
+     [ state_121111111111112( init, shared_k, signed, skV, storeV, lock ) ]
+  */
+
+rule (modulo E) newip_0_121111111111111[color=#658040 process=new ip;]:
+   [
+   state_121111111111111( init, old_i, shared_k, signed, skV, storeV, lock.1
+   ),
+   Fr( ip )
+   ]
+  -->
+   [
+   state_1211111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                           lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) newip_0_121111111111111[color=#658040 process=new ip;]:
+     [
+     state_121111111111111( init, old_i, shared_k, signed, skV, storeV, lock
+     ),
+     Fr( ip )
+     ]
+    -->
+     [
+     state_1211111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                             lock
+     )
+     ]
+  */
+
+rule (modulo E) eventInputsencipsharedk_0_1211111111111111[color=#658040 process=event Input( senc(ip, shared_k) );]:
+   [
+   state_1211111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                           lock.1
+   )
+   ]
+  --[ Input( senc(ip, shared_k) ) ]->
+   [
+   state_12111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                            lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventInputsencipsharedk_0_1211111111111111[color=#658040 process=event Input( senc(ip, shared_k) );]:
+     [
+     state_1211111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                             lock
+     )
+     ]
+    --[ Input( senc(ip, shared_k) ) ]->
+     [
+     state_12111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                              lock
+     )
+     ]
+  */
+
+rule (modulo E) outsencipinputsharedk_0_12111111111111111[color=#658040 process=out(senc(<ip, 'input'>, shared_k));]:
+   [
+   state_12111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                            lock.1
+   )
+   ]
+  -->
+   [
+   state_121111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                             lock.1
+   ),
+   Out( senc(<ip, 'input'>, shared_k) )
+   ]
+
+  /*
+  rule (modulo AC) outsencipinputsharedk_0_12111111111111111[color=#658040 process=out(senc(<ip, 'input'>, shared_k));]:
+     [
+     state_12111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                              lock
+     )
+     ]
+    -->
+     [
+     state_121111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                               lock
+     ),
+     Out( senc(<ip, 'input'>, shared_k) )
+     ]
+  */
+
+rule (modulo E) insencprogipoldioutputsharedk_0_121111111111111111[color=#658040 process=in(senc(<prog(ip, old_i), 'output'>, shared_k));]:
+   [
+   state_121111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                             lock.1
+   ),
+   In( senc(<prog(ip, old_i), 'output'>, shared_k) )
+   ]
+  -->
+   [
+   state_1211111111111111111( init, ip, old_i, shared_k, signed, skV,
+                              storeV, lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) insencprogipoldioutputsharedk_0_121111111111111111[color=#658040 process=in(senc(<prog(ip, old_i), 'output'>, shared_k));]:
+     [
+     state_121111111111111111( init, ip, old_i, shared_k, signed, skV, storeV,
+                               lock
+     ),
+     In( senc(<prog(ip, old_i), 'output'>, shared_k) )
+     ]
+    -->
+     [
+     state_1211111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                storeV, lock
+     )
+     ]
+  */
+
+rule (modulo E) eventVoutputsencprogipoldioutputsharedk_0_1211111111111111111[color=#658040 process=event Voutput( senc(<prog(ip, old_i), 'output'>, shared_k) );]:
+   [
+   state_1211111111111111111( init, ip, old_i, shared_k, signed, skV,
+                              storeV, lock.1
+   )
+   ]
+  --[ Voutput( senc(<prog(ip, old_i), 'output'>, shared_k) ) ]->
+   [
+   state_12111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                               storeV, lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventVoutputsencprogipoldioutputsharedk_0_1211111111111111111[color=#658040 process=event Voutput( senc(<prog(ip, old_i), 'output'>, shared_k) );]:
+     [
+     state_1211111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                storeV, lock
+     )
+     ]
+    --[ Voutput( senc(<prog(ip, old_i), 'output'>, shared_k) ) ]->
+     [
+     state_12111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                 storeV, lock
+     )
+     ]
+  */
+
+rule (modulo E) insertstoreVlistipoldi_0_12111111111111111111[color=#658040 process=insert storeV,list(ip, old_i);]:
+   [
+   state_12111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                               storeV, lock.1
+   )
+   ]
+  --[ Insert( storeV, list(ip, old_i) ) ]->
+   [
+   state_121111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                storeV, lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) insertstoreVlistipoldi_0_12111111111111111111[color=#658040 process=insert storeV,list(ip, old_i);]:
+     [
+     state_12111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                 storeV, lock
+     )
+     ]
+    --[ Insert( storeV, list(ip, old_i) ) ]->
+     [
+     state_121111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                  storeV, lock
+     )
+     ]
+  */
+
+rule (modulo E) unlockstoreV_0_121111111111111111111[color=#658040 process=unlock storeV;]:
+   [
+   state_121111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                storeV, lock.1
+   )
+   ]
+  --[ Unlock_1( '1', lock.1, storeV ), Unlock( '1', lock.1, storeV ) ]->
+   [
+   state_1211111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                 storeV, lock.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) unlockstoreV_0_121111111111111111111[color=#658040 process=unlock storeV;]:
+     [
+     state_121111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                  storeV, lock
+     )
+     ]
+    --[ Unlock_1( '1', lock, storeV ), Unlock( '1', lock, storeV ) ]->
+     [
+     state_1211111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                   storeV, lock
+     )
+     ]
+  */
+
+rule (modulo E) __0_1211111111111111111111[color=#658040 process=0]:
+   [
+   state_1211111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                 storeV, lock.1
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) __0_1211111111111111111111[color=#658040 process=0]:
+     [
+     state_1211111111111111111111( init, ip, old_i, shared_k, signed, skV,
+                                   storeV, lock
+     )
+     ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) __0_121111111111112[color=#658040 process=0]:
+   [ state_121111111111112( init, shared_k, signed, skV, storeV, lock.1 ) ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) __0_121111111111112[color=#658040 process=0]:
+     [ state_121111111111112( init, shared_k, signed, skV, storeV, lock ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) __0_12111112[color=#658040 process=0]:
+   [ state_12111112( init, shared_k, signed, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+restriction locking_1:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-locations/SOC.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-locations/SOC.spthy
+
+  output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
+  processing time: 1.427055s
+  secrecy (all-traces): verified (2 steps)
+  Input (all-traces): verified (40 steps)
+  secrecy_computes2 (all-traces): verified (2 steps)
+  secrecy_computes3 (all-traces): verified (2 steps)
+  attested_computation (all-traces): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/SOC.spthy
+
+  output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
+  processing time: 1.427055s
+  secrecy (all-traces): verified (2 steps)
+  Input (all-traces): verified (40 steps)
+  secrecy_computes2 (all-traces): verified (2 steps)
+  secrecy_computes3 (all-traces): verified (2 steps)
+  attested_computation (all-traces): verified (4 steps)
+
+==============================================================================
+*/

@@ -1804,7 +1804,7 @@ analyzing: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 analyzed: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Modified_RPC.spthy.tmp
-  processing time: 221.374808404s
+  processing time: 156.213506389s
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (9 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)
@@ -1821,7 +1821,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Modified_RPC.spthy.tmp
-  processing time: 221.374808404s
+  processing time: 156.213506389s
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (9 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

@@ -342,7 +342,7 @@ data ProtoRuleName =
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
 
--- | Information for protocol rules modulo E. 
+-- | Information for protocol rules modulo E.
 data ProtoRuleEInfo = ProtoRuleEInfo
        { _preName       :: ProtoRuleName
        , _preAttributes :: [RuleAttribute]
@@ -1121,7 +1121,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
 
 
 prettyRestr :: HighlightDocument d => F.SyntacticLNFormula -> d
-prettyRestr fact =  operator_ "_restrict(" <> F.prettySyntacticLNFormula fact <> operator_ ")" 
+prettyRestr fact =  operator_ "_restrict(" <> F.prettySyntacticLNFormula fact <> operator_ ")"
 
 -- | pretty-print rules with restrictions
 prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [F.SyntacticLNFormula] -> d
@@ -1134,7 +1134,7 @@ prettyRuleRestr prems acts concls restr =
 -- Debug:
 --     (keyword_ "new variables: ") <> (ppList prettyLNTerm $ L.get rNewVars ru)
   where
-    ppList           = fsep . punctuate comma 
+    ppList           = fsep . punctuate comma
     ppFactsList list = fsep [operator_ "[", ppList $ map prettyLNFact list, operator_ "]"]
 
 -- | pretty-print rules without restrictions
