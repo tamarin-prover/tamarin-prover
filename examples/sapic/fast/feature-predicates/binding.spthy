@@ -1,0 +1,15 @@
+theory PredicatesBinding
+begin
+
+predicates:
+          Added(x)   <=> Ex #a. A(x)@a & #a < #NOW
+
+new a; ( event A(a) | if Added(a) then event C())
+
+lemma C_exists: exists-trace
+	"Ex #i . C()@i "
+
+lemma A_before_C:
+    "All #c. C()@c ==> Ex #a a. A(a)@a"
+
+end

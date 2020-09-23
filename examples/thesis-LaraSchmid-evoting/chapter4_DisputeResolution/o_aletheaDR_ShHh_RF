@@ -1,0 +1,76 @@
+#!/usr/bin/python
+#oracle_RF
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global priorities, plist, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         break
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         break
+
+
+
+if lemma == "indivVerif_v": 
+  match = False
+  priorities = ["~~>","In_S","AgSt","In_A","'pkD'"," !KU( sg(encp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "indivVerif_b": 
+  match = False
+  priorities = ["~~>","In_S","AgSt","In_A","'pkD'"," !KU( sg(encp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "DRvoterC": 
+  match = False
+  priorities = ["~~>","($H = 'H1')","($H.1 = 'H1')","!KU( ~sskD","AgSt_H"," 'S', <'b'"," In_A( $BB, <'b'","!KU( sg(encp(v","AgSt","In_S","In_A","'pkD'"," !KU( sg(cp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "DRvoterT": 
+  match = False
+  priorities = ["~~>","($H = 'H1')","($H.1 = 'H1')","!KU( ~sskD","AgSt_H"," 'S', <'b'"," In_A( $BB, <'b'","!KU( sg(encp(v","AgSt","In_S","In_A","'pkD'"," !KU( sg(cp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "DRauth": 
+  match = False
+  priorities = ["~~>","($H = 'H1')","($H.1 = 'H1')","!KU( ~sskD","AgSt_H"," 'S', <'b'"," In_A( $BB, <'b'","!KU( sg(encp(v","AgSt","In_S","In_A","'pkD'"," !KU( sg(cp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "Uniqueness": 
+  match = False
+  priorities = ["~~>","($H = 'H1')","($H.1 = 'H1')","!KU( ~sskD","AgSt_H"," 'S', <'b'"," In_A( $BB, <'b'","!KU( sg(encp(v","AgSt","In_S","In_A","'pkD'"," !KU( sg(cp(v","In_A( $S"," In_A( 'S', <'pkD'","AgSt_A0","'bs'","!KU( ~skS","!KU( ~skD","In_A( $S, <'vs'"]
+
+if lemma == "Observational_equivalence": 
+  match = False
+  priorities = ["!KU( ~sk","!KU( ~ssk","Out_IR","Out_A(","~~>","In_S","!KD( ","AgSt","!KU( ~sskD","!KU( sg(encp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+
+#j
+plist = [ [] for i in priorities ]
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+#  if lemma == "secret":
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+print 1

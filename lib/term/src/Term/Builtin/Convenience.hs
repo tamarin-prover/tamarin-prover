@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Convenience abbreviations, mostly used for testing and debugging.
@@ -22,21 +22,24 @@ b # e  = fAppAC Union [b,e]
 (+:) :: Ord a => Term a -> Term a -> Term a
 b +: e = fAppAC Xor [b,e]
 
-adec, aenc, sdec, senc, sign, revealSign :: (Term a,Term a) -> Term a
+adec, aenc, sdec, senc, sign, revealSign, rep, check_rep:: (Term a,Term a) -> Term a
 adec (a,b)       = fAppNoEq adecSym [a,b]
 aenc (a,b)       = fAppNoEq aencSym [a,b]
 sdec (a,b)       = fAppNoEq sdecSym [a,b]
 senc (a,b)       = fAppNoEq sencSym [a,b]
 sign (a,b)       = fAppNoEq signSym [a,b]
 revealSign (a,b) = fAppNoEq revealSignSym [a,b]
+rep (a,b)        = fAppNoEq repSym [a,b]
+check_rep (a,b)        = fAppNoEq checkRepSym [a,b]
 
 verify, revealVerify :: (Term a,Term a,Term a) -> Term a
 verify (a,b,c) = fAppNoEq verifySym [a,b,c]
 revealVerify (a,b,c) = fAppNoEq revealVerifySym [a,b,c]
 
-pk, extractMessage :: Term a -> Term a
+pk, extractMessage, get_rep:: Term a -> Term a
 pk a = fAppNoEq pkSym [a]
 extractMessage a = fAppNoEq extractMessageSym [a]
+get_rep a = fAppNoEq getRepSym [a]
 
 trueC :: Term a
 trueC = fAppNoEq trueSym []

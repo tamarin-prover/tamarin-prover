@@ -1,4 +1,8 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts          #-}
+
+
+{-# LANGUAGE PatternGuards          #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
@@ -18,6 +22,8 @@ module Theory.Text.Parser (
   , parseRestriction
   , parseIntruderRules
   , newVariables
+  , liftedAddProtoRule
+  , liftedAddRestriction
   ) where
 
 import           Prelude                    hiding (id, (.))
@@ -27,17 +33,18 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
 import           Data.Label
+import           Data.Either
 import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
--- import qualified Data.List                  as L
 import           Data.Color
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+import qualified Control.Monad.Fail         as Fail
 import qualified Control.Monad.Catch        as Catch
 
 import           Text.Parsec                hiding ((<|>))
@@ -55,14 +62,14 @@ import           Theory.Text.Parser.Token
 
 import           Debug.Trace
 
--- import           Data.Functor.Identity
+import           Data.Functor.Identity
 
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
 
--- | A restriction describes a property that must hold for all traces. Restrictions are
--- always used as lemmas in proofs.
+-- | A restriction describes a property that must hold for all traces.
+-- | Restrictions are always used as lemmas in proofs.
 data ParseRestriction = ParseRestriction
        { pRstrName       :: String
        , pRstrAttributes :: [RestrictionAttribute]
@@ -74,12 +81,12 @@ data ParseRestriction = ParseRestriction
 -- | True iff the restriction is a LHS restriction.
 isLeftRestriction :: ParseRestriction -> Bool
 isLeftRestriction rstr =
-     (LHSRestriction `elem` pRstrAttributes rstr)
+     LHSRestriction `elem` pRstrAttributes rstr
 
 -- | True iff the restriction is a RHS restriction.
 isRightRestriction :: ParseRestriction -> Bool
 isRightRestriction rstr =
-     (RHSRestriction `elem` pRstrAttributes rstr)
+     RHSRestriction `elem` pRstrAttributes rstr
 
 -- -- | True iff the restriction is a Both restriction.
 -- isBothRestriction :: ParseRestriction -> Bool
@@ -98,8 +105,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = do
-          parseFile (theory flags) file
+parseOpenTheory flags file = parseFile (theory flags) file
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
@@ -126,11 +132,11 @@ parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
 parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags)
 
 -- | Parse a lemma for an open theory from a string.
-parseLemma :: String -> Either ParseError (Lemma ProofSkeleton)
+parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString "<unknown source>" lemma
 
 -- | Parse a lemma for an open theory from a string.
-parseRestriction :: String -> Either ParseError Restriction
+parseRestriction :: String -> Either ParseError SyntacticRestriction
 parseRestriction = parseString "<unknown source>" restriction
 
 ------------------------------------------------------------------------------
@@ -176,14 +182,14 @@ binaryAlgApp plit = do
     (k,priv) <- lookupArity op
     arg1 <- braced (tupleterm plit)
     arg2 <- term plit False
-    when (k /= 2) $ fail $
+    when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm plit))
-  when (2 /= length ts) $ fail $
+  when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
   when eqn $ fail $
@@ -254,16 +260,16 @@ factAnnotation = asum
   , symbol "no_precomp" *> pure NoSources
   ]
 
--- | Parse a fact.
-fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = try (
+-- | Parse a fact that does not necessarily have a term in it.
+fact' :: Parser t -> Parser (Fact t)
+fact' pterm = try (
     do multi <- option Linear (opBang *> pure Persistent)
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
          (c:_) | isUpper c -> return ()
                | otherwise -> fail "facts must start with upper-case letters"
-       ts    <- parens (commaSep (msetterm plit))
+       ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
        mkProtoFact multi i (S.fromList ann) ts
     <?> "fact" )
@@ -281,6 +287,9 @@ fact plit = try (
       "FR"  -> singleTerm f freshFact
       _     -> return . protoFactAnn multi f ann
 
+-- | Parse a fact.
+fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
+fact plit = fact' (msetterm plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
@@ -324,37 +333,41 @@ ruleAttribute = asum
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
-protoRuleInfo = (ProtoRuleEInfo <$> (StandRule <$>
-                                        (symbol "rule" *> optional moduloE *> identifier))
-                               <*> (option [] $ list ruleAttribute)) <*  colon
+protoRuleInfo = do
+                _ <- symbol "rule"
+                _ <- optional moduloE
+                ident <- identifier
+                att <- option [] $ list ruleAttribute
+                _ <- colon
+                return $ ProtoRuleEInfo (StandRule ident) att []
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 diffRule :: Parser (DiffProtoRule)
 diffRule = do
-    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0) <- genericRule
-    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
-    return $ DiffProtoRule (Rule ri ps cs as (newVariables ps cs)) leftRight
+    return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them
 protoRule :: Parser (OpenProtoRule)
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule name) _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0) <- genericRule
-    let (ps,as,cs) = apply subst (ps0,as0,cs0)
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
-    return $ OpenProtoRule (Rule ri ps cs as (newVariables ps cs)) variants
+    return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
@@ -371,14 +384,13 @@ protoRuleAC = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0) <- genericRule
-    let (ps,as,cs) = apply subst (ps0,as0,cs0)
-    return $ Rule ri ps cs as (newVariables ps cs)
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
+    return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
-letBlock = do
-    toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
+letBlock = toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
     definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
@@ -387,7 +399,7 @@ letBlock = do
 intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
-    (ps,as,cs) <- genericRule
+    (ps,as,cs,[]) <- genericRule -- intruder rules should not introduce restrictions.
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
@@ -400,19 +412,29 @@ intrRule = do
           'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
           _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact])
-genericRule =
-    (,,) <$> list (fact llit)
-         <*> ((pure [] <* symbol "-->") <|>
-              (symbol "--[" *> commaSep (fact llit) <* symbol "]->"))
-         <*> list (fact llit)
+embeddedRestriction :: Parser a -> Parser a
+embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"
+
+factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
+factOrRestr = Right <$> fact llit
+              <|> Left <$> embeddedRestriction standardFormula
+
+genericRule :: Parser ([LNFact], [LNFact], [LNFact], [SyntacticLNFormula]) --- lhs, actions, rhs, restrictions
+genericRule = do
+    lhs         <- list (fact llit)
+    actsAndRsts <-
+        (   (pure [] <* symbol "-->")
+        <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->")
+        )
+    rhs <- list (fact llit)
+    return (lhs, rights actsAndRsts, rhs, lefts actsAndRsts)
 
 newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
 newVariables prems concs = map varTerm $ S.toList newvars
   where
     newvars = S.difference concvars premvars
-    premvars = S.fromList $ concat $ map getFactVariables prems
-    concvars = S.fromList $ concat $ map getFactVariables concs
+    premvars = S.fromList $ concatMap getFactVariables prems
+    concvars = S.fromList $ concatMap getFactVariables concs
 
 {-
 -- | Add facts to a rule.
@@ -505,10 +527,11 @@ transferProto = do
 ------------------------------------------------------------------------------
 
 -- | Parse an atom with possibly bound logical variables.
-blatom :: Parser BLAtom
+blatom :: Parser (SyntacticAtom BLTerm)
 blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
+  , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
@@ -517,7 +540,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
     nodevarTerm = (lit . Var) <$> nodevar
 
 -- | Parse an atom of a formula.
-fatom :: Parser LNFormula
+fatom :: Parser  SyntacticLNFormula
 fatom = asum
   [ pure lfalse <* opLFalse
   , pure ltrue  <* opLTrue
@@ -533,44 +556,51 @@ fatom = asum
         return $ foldr (hinted q) f vs
 
 -- | Parse a negation.
-negation :: Parser LNFormula
+negation :: Parser SyntacticLNFormula
 negation = opLNot *> (Not <$> fatom) <|> fatom
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser LNFormula
+conjuncts :: Parser SyntacticLNFormula
 conjuncts = chainl1 negation ((.&&.) <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser LNFormula
+disjuncts :: Parser SyntacticLNFormula
 disjuncts = chainl1 conjuncts ((.||.) <$ opLOr)
 
 -- | An implication.
-imp :: Parser LNFormula
+imp :: Parser SyntacticLNFormula
 imp = do
   lhs <- disjuncts
   asum [ opImplies *> ((lhs .==>.) <$> imp)
        , pure lhs ]
 
 -- | An logical equivalence.
-iff :: Parser LNFormula
+iff :: Parser SyntacticLNFormula
 iff = do
   lhs <- imp
   asum [opLEquiv *> ((lhs .<=>.) <$> imp), pure lhs ]
 
 -- | Parse a standard formula.
-standardFormula :: Parser LNFormula
+standardFormula :: Parser (SyntacticLNFormula)
 standardFormula = iff
+
+
+plainFormula :: Parser LNFormula
+plainFormula = try $ do
+    lnf <- toLNFormula <$> standardFormula
+    case lnf of
+        Nothing -> fail "Syntactic sugar is not allowed, guarded formula expected."
+        Just lnf' -> return lnf'
 
 -- | Parse a guarded formula using the hack of parsing a standard formula and
 -- converting it afterwards.
---
 -- FIXME: Write a proper parser.
 guardedFormula :: Parser LNGuarded
-guardedFormula = try $ do
-    res <- formulaToGuarded <$> standardFormula
-    case res of
-        Left d   -> fail $ render d
-        Right gf -> return gf
+guardedFormula = do
+    pf <- plainFormula
+    case formulaToGuarded pf of
+           Left d   -> fail $ render d
+           Right gf -> return gf
 
 
 ------------------------------------------------------------------------------
@@ -586,7 +616,7 @@ restrictionAttribute = asum
   ]
 
 -- | Parse a restriction.
-restriction :: Parser Restriction
+restriction :: Parser SyntacticRestriction
 restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
@@ -595,7 +625,7 @@ restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
 --legacyAxiom = symbol "axiom" *> fail "Using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'."
 
 -- | Parse a legacy axiom, now called restriction.
-legacyAxiom :: Parser Restriction
+legacyAxiom :: Parser SyntacticRestriction
 legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
@@ -603,7 +633,7 @@ legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, re
 diffRestriction :: Parser ParseRestriction
 diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
                     <*> (option [] $ list restrictionAttribute)
-                    <*> (colon *> doubleQuoted standardFormula)
+                    <*> (colon *> doubleQuoted plainFormula)
 
 -- | Fail on parsing an old "axiom" keyword.
 --legacyDiffAxiom :: Parser ParseRestriction
@@ -613,7 +643,7 @@ diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
 legacyDiffAxiom :: Parser ParseRestriction
 legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") ParseRestriction <$> (symbol "axiom" *> identifier)
               <*> (option [] $ list restrictionAttribute)
-              <*> (colon *> doubleQuoted standardFormula)
+              <*> (colon *> doubleQuoted plainFormula)
 
 ------------------------------------------------------------------------------
 -- Parsing Lemmas
@@ -646,13 +676,20 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
--- | Parse a lemma.
-lemma :: Parser (Lemma ProofSkeleton)
-lemma = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
+protoLemma :: Parser f -> Parser (ProtoLemma f ProofSkeleton)
+protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
-                      <*> doubleQuoted standardFormula
+                      <*> doubleQuoted parseFormula
                       <*> (proofSkeleton <|> pure (unproven ()))
+
+-- | Parse a lemma.
+lemma :: Parser (SyntacticLemma ProofSkeleton)
+lemma = protoLemma standardFormula
+
+-- | Parse a lemma w/o syntactic sugar
+plainLemma :: Parser (Lemma ProofSkeleton)
+plainLemma = protoLemma plainFormula
 
 -- | Parse a diff lemma.
 diffLemma :: Parser (DiffLemma DiffProofSkeleton)
@@ -799,6 +836,10 @@ builtins thy0 =do
           *> extendSig signatureMaudeSig
       , try (symbol "revealing-signing")
           *> extendSig revealSignatureMaudeSig
+      , try (symbol "locations-report")
+          *>  do
+          modifyState (`mappend` locationReportMaudeSig)
+          return (Just transReport)
       , try ( symbol "reliable-channel")
              *> return (Just transReliable)
       , symbol "hashing"
@@ -884,23 +925,20 @@ options thy0 =do
 
 predicate :: Parser Predicate
 predicate = do
-           f <- fact llit
+           f <- fact' lvar
            _ <- symbol "<=>"
-           form <- standardFormula
+           form <- plainFormula
            return $ Predicate f form
+           <?> "predicate declaration"
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
 preddeclaration thy = do
-                    _          <- symbol "predicates"
+                    _          <- try (symbol "predicates") <|> symbol "predicate"
                     _          <- colon
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
                     return thy'
-                where
-                liftedAddPredicate thy' pr  =
-                    case addPredicate pr thy' of
-                        (Just thy'') -> return (thy''::OpenTheory)
-                        Nothing     -> fail $ "duplicate predicate: " ++ (render $ prettyLNFact (get pFact pr))
+                    <?> "predicates"
 
 -- used for debugging
 -- println :: String -> ParsecT String u Identity ()
@@ -983,10 +1021,8 @@ sapicAction = try (do
                         f <- fact llit
                         return (Event f)
                    )
-               <|> try (do
-                        r <- genericRule
-                        return (MSR r)
-                   )
+               <|> try ( MSR <$> genericRule)
+
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that
 -- the precedence is expressed in a way that can be directly encoded in Parsec.
@@ -1027,13 +1063,11 @@ process thy=
                   ))
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
-                        p <- actionprocess thy
+                        p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm llit
-                        case Catch.catch (applyProcess (substFromList [(LVar "_loc_" LSortMsg 0,m)]) p) (fail . prettyLetExceptions) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
+                        return $ paddAnn p [ProcessLoc m]
                         )
                         -- TODO SAPIC parser: multterm return
                         -- This is what SAPIC did:  | LP process RP AT multterm                      { substitute "_loc_" $5 $2 }
@@ -1086,35 +1120,35 @@ actionprocess thy=
                         t2 <- msetterm llit
                         _ <- symbol "then"
                         p <- process thy
-                        _ <- symbol "else"
-                        q <- process thy
+                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
                         return (ProcessComb (CondEq t1 t2  ) mempty p q)
+                        <?> "conditional process (with equality)"
                    )
             <|> try (do
                         _ <- symbol "if"
-                        pr <- fact llit
+                        frml <- standardFormula
                         _ <- symbol "then"
                         p <- process thy
-                        _ <- symbol "else"
-                        q <- process thy
-                        return (ProcessComb (Cond pr) mempty p q)
+                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
+                        return (ProcessComb (Cond frml) mempty p q)
+                        <?> "conditional process (with predicate)"
                    )
-            <|> try (do
-                        _ <- symbol "if"
-                        t1 <- msetterm llit
-                        _ <- opEqual
-                        t2 <- msetterm llit
-                        _ <- symbol "then"
-                        p <- process thy
-                        return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
-                   )
-            <|> try (do
-                        _ <- symbol "if"
-                        pr <- fact llit
-                        _ <- symbol "then"
-                        p <- process thy
-                        return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
-                   )
+            -- <|> try (do
+            --             _ <- symbol "if"
+            --             t1 <- msetterm llit
+            --             _ <- opEqual
+            --             t2 <- msetterm llit
+            --             _ <- symbol "then"
+            --             p <- process thy
+            --             return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
+            --        )
+            -- <|> try (do
+            --             _ <- symbol "if"
+            --             pr <- fact llit
+            --             _ <- symbol "then"
+            --             p <- process thy
+            --             return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
+            --        )
             <|> try ( do  -- sapic actions are constructs separated by ";"
                         s <- sapicAction
                         _ <- opSeq
@@ -1130,7 +1164,7 @@ actionprocess thy=
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         a <- let p = checkProcess (BC.unpack i) thy in
-                            (\x -> paddAnn x [BC.unpack i]) <$> p
+                             (\x -> paddAnn x [ProcessName $ BC.unpack i]) <$> p
                         return a
                         )
             <|>    try  (do -- let expression parser
@@ -1140,12 +1174,20 @@ actionprocess thy=
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
-            <|> do        -- parens parser
+            <|>   try (do    -- parens parser + at multterm
+                        _ <- symbol "("
+                        p <- process thy
+                        _ <- symbol ")"
+                        _ <- symbol "@"
+                        m <- msetterm llit
+                        return $ paddAnn p [ProcessLoc m]
+                        )
+            <|> try (do        -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
                         return p
-
+                    )
 
 heuristic :: Bool -> Parser [GoalRanking]
 heuristic diff = do
@@ -1155,20 +1197,131 @@ heuristic diff = do
         True  -> map charToGoalRankingDiff <$> identifier
         False -> map charToGoalRanking     <$> identifier
 
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
 
+-- | Exception type for catching parsing errors
+data ParsingException = UndefinedPredicate FactTag
+                      | DuplicateItem OpenTheoryItem
+                      | TryingToAddFreshRule
 
--- checks if process exists, if not -> error
--- checkProcess :: String -> OpenTheory -> Parser OpenTheory
--- checkProcess i thy= case findProcess i thy of
---     Just thy' -> return thy
---     Nothing -> fail $ "process not defined: " ++ i
+instance Show (ParsingException) where
+    show (UndefinedPredicate facttag) = "undefined predicate "
+                                         ++ showFactTagArity facttag
+                                         -- ++ " in lemma: "
+                                         -- ++ get lName lem
+                                         -- ++ "."
+    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
+    show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
+    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
+    show (DuplicateItem (TextItem _)) =  undefined
+    show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
+    show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
+    show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
+        "duplicate process: " ++ get pName pDef
+    show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
+
+instance Catch.Exception ParsingException
+
+instance Fail.MonadFail (Either Catch.SomeException) where
+  fail = Fail.fail
+
+
+liftEitherToEx :: (Catch.MonadThrow m, Catch.Exception e) => (t -> e) -> Either t a -> m a
+liftEitherToEx _ (Right r)     = return r
+liftEitherToEx constr (Left l) = Catch.throwM $ constr l
+
+liftMaybeToEx :: (Catch.MonadThrow m, Catch.Exception e) => e -> Maybe a -> m a
+liftMaybeToEx _      (Just r) = return r
+liftMaybeToEx constr Nothing  = Catch.throwM constr
+
+liftedExpandFormula :: Catch.MonadThrow m =>
+                       Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+
+liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
+                     -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
+liftedExpandLemma thy =  liftEitherToEx UndefinedPredicate . expandLemma thy
+
+liftedExpandRestriction :: Catch.MonadThrow m =>
+                           Theory sig c r p s
+                           -> ProtoRestriction SyntacticLNFormula
+                           -> m (ProtoRestriction LNFormula)
+liftedExpandRestriction thy = liftEitherToEx UndefinedPredicate . expandRestriction thy
+
+liftedAddProtoRuleNoExpand :: Catch.MonadThrow m => OpenTheory -> Theory.OpenProtoRule -> m OpenTheory
+liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addOpenProtoRule ru thy)
+
+liftedAddPredicate :: Catch.MonadThrow m =>
+                      Theory sig c r p SapicElement
+                      -> Predicate -> m (Theory sig c r p SapicElement)
+liftedAddPredicate thy prd = liftMaybeToEx (DuplicateItem (PredicateItem prd)) (addPredicate prd thy)
+
+liftedAddRestriction :: Catch.MonadThrow m =>
+                        Theory sig c r p s
+                        -> ProtoRestriction SyntacticLNFormula -> m (Theory sig c r p s)
+liftedAddRestriction thy rstr = do
+        rstr' <- liftedExpandRestriction thy rstr
+        liftMaybeToEx (DuplicateItem $ RestrictionItem rstr') (addRestriction rstr' thy)
+                                 -- Could catch at which point in to lemma, but need MonadCatch
+                                 -- ++ " in definition of predicate: "
+                                 -- ++ get rstrName rstr
+                                 -- ++ "."
+
+
+liftedAddLemma :: Catch.MonadThrow m =>
+                  Theory sig c r ProofSkeleton s
+                  -> ProtoLemma SyntacticLNFormula ProofSkeleton
+                  -> m (Theory sig c r ProofSkeleton s)
+liftedAddLemma thy lem = do
+        lem' <- liftedExpandLemma thy lem
+        liftMaybeToEx (DuplicateItem $ LemmaItem lem') (addLemma lem' thy)
+                                         -- Could catch at which point in to lemma, but need MonadCatch
+                                         -- ++ " in lemma: "
+                                         -- ++ get lName lem
+                                         -- ++ "."
+
+-- | Add new protocol rule and introduce restrictions for _restrict contruct
+--  1. expand syntactic restrict constructs
+--  2. for each, chose fresh action and restriction name
+--  3. add action names to rule
+--  4. add rule, fail if duplicate
+--  5. add restrictions, fail if duplicate
+-- FIXME: we only deal we the rule modulo E here, if variants modulo AC are
+--        imported we do not check if they have _restrict annotations
+--        (but they should not, as they will not be exported)
+liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m (OpenTheory)
+liftedAddProtoRule thy ru
+    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
+        return thy''
+    | otherwise = Catch.throwM TryingToAddFreshRule
+            where
+                rfacts = get (preRestriction . rInfo)
+                addExpandedRestriction thy' xrstr = liftMaybeToEx
+                                                     (DuplicateItem $ RestrictionItem xrstr)
+                                                     (addRestriction xrstr thy')
+                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru
+
+                restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
+                actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
+                fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
+                counter = zip [1::Int ..]
+
+
+-- | checks if process exists, if not -> error
 checkProcess :: String -> OpenTheory -> Parser Process
 checkProcess i thy = case lookupProcessDef i thy of
     Just p -> return $ get pBody p
     Nothing -> fail $ "process not defined: " ++ i
+
+-- We can throw exceptions, but not catch them
+instance Catch.MonadThrow (ParsecT String MaudeSig Data.Functor.Identity.Identity) where
+    throwM e = fail (show e)
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
@@ -1204,10 +1357,12 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- ((liftedAddLemma thy) =<<) lemma
+      , do thy' <- liftedAddLemma thy =<< lemma
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
+           -- thy'' <- foldM liftedAddRestriction thy' $
+           --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACs [r] thy)
@@ -1224,7 +1379,7 @@ theory flags0 = do
       , do return thy
       ]
 
-    define :: S.Set String -> OpenTheory -> Parser OpenTheory
+
     define flags thy = do
        flag <- try (symbol "#define") *> identifier
        addItems (S.insert flag flags) thy
@@ -1241,23 +1396,11 @@ theory flags0 = do
                  symbol_ "endif"
                  addItems flags thy
 
-    liftedAddProtoRule thy ru = case addOpenProtoRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule modulo E: " ++ render (prettyRuleName $ get oprRuleE ru)
-
-    liftedAddLemma thy lem = case addLemma lem thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
-
     -- check process defined only once
     -- add process to theoryitems
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate process: " ++ get pName pDef
-
-    liftedAddRestriction thy rstr = case addRestriction rstr thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate restriction: " ++ get rstrName rstr
 
     liftedAddHeuristic thy h = case addHeuristic h thy of
         Just thy' -> return thy'
@@ -1291,12 +1434,12 @@ diffTheory flags0 = do
            addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
-      , do thy' <- liftedAddRestriction thy =<< diffRestriction
+      , do thy' <- liftedAddRestriction' thy =<< diffRestriction
            addItems flags thy'
-      , do thy' <- liftedAddRestriction thy =<< legacyDiffAxiom
+      , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< lemma
+      , do thy' <- liftedAddLemma' thy =<< plainLemma
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
@@ -1338,7 +1481,7 @@ diffTheory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
 
-    liftedAddLemma thy lem = if isLeftLemma lem
+    liftedAddLemma' thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of
                                         Just thy' -> return thy'
                                         Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
@@ -1352,7 +1495,7 @@ diffTheory flags0 = do
                                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
                                              Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
 
-    liftedAddRestriction thy rstr = if isLeftRestriction rstr
+    liftedAddRestriction' thy rstr = if isLeftRestriction rstr
                                        then case addRestrictionDiff LHS (toRestriction rstr) thy of
                                                Just thy' -> return thy'
                                                Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)

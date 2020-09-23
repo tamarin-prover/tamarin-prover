@@ -102,6 +102,19 @@ case-studies/%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
+# individual case studies, special case with auto-sources
+case-studies/%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --auto-sources --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
 # individual case studies, special case with oracle
 case-studies/%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies/csf18-xor
@@ -199,6 +212,46 @@ TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.
 TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies/features/equivalence/,$(TESTOBSEQ_CASE_STUDIES))) $(REGRESSION_OBSEQ_TARGETS)
 
 OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
+
+
+# individual case studies, special case with oracle for csf19
+case-studies/%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf19-wrapping
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/gcm.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with oracle for csf19
+case-studies/%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies/csf19-wrapping
+	# Use -N3, as the fourth core is used by the OS and the console
+	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/siv.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# CSF19 case studies
+CSF19_WRAPPING_GCM_CASE_STUDIES=gcm.spthy
+CSF19_WRAPPING_GCM_TARGETS=$(subst .spthy,_analyzed-oracle-gcm-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_GCM_CASE_STUDIES)))
+
+CSF19_WRAPPING_SIV_CASE_STUDIES=siv.spthy
+CSF19_WRAPPING_SIV_TARGETS=$(subst .spthy,_analyzed-oracle-siv-wrapping.spthy,$(addprefix case-studies/csf19-wrapping/,$(CSF19_WRAPPING_SIV_CASE_STUDIES)))
+
+CSF19_WRAPPING_TARGETS= $(CSF19_WRAPPING_GCM_TARGETS) $(CSF19_WRAPPING_SIV_TARGETS)
+
+csf19-wrapping-case-studies: $(CSF19_WRAPPING_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/csf19-wrapping/*.spthy
+
 
 #Observational equivalence test case studies:
 obseq-test-case-studies:	$(TESTOBSEQ_TARGETS)
@@ -327,6 +380,26 @@ FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/,$(F
 features-case-studies:	$(FEATURES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies/features/multiset/*.spthy case-studies/features/private_function_symbols/*.spthy case-studies/cav13/*.spthy case-studies/features/injectivity/*.spthy
 
+## Auto-sources
+###############
+
+AUTO_SOURCES_CASE_STUDIES=CCITT_X509_1.spthy CCITT_X509_1c.spthy \
+                   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
+                   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
+                   AS_Modified_RPC.spthy AS_RPC.spthy \
+                   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
+                   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
+                   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
+                   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
+                   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
+                   WooLam_Pi_f.spthy
+
+AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix case-studies/features/auto-sources/spore/,$(AUTO_SOURCES_CASE_STUDIES)))
+
+# case studies
+auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies/features/auto-sources/spore/*.spthy
+
 ## Regression (old issues)
 ##########################
 
@@ -347,64 +420,17 @@ regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
 ##########################
 
 # FAST <=> processing time less than 10sec on Robert's current computer (per file)
-
-SAPIC_CASE_STUDIES_FAST=basic/no-replication.spthy basic/replication.spthy basic/channels1.spthy basic/channels2.spthy basic/channels3.spthy  basic/design-choices.spthy basic/exclusive-secrets.spthy basic/reliable-channel.spthy \
-feature-let-bindings/let-blocks2.spthy feature-let-bindings/let-blocks3.spthy feature-let-bindings/match_new.spthy \
-statVerifLeftRight/stateverif_left_right.spthy \
-MoedersheimWebService/set-abstr.spthy MoedersheimWebService/set-abstr-lookup.spthy \
-fairexchange-mini/mini10.spthy fairexchange-mini/mini2.spthy fairexchange-mini/mini4.spthy fairexchange-mini/mini6.spthy fairexchange-mini/mini8.spthy fairexchange-mini/ndc-nested-2.spthy fairexchange-mini/ndc-nested-4.spthy fairexchange-mini/ndc-nested.spthy fairexchange-mini/mini1.spthy fairexchange-mini/mini3.spthy fairexchange-mini/mini5.spthy fairexchange-mini/mini7.spthy fairexchange-mini/mini9.spthy fairexchange-mini/ndc-nested-3.spthy fairexchange-mini/ndc-nested-5.spthy fairexchange-mini/ndc-two-replications.spthy\
-SCADA/opc_ua_secure_conversation.spthy \
-feature-xor/CH07.spthy feature-xor/CRxor.spthy feature-xor/KCL07.spthy \
-feature-secret-channel/secret-channel.spthy \
-GJM-contract/contract.spthy
-# not working because of missing support for predicates
-# basic/running-example.spthy feature-let-bindings/let-blocks.spthy
-# encWrapDecUnwrap/encwrapdecunwrap.spthy NOTE: might be not working for other reasons as well, it was commented out investigate
-# Yubikey/Yubikey.spthy NOTE commented out previously need to verify
-# PKCS11/pkcs11-templates.spthy PKCS11/pkcs11-dynamic-policy.spthy \ NOTE commented out previously need to verify
-# feature-predicates/decwrap_destr.spthy feature-predicates/simple_example.spthy \
-# location stuff: not tested so far
-# feature-locations/AC.spthy feature-locations/AKE.spthy feature-locations/licensing.spthy \
-# feature-locations/SOC.spthy  -> commented out before
-# examples/sapic/feature-locations/OTP.sapic examples/sapic/feature-locations/AC.sapic examples/sapic/feature-locations/AC_counter_with_attack.sapic examples/sapic/feature-locations/AC_sid_with_attack.sapic -> not in Makefile before
-# pkcs11-example were previously commented out because they took so long, but should check if they can be completed.
-# examples/sapic/PKCS11/pkcs11-templates.sapic
-# examples/sapic/PKCS11/pkcs11-dynamic-policy.sapic
-#
-# exceptional cases, that are left out on purpose, with explanations:
-# xor/NSLPK3xor.spthy: attack finding relies on sources lemma which is untrue. it is acceptable for this model,
-# 		because the attacks found despite an incorrect sources lemma
-# 		are correct by definition, but negating it would defeat its
-# 		purpose, and removing it would inhibit the attack finding.
-#
-# missing (but also before): fairexchange stuff...-> check how long they take on fast machines
-# examples/sapic/fairexchange-km/km.sapic
-# examples/sapic/fairexchange-km/km-with-comments.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-A.sapic
-# examples/sapic/fairexchange-asw/asw-mod-weak-locks.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod-weak-B.sapic
-# examples/sapic/fairexchange-asw/aswAB.sapic
-# examples/sapic/fairexchange-asw/aswAB-mod.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-magic.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch-B.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-fakepcsbranch.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks-unfairness-A.sapic
-# examples/sapic/fairexchange-gjm/gjm.sapic
-# examples/sapic/fairexchange-gjm/gjm-locks.sapic#
-
-# envelope examples (this example was never completed and is for reference only)
-# examples/sapic/envelope/envelope.sapic
-# examples/sapic/envelope/envelope_simpler.sapic
-# examples/sapic/envelope/envelope_allowsattack.sapic
+SAPIC_CASE_STUDIES_FAST=$(subst examples/sapic/,,$(wildcard examples/sapic/fast/*/*.spthy))
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_CASE_STUDIES_SLOW=encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy \
-NSL/nsl-no_as-untagged.spthy
-SAPIC_CASE_STUDIES_SUPER_SLOW=fairexchange-asw/aswAB.spthy
+SAPIC_CASE_STUDIES_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/slow/*/*.spthy))
+
+# SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
+SAPIC_CASE_STUDIES_SUPER_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/super-slow/*/*.spthy))
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_FAST)))
 SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
-SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
+SAPIC_CS_TARGETS_SUPER_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies/sapic/,$(SAPIC_CASE_STUDIES_SUPER_SLOW)))
 
 # lol:
 # 	$(info $$var is [${SAPIC_CS_TARGETS}])
@@ -414,7 +440,7 @@ sapic-case-studies:	$(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) # used for
 	grep "verified\|falsified\|processing time" $^
 sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during development
 	grep "verified\|falsified\|processing time" $^
-sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPERSLOW) # used to heat in winter
+sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
@@ -434,7 +460,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
+CS_TARGETS=case-studies/Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_TAMARIN_CS_TARGETS) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS)
 
 case-studies: 	case-studies/system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies/

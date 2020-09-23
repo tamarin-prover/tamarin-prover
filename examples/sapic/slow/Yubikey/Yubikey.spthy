@@ -1,0 +1,141 @@
+theory Yubikey
+begin
+
+section{* The Yubikey-Protocol *}
+
+/*
+ * Protocol:    Yubikey Protocol
+ * Date:        Nov 2014
+ * Status:      not working (can be shown manually)
+ */
+
+builtins: symmetric-encryption, multiset
+
+predicates:
+Smaller(a,b) <=> Ex z. a+z=b
+
+let Yubikey=
+ new k; new L_pid; new secretid;
+ insert <'Server',L_pid>, <secretid,k,'zero'>;
+ insert <'L_Yubikey',L_pid>,('zero'+'one');
+ event YubiInit(L_pid,secretid,k);
+ out(L_pid);
+ !(( //Plug
+	lock <'Yubikey',L_pid>;
+	  lookup <'L_Yubikey',L_pid> as sc in
+		in(sc); //just a trick to enforce adv learning sc
+		insert <'L_Yubikey',L_pid>, sc+'one';
+	unlock <'Yubikey',L_pid>
+  )||( //ButtonPress
+	lock <'Yubikey',L_pid>;
+	  lookup <'L_Yubikey',L_pid> as tc in
+		in(tc); //just a trick to enforce adv learning tc
+		insert <'L_Yubikey',L_pid>, tc + 'one';
+		new nonce;
+		new npr;
+		event YubiPress(L_pid,secretid,k,tc);
+		out(<L_pid,nonce,senc(<secretid,tc,npr>,k)>);
+	unlock <'Yubikey',L_pid>
+  )
+ )
+
+let Server=
+ !(
+     in(<L_pid,nonce,senc(<secretid,tc,npr>,k)>);
+     lock <'Server',L_pid>;
+     lookup <'Server',L_pid> as tuple in
+     if fst(tuple)=secretid then
+        if fst(snd(tuple))=k then
+            in(otc);
+            if snd(snd(tuple))=otc then
+                if Smaller(otc,tc) then
+					event InitStuff(L_pid,secretid,k,tuple,otc,tc);
+					event Login(L_pid,k,tc);
+	 	insert <'Server',L_pid>, <secretid,k,tc>;
+	 unlock <'Server',L_pid>
+ )
+
+(Server || !Yubikey)
+
+/* // For sanity: Ensure that a successful login is reachable. */
+/* lemma Login_reachable: */
+/*   exists-trace */
+/*   "Ex #i pid k x . Login(pid,k,x)@i" */
+
+// source lemmas:
+// There exists a Initialisation for every Login on the Server
+/* lemma init_server[sources]: */
+lemma init_server[sources]:
+		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
+		==> 
+		 tuple=<sid,k,otc>
+		&
+		 (Ex #j.  YubiInit(pid, sid, k)@j & #j<#i)
+                 "
+
+lemma init_server_secrecy[use_induction, reuse]:
+		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
+		==> 
+                 (not Ex #j . KU(k)@j) "
+
+lemma init_yubikey[sources]:
+		"All pid sid k tc #i . YubiPress(pid,sid,k,tc)@i ==> Ex #j.
+		YubiInit(pid, sid, k)@j & #j<#i"
+
+// If a succesful Login happens before a second sucesfull Login, the
+// counter value of the first is smaller than the counter value of the
+// second.
+//
+// This lemma needs some manual intervention. See README for where to fine the
+// manual part of the proof. For the sake of automated regresstion testing,
+// this lemma is assumed as a restriction.
+/* lemma slightly_weaker_invariant[reuse, use_induction]: */
+restriction slightly_weaker_invariant:
+        "(All pid k tc1 tc2 #t1 #t2 .
+             Login(pid,k,tc1)@#t1 & Login(pid,k,tc2)@#t2
+        ==> ( #t1<#t2 & ( Ex z . tc1+z=tc2))
+            | #t2<#t1 | #t1=#t2)
+        "
+
+/* // Each succesful login with counter value x was preceeded by a PressButton */
+/* // event with the same counter value */
+lemma one_count_foreach_login[reuse,use_induction]:
+        "All pid k x #t2 . Login(pid,k,x)@t2 ==>
+         ( Ex #t1 sid . YubiPress(pid,sid,k,x)@#t1 & #t1<#t2 
+		)"
+
+/* // It is not possible to have to distinct logins with the same counter */
+/* // value */
+lemma no_replay[reuse]:
+        "not (Ex #i #j pid k x .
+         Login(pid,k,x)@i &  Login(pid,k,x)@j 
+         & not(#i=#j))"
+
+
+
+lemma injective_correspondance[reuse, use_induction]:
+    "All pid k x #t2 . Login(pid,k,x)@t2 ==>
+         ( Ex #t1 sid . YubiPress(pid,sid,k,x)@#t1 & #t1<#t2 )
+        & All #t3 . Login(pid,k,x)@t3 ==> #t3=#t2
+        "
+
+lemma Login_invalidates_smaller_counters:
+        "All pid k tc1 tc2 #t1 #t2 .
+             Login(pid,k,tc1)@#t1 & Login(pid,k,tc2)@#t2
+			 & (Ex z. tc1+z=tc2)
+         	==>  #t1<#t2 "
+end
+
+// Automated part..
+/* ============================================================================== */
+/* summary of summaries: */
+
+/* analyzed: Yubikey/Yubikey.spthy */
+
+/*   init_server (all-traces): verified (148 steps) */
+/*   init_server_secrecy (all-traces): verified (191 steps) */
+/*   init_yubikey (all-traces): verified (63 steps) */
+/*   one_count_foreach_login (all-traces): verified (88 steps) */
+/*   no_replay (all-traces): verified (2 steps) */
+/*   injective_correspondance (all-traces): verified (6 steps) */
+/*   Login_invalidates_smaller_counters (all-traces): verified (340 steps) */
