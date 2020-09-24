@@ -1,5 +1,5 @@
 
-Model Specification using Rules {#sec:model-specification} 
+Model Specification using Rules {#sec:model-specification}
 ===================
 
 In this section, we now provide an informal description of the
@@ -52,7 +52,7 @@ Rules{#sec:rules}
 
 We use multiset rewriting to specify the concurrent execution of
 the protocol and the adversary.  Multiset rewriting is a formalism that is commonly used to model
-concurrent systems since it naturally supports independent transitions. 
+concurrent systems since it naturally supports independent transitions.
 
 A multiset rewriting system defines a transition system, where, in our
 case,
@@ -87,7 +87,7 @@ rule can be applied to a state if it can be instantiated such that its left hand
 side is contained in the current state. In this case, the left-hand side facts
 are removed from the state, and replaced by the instantiated right hand side.
 
-For example, in the initial state, `MyRule1` can be instantiated repeatedly. 
+For example, in the initial state, `MyRule1` can be instantiated repeatedly.
 
 For any instantiation of `MyRule1`,
 this leads to follow-up  state that contains `F('1','x')` and `F('2','y')`. `MyRule2`
@@ -198,13 +198,13 @@ are never consumed, the use of persistent facts is preferred.
 
 ### Embedded restrictions{#sec:embeddedrestrictions}
 
-A frequently used trick when modelling protocols is to enforce a 
+A frequently used trick when modelling protocols is to enforce a
 restriction
 on the trace once a certain rule is invoked, for instance if
 the step represented by the rule requires another step at some later point in time, e.g., to model a reliable channel.
 [We explain what restriction are later](007_property-specification.html#sec:restrictions),
 but roughly speaking, they specify constraints that a protocol execution should
-uphold. 
+uphold.
 
 This can be done by hand, namely by specifying a restriction that refers to an `action
 fact` unique to this rule, or by using embedded restrictions like this:
@@ -214,8 +214,8 @@ rule B:
     [In(x), In(y)] --[ _restrict( formula )]-> []
 ```
 
-where `formula` is a restriction. 
-
+where `formula` is a restriction. Note that embedded restrictions currently
+are only available in trace mode.
 
 Modeling protocols
 ------------------
@@ -242,8 +242,8 @@ following rule. Note that we also directly give all public keys to the attacker,
 modeled by the `Out` on the right-hand side.
 
 	rule Generate_key_pair:
-	  [ Fr(~x) ] 
-	  --> 
+	  [ Fr(~x) ]
+	  -->
 	  [ !Pk($A,pk(~x))
 	  , Out(pk(~x))
 	  , !Ltk($A,~x)
@@ -255,8 +255,8 @@ $x$, which enables exploiting the commutativity of the exponents to establish
 keys. In this case, we specify the following rule instead.
 
 	rule Generate_DH_key_pair:
-	  [ Fr(~x) ] 
-	  --> 
+	  [ Fr(~x) ]
+	  -->
 	  [ !Pk($A,'g'^~x)
 	  , Out('g'^~x)
 	  , !Ltk($A,~x)
@@ -270,7 +270,7 @@ or starting a session.
 
 ### Modeling the Naxos responder role
 
-We first model the responder role, which is simpler than the 
+We first model the responder role, which is simpler than the
 initiator role since it can be done in one rule.
 
 The protocol uses a Diffie-Hellman exponentiation, and two hash functions `h1`
@@ -322,14 +322,14 @@ later we will want to make a statement about the session key in the security
 property. We therefore add the computed key to the actions:
 
         rule NaxosR_attempt2:
-                [ 
-                  In(X), 
+                [
+                  In(X),
                   Fr(~eskR),
                   !Ltk($R, lkR)
-                ] 
+                ]
                 --[ SessionKey($R, kR ) ]->
-                [ 
-                  Out( 'g'^h1(< ~eskR, lkR >) ) 
+                [
+                  Out( 'g'^h1(< ~eskR, lkR >) )
                 ]
 
 The computation of `kR` is not yet specified in the above. We could replace
@@ -343,7 +343,7 @@ to specify security properties, as we will see in the next
 section.  This leads to:
 
         rule NaxosR_attempt3:
-          let 
+          let
               exR = h1(< ~eskR, lkR >)
               hkr = 'g'^exR
               kR  = h2(< pkI^exR, X^lkR, X^exR, $I, $R >)
@@ -383,7 +383,7 @@ The above rule suffices to model basic security properties, as we will see later
 
 The initiator role of the Naxos protocol consists of sending a message and waiting
 for the response. While the initiator is waiting
-for a response, other agents might also perform steps. We therefore 
+for a response, other agents might also perform steps. We therefore
 model the initiator using two rules.^[This modeling approach, as with the
 responder, is similar to the approach taken in cryptographic security models in
 the game-based setting, where each rule corresponds to a "query".]
@@ -471,4 +471,3 @@ TODO:
   * An explanation/examples of the difference between K, KU, and KD, and when
     you would use each. (This should go in the next section)
 -->
-
