@@ -36,6 +36,9 @@ module Theory.Text.Pretty (
   , kwPredicate
   , kwDiffLemma
   , kwRestriction
+  , kwLeft
+  , kwRight
+  , kwVariants
 
   -- ** Composed forms
   , kwRuleModulo
@@ -109,7 +112,7 @@ closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 kwTheoryHeader :: HighlightDocument d => d -> d
 kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
-kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwLemma, kwPredicates, kwPredicate, kwDiffLemma :: HighlightDocument d => d
+kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwLemma, kwPredicates, kwPredicate, kwDiffLemma, kwLeft, kwRight, kwVariants :: HighlightDocument d => d
 kwEnd         = keyword_ "end"
 kwBy          = keyword_ "by"
 kwCase        = keyword_ "case"
@@ -120,6 +123,9 @@ kwLemma       = keyword_ "lemma"
 kwPredicates  = keyword_ "predicates"
 kwPredicate  = keyword_ "predicate"
 kwDiffLemma   = keyword_ "diffLemma"
+kwLeft        = keyword_ "left"
+kwRight       = keyword_ "right"
+kwVariants    = keyword_ "variants"
 
 kwModulo :: HighlightDocument d
          => String  -- ^ What
@@ -133,7 +139,6 @@ kwRuleModulo     = kwModulo "rule"
 kwInstanceModulo = kwModulo "instance"
 kwTypesModulo    = kwModulo "type assertions"
 kwVariantsModulo = kwModulo "variants"
-
 
 ------------------------------------------------------------------------------
 -- Operators
@@ -157,4 +162,3 @@ opLOr       = operator_ "∨" -- "|"
 opImp       = operator_ "⇒" -- "==>"
 opIff       = operator_ "⇔" -- "<=>"
 opDot       = operator_ "."
-

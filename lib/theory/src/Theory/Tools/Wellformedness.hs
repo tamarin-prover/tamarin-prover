@@ -115,12 +115,12 @@ prettyWfErrorReport =
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 thyProtoRules :: OpenTranslatedTheory -> [ProtoRuleE]
-thyProtoRules thy = [ ru | RuleItem ru <- get thyItems thy ]
+thyProtoRules thy = [ get oprRuleE ru | RuleItem ru <- get thyItems thy ]
 
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 diffThyProtoRules :: OpenDiffTheory -> [ProtoRuleE]
-diffThyProtoRules thy = [ ru | DiffRuleItem ru <- get diffThyItems thy ]
+diffThyProtoRules thy = [ get dprRule ru | DiffRuleItem ru <- get diffThyItems thy ]
 
 -- | Lower-case a string.
 lowerCase :: String -> String
@@ -278,7 +278,8 @@ unboundCheck info ru
 -- | Report on sort clashes.
 unboundReport :: OpenTranslatedTheory -> WfErrorReport
 unboundReport thy = do
-    RuleItem ru <- get thyItems thy
+    RuleItem ru' <- get thyItems thy
+    let ru = get oprRuleE ru'
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
@@ -286,7 +287,8 @@ unboundReport thy = do
 -- | Report on sort clashes.
 unboundReportDiff :: OpenDiffTheory -> WfErrorReport
 unboundReportDiff thy = do
-    DiffRuleItem ru <- get diffThyItems thy
+    DiffRuleItem ru' <- get diffThyItems thy
+    let ru = get dprRule ru'
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
@@ -308,8 +310,13 @@ factReports thy = concat
 
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           do ruleFacts <$> get thyCache thy
-      <|> do RuleItem ru <- get thyItems thy
-             return $ ruleFacts ru
+      <|> ((do
+             RuleItem ru <- get thyItems thy
+             return $ ruleFacts $ get oprRuleE ru)
+          ++ (do
+             RuleItem ru <- get thyItems thy
+             ruAC <- get oprRuleAC ru
+             return $ ruleFacts ruAC))
       <|> do LemmaItem l <- get thyItems thy
              return $ (,) ("Lemma " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
@@ -383,7 +390,8 @@ factReports thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do RuleItem ru <- get thyItems thy; get rActs ru)
+        : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
+          ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
@@ -425,13 +433,17 @@ factReportsDiff thy = concat
     -- agrees with the arity of the function as given by the signature is
     -- enforced by the parser and implicitly checked in 'factArity'.
 
-    theoryDiffRuleFacts = do
+    theoryDiffRuleFacts = (do
               DiffRuleItem ru <- get diffThyItems thy
-              return $ ruleFacts ru
+              return $ ruleFacts $ get dprRule ru)
 
-    theoryParsedRuleFacts = do
+    theoryParsedRuleFacts = (do
               EitherRuleItem (_, ru) <- get diffThyItems thy
-              return $ ruleFacts ru
+              return $ ruleFacts $ get oprRuleE ru)
+              ++ (do
+              EitherRuleItem (_, ru) <- get diffThyItems thy
+              ruAC <- get oprRuleAC ru
+              return $ ruleFacts ruAC)
 
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           theoryDiffRuleFacts
@@ -523,8 +535,9 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ru <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do EitherRuleItem (_, ru) <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
@@ -746,7 +759,8 @@ formulaReportsDiff thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
 multRestrictedReport thy = do
-    ru <- theoryRules thy
+    ruO <- theoryRules thy
+    let ru = get oprRuleE ruO
     (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []
@@ -812,7 +826,8 @@ multRestrictedReport thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
 multRestrictedReportDiff thy = do
-    ru <- diffTheoryDiffRules thy
+    ruO <- diffTheoryDiffRules thy
+    let ru = get dprRule ruO
     (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []

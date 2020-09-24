@@ -839,7 +839,7 @@ messageSnippet thy = vcat
 rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 rulesDiffSnippet thy = vcat
     [ ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyProtoRuleE msrRules
+        vsep $ map prettyDiffRule msrRules
     ]
   where
     msrRules   = diffTheoryDiffRules thy

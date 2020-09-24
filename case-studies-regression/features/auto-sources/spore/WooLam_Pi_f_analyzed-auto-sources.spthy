@@ -10,155 +10,6 @@ equations:
 
 
 
-lemma AUTO_typing [sources]:
-  all-traces
-  "((⊤) ∧
-    (∀ x m #i.
-      (AUTO_IN_1_2_S_to_B( m, x ) @ #i) ⇒
-      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-       (∃ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
-   (∀ x m #i.
-     (AUTO_IN_1_1_S_to_B( m, x ) @ #i) ⇒
-     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ∧ (#j < #i))))"
-/*
-guarded formula characterizing all counter-examples:
-"((∃ x m #i.
-    (AUTO_IN_1_2_S_to_B( m, x ) @ #i)
-   ∧
-    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
-  (∃ x m #i.
-    (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
-   ∧
-    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ⇒ ¬(#j < #i))))"
-*/
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (∃ x m #i.
-           (AUTO_IN_1_2_S_to_B( m, x ) @ #i)
-          ∧
-           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
-         (∃ x m #i.
-           (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
-          ∧
-           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ⇒ ¬(#j < #i))) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_1_A_to_B_2( senc(<'1', a, b, x>, ~kas) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( !Ltk( ~kas, a ) ▶₁ #i )
-        case Init
-        solve( !Ltk( ~kbs, b ) ▶₂ #i )
-          case Init
-          solve( !KU( senc(<'2', $X, $X.1, x, senc(<'1', $X, $X.1, x>, ~kas)>,
-                           ~kbs)
-                 ) @ #vk )
-            case B_to_S
-            by contradiction /* from formulas */
-          next
-            case S_to_B
-            solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb>, ~kas.1) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.2)) )
-              case case_1
-              by contradiction /* cyclic */
-            next
-              case case_2
-              by contradiction /* cyclic */
-            qed
-          next
-            case c_senc
-            by contradiction /* from formulas */
-          qed
-        qed
-      qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    next
-      case case_3
-      by contradiction /* from formulas */
-    qed
-  next
-    case case_2
-    solve( (last(#i))  ∥
-           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_1_A_to_B_2( senc(<'1', a, b, x>, ~kas) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( !Ltk( ~kas, a ) ▶₁ #i )
-        case Init
-        solve( !Ltk( ~kbs, b ) ▶₂ #i )
-          case Init
-          solve( !KU( senc(<'2', $X, $X.1, x, senc(<'1', $X, $X.1, x>, ~kas)>,
-                           ~kbs)
-                 ) @ #vk )
-            case B_to_S
-            solve( !KU( senc(<'1', $X, $X.1, ~nb>, ~kas) ) @ #vk.1 )
-              case A_to_B_2
-              by contradiction /* from formulas */
-            next
-              case S_to_B
-              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
-                     (∃ #j.
-                       (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb.1>, ~kas.1) ) @ #j)
-                      ∧
-                       (¬(last(#j))) ∧ (#j < #vr.4)) )
-                case case_1
-                by contradiction /* cyclic */
-              next
-                case case_2
-                by contradiction /* cyclic */
-              qed
-            next
-              case c_senc
-              by contradiction /* from formulas */
-            qed
-          next
-            case S_to_B
-            solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb>, ~kas.1) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.2)) )
-              case case_1
-              by contradiction /* cyclic */
-            next
-              case case_2
-              by contradiction /* cyclic */
-            qed
-          next
-            case c_senc
-            by contradiction /* from formulas */
-          qed
-        qed
-      qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    next
-      case case_3
-      by contradiction /* from formulas */
-    qed
-  qed
-qed
-
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
 
@@ -450,6 +301,155 @@ qed
 
 /* All well-formedness checks were successful. */
 
+lemma AUTO_typing [sources]:
+  all-traces
+  "((⊤) ∧
+    (∀ x m #i.
+      (AUTO_IN_1_2_S_to_B( m, x ) @ #i) ⇒
+      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+       (∃ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
+   (∀ x m #i.
+     (AUTO_IN_1_1_S_to_B( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ∧ (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x m #i.
+    (AUTO_IN_1_2_S_to_B( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
+  (∃ x m #i.
+    (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ⇒ ¬(#j < #i))))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ x m #i.
+           (AUTO_IN_1_2_S_to_B( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_B_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
+         (∃ x m #i.
+           (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_A_to_B_2( m ) @ #j) ⇒ ¬(#j < #i))) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_A_to_B_2( senc(<'1', a, b, x>, ~kas) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !Ltk( ~kas, a ) ▶₁ #i )
+        case Init
+        solve( !Ltk( ~kbs, b ) ▶₂ #i )
+          case Init
+          solve( !KU( senc(<'2', $X, $X.1, x, senc(<'1', $X, $X.1, x>, ~kas)>,
+                           ~kbs)
+                 ) @ #vk )
+            case B_to_S
+            by contradiction /* from formulas */
+          next
+            case S_to_B
+            solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_senc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_A_to_B_2( senc(<'1', a, b, x>, ~kas) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !Ltk( ~kas, a ) ▶₁ #i )
+        case Init
+        solve( !Ltk( ~kbs, b ) ▶₂ #i )
+          case Init
+          solve( !KU( senc(<'2', $X, $X.1, x, senc(<'1', $X, $X.1, x>, ~kas)>,
+                           ~kbs)
+                 ) @ #vk )
+            case B_to_S
+            solve( !KU( senc(<'1', $X, $X.1, ~nb>, ~kas) ) @ #vk.1 )
+              case A_to_B_2
+              by contradiction /* from formulas */
+            next
+              case S_to_B
+              solve( (∃ #j. (!KU( nb.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                     (∃ #j.
+                       (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb.1>, ~kas.1) ) @ #j)
+                      ∧
+                       (¬(last(#j))) ∧ (#j < #vr.4)) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* cyclic */
+              qed
+            next
+              case c_senc
+              by contradiction /* from formulas */
+            qed
+          next
+            case S_to_B
+            solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_A_to_B_2( senc(<'1', $X.2, $X.3, nb>, ~kas.1) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.2)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* cyclic */
+            qed
+          next
+            case c_senc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
 end
 /* Output
 maude tool: 'maude'
@@ -463,12 +463,12 @@ analyzing: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.523604322s
-  AUTO_typing (all-traces): verified (31 steps)
+  processing time: 0.600866922s
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)
   agreement_B (all-traces): verified (13 steps)
+  AUTO_typing (all-traces): verified (31 steps)
 
 ------------------------------------------------------------------------------
 
@@ -478,12 +478,12 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.523604322s
-  AUTO_typing (all-traces): verified (31 steps)
+  processing time: 0.600866922s
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)
   agreement_B (all-traces): verified (13 steps)
+  AUTO_typing (all-traces): verified (31 steps)
 
 ==============================================================================
 */
