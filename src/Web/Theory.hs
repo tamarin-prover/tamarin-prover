@@ -1008,7 +1008,7 @@ htmlThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformedness $ removeSapicItems (openTheory thy)
+             report = checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy)
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1143,7 +1143,7 @@ htmlDiffThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformednessDiff $ openDiffTheory thy
+             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
 
 
 

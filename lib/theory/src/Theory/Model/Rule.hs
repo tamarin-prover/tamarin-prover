@@ -791,20 +791,15 @@ getSubstitutionsFixingNewVars _ _
           = error "getSubstitutionsFixingNewVars: not called on a protocol rule" -- FIXME: Nothing?
 
 -- | returns true if the first Rule has the same name, premise, conclusion and
--- action facts, ignoring terms, and added action facts
+-- action facts, ignoring added action facts and other rule information
+-- TODO: Ignore renaming?
 equalUpToAddedActions :: (HasRuleName (Rule i), HasRuleName (Rule i2)) => (Rule i) -> (Rule i2) -> Bool
 equalUpToAddedActions ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
-  ruleName ruE == ruleName ruAC
-    && length ps == length ps' && length cs == length cs'
-    && foldl sameFacts True (zip ps ps') && foldl sameFacts True (zip cs cs')
-    && compareActions as as'
+  ruleName ruE == ruleName ruAC && ps == ps' && cs == cs' && compareActions as as'
   where
-    sameFacts b (f1, f2) = b && sameFact f1 f2
-    sameFact (Fact tag _ _) (Fact tag' _ _) = tag == tag'
-
     compareActions _      []       = True
     compareActions []     _        = False
-    compareActions (a:ass) (a':ass') = if sameFact a a'
+    compareActions (a:ass) (a':ass') = if a == a'
       then compareActions ass ass'
       else compareActions ass (a':ass')
 

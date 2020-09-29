@@ -119,7 +119,6 @@ module Theory (
   , addStringComment
   , addFormalComment
   , addFormalCommentDiff
-  , cprRuleE
   , filterSide
   , addDefaultDiffLemma
   , addProtoRuleLabel
@@ -154,7 +153,9 @@ module Theory (
   , ClosedDiffTheory
   , ClosedRuleCache(..) -- FIXME: this is only exported for the Binary instances
   , closeTheory
+  , closeTheoryWithMaude
   , closeDiffTheory
+  , closeDiffTheoryWithMaude
   , openTheory
   , openTranslatedTheory
   , openDiffTheory
@@ -163,9 +164,12 @@ module Theory (
   , OpenProtoRule(..)
   , oprRuleE
   , oprRuleAC
+  , cprRuleE
+  , cprRuleAC
   , DiffProtoRule(..)
   , dprRule
   , dprLeftRight
+  , unfoldRuleVariants
 
   , getLemmas
   , getDiffLemmas
@@ -416,7 +420,6 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
--- TODO: Check that all variants are there if variants are given!
 closeProtoRule :: MaudeHandle -> OpenProtoRule -> [ClosedProtoRule]
 closeProtoRule hnd (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
 closeProtoRule _   (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
