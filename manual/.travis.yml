@@ -1,17 +1,17 @@
 language: generic
 script: bash ./deploy.sh
 
-# This is the Official Way to get travis to run a 14.04 build.
+# This is the Official Way to get travis to run a 18.04 build.
 # We need sudo to install texlive-xetex for the pdf.
 sudo: required
-dist: trusty
+dist: xenial
 
 # pandoc is in the apt repositories but the version is too old---specifically, it doesn't
 # support the {width=100%} syntax used in the manual. Hence, download a later release and
 # install that manually.
 before_install:
-  - wget https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb
-  - sudo dpkg -i pandoc-1.19.1-1-amd64.deb
+  - wget https://github.com/jgm/pandoc/releases/download/2.10.1/pandoc-2.10.1-1-amd64.deb
+  - sudo dpkg -i pandoc-2.10.1-1-amd64.deb
 
 # Dependencies for the compile
 addons:
