@@ -118,7 +118,7 @@ the left-hand side of the `=` sign must be a variable and
 the right-hand side is an arbitrary term. The rule will be interpreted after
 substituting all variables occurring in the let by their right-hand
 sides.
-As the above example indicates, macros may use the right-hand sides of
+As the above example indicates, macros may use the left-hand sides of
 earlier defined macros.
 
 
@@ -214,8 +214,8 @@ rule B:
     [In(x), In(y)] --[ _restrict( formula )]-> []
 ```
 
-where `formula` is a restriction. 
-
+where `formula` is a restriction. Note that embedded restrictions currently
+are only available in trace mode.
 
 Modeling protocols
 ------------------
