@@ -645,14 +645,6 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
--- | Parse an 'AccKind'
-accKind :: Parser AccKind
-accKind = asum
-  [ symbol "coarse"              *> pure Coarse
-  , symbol "cases"              *> pure Cases
-  , symbol "control-equivalence" *> pure ControlEquivalence
-  ]
-
 protoLemma :: Parser f -> Parser (ProtoLemma f ProofSkeleton)
 protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> (option [] $ list (lemmaAttribute False))
@@ -679,18 +671,12 @@ lemmaAcc :: Parser AccLemma
 lemmaAcc = try $ do
                _ <-  symbol "lemma"
                name <- identifier
-               attributes <- option [] $ list (try (Left <$> lemmaAttribute False) <|> (Right <$> accKind))
+               attributes <- option [] $ list (try (Left <$> lemmaAttribute False))
                _ <-  colon
                identifiers <- commaSep1 $ identifier
                _ <-  try (symbol "accounts for") <|> symbol "account for"
-               -- kind <- brackets accKind
                formula <-  doubleQuoted standardFormula
-               case rights attributes of
-                [] -> return $ AccLemma name (lefts attributes) identifiers [] defaultKind formula
-                [kind] -> return $ AccLemma name (lefts attributes) identifiers [] kind formula
-                list -> fail $ "An accountability lemma can only have one of " ++ show list ++ "."
-               where
-                defaultKind = Coarse
+               return $ AccLemma name (lefts attributes) identifiers [] formula
 
 ------------------------------------------------------------------------------
 -- Parsing Case Tests

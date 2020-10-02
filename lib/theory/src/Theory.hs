@@ -61,7 +61,6 @@ module Theory (
   , LemmaAttribute(..)
   , TraceQuantifier(..)
   , CaseIdentifier
-  , AccKind(..)
   , Lemma
   , SyntacticLemma
   , ProtoLemma(..)
@@ -76,7 +75,6 @@ module Theory (
   , lAttributes
   , lProof
   , aName
-  , aAccKind
   , aAttributes
   , aCaseIdentifiers
   , aCaseTests
@@ -558,16 +556,6 @@ data LemmaAttribute =
 data TraceQuantifier = ExistsTrace | AllTraces
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-
--- | AccKind describe the different types of an accountabilty lemma_attr
-data AccKind =
-        Coarse
-      | Cases
-      | ControlEquivalence
---      | ControlSubset
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
 data ProtoLemma f p = Lemma
@@ -610,7 +598,6 @@ data AccLemma = AccLemma
        , _aAttributes      :: [LemmaAttribute]
        , _aCaseIdentifiers :: [CaseIdentifier]
        , _aCaseTests       :: [CaseTest]
-       , _aAccKind         :: AccKind
        , _aFormula         :: SyntacticLNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
