@@ -54,16 +54,21 @@ Section [Heuristics](009_advanced-features.html#sec:heuristics).
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
-specified in the body of the theory.
+specified in the body of the theory. Rule variants can be explicitly given, as
+well as the left and right instances of a rule in diff-mode.
+(When called with `--diff`, Tamarin will parse `diff_rule` instead of `rule`).
 
-    rule := 'rule' [modulo] ident [rule_attrs] ':'
+    rule        := simple_rule [variants]
+    diff_rule   := simple_rule ['left' rule 'right' rule]
+    simple_rule := 'rule' [modulo] ident [rule_attrs] ':'
             [let_block]
             '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
-    modulo     := '(' 'modulo' ('E' | 'AC') ')'
-    rule_attrs := '[' rule_attr (',' rule_attr)* ']'
-    rule_attr  := ('color=' | 'colour=') hexcolor
-    let_block  := 'let' (msg_var '=' msetterm)+ 'in'
-    msg_var    := ident ['.' natural] [':' 'msg']
+    variants    := 'variants' simple_rule (',' simple_rule)*
+    modulo      := '(' 'modulo' ('E' | 'AC') ')'
+    rule_attrs  := '[' rule_attr (',' rule_attr)* ']'
+    rule_attr   := ('color=' | 'colour=') hexcolor
+    let_block   := 'let' (msg_var '=' msetterm)+ 'in'
+    msg_var     := ident ['.' natural] [':' 'msg']
 
 Rule annotations do not influence the rule's semantics. A color is represented
 as a triplet of 8 bit hexadecimal values optionally
@@ -108,7 +113,7 @@ quantifier.
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' | 
+    lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' |
                              'hide_lemma=' ident | 'heuristic=' heuristic |
                              'left' | 'right') ']'
 
@@ -223,4 +228,3 @@ reserved keywords `let`, `in`, or `rule`. Although identifiers beginning with
 a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
     ident := alphaNum (alphaNum | '_')*
-
