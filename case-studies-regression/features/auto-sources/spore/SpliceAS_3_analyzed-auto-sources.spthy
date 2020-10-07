@@ -13,214 +13,6 @@ equations:
 
 
 
-lemma AUTO_typing [sources]:
-  all-traces
-  "((⊤) ∧
-    (∀ x m #i.
-      (AUTO_IN_1_2_S_to_AS( m, x ) @ #i) ⇒
-      (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-        (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
-       (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
-   (∀ x m #i.
-     (AUTO_IN_1_1_S_to_AS( m, x ) @ #i) ⇒
-     (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-       (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
-      (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))"
-/*
-guarded formula characterizing all counter-examples:
-"((∃ x m #i.
-    (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
-   ∧
-    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
-  (∃ x m #i.
-    (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
-   ∧
-    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))))"
-*/
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (∃ x m #i.
-           (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
-          ∧
-           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
-         (∃ x m #i.
-           (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
-          ∧
-           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_1_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_3_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( !Ltk( $S, ~ltkS ) ▶₁ #i )
-        case Register_pk
-        solve( !KU( sign(<'3', t, l, aenc(<'4', c, x>, pk(~ltkS))>, ltkC)
-               ) @ #vk.10 )
-          case C_to_S
-          by contradiction /* from formulas */
-        next
-          case S_to_C
-          solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.7)) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* impossible chain */
-          next
-            case case_3
-            by contradiction /* impossible chain */
-          qed
-        next
-          case c_sign
-          solve( !KU( aenc(<'4', c, x>, pk(~ltkS)) ) @ #vk.12 )
-            case C_to_S
-            by contradiction /* from formulas */
-          next
-            case S_to_C
-            solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.7)) )
-              case case_1
-              by contradiction /* cyclic */
-            next
-              case case_2
-              by contradiction /* impossible chain */
-            next
-              case case_3
-              by contradiction /* impossible chain */
-            qed
-          next
-            case c_aenc
-            by contradiction /* from formulas */
-          qed
-        qed
-      qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    next
-      case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
-      by contradiction /* from formulas */
-    qed
-  next
-    case case_2
-    solve( (last(#i))  ∥
-           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_1_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_3_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( !Ltk( $S, ~ltkS ) ▶₁ #i )
-        case Register_pk
-        solve( !KU( sign(<'3', t, l, aenc(<'4', c, x>, pk(~ltkS))>, ltkC)
-               ) @ #vk.10 )
-          case C_to_S
-          by contradiction /* from formulas */
-        next
-          case S_to_C
-          solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.7)) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* impossible chain */
-          next
-            case case_3
-            by contradiction /* impossible chain */
-          qed
-        next
-          case c_sign
-          solve( !KU( aenc(<'4', c, x>, pk(~ltkS)) ) @ #vk.12 )
-            case C_to_S
-            by contradiction /* from formulas */
-          next
-            case S_to_C
-            solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.7))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.7)) )
-              case case_1
-              by contradiction /* cyclic */
-            next
-              case case_2
-              by contradiction /* impossible chain */
-            next
-              case case_3
-              by contradiction /* impossible chain */
-            qed
-          next
-            case c_aenc
-            by contradiction /* from formulas */
-          qed
-        qed
-      qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    next
-      case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
-      by contradiction /* from formulas */
-    qed
-  qed
-qed
-
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
   --[ Register( $U, ~ltk ), OnlyOnce( $U ) ]->
@@ -1234,6 +1026,214 @@ qed
 
 /* All well-formedness checks were successful. */
 
+lemma AUTO_typing [sources]:
+  all-traces
+  "((⊤) ∧
+    (∀ x m #i.
+      (AUTO_IN_1_2_S_to_AS( m, x ) @ #i) ⇒
+      (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+        (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
+       (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
+   (∀ x m #i.
+     (AUTO_IN_1_1_S_to_AS( m, x ) @ #i) ⇒
+     (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+       (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
+      (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x m #i.
+    (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
+  (∃ x m #i.
+    (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
+   ∧
+    (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ x m #i.
+           (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
+         (∃ x m #i.
+           (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
+          ∧
+           (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_3_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !Ltk( $S, ~ltkS ) ▶₁ #i )
+        case Register_pk
+        solve( !KU( sign(<'3', t, l, aenc(<'4', c, x>, pk(~ltkS))>, ltkC)
+               ) @ #vk.10 )
+          case C_to_S
+          by contradiction /* from formulas */
+        next
+          case S_to_C
+          solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.7)) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_sign
+          solve( !KU( aenc(<'4', c, x>, pk(~ltkS)) ) @ #vk.12 )
+            case C_to_S
+            by contradiction /* from formulas */
+          next
+            case S_to_C
+            solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.7)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            next
+              case case_3
+              by contradiction /* impossible chain */
+            qed
+          next
+            case c_aenc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    next
+      case case_4
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_1_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j.
+             (AUTO_OUT_0_3_C_to_S( aenc(<'4', c, x>, pk(~ltkS)) ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !Ltk( $S, ~ltkS ) ▶₁ #i )
+        case Register_pk
+        solve( !KU( sign(<'3', t, l, aenc(<'4', c, x>, pk(~ltkS))>, ltkC)
+               ) @ #vk.10 )
+          case C_to_S
+          by contradiction /* from formulas */
+        next
+          case S_to_C
+          solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.7)) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_sign
+          solve( !KU( aenc(<'4', c, x>, pk(~ltkS)) ) @ #vk.12 )
+            case C_to_S
+            by contradiction /* from formulas */
+          next
+            case S_to_C
+            solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.7))  ∥
+                   (∃ #j.
+                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', c.1, n2>, pk(~ltkS.1)) ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧ (#j < #vr.7)) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            next
+              case case_3
+              by contradiction /* impossible chain */
+            qed
+          next
+            case c_aenc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    next
+      case case_4
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
 end
 /* Output
 maude tool: 'maude'
@@ -1247,14 +1247,14 @@ analyzing: examples/features/auto-sources/spore/SpliceAS_3.spthy
 analyzed: examples/features/auto-sources/spore/SpliceAS_3.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_3.spthy.tmp
-  processing time: 9.020654306s
-  AUTO_typing (all-traces): verified (40 steps)
+  processing time: 9.311974191s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): verified (55 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
   agreement_B (all-traces): verified (14 steps)
   injectiveagreement_A (all-traces): verified (75 steps)
   agreement_A (all-traces): verified (55 steps)
+  AUTO_typing (all-traces): verified (40 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1264,14 +1264,14 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_3.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_3.spthy.tmp
-  processing time: 9.020654306s
-  AUTO_typing (all-traces): verified (40 steps)
+  processing time: 9.311974191s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): verified (55 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
   agreement_B (all-traces): verified (14 steps)
   injectiveagreement_A (all-traces): verified (75 steps)
   agreement_A (all-traces): verified (55 steps)
+  AUTO_typing (all-traces): verified (40 steps)
 
 ==============================================================================
 */

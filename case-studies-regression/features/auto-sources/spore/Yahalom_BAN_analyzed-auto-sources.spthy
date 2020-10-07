@@ -10,69 +10,6 @@ equations:
 
 
 
-lemma AUTO_typing [sources]:
-  all-traces
-  "(⊤) ∧
-   (∀ x m #i.
-     (AUTO_IN_1_1_S_1( m, x ) @ #i) ⇒
-     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ∧ (#j < #i))))"
-/*
-guarded formula characterizing all counter-examples:
-"∃ x m #i.
-  (AUTO_IN_1_1_S_1( m, x ) @ #i)
- ∧
-  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ⇒ ¬(#j < #i))"
-*/
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  simplify
-  solve( (last(#i))  ∥
-         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-         (∃ #j.
-           (AUTO_OUT_0_1_B_1( senc(<'1', zA, x>, zkbs) ) @ #j)
-          ∧
-           (¬(last(#j))) ∧ (#j < #i)) )
-    case case_1
-    solve( !LongtermKey( zkbs, zB ) ▶₂ #i )
-      case Init
-      solve( !LongtermKey( zkas, zA ) ▶₃ #i )
-        case Init
-        solve( !KU( senc(<'1', $X.1, x>, ~kxs) ) @ #vk.4 )
-          case B_1
-          by contradiction /* from formulas */
-        next
-          case S_1
-          solve( (∃ #j. (!KU( zna ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_1_B_1( senc(<'1', $X.3, zna>, ~kxs.3) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.2)) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* cyclic */
-          qed
-        next
-          case c_senc
-          by contradiction /* from formulas */
-        qed
-      qed
-    qed
-  next
-    case case_2
-    by contradiction /* from formulas */
-  next
-    case case_3
-    by contradiction /* from formulas */
-  qed
-qed
-
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -372,6 +309,69 @@ qed
 
 /* All well-formedness checks were successful. */
 
+lemma AUTO_typing [sources]:
+  all-traces
+  "(⊤) ∧
+   (∀ x m #i.
+     (AUTO_IN_1_1_S_1( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ∧ (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x m #i.
+  (AUTO_IN_1_1_S_1( m, x ) @ #i)
+ ∧
+  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ⇒ ¬(#j < #i))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j.
+           (AUTO_OUT_0_1_B_1( senc(<'1', zA, x>, zkbs) ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (#j < #i)) )
+    case case_1
+    solve( !LongtermKey( zkbs, zB ) ▶₂ #i )
+      case Init
+      solve( !LongtermKey( zkas, zA ) ▶₃ #i )
+        case Init
+        solve( !KU( senc(<'1', $X.1, x>, ~kxs) ) @ #vk.4 )
+          case B_1
+          by contradiction /* from formulas */
+        next
+          case S_1
+          solve( (∃ #j. (!KU( zna ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_0_1_B_1( senc(<'1', $X.3, zna>, ~kxs.3) ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* cyclic */
+          qed
+        next
+          case c_senc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
 end
 /* Output
 maude tool: 'maude'
@@ -385,12 +385,12 @@ analyzing: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 0.999235046s
-  AUTO_typing (all-traces): verified (14 steps)
+  processing time: 1.08143878s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
   noninjectiveagreement_A (all-traces): falsified - found trace (7 steps)
+  AUTO_typing (all-traces): verified (14 steps)
 
 ------------------------------------------------------------------------------
 
@@ -400,12 +400,12 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 0.999235046s
-  AUTO_typing (all-traces): verified (14 steps)
+  processing time: 1.08143878s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
   noninjectiveagreement_A (all-traces): falsified - found trace (7 steps)
+  AUTO_typing (all-traces): verified (14 steps)
 
 ==============================================================================
 */

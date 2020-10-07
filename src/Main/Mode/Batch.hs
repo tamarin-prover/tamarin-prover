@@ -19,6 +19,7 @@ import           Data.Maybe
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing                   (timed)
+import           Extension.Data.Label
 
 import qualified Text.PrettyPrint.Class          as Pretty
 
@@ -127,7 +128,7 @@ run thisMode as
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 
         ppWfAndSummary thy =
-            case checkWellformedness (removeSapicItems (openTheory thy)) of
+            case checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)
@@ -136,7 +137,7 @@ run thisMode as
             Pretty.$--$ prettyClosedSummary thy
 
         ppWfAndSummaryDiff thy =
-            case checkWellformednessDiff (openDiffTheory thy) of
+            case checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)
