@@ -1,0 +1,191 @@
+theory NDCTwoReplications begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+heuristic: p
+
+section{* small example for progression function *}
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( state_11( ~prog_11 ) ▶₀ #t )
+  case __1_1
+  solve( state_11( ~prog_11 ) ▶₀ #t.2 )
+    case __1_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( state_21( ~prog_21 ) ▶₀ #t )
+  case __1_2
+  solve( state_21( ~prog_21 ) ▶₀ #t.2 )
+    case __1_2
+    SOLVED // trace found
+  qed
+qed
+
+lemma no_progress_possible:
+  exists-trace "(¬(∃ #t. A( ) @ #t)) ∧ (¬(∃ #t. B( ) @ #t))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #t. (A( ) @ #t) ⇒ ⊥) ∧ (∀ #t. (B( ) @ #t) ⇒ ⊥)"
+*/
+simplify
+SOLVED // trace found
+
+lemma A_exclusive:
+  all-traces "(∃ #t. A( ) @ #t) ⇒ (¬(∃ #t2. B( ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"(∃ #t. (A( ) @ #t)) ∧ (∃ #t2. (B( ) @ #t2))"
+*/
+simplify
+solve( state_11( ~prog_11 ) ▶₀ #t )
+  case __1_1
+  by solve( state_21( ~prog_21 ) ▶₀ #t2 )
+qed
+
+lemma B_exclusive:
+  all-traces "(∃ #t. B( ) @ #t) ⇒ (¬(∃ #t2. A( ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"(∃ #t. (B( ) @ #t)) ∧ (∃ #t2. (A( ) @ #t2))"
+*/
+simplify
+solve( state_21( ~prog_21 ) ▶₀ #t )
+  case __1_2
+  by solve( state_11( ~prog_11 ) ▶₀ #t2 )
+qed
+
+rule (modulo E) MessageID-rule[color=#ffffff process=+]:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=+]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1[color=#ffffff process=!]:
+   [ state_( ) ] --> [ !semistate_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1[color=#ffffff process=!]:
+   [ Fr( ~prog_11 ), !semistate_11( ) ]
+  --[ ProgressFrom_11( ~prog_11 ) ]->
+   [ state_11( ~prog_11 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_11[color=#ffffff process=event A( );]:
+   [ state_11( ~prog_11 ) ]
+  --[ ProgressTo_111( ~prog_11 ), A( ) ]->
+   [ state_111( ~prog_11 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111[color=#ffffff process=0]:
+   [ state_111( ~prog_11 ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_2[color=#ffffff process=!]:
+   [ state_( ) ] --> [ !semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_2[color=#ffffff process=!]:
+   [ Fr( ~prog_21 ), !semistate_21( ) ]
+  --[ ProgressFrom_21( ~prog_21 ) ]->
+   [ state_21( ~prog_21 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventB_0_21[color=#ffffff process=event B( );]:
+   [ state_21( ~prog_21 ) ]
+  --[ ProgressTo_211( ~prog_21 ), B( ) ]->
+   [ state_211( ~prog_21 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_211[color=#ffffff process=0]:
+   [ state_211( ~prog_21 ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress_[1,1]_to_[1,1,1]:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+restriction Progress_[2,1]_to_[2,1,1]:
+  "∀ prog_21 #t.
+    (ProgressFrom_21( prog_21 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
+
+  output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
+  processing time: 0.091203s
+  A_possible (exists-trace): verified (4 steps)
+  B_possible (exists-trace): verified (4 steps)
+  no_progress_possible (exists-trace): verified (2 steps)
+  A_exclusive (all-traces): verified (3 steps)
+  B_exclusive (all-traces): verified (3 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
+
+  output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
+  processing time: 0.091203s
+  A_possible (exists-trace): verified (4 steps)
+  B_possible (exists-trace): verified (4 steps)
+  no_progress_possible (exists-trace): verified (2 steps)
+  A_exclusive (all-traces): verified (3 steps)
+  B_exclusive (all-traces): verified (3 steps)
+
+==============================================================================
+*/

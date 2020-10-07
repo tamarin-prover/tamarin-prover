@@ -24,21 +24,21 @@ Property (reachability):
  - helping lemma: secrecy of key k
  - injective agreement of Tag
  - injective agreement of Reader (falsified)
- 
+
  Result:
  ==============================================================================
  summary of summaries:
- 
+
  analyzed: build09_LAK06_3600.spthy
- 
+
    executable (exists-trace): verified (9 steps)
    helpingSecrecy (all-traces): verified (2 steps)
    noninjectiveagreementTAG (all-traces): verified (2148 steps)
    noninjectiveagreementREADER (all-traces): falsified - found trace (13 steps)
-		 
+
  ==============================================================================
 tamarin-prover --prove build09_LAK06_3600.spthy  3094.16s user 411.29s system 2617% cpu 2:13.90 total
-		 
+
 
 ### LAK06_state.spthy
 Model:
@@ -69,13 +69,13 @@ Property: weak UK of tag:
  - two tages T1 T2 in a guessing phase
  - one tag T_i in the learning phase, i=1 on the left and i=2 on the right.
  - No restriction to implement phases as the property can be proven without it (see comments in the file).
- 
+
  ==============================================================================
  summary of summaries:
- 
+
  analyzed: CH07-untrac-weak_checkingProof.spthy
-   [...] 
+   [...]
    DiffLemma:  Observational_equivalence : verified (3118 steps)
-	   
+
  ==============================================================================
- ~/.local/bin/tamarin-prover --prove=Observ  --diff +RTS -N14 -RTS  675.47s user 109.34s system 906% cpu 1:26.59 total
+ ~/.local/bin/tamarin-prover --prove=Observ*  --diff +RTS -N14 -RTS  675.47s user 109.34s system 906% cpu 1:26.59 total

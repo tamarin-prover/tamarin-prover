@@ -89,6 +89,7 @@ import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
 import           Theory.Sapic
+import           Theory.Tools.RuleVariants
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -115,12 +116,12 @@ prettyWfErrorReport =
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 thyProtoRules :: OpenTranslatedTheory -> [ProtoRuleE]
-thyProtoRules thy = [ ru | RuleItem ru <- get thyItems thy ]
+thyProtoRules thy = [ get oprRuleE ru | RuleItem ru <- get thyItems thy ]
 
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 diffThyProtoRules :: OpenDiffTheory -> [ProtoRuleE]
-diffThyProtoRules thy = [ ru | DiffRuleItem ru <- get diffThyItems thy ]
+diffThyProtoRules thy = [ get dprRule ru | DiffRuleItem ru <- get diffThyItems thy ]
 
 -- | Lower-case a string.
 lowerCase :: String -> String
@@ -173,6 +174,66 @@ ruleSortsReport thy = do
     ru <- thyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      " clashing sorts, casings, or multiplicities:") ru
+
+--- | Check that the protocol rule variants are correct.
+variantsCheck :: MaudeHandle -> String -> OpenProtoRule -> WfErrorReport
+variantsCheck _   _    (OpenProtoRule _ [])     = []
+variantsCheck hnd info (OpenProtoRule ruE ruAC) =
+  if sameVariantsUpToActions ruAC recomputedVariants then
+    []
+  else
+    return $
+            ( "variants"
+            , text info $-$ (nest 2 $ (numbered' $ (map prettyProtoRuleAC ruAC)))
+              $--$ text "Recomputed variants: " $--$
+              (nest 2 $ (numbered' $ map prettyProtoRuleAC recomputedVariants))
+            )
+  where
+    recomputedVariants = map (get cprRuleAC) $ unfoldRuleVariants $
+      ClosedProtoRule ruE (variantsProtoRule hnd ruE)
+    sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
+
+-- | Report on missing or different variants.
+ruleVariantsReport :: SignatureWithMaude -> OpenTranslatedTheory -> WfErrorReport
+ruleVariantsReport sig thy = do
+    ru <- [ ru | RuleItem ru <- get thyItems thy ]
+    variantsCheck hnd ("rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
+                     " cannot confirm manual variants:") ru
+  where
+    hnd = get sigmMaudeHandle sig
+
+-- | Report on missing or different variants in case of diff rules.
+ruleVariantsReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
+ruleVariantsReportDiff sig thy = do
+    lrRu <- [ get dprLeftRight ru | DiffRuleItem ru <- get diffThyItems thy ]
+    case lrRu of
+      Just (lr, rr) -> (variantsCheck hnd ("left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
+                     " cannot confirm manual variants:") lr) ++
+                      (variantsCheck hnd ("right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
+                      " cannot confirm manual variants:") rr)
+      Nothing -> []
+  where
+    hnd = get sigmMaudeHandle sig
+
+-- | Report on inconsistent left/right rules. This does not check the variants (done by ruleVariantsReportDiff).
+leftRightRuleReportDiff :: OpenDiffTheory -> WfErrorReport
+leftRightRuleReportDiff thy = do
+    ru <- [ ru | DiffRuleItem ru <- get diffThyItems thy ]
+    case get dprLeftRight ru of
+      Just ((OpenProtoRule lr _), _) | not (equalUpToAddedActions lr (getLeftRule (get dprRule ru))) -> return $
+              ( "left rule"
+              , text "Inconsistent left rule" $-$ (nest 2 $ prettyProtoRuleE lr)
+                $--$ text "w.r.t." $--$
+                (nest 2 $ prettyProtoRuleE (get dprRule ru))
+              )
+      Just (_, (OpenProtoRule rr _)) | not (equalUpToAddedActions rr (getRightRule (get dprRule ru))) -> return $
+              ( "right rule"
+              , text "Inconsistent right rule" $-$ (nest 2 $ prettyProtoRuleE rr)
+                $--$ text "w.r.t." $--$
+                (nest 2 $ prettyProtoRuleE (get dprRule ru))
+              )
+      Just (_, _) | otherwise -> []
+      Nothing -> []
 
 -- | Report on sort clashes.
 ruleSortsReportDiff :: OpenDiffTheory -> WfErrorReport
@@ -278,7 +339,8 @@ unboundCheck info ru
 -- | Report on sort clashes.
 unboundReport :: OpenTranslatedTheory -> WfErrorReport
 unboundReport thy = do
-    RuleItem ru <- get thyItems thy
+    RuleItem ru' <- get thyItems thy
+    let ru = get oprRuleE ru'
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
@@ -286,7 +348,8 @@ unboundReport thy = do
 -- | Report on sort clashes.
 unboundReportDiff :: OpenDiffTheory -> WfErrorReport
 unboundReportDiff thy = do
-    DiffRuleItem ru <- get diffThyItems thy
+    DiffRuleItem ru' <- get diffThyItems thy
+    let ru = get dprRule ru'
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
@@ -308,8 +371,13 @@ factReports thy = concat
 
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           do ruleFacts <$> get thyCache thy
-      <|> do RuleItem ru <- get thyItems thy
-             return $ ruleFacts ru
+      <|> ((do
+             RuleItem ru <- get thyItems thy
+             return $ ruleFacts $ get oprRuleE ru)
+          ++ (do
+             RuleItem ru <- get thyItems thy
+             ruAC <- get oprRuleAC ru
+             return $ ruleFacts ruAC))
       <|> do LemmaItem l <- get thyItems thy
              return $ (,) ("Lemma " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
@@ -383,7 +451,8 @@ factReports thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do RuleItem ru <- get thyItems thy; get rActs ru)
+        : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
+          ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
@@ -425,13 +494,17 @@ factReportsDiff thy = concat
     -- agrees with the arity of the function as given by the signature is
     -- enforced by the parser and implicitly checked in 'factArity'.
 
-    theoryDiffRuleFacts = do
+    theoryDiffRuleFacts = (do
               DiffRuleItem ru <- get diffThyItems thy
-              return $ ruleFacts ru
+              return $ ruleFacts $ get dprRule ru)
 
-    theoryParsedRuleFacts = do
+    theoryParsedRuleFacts = (do
               EitherRuleItem (_, ru) <- get diffThyItems thy
-              return $ ruleFacts ru
+              return $ ruleFacts $ get oprRuleE ru)
+              ++ (do
+              EitherRuleItem (_, ru) <- get diffThyItems thy
+              ruAC <- get oprRuleAC ru
+              return $ ruleFacts ruAC)
 
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           theoryDiffRuleFacts
@@ -523,8 +596,14 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ru <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do EitherRuleItem (_, ru) <- get diffThyItems thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do
+          DiffRuleItem ruO <- get diffThyItems thy
+          case get dprLeftRight ruO of
+            Nothing -> []
+            Just (OpenProtoRule lr lrAC, OpenProtoRule rr rrAC) -> get rActs lr ++ get rActs rr ++ concatMap (\x -> Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName x) 0, factAnnotations = S.empty, factTerms = []} : get rActs x) (lrAC ++ rrAC))
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
@@ -746,7 +825,8 @@ formulaReportsDiff thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
 multRestrictedReport thy = do
-    ru <- theoryRules thy
+    ruO <- theoryRules thy
+    let ru = get oprRuleE ruO
     (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []
@@ -812,7 +892,8 @@ multRestrictedReport thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
 multRestrictedReportDiff thy = do
-    ru <- diffTheoryDiffRules thy
+    ruO <- diffTheoryDiffRules thy
+    let ru = get dprRule ruO
     (,) "Multiplication restriction of rules" <$>
         case restrictedFailures ru of
           ([],[]) -> []
@@ -878,15 +959,17 @@ multRestrictedReportDiff thy = do
 ------------------------------------------------------------------------------
 
 -- | Returns a list of errors, if there are any.
-checkWellformednessDiff :: OpenDiffTheory
+checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformednessDiff thy = -- trace ("checkWellformednessDiff: " ++ show thy) $
+checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
   concatMap ($ thy)
     [ unboundReportDiff
     , freshNamesReportDiff
     , publicNamesReportDiff
     , ruleSortsReportDiff
     , factReportsDiff
+    , ruleVariantsReportDiff sig
+    , leftRightRuleReportDiff
 --     , ruleNameReportDiff
     , formulaReportsDiff
     , lemmaAttributeReportDiff
@@ -895,13 +978,14 @@ checkWellformednessDiff thy = -- trace ("checkWellformednessDiff: " ++ show thy)
 
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformedness thy = concatMap ($ thy)
+checkWellformedness thy sig = concatMap ($ thy)
     [ unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
+    , ruleVariantsReport sig
     , factReports
     , formulaReports
     , lemmaAttributeReport

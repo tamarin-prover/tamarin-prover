@@ -1,0 +1,248 @@
+theory AKE begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, check_rep/2, fst/1, get_rep/1, pair/2, pk/1,
+           rep/2 [private], report/1, sdec/2, senc/2, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    check_rep(rep(x.1, x.2), x.2) = true,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, y )<->¬(∃ z. y = <'loc', z>)
+
+lemma sanity3 [reuse]:
+  all-traces
+  "∀ pka k #t1.
+    (SessionV( pka, k ) @ #t1) ⇒
+    (∃ #t2. (SessionP( pka, k ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1.
+  (SessionV( pka, k ) @ #t1)
+ ∧
+  ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+by solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+
+lemma secrecy [reuse]:
+  all-traces
+  "¬(∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (K( k ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (K( k ) @ #t2)"
+*/
+simplify
+by solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+
+rule (modulo E) Report-rule[color=#ffffff process=new init;]:
+   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=new init;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newinit_0_[color=#ffffff process=new init;]:
+   [ state_( ), Fr( init ) ] --> [ state_1( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1[color=#ffffff process=|]:
+   [ state_1( init ) ] --> [ state_11( init ), state_12( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11[color=#ffffff process=!]:
+   [ state_11( init ) ] --> [ !semistate_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_11[color=#ffffff process=!]:
+   [ !semistate_111( init ) ] --> [ state_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inpkskV_0_111[color=#405280 process=in(pk(skV));]:
+   [ state_111( init ), In( pk(skV) ) ] --> [ state_1111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1111[color=#405280 process=!]:
+   [ state_1111( init, skV ) ] --> [ !semistate_11111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1111[color=#405280 process=!]:
+   [ !semistate_11111( init, skV ) ] --> [ state_11111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newk_0_11111[color=#405280 process=new k;]:
+   [ state_11111( init, skV ), Fr( k ) ]
+  -->
+   [ state_111111( init, k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSessionPpkskVk_0_111111[color=#405280 process=event SessionP( pk(skV), k );]:
+   [ state_111111( init, k, skV ) ]
+  --[ SessionP( pk(skV), k ) ]->
+   [ state_1111111( init, k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPoutputaenckpkskVrepaenckpkskVlocpkskV_0_1111111[color=#405280 process=event Poutput( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)
+         >
+);]:
+   [ state_1111111( init, k, skV ) ]
+  --[
+  Poutput( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)> )
+  ]->
+   [ state_11111111( init, k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outaenckpkskVrepaenckpkskVlocpkskV_0_11111111[color=#405280 process=out(<aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)>);]:
+   [ state_11111111( init, k, skV ) ]
+  -->
+   [
+   state_111111111( init, k, skV ),
+   Out( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111111111[color=#405280 process=0]:
+   [ state_111111111( init, k, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_12[color=#ffffff process=!]:
+   [ state_12( init ) ] --> [ !semistate_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_12[color=#ffffff process=!]:
+   [ !semistate_121( init ) ] --> [ state_121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newskV_0_121[color=#658040 process=new skV;]:
+   [ state_121( init ), Fr( skV ) ] --> [ state_1211( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventHonestPpkskV_0_1211[color=#658040 process=event HonestP( pk(skV) );]:
+   [ state_1211( init, skV ) ]
+  --[ HonestP( pk(skV) ) ]->
+   [ state_12111( init, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpkskV_0_12111[color=#658040 process=out(pk(skV));]:
+   [ state_12111( init, skV ) ]
+  -->
+   [ state_121111( init, skV ), Out( pk(skV) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inaenckpkskVsigned_0_121111[color=#658040 process=in(<aenc(k, pk(skV)), signed>);]:
+   [ state_121111( init, skV ), In( <aenc(k, pk(skV)), signed> ) ]
+  -->
+   [ state_1211111( init, k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+   [ state_1211111( init, k, signed, skV ) ]
+  --[ Pred_Eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) ) ]->
+   [ state_12111111( init, k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+   [ state_1211111( init, k, signed, skV ) ]
+  --[ Pred_Not_Eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) )
+  ]->
+   [ state_12111112( init, k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventVoutputaenckpkskVsigned_0_12111111[color=#658040 process=event Voutput( <aenc(k, pk(skV)), signed> );]:
+   [ state_12111111( init, k, signed, skV ) ]
+  --[ Voutput( <aenc(k, pk(skV)), signed> ) ]->
+   [ state_121111111( init, k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSessionVpkskVk_0_121111111[color=#658040 process=event SessionV( pk(skV), k );]:
+   [ state_121111111( init, k, signed, skV ) ]
+  --[ SessionV( pk(skV), k ) ]->
+   [ state_1211111111( init, k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1211111111[color=#658040 process=0]:
+   [ state_1211111111( init, k, signed, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_12111112[color=#658040 process=0]:
+   [ state_12111112( init, k, signed, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-locations/AKE.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-locations/AKE.spthy
+
+  output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
+  processing time: 0.314906s
+  sanity3 (all-traces): verified (2 steps)
+  secrecy (all-traces): verified (2 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AKE.spthy
+
+  output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
+  processing time: 0.314906s
+  sanity3 (all-traces): verified (2 steps)
+  secrecy (all-traces): verified (2 steps)
+
+==============================================================================
+*/

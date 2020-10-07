@@ -161,13 +161,16 @@ lookupArity op = do
         Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Parser (Term l) -> Parser (Term l)
-naryOpApp plit = do
+naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp eqn plit = do
     op <- identifier
+    --traceM $ show op ++ " " ++ show eqn
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
     ts <- parens $ if k == 1
-                     then return <$> tupleterm plit
-                     else commaSep (msetterm plit)
+                     then return <$> tupleterm eqn plit
+                     else commaSep (msetterm eqn plit)
     let k' = length ts
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
@@ -176,19 +179,21 @@ naryOpApp plit = do
     return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Parser (Term l) -> Parser (Term l)
-binaryAlgApp plit = do
+binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp eqn plit = do
     op <- identifier
+    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+      $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv) <- lookupArity op
-    arg1 <- braced (tupleterm plit)
-    arg2 <- term plit False
+    arg1 <- braced (tupleterm eqn plit)
+    arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
-  ts <- symbol "diff" *> parens (commaSep (msetterm plit))
+  ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
   diff <- enableDiff <$> getState
@@ -204,7 +209,7 @@ diffOp eqn plit = do
 term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
-    , parens (msetterm plit)
+    , parens (msetterm eqn plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
     , nullaryApp
@@ -212,8 +217,8 @@ term plit eqn = asum
     ]
     <?> "term"
   where
-    application = asum $ map (try . ($ plit)) [naryOpApp, binaryAlgApp, diffOp eqn]
-    pairing = angled (tupleterm plit)
+    application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
+    pairing = angled (tupleterm eqn plit)
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
@@ -221,36 +226,36 @@ term plit eqn = asum
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Parser (Term l) -> Parser (Term l)
-expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+expterm eqn plit = chainl1 (term plit eqn) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Parser (Term l) -> Parser (Term l)
-multterm plit = do
+multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+multterm eqn plit = do
     dh <- enableDH <$> getState
-    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
-        then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else term plit False
+    if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+        then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
+        else term plit eqn
 
 -- | A left-associative sequence of xors.
-xorterm :: Ord l => Parser (Term l) -> Parser (Term l)
-xorterm plit = do
+xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+xorterm eqn plit = do
     xor <- enableXor <$> getState
-    if xor -- if xor is not enabled, do not accept 'xorterms's
-        then chainl1 (multterm plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
-        else multterm plit
+    if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
+        else multterm eqn plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Parser (Term l) -> Parser (Term l)
-msetterm plit = do
+msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+msetterm eqn plit = do
     mset <- enableMSet <$> getState
-    if mset -- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else xorterm plit
+    if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
+        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else xorterm eqn plit
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Parser (Term l) -> Parser (Term l)
-tupleterm plit = chainr1 (msetterm plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+tupleterm eqn plit = chainr1 (msetterm eqn plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact annotation
 factAnnotation :: Parser FactAnnotation
@@ -267,7 +272,7 @@ fact' pterm = try (
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
-         (c:_) | isUpper c -> return ()
+         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation
@@ -289,7 +294,7 @@ fact' pterm = try (
 
 -- | Parse a fact.
 fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
-fact plit = fact' (msetterm plit)
+fact plit = fact' (msetterm False plit)
 
 ------------------------------------------------------------------------------
 -- Parsing Rules
@@ -300,8 +305,8 @@ modulo :: String -> Parser ()
 modulo thy = parens $ symbol_ "modulo" *> symbol_ thy
 
 moduloE, moduloAC :: Parser ()
-moduloE  = modulo "E"
-moduloAC = modulo "AC"
+moduloE   = modulo "E"
+moduloAC  = modulo "AC"
 
 {- -- This has not been renamed from typing to source, as it is unclear.
 -- | Parse a typing assertion modulo E.
@@ -344,7 +349,21 @@ protoRuleInfo = do
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
-protoRule :: Parser ProtoRuleE
+diffRule :: Parser (DiffProtoRule)
+diffRule = do
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
+    leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
+    return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
+
+-- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
+-- 'Knows', and 'Learn' no rule is returned as the default theory already
+-- contains them
+protoRule :: Parser (OpenProtoRule)
 protoRule = do
     ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
@@ -352,14 +371,34 @@ protoRule = do
     subst <- option emptySubst letBlock
     (ps0,as0,cs0,rs0) <- genericRule
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
-    return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)
+    variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
+    return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
+
+-- | Parse RuleInfo
+protoRuleACInfo :: Parser ProtoRuleACInfo
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
+                                        (symbol "rule" *> moduloAC *> identifier))
+                               <*> (option [] $ list ruleAttribute))
+                               <*> pure (Disj [emptySubstVFresh]) <*> pure []
+                               <*  colon
+
+-- | Parse a protocol rule variant modulo AC.
+protoRuleAC :: Parser ProtoRuleAC
+protoRuleAC = do
+    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
+    return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
 letBlock = toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm llit
+    definition = (,) <$> (sortedLVar [LSortMsg] <* equalSign) <*> msetterm False llit
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -421,7 +460,6 @@ tlit = asum
     [ constTerm <$> singleQuoted identifier
     , varTerm  <$> identifier
     ]
-
 -- | Parse a single transfer.
 transfer :: Parser Transfer
 transfer = do
@@ -475,8 +513,6 @@ transfer = do
                      <|> pure []
         types     <- typeAssertions
         return $ \a -> TransferDesc a ts moreConcs types
-
-
 -- | Parse a protocol in transfer notation
 transferProto :: Parser [ProtoRuleE]
 transferProto = do
@@ -485,7 +521,6 @@ transferProto = do
   where
     abbrevs = (symbol "let" *> many1 abbrev) <|> pure []
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
-
 -}
 
 ------------------------------------------------------------------------------
@@ -499,7 +534,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm llit <* opEqual) <*> msetterm llit <?> "term equality"
+  , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
@@ -931,55 +966,55 @@ sapicAction = try (do
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut Nothing t)
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         _ <- symbol ")"
                         return (ChOut (Just t) t')
                    )
                <|> try (do
                         _ <- symbol "insert"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- comma
-                        t' <- msetterm llit
+                        t' <- msetterm False llit
                         return (Insert t t')
                    )
                <|> try (do
                         _ <- symbol "delete"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Delete t)
                    )
                <|> try (do
                         _ <- symbol "lock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Lock t)
                    )
                <|> try (do
                         _ <- symbol "unlock"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         return (Unlock t)
                    )
                <|> try (do
@@ -1032,7 +1067,7 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
                         -- TODO SAPIC parser: multterm return
@@ -1061,7 +1096,7 @@ actionprocess thy=
                         return (ProcessAction Rep mempty p))
             <|> try (do     -- lookup / if with and w/o else branches
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1072,7 +1107,7 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "lookup"
-                        t <- msetterm llit
+                        t <- msetterm False llit
                         _ <- symbol "as"
                         v <- msgvar
                         _ <- symbol "in"
@@ -1081,9 +1116,9 @@ actionprocess thy=
                    )
             <|> try (do
                         _ <- symbol "if"
-                        t1 <- msetterm llit
+                        t1 <- msetterm False llit
                         _ <- opEqual
-                        t2 <- msetterm llit
+                        t2 <- msetterm False llit
                         _ <- symbol "then"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
@@ -1145,7 +1180,7 @@ actionprocess thy=
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
-                        m <- msetterm llit
+                        m <- msetterm False llit
                         return $ paddAnn p [ProcessLoc m]
                         )
             <|> try (do        -- parens parser
@@ -1179,7 +1214,7 @@ instance Show (ParsingException) where
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
-    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName ru)
+    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
     show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
@@ -1218,7 +1253,7 @@ liftedExpandRestriction :: Catch.MonadThrow m =>
 liftedExpandRestriction thy = liftEitherToEx UndefinedPredicate . expandRestriction thy
 
 liftedAddProtoRuleNoExpand :: Catch.MonadThrow m => OpenTheory -> Theory.OpenProtoRule -> m OpenTheory
-liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addProtoRule ru thy)
+liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addOpenProtoRule ru thy)
 
 liftedAddPredicate :: Catch.MonadThrow m =>
                       Theory sig c r p SapicElement
@@ -1255,12 +1290,15 @@ liftedAddLemma thy lem = do
 --  3. add action names to rule
 --  4. add rule, fail if duplicate
 --  5. add restrictions, fail if duplicate
-liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> Rule ProtoRuleEInfo -> m (OpenTheory)
+-- FIXME: we only deal we the rule modulo E here, if variants modulo AC are
+--        imported we do not check if they have _restrict annotations
+--        (but they should not, as they will not be exported)
+liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m (OpenTheory)
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo) ru = do
-        rformulas <- mapM (liftedExpandFormula thy) (rfacts ru)
-        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulas)
-        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulas) -- TODO was ru instead of rformulas
+    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
         return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
@@ -1268,7 +1306,7 @@ liftedAddProtoRule thy ru
                 addExpandedRestriction thy' xrstr = liftMaybeToEx
                                                      (DuplicateItem $ RestrictionItem xrstr)
                                                      (addRestriction xrstr thy')
-                addActions   rname rformulas = modify rActs (++ actions rname rformulas) ru
+                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
@@ -1327,9 +1365,6 @@ theory flags0 = do
            -- thy'' <- foldM liftedAddRestriction thy' $
            --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoRule thy ru
-           addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
@@ -1353,11 +1388,12 @@ theory flags0 = do
     ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+         then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+         else do _ <- manyTill anyChar (try (symbol_ "#endif"))
+                 addItems flags thy
 
     -- check process defined only once
     -- add process to theoryitems
@@ -1406,8 +1442,8 @@ diffTheory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoDiffRule thy ru
+      , do ru <- diffRule
+           thy' <- liftedAddDiffRule thy ru
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACsDiffAll [r] thy)
@@ -1426,19 +1462,21 @@ diffTheory flags0 = do
     ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     ifdef flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
-       thy' <- addItems flags thy
-       symbol_ "#endif"
        if flag `S.member` flags
-         then addItems flags thy'
-         else addItems flags thy
+         then do thy' <- addItems flags thy
+                 symbol_ "#endif"
+                 addItems flags thy'
+         else do _ <- manyTill anyChar (try (string "#"))
+                 symbol_ "endif"
+                 addItems flags thy
 
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddProtoDiffRule thy ru = case addProtoDiffRule ru thy of
+    liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'

@@ -70,6 +70,7 @@ import           Main.Console
 import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
+import           Safe
 
 
 ------------------------------------------------------------------------------
@@ -80,8 +81,8 @@ import           Text.Parsec                hiding ((<|>),try)
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
-      "Attempt to prove a lemma "
+  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX*|LEMMANAME"
+      "Attempt to prove all lemmas that start with LEMMAPREFIX or the lemma which name is LEMMANAME"
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
@@ -152,9 +153,11 @@ loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
 -- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
-    thy <- loadOpenThy as inFile
+    thy0 <- loadOpenThy as inFile
+    thy <- addMessageDeductionRuleVariants thy0
+    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
     -- report
-    case checkWellformedness thy of
+    case checkWellformedness thy sig of
       []     -> return ()
       report -> do
           putStrLn ""
@@ -168,15 +171,16 @@ loadClosedThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
-    closeThy as thy
+    closeThyWithMaude sig as thy
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThyWfReport as inFile = do
     thy0 <- loadOpenDiffThy as inFile
     thy1 <- addMessageDeductionRuleVariantsDiff thy0
+    sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
     -- report
-    case checkWellformednessDiff thy1 of
+    case checkWellformednessDiff thy1 sig of
       []     -> return ()
       report -> do
           putStrLn ""
@@ -190,7 +194,7 @@ loadClosedDiffThyWfReport as inFile = do
           putStrLn $ replicate 78 '-'
           if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
-    closeDiffThy as thy1
+    closeDiffThyWithMaude sig as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -224,7 +228,8 @@ reportOnClosedThyStringWellformedness as input =
       Left  err   -> return $ "parse error: " ++ show err
       Right thy -> do
             thy' <- Sapic.translate thy
-            case checkWellformedness thy' of
+            sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
+            case checkWellformedness thy' sig of
                   []     -> return ""
                   report -> do
                     if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -237,22 +242,30 @@ reportOnClosedDiffThyStringWellformedness as input = do
       Left  err   -> return $ "parse error: " ++ show err
       Right thy0 -> do
         thy1 <- addMessageDeductionRuleVariantsDiff thy0
+        sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
         -- report
-        case checkWellformednessDiff thy1 of
+        case checkWellformednessDiff thy1 sig of
           []     -> return ""
           report -> do
             if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
             return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
+
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as thy0 = do
   thy1 <- addMessageDeductionRuleVariants thy0
+  sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy1
+  closeThyWithMaude sig as thy1
+
+-- | Close a theory according to arguments.
+closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTranslatedTheory -> IO ClosedTheory
+closeThyWithMaude sig as thy0 = do
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
-  let thy2 = wfCheck thy1
+  let thy1 = wfCheck thy0
   -- close and prove
-  cthy <- closeTheory (maudePath as) thy2 (argExists "auto-sources" as)
+  let cthy = closeTheoryWithMaude sig thy1 (argExists "auto-sources" as)
   return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
     where
       -- apply partial application
@@ -267,11 +280,16 @@ closeThy as thy0 = do
       wfCheck :: OpenTranslatedTheory -> OpenTranslatedTheory
       wfCheck thy =
         noteWellformedness
-          (checkWellformedness thy) thy (elem "quit-on-warning" (quitOnWarning as))
+          (checkWellformedness thy sig) thy (elem "quit-on-warning" (quitOnWarning as))
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
+            else
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
@@ -285,11 +303,17 @@ closeThy as thy0 = do
 -- | Close a diff theory according to arguments.
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
+  sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy0
+  closeDiffThyWithMaude sig as thy0
+
+-- | Close a diff theory according to arguments.
+closeDiffThyWithMaude :: SignatureWithMaude -> Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
+closeDiffThyWithMaude sig as thy0 = do
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
   let thy2 = wfCheckDiff thy0
   -- close and prove
-  cthy <- closeDiffTheory (maudePath as) (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
+  let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
   return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
@@ -304,18 +328,28 @@ closeDiffThy as thy0 = do
       wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
       wfCheckDiff thy =
         noteWellformednessDiff
-          (checkWellformednessDiff thy) thy (elem "quit-on-warning" (quitOnWarning as))
+          (checkWellformednessDiff thy sig) thy (elem "quit-on-warning" (quitOnWarning as))
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =
-          any (`isPrefixOf` get lName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
+            else
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lName lem) lemmaNames
+                else any ( == get lName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as
 
       diffLemmaSelector :: DiffLemma p -> Bool
       diffLemmaSelector lem =
-          any (`isPrefixOf` get lDiffName lem) lemmaNames
+          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
+            then any (`isPrefixOf` get lDiffName lem) [init $ head lemmaNames]
+            else
+              if (lemmaNames == [""])
+                then any (`isPrefixOf` get lDiffName lem) lemmaNames
+                else any ( == get lDiffName lem) lemmaNames
         where
           lemmaNames :: [String]
           lemmaNames = findArg "prove" as

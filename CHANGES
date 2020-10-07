@@ -1,11 +1,25 @@
-* current develop
+* 1.6.0
+  - SAPIC integration
+
+  - New feature: auto sources - compute sources lemmas automatically
+
+  - New feature: predicate support
+
   - Observational equivalence concludes with attack more quickly, without requiring instantiation to public values for free variables.
 
   - Add a true (sequential) depth-first search (DFS) option: --stop-on-trace=seqdfs
 
-  - SAPIC bug fix
-
   - nixOS development simplification
+
+  - Allow Maude 3.0.0 (in addition to 2.7.1)
+
+  - Change: --prove=name only verifies lemma named 'name', to prove all lemmas with the prefix 'name' use --prove=name* instead; adjusted existing examples
+
+  - Numerous bug fixes
+
+  - Multiple new case studies
+
+  - Using stack LTS resolver 16.12 and GHC 8.8.4 now [stack update, stack upgrade needed]
 
 * 1.4.1
   - Variants are now computed in Maude, for a pre-computation speedup for theories with many variants. Old internal variant computation still accessible by setting the environment variable "TAMARIN_NO_MAUDE_VARIANTS".
