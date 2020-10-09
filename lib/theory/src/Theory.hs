@@ -246,8 +246,6 @@ import           Data.Maybe
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
 
-import           Debug.Trace
-
 import           Control.Basics
 import           Control.Category
 import           Control.DeepSeq
@@ -1164,7 +1162,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position       <- findPos v term
               ruleSys        <- nodeRuleSafe nodeid source
               rule           <- find ((ruleName ruleSys ==).ruleName) rules
-              premise        <- lookupPrem pid $ L.get cprRuleE rule
+              premise        <- lookupPrem pid $ L.get cprRuleAC rule
               t'             <- protoOrInFactView premise
               unifyProtTerm  <- atMay t' tidx
               return $ do
