@@ -411,8 +411,10 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
           loopBreakers = L.get pracLoopBreakers ruACInfoOld
           rName i oldName = case oldName of
             FreshRule -> FreshRule
-            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
-
+            StandRule n -> case n of
+            	DefdRuleName s -> StandRule $ DefdRuleName $ s ++ "___VARIANT_" ++ show i
+            	SAPiCRuleName s -> StandRule $ SAPiCRuleName $ s ++ "___VARIANT_" ++ show i
+					
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
           variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
@@ -1032,7 +1034,7 @@ expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormu
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addRestriction l thy = do
-    guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
+    guard (isNothing $ lookupRestriction (rstrNameString (L.get rstrName l)) thy)
     return $ modify thyItems (++ [RestrictionItem l]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
@@ -1295,7 +1297,7 @@ setOption l = L.set (l . thyOptions) True
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addRestrictionDiff s l thy = do
-    guard (isNothing $ lookupRestrictionDiff s (L.get rstrName l) thy)
+    guard (isNothing $ lookupRestrictionDiff s (rstrNameString (L.get rstrName l)) thy)
     return $ modify diffThyItems (++ [EitherRestrictionItem (s, l)]) thy
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
@@ -1363,7 +1365,7 @@ removeDiffLemma lemmaName thy = do
 
 -- | Find the restriction with the given name.
 lookupRestriction :: String -> Theory sig c r p s -> Maybe Restriction
-lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
+lookupRestriction name = find ((name ==) . rstrNameString . (L.get rstrName)) . theoryRestrictions
 
 -- | Find the lemma with the given name.
 lookupLemma :: String -> Theory sig c r p s -> Maybe (Lemma p)
@@ -1382,7 +1384,7 @@ lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
-lookupRestrictionDiff s name = find ((name ==) . L.get rstrName) . (diffTheorySideRestrictions s)
+lookupRestrictionDiff s name = find ((name ==) . rstrNameString . (L.get rstrName)) . (diffTheorySideRestrictions s)
 
 -- | Find the lemma with the given name.
 lookupLemmaDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe (Lemma p2)
@@ -2533,19 +2535,25 @@ prettyDiffLemmaName l = text ((L.get lDiffName l))
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d
 prettyRestriction rstr =
-    kwRestriction <-> text (L.get rstrName rstr) <> colon $-$
+    kwRestriction <-> text (name) <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
+    name = case L.get rstrName rstr of 
+      OrdinaryName str -> str
+      SAPiCInclName str -> takeWhile (/= '#') (takeWhile(/= '#') str)
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
 -- | Pretty print an either restriction.
 prettyEitherRestriction :: HighlightDocument d => (Side, Restriction) -> d
 prettyEitherRestriction (s, rstr) =
-    kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s <> colon $-$
+    kwRestriction <-> text (name) <-> prettySide s <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
+    name = case L.get rstrName rstr of 
+      OrdinaryName str -> str
+      SAPiCInclName str -> takeWhile (/= '#') (takeWhile(/= '#') str) 
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
     -- | Pretty print a lemma.

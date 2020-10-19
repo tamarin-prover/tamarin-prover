@@ -71,7 +71,7 @@ instance (Show p) => Show (SapicException p) where
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
                               ++ " in definition of predicate: "
-                              ++ get rstrName rstr
+                              ++ rstrNameString (get rstrName rstr)
                               ++ "."
 
 

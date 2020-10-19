@@ -41,6 +41,7 @@ module Theory.Model.Rule (
 
   -- * Protocol Rule Information
   , RuleAttribute(..)
+  , StandName(..)
   , ProtoRuleName(..)
   , ProtoRuleEInfo(..)
   , preName
@@ -335,9 +336,18 @@ instance Binary RuleAttribute
 
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
+data StandName =
+         DefdRuleName String
+       | SAPiCRuleName String
+       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+instance NFData StandName
+instance Binary StandName
+
+-- | A name of a protocol rule is either one of the special reserved rules or
+-- some standard rule.
 data ProtoRuleName =
          FreshRule
-       | StandRule String -- ^ Some standard protocol rule
+       | StandRule StandName -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable, Generic)
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
@@ -710,7 +720,9 @@ getRuleName ru = case ruleName ru of
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> case p of
                                       FreshRule   -> "FreshRule"
-                                      StandRule s -> s
+                                      StandRule n -> case n of 
+                                        DefdRuleName s -> s
+                                        SAPiCRuleName s -> s
 
 -- | Returns a protocol rule's name
 getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
@@ -726,7 +738,9 @@ getRuleNameDiff ru = case ruleName ru of
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> "Proto" ++ case p of
                                       FreshRule   -> "FreshRule"
-                                      StandRule s -> s
+                                      StandRule n -> case n of 
+                                        DefdRuleName s -> s
+                                        SAPiCRuleName s -> s
 
 -- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
 getRemainingRuleApplications :: RuleACInst -> Int
@@ -1086,7 +1100,9 @@ reservedRuleNames = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub", "iequa
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> prefixIfReserved n
+    StandRule n -> case n of 
+      DefdRuleName s -> prefixIfReserved s
+      SAPiCRuleName s -> takeWhile (/='#') s
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName

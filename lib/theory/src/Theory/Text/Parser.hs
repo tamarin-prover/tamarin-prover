@@ -95,7 +95,7 @@ isRightRestriction rstr =
 
 -- | Converts ParseRestrictions to Restrictions
 toRestriction :: ParseRestriction -> Restriction
-toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
+toRestriction rstr = Restriction (OrdinaryName(pRstrName rstr)) (pRstrFormula rstr)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -344,14 +344,14 @@ protoRuleInfo = do
                 ident <- identifier
                 att <- option [] $ list ruleAttribute
                 _ <- colon
-                return $ ProtoRuleEInfo (StandRule ident) att []
+                return $ ProtoRuleEInfo (StandRule (DefdRuleName ident)) att []
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 diffRule :: Parser (DiffProtoRule)
 diffRule = do
-    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule (DefdRuleName name)) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -365,7 +365,7 @@ diffRule = do
 -- contains them
 protoRule :: Parser (OpenProtoRule)
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule (DefdRuleName name)) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -376,8 +376,8 @@ protoRule = do
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
-protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
-                                        (symbol "rule" *> moduloAC *> identifier))
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> DefdRuleName <$> (
+                                        (symbol "rule" *> moduloAC *> identifier)))
                                <*> (option [] $ list ruleAttribute))
                                <*> pure (Disj [emptySubstVFresh]) <*> pure []
                                <*  colon
@@ -385,7 +385,7 @@ protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
 -- | Parse a protocol rule variant modulo AC.
 protoRuleAC :: Parser ProtoRuleAC
 protoRuleAC = do
-    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
+    ri@(ProtoRuleACInfo (StandRule (DefdRuleName name)) _ _ _)  <- try protoRuleACInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -618,7 +618,7 @@ restrictionAttribute = asum
 
 -- | Parse a restriction.
 restriction :: Parser SyntacticRestriction
-restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
+restriction = Restriction <$> (OrdinaryName <$> (symbol "restriction" *> identifier <* colon))
                           <*> doubleQuoted standardFormula
 
 -- | Fail on parsing an old "axiom" keyword.
@@ -627,7 +627,7 @@ restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
 
 -- | Parse a legacy axiom, now called restriction.
 legacyAxiom :: Parser SyntacticRestriction
-legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
+legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (OrdinaryName <$> (symbol "axiom" *> identifier <* colon))
                           <*> doubleQuoted standardFormula
 
 -- | Parse a diff restriction.
@@ -1216,7 +1216,7 @@ instance Show (ParsingException) where
                                          -- ++ "."
     show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
     show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
-    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
+    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ rstrNameString (get rstrName rstr)
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
     show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
@@ -1295,7 +1295,12 @@ liftedAddLemma thy lem = do
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m (OpenTheory)
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+    | (StandRule (DefdRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
+        return thy''
+    | (StandRule (SAPiCRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
         rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
@@ -1310,7 +1315,9 @@ liftedAddProtoRule thy ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
-                fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
+                fromRuleRestriction' rname (i,f) = case get (preName . rInfo . oprRuleE) ru of 
+                  (StandRule (SAPiCRuleName _)) -> fromRuleRestriction (SAPiCInclName(rname ++ "_" ++ show i)) f
+                  (StandRule (DefdRuleName _)) -> fromRuleRestriction (OrdinaryName(rname ++ "_" ++ show i)) f
                 counter = zip [1::Int ..]
 
 
@@ -1499,13 +1506,13 @@ diffTheory flags0 = do
     liftedAddRestriction' thy rstr = if isLeftRestriction rstr
                                        then case addRestrictionDiff LHS (toRestriction rstr) thy of
                                                Just thy' -> return thy'
-                                               Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                               Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
                                        else if isRightRestriction rstr
                                                then case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> return thy'
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
                                                else case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> case addRestrictionDiff LHS (toRestriction rstr) thy' of
                                                      Just thy'' -> return thy''
-                                                     Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                                     Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
