@@ -84,6 +84,7 @@ module Theory.Model.Rule (
   , isConstantRule
   , isSubtermRule
   , containsNewVars
+  , getPrettyRuleName
   , getRuleName
   , getRuleNameDiff
   , getRemainingRuleApplications
@@ -724,6 +725,24 @@ getRuleName ru = case ruleName ru of
                                         DefdRuleName s -> s
                                         SAPiCRuleName s -> s
 
+-- returns a pretty Rule name
+getPrettyRuleName :: HasRuleName (Rule i) => Rule i -> String
+getPrettyRuleName ru = case ruleName ru of
+                      IntrInfo i  -> case i of
+                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      CoerceRule        -> "Coerce"
+                                      IRecvRule         -> "Recv"
+                                      ISendRule         -> "Send"
+                                      PubConstrRule     -> "PubConstr"
+                                      FreshConstrRule   -> "FreshConstr"
+                                      IEqualityRule     -> "Equality"
+                      ProtoInfo p -> case p of
+                                      FreshRule   -> "FreshRule"
+                                      StandRule n -> case n of 
+                                        DefdRuleName s -> s
+                                        SAPiCRuleName s -> takeWhile (/= '#') s
+
 -- | Returns a protocol rule's name
 getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
@@ -741,6 +760,7 @@ getRuleNameDiff ru = case ruleName ru of
                                       StandRule n -> case n of 
                                         DefdRuleName s -> s
                                         SAPiCRuleName s -> s
+
 
 -- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
 getRemainingRuleApplications :: RuleACInst -> Int

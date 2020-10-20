@@ -1348,7 +1348,7 @@ prettyGoals solved sys = vsep $ do
     guard (solved == L.get gsSolved status)
     let nr  = L.get gsNr status
         sourceRule = case goalRule sys goal of
-            Just ru -> " (from rule " ++ getRuleName ru ++ ")"
+            Just ru -> " (from rule " ++ getPrettyRuleName ru ++ ")"
             Nothing -> ""
         loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
                     | otherwise                  = ""

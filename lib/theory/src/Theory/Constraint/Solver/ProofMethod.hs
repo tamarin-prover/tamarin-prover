@@ -452,7 +452,7 @@ rankProofMethods ranking ctxt sys = do
     contradiction c                    = (Contradiction (Just c), "")
 
     sourceRule goal = case goalRule sys goal of
-        Just ru -> " (from rule " ++ getRuleName ru ++ ")"
+        Just ru -> " (from rule " ++ getPrettyRuleName ru ++ ")"
         Nothing -> ""
 
     solveGoalMethod (goal, (nr, usefulness)) =

@@ -248,7 +248,7 @@ nodeToJSONGraphNode :: Bool -> (NodeId, RuleACInst) -> JSONGraphNode
 nodeToJSONGraphNode pretty (n, ru) = 
     JSONGraphNode { jgnId = show n
                   , jgnType = getRuleType ru
-                  , jgnLabel = getRuleName ru
+                  , jgnLabel = getPrettyRuleName ru
                   , jgnMetadata = Just (nodeToJSONGraphNodeMetadata pretty (n, ru))
                   }
 
