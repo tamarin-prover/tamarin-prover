@@ -412,9 +412,9 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
           rName i oldName = case oldName of
             FreshRule -> FreshRule
             StandRule n -> case n of
-            	DefdRuleName s -> StandRule $ DefdRuleName $ s ++ "___VARIANT_" ++ show i
-            	SAPiCRuleName s -> StandRule $ SAPiCRuleName $ s ++ "___VARIANT_" ++ show i
-					
+              DefdRuleName s -> StandRule $ DefdRuleName $ s ++ "___VARIANT_" ++ show i
+              SAPiCRuleName s -> StandRule $ SAPiCRuleName $ s ++ "___VARIANT_" ++ show i
+
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
           variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
@@ -2541,7 +2541,7 @@ prettyRestriction rstr =
   where
     name = case L.get rstrName rstr of 
       OrdinaryName str -> str
-      SAPiCInclName str -> takeWhile (/= '#') (takeWhile(/= '#') str)
+      SAPiCInclName str -> takeWhile (/= '#') str
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
 -- | Pretty print an either restriction.
@@ -2553,7 +2553,7 @@ prettyEitherRestriction (s, rstr) =
   where
     name = case L.get rstrName rstr of 
       OrdinaryName str -> str
-      SAPiCInclName str -> takeWhile (/= '#') (takeWhile(/= '#') str) 
+      SAPiCInclName str -> takeWhile (/= '#') str 
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
     -- | Pretty print a lemma.

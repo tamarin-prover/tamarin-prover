@@ -169,7 +169,7 @@ fromRuleRestriction (SAPiCInclName rname) f =
                 -- creates restriction with f quantified over free variables
                 -- and varnow
                 mkRestriction f' = Restriction
-                                        (SAPiCInclName ("restr_"++ rname ++ "#"))
+                                        (SAPiCInclName ("restr_"++ rname))
                                         (foldr (hinted forall) f'' (frees f''))
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
