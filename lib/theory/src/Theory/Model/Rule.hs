@@ -1122,7 +1122,7 @@ prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> case n of 
       DefdRuleName s -> prefixIfReserved s
-      SAPiCRuleName s -> takeWhile (/='#') s
+      SAPiCRuleName s -> prefixIfReserved (takeWhile (/='#') s)
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName

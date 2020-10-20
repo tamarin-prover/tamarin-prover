@@ -1318,6 +1318,7 @@ liftedAddProtoRule thy ru
                 fromRuleRestriction' rname (i,f) = case get (preName . rInfo . oprRuleE) ru of 
                   (StandRule (SAPiCRuleName _)) -> fromRuleRestriction (SAPiCInclName(rname ++ "_" ++ show i)) f
                   (StandRule (DefdRuleName _)) -> fromRuleRestriction (OrdinaryName(rname ++ "_" ++ show i)) f
+                  FreshRule -> undefined
                 counter = zip [1::Int ..]
 
 
