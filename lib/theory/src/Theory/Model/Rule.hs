@@ -84,7 +84,6 @@ module Theory.Model.Rule (
   , isConstantRule
   , isSubtermRule
   , containsNewVars
-  , getPrettyRuleName
   , getRuleName
   , getRuleNameDiff
   , getRemainingRuleApplications
@@ -131,6 +130,8 @@ module Theory.Model.Rule (
   -- * Pretty-Printing
   , reservedRuleNames
   , showRuleCaseName
+  , showPrettyRuleCaseName
+  , prettyDotProtoRuleName
   , prettyRule
   , prettyRuleRestr
   , prettyProtoRuleName
@@ -182,6 +183,7 @@ import           Theory.Model.Fact
 import qualified Theory.Model.Formula as F
 import           Theory.Text.Pretty
 import           Theory.Sapic
+import Data.Char (chr, isAlphaNum)
 
 -- import           Debug.Trace
 
@@ -723,25 +725,7 @@ getRuleName ru = case ruleName ru of
                                       FreshRule   -> "FreshRule"
                                       StandRule n -> case n of 
                                         DefdRuleName s -> s
-                                        SAPiCRuleName s -> s
-
--- returns a pretty Rule name
-getPrettyRuleName :: HasRuleName (Rule i) => Rule i -> String
-getPrettyRuleName ru = case ruleName ru of
-                      IntrInfo i  -> case i of
-                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
-                                      CoerceRule        -> "Coerce"
-                                      IRecvRule         -> "Recv"
-                                      ISendRule         -> "Send"
-                                      PubConstrRule     -> "PubConstr"
-                                      FreshConstrRule   -> "FreshConstr"
-                                      IEqualityRule     -> "Equality"
-                      ProtoInfo p -> case p of
-                                      FreshRule   -> "FreshRule"
-                                      StandRule n -> case n of 
-                                        DefdRuleName s -> s
-                                        SAPiCRuleName s -> takeWhile (/= '#') s
+                                        SAPiCRuleName s -> formatSAPiCRuleName s
 
 -- | Returns a protocol rule's name
 getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
@@ -759,7 +743,7 @@ getRuleNameDiff ru = case ruleName ru of
                                       FreshRule   -> "FreshRule"
                                       StandRule n -> case n of 
                                         DefdRuleName s -> s
-                                        SAPiCRuleName s -> s
+                                        SAPiCRuleName s -> formatSAPiCRuleName s
 
 
 -- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
@@ -1122,7 +1106,17 @@ prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> case n of 
       DefdRuleName s -> prefixIfReserved s
-      SAPiCRuleName s -> prefixIfReserved (takeWhile (/='#') s)
+      SAPiCRuleName s -> formatSAPiCRuleName s
+
+prettyDotProtoRuleName :: Document d => ProtoRuleName -> d
+prettyDotProtoRuleName rn = text $ case rn of
+    FreshRule   -> "Fresh"
+    StandRule n -> case n of 
+      DefdRuleName s -> prefixIfReserved s
+      SAPiCRuleName s -> if ("new" `isPrefixOf` s) then [chr 957] ++ (drop 3 (takeWhile (/='#') s)) else takeWhile (/='#') s
+
+formatSAPiCRuleName :: String -> String
+formatSAPiCRuleName s = filter (\x -> isAlphaNum x || (x == '_' && x /= '#')) s
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
@@ -1137,6 +1131,11 @@ prettyRuleAttribute attr = case attr of
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
+
+-- | Pretty print the rule name such that it can be used as a case name in a dot.
+showPrettyRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
+showPrettyRuleCaseName =
+    render . ruleInfo prettyDotProtoRuleName prettyIntrRuleACInfo . ruleName
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of

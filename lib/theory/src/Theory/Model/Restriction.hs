@@ -18,7 +18,6 @@
 
 module Theory.Model.Restriction (
     ProtoRestriction(..)
-  , RestrictionName(..)
   , Restriction
   , SyntacticRestriction
   , RestrictionAttribute(..)
@@ -26,7 +25,6 @@ module Theory.Model.Restriction (
   , rstrFormula
   , varNow
   , fromRuleRestriction
-  , rstrNameString
 ) where
 
 import           Control.DeepSeq
@@ -56,19 +54,11 @@ data RestrictionAttribute = LHSRestriction
     | RHSRestriction
     | BothRestriction
     deriving (Eq, Ord, Show)
-    
--- | Name types for a 'Restriction'.
-data RestrictionName = OrdinaryName String
-    | SAPiCInclName String
-    deriving (Generic, Eq, Ord, Show)
-
-instance NFData RestrictionName
-instance Binary RestrictionName
 
 -- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
 data ProtoRestriction f = Restriction
-    { _rstrName    :: RestrictionName
+    { _rstrName    :: String
     , _rstrFormula :: f
     }
     deriving (Generic)
@@ -141,15 +131,15 @@ rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
 --    and
 --    ranme(f(x,y), z)
 --
-fromRuleRestriction :: RestrictionName -> LNFormula -> (Restriction, Fact LNTerm)
-fromRuleRestriction (OrdinaryName rname) f =
+fromRuleRestriction :: String -> LNFormula -> (Restriction, Fact LNTerm)
+fromRuleRestriction rname f =
                 ( mkRestriction (rewrF f)
                 , mkFact $ getVarTerms (rewrSubst f) $ rewrF f)
             where
                 -- creates restriction with f quantified over free variables
                 -- and varnow
                 mkRestriction f' = Restriction
-                                        (OrdinaryName ("restr_"++rname))
+                                        ("restr_" ++ rname)
                                         (foldr (hinted forall) f'' (frees f''))
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
@@ -162,28 +152,4 @@ fromRuleRestriction (OrdinaryName rname) f =
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
                 mkFact = protoFactAnn Linear ("restr_"++ rname) S.empty
-fromRuleRestriction (SAPiCInclName rname) f =
-                ( mkRestriction (rewrF f)
-                , mkFact $ getVarTerms (rewrSubst f) $ rewrF f)
-            where
-                -- creates restriction with f quantified over free variables
-                -- and varnow
-                mkRestriction f' = Restriction
-                                        (SAPiCInclName ("restr_"++ rname))
-                                        (foldr (hinted forall) f'' (frees f''))
-                                        where
-                                            f'' = Ato (Action timepoint fact) .==>. f'
-                                            timepoint = varTerm $ Free varNow
-                                            fact = mkFact (getBVarTerms f')
-
-                rewrF     = fst . rewrite                -- rewritten formula
-                rewrSubst = substFromMap . snd . rewrite -- substitution from rewritten formula
-                getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
-                getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
-                -- produce fact from set of terms
-                mkFact = protoFactAnn Linear ("restr_"++ takeWhile (/='#') rname) S.empty
-                
-rstrNameString :: RestrictionName -> String
-rstrNameString (OrdinaryName s) = s
-rstrNameString (SAPiCInclName s) = s
 

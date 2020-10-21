@@ -284,7 +284,7 @@ resLocking hasUnlock v =  do
               toEx resLockingL
             else
               toEx resLockingLNoUnlockPOS
-    return $ mapName hardcodeRes $ mapFormula (mapAtoms subst) rest
+    return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
     where
         subst _ a
             | (Action t f) <- a,
@@ -295,8 +295,6 @@ resLocking hasUnlock v =  do
               Fact {factTag = ProtoFact Linear "UnlockPOS" 3} <- f =
               Action t (f {factTag = ProtoFact Linear (hardcode "Unlock") 3})
             | otherwise = a
-        hardcodeRes (OrdinaryName s) = OrdinaryName (s ++ "_" ++ show (lvarIdx v))
-        hardcodeRes (SAPiCInclName s) = SAPiCInclName (s ++ "_" ++ show (lvarIdx v))
         hardcode s = s ++ "_" ++ show (lvarIdx v)
         mapFormula = L.modify rstrFormula
         mapName = L.modify rstrName

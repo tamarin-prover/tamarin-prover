@@ -134,7 +134,7 @@ dotNode v = dotOnce dsNodes v $ do
     label ru = " : " ++ render nameAndActs
       where
         nameAndActs =
-            ruleInfo (prettyProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
+            ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
             brackets (vcat $ punctuate comma $ map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
@@ -354,7 +354,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
-            let lbl | hasOutgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+            let lbl | hasOutgoingEdge = show v ++ " : " ++ showPrettyRuleCaseName ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
@@ -369,7 +369,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
         cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
 
         ruleLabel =
-            prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+            prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru) <>
             (brackets $ vcat $ punctuate comma $
                 map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
 

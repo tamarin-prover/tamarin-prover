@@ -233,7 +233,7 @@ prettyPosition = foldl (\ s n -> s ++ show n ) ""
 prettySapicAction' ::
                    ( [LNFact] -> [LNFact] -> [LNFact] -> [SyntacticLNFormula] -> String)
                     -> SapicAction  -> String
-prettySapicAction' _ (New n) = [toEnum 957] ++ show n
+prettySapicAction' _ (New n) = "new" ++ show n
 prettySapicAction' _ Rep  = "!"
 prettySapicAction' _ (ChIn (Just t1) t2 )  = "in(" ++ render (prettyLNTerm t1) ++ "," ++ render ( prettyLNTerm t2) ++ ")"
 prettySapicAction' _ (ChIn Nothing t2 )  = "in(" ++ render (prettyLNTerm t2) ++ ")"

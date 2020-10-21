@@ -95,7 +95,7 @@ isRightRestriction rstr =
 
 -- | Converts ParseRestrictions to Restrictions
 toRestriction :: ParseRestriction -> Restriction
-toRestriction rstr = Restriction (OrdinaryName(pRstrName rstr)) (pRstrFormula rstr)
+toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -618,7 +618,7 @@ restrictionAttribute = asum
 
 -- | Parse a restriction.
 restriction :: Parser SyntacticRestriction
-restriction = Restriction <$> (OrdinaryName <$> (symbol "restriction" *> identifier <* colon))
+restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
 -- | Fail on parsing an old "axiom" keyword.
@@ -627,7 +627,7 @@ restriction = Restriction <$> (OrdinaryName <$> (symbol "restriction" *> identif
 
 -- | Parse a legacy axiom, now called restriction.
 legacyAxiom :: Parser SyntacticRestriction
-legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (OrdinaryName <$> (symbol "axiom" *> identifier <* colon))
+legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
                           <*> doubleQuoted standardFormula
 
 -- | Parse a diff restriction.
@@ -1216,7 +1216,7 @@ instance Show (ParsingException) where
                                          -- ++ "."
     show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
     show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
-    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ rstrNameString (get rstrName rstr)
+    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ (get rstrName rstr)
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
     show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
@@ -1315,10 +1315,7 @@ liftedAddProtoRule thy ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
-                fromRuleRestriction' rname (i,f) = case get (preName . rInfo . oprRuleE) ru of 
-                  (StandRule (SAPiCRuleName _)) -> fromRuleRestriction (SAPiCInclName(rname ++ "_" ++ show i)) f
-                  (StandRule (DefdRuleName _)) -> fromRuleRestriction (OrdinaryName(rname ++ "_" ++ show i)) f
-                  FreshRule -> undefined
+                fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
                 counter = zip [1::Int ..]
 
 
@@ -1507,13 +1504,13 @@ diffTheory flags0 = do
     liftedAddRestriction' thy rstr = if isLeftRestriction rstr
                                        then case addRestrictionDiff LHS (toRestriction rstr) thy of
                                                Just thy' -> return thy'
-                                               Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
+                                               Nothing   -> fail $ "duplicate restriction: " ++ (get rstrName (toRestriction rstr))
                                        else if isRightRestriction rstr
                                                then case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> return thy'
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ (get rstrName (toRestriction rstr))
                                                else case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> case addRestrictionDiff LHS (toRestriction rstr) thy' of
                                                      Just thy'' -> return thy''
-                                                     Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ rstrNameString (get rstrName (toRestriction rstr))
+                                                     Nothing   -> fail $ "duplicate restriction: " ++ (get rstrName (toRestriction rstr))
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ (get rstrName (toRestriction rstr))

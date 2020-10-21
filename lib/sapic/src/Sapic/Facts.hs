@@ -302,7 +302,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
               Nothing -> SAPiCRuleName
             name = case processName of
                 Just s -> s
-                Nothing -> stripSemicolon (prettySapicTopLevel process)
+                Nothing -> stripSemicolon(prettySapicTopLevel process)
                          ++ "#_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
