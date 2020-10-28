@@ -46,9 +46,10 @@ dotPath = fromMaybe "dot" . findArg "withDot"
 
 -- | Path to dot or json tool
 graphPath :: Arguments -> (String, FilePath)
-graphPath as = 
-  if (argExists "withJson" as) then ("json", (fromMaybe "json" . findArg "withJson") as)
-                               else ("dot", (fromMaybe "dot" . findArg "withDot") as)
+graphPath as =
+  if argExists "withJson" as
+     then ("json", (fromMaybe "json" . findArg "withJson") as)
+     else ("dot", (fromMaybe "dot" . findArg "withDot") as)
 
 
 ------------------------------------------------------------------------------
@@ -59,7 +60,7 @@ graphPath as =
 getCommandLine :: IO String
 getCommandLine = do
   arguments <- getArgs
-  return . concat . intersperse " " $ programName : arguments
+  return . unwords $ programName : arguments
 
 -- | Read the cpu info using a call to cat /proc/cpuinfo
 getCpuModel :: IO String
@@ -76,7 +77,7 @@ getCpuModel =
 
 -- | Build the command line corresponding to a program arguments tuple.
 commandLine :: String -> [String] -> String
-commandLine prog args = concat $ intersperse " " $ prog : args
+commandLine prog args = unwords $ prog : args
 
 -- | Test if a process is executable and check its response. This is used to
 -- determine the versions and capabilities of tools that we depend on.
@@ -126,19 +127,27 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
 ensureGraphVizDot :: Arguments -> IO Bool
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
-    testProcess check errMsg " checking version: " dot ["-V"] "" False
+    testProcess check errMsg1 " checking version: " dot ["-v </dev/null"] "" False
   where
     dot = dotPath as
     check _ err
-      | "graphviz" `isInfixOf` map toLower err = Right $ init err ++ ". OK."
-      | otherwise                              = Left  $ errMsg
-    errMsg = unlines
+      | "graphviz" `isInfixOf` err' && "png" `isInfixOf` err' = Right $ init err ++ ". OK."
+      | "graphviz" `isInfixOf` err' = Left errMsg2
+      | otherwise                   = Left errMsg1
+      where err' = map toLower err
+    errMsg1 = unlines
       [ "WARNING:"
       , ""
       , " The dot tool seems not to be provided by Graphviz."
       , " Graph generation might not work."
       , " Please download an official version from:"
       , "         http://www.graphviz.org/"
+      ]
+    errMsg2 = unlines
+      [ "WARNING:"
+      , ""
+      , " The dot tool does not seem to support PNG."
+      , " Graph generation might not work."
       ]
 
 -- | Check whether a the graph rendering command supplied is pointing to an existing file
@@ -153,7 +162,7 @@ ensureGraphCommand as = do
       | otherwise  = Left  $ errMsg
     errMsg = unlines
       [ "Command not found" ]
-      
+
 -- | Ensure a suitable version of Maude is installed.
 ensureMaude :: Arguments -> IO Bool
 ensureMaude as = do
