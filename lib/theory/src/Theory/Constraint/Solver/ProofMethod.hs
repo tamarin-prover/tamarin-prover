@@ -182,7 +182,7 @@ type CaseName = String
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
-  | Solved                               -- ^ An attack was found
+  | Solved Bool                          -- ^ An attack was found
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -238,9 +238,10 @@ execProofMethod :: ProofContext
 execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
-        Solved
+        Solved True
           | null (openGoals sys) -> return M.empty
           | otherwise            -> Nothing
+        Solved False             -> Nothing
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
           | otherwise                        -> Nothing
@@ -1055,7 +1056,7 @@ smartDiffRanking ctxt sys =
 -- | Pretty-print a proof method.
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
+    Solved _             -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction            -> keyword_ "induction"
     Sorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
