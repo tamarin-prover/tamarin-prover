@@ -71,7 +71,6 @@ library
         Extension.Prelude
         Extension.Data.Label
         Extension.Data.Monoid
-        Extension.Data.Bounded
         Extension.Data.ByteString
 
         Text.Dot
