@@ -133,7 +133,7 @@ translate th = case theoryProcesses th of
   -- in
   -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
   -- predicate_restrictions ^ lemmas_tamarin
-  -- <CIRCUMFLEX> "end"
+  --- ^ "end"
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and

@@ -459,7 +459,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
-        (all isSubtermRule {-<DOLLAR> trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
     injFactInstances =
