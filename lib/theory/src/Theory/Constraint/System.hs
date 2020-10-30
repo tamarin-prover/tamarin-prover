@@ -815,7 +815,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms {- <DOLLAR-SIGN> trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
+         (GAto ato)  -> unifiableAtoms {-$ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
@@ -882,7 +882,7 @@ doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME J
         res = step forms solved
 
     step :: [(LNGuarded, System)] -> Bool -> [(LNGuarded, System)]
-    step forms solved = map simpGuard $ concat {- <DOLLAR-SIGN> trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
+    step forms solved = map simpGuard $ concat {-$ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
 
     valuation s' = safePartialAtomValuation ctxt s'
 
@@ -1290,7 +1290,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 --   , ("system",          text $ show se)
 --   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
 --   , ("DEBUG: Nodes",    vcat $ map prettyNode $ M.toList $ L.get sNodes se)
---   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-<DOLLAR> map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
+--   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
