@@ -26,11 +26,11 @@ import qualified Data.Map.Strict as M
 
 type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
  
- -- | suffix list p to each element of set *)
+-- <PIPE> suffix list p to each element of set *)
 (<.>) :: Ord a => [a] -> S.Set [a]  -> S.Set [a]
 (<.>) pos set = S.map (\pos' -> pos ++ pos' ) set 
 
--- | suffix list p to each element in a set of set of sets *)
+-- <PIPE> suffix list p to each element in a set of set of sets *)
 (<..>) :: Ord a => [a] -> S.Set (S.Set [a]) -> S.Set (S.Set [a])
 (<..>) pos setset  = S.map (\set' -> pos <.> set') setset
 
