@@ -380,11 +380,13 @@ solveSplit :: SplitId -> Reduction String
 solveSplit x = do
     split <- gets ((`performSplit` x) . get sEqStore)
     let errMsg = error "solveSplit: inexistent split-id"
-    store      <- maybe errMsg disjunctionOfList split
+    (store, idx)  <- maybe errMsg disjunctionOfList split
+    insertGoal (SplitG idx) False 
     -- FIXME: Simplify this interaction with the equation store
-    hnd        <- getMaudeHandle
-    substCheck <- gets (substCreatesNonNormalTerms hnd)
-    store'     <- simp hnd substCheck store
+    hnd           <- getMaudeHandle
+    substCheck    <- gets (substCreatesNonNormalTerms hnd)
+    (store', ids) <- simp hnd substCheck store
+    mapM_ (flip insertGoal False . SplitG) ids
     contradictoryIf (eqsIsFalse store')
     sEqStore =: store'
     return "split"
@@ -397,5 +399,5 @@ solveSplit x = do
 solveDisjunction :: Disj LNGuarded -> Reduction String
 solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
-    insertFormula gfm
+    void $ insertFormula gfm
     return $ "case_" ++ show i

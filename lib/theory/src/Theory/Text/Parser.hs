@@ -35,8 +35,10 @@ import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
 import qualified Data.Map                   as M
+import           Data.Maybe  --TODO-UNCERTAIN test if it can be removed
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+-- import           Data.List                  (foldl1')  --TODO-UNCERTAIN test if it can be removed
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
@@ -56,6 +58,7 @@ import           Text.PrettyPrint.Class     (render)
 
 import           Term.Substitution
 import           Term.SubtermRule
+import           Term.Maude.Signature  --TODO-UNCERTAIN test if it can be removed
 import           Theory
 import           Theory.Sapic
 import           Theory.Text.Parser.Token
@@ -105,7 +108,11 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags file = parseFile (theory flags) file
+parseOpenTheory flags file = parseFile (theory flags) file  --do
+                               --thy <- parseFile (theory flags) file
+                               --putStrLn $ render (prettyOpenTheory thy)
+                               --return thy
+--TODO-UNDEBUG
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
@@ -145,7 +152,21 @@ parseRestriction = parseString "<unknown source>" restriction
 
 -- | Parse an lit with logical variables.
 llit :: Parser LNTerm
-llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
+llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, natTerm <$> natName, varTerm <$> msgvar]
+
+-- | Parse an lit with logical variables of the given sort.
+sortedLlit :: LSort -> Parser LNTerm
+sortedLlit s@(LSortUser _) =
+    varTerm <$> asum
+      [ try $ sortedLVar [s]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n s i ]
+sortedLlit s@LSortNat =
+    varTerm <$> asum
+      [ try $ sortedLVar [s]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n s i ]
+sortedLlit _ = llit
 
 -- | Parse an lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
@@ -153,45 +174,94 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy)
+lookupArity :: String -> Parser (Int, Privacy, Maybe [String])
 lookupArity op = do
     maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public))]) of
-        Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv) -> return (k,priv)
+    case lookup (BC.pack op) [ (noEqOp o, o) | o <- allSyms maudeSig ] of
+        Nothing -> do
+          fail $ "unknown operator `" ++ op ++ "'"
+        Just (NoEqSym _ k priv sts) -> return (k,priv,sts)
+  where
+    allSyms maudeSig =
+      S.toList (noEqFunSyms maudeSig)
+      ++ [NoEqSym emapSymString 2 Public Nothing]
+      ++ (catMaybes $ map mapACSym (S.toList $ userACSyms maudeSig))
+    noEqOp (NoEqSym f _ _ _) = f
+    --TODO-UNCERTAIN why do we add the user-defined AC-symbols (not the normal AC ones) despite the function description? Commit 09577fc
+    mapACSym (UserAC f s) = Just (NoEqSym (BC.pack f) 2 Public (Just [s,s,s]))
+    mapACSym _            = Nothing
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp :: Bool -> Parser (LNTerm) -> Parser (LNTerm)
 naryOpApp eqn plit = do
     op <- identifier
     --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    (k,priv) <- lookupArity op
-    ts <- parens $ if k == 1
-                     then return <$> tupleterm eqn plit
-                     else commaSep (msetterm eqn plit)
+    (k,priv,sts) <- lookupArity op
+    ts <- parens $ arguments op k sts
+    -- Verify arity
     let k' = length ts
-    when (k /= k') $
-        fail $ "operator `" ++ op ++"' has arity " ++ show k ++
-               ", but here it is used with arity " ++ show k'
+    when (k /= k' && k > 1) $ do
+            let err = "operator `" ++ op ++"' has arity " ++ show k ++
+                      ", but here it is used with arity " ++ show k'
+            fail err
+    let args  = if k' > k && k == 1
+                  then [foldr1 (curry fAppPair) ts]
+                  else ts
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,priv)) ts
+    msig <- getState
+    return $ if op `elem` userACSyms' msig
+      then lookupUserAC op (S.toList $ userACSyms msig) args
+      else app (NoEqSym (BC.pack op) k priv sts) args
+  where  --TODO-UNCERTAIN: did not double check the code in this where-block (might need to fix, see upper uncertainty)
+    --TODO-UNCERTAIN: The main commits for this are: 8985fa4 -> 87076d7 -> 19a6b44
+    -- Functions on built-in sorts
+    arguments _  0 _       = return []
+    arguments _  _ Nothing = commaSep (msetterm eqn plit)
+    -- Functions on user-defined sorts (with type signature)
+    arguments op _ (Just xs) =
+      commaSepN $ map (sortedTerm op) (zip ([1..] :: [Integer]) $ init xs)
+
+    lookupUserAC idn (sym@(UserAC idn' _):syms) as
+      | idn == idn'              = fAppAC sym as
+      | otherwise                = lookupUserAC idn syms as
+    lookupUserAC idn (_:syms) as = lookupUserAC idn syms as
+    lookupUserAC idn [] _ = error $
+      "Theory.Text.naryOpApp: error parsing user AC symbol: " ++ idn
+
+    -- Parse a term with the given sort
+    sortedTerm op (idx, sortname) = do
+      let sort = sortFromString sortname
+      lnterm <- msetterm eqn $ asum [try $ sortedLlit sort, llit]
+      let order = sortCompare (sortOfLNTerm lnterm) sort
+      if order == (Just LT) || order == (Just EQ)
+        then return lnterm
+        -- XXX: Because of limitations in the way Parsec handles errors,  --TODO-UNCERTAIN removed this liftIO (and the one above)
+        -- the error message from fail will not show up in the output which
+        -- may be confusing to the user. We print an additional error message.
+        else do
+          pos <- getPosition
+          let err = "Error: Function " ++ op ++ " expects argument of sort "
+                    ++ sortname ++ " at position " ++ show idx ++
+                    ", but found sort " ++ sortTypename (sortOfLNTerm lnterm)
+                    ++ " instead! (line " ++ show (sourceLine pos) ++ ")."
+          fail err
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp :: Bool -> Parser LNTerm -> Parser LNTerm
 binaryAlgApp eqn plit = do
     op <- identifier
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    (k,priv) <- lookupArity op
+    (k,priv, sts) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
+    return $ fAppNoEq (NoEqSym (BC.pack op) 2 priv sts) [arg1, arg2]
 
-diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+diffOp :: Bool -> Parser LNTerm -> Parser LNTerm
 diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
@@ -206,12 +276,14 @@ diffOp eqn plit = do
   return $ fAppDiff (arg1, arg2)
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
+term :: Parser LNTerm -> Bool -> Parser LNTerm
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1" *> pure fAppOne
-    , application <?> "function application"
+    , symbol "1:nat" *> pure fAppNatOne
+    , symbol "%1"    *> pure fAppNatOne
+    , symbol "1"     *> pure fAppOne
+    , application   <?> "function application"
     , nullaryApp
     , plit
     ]
@@ -222,15 +294,15 @@ term plit eqn = asum
     nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
-           | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (NoEqSym sym 0 priv sts)) [])
+           | NoEq (NoEqSym sym 0 priv sts) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+expterm :: Bool -> Parser LNTerm -> Parser LNTerm
 expterm eqn plit = chainl1 (term plit eqn) ((\a b -> fAppExp (a,b)) <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+multterm :: Bool -> Parser LNTerm -> Parser LNTerm
 multterm eqn plit = do
     dh <- enableDH <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
@@ -238,7 +310,7 @@ multterm eqn plit = do
         else term plit eqn
 
 -- | A left-associative sequence of xors.
-xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+xorterm :: Bool -> Parser LNTerm -> Parser LNTerm
 xorterm eqn plit = do
     xor <- enableXor <$> getState
     if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
@@ -246,21 +318,38 @@ xorterm eqn plit = do
         else multterm eqn plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+msetterm :: Bool -> Parser LNTerm -> Parser LNTerm
 msetterm eqn plit = do
     mset <- enableMSet <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        then chainl1 (natterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
+        else natterm eqn plit
+
+-- | A left-associative sequence of terms on natural numbers.
+natterm :: Bool -> Parser LNTerm -> Parser LNTerm
+natterm eqn plit = do
+    nats <- enableNat <$> getState
+    if nats -- if nat is not enabled, do not accept 'natterms's
+        then try (xorterm eqn plit) <|> sumterm  --TODO-UNCERTAIN: not sure whether the order (mset-nat-xor-mult) matters (Cedric's was nat-mult-mset)
         else xorterm eqn plit
+  where
+    sumterm = chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
+
+    subnatterm = try $ asum
+      [ parens sumterm
+      , symbol "1:nat" *> pure fAppNatOne
+      , symbol "1"     *> pure fAppNatOne  --TODO-UNCERTAIN (probably the intent was "if we expect a nat, we take 1 as nat instead of diffie-hellman")
+      , sortedLlit LSortNat
+      ]
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+tupleterm :: Bool -> Parser LNTerm -> Parser LNTerm
 tupleterm eqn plit = chainr1 (msetterm eqn plit) ((\a b -> fAppPair (a,b)) <$ comma)
 
 -- | Parse a fact annotation
 factAnnotation :: Parser FactAnnotation
 factAnnotation = asum
-  [ opPlus  *> pure SolveFirst
+  [ opUnion  *> pure SolveFirst
   , opMinus *> pure SolveLast
   , symbol "no_precomp" *> pure NoSources
   ]
@@ -293,7 +382,7 @@ fact' pterm = try (
       _     -> return . protoFactAnn multi f ann
 
 -- | Parse a fact.
-fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
+fact :: Parser LNTerm -> Parser (Fact LNTerm)
 fact plit = fact' (msetterm False plit)
 
 ------------------------------------------------------------------------------
@@ -533,6 +622,7 @@ blatom = (fmap (fmapTerm (fmap Free))) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
+  , Subterm     <$> try (msetterm False llit <* opSubterm) <*> msetterm False llit <?> "subterm predicate"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
@@ -823,6 +913,8 @@ builtins thy0 =do
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "natural-numbers")
+          *> extendSig natMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
@@ -855,6 +947,8 @@ diffbuiltins =
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "natural-numbers")
+          *> extendSig natMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
@@ -873,25 +967,76 @@ diffbuiltins =
           *> extendSig hashMaudeSig
       ]
 
+-- | User-defined sorts.
+usersorts :: Parser ()
+usersorts =
+    symbol "usersorts" *> colon *> commaSep1 sortSymbol *> pure ()
+  where
+    sortSymbol = do
+      ident <- identifier
+      sig   <- getState
+      setState (addUserSort ident sig)
 
 functions :: Parser ()
 functions =
     symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
   where
     functionSymbol = do
-        f   <- BC.pack <$> identifier <* opSlash
-        k   <- fromIntegral <$> natural
-        priv <- option Public (symbol "[private]" *> pure Private)
+        f          <- BC.pack <$> identifier
+        (k, sorts) <- parseArity
+        priv       <- option Public (symbol "[private]" *> pure Private)
+        ac         <- option False (symbol "[AC]" *> pure True)
         if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
           then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
           else return ()
         sig <- getState
-        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just kp' | kp' /= (k,priv) ->
-            fail $ "conflicting arities/private " ++
-                   show kp' ++ " and " ++ show (k,priv) ++
-                   " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,(k,priv)) sig)
+        -- Sanity checks for user-sorted functions
+        when (isJust sorts) (verifySorts (fromJust sorts) sig)
+        if ac
+          then do
+            verifySymbol f (fromJust sorts)
+            setState $ addUserACSym (UserAC (BC.unpack f) (head $ fromJust sorts)) sig
+          else do
+            let noeqsym = NoEqSym f k priv sorts
+            verifyArities noeqsym sig
+            setState $ addFunSym noeqsym sig
+
+    -- Parse old-style function symbol (such as h/1, f/2, etc) or
+    -- new-style function symbol (with function signature, such as
+    -- f: Msg Msg -> Msg).
+    parseArity = oldStyle <|> newStyle
+
+    oldStyle = do
+      k <- opSlash *> (fromIntegral <$> natural)
+      return (k, Nothing)
+
+    newStyle = do
+      args <- colon *> wsSep identifier
+      void $ symbol "->"
+      retv <- identifier
+      let sorts = args ++ [retv]
+      return (length sorts - 1, Just sorts)
+
+    verifySorts xs msig = flip mapM_ xs $ \sort ->
+      if elem (sortFromString sort) (allSorts msig)
+        then return ()
+        else fail $ "Invalid sort specified: " ++ sort
+
+    verifySymbol _ ([x,y,z]) | x == y && y == z = return ()
+    verifySymbol f _ = fail $ "Invalid AC symbol: " ++ (BC.unpack f)
+
+    verifyArities sym@(NoEqSym f _ _ _) sig =
+      case lookup f [ (noEqOp o, o) | o <- S.toList (stFunSyms sig)] of
+        Just other | other /= sym ->
+          fail $ "conflicting symbols: " ++
+                 show sym ++ " and " ++ show other
+        _ -> return ()
+      where
+        noEqOp (NoEqSym fs _ _ _) = fs
+
+    allSorts msig =
+      [LSortMsg, LSortFresh, LSortPub, LSortNat] ++
+      (S.toList $ userSortsForMaudeSig msig)
 
 equations :: Parser ()
 equations =
@@ -1345,6 +1490,9 @@ theory flags0 = do
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
            addItems flags thy'
+      , do usersorts
+           msig <- getState
+           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
       , do functions
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy

@@ -917,7 +917,7 @@ injRanking ctxt allowLoopBreakers sys =
         _                                                  -> False
 
     isSignatureGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
+        Just (viewTerm -> FApp (NoEq (NoEqSym f _ _ _)) _) | (BC.unpack f) == "sign" -> True
         _                                                                 -> False
 
     -- Be conservative on splits that don't exist.
@@ -936,7 +936,7 @@ smartRanking :: ProofContext
              -> System
              -> [AnnotatedGoal] -> [AnnotatedGoal]
 smartRanking ctxt allowPremiseGLoopBreakers sys =
-    sortOnUsefulness . unmark . sortDecisionTree notSolveLast . sortDecisionTree solveFirst . goalNrRanking
+    moveNatToEnd . sortOnUsefulness . unmark . sortDecisionTree notSolveLast . sortDecisionTree solveFirst . goalNrRanking
   where
     oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
 
@@ -946,6 +946,10 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
       _                                            -> Nothing
 
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
+
+    moveNatToEnd = sortOn isNatSubtermSplit
+    isNatSubtermSplit (SplitG id, _) = isNatSubterm (L.get sEqStore sys) id
+    isNatSubtermSplit _              = False
 
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
@@ -999,7 +1003,7 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
         _                                                  -> False
 
     isSignatureGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp (NoEq (f, _)) _) | (BC.unpack f) == "sign" -> True
+        Just (viewTerm -> FApp (NoEq (NoEqSym f _ _ _)) _) | (BC.unpack f) == "sign" -> True
         _                                                                 -> False
 
     -- Be conservative on splits that don't exist.

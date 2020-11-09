@@ -112,6 +112,8 @@ startMaudeProcess maudePath maudeSig = do
     -- set maude flags
     mapM_ (executeMaudeCommand hin hout) setupCmds
     -- input the maude theory
+    --putStrLn "Starting Maude with the following code:"
+    --print (ppTheory maudeSig) --TODO-UNDEBUG
     executeMaudeCommand hin hout (ppTheory maudeSig)
     return (MP hin hout herr hproc 0 0 0 0)
   where

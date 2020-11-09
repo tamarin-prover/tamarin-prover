@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -32,6 +33,8 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import qualified Extension.Data.Label               as L
+import           Data.Maybe                         (listToMaybe, maybeToList, mapMaybe)
 
 import           Control.Basics
 import           Control.Category
@@ -89,6 +92,8 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- negativeSubtermVars
+              c10 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -100,6 +105,8 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("process neg-subterms (S_subterm-neg)",c9)
+                    , ("orderings for ~vars (S_fresh-order)", c10)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -119,6 +126,8 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- negativeSubtermVars
+              c10 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -130,6 +139,8 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("process neg-subterms (S_subterm-neg)",c9)
+                    , ("orderings for ~vars (S_fresh-order)", c10)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -286,12 +297,12 @@ solveUniqueActions = do
 -- required to decompose the formula in the initial constraint system.
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
-    formulas <- getM sFormulas
-    applyChangeList $ do
-        fm <- S.toList formulas
-        guard (reducibleFormula fm)
-        return $ do modM sFormulas $ S.delete fm
-                    insertFormula fm
+    formulas  <- S.toList <$> getM sFormulas
+    changedList <- mapM (\fm -> do
+        modM sFormulas $ S.delete fm
+        insertFormula fm
+      ) formulas
+    return $ if Changed `elem` changedList then Changed else Unchanged
 
 -- | Try to simplify the atoms contained in the formulas. See
 -- 'partialAtomValuation' for an explanation of what CR-rules are exploited
@@ -310,7 +321,7 @@ evalFormulaAtoms = do
                 _          -> return ()
               modM sFormulas       $ S.delete fm
               modM sSolvedFormulas $ S.insert fm
-              insertFormula fm'
+              void $ insertFormula fm'
           Nothing  -> []
 
 -- | A partial valuation for atoms. The return value of this function is
@@ -322,6 +333,8 @@ evalFormulaAtoms = do
 --
 -- The interpretation for @Just False@ is analogous. @Nothing@ is used to
 -- represent *unknown*.
+-- 
+-- FIXME this function is almost identical to System>safePartial evaluation -> join them
 --
 partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 partialAtomValuation ctxt sys =
@@ -331,6 +344,7 @@ partialAtomValuation ctxt sys =
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+    redElem    = elemNotBelowReducible (reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt)
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -368,6 +382,11 @@ partialAtomValuation ctxt sys =
                     | i `before` j || j `before` i  -> Just False
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
+                  
+          Subterm small big
+             | big `redElem` small                  -> Just False  -- includes equality
+             | small `redElem` big                  -> Just True -- small /= big because of the previous condition
+             | otherwise                            -> Nothing
 
           Last (ltermNodeId' -> i)
             | isLast sys i                       -> Just True
@@ -392,6 +411,79 @@ insertImpliedFormulas = do
         implied <- impliedFormulas hnd sys clause
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
-          then return (insertFormula implied)
+          then return (void $ insertFormula implied)
           else []
+
+
+-- | CR-rule *S_subterm-neg*: @s ¬⊏ x, t ⊏ x --insert--> s ¬⊏ t, s ≠ t@
+negativeSubtermVars :: Reduction ChangeIndicator
+negativeSubtermVars = do
+  formulas <- getM sFormulas
+  changelists <- mapM (\f -> case f of
+      (GGuarded All [] [Subterm i j] gf) | gf == gfalse && isMsgVar (bTermToLTerm j) -> do
+          subtermRel <- liftM rawSubtermRel $ getM sEqStore
+          let matching = filter ((bTermToLTerm j ==) . snd) subtermRel
+          mapM (\(small, _) -> do
+            let smallB = lTermToBTerm small
+            c1 <- insertFormula (gnotAtom $ Subterm i smallB)
+            c2 <- insertFormula (gnotAtom $ EqE i smallB)
+            return [c1, c2]
+            ) matching
+      _ -> return []
+    ) (S.toList formulas)
+  let changed = Changed `elem` concat (concat changelists)
+  return $ if changed then Changed else Unchanged
+
+
+-- | CR-rule *S_fresh-order*:
+--
+-- `i:f`, `j:g`, `t1 ⊏ s1`, ..., `t_(n-1) ⊏ s_(n-1)`
+-- -- insert --
+-- `i<j`
+-- *with `prems(f)u = Fr(~s0)` and `prems(g)v = Fact(tn))`*
+-- *if `si` is syntactically in `t_(i+1)` and not below a reducible operator*
+freshOrdering :: Reduction ChangeIndicator
+freshOrdering = do
+  rawSubterms <- rawSubtermRel <$> getM sEqStore
+  nodes <- M.assocs <$> getM sNodes
+  el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let freshVars = concatMap getFreshVars nodes
+  let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  --add a fake-subterm for each freshVar
+  let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms
+  let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]
+  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]
+  
+  oldLesses <- gets (get sLessAtoms)
+  mapM_ (uncurry insertLess) newLesses
+  --modify dropEntailedOrdConstraints
+  modifiedLesses <- gets (get sLessAtoms)
+  return $ if oldLesses == modifiedLesses
+    then Unchanged
+    else Changed
+
+    where
+      getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
+      getFreshVars (idx, L.get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (idx, head $ factTerms prem)
+          _         -> Nothing
+        ) prems
+
+      floodFill :: M.Map LNTerm [(LNTerm, LNTerm)] -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm)
+      floodFill graph visited (s,x)
+        | (s,x) `S.member` visited = visited
+        | otherwise                = foldl (floodFill graph) (S.insert (s,x) visited) (M.findWithDefault [] x graph)
+
+      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, [LNTerm])] -> Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) -> [NodeId]
+      connectNodeToFreshes _ [] _ = []
+      connectNodeToFreshes el ((nid, containing):xs) r@(L.get rPrems -> prems) =
+        case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
+          Just nid -> nid : connectNodeToFreshes el xs r
+          _        ->       connectNodeToFreshes el xs r
+      
+      notFresh (factTag -> FreshFact) = False
+      notFresh _                      = True
+
+
+
+
 

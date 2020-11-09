@@ -644,6 +644,7 @@ formulaFacts =
     atomFacts (Action _ fa)   = [fa]
     atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
     atomFacts (EqE _ _)       = mempty
+    atomFacts (Subterm _ _)   = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
 
@@ -656,6 +657,7 @@ formulaTerms =
     atomTerms (Syntactic _)       = []
     -- atomTerms (Syntactic (Pred p)) = factTerms p
     atomTerms (EqE t s)            = [t, s]
+    atomTerms (Subterm i j)        = [i, j]
     atomTerms (Less i j)           = [i, j]
     atomTerms (Last i)             = [i]
 
@@ -713,7 +715,8 @@ formulaReports thy = do
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
+        disallowed = flip filter binders
+          (\(_,s) -> not (s `elem` [LSortMsg, LSortNode, LSortNat] || isUserSort s))  --TODO-UNCERTAIN: what this change does
 
     -- check that only bound variables and public names are used
     checkTerms header fm
@@ -736,7 +739,9 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        allowed (viewTerm2 -> FUnion args)               = all allowed args
+        allowed (viewTerm2 -> FUserAC _ _ args)          = all allowed args  --TODO-UNCERTAIN: what this line (and the below) do
+        allowed (viewTerm2 -> FNatPlus args)             = all allowed args
         -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False

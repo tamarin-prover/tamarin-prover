@@ -15,38 +15,40 @@ import qualified Data.Set as S
 -- Builtin symbols (pair and inv are defined in Term.Term)
 ----------------------------------------------------------------------
 
+--TODO-MY add the + for the natural numbers
 -- | Binary builtin function symbols.
 sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym, repSym, checkRepSym :: NoEqSym
-sdecSym = ("sdec",(2, Public))
-sencSym = ("senc",(2, Public))
-adecSym = ("adec",(2, Public))
-aencSym = ("aenc",(2, Public))
-signSym = ("sign",(2, Public))
-revealSignSym = ("revealSign",(2, Public))
-repSym = ("rep",(2,Private))
-checkRepSym = ("check_rep",(2,Public))
+sdecSym = NoEqSym "sdec" 2 Public Nothing
+sencSym = NoEqSym "senc" 2 Public Nothing
+adecSym = NoEqSym "adec" 2 Public Nothing
+aencSym = NoEqSym "aenc" 2 Public Nothing
+signSym = NoEqSym "sign" 2 Public Nothing
+revealSignSym = NoEqSym "revealSign" 2 Public Nothing
+repSym = NoEqSym "rep" 2 Private Nothing
+checkRepSym = NoEqSym "check_rep" 2 Public Nothing
 
 -- | Ternary builtin function symbols.
 verifySym, revealVerifySym :: NoEqSym
-verifySym = ("verify",(3, Public))
-revealVerifySym = ("revealVerify",(3, Public))
+verifySym = NoEqSym "verify" 3 Public Nothing
+revealVerifySym = NoEqSym "revealVerify" 3 Public Nothing
 
 -- | Unary builtin function symbols.
 pkSym, hashSym, extractMessageSym, getRepSym, reportSym :: NoEqSym
-pkSym = ("pk",(1, Public))
-hashSym = ("h",(1, Public))
-extractMessageSym = ("getMessage",(1, Public))
-getRepSym = ("get_rep",(1, Public))
-reportSym = ("report",(1, Public))
+pkSym = NoEqSym "pk" 1 Public Nothing
+hashSym = NoEqSym "h" 1 Public Nothing
+extractMessageSym = NoEqSym "getMessage" 1 Public Nothing
+getRepSym = NoEqSym "get_rep" 1 Public Nothing
+reportSym = NoEqSym "report" 1 Public Nothing
 
 -- | Nullary builtin function symbols.
 trueSym :: NoEqSym
-trueSym = ("true",(0, Public))
+trueSym = NoEqSym "true" 0 Public Nothing
 
 ----------------------------------------------------------------------
 -- Builtin signatures
 ----------------------------------------------------------------------
 
+--TODO-MY add the natural numbers
 -- | The signature for symmetric encryption.
 symEncFunSig :: NoEqFunSig
 symEncFunSig = S.fromList $ [ sdecSym, sencSym ]

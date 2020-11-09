@@ -404,9 +404,16 @@ precomputeSources ctxt restrictions =
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $
       [ return $ varTerm (LVar "t" LSortFresh 1)
+      -- Bilinear pairing
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
+      -- Natural numbers
+      , if enableNat msig then
+          [ fAppNoEq natOneSym []
+          , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
+          else []
+      -- User-defined functions  --TODO-UNCERTAIN removed iterated functions
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,priv)) <- S.toList . noEqFunSyms  $ msig
+        | o@(NoEqSym _ k priv _) <- S.toList . noEqFunSyms $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

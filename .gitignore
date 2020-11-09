@@ -6,6 +6,8 @@ testbed
 case-studies
 case-studies-sapic
 case-studies-sequential
+case-studies-normal
+case-studies-usersort
 tamarin-prover-img
 .cabal-sandbox/
 cabal-sandbox/

@@ -39,7 +39,6 @@ module Theory.Constraint.Solver.Reduction (
   , insertAction
   , insertLess
   , insertFormula
-  , reducibleFormula
 
   -- ** Goal management
   , markGoalAsSolved
@@ -96,6 +95,7 @@ import           Extension.Data.Label
 import           Extension.Prelude
 
 import           Logic.Connectives
+import           Term.Builtin.Convenience
 
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
@@ -395,18 +395,19 @@ insertLast i = do
 -- system than the set of actions was changed.
 insertAtom :: LNAtom -> Reduction ChangeIndicator
 insertAtom ato = case ato of
-    EqE x y       -> solveTermEqs SplitNow [Equal x y]
-    Action i fa   -> insertAction (ltermNodeId' i) fa
-    Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j)
-                        return Unchanged
-    Last i        -> insertLast (ltermNodeId' i)
+    EqE x y       -> solveTermEqs SplitNow [Equal x y] >> return Changed
+    Subterm x y   -> solveSubtermEq SplitLater (x, y)  --currently, SplitNow is not used at all. We could experiment...
+    Action i fa   -> insertAction (ltermNodeId' i) fa >> return Changed
+    Less i j      -> insertLess (ltermNodeId' i) (ltermNodeId' j) >> return Changed
+    Last i        -> insertLast (ltermNodeId' i) >> return Changed
     Syntactic _   -> return Unchanged
+
 
 -- | Insert a 'Guarded' formula. Ensures that existentials, conjunctions, negated
 -- last atoms, and negated less atoms, are immediately solved using the rules
 -- *S_exists*, *S_and*, *S_not,last*, and *S_not,less*. Only the inserted
 -- formula is marked as solved. Other intermediate formulas are not marked.
-insertFormula :: LNGuarded -> Reduction ()
+insertFormula :: LNGuarded -> Reduction ChangeIndicator
 insertFormula = do
     insert True
   where
@@ -416,43 +417,71 @@ insertFormula = do
         insert' mark formulas solvedFormulas fm
 
     insert' mark formulas solvedFormulas fm
-      | fm `S.member` formulas       = return ()
-      | fm `S.member` solvedFormulas = return ()
+      | fm `S.member` formulas       = return Unchanged
+      | fm `S.member` solvedFormulas = return Unchanged
       | otherwise = case fm of
           GAto ato -> do
               markAsSolved
-              void (insertAtom (bvarToLVar ato))
+              insertAtom (bvarToLVar ato)
 
           -- CR-rule *S_∧*
           GConj fms -> do
               markAsSolved
               mapM_ (insert False) (getConj fms)
+              return Changed
 
           -- Store for later applications of CR-rule *S_∨*
           GDisj disj -> do
               modM sFormulas (S.insert fm)
-              insertGoal (DisjG disj) False
+              goals <- getM sGoals
+              unless (M.member (DisjG disj) goals) $
+                insertGoal (DisjG disj) False
+              return Unchanged  --TODO-MY monitor the issue https://github.com/tamarin-prover/tamarin-prover/issues/414 -> markAsSolved, remove unless, return Changed
 
           -- CR-rule *S_∃*
           GGuarded Ex ss as gf -> do
               -- must always mark as solved, as we otherwise may repeatedly
-              -- introduce fresh variables.
+              -- introduce fresh variables. -> no markAsSolved
               modM sSolvedFormulas $ S.insert fm
               xs <- mapM (uncurry freshLVar) ss
               let body = gconj (map GAto as ++ [gf])
-              insert False (substBound (zip [0..] (reverse xs)) body)
+              void $ insert False (substBound (zip [0..] (reverse xs)) body)
+              return Changed
 
           -- CR-rule *S_{¬,⋖}*
           GGuarded All [] [Less i j] gf  | gf == gfalse -> do
               markAsSolved
-              insert False (gdisj [GAto (EqE i j), GAto (Less j i)])
+              void $ insert False (gdisj [GAto (EqE i j), GAto (Less j i)])
+              return Changed
+
+          -- here, @j@ is not a variable -> apply the CR-rules *S_subterm-neg-[ac-]recurse*
+          GGuarded All [] [Subterm i j] gf | gf == gfalse  -> do
+              hnd <- getMaudeHandle
+              let st = (bTermToLTerm i, bTermToLTerm j)
+              deconstructed <- splitSubterm (reducibleFunSyms $ mhMaudeSig hnd) st
+              let isUnchanged = case deconstructed of
+                                  [SubtermD x] | x == st                -> True
+                                  [NatSubtermD (s, t, _)] | (s,t) == st -> isMsgVar s
+                                  _                                     -> False
+              unless isUnchanged markAsSolved  -- if the equality holds, just insert the formula and return
+              let lb = lTermToBTerm
+              mapM_ (\destr -> case destr of
+                  TrueD                                -> void $ insert False gfalse
+                  (SubtermD (s,t))                     -> modM sFormulas (S.insert $ gnotAtom $ Subterm (lb s) (lb t))
+                  (NatSubtermD (s, t, _)) | isMsgVar s -> modM sFormulas (S.insert $ gnotAtom $ Subterm (lb s) (lb t))
+                  (NatSubtermD (s, t, _))              -> void $ insert False (GAto (Subterm (lb t) ((lb s) ++: fAppNatOne)))
+                  (EqualD (a,b))                       -> modM sFormulas (S.insert $ gnotAtom $ EqE (lb a) (lb b))
+                  (ACNewVarD (a, b, _))                -> modM sFormulas (S.insert $ gnotAtom $ EqE (lb a) (lb b))
+                ) deconstructed
+              return $ if isUnchanged then Unchanged else Changed
 
           -- CR-rule: FIXME add this rule to paper
           GGuarded All [] [EqE i@(bltermNodeId -> Just _)
                                j@(bltermNodeId -> Just _) ] gf
             | gf == gfalse -> do
                 markAsSolved
-                insert False (gdisj [GAto (Less i j), GAto (Less j i)])
+                void $ insert False (gdisj [GAto (Less i j), GAto (Less j i)])
+                return Unchanged --FIXME not sure wether this should be unchanged (I encountered this while removing reducibleFormula)
 
           -- CR-rule *S_{¬,last}*
           GGuarded All [] [Last i]   gf  | gf == gfalse -> do
@@ -463,23 +492,14 @@ insertFormula = do
                                     void (insertLast j)
                                     return (varTerm (Free j))
                      Just j -> return (varTerm (Free j))
-              insert False $ gdisj [ GAto (Less j i), GAto (Less i j) ]
+              void $ insert False $ gdisj [ GAto (Less j i), GAto (Less i j) ]
+              return Changed
 
           -- Guarded All quantification: store for saturation
-          GGuarded All _ _ _ -> modM sFormulas (S.insert fm)
+          GGuarded All _ _ _ -> modM sFormulas (S.insert fm) >> return Unchanged
       where
         markAsSolved = when mark $ modM sSolvedFormulas $ S.insert fm
 
--- | 'True' iff the formula can be reduced by one of the rules implemented in
--- 'insertFormula'.
-reducibleFormula :: LNGuarded -> Bool
-reducibleFormula fm = case fm of
-    GAto _                        -> True
-    GConj _                       -> True
-    GGuarded Ex _ _ _             -> True
-    GGuarded All [] [Less _ _] gf -> gf == gfalse
-    GGuarded All [] [Last _]   gf -> gf == gfalse
-    _                             -> False
 
 
 -- Goal management
@@ -646,7 +666,7 @@ conjoinSystem sys = do
     _ <- (setNodes . (M.toList (get sNodes sys) ++) . M.toList) =<< getM sNodes
     -- conjoin equation store
     eqs <- getM sEqStore
-    let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj $ get sConjDisjEqs sys))
+    let (eqs',splitIds) = (mapAccumL addEntries eqs (map snd . getConj $ get sConjDisjEqs sys))
     setM sEqStore eqs'
     -- add split-goals for all disjunctions of sys
     mapM_  (`insertGoal` False) $ SplitG <$> splitIds
@@ -686,19 +706,49 @@ solveTermEqs splitStrat eqs0 =
       eqs1 -> do
         hnd <- getMaudeHandle
         se  <- gets id
-        (eqs2, maySplitId) <- addEqs hnd eqs1 =<< getM sEqStore
-        setM sEqStore
-            =<< simp hnd (substCreatesNonNormalTerms hnd se)
-            =<< case (maySplitId, splitStrat) of
-                  (Just splitId, SplitNow) -> disjunctionOfList
-                                                $ fromJustNote "solveTermEqs"
-                                                $ performSplit eqs2 splitId
+        (eqs2, maySplitId, splitGoals) <- addEqs hnd eqs1 =<< getM sEqStore
+        eqs3 <- case (maySplitId, splitStrat) of
+                  (Just splitId, SplitNow) -> do
+                      (eqs, idx) <- disjunctionOfList
+                        $ fromJustNote "solveTermEqs"
+                        $ performSplit eqs2 splitId
+                      insertGoal (SplitG idx) False
+                      return eqs
                   (Just splitId, SplitLater) -> do
                       insertGoal (SplitG splitId) False
                       return eqs2
                   _                        -> return eqs2
+        (eqs4, splitGoals2) <- simp hnd (substCreatesNonNormalTerms hnd se) eqs3
+        setM sEqStore eqs4
+        mapM_ (flip insertGoal False . SplitG) (splitGoals ++ splitGoals2)
         noContradictoryEqStore
         return Changed
+
+-- | Similar to solveTermEqs but inserts a (single) Subterm predicate instead of a set of equations
+solveSubtermEq :: SplitStrategy -> (LNTerm, LNTerm) -> Reduction ChangeIndicator
+solveSubtermEq splitStrat (small, big) = do
+    hnd <- getMaudeHandle
+    se  <- gets id
+    origStore <- getM sEqStore
+    (store, maySplitId) <- addSubterm hnd (small, big) origStore
+    store2 <- case (maySplitId, splitStrat) of
+       --alternative split strategy would be: split later if it's NatSubtermE, split now if it's SubtermE
+       (Just splitId, SplitLater) -- || sortOfLNTerm small == LSortNat && sortOfLNTerm big == LSortNat
+            -> insertGoal (SplitG splitId) False >> return store
+       (Just splitId, SplitNow) -> do
+            (eqs, idx) <- disjunctionOfList
+              $ fromJustNote "solveSubtermEq"
+              $ performSplit store splitId
+            insertGoal (SplitG idx) False
+            return eqs
+       _ -> return store  -- no new split
+    (store3, splitGoals) <- simp hnd (substCreatesNonNormalTerms hnd se) store2
+    setM sEqStore store3
+    mapM_ (flip insertGoal False . SplitG) splitGoals
+    noContradictoryEqStore
+    return $ case maySplitId of
+       Nothing -> Unchanged  -- origStore was inserted
+       _       -> Changed
 
 -- | Add a list of equalities in substitution form to the equation store
 solveSubstEqs :: SplitStrategy -> LNSubst -> Reduction ChangeIndicator
@@ -739,7 +789,9 @@ solveRuleConstraints (Just eqConstr) = do
     (eqs, splitId) <- addRuleVariants eqConstr <$> getM sEqStore
     insertGoal (SplitG splitId) False
     -- do not use expensive substCreatesNonNormalTerms here
-    setM sEqStore =<< simp hnd (const (const False)) eqs
+    (store, ids) <- simp hnd (const (const False)) eqs
+    setM sEqStore store
+    mapM_ (flip insertGoal False . SplitG) ids
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
 

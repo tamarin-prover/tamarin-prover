@@ -18,12 +18,17 @@ module Term.Maude.Signature (
   , enableMSet
   , enableDiff
   , enableXor
+  , enableNat
   , stFunSyms
   , stRules
   , funSyms
+  , userACSyms
+  , userACSyms'
   , irreducibleFunSyms
+  , reducibleFunSyms
   , rrulesForMaudeSig
   , noEqFunSyms
+  , userSortsForMaudeSig
 
   -- * predefined maude signatures
   , dhMaudeSig
@@ -35,6 +40,7 @@ module Term.Maude.Signature (
   , locationReportMaudeSig
   , hashMaudeSig
   , msetMaudeSig
+  , natMaudeSig
   , bpMaudeSig
   , xorMaudeSig
   , minimalMaudeSig
@@ -43,6 +49,8 @@ module Term.Maude.Signature (
   -- * extend maude signatures
   , addFunSym
   , addCtxtStRule
+  , addUserSort
+  , addUserACSym
 
   -- * pretty printing
   , prettyMaudeSig
@@ -57,6 +65,7 @@ import Control.Monad.Fresh
 -- import Control.Applicative
 import Control.DeepSeq
 
+import Data.Maybe  --TODO-UNCERTAIN: needed?
 import GHC.Generics (Generic)
 import Data.Binary
 import Data.Foldable (asum)
@@ -67,57 +76,68 @@ import qualified Data.Set as S
 import qualified Data.ByteString.Char8 as BC
 
 import qualified Text.PrettyPrint.Highlight as P
+import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Maude Signatures
 ----------------------------------------------------------------------
 
 -- | The required information to define a @Maude functional module@.
-data MaudeSig = MaudeSig
+data MaudeSig = MaudeSig  --TODO-MY add new field with custom sorts
     { enableDH           :: Bool
     , enableBP           :: Bool
     , enableMSet         :: Bool
+    , enableNat          :: Bool
     , enableXor          :: Bool
     , enableDiff         :: Bool
-    , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory
+    , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory TODO-MY: change to Set FunSym
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
 
     , funSyms            :: FunSig        -- ^ function signature including the
                                           -- function symbols for DH, BP, and Multiset
                                           -- can be computed from enableX and stFunSyms
     , irreducibleFunSyms :: FunSig        -- ^ irreducible function symbols (can be computed)
+    , reducibleFunSyms   :: FunSig        -- ^ function symbols @f@ that have a rewriting rule @l→r∈R@ with @root(l)=f@
+    , userSorts          :: S.Set String  -- ^ user-defined sorts
+    , userACSyms         :: S.Set ACSym   -- ^ user-defined AC symbols
     }
     deriving (Ord, Show, Eq, Generic, NFData, Binary)
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@(MaudeSig {enableDH,enableBP,enableMSet,enableXor,enableDiff=_,stFunSyms,stRules}) =
-    msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns}
+maudeSig msig@MaudeSig {enableDH, enableBP, enableMSet, enableNat, enableXor, enableDiff = _, stFunSyms, stRules} =
+    msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns, reducibleFunSyms=reducible}
   where
-    allfuns = (S.map NoEq stFunSyms)
+    -- TODO-UNCERTAIN: (todo from Cedric) Take into accounts user-defined AC function symbols.
+    allfuns = S.map NoEq stFunSyms
                 `S.union` (if enableDH || enableBP then dhFunSig   else S.empty)
                 `S.union` (if enableBP             then bpFunSig   else S.empty)
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
+                `S.union` (if enableNat            then natFunSig  else S.empty)
                 `S.union` (if enableXor            then xorFunSig  else S.empty)
-    irreduciblefuns = allfuns `S.difference` reducible
-    reducible =
-        S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules ]
-          `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig
+    irreduciblefuns = allfuns `S.difference` reducibleWithoutMult
+    reducibleWithoutMult =
+        S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules]
+          `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig  --careful! the AC Mult is missing here (probably intentionally)
+    reducible = S.fromList [ o | RRule (viewTerm -> FApp o _) _ <- S.toList $ rrulesForMaudeSig msig ]
 
 -- | A monoid instance to combine maude signatures.
 instance Semigroup MaudeSig where
-    MaudeSig dh1 bp1 mset1 xor1 diff1 stFunSyms1 stRules1 _ _ <>
-      MaudeSig dh2 bp2 mset2 xor2 diff2 stFunSyms2 stRules2 _ _ =
+    MaudeSig dh1 bp1 mset1 nat1 xor1 diff1 stFunSyms1 stRules1 _ _ _ uSorts1 uSyms1 <>
+      MaudeSig dh2 bp2 mset2 nat2 xor2 diff2 stFunSyms2 stRules2 _ _ _ uSorts2 uSyms2 =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
+                           ,enableNat=nat1||nat2
                            ,enableXor=xor1||xor2
                            ,enableDiff=diff1||diff2
                            ,stFunSyms=S.union stFunSyms1 stFunSyms2
-                           ,stRules=S.union stRules1 stRules2})
+                           ,stRules=S.union stRules1 stRules2
+                           ,userSorts=S.union uSorts1 uSorts2
+                           ,userACSyms=S.union uSyms1 uSyms2})
 
 instance Monoid MaudeSig where
-    mempty = MaudeSig False False False False False S.empty S.empty S.empty S.empty
+    mempty = MaudeSig False False False False False False S.empty S.empty S.empty S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -127,6 +147,17 @@ noEqFunSyms msig = S.fromList [ o | NoEq o <- S.toList (funSyms msig) ]
 addFunSym :: NoEqSym -> MaudeSig -> MaudeSig
 addFunSym funsym msig =
     msig `mappend` mempty {stFunSyms=S.fromList [funsym]}
+
+-- | Add a user-defined sort to given maude signature.
+addUserSort :: String -> MaudeSig -> MaudeSig
+addUserSort str msig =
+    msig `mappend` mempty {userSorts=S.fromList [str]}
+
+-- | Add a user-defined AC symbol to given maude signature.
+addUserACSym :: ACSym -> MaudeSig -> MaudeSig
+addUserACSym sym msig =
+    msig `mappend` mempty {userACSyms=S.fromList [sym]}
+
 
 -- | Add subterm rule to given maude signature.
 addCtxtStRule :: CtxtStRule -> MaudeSig -> MaudeSig
@@ -142,16 +173,41 @@ rrulesForMaudeSig (MaudeSig {enableDH, enableBP, enableMSet, enableXor, stRules}
     `S.union` (if enableBP   then bpRules   else S.empty)
     `S.union` (if enableMSet then msetRules else S.empty)
     `S.union` (if enableXor  then xorRules  else S.empty)
+    
+-- | Extract sorts from maude signature substitution rules.
+sortsForMaudeSig :: MaudeSig -> Set LSort
+sortsForMaudeSig msig =
+    S.fromList $ map getLSort $ S.toList $ stRules msig
+  where
+    getLSort (CtxtStRule lnterm _) = sortOfLNTerm lnterm
+
+-- | Extract user-defined sorts from maude signature.
+userSortsForMaudeSig :: MaudeSig -> Set LSort
+userSortsForMaudeSig msig =
+    S.union
+      (S.map LSortUser $ userSorts msig)
+      (S.filter isUserDefined $ sortsForMaudeSig msig)
+  where
+    isUserDefined (LSortUser _) = True
+    isUserDefined _             = False
+
+userACSyms' :: MaudeSig -> [String]
+userACSyms' msig = catMaybes $ map sym $ S.toList $ userACSyms msig
+  where 
+    sym (UserAC f _) = Just f
+    sym _            = Nothing
+
 
 ------------------------------------------------------------------------------
 -- Builtin maude signatures
 ------------------------------------------------------------------------------
 
 -- | Maude signatures for the AC symbols.
-dhMaudeSig, bpMaudeSig, msetMaudeSig, xorMaudeSig :: MaudeSig
+dhMaudeSig, bpMaudeSig, msetMaudeSig, natMaudeSig, xorMaudeSig :: MaudeSig
 dhMaudeSig   = maudeSig $ mempty {enableDH=True}
 bpMaudeSig   = maudeSig $ mempty {enableBP=True}
 msetMaudeSig = maudeSig $ mempty {enableMSet=True}
+natMaudeSig  = maudeSig $ mempty {enableNat=True}
 xorMaudeSig  = maudeSig $ mempty {enableXor=True}
 
 -- | Maude signatures for the default subterm symbols.
@@ -182,8 +238,10 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig = P.vcat
-    [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
+    [ ppNonEmptyList' "builtins:"  P.text     builtIns
+    , ppNonEmptyList' "usersorts:" P.text  $  S.toList (userSorts sig)
+    , ppNonEmptyList' "functions:" ppFun   $  (map Left  $ S.toList $ stFunSyms sig)
+                                           ++ (map Right $ S.toList $ userACSyms sig)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
@@ -197,9 +255,24 @@ prettyMaudeSig sig = P.vcat
       [ (enableDH,   "diffie-hellman")
       , (enableBP,   "bilinear-pairing")
       , (enableMSet, "multiset")
+      , (enableNat,  "natural-numbers")
       , (enableXor,  "xor")
       ]
+            
+    ppFun (Left noeq) = ppNoEqFunSymb noeq
+    ppFun (Right acs) = ppACSym acs
 
-    ppFunSymb (f,(k,priv)) = P.text $ BC.unpack f ++ "/" ++ show k ++ showPriv priv
-      where showPriv Private = " [private]"
-            showPriv Public  = ""
+    ppACSym (UserAC f s) = P.text $ f ++ ": " ++ s ++ " " ++ s ++ " -> " ++ s ++ " [AC]"
+    ppACSym _            = P.text ""
+
+    ppNoEqFunSymb (NoEqSym f k priv sorts) = P.text $ 
+        case sorts of
+          Nothing  -> BC.unpack f ++ "/" ++ show k ++ showPriv priv
+          Just sts -> BC.unpack f ++ ":" ++ showSorts sts ++ showPriv priv
+      where
+        showPriv Private = " [private]"
+        showPriv Public  = ""
+
+        showSorts []     = ""
+        showSorts [x]    = " -> " ++ x
+        showSorts (x:xs) = " " ++ x ++ showSorts xs 

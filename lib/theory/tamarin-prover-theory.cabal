@@ -43,6 +43,7 @@ library
     build-depends:
         aeson
       , aeson-pretty
+      , array
       , base
       , binary
       , bytestring

@@ -58,7 +58,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
   where
     check hnd = go t0
       where
-        go t = case viewTerm2 t of
+        go t = case viewTerm2 t of  --TODO-UNCERTAIN: here would be some iterated-function code
             -- irreducible function symbols
             FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
             FList ts                                        -> all go ts
@@ -95,6 +95,8 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult      ts    -> all go ts
             FXor       ts    -> all go ts
             FUnion     ts    -> all go ts
+            FNatPlus   ts    -> all go ts
+            FUserAC _ _ ts   -> all go ts
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 

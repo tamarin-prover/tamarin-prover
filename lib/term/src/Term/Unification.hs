@@ -8,14 +8,14 @@
 -- AC unification based on maude and free unification.
 module Term.Unification (
   -- * Unification modulo AC
-    unifyLTerm
+    unifyLTerm  --TODO-MY-NONUM not used outside - why do we expose this?
   , unifyLNTerm
   , unifiableLNTerms
 
-  , unifyLTermFactored
+  , unifyLTermFactored  --TODO-MY-NONUM not used outside - why do we expose this?
   , unifyLNTermFactored
 
-  -- * Unification without AC
+  -- * Unification without AC  --TODO-MY-NONUM remove all NoAC versions; they are unused
   , unifyLTermNoAC
   , unifyLNTermNoAC
   , unifiableLNTermsNoAC
@@ -44,6 +44,7 @@ module Term.Unification (
   , enableDH
   , enableBP
   , enableMSet
+  , enableNat
   , enableXor
   , enableDiff
   , minimalMaudeSig
@@ -64,6 +65,7 @@ module Term.Unification (
   , funSyms
   , stRules
   , irreducibleFunSyms
+  , reducibleFunSyms
   , noEqFunSyms
   , addFunSym
   , addCtxtStRule
@@ -83,6 +85,7 @@ import           Data.Map (Map)
 import           System.IO.Unsafe (unsafePerformIO)
 
 
+import           Term.Term.FunctionSymbols
 import           Term.Rewriting.Definitions
 import           Term.Substitution
 import qualified Term.Maude.Process as UM
@@ -239,6 +242,13 @@ unifyRaw l0 r0 = do
        (Lit (Var vl),  _            ) -> elim vl r
        (_,             Lit (Var vr) ) -> elim vr l
        (Lit (Con cl),  Lit (Con cr) ) -> guard (cl == cr)
+       -- Special cases for builtin naturals: Make sure to perform unification
+       -- via Maude if we have 0:nat/1:nat on the left-/right-hand side.
+       (FApp (NoEq lfsym) [], FApp (AC NatPlus) _) ->
+          guard (lfsym == natOneSym) >> tell [Equal l r]
+       (FApp (AC NatPlus) _, FApp (NoEq rfsym) []) ->
+          guard (rfsym == natOneSym) >> tell [Equal l r]
+       -- General cases / function application
        (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)
@@ -258,9 +268,9 @@ unifyRaw l0 r0 = do
   where
     elim v t
       | v `occurs` t = mzero -- no unifier
-      | otherwise    = do
+      | otherwise    = trace ("Eliminating on " ++ show v ++ " <-> " ++ show t) $ do  --TODO-UNCERTAIN: remove trace
           sortOf <- ask
-          guard  (sortGeqLTerm sortOf v t)
+          guard $ trace ("Sorts: " ++ show v ++ " >=? " ++ show t ++ " = " ++ show (sortGeqLTerm sortOf v t)) $  (sortGeqLTerm sortOf v t)  --TODO-UNCERTAIN: remove trace
           modify (M.insert v t . M.map (applyVTerm (substFromList [(v,t)])))
 
 
@@ -274,7 +284,7 @@ instance Monoid MatchFailure where
 
 -- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.
-matchRaw :: IsConst c
+matchRaw :: IsConst c  --TODO-UNCERTAIN: adapt matching in same way as unification?
          => (c -> LSort)
          -> LTerm c -- ^ Term @t@
          -> LTerm c -- ^ Pattern @p@.
@@ -309,7 +319,7 @@ matchRaw sortOf t p = do
 -- | @sortGreaterEq v t@ returns @True@ if the sort ensures that the sort of @v@ is greater or equal to
 --   the sort of @t@.
 sortGeqLTerm :: IsConst c => (c -> LSort) -> LVar -> LTerm c -> Bool
-sortGeqLTerm st v t = do
+sortGeqLTerm st v t = trace ("sortGeqLTerm on " ++ show (lvarSort v) ++ ", " ++ show (sortOfLTerm st t)) $ do  --TODO-UNCERTAIN: remove trace
     case (lvarSort v, sortOfLTerm st t) of
         (s1, s2) | s1 == s2     -> True
         -- Node is incomparable to all other sorts, invalid input

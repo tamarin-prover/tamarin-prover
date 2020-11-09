@@ -33,6 +33,7 @@ module Term.LTerm (
   -- ** Construction
   , freshTerm
   , pubTerm
+  , natTerm
 
   -- * LVar
   , LSort(..)
@@ -51,6 +52,7 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isPubVar
+  , isNatVar
   , isPubConst
   , isSimpleTerm
   , getVar
@@ -58,9 +60,15 @@ module Term.LTerm (
   , freshToConst
   , variableToConst
   , niFactors
+  , flattenedACTerms
+  , SubtermSplit(..)
+  , splitSubterm
   , containsPrivate
   , containsNoPrivateExcept
   , neverContainsFreshPriv
+  , sortTypename
+  , sortFromString
+  , isUserSort
 
   -- ** Destructors
   , ltermVar
@@ -113,6 +121,7 @@ module Term.LTerm (
 import           Text.PrettyPrint.Class
 
 -- import           Control.Applicative
+import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Identity
@@ -120,6 +129,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import           GHC.Generics                     (Generic)
 import           Data.Binary
+import qualified Data.List                        as L
 import qualified Data.DList                       as D
 import           Data.Foldable                    hiding (concatMap, elem, notElem, any)
 import           Data.Data
@@ -149,18 +159,27 @@ import           Term.VTerm
 --
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
+-- >  LSortNat   < LSortMsg
+-- >  LSortUser  < LSortMsg
 --
 data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
-           | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
-           deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data, Generic, NFData, Binary )
+           | LSortNode         -- ^ Sort for variables denoting nodes of derivation graphs.
+           | LSortNat          -- ^ Arbitrary natural numbers.
+           | LSortUser String  -- ^ Arbitrary user-defined sort.
+           deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      Msg
---                           /   \
---                         Pub  Fresh
-sortCompare :: LSort -> LSort -> Maybe Ordering
+-- Partial order:
+--     Node
+--
+--     Msg
+--     |-- Fresh
+--     |-- User
+--     |-- Pub
+--
+sortCompare :: LSort -> LSort -> Maybe Ordering  --TODO-MY take care that this is still correct; update the above figure 
 sortCompare s1 s2 = case (s1, s2) of
     (a, b) | a == b          -> Just EQ
     -- Node is incomparable to all other sorts, invalid input
@@ -174,17 +193,23 @@ sortCompare s1 s2 = case (s1, s2) of
 
 -- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
 sortPrefix :: LSort -> String
-sortPrefix LSortMsg   = ""
-sortPrefix LSortFresh = "~"
-sortPrefix LSortPub   = "$"
-sortPrefix LSortNode  = "#"
+sortPrefix LSortMsg       = ""
+sortPrefix LSortFresh     = "~"
+sortPrefix LSortPub       = "$"
+sortPrefix LSortNode      = "#"
+sortPrefix LSortNat       = "%"
+sortPrefix (LSortUser st) = "?" ++ st ++ "?"
+--TODO-MY add LSortNum
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
-sortSuffix LSortMsg   = "msg"
-sortSuffix LSortFresh = "fresh"
-sortSuffix LSortPub   = "pub"
-sortSuffix LSortNode  = "node"
+sortSuffix LSortMsg       = "msg"
+sortSuffix LSortFresh     = "fresh"
+sortSuffix LSortPub       = "pub"
+sortSuffix LSortNode      = "node"
+sortSuffix LSortNat       = "nat"
+sortSuffix (LSortUser st) = st
+--TODO-MY add LSortNum
 
 
 ------------------------------------------------------------------------------
@@ -196,7 +221,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName | NodeName
+data NameTag = FreshName | PubName | NodeName | NatName  --TODO-MY add NumName
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
@@ -213,9 +238,11 @@ type NTerm v = VTerm Name v
 instance IsConst Name where
 
 instance Show Name where
-  show (Name FreshName  n) = "~'" ++ show n ++ "'"
+  show (Name FreshName  n) = "~'" ++ show n ++ "'"  --TODO-MY-NONUM use sortPrefix
   show (Name PubName    n) = "'"  ++ show n ++ "'"
   show (Name NodeName   n) = "#'" ++ show n ++ "'"
+  show (Name NatName   n) = "%'" ++ show n ++ "'"
+--TODO-MY add NumName
 
 instance Show NameId where
   show = getNameId
@@ -231,15 +258,20 @@ freshTerm = lit . Con . Name FreshName . NameId
 pubTerm :: String -> NTerm v
 pubTerm = lit . Con . Name PubName . NameId
 
+-- | @natTerm f@ represents the nat name @f@.
+natTerm :: String -> NTerm v
+natTerm = lit . Con . Name NatName . NameId
+
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
 sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
+sortOfName (Name NatName   _) = LSortNat
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
-isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)
+isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)  --TODO-MY add LSortNum
 isPubConst _                         = False
 
 
@@ -276,9 +308,12 @@ freshLVar n s = LVar n s <$> freshIdent n
 -- | Returns the most precise sort of an 'LTerm'.
 sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
-    Lit2 (Con c)  -> sortOfConst c
-    Lit2 (Var lv) -> lvarSort lv
-    _             -> LSortMsg
+    Lit2 (Con c)                          -> sortOfConst c
+    Lit2 (Var lv)                         -> lvarSort lv
+    FAppNoEq (NoEqSym _ _ _ (Just sts)) _ -> sortFromString $ last sts
+    FUserAC _ sort _                      -> sortFromString sort
+    FNatPlus _                            -> LSortNat
+    _                                     -> LSortMsg  --TODO-MY adapt because functions can return non-msg-sort!!!!!
 
 -- | Returns the most precise sort of an 'LNTerm'.
 sortOfLNTerm :: LNTerm -> LSort
@@ -292,17 +327,24 @@ sortOfLit (Var v) = lvarSort v
 -- | Is a term a message variable?
 isMsgVar :: LNTerm -> Bool
 isMsgVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortMsg)
-isMsgVar _                         = False
+isMsgVar _                         = False  --TODO-MY understand better how this is used - maybe something needs to be done?
 
 -- | Is a term a public variable?
 isPubVar :: LNTerm -> Bool
 isPubVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortPub)
-isPubVar _                         = False
+isPubVar _                         = False  --TODO-MY understand better how this is used - maybe something needs to be done?
+
+-- | Is a term a number variable?
+isNatVar :: LNTerm -> Bool
+isNatVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortNat)
+isNatVar _                         = False
 
 -- | Is a term a fresh variable?
 isFreshVar :: LNTerm -> Bool
 isFreshVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortFresh)
-isFreshVar _                         = False
+isFreshVar _                         = False  --TODO-MY understand better how this is used - maybe something needs to be done?
+
+--TODO-MY maybe isNumVar is needed?
 
 -- | If the term is a variable, return it, nothing otherwise.
 getVar :: LNTerm -> Maybe LVar
@@ -319,43 +361,144 @@ getMsgVar _                                                    = Nothing
 -------------------------------------------
 
 -- | The non-inverse factors of a term.
-niFactors :: LNTerm -> [LNTerm]
+niFactors :: LNTerm -> [LNTerm]  --TODO-MY pay special attention to this!!
 niFactors t = case viewTerm2 t of
                 FMult ts -> concatMap niFactors ts
                 FInv t1  -> niFactors t1
                 _        -> [t]
 
+-- | If @[term1, ..., termN]@ is returned, then @t = term1 + ... + termN@ where @+@ is the ACSymbol.
+-- It is made sure that the length of the returned list is maximal (i.e., the + is flattened)
+flattenedACTerms :: ACSym -> Term t -> [Term t]
+flattenedACTerms f (viewTerm -> FApp (AC sym) ts)
+  | sym == f = concatMap (flattenedACTerms f) ts
+flattenedACTerms _ term = [term]
+
+
+data SubtermSplit = SubtermD    (LNTerm, LNTerm)
+                  | NatSubtermD (LNTerm, LNTerm, LVar)  -- small, big, newVar
+                  | EqualD      (LNTerm, LNTerm)
+                  | ACNewVarD   (LNTerm, LNTerm, LVar)  -- small+newVar, big, newVar
+                  | TrueD
+  deriving (Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary)
+
+-- | Deconstructs a subterm according to the CR-rules S_subterm-[ac-]recurse, S_invalid and stops destructing for S_nat / S_neg-nat
+-- Returns @set@ such that @small ⊏ big@ is equivalent to the disjunction of @set@
+-- If the subterm is trivially false, [] is returned as the empty disjunction
+splitSubterm :: MonadFresh m => FunSig -> (LNTerm, LNTerm) -> m [SubtermSplit]
+splitSubterm reducible subterm = S.toList <$> recurse (SubtermD subterm)
+  where
+    recurse :: MonadFresh m => SubtermSplit -> m (S.Set SubtermSplit)
+    recurse std@(SubtermD st) = do
+      res <- step st
+      case res of
+        Just entries -> S.unions <$> mapM recurse (S.toList entries)
+        Nothing -> return $ S.singleton std
+    recurse x = return $ S.singleton x  -- for everything except SubtermD we stop the recursion
+
+    -- @step@ returns nothing if @small ⊏ big@ cannot be further destructed.
+    -- Else it returns @Just list@ if @small ⊏ big@ can be replaced by the disjunction of the list.
+    -- It especially returns @Just []@ if @small ⊏ big@ is trivially false.
+    step :: MonadFresh m => (LNTerm, LNTerm) -> m (Maybe (S.Set SubtermSplit))
+    step (small, big)
+      | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat =  -- terms like 1+1 < x+y+z
+        return $ Just $ S.singleton TrueD  -- true
+      | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
+        ac <- processAC NatPlus (small, big)
+        return $ case ac of
+          Right False -> Just S.empty
+          Right True -> Just $ S.singleton TrueD
+          Left tuple -> Just $ S.singleton $ NatSubtermD tuple
+      | big `redElem` small =  -- trivially false (big == small included)
+        return $ Just S.empty  -- false
+      | small `redElem` big =  -- trivially true
+        return $ Just $ S.singleton TrueD  -- true
+          where
+            onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
+            l t = length $ flattenedACTerms NatPlus t
+    step (_, viewTerm -> Lit (Con _)) =  -- nothing can be a strict subterm of a constant
+        return $ Just S.empty  -- false
+    step (small, big@(viewTerm -> Lit (Var _)))
+      | isPubVar big || isFreshVar big || (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat) =  -- CR-rule S_invalid
+        return $ Just S.empty  -- false
+    step (_, viewTerm -> Lit (Var _)) =  -- variable: do not recurse further
+        return Nothing
+    step (small, big@(viewTerm -> FApp (AC f) _))  -- apply CR-rule S_subterm-ac-recurse
+      | AC f `S.notMember` reducible = do
+        ac <- processAC f (small, big)
+        return $ case ac of
+          Right False -> Just S.empty
+          Right True -> Just $ S.singleton TrueD
+          Left (nSmall, nBig, newVar) ->
+            let acSpecial = ACNewVarD (fAppAC f [nSmall, varTerm newVar], nBig, newVar)
+            in Just $ acSpecial `S.insert` S.unions (map (eqOrSubterm small) (flattenedACTerms f big))
+    step (small, viewTerm -> FApp (NoEq f) ts)  -- apply CR-rule S_subterm-recurse
+      | NoEq f `S.notMember` reducible = do
+        return $ Just $ S.unions (map (eqOrSubterm small) ts)
+    step (_, viewTerm -> FApp (C _) _) =  -- we treat commutative but not associative symbols as reducible functions
+        return Nothing
+    step (_, viewTerm -> FApp List _) =  -- list seems to be unused (?)
+        return Nothing
+    step _ =  -- reducible function symbol observed (when applying subterm-[ac-]recurse)
+        return Nothing
+
+    redElem = elemNotBelowReducible reducible
+    eqOrSubterm :: LNTerm -> LNTerm -> S.Set SubtermSplit
+    eqOrSubterm s t = S.fromList [SubtermD (s, t), EqualD (s, t)]  -- the unifiers for the equation
+
+    -- returns the triple @((nSmall, nBig), newVar, ac)@
+    -- nSmall, nBig are small, big where terms are removed that were on both sides
+    -- newVar is for the CR-rule S_neg-ac-recurse
+    processAC :: MonadFresh m => ACSym -> (LNTerm, LNTerm) -> m (Either (LNTerm, LNTerm, LVar) Bool)
+    processAC f (small, big) = do
+        newVar <- freshLVar "newVar" (sortOfLNTerm big)  -- generate a new variable
+        return $ case lists of
+          (_, []) -> Right False
+          ([], _) -> Right True
+          (lSmall, lBig) -> Left (fAppAC f lSmall, fAppAC f lBig, newVar)
+        --let term = fAppAC f [nSmall, varTerm newVar]  -- build the term = small + newVar
+      where
+        -- removes terms that are on both sides of the subterm
+        -- lists have to be sorted before removeSame works
+        removeSame (a:as, b:bs) | a == b = removeSame (as,   bs)
+        removeSame (a:as, b:bs) | a < b  = first (a:) $ removeSame (as, b:bs)
+        removeSame (a:as, b:bs) | a > b  = second (b:) $ removeSame (a:as, bs)
+        removeSame x = x  -- one of the lists is empty
+
+        lists = removeSame (L.sort $ flattenedACTerms f small, L.sort $ flattenedACTerms f big)
+
+
 -- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
-containsPrivate :: Term t -> Bool
+containsPrivate :: Term t -> Bool  --NOT-TODO-MY this function is all-fine; nothing to do as non-Private is only diff
 containsPrivate t = case viewTerm t of
-    Lit _                          -> False
-    FApp (NoEq (_,(_,Private))) _  -> True
-    FApp _                      as -> any containsPrivate as
+    Lit _                                  -> False
+    FApp (NoEq (NoEqSym _ _ Private _)) _  -> True
+    FApp _                              as -> any containsPrivate as
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
-containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
+containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool  --NOT-TODO-MY like the above
 containsNoPrivateExcept funs t = case viewTerm t of
     Lit _                          -> True
-    FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
+    FApp (NoEq (NoEqSym f _ Private _)) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
     
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.
-isSimpleTerm :: LNTerm -> Bool
+isSimpleTerm :: LNTerm -> Bool  --NOT-TODO-MY should be fine like this
 isSimpleTerm t =
     not (containsPrivate t) && 
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
-neverContainsFreshPriv :: LNTerm -> Bool
+neverContainsFreshPriv :: LNTerm -> Bool  --TODO-MY probably nothing to change but double-check the WF-condition that uses this
 neverContainsFreshPriv t =
     not (containsPrivate t) && 
     (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- | Replaces all Fresh variables with constants using toConst.
-freshToConst :: LNTerm -> LNTerm
+freshToConst :: LNTerm -> LNTerm  --NOT-TODO-MY
 freshToConst t = case viewTerm t of
     Lit (Con _)                              -> t
     Lit (Var v) | (lvarSort v == LSortFresh) -> variableToConst v
@@ -371,32 +514,55 @@ variableToConst cvar = constTerm (Name (nameOfSort cvar) (NameId ("constVar_" ++
 
     nameOfSort (LVar _ LSortFresh _) = FreshName
     nameOfSort (LVar _ LSortPub   _) = PubName
-    nameOfSort (LVar _ LSortNode  _) = NodeName
+    nameOfSort (LVar _ LSortNode  _) = NodeName  --TODO-MY add NumName
     nameOfSort (LVar _ LSortMsg   _) = error "Invalid sort Msg"
 
+-- | @sortTypename s@ is the string used for representing sort @s@ in function
+-- signatures (when defining custom functions).
+sortTypename :: LSort -> String
+sortTypename LSortMsg       = "Msg"
+sortTypename LSortFresh     = "Fresh"
+sortTypename LSortPub       = "Pub"
+sortTypename LSortNat       = "Nat"
+sortTypename (LSortUser st) = st
+sortTypename LSortNode      = error "sortTypename: May not use sort 'Node'."
+
+-- | @sortFromString t@ is the sort for a given typename @t@.
+sortFromString :: String -> LSort
+sortFromString "Msg"   = LSortMsg
+sortFromString "Fresh" = LSortFresh
+sortFromString "Pub"   = LSortPub
+sortFromString "Nat"   = LSortNat
+sortFromString "Node"  = error "sortFromString: May not use sort 'Node'."
+sortFromString st      = LSortUser st
+
+-- | Is this a user-defined sort?
+isUserSort :: LSort -> Bool
+isUserSort (LSortUser _) = True
+isUserSort _             = False
 
 -- Destructors
 --------------
 
 -- | Extract a variable of the given sort from a term that may be such a
 -- variable. Use 'termVar', if you do not want to restrict the sort.
-ltermVar :: LSort -> LTerm c -> Maybe LVar
+ltermVar :: LSort -> LTerm c -> Maybe LVar  --NOT-TODO-MY
 ltermVar s t = do v <- termVar t; guard (s == lvarSort v); return v
 
 -- | Extract a variable of the given sort from a term that must be such a
 -- variable. Fails with an error, if that is not possible.
-ltermVar' :: Show c => LSort -> LTerm c -> LVar
+ltermVar' :: Show c => LSort -> LTerm c -> LVar  --NOT-TODO-MY
 ltermVar' s t =
     fromJustNote err (ltermVar s t)
   where
     err = "ltermVar': expected variable term of sort " ++ show s ++ ", but got " ++ show t
 
 -- | Extract a node-id variable from a term that may be a node-id variable.
-ltermNodeId  :: LTerm c -> Maybe LVar
+ltermNodeId  :: LTerm c -> Maybe LVar  --NOT-TODO-MY
 ltermNodeId = ltermVar LSortNode
 
 -- | Extract a node-id variable from a term that must be a node-id variable.
-ltermNodeId' :: Show c => LTerm c -> LVar
+ltermNodeId' :: Show c => LTerm c -> LVar  --NOT-TODO-MY
 ltermNodeId' = ltermVar' LSortNode
 
 
@@ -471,8 +637,10 @@ instance Ord LVar where
         compare x3 y3 <> compare x2 y2 <> compare x1 y1
 
 instance Show LVar where
-    show (LVar v s i) =
-        sortPrefix s ++ body
+    show (LVar v s i)
+        | isUserSort s  = body ++ ":" ++ sortSuffix s
+        | s == LSortNat = body ++ ":" ++ sortSuffix s
+        | otherwise     = sortPrefix s ++ body
       where
         body | null v           = show i
 --             | isDigit (last v) = v ++ "." ++ show i
@@ -672,8 +840,10 @@ instance (HasFrees l, Ord l) => HasFrees (Term l) where
 
     foldFreesOcc f c t = case viewTerm t of
         Lit  l             -> foldFreesOcc f c l
-        FApp (NoEq o) as -> foldFreesOcc f ((BC.unpack . fst $ o):c) as
-        FApp o        as -> mconcat $ map (foldFreesOcc f (show o:c)) as
+        FApp (NoEq o) as   -> foldFreesOcc f (noEqOp o:c) as
+        FApp o        as   -> mconcat $ map (foldFreesOcc f (show o:c)) as
+      where
+        noEqOp (NoEqSym fs _ _ _) = BC.unpack fs
           -- AC or C symbols
 
     mapFrees f (viewTerm -> Lit l)                  = lit <$> mapFrees f l

@@ -182,6 +182,7 @@ getRuleType r
     | isIEqualityRule r = "isIEqualityRule"
     | isConstrRule r    = "isConstrRule"
     | isPubConstrRule r = "isPubConstrRule"
+    | isNatConstrRule r = "isNatConstrRule"
     | isFreshRule r     = "isFreshRule"
     | isIRecvRule r     = "isIRecvRule"
     | isISendRule r     = "isISendRule"
@@ -195,9 +196,9 @@ lntermToJSONGraphNodeTerm :: Bool -> LNTerm -> JSONGraphNodeTerm
 lntermToJSONGraphNodeTerm pretty t =
     case viewTerm t of
       Lit l -> Const (show l)
-      FApp (NoEq (s,_)) [] 
+      FApp (NoEq (NoEqSym s _ _ _)) [] 
             -> Funct (plainstring $ show s) [] res
-      FApp (NoEq (s,_)) as 
+      FApp (NoEq (NoEqSym s _ _ _)) as 
             -> Funct (plainstring $ show s) (map (lntermToJSONGraphNodeTerm pretty) as) res
       FApp (AC o) as       
             -> Funct (show o) (map (lntermToJSONGraphNodeTerm pretty) as) res
