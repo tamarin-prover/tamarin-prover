@@ -78,9 +78,9 @@ data TransAction =
   -- location
   | Report LVar LVar
   -- to implement with accountability extension
-  -- | InitId
-  -- | StopId 
-  -- | EventId
+  --- | InitId
+  --- | StopId 
+  --- | EventId
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -185,10 +185,10 @@ varMsgId p = LVar n s i
 -- actionToFact :: TransAction -> Fact t
 actionToFact :: TransAction -> Fact (VTerm Name LVar)
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | Not implemented yet: progress
-  -- | StopId
-  -- | EventEmpty
-  -- | EventId
+  --- | Not implemented yet: progress
+  --- | StopId
+  --- | EventEmpty
+  --- | EventId
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
