@@ -1,0 +1,18 @@
+theory MINIMAL
+
+begin
+rule X:
+    [ NotProduced() ]
+  --[ Never() ]->
+    []
+
+lemma notrace_ofcourse:
+    exists-trace
+    "Ex #i . Never()@i "
+
+lemma notrace_maybe:
+    exists-trace
+    "Ex #i . Never()@i "
+SOLVED
+
+end
