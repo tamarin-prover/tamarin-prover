@@ -89,9 +89,10 @@ testProcess
   -> FilePath       -- ^ Process to start
   -> [String]       -- ^ Arguments
   -> String         -- ^ Stdin
+  -> Bool           -- ^ Whether to ignore ExitFailure
   -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
   -> IO Bool        -- ^ True, if test was successful
-testProcess check defaultMsg testName prog args inp maudeTest = do
+testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = do
     putStr testName
     hFlush stdout
     handle handler $ do
@@ -105,14 +106,19 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
                 putStrLn $ " stderr:  " ++ err
                 return False
 
-        case exitCode of
-            ExitFailure code -> errMsg $
-              "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
-            ExitSuccess      ->
-              case check out err of
-                Left msg     -> errMsg msg
-                Right msg    -> do putStrLn msg
-                                   return True
+        if not ignoreExitCode
+           then case exitCode of
+                  ExitFailure code -> errMsg $
+                    "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
+                  ExitSuccess      ->
+                    case check out err of
+                      Left msg     -> errMsg msg
+                      Right msg    -> do putStrLn msg
+                                         return True
+           else case check out err of
+                  Left msg     -> errMsg msg
+                  Right msg    -> do putStrLn msg
+                                     return True
   where
     handler :: IOException -> IO Bool
     handler _ = do putStrLn "caught exception while executing:"
@@ -127,14 +133,19 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
 ensureGraphVizDot :: Arguments -> IO Bool
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
-    testProcess check errMsg1 " checking version: " dot ["-v </dev/null"] "" False
+    dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
+    if dotExists 
+       then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
+       else return dotExists
   where
     dot = dotPath as
-    check _ err
-      | "graphviz" `isInfixOf` err' && "png" `isInfixOf` err' = Right $ init err ++ ". OK."
-      | "graphviz" `isInfixOf` err' = Left errMsg2
-      | otherwise                   = Left errMsg1
+    check str okMsg _ err
+      | str `isInfixOf` err' = Right msg
+      | otherwise = Left "Error."
       where err' = map toLower err
+            msg  = if null okMsg
+                      then init err' ++ ". OK."
+                      else okMsg
     errMsg1 = unlines
       [ "WARNING:"
       , ""
@@ -154,7 +165,7 @@ ensureGraphVizDot as = do
 ensureGraphCommand :: Arguments -> IO Bool
 ensureGraphCommand as = do
     putStrLn $ "Graph rendering command: " ++ cmd
-    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
     cmd = snd $ graphPath as
     check _ err
@@ -167,8 +178,8 @@ ensureGraphCommand as = do
 ensureMaude :: Arguments -> IO Bool
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
-    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" True
-    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" True
+    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
+    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
     return (t1 && t2)
   where
     maude = maudePath as
