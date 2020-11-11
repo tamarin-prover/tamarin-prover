@@ -182,7 +182,7 @@ type CaseName = String
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
-  | Solved Bool                          -- ^ An attack was found
+  | Solved Bool                          -- ^ True -> an attack was found, False -> invalid proof step
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -239,9 +239,9 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
         Solved True
-          | checkIfNoOpenGoalsPresent sys -> return M.empty
-          | otherwise            -> Nothing
-        Solved False             -> Nothing
+          | checkIfNoOpenGoalsPresent sys -> return M.empty -- SOLVED inside of a proof and no open goals
+          | otherwise            -> Nothing -- SOLVED inside of a proof and open goals left
+        Solved False             -> Nothing -- SOLVED at the start of a proof
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
           | otherwise                        -> Nothing

@@ -1154,7 +1154,7 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
 isDiffSystem :: System -> Bool
 isDiffSystem = L.get sDiffSystem
 
--- | Check if there are no open goals
+-- | Check if there are no open goals.
 checkIfNoOpenGoalsPresent:: System -> Bool
 checkIfNoOpenGoalsPresent sys = (length openGoals) == 0
   where
