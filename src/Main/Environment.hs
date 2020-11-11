@@ -106,19 +106,18 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
                 putStrLn $ " stderr:  " ++ err
                 return False
 
+        let check' = case check out err of
+                      Left msg     -> errMsg msg
+                      Right msg    -> do putStrLn msg
+                                         return True
+
         if not ignoreExitCode
            then case exitCode of
                   ExitFailure code -> errMsg $
                     "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
-                  ExitSuccess      ->
-                    case check out err of
-                      Left msg     -> errMsg msg
-                      Right msg    -> do putStrLn msg
-                                         return True
-           else case check out err of
-                  Left msg     -> errMsg msg
-                  Right msg    -> do putStrLn msg
-                                     return True
+                  ExitSuccess      -> check'
+           else check'
+
   where
     handler :: IOException -> IO Bool
     handler _ = do putStrLn "caught exception while executing:"
