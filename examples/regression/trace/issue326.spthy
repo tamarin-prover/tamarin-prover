@@ -1,6 +1,13 @@
 theory MINIMAL
 
 begin
+
+/*
+* Author: Cas Cremers
+* Date: October 2020
+* Comment: minimal example for issue 326
+*/
+
 rule X:
     [ NotProduced() ]
   --[ Never() ]->
