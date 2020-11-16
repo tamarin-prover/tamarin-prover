@@ -1,0 +1,71 @@
+theory OTYT06_UK3
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+OTYT06: Reader R, RFID tag T, shared knowledge k
+	This is a stateful protocol, the tag and reader's knowledge is updated
+        after a successful run. 
+
+   R: knows(k)
+   T: knows(k)
+   R: fresh(r1)
+R->T: r1
+T->R: h(k XOR r1)
+   R: fresh(k1)
+R->T: k XOR k1
+   R: replace k by k1
+   T: replace k by k1
+
+Protocol satisfies recent aliveness of the tag, but not untracability.
+Recent aliveness of reader is not satisfied. 
+
+*/
+
+rule Setup:
+   [ Fr( ~k ) ]
+ --[ Setup(~k)
+   , OnlyOnce( 'setup' ) ]-> 
+   [ Tag(~k, ~k) ] // first arg: initial key, snd arg: current key
+
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   ]
+
+rule tag2:
+   let newCurrentKey = diff(x XOR newKey, ~k2)
+       initialKey = diff(~k, ~k2)
+   in
+   [ Fr(~k2)
+   , In( newKey )
+   , Tag( ~k, x )
+   ]
+   -->
+   [ Tag( initialKey, newCurrentKey)
+   ]
+
+/*
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+
+restriction unique:
+  "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+// ATTACKS FOUND MANUALLY - see OTYT06_UK3-proof.spthy file, but also AUTOMATICALLY (in Rule_equality LHS start)
+// Observational Equivalence
+
+end

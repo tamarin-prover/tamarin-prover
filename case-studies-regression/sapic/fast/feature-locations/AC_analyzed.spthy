@@ -1,0 +1,417 @@
+theory AttestedComputation begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2, fst/1, get_rep/1, list/2, pair/2, prog/3,
+           rep/2 [private], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = true,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, y )<->¬(y = 'l')
+
+lemma attested_comput:
+  all-traces
+  "∀ #i m.
+    (Local( m, 'l' ) @ #i) ⇒ (∃ #j. (Remote( m, 'l' ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (Local( m, 'l' ) @ #i) ∧ ∀ #j. (Remote( m, 'l' ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+by solve( state_11211111111( i.1, init, lio, o, r, state, lock ) ▶₀ #i )
+
+rule (modulo E) Report-rule[color=#ffffff process=new init;]:
+   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=new init;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newinit_0_[color=#ffffff process=new init;]:
+   [ state_( ), Fr( init ) ] --> [ state_1( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1[color=#ffffff process=!]:
+   [ state_1( init ) ] --> [ !semistate_11( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1[color=#ffffff process=!]:
+   [ !semistate_11( init ) ] --> [ state_11( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11[color=#ffffff process=|]:
+   [ state_11( init ) ] --> [ state_111( init ), state_112( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_111[color=#ffffff process=new state;]:
+   [ state_111( init ), Fr( state ) ] --> [ state_1111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstateinit_0_1111[color=#ffffff process=insert state,init;]:
+   [ state_1111( init, state ) ]
+  --[ Insert( state, init ) ]->
+   [ state_11111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111[color=#ffffff process=!]:
+   [ state_11111( init, state ) ] --> [ !semistate_111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_11111[color=#ffffff process=!]:
+   [ !semistate_111111( init, state ) ] --> [ state_111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstate_0_111111[color=#405280 process=lock state;]:
+   [ state_111111( init, state ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, state ), Lock( '0', lock, state ) ]->
+   [ state_1111111( init, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstateaslio_0_1111111[color=#405280 process=lookup state as lio]:
+   [ state_1111111( init, lock, state ) ]
+  --[ IsIn( state, lio ) ]->
+   [ state_11111111( init, lio, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstateaslio_1_1111111[color=#405280 process=lookup state as lio]:
+   [ state_1111111( init, lock, state ) ]
+  --[ IsNotSet( state ) ]->
+   [ state_11111112( init, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ini_0_11111111[color=#405280 process=in(i);]:
+   [ state_11111111( init, lio, lock, state ), In( i ) ]
+  -->
+   [ state_111111111( i, init, lio, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newr_0_111111111[color=#405280 process=new r;]:
+   [ state_111111111( i, init, lio, lock, state ), Fr( r ) ]
+  -->
+   [ state_1111111111( i, init, lio, lock, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventRemoteprogrilioiliol_0_1111111111[color=#405280 process=event Remote( <prog(r, i, lio), i, lio>, 'l' );]:
+   [ state_1111111111( i, init, lio, lock, r, state ) ]
+  --[ Remote( <prog(r, i, lio), i, lio>, 'l' ) ]->
+   [ state_11111111111( i, init, lio, lock, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outprogriliorepprogrilioiliol_0_11111111111[color=#405280 process=out(<prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'l')>);]:
+   [ state_11111111111( i, init, lio, lock, r, state ) ]
+  -->
+   [
+   state_111111111111( i, init, lio, lock, r, state ),
+   Out( <prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'l')> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstatelistprogriliolistilio_0_111111111111[color=#405280 process=insert state,list(prog(r, i, lio), list(i, lio));]:
+   [ state_111111111111( i, init, lio, lock, r, state ) ]
+  --[ Insert( state, list(prog(r, i, lio), list(i, lio)) ) ]->
+   [ state_1111111111111( i, init, lio, lock, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlockstate_0_1111111111111[color=#405280 process=unlock state;]:
+   [ state_1111111111111( i, init, lio, lock, r, state ) ]
+  --[ Unlock_0( '0', lock, state ), Unlock( '0', lock, state ) ]->
+   [ state_11111111111111( i, init, lio, lock, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111111111111[color=#405280 process=0]:
+   [ state_11111111111111( i, init, lio, lock, r, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111112[color=#405280 process=0]:
+   [ state_11111112( init, lock, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_112[color=#ffffff process=!]:
+   [ state_112( init ) ] --> [ !semistate_1121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_112[color=#ffffff process=!]:
+   [ !semistate_1121( init ) ] --> [ state_1121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_1121[color=#ffffff process=new state;]:
+   [ state_1121( init ), Fr( state ) ] --> [ state_11211( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstateinit_0_11211[color=#ffffff process=insert state,init;]:
+   [ state_11211( init, state ) ]
+  --[ Insert( state, init ) ]->
+   [ state_112111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_112111[color=#ffffff process=!]:
+   [ state_112111( init, state ) ] --> [ !semistate_1121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_112111[color=#ffffff process=!]:
+   [ !semistate_1121111( init, state ) ]
+  -->
+   [ state_1121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inior_0_1121111[color=#658040 process=in(<i, o, r>);]:
+   [ state_1121111( init, state ), In( <i, o, r> ) ]
+  -->
+   [ state_11211111( i, init, o, r, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstate_0_11211111[color=#658040 process=lock state;]:
+   [ state_11211111( i, init, o, r, state ), Fr( lock.1 ) ]
+  --[ Lock_1( '1', lock.1, state ), Lock( '1', lock.1, state ) ]->
+   [ state_112111111( i, init, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lockstate_0_11211111[color=#658040 process=lock state;]:
+     [ state_11211111( i, init, o, r, state ), Fr( lock ) ]
+    --[ Lock_1( '1', lock, state ), Lock( '1', lock, state ) ]->
+     [ state_112111111( i, init, o, r, state, lock ) ]
+  */
+
+rule (modulo E) lookupstateaslio_0_112111111[color=#658040 process=lookup state as lio]:
+   [ state_112111111( i, init, o, r, state, lock.1 ) ]
+  --[ IsIn( state, lio ) ]->
+   [ state_1121111111( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateaslio_0_112111111[color=#658040 process=lookup state as lio]:
+     [ state_112111111( i, init, o, r, state, lock ) ]
+    --[ IsIn( state, lio ) ]->
+     [ state_1121111111( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) lookupstateaslio_1_112111111[color=#658040 process=lookup state as lio]:
+   [ state_112111111( i, init, o, r, state, lock.1 ) ]
+  --[ IsNotSet( state ) ]->
+   [ state_1121111112( i, init, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateaslio_1_112111111[color=#658040 process=lookup state as lio]:
+     [ state_112111111( i, init, o, r, state, lock ) ]
+    --[ IsNotSet( state ) ]->
+     [ state_1121111112( i, init, o, r, state, lock ) ]
+  */
+
+rule (modulo E) ifoiliocheckreprl_0_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
+   [ state_1121111111( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Pred_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+   [ state_11211111111( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) ifoiliocheckreprl_0_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
+     [ state_1121111111( i, init, lio, o, r, state, lock ) ]
+    --[ Pred_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+     [ state_11211111111( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) ifoiliocheckreprl_1_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
+   [ state_1121111111( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Pred_Not_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+   [ state_11211111112( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) ifoiliocheckreprl_1_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
+     [ state_1121111111( i, init, lio, o, r, state, lock ) ]
+    --[ Pred_Not_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+     [ state_11211111112( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) eventLocaloiliol_0_11211111111[color=#658040 process=event Local( <o, i, lio>, 'l' );]:
+   [ state_11211111111( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Local( <o, i, lio>, 'l' ) ]->
+   [ state_112111111111( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) eventLocaloiliol_0_11211111111[color=#658040 process=event Local( <o, i, lio>, 'l' );]:
+     [ state_11211111111( i, init, lio, o, r, state, lock ) ]
+    --[ Local( <o, i, lio>, 'l' ) ]->
+     [ state_112111111111( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) insertstatelistolistilio_0_112111111111[color=#658040 process=insert state,list(o, list(i, lio));]:
+   [ state_112111111111( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Insert( state, list(o, list(i, lio)) ) ]->
+   [ state_1121111111111( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) insertstatelistolistilio_0_112111111111[color=#658040 process=insert state,list(o, list(i, lio));]:
+     [ state_112111111111( i, init, lio, o, r, state, lock ) ]
+    --[ Insert( state, list(o, list(i, lio)) ) ]->
+     [ state_1121111111111( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) unlockstate_0_1121111111111[color=#658040 process=unlock state;]:
+   [ state_1121111111111( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Unlock_1( '1', lock.1, state ), Unlock( '1', lock.1, state ) ]->
+   [ state_11211111111111( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) unlockstate_0_1121111111111[color=#658040 process=unlock state;]:
+     [ state_1121111111111( i, init, lio, o, r, state, lock ) ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [ state_11211111111111( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) __0_11211111111111[color=#658040 process=0]:
+   [ state_11211111111111( i, init, lio, o, r, state, lock.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) __0_11211111111111[color=#658040 process=0]:
+     [ state_11211111111111( i, init, lio, o, r, state, lock ) ] --> [ ]
+  */
+
+rule (modulo E) unlockstate_0_11211111112[color=#658040 process=unlock state;]:
+   [ state_11211111112( i, init, lio, o, r, state, lock.1 ) ]
+  --[ Unlock_1( '1', lock.1, state ), Unlock( '1', lock.1, state ) ]->
+   [ state_112111111121( i, init, lio, o, r, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) unlockstate_0_11211111112[color=#658040 process=unlock state;]:
+     [ state_11211111112( i, init, lio, o, r, state, lock ) ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [ state_112111111121( i, init, lio, o, r, state, lock ) ]
+  */
+
+rule (modulo E) __0_112111111121[color=#658040 process=0]:
+   [ state_112111111121( i, init, lio, o, r, state, lock.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) __0_112111111121[color=#658040 process=0]:
+     [ state_112111111121( i, init, lio, o, r, state, lock ) ] --> [ ]
+  */
+
+rule (modulo E) __0_1121111112[color=#658040 process=0]:
+   [ state_1121111112( i, init, o, r, state, lock.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) __0_1121111112[color=#658040 process=0]:
+     [ state_1121111112( i, init, o, r, state, lock ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+restriction locking_1:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-locations/AC.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-locations/AC.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
+  processing time: 0.621471s
+  attested_comput (all-traces): verified (2 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AC.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
+  processing time: 0.621471s
+  attested_comput (all-traces): verified (2 steps)
+
+==============================================================================
+*/

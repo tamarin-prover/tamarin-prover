@@ -1,0 +1,248 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             April 2020
+  Time:                 ?
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/wideMouthedFrogLowe.html)
+
+  Lowe modified Wide Mouthed Frog
+
+  A, S :   	principal
+  Kas, Kbs, Kab :   	symkey
+  Nb :   	nonce
+  Ta, Ts :   	timestamp
+  suc :   	nonce -> nonce
+
+  1.   	A 	-> 	S 	:   	A, {Ta, B, Kab}Kas
+  2.   	S 	-> 	B 	:   	{Ts, A, Kab}Kbs
+  3.   	B 	-> 	A 	:   	{Nb}Kab
+  4.   	A 	-> 	B 	:   	{succ(Nb)}Kab
+
+  Two messages have been appened to Wide Mouthed Frog for mutual authentification of A and B (nonce handshake).
+
+  "It is assumed that the encryption is done in such a way that we know the whole message was sent at once.
+  If two separate encrypted sections are included in one message,
+  we treat them as though they arrived in separate messages.
+  A message cannot be understood by a principal who does not know the key
+  (or, in the case of public-key cryptography, by a principal who does not know the inverse of the key);
+  the key cannot be deduced from the encrypted message.
+  Each encrypted message contains sufficient redundancy to allow a principal who decrypts it to verify that he has used the right key.
+  In addition, messages contain sufficient information for a principal to detect (and ignore) his own messages."
+
+  "A sends a session key to S, including a timestamp Ta.
+  S checks that the first message is timely,
+  and if it is, it forwards the message to B, together with its own timestamp Ts.
+  B then checks that the timestamp from S is later than any other it has received from S."
+
+  A sends a session key to S, including a timestamp Ta.
+  S checks that the first message is timely,
+  and if it is, it forwards the message to B, together with its own timestamp Ts.
+  B then checks that the timestamp from S is later than any other it has received from S
+
+  The protocol must guaranty the secrecy of the new shared key Kab: in every session,
+  the value of Kab must be known only by the participants playing the roles of A and B and S.
+
+  The protocol must guaranty the authenticity of Kab: in every session,
+  on reception of message 2, B must be ensured that the key Kab in the message
+  has been created by S in the same session on behalf of A.
+
+  We model a variant with tags.
+
+*/
+
+theory WmFrogLowe
+begin
+
+builtins: symmetric-encryption
+
+functions: succ/1, pred/1
+
+equations: pred(succ(x))=x
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[ KeyGen($X) ]->
+  [ !Ltk(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !Ltk(~sk,$A)]
+  --[ Reveal($A)]->
+    [ Out(~sk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+//  1.    A  ->  S  :    A, {Ta, B, Kab}Kas
+rule A_to_S:
+  [
+    !Ltk(~kas,$A)
+    , Fr(~ta)
+    , Fr(~kab)
+  ]
+  --[
+        Secret($A, $B, ~kab)
+      , Running_A($A, $B, <'A', 'B', ~kab>)
+    ]->
+  [
+      Out(<$A, senc(<'1', ~ta, $B, ~kab>, ~kas)>)
+    , StateA($A, $B, ~kas, ~ta, ~kab)
+  ]
+
+//  2.    S  ->  B  :    {Ts, A, Kab}Kbs
+rule S_to_B:
+  [
+    In(<a, senc(<'1', ta, b, kab>, ~kas)>)
+    , !Ltk(~kas,a)
+    , !Ltk(~kbs,b)
+    , Fr(~ts)
+  ]
+  --[
+        Secret(a, b, kab)
+      , Running_S(a, b, <'A', 'B', kab>)
+      , Commit_S(a, b, <'A', 'B', kab>)
+    ]->
+  [
+    Out(senc(<'2',~ts, a, kab>, ~kbs))
+  ]
+
+//  3.   	B 	-> 	A 	:   	{Nb}Kab
+rule B_to_A:
+  [
+      In(senc(<'2',ts, a, kab>, ~kbs))
+    , !Ltk(~kbs,$B)
+    , Fr(~nb)
+  ]
+  --[
+        Secret(a, $B, kab)
+      , Running_B(a, $B, <'A', 'B', kab>)
+    ]->
+  [
+      StateB(a, $B, ~kbs, kab, ~nb)
+    , Out(senc(<'3', ~nb>,kab))
+  ]
+
+//  4.   	A 	-> 	B 	:   	{succ(Nb)}Kab  send
+rule A_to_B:
+  [
+    !Ltk(~kas,$A)
+    , StateA($A, $B, ~kas, ~ta, ~kab)
+    , In(senc(<'3', nb>,~kab))
+  ]
+  --[
+      Commit_A($A, $B, <'A', 'B', ~kab>)
+    ]->
+  [
+      Out(senc(<'4', succ(nb)>, ~kab))
+  ]
+
+//  4.   	A 	-> 	B 	:   	{succ(Nb)}Kab  receive
+rule B_from_A:
+  [
+      StateB(a, $B, ~kbs, kab, ~nb)
+    , In(senc(<'4', succ(~nb)>, kab))
+    , !Ltk(~kbs,$B)
+  ]
+  --[
+        Commit_B(a, $B, <'A', 'B', kab>)
+    ]->
+  [ ]
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B t #i #j #k #l #m.
+   Commit_B(A,B,t)@#i
+  & Commit_A(A,B,t)@#j & #j<#i
+  & Running_B(A,B,t)@#k & #k<#j
+  & Commit_S(A,B,t)@#l & #l<#k
+  & Running_S(A,B,t)@#l
+  & Running_A(A,B,t)@#m & #m<#l
+  & not(Ex #r1. Reveal(A)@#r1)
+  & not(Ex #r2. Reveal(B)@#r2)
+ "
+
+// check the secrecy of a secret x protected by the long-term key of A and B
+lemma Secrecy:
+ "
+   not(
+     Ex A B m #i .
+       Secret(A, B, m)@ #i
+       & (Ex #r. K(m) @ #r)
+       & not(Ex #r. Reveal(B) @ #r)
+       & not(Ex #r. Reveal(A) @ #r)
+   )
+ "
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma agreement_B:
+ "All A B t #i.
+   Commit_B(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity and freshness of the transaction from S's point of view
+lemma injectiveagreement_S:
+  "All A B t #i.
+    Commit_S(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_S(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from S's point of view
+lemma agreement_S:
+ "All A B t #i.
+   Commit_S(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity and freshness of the transaction from A's point of view
+lemma injectiveagreement_A:
+ "All A B t #i.
+   Commit_A(A,B,t) @i
+   ==> (Ex #j. Running_B(A,B,t) @j
+       & j < i
+       & not (Ex A2 B2 #i2. Commit_A(A2,B2,t) @i2
+                          & not (#i2 = #i)))
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from A's point of view
+lemma agreement_A:
+"All A B t #i.
+  Commit_A(A,B,t) @i
+  ==> (Ex #j. Running_B(A,B,t) @j  & j < i)
+            | (Ex #r. Reveal(A)@r)
+            | (Ex #r. Reveal(B)@r)"
+
+end

@@ -1,0 +1,175 @@
+theory OTYT06
+begin
+
+builtins: xor, hashing
+
+/*
+OTYT06: Reader R, RFID tag T, shared knowledge k
+	This is a stateful protocol, the tag and reader's knowledge is updated
+        after a successful run. 
+
+   R: knows(k)
+   T: knows(k)
+   R: fresh(r1)
+R->T: r1
+T->R: h(k XOR r1)
+   R: fresh(k1)
+R->T: k XOR k1
+   R: replace k by k1
+   T: replace k by k1
+
+Protocol satisfies recent aliveness of the tag, but not untraceability.
+Recent aliveness of reader is not satisfied. 
+
+*/
+
+rule Setup:
+   [ Fr( ~k )
+   ]
+ --[ Setup(~k), KeyS(~k), OnlyOnce( ) ]-> 
+   [ Reader( ~k, ~k )
+   , Tag( ~k, ~k ) 
+   ]
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ ChallengeReader( ~r1 ), Ch(~r1) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ ResponseTag( ~k, x, r1 )
+   , TagKey(~k, x)
+   , Response( ~k, 'Tag' )
+   , ChallengeTag( x )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   , KeyTag(x)
+   , Tag1rule()
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )
+   , TagRunning( ~k, x )
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , Reader( ~k, ~kp )
+   , In( xoredhash )
+   , Fr(~k1)
+   ]
+ --[ Reader( ~k, ~kp ) 
+   , AliveTag( ~k, ~kp, ~r1, ~kp XOR ~r1 )
+   , Commit( ~k, 'Reader', ~kp)
+   , Response( ~k, 'Reader' )
+   , Eq( xoredhash, h(~kp XOR ~r1) )
+   , KeyS(~k), KeyS(~k1), KeyS(~kp)
+   , KeyD(~kp)
+   , KeyX(~kp XOR ~r1) // Needed for recent aliveness
+   , OutK(~kp XOR ~k1)
+   , Ch(~r1)
+   , Reader2rule()
+   ]->
+   [ Out( ~kp XOR ~k1) 
+   , Reader( ~k, ~k1 )
+   ]
+
+rule tag2:
+   [ In( newkey )
+   , Tag( ~k, x ) 
+   , TagRunning( ~k, x )
+   ]
+ --[ Update( x, x XOR newkey, 'Tag' )
+   , AliveReader( ~k )
+   , KeyTag(x XOR newkey)
+   ]->
+   [ Tag( ~k, x XOR newkey )
+   ]
+
+rule desynchronized:
+  [ Reader(~k, x), Tag(~k, y) ]
+--[ InEq(x,y)
+  , Desynch(~k) ]->
+  [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+
+/* HELPING LEMMAS */
+// AUTOPROOF (instant with oracle): holds
+lemma helping_reader_start [reuse,use_induction]:
+"All x y #k. Reader(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
+
+// AUTOPROOF (instant with oracle): holds
+lemma helping_tag_start [reuse,use_induction]:
+"All x y #k. Tag(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
+
+// AUTOPROOF (instant with oracle): holds
+lemma helping_keys_reader_are_secret [reuse,use_induction]:
+  all-traces "∀ x #i. KeyS(x)@i ==> not (Ex #j. KU(x)@j)"
+
+// AUTOPROOF (~2m with oracle): holds
+lemma helping_keys_disjoint_challenge [reuse,use_induction]:
+  all-traces "∀ x ch #i #j. KeyS(x)@i & Ch(ch)@j ==> not (x=ch)"
+
+// AUTOPROOF (instant, no oracle): holds
+lemma helping_keys_disjoint_XX [reuse,use_induction]:
+  all-traces "∀ x y #i #j. KeyX(x)@i & KeyX(y)@j ==> (#i = #j | not (x=y))"
+
+// AUTOPROOF (instant, no oracle): holds
+lemma helping_keys_disjoint_XS [reuse,use_induction]:
+  all-traces "∀ x y #i #j. KeyX(x)@i & KeyS(y)@j ==> not (x=y)"
+
+// AUTOPROOF (instant with oracle): holds
+lemma helping_keys_disjoint_DD [reuse,use_induction]:
+  all-traces "∀ x y #i #j. KeyD(x)@i & KeyD(y)@j ==> (#i = #j | not (x=y))"
+
+// AUTOPROOF (~1m with oracle): holds
+lemma helping_keys_disjoint_OutX [reuse,use_induction]:
+  all-traces "∀ x y #i #j. OutK(x)@i & KeyX(y)@j ==> (#i = #j | not (x=y))"
+
+
+/* SECURITY CLAIMS */
+// AUTOPROOF (instant): Aliveness holds
+lemma alive_tag [use_induction]:
+  all-traces "∀ k1 kp r kpr #i. (AliveTag( k1, kp, r, kpr ) @ #i) ⇒ (∃ #j. Response(k1, 'Tag' ) @ #j)"
+
+// AUTOPROOF (2-3h on the server, no oracle): Aliveness holds for a bounded number of tag and reader sessions (<= 2 sessions each)
+lemma recentalive_tag_bounded [use_induction]:
+  all-traces "((All #t1 #t2 #t3. ((Tag1rule()@t1 & Tag1rule()@t2 & Tag1rule()@t3) ==> (#t1=#t2 | #t1=#t3 | #t2=#t3))) &
+               (All #t1 #t2 #t3. ((Reader2rule()@t1 & Reader2rule()@t2 & Reader2rule()@t3) ==> (#t1=#t2 | #t1=#t3 | #t2=#t3)))) ==>
+  ∀ k1 kp r kpr #i. (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+     (∃ #j #k. ChallengeReader(r) @k & Response(k1, 'Tag' ) @ #j & k < j & j < i)"
+
+// Autofalsification using BFS (13m, no oracle): well-authentication on k,kp,r1 from the reader's POV is violated.
+lemma WA_tag:
+  all-traces "∀ k1 kp r kpr #i. (AliveTag( k1, kp, r, kpr ) @ #i) ⇒ (∃  #j. ResponseTag(k1, kp, r ) @ #j)"
+
+// Autofalsification, without BFS [so default DFS] (instant with oracle)
+lemma alive_reader:
+  all-traces "∀ x #i. (AliveReader( x ) @ #i) ⇒ (∃ #j. Response( x, 'Reader' ) @ #j)"
+
+// Autofalsification using BFS, the oracle, AND a max proof depth of 12. Attack found in about 2m.
+// Command used: tamarin-prover --bound=12 --prove=desynch* --heuristic=O --stop-on-trace=BFS --oraclename=oracle_OTYT06_trace.py +RTS -N10 -M800000m -RTS OTYT06_trace.spthy
+lemma desynch_impossible:
+  all-traces
+  "not Ex k #i. Desynch(k)@i"
+
+
+/* SANITY CHECK */
+// TRACE FOUND AUTOMATICALLY (~5s, no oracle)
+lemma executable:
+  exists-trace "∃ x k r kr y #i #j #k. (AliveTag( x, k, r, kr ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) & (Update( x, y, 'Tag') @ #k)
+           // further restriction to automatically get the desired execution
+           ∧ (not Ex #l. Response( x, 'Tag' ) @ #l & (not (#j=#l)))"
+
+end

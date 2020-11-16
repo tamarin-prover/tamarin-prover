@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+"""
+part of the tamarin theory pkcs11_gcm
+invocation: use smart heuristic ordering, e.g.
+$ tamarin-prover --heuristic=O --prove gcm.spthy
+"""
+import sys
+
+# an oracle is a set of ranked goals
+# goals in the same list are equally ranked and lists are ranked descending
+# TODO store has different format now!
+oracles = {
+        "Counter_Monotonicity":[ [" = ", " < ", "last(", "DCtrIs( d, C"], ["DCtr"] ], 
+        "IV_Uniqueness":[ [" = ", " < ", "last("], ["IV( "] ], 
+            # "Key_UnwrapImpliesWrap":[ ["!Store( d, h, wk, wl )", "!KU( senc(~key, ", 
+            #     # "CreateKey( ~key,", ] ], 
+            #     "CreateKey ek,", ] ], 
+            # "Key_UnwrapObeysOrder":[ ["!Store( ~device.1, h, K, L )", "!KU( senc(~key, "] ], 
+        "Key_IntegrityAndConfidentiality":[ ["CreateKey( ek,"] ], 
+            # "Key_Migration":[ ["!Store( d,", "CreateKey(","InitKey("] ], 
+            # "Key_BoundToDevice":[ [" = ", "!Store( D, wk, wl )", "CreateKey("] ], 
+            # "Key_PairingTwoDevices":[ 
+            #     ["CreateKey( ~key, ('1'+'1') )", "CreateKey( ~key, ('1'+'1'+'1') )", 
+            #     "CreateKey( wk, ('1'+'1') )", "CreateKey( wk, ('1'+'1'+'1') )"], 
+            #     ["=", "!Store( d, wk, ", "!KU( senc(~key, "] ], 
+        }
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+oracle = oracles[lemma] if lemma in oracles else []
+
+results = []
+for current in oracle:
+    for line in list(lines): # local copy
+        for guess in current:
+            if guess in line:
+                num = line.split(":")[0]
+                # print(num); exit(0) # TODO: uncomment to break on first match
+                results.append(num)
+                lines.remove(line) # that's why we need the local copy
+                break
+
+for num in results:
+    print(num)

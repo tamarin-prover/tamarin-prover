@@ -1,0 +1,85 @@
+theory NoReplication begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma onlyOneSecret:
+  all-traces
+  "∀ #i #j x y. ((Secret( x ) @ #i) ∧ (Secret( y ) @ #j)) ⇒ (x = y)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j x y. (Secret( x ) @ #i) ∧ (Secret( y ) @ #j) ∧ ¬(x = y)"
+*/
+simplify
+solve( state_1( x ) ▶₀ #i )
+  case news_0_
+  solve( state_1( y ) ▶₀ #j )
+    case news_0_
+    by contradiction /* from formulas */
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff process=new s;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff process=new s;]:
+   [ state_( ), Fr( s ) ] --> [ state_1( s ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSecrets_0_1[color=#ffffff process=event Secret( s );]:
+   [ state_1( s ) ] --[ Secret( s ) ]-> [ state_11( s ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outs_0_11[color=#ffffff process=out(s);]:
+   [ state_11( s ) ] --> [ state_111( s ), Out( s ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111[color=#ffffff process=0]:
+   [ state_111( s ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/no-replication.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/no-replication.spthy
+
+  output:          examples/sapic/fast/basic/no-replication.spthy.tmp
+  processing time: 0.065841s
+  onlyOneSecret (all-traces): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/no-replication.spthy
+
+  output:          examples/sapic/fast/basic/no-replication.spthy.tmp
+  processing time: 0.065841s
+  onlyOneSecret (all-traces): verified (4 steps)
+
+==============================================================================
+*/

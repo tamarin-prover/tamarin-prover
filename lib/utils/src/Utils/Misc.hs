@@ -11,7 +11,9 @@ module Utils.Misc (
   , partitions
   , nonTrivialPartitions
   , twoPartitions
- 
+  , duplicate
+  , multiply
+
   -- * Control
   , whileTrue
 
@@ -61,9 +63,17 @@ getEnvMaybe k = unsafePerformIO $ do
 envIsSet :: String -> Bool
 envIsSet k = isJust $ getEnvMaybe k
 
--- | @subsetOf xs ys@ return @True@ if @set xs@ is a subset of @set ys@ 
+-- | @subsetOf xs ys@ return @True@ if @set xs@ is a subset of @set ys@
 subsetOf :: Ord a => [a] -> [a] -> Bool
 subsetOf xs ys = (S.fromList xs) `S.isSubsetOf` (S.fromList ys)
+
+-- | @duplicate x@ return @(x, x)@
+duplicate :: a -> (a, a)
+duplicate x = (x, x)
+
+-- | @multiply f (a, c)@ returns the list of all tuples (f a, c)
+multiply :: (a -> [b]) -> (a, c) -> [(b, c)]
+multiply f (a, c) = zip (f a) (repeat c)
 
 -- | Inverts a bijective Map.
 invertMap :: Ord v => Map k v -> Map v k
@@ -78,8 +88,8 @@ whileTrue m = go 0
 
 -- | Compute the equality classes given wrto a partial function.
 equivClasses :: (Ord a, Ord b) => [(a, b)] -> M.Map b (S.Set a)
-equivClasses = 
-    foldl' insertEdge M.empty 
+equivClasses =
+    foldl' insertEdge M.empty
   where
     insertEdge m (from,to) = M'.insertWith S.union to (S.singleton from) m
 
@@ -124,4 +134,3 @@ twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
         addToFirst  (a, b) = (x:a, b)
         addToSecond (a, b) = (a, x:b)
         ps = twoPartitions xs
-

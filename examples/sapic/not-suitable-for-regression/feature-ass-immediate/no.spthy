@@ -1,0 +1,31 @@
+theory AssImmediateNo
+begin
+
+event A()
+
+// the following lemmas are not well formed and cannot be proven. They should
+// only ensure that ass_immediate is NOT added.
+
+// L+ & L- -- (AllTraces, (True, True))
+lemma lplus_lminus_all:
+  all-traces
+  "Ex #i. A()@i"
+
+// L+ & L- -- (ExistsTrace, (True, True))
+lemma lplus_lminus_ex:
+  exists-trace
+  "Ex #i. A()@i"
+
+// L+ & not L- (ExistsTrace, (True, False))
+lemma lplus_notlminus_ex:
+  exists-trace
+  "Ex x #i. K(x)@i"
+
+// not L+ & L- (AllTraces, (False, True))
+// will give warning because it is unguarded.
+lemma notlplus_lminus_all:
+  all-traces
+  "Ex x #i. not K(x)@i"
+  
+
+end

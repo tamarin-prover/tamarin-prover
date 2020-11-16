@@ -1,11 +1,12 @@
-{-# LANGUAGE DeriveAnyClass        #-}
-{-# LANGUAGE DeriveDataTypeable    #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DeriveTraversable     #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE PatternGuards         #-}
-{-# LANGUAGE StandaloneDeriving    #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveTraversable       #-}
+{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE PatternGuards       #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -15,9 +16,10 @@
 --
 -- Data types for SAPIC processes in theories
 module Theory.Sapic (
-    -- types 
+    -- types
     Process(..)
     , ProcessCombinator(..)
+    , ProcessParsedAnnotation(..)
     , SapicType
     , defaultSapicTypeS
     , defaultSapicType
@@ -38,7 +40,7 @@ module Theory.Sapic (
     , toLNTerm
     , toLNFact
     , toLFormula
-    -- utitlities 
+    -- utitlities
     , paddAnn
     , foldProcess
     , foldMProcess
@@ -95,7 +97,7 @@ type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 
 -- | Function symbol (f,l,r) with argument types l and return type r
 -- define only on NoEqSyms, as we will assume the others to be polymorphic
-type SapicFunSym = (NoEqSym, [SapicType], SapicType) 
+type SapicFunSym = (NoEqSym, [SapicType], SapicType)
 
 defaultSapicTypeS :: String
 defaultSapicTypeS = "bitstring"
@@ -119,30 +121,30 @@ instance Hinted SapicLVar where
 toLVar:: SapicLVar -> LVar
 toLVar = slvar
 
-toLNTerm:: SapicTerm -> LNTerm 
-toLNTerm = fmap f 
-    where 
+toLNTerm:: SapicTerm -> LNTerm
+toLNTerm = fmap f
+    where
         f (Con c) = Con c
         f (Var v) = Var $ toLVar v
 
-toLNFact:: SapicLNFact -> LNFact 
+toLNFact:: SapicLNFact -> LNFact
 toLNFact = fmap toLNTerm
 
 toLFormula:: (Functor syn) => ProtoFormula syn (String, LSort) c SapicLVar -> ProtoFormula syn (String, LSort) c LVar
 toLFormula = mapAtoms f
-    where f _ = fmap $ fmap $ fmap $ fmap toLVar 
+    where f _ = fmap $ fmap $ fmap $ fmap toLVar
 
 -- | Actions are parts of the process that maybe connected with ";"
-data SapicAction v = 
+data SapicAction v =
                    Rep
                  | New v
                  | ChIn (Maybe (SapicNTerm v)) (SapicNTerm v)
                  | ChOut (Maybe (SapicNTerm v)) (SapicNTerm v)
                  | Insert (SapicNTerm v) (SapicNTerm v)
-                 | Delete (SapicNTerm v) 
-                 | Lock (SapicNTerm v) 
-                 | Unlock (SapicNTerm v) 
-                 | Event (SapicNFact v) 
+                 | Delete (SapicNTerm v)
+                 | Lock (SapicNTerm v)
+                 | Unlock (SapicNTerm v)
+                 | Event (SapicNFact v)
                  | MSR ([SapicNFact v], [SapicNFact v], [SapicNFact v], [SapicNFormula v])
             deriving (Functor, Foldable)
 
@@ -170,7 +172,7 @@ deriving instance (Data v, Generic v) => Data (ProcessCombinator v)
 -- | The process tree is terminated with null processes, and either splits
 -- (parallel and other combinators) or describes a sequence of actions with
 -- only one daughter
-data Process ann v =  
+data Process ann v =
         ProcessNull ann
     |   ProcessComb (ProcessCombinator v) ann (Process ann v) (Process ann v)
     |   ProcessAction (SapicAction v) ann (Process ann v)
@@ -194,7 +196,7 @@ mapTerms :: (SapicNTerm t -> SapicNTerm v)
             -> (t -> v)
             -> Process ann t
             -> Process ann v
-mapTerms _ _  _  (ProcessNull ann)  = ProcessNull ann 
+mapTerms _ _  _  (ProcessNull ann)  = ProcessNull ann
 mapTerms f ff fv (ProcessAction ac ann p') = ProcessAction (mapTermsAction f ff fv ac) ann (mT p')
     where mT = mapTerms f ff fv
 mapTerms f ff fv (ProcessComb c ann pl pr) = ProcessComb (mapTermsComb f ff fv c) ann (mT pl) (mT pr)
@@ -205,7 +207,7 @@ mapTermsAction :: (SapicNTerm t -> SapicNTerm v)
                   -> (t -> v)
                   -> SapicAction t
                   -> SapicAction v
-mapTermsAction f ff fv ac 
+mapTermsAction f ff fv ac
         | (New v) <- ac        = New (fv v)
         | (ChIn  mt t) <- ac   = ChIn (fmap f mt) (f t)
         | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
@@ -250,7 +252,7 @@ foldProcess fNull fAct fComb gAct gComb a p
                 r = foldProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
             in
                gAct a' ann r ac -- 3. reconstruct result from accumulator and subtree's result
-    | (ProcessComb c ann pl pr) <- p = 
+    | (ProcessComb c ann pl pr) <- p =
             let a' = fComb a ann c
                 rl = foldProcess fNull fAct fComb gAct gComb a' pl
                 rr = foldProcess fNull fAct fComb gAct gComb a' pr
@@ -278,7 +280,7 @@ foldMProcess fNull fAct fComb gAct gComb a p
             a' <- fComb a ann c
             rl <- foldMProcess fNull fAct fComb gAct gComb a' pl
             rr <- foldMProcess fNull fAct fComb gAct gComb a' pr
-            r  <- gComb a' c ann rl rr 
+            r  <- gComb a' c ann rl rr
             return r
 
 -- | Traverses process. Simplified variant of @foldMProcces@ that avoids accumulator (can store in monad)
@@ -290,7 +292,7 @@ traverseProcess :: Monad m =>
                    -> m t3
 traverseProcess gNull gAct gComb = foldMProcess (const gNull) nothing nothing (const gAct) (const gComb) ()
         where nothing = const $ const $ const $ return ()
-                
+
 traverseProcess' :: Monad m =>
                        (SapicNTerm t -> m (SapicNTerm v))
                        -> (SapicNFormula t -> m (SapicNFormula v))
@@ -313,7 +315,7 @@ traverseTermsAction :: Applicative f =>
                        -> (t -> f v)
                        -> SapicAction t
                        -> f (SapicAction v)
-traverseTermsAction ft ff fv ac 
+traverseTermsAction ft ff fv ac
         -- | (New v) <- ac = (New . termVar') <$> ft (varTerm v)
         | (New v) <- ac = New <$> fv v
         | (ChIn  mt t) <- ac   = ChIn <$> traverse ft mt <*> ft t
@@ -346,17 +348,17 @@ traverseTermsComb ft ff fv c
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
 
-------------------------- 
+-------------------------
 -- Applying substitutions
-------------------------- 
+-------------------------
 
 instance (IsVar v) => Apply (Subst Name v) (ProcessCombinator v) where
-    apply subst c 
+    apply subst c
             = mapTermsComb (apply subst) (apply subst) (apply subst) c
 
 data CapturedTag = CapturedIn | CapturedLookup | CapturedNew
     deriving (Typeable, Show)
-data LetExceptions = CapturedEx CapturedTag SapicLVar 
+data LetExceptions = CapturedEx CapturedTag SapicLVar
     deriving (Typeable, Show, Exception)
     -- deriving (Typeable)
 
@@ -367,31 +369,32 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
           pretty CapturedNew = "new"
 
 -- | Apply a substitution, but raise an error if necessary
-applyProcessCombinatorError :: MonadThrow m => Subst Name SapicLVar 
+applyProcessCombinatorError :: MonadThrow m => Subst Name SapicLVar
             -> ProcessCombinator SapicLVar -> m (ProcessCombinator SapicLVar)
-applyProcessCombinatorError subst c 
-        | (Lookup t v) <- c  = if v `elem` dom subst then 
+applyProcessCombinatorError subst c
+        | (Lookup t v) <- c  = if v `elem` dom subst then
                                   throwM $ CapturedEx CapturedLookup v
-                               else 
+                               else
                                   return $ Lookup (apply subst t) v
         | otherwise = return $ apply subst c
 
+
 instance Apply SapicSubst (SapicAction SapicLVar) where
-    apply subst ac 
+    apply subst ac
         = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
 -- | Apply a substitution, but raise an error if necessary
 applySapicActionError :: MonadThrow m =>
     Subst Name SapicLVar -> SapicAction SapicLVar -> m (SapicAction SapicLVar)
 applySapicActionError subst ac
-        | (New v) <- ac =  if v `elem` dom subst then 
+        | (New v) <- ac =  if v `elem` dom subst then
                                   throwM $ CapturedEx CapturedNew v
-                               else 
+                               else
                                   return $ New v
         | (ChIn mt t) <- ac,  Lit (Var v) <-  viewTerm t =
-                            if v `elem` dom subst && not ( "pat_" `isPrefixOf` lvarName' v) then 
+                            if v `elem` dom subst && not ( "pat_" `isPrefixOf` lvarName' v) then
                                   -- t is a single variable that is captured by the let.
-                                  -- This is likely unintended, so we warn, unless the variable starts with 
+                                  -- This is likely unintended, so we warn, unless the variable starts with
                                   -- pat_
                                   throwM $ CapturedEx CapturedIn v
                             else
@@ -422,15 +425,20 @@ applyProcess subst (ProcessAction ac ann p) = do
 
 -- | After parsing, the process is already annotated wth a list of process
 --   identifiers. Any identifier in this in this list was inlined to give this
---   comment, e.g., 
+--   comment, e.g.,
 --    let A = 0
 --    let B = A | A
 --    !B
 --    has two Null-rules with annotation [A,B].
 --  This will be helpful to recognise protocols roles and visualise them.
 
-type ProcessName = String -- String used in annotation to identify processes
-type ProcessAnnotation = [ProcessName]
+data ProcessParsedAnnotation =
+  ProcessName String -- String used in annotation to identify processes
+  | ProcessLoc SapicTerm
+  deriving( Eq, Ord, Show, Data, Generic)
+instance NFData ProcessParsedAnnotation
+instance Binary ProcessParsedAnnotation
+type ProcessAnnotation = [ProcessParsedAnnotation]
 type PlainProcess = LProcess ProcessAnnotation
 type ProcessPosition = [Int]
 
@@ -443,26 +451,26 @@ rhsP p = (p++[2]) :: ProcessPosition
 -- rhs :: ProcessPosition = 2
 
 descendant :: Eq a => [a] -> [a] -> Bool
-descendant child parent = parent `isPrefixOf` child 
+descendant child parent = parent `isPrefixOf` child
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 paddAnn :: PlainProcess -> ProcessAnnotation -> PlainProcess
 paddAnn (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
-paddAnn (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr 
+paddAnn (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr
 paddAnn (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p
 
 -- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (Process ann v -> a) -> Process ann v -> a
 pfoldMap f (ProcessNull an) = f (ProcessNull an)
-pfoldMap f (ProcessComb c an pl pr)  = 
+pfoldMap f (ProcessComb c an pl pr)  =
         pfoldMap f pl
-        `mappend` 
+        `mappend`
         f (ProcessComb c an pl pr)
-        `mappend` 
+        `mappend`
         pfoldMap f pr
-pfoldMap f (ProcessAction a an p)   = 
+pfoldMap f (ProcessAction a an p)   =
         f (ProcessAction a an p)
-        `mappend` 
+        `mappend`
         pfoldMap f p
 
 prettyPosition:: ProcessPosition -> String
@@ -473,17 +481,17 @@ prettySapicTerm :: Document d => SapicTerm -> d
 prettySapicTerm = prettyTerm (text . show)
 
 prettySapicFact :: Document d => Fact SapicTerm -> d
-prettySapicFact = prettyFact prettySapicTerm 
+prettySapicFact = prettyFact prettySapicTerm
 
 prettySyntacticSapicFormula :: HighlightDocument d => ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar -> d
 prettySyntacticSapicFormula = prettySyntacticLNFormula . toLFormula
 
-    
--- | Printer for SAPIC actions. 
+
+-- | Printer for SAPIC actions.
 -- Note: Need to give the pretty printer for rules as a parameter as otherwise
 -- we would have circular dependencies.
 -- Instantiated in Theory.Sapic.Print later
-prettySapicAction' :: 
+prettySapicAction' ::
                    ( [SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String)
                     -> SapicAction SapicLVar  -> String
 prettySapicAction' _ (New n) = "new "++ show n
@@ -508,21 +516,20 @@ prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm
 
--- | Printer for SAPIC processes.. 
+-- | Printer for SAPIC processes..
 -- TODO At the moment, the process structure is not used to properly print how
 -- elements are associated.
 -- Should do it, but then we cannot use pfoldMap anymore.
 prettySapic' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> LProcess ann -> String
-prettySapic' prettyRuleRestr = pfoldMap f 
+prettySapic' prettyRuleRestr = pfoldMap f
     where f (ProcessNull _) = "0"
-          f (ProcessComb c _ _ _)  = prettySapicComb c 
-          f (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+          f (ProcessComb c _ _ _)  = prettySapicComb c
+          f (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep
           f (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
 
 -- | Printer for the top-level process, used, e.g., for rule names.
 prettySapicTopLevel' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> LProcess ann -> String
 prettySapicTopLevel' _ (ProcessNull _) = "0"
-prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c 
-prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep 
+prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c
+prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep
 prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
-

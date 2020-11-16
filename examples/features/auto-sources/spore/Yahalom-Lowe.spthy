@@ -1,0 +1,185 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Stephanie Delaune
+  Date:           March 2020
+  Time:           ??
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/yahalomLowe.html)
+
+  Lowe's modified version of Yahalom
+
+  A, B, S :    principal
+  Na, Nb :    number fresh
+  Kas, Kbs, Kab :    key
+
+  A knows :    A, B, S, Kas
+  B knows :    B, S, Kbs
+  S knows :    S, A, B, Kas, Kbs
+
+
+// original version
+  1.    A  ->  B  :    A, Na
+  2.    B  ->  S  :    B, {A, Na, Nb}Kbs
+  3.    S  ->  A  :    {B, Kab, Na, Nb}Kas, {A, Kab}Kbs
+  4.    A  ->  B  :    {A, Kab}Kbs, {Nb}Kab
+
+  1.    A  ->  B  :    A, Na
+  2.    B  ->  S  :    {A, Na, Nb}Kbs
+  3.    S  ->  A  :    {B, Kab, Na, Nb}Kas
+  4.    S  ->  B  :    {A, Kab}Kbs
+  5.    A  ->  B  :    {A, B, S, Nb}Kab
+
+  The fresh symmetric shared key Kab is created by the server S
+  and sent encrypted, in message 3 both to A (directly) and to B (indirectly).
+
+  The protocol must guaranty the secrecy of Kab: in every session,
+  the value of Kab must be known only by the participants playing the roles of A, B and S.
+
+  A must be also properly authentified to B.
+
+  This version of the Yahalom protocol is presented in its original paper to illustrate a verification technique by model checking.
+
+  We model a variant with tags.
+*/
+
+theory YahalomLowe
+begin
+
+builtins: symmetric-encryption
+
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[KeyGen($X)]->
+  [ !LongtermKey(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !LongtermKey(~sk,$A)]
+  --[ Compromise($A)]->
+    [ Out(~sk) ]
+
+rule Reveal_Shortterm_Key:
+    [ !ShorttermKey(~kab,$B,$A)]
+  --[ Compromise($A), Compromise($B)]->
+    [ Out(~kab) ]
+
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+//  1.    A  ->  B  :    A, Na
+rule A_1:
+[Fr(~na)]  --[]->
+  [Out(<$A, ~na>), StateA1($A, $B, ~na)]
+
+//  2.    B  ->  S  :    {A, Na, Nb}Kbs
+rule B_1:
+  let msg = senc(<'1', yA, yna, ~nb>,ykbs) in
+  [In(<yA, yna>), !LongtermKey(ykbs,yB), Fr(~nb)]
+  --[RunningB(yB,yA,<yna,~nb>)]->
+  [Out(msg), StateB1(yB, yA, yna, ~nb)]
+
+//  3.    S  ->  A  :    {B, Kab, Na, Nb}Kas
+rule S_1:
+ [Fr(~kab), In(senc(<'1',zA,zna,znb>,zkbs)), !LongtermKey(zkbs,zB), !LongtermKey(zkas,zA)]
+--[]->
+[StateS1(zA,zB,zna,znb,~kab), Out(senc(<'2',zB,~kab,zna,znb>,zkas))]
+
+
+// 4. S  -> B:  {A, Kab}Kbs
+rule S_2:
+[StateS1(zA,zB,zna,znb,zkab), !LongtermKey(zkbs,zB)]
+--[Serveur(zA,zB,<zkab,zna,znb>)]->
+[Out(senc(<'3',zA,zkab>,zkbs))]
+
+//  5.    A  ->  B  :    {A, B, S, Nb}Kab
+rule A_2:
+[StateA1(xA,xB,na), !LongtermKey(xkas,xA), In(senc(<'2',xB,xkab,na,xnb>,xkas))]
+--[CommitA(xA,xB,<na,xnb>), RunningA(xA,xB,<xkab,na,xnb>),Secret(xA,xB,xkab)]->
+[Out(senc(<'4',xA,xB,'S',xnb>,xkab))]
+
+//
+rule B_2:
+[StateB1(yB,yA,yna,nb), !LongtermKey(ykbs,yB), In(<senc(<'3',yA,ykab>,ykbs),senc(<'4',yA,yB,'S',nb>,ykab)>)]
+--[CommitB(yB,yA,<ykab,yna,nb>),Secret(yB,yA,ykab)]->
+[]
+
+restriction singlelongtermkeyperuser:
+  "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
+
+
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+lemma executability:
+exists-trace
+"Ex A B kab na nb #i #j #k.
+  CommitB(B,A,<kab,na,nb>)@i 
+  & CommitA(A,B,<na,nb>)@j & #j<#i
+  & Serveur(A,B,<kab,na,nb>)@k & #k < #j
+  & not(Ex #r1. Compromise(A)@#r1) 
+  & not(Ex #r2. Compromise(B)@#r2)"
+
+
+// check the secrecy of the newly generated session key
+lemma secrecy:
+  "All A B k #i. Secret(A,B,k)@i ==> not (Ex #j. K(k)@j ) |  (Ex #j. Compromise(B)@j)  |  (Ex #j. Compromise(A)@j)  "
+
+
+
+
+// check the authenticity of the transaction from B's point of view
+lemma noninjectiveagreement_B:
+  "All A B t #i.
+    CommitB(B, A, t) @i
+    ==> ((Ex #j. RunningA(A,B, t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+// check the authenticity of the transaction from A's point of view
+lemma noninjectiveagreement_A:
+  "All A B t #i.
+    CommitA(A, B, t) @i
+    ==> ((Ex #j. RunningB(B,A,t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+"All A B t #i. CommitB(B,A,t) @i
+  ==> ((Ex #j. RunningA(A,B,t) @j
+      & j < i
+      & not (Ex A2 B2 #i2. CommitB(B2,A2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+// check the authenticity and freshness of the transaction from A's point of view
+lemma injectiveagreement_A:
+"All A B t #i. CommitA(A,B,t)@i
+  ==> ((Ex #j. RunningB(B,A,t) @j
+      & j < i
+      & not (Ex A2 B2 #i2. CommitA(A2,B2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+end
+

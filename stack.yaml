@@ -6,7 +6,7 @@ packages:
 - lib/utils/
 - lib/sapic/
 - lib/export/
-extra-deps: []
-resolver: lts-13.2
+extra-deps: [ binary-instances-1, fclabels-2.0.4 ]
+resolver: lts-16.12
 nix:
   packages: [ zlib ]

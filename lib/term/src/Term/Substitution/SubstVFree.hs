@@ -269,7 +269,7 @@ instance (Apply s a, Apply s b, Apply s c) => Apply s (a, b, c) where
     apply subst (x,y,z) = (apply subst x, apply subst y, apply subst z)
 
 instance (Apply s a, Apply s b, Apply s c, Apply s d) => Apply s (a, b, c, d) where
-    apply subst (w,x,y,z) = (apply subst w,apply subst x, apply subst y, apply subst z)
+    apply subst (x,y,z,t) = (apply subst x, apply subst y, apply subst z, apply subst t)
 
 instance Apply s a => Apply s (Maybe a) where
     apply subst = fmap (apply subst)

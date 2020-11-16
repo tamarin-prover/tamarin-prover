@@ -12,7 +12,7 @@
 -- Equational signatures for Maude.
 module Term.Maude.Signature (
   -- * Maude signatures
-    MaudeSig 
+    MaudeSig
   , enableDH
   , enableBP
   , enableMSet
@@ -32,6 +32,7 @@ module Term.Maude.Signature (
   , symEncMaudeSig
   , signatureMaudeSig
   , revealSignatureMaudeSig
+  , locationReportMaudeSig
   , hashMaudeSig
   , msetMaudeSig
   , bpMaudeSig
@@ -157,13 +158,14 @@ xorMaudeSig  = maudeSig $ mempty {enableXor=True}
 -- | Maude signatures for the default subterm symbols.
 --pairMaudeSig :: Bool -> MaudeSig
 --pairMaudeSig flag = maudeSig $ mempty {stFunSyms=pairFunSig,stRules=pairRules,enableDiff=flag}
-pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, revealSignatureMaudeSig, hashMaudeSig :: MaudeSig
+pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, revealSignatureMaudeSig, hashMaudeSig, locationReportMaudeSig :: MaudeSig
 pairMaudeSig            = maudeSig $ mempty {stFunSyms=pairFunSig,stRules=pairRules}
 symEncMaudeSig          = maudeSig $ mempty {stFunSyms=symEncFunSig,stRules=symEncRules}
 asymEncMaudeSig         = maudeSig $ mempty {stFunSyms=asymEncFunSig,stRules=asymEncRules}
 signatureMaudeSig       = maudeSig $ mempty {stFunSyms=signatureFunSig,stRules=signatureRules}
 revealSignatureMaudeSig = maudeSig $ mempty {stFunSyms=revealSignatureFunSig,stRules=revealSignatureRules}
 hashMaudeSig            = maudeSig $ mempty {stFunSyms=hashFunSig}
+locationReportMaudeSig            = maudeSig $ mempty {stFunSyms=locationReportFunSig, stRules=locationReportRules}
 
 -- | The minimal maude signature.
 minimalMaudeSig :: Bool -> MaudeSig

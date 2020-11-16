@@ -35,6 +35,7 @@ data WFerrror p = WFLock WFLockTag p
                 | WFReliable
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
+
     deriving (Typeable)
 
 -- | SapicExceptions see instance of show below for explanation.
@@ -91,7 +92,7 @@ instance (Show p) => Show (WFerrror p) where
     show WFReliable =
                    "If reliable channels are activated, processes should only contain in('r',m), out('r',m), in('c',m) or out('c',m) for communication."
     show (WFLock tag pr) =
-                   "Process " ++ show pr ++ " contains lock that extends over " 
+                   "Process " ++ show pr ++ " contains lock that extends over "
                    ++ prettyWFLockTag tag ++ " which is not allowed."
     show (WFBoundTwice v) =
                    "Variable bound twice: " ++ show v ++ "."

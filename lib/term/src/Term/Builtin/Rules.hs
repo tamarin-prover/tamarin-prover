@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Builtin rewriting rules.
@@ -17,7 +17,7 @@ module Term.Builtin.Rules (
   , asymEncRules
   , signatureRules
   , revealSignatureRules
-
+  , locationReportRules
   -- * Convenience export
   , module Term.Builtin.Signature
 ) where
@@ -98,3 +98,6 @@ signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `CtxtStRule` (StR
 revealSignatureRules = S.fromList [ revealVerify (revealSign (x1,x2), x1, pk x2) `CtxtStRule` (StRhs [[0,0]] trueC),
                                     extractMessage (revealSign (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)]
 
+locationReportRules = S.fromList [ check_rep (rep (x1,x2), x2) `CtxtStRule` (StRhs [[0,0]] trueC),
+                                   get_rep (rep (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
+                                 ]

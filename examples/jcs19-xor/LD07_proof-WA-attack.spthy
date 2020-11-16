@@ -1,0 +1,657 @@
+theory LD07_WA_attack begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Reader/2, Tag/2 */
+
+rule (modulo E) Setup:
+   [ Fr( ~k0 ), Fr( ~k1 ) ]
+  --[ Setup( ~k0 ), KeyS( ~k0 ), KeyS( ~k1 ), OnlyOnce( ) ]->
+   [ Reader( ~k0, ~k1 ), Tag( ~k0, (~k0⊕~k1) ) ]
+
+  /*
+  rule (modulo AC) Setup:
+     [ Fr( ~k0 ), Fr( ~k1 ) ]
+    --[ Setup( ~k0 ), KeyS( ~k0 ), KeyS( ~k1 ), OnlyOnce( ) ]->
+     [ Reader( ~k0, ~k1 ), Tag( ~k0, z ) ]
+    variants (modulo AC)
+    1. ~k0   = ~k0.4
+       ~k1   = ~k1.4
+       z     = (~k0.4⊕~k1.4)
+    
+    2. ~k0   = ~x.4
+       ~k1   = ~x.4
+       z     = zero
+  */
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ ChallengeReader( ~r1 ), Ch( ~r1 ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  ResponseTag( ~k, x, r1 ), TagKey( ~k, x ), Response( ~k, 'Tag' ),
+  ChallengeTag( x ), Tag( ~k, x ), Running( ~k, 'Tag', x ),
+  KeyTag( x ), Tag1rule( ), InEq( r1, zero )
+  ]->
+   [ Out( h((r1⊕x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) tag1:
+     [ In( r1 ), Tag( ~k, x ) ]
+    --[
+    ResponseTag( ~k, x, r1 ), TagKey( ~k, x ), Response( ~k, 'Tag' ),
+    ChallengeTag( x ), Tag( ~k, x ), Running( ~k, 'Tag', x ),
+    KeyTag( x ), Tag1rule( ), InEq( r1, zero )
+    ]->
+     [ Out( h(z) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+    variants (modulo AC)
+    1. r1    = r1.6
+       x     = r1.6
+       z     = zero
+    
+    2. r1    = r1.6
+       x     = x.7
+       z     = (r1.6⊕x.7)
+    
+    3. r1    = r1.6
+       x     = zero
+       z     = r1.6
+    
+    4. r1    = r1.7
+       x     = (r1.7⊕z.9)
+       z     = z.9
+    
+    5. r1    = zero
+       x     = x.6
+       z     = x.6
+    
+    6. r1    = (x.7⊕z.8)
+       x     = x.7
+       z     = z.8
+    
+    7. r1    = (x.8⊕x.9)
+       x     = (x.8⊕x.10)
+       z     = (x.9⊕x.10)
+    // loop breaker: [1]
+  */
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), Reader( ~k, ~kp ), In( xoredhash ), Fr( ~k1 ) ]
+  --[
+  Reader( ~k, ~kp ), AliveTag( ~k, (~k⊕~kp), ~r1, (~kp⊕~r1) ),
+  Commit( ~k, 'Reader', ~kp ), Response( ~k, 'Reader' ),
+  Eq( xoredhash, h((~k⊕~kp⊕~r1)) ), KeyS( ~k ), KeyS( ~k1 ),
+  KeyS( ~kp ), KeyD( ~kp ), KeyX( (~kp⊕~r1) ), OutK( (~k1⊕~kp) ),
+  Ch( ~r1 ), Reader2rule( )
+  ]->
+   [ Out( <(~k1⊕~kp), h((~k⊕~k1))> ), Reader( ~k, ~k1 ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) reader2:
+     [ Initiated( ~r1 ), Reader( ~k, ~kp ), In( xoredhash ), Fr( ~k1 ) ]
+    --[
+    Reader( ~k, ~kp ), AliveTag( ~k, z.2, ~r1, z.3 ),
+    Commit( ~k, 'Reader', ~kp ), Response( ~k, 'Reader' ),
+    Eq( xoredhash, h(z.4) ), KeyS( ~k ), KeyS( ~k1 ), KeyS( ~kp ),
+    KeyD( ~kp ), KeyX( z.3 ), OutK( z ), Ch( ~r1 ), Reader2rule( )
+    ]->
+     [ Out( <z, h(z.1)> ), Reader( ~k, ~k1 ) ]
+    variants (modulo AC)
+     1. ~k    = ~k.13
+        ~k1   = ~k.13
+        ~kp   = ~k.13
+        ~r1   = ~k.13
+        z     = zero
+        z.1   = zero
+        z.2   = zero
+        z.3   = zero
+        z.4   = ~k.13
+    
+     2. ~k    = ~k.13
+        ~k1   = ~k1.14
+        ~kp   = ~kp.15
+        ~r1   = ~r1.16
+        z     = (~k1.14⊕~kp.15)
+        z.1   = (~k.13⊕~k1.14)
+        z.2   = (~k.13⊕~kp.15)
+        z.3   = (~kp.15⊕~r1.16)
+        z.4   = (~k.13⊕~kp.15⊕~r1.16)
+    
+     3. ~k    = ~k.14
+        ~k1   = ~k.14
+        ~kp   = ~k.14
+        ~r1   = ~r1.17
+        z     = zero
+        z.1   = zero
+        z.2   = zero
+        z.3   = (~k.14⊕~r1.17)
+        z.4   = ~r1.17
+    
+     4. ~k    = ~k.14
+        ~k1   = ~k.14
+        ~kp   = ~kp.16
+        ~r1   = ~k.14
+        z     = (~k.14⊕~kp.16)
+        z.1   = zero
+        z.2   = (~k.14⊕~kp.16)
+        z.3   = (~k.14⊕~kp.16)
+        z.4   = ~kp.16
+    
+     5. ~k    = ~k.14
+        ~k1   = ~k.14
+        ~kp   = ~kp.16
+        ~r1   = ~kp.16
+        z     = (~k.14⊕~kp.16)
+        z.1   = zero
+        z.2   = (~k.14⊕~kp.16)
+        z.3   = zero
+        z.4   = ~k.14
+    
+     6. ~k    = ~k.14
+        ~k1   = ~k.14
+        ~kp   = ~kp.16
+        ~r1   = ~r1.17
+        z     = (~k.14⊕~kp.16)
+        z.1   = zero
+        z.2   = (~k.14⊕~kp.16)
+        z.3   = (~kp.16⊕~r1.17)
+        z.4   = (~k.14⊕~kp.16⊕~r1.17)
+    
+     7. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~k.14
+        ~r1   = ~k.14
+        z     = (~k.14⊕~k1.15)
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = zero
+        z.3   = zero
+        z.4   = ~k.14
+    
+     8. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~k.14
+        ~r1   = ~r1.17
+        z     = (~k.14⊕~k1.15)
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = zero
+        z.3   = (~k.14⊕~r1.17)
+        z.4   = ~r1.17
+    
+     9. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~k1.15
+        ~r1   = ~k.14
+        z     = zero
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = (~k.14⊕~k1.15)
+        z.3   = (~k.14⊕~k1.15)
+        z.4   = ~k1.15
+    
+    10. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~k1.15
+        ~r1   = ~k1.15
+        z     = zero
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = (~k.14⊕~k1.15)
+        z.3   = zero
+        z.4   = ~k.14
+    
+    11. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~k1.15
+        ~r1   = ~r1.17
+        z     = zero
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = (~k.14⊕~k1.15)
+        z.3   = (~k1.15⊕~r1.17)
+        z.4   = (~k.14⊕~k1.15⊕~r1.17)
+    
+    12. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~kp.16
+        ~r1   = ~k.14
+        z     = (~k1.15⊕~kp.16)
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = (~k.14⊕~kp.16)
+        z.3   = (~k.14⊕~kp.16)
+        z.4   = ~kp.16
+    
+    13. ~k    = ~k.14
+        ~k1   = ~k1.15
+        ~kp   = ~kp.16
+        ~r1   = ~kp.16
+        z     = (~k1.15⊕~kp.16)
+        z.1   = (~k.14⊕~k1.15)
+        z.2   = (~k.14⊕~kp.16)
+        z.3   = zero
+        z.4   = ~k.14
+    // loop breaker: [1]
+  */
+
+rule (modulo E) tag2:
+   [ In( <newkey, newhash> ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+  --[
+  Update( ~k, (newkey⊕x), 'Tag' ), Eq( h((newkey⊕x)), newhash ),
+  AliveReader( ~k ), KeyTag( (newkey⊕x) )
+  ]->
+   [ Tag( ~k, (newkey⊕x) ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) tag2:
+     [ In( <newkey, newhash> ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+    --[
+    Update( ~k, z, 'Tag' ), Eq( h(z), newhash ), AliveReader( ~k ),
+    KeyTag( z )
+    ]->
+     [ Tag( ~k, z ) ]
+    variants (modulo AC)
+    1. newkey
+             = newkey.7
+       x     = newkey.7
+       z     = zero
+    
+    2. newkey
+             = newkey.7
+       x     = x.8
+       z     = (newkey.7⊕x.8)
+    
+    3. newkey
+             = newkey.7
+       x     = zero
+       z     = newkey.7
+    
+    4. newkey
+             = newkey.8
+       x     = (newkey.8⊕z.10)
+       z     = z.10
+    
+    5. newkey
+             = zero
+       x     = x.7
+       z     = x.7
+    
+    6. newkey
+             = (x.8⊕z.9)
+       x     = x.8
+       z     = z.9
+    
+    7. newkey
+             = (x.9⊕x.10)
+       x     = (x.9⊕x.11)
+       z     = (x.10⊕x.11)
+    // loop breaker: [1]
+  */
+
+rule (modulo E) desynchronized:
+   [ Reader( ~k, x ), Tag( ~k, y ) ]
+  --[ InEq( (~k⊕x), y ), Desynch( ~k ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) desynchronized:
+     [ Reader( ~k, x ), Tag( ~k, y ) ]
+    --[ InEq( z, y ), Desynch( ~k ) ]->
+     [ ]
+    variants (modulo AC)
+    1. ~k    = ~k.5
+       x     = x.5
+       z     = (~k.5⊕x.5)
+    
+    2. ~k    = ~k.5
+       x     = zero
+       z     = ~k.5
+    
+    3. ~k    = ~x.5
+       x     = ~x.5
+       z     = zero
+    
+    4. ~k    = ~x.5
+       x     = (~x.5⊕x.6)
+       z     = x.6
+  */
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma helping_reader_start [reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Reader( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Reader( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+lemma helping_tag_start [reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+lemma helping_keys_reader_are_secret [reuse, use_induction]:
+  all-traces "∀ x #i. (KeyS( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (KeyS( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_challenge [reuse, use_induction]:
+  all-traces
+  "∀ x ch #i #j. ((KeyS( x ) @ #i) ∧ (Ch( ch ) @ #j)) ⇒ (¬(x = ch))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x ch #i #j. (KeyS( x ) @ #i) ∧ (Ch( ch ) @ #j) ∧ x = ch"
+*/
+by sorry
+
+lemma helping_keys_disjoint_XX [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j.
+    ((KeyX( x ) @ #i) ∧ (KeyX( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (KeyX( x ) @ #i) ∧ (KeyX( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_XS [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j. ((KeyX( x ) @ #i) ∧ (KeyS( y ) @ #j)) ⇒ (¬(x = y))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j. (KeyX( x ) @ #i) ∧ (KeyS( y ) @ #j) ∧ x = y"
+*/
+by sorry
+
+lemma helping_keys_disjoint_DD [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j.
+    ((KeyD( x ) @ #i) ∧ (KeyD( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (KeyD( x ) @ #i) ∧ (KeyD( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_OutX [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j.
+    ((OutK( x ) @ #i) ∧ (KeyX( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (OutK( x ) @ #i) ∧ (KeyX( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma alive_tag [use_induction]:
+  all-traces
+  "∀ k1 kp r kpr #i.
+    (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+    (∃ #j. Response( k1, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k1 kp r kpr #i.
+  (AliveTag( k1, kp, r, kpr ) @ #i)
+ ∧
+  ∀ #j. (Response( k1, 'Tag' ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma recentalive_tag_bounded [use_induction]:
+  all-traces
+  "((∀ #t1 #t2 #t3.
+      (((Tag1rule( ) @ #t1) ∧ (Tag1rule( ) @ #t2)) ∧
+       (Tag1rule( ) @ #t3)) ⇒
+      (((#t1 = #t2) ∨ (#t1 = #t3)) ∨ (#t2 = #t3))) ∧
+    (∀ #t1 #t2 #t3.
+      (((Reader2rule( ) @ #t1) ∧ (Reader2rule( ) @ #t2)) ∧
+       (Reader2rule( ) @ #t3)) ⇒
+      (((#t1 = #t2) ∨ (#t1 = #t3)) ∨ (#t2 = #t3)))) ⇒
+   (∀ k1 kp r kpr #i.
+     (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+     (∃ #j #k.
+       (((ChallengeReader( r ) @ #k) ∧ (Response( k1, 'Tag' ) @ #j)) ∧
+        (#k < #j)) ∧
+       (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #t1 #t2 #t3.
+   (Tag1rule( ) @ #t1) ∧ (Tag1rule( ) @ #t2) ∧ (Tag1rule( ) @ #t3)
+  ⇒
+   ((#t1 = #t2) ∨ (#t1 = #t3) ∨ (#t2 = #t3))) ∧
+ (∀ #t1 #t2 #t3.
+   (Reader2rule( ) @ #t1) ∧
+   (Reader2rule( ) @ #t2) ∧
+   (Reader2rule( ) @ #t3)
+  ⇒
+   ((#t1 = #t2) ∨ (#t1 = #t3) ∨ (#t2 = #t3))) ∧
+ (∃ k1 kp r kpr #i.
+   (AliveTag( k1, kp, r, kpr ) @ #i)
+  ∧
+   ∀ #j #k.
+    (ChallengeReader( r ) @ #k) ∧ (Response( k1, 'Tag' ) @ #j)
+   ⇒
+    ((¬(#k < #j)) ∨ (¬(#j < #i))))"
+*/
+by sorry
+
+lemma WA_tag [use_induction]:
+  all-traces
+  "∀ k1 kp r kpr #i.
+    (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+    (∃ #j. ResponseTag( k1, kp, r ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k1 kp r kpr #i.
+  (AliveTag( k1, kp, r, kpr ) @ #i)
+ ∧
+  ∀ #j. (ResponseTag( k1, kp, r ) @ #j) ⇒ ⊥"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (ResponseTag( ~k, kp.1, ~r1 ) @ #j) ∧ ¬(last(#j))) )
+    case case_1
+    solve( Initiated( ~r1 ) ▶₀ #i )
+      case reader1
+      solve( splitEqs(1) )
+        case split
+        solve( !KU( h(z) ) @ #vk )
+          case c_h
+          by sorry
+        next
+          case reader2
+          by sorry
+        next
+          case tag1
+          solve( Reader( ~k, ~kp ) ▶₁ #i )
+            case Setup
+            solve( Tag( ~k, x ) ▶₁ #vr.1 )
+              case Setup
+              by sorry
+            next
+              case tag1
+              by sorry
+            next
+              case tag2
+              solve( Tag( ~k, x.1 ) ▶₁ #vr.3 )
+                case Setup
+                solve( Tag( ~k, (~k⊕~kp) ) ▶₁ #vr.2 )
+                  case tag1
+                  solve( Tag( ~k, (~k⊕~kp) ) ▶₁ #vr.4 )
+                    case Setup
+                    solve( !KU( h(x) ) @ #vk.4 )
+                      case c_h
+                      by sorry
+                    next
+                      case reader2
+                      by contradiction /* non-injective facts (#i.1,#vr.4,#i) */
+                    next
+                      case tag1
+                      solve( Tag( ~k, x.1 ) ▶₁ #vr.4 )
+                        case Setup
+                        solve( splitEqs(6) )
+                          case split_case_1
+                          by contradiction /* from formulas */
+                        next
+                          case split_case_2
+                          by contradiction /* from formulas */
+                        next
+                          case split_case_3
+                          by sorry
+                        next
+                          case split_case_4
+                          by contradiction /* forbidden KD-fact */
+                        next
+                          case split_case_5
+                          by contradiction /* from formulas */
+                        next
+                          case split_case_6
+                          solve( splitEqs(0) )
+                            case split
+                            solve( splitEqs(3) )
+                              case split_case_1
+                              solve( !KU( (~r1⊕newkey) ) @ #vk.3 )
+                                case c_xor
+                                solve( !KU( ~r1 ) @ #vk.5 )
+                                  case reader1
+                                  SOLVED // trace found
+                                next
+                                  case reader2
+                                  by contradiction /* from formulas */
+                                qed
+                              next
+                                case coerce
+                                by sorry
+                              qed
+                            next
+                              case split_case_2
+                              by sorry
+                            qed
+                          qed
+                        next
+                          case split_case_7
+                          by sorry
+                        next
+                          case split_case_8
+                          by sorry
+                        qed
+                      next
+                        case tag1
+                        by sorry
+                      next
+                        case tag2
+                        by sorry
+                      qed
+                    qed
+                  next
+                    case tag1
+                    by sorry
+                  next
+                    case tag2
+                    by sorry
+                  qed
+                next
+                  case tag2
+                  by sorry
+                qed
+              next
+                case tag1
+                by sorry
+              next
+                case tag2
+                by sorry
+              qed
+            qed
+          next
+            case reader2
+            by sorry
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma recentalive_reader:
+  all-traces
+  "∀ x #i.
+    (AliveReader( x ) @ #i) ⇒
+    (∃ y #j #k.
+      (((ChallengeTag( y ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (AliveReader( x ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (ChallengeTag( y ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable:
+  exists-trace
+  "∃ x k r kr y #i #j #k.1.
+    (((AliveTag( x, k, r, kr ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (Update( x, y, 'Tag' ) @ #k.1)) ∧
+    (¬(∃ #l. (Response( x, 'Tag' ) @ #l) ∧ (¬(#j = #l))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x k r kr y #i #j #k.1.
+  (AliveTag( x, k, r, kr ) @ #i) ∧
+  (Response( x, 'Tag' ) @ #j) ∧
+  (Update( x, y, 'Tag' ) @ #k.1)
+ ∧
+  ∀ #l. (Response( x, 'Tag' ) @ #l) ⇒ #j = #l"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+end

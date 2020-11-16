@@ -47,23 +47,20 @@ The Tamarin Prover is distributed through a number of channels: source and binar
    1. run 'make case-studies' and compare 'case-studies/' with
       'case-studies-regression/'
 
-   2. run 'make sapic-case-studies' and compare 'case-studies-sapic/' with
-      'case-studies-sapic-regression/'
+   2. run 'tamarin-prover test'
 
-   3. run 'tamarin-prover test'
-
-   4. call 'tamarin-prover' and copy CSF'12 automatic command and
+   3. call 'tamarin-prover' and copy CSF'12 automatic command and
       check whether verification succeeds, i.e., run
-      'tamarin-prover --prove *'
+      'tamarin-prover --prove *.spthy'
       in the examples/csf12 folder.
 
-   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
+   4. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
       in data/ so:
       'tamarin-prover variants > tmp.txt'
       'diff tmp.txt data/intrudervariants_both_bp_dh_for_diff.txt'
       which should be empty.
 
-   6. call 'tamarin-prover' and copy CSF'12 interactive command and
+   5. call 'tamarin-prover' and copy CSF'12 interactive command and
       execute the following steps in the GUI after running
       'tamarin-prover interactive .'
       in the examples/csf12 folder.
@@ -74,7 +71,7 @@ The Tamarin Prover is distributed through a number of channels: source and binar
         (d) try Download
         (e) try 'Loading a new theory' from the start page
 
-   7. Bump version number to even minor version in cabal files and code,
+   6. Bump version number to even minor version in cabal files and code,
       commit version bump, by running the 'version-change.sh' script as
       described in its comments. Then merge from 'develop' into 'master'
       and use "Release" functionality to prepare the release.
@@ -120,3 +117,31 @@ make -j 6 case-studies
 ```
 
 to run 6 case studies in parallel.
+
+Editor support
+--------------
+
+The directory `etc` holds files for editor support. For the `vim` editor, it is
+desirable to have a separate repository for these files, hence we include this
+directory as a git-subtree. [Here is
+a tutorial](https://www.atlassian.com/git/tutorials/git-subtree). In summary:
+
+1. To merge changes from the outside  repository into `etc` here, run the
+   following command, where $branch is the branch you are in now, which is
+   almost always `develop`.
+```
+ git subtree pull --prefix etc https://github.com/tamarin-prover/editors $branch --squash
+```
+
+2. To contribute changes in `etc` back to that outside repository, run the
+   following, where `$github_user` is your github user name, because you need
+   to fork that directory, too.
+```
+git subtree push --prefix etc https://github.com/$github_user/editors $branch
+```
+
+3. FYI: if we ever want to add another subtree, we use:
+```
+git subtree add --prefix $local_dir $remote_url $remote_branch --squash
+```
+
