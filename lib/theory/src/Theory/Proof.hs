@@ -404,7 +404,7 @@ instance Monoid ProofStatus where
 -- | The status of a 'ProofStep'.
 proofStepStatus :: ProofStep (Maybe a) -> ProofStatus
 proofStepStatus (ProofStep _         Nothing ) = UndeterminedProof
-proofStepStatus (ProofStep (Solved _)   (Just _)) = TraceFound
+proofStepStatus (ProofStep Solved    (Just _)) = TraceFound
 proofStepStatus (ProofStep (Sorry _) (Just _)) = IncompleteProof
 proofStepStatus (ProofStep _         (Just _)) = CompleteProof
 
@@ -823,7 +823,7 @@ cutOnSolvedSingleThreadDFS prf0 =
         findSolved node = case node of
               -- do not search in nodes that are not annotated
               LNode (ProofStep _      (Nothing, _   )) _  -> NoSolution
-              LNode (ProofStep (Solved _) (Just _ , path)) _  -> Solution path
+              LNode (ProofStep Solved (Just _ , path)) _  -> Solution path
               LNode (ProofStep _      (Just _ , _   )) cs ->
                   foldMap findSolved cs
 
@@ -886,7 +886,7 @@ cutOnSolvedDFS prf0 =
           | otherwise = case node of
               -- do not search in nodes that are not annotated
               LNode (ProofStep _      (Nothing, _   )) _  -> NoSolution
-              LNode (ProofStep (Solved _) (Just _ , path)) _  -> Solution path
+              LNode (ProofStep Solved (Just _ , path)) _  -> Solution path
               LNode (ProofStep _      (Just _ , _   )) cs ->
                   foldMap (findSolved (succ d))
                       (cs `using` parTraversable nfProofMethod)
@@ -960,7 +960,7 @@ cutOnSolvedBFS =
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
 
-    checkLevel 0 (LNode  step@(ProofStep (Solved _) (Just _)) _) =
+    checkLevel 0 (LNode  step@(ProofStep Solved (Just _)) _) =
         S.put TraceFound >> return (LNode step M.empty)
     checkLevel 0 prf@(LNode (ProofStep _ x) cs)
       | M.null cs = return prf
@@ -1016,7 +1016,7 @@ proveSystemDFS heuristic ctxt d0 sys0 =
   where
     prove !depth sys =
         case rankProofMethods (useHeuristic heuristic depth) ctxt sys of
-          []                         -> node (Solved True) M.empty
+          []                         -> node Solved M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
         node method cases =
@@ -1059,7 +1059,7 @@ prettyProofWith prettyStep prettyCase =
   where
     ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
 
-    ppCases ps@(ProofStep (Solved _) _) [] = prettyStep ps
+    ppCases ps@(ProofStep Solved _) [] = prettyStep ps
     ppCases ps []                      = prettyCase ps (kwBy <> text " ")
                                            <> prettyStep ps
     ppCases ps [("", prf)]             = prettyStep ps $-$ ppPrf prf

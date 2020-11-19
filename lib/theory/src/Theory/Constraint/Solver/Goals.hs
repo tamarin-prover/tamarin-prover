@@ -21,7 +21,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
-  , planeOpenGoals
+  , plainOpenGoals
   ) where
 
 -- import           Debug.Trace
@@ -43,7 +43,7 @@ import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
 import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
 import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
-import           Extension.Data.Label
+import           Extension.Data.Label                    as L
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -193,13 +193,13 @@ openGoals sys = do
             ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start 
 
 -- | The list of all open goals left together with their status.
-planeOpenGoals:: System -> [(Goal, Status)]
-planeOpenGoals sys = openGoalsLeft
+plainOpenGoals:: System -> [(Goal, GoalStatus)]
+plainOpenGoals sys = openGoalsLeft
   where
     openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
     isOpen(_, status) = case status of
       GoalStatus s _ _ -> not s
-                                
+       
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------

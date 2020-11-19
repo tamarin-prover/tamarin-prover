@@ -724,7 +724,7 @@ startProofSkeleton :: Parser ProofSkeleton
 startProofSkeleton =
     solvedProof <|> otherProof
   where
-    solvedProof = symbol "SOLVED" *> pure (LNode (ProofStep (Solved False) ()) M.empty)
+    solvedProof = symbol "SOLVED" *> error "SOLVED without a proof was found."
     otherProof = proofSkeleton
 
 -- | Parse a proof skeleton.
@@ -733,7 +733,7 @@ proofSkeleton =
     solvedProof <|> finalProof <|> interProof
   where
     solvedProof = 
-        symbol "SOLVED" *> pure (LNode (ProofStep (Solved True) ()) M.empty)
+        symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
 
     finalProof = do
         method <- symbol "by" *> proofMethod

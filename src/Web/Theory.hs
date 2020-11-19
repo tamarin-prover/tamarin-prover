@@ -105,7 +105,7 @@ applyMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
       (oneStepProver method                        `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
        replaceSorryProver (contradictionProver)    `mappend`
-       replaceSorryProver (oneStepProver (Solved True))
+       replaceSorryProver (oneStepProver Solved)
       )
 
 applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
@@ -125,7 +125,7 @@ applyMethodAtPathDiff thy s lemmaName proofPath defaultHeuristic i = do
       (oneStepProver method                        `mappend`
        replaceSorryProver (oneStepProver Simplify) `mappend`
        replaceSorryProver (contradictionProver)    `mappend`
-       replaceSorryProver (oneStepProver (Solved True))
+       replaceSorryProver (oneStepProver Solved)
       )
 
 applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
@@ -1690,7 +1690,7 @@ prevDiffThyPath thy = go
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
 isInterestingMethod (Sorry _) = True
-isInterestingMethod (Solved _) = True
+isInterestingMethod Solved    = True
 isInterestingMethod _         = False
 
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
