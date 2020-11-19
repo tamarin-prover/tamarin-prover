@@ -224,7 +224,7 @@ parseVariantsReply msig reply = flip parseOnly reply $ do
     <* endOfLine <* string "rewrites: "
     <* takeWhile1 isDigit <* endOfLine <* endOfInput
   where
-    parseVariant = string "Variant " *> option '#' (char '#') *> takeWhile1 isDigit *> endOfLine *>
+    parseVariant = string "Variant " *> optional (char '#') *> takeWhile1 isDigit *> endOfLine *>
                    string "rewrites: " *> takeWhile1 isDigit *> endOfLine *>
                    parseReprintedTerm *> manyTill parseEntry endOfLine
     parseReprintedTerm = choice [ string "TOP" *> pure LSortMsg, parseSort ]
