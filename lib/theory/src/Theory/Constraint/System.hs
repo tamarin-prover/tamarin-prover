@@ -109,7 +109,6 @@ module Theory.Constraint.System (
   , resolveNodePremFact
   , resolveNodeConcFact
   , goalRule
-  , checkIfNoOpenGoalsPresent
 
   -- ** Actions
   , allActions
@@ -1153,15 +1152,6 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
 isDiffSystem = L.get sDiffSystem
-
--- | Check if there are no open goals.
-checkIfNoOpenGoalsPresent:: System -> Bool
-checkIfNoOpenGoalsPresent sys = (length openGoals) == 0
-  where
-    openGoals = filter isOpen (M.toList $ L.get sGoals sys)
-    isOpen(_, status) = case status of
-      GoalStatus s _ _ -> not s
-
 
 -- Actions
 ----------

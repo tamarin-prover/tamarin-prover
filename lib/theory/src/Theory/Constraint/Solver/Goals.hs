@@ -21,6 +21,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+  , planeOpenGoals
   ) where
 
 -- import           Debug.Trace
@@ -190,6 +191,14 @@ openGoals sys = do
                               map (\(i, _, m) -> (m, i)) $ allKUActions sys
             -- and check whether any of them happens before the KD-conclusion
             ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start 
+
+-- | The list of all open goals left together with their status.
+planeOpenGoals:: System -> [(Goal, Status)]
+planeOpenGoals sys = openGoalsLeft
+  where
+    openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
+    isOpen(_, status) = case status of
+      GoalStatus s _ _ -> not s
                                 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's

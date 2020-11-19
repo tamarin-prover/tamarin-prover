@@ -239,9 +239,9 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
         Solved True
-          | checkIfNoOpenGoalsPresent sys -> return M.empty -- SOLVED inside of a proof and no open goals
-          | otherwise            -> Nothing -- SOLVED inside of a proof and open goals left
-        Solved False             -> Nothing -- SOLVED at the start of a proof
+          | null (planeOpenGoals sys) -> return M.empty -- SOLVED inside of a proof and no open goals
+          | otherwise                 -> Nothing -- SOLVED inside of a proof and open goals left
+        Solved False                  -> Nothing -- SOLVED at the start of a proof
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
           | otherwise                        -> Nothing
