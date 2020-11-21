@@ -52,6 +52,7 @@ blocking :: LProcess ann -> Bool
 blocking (ProcessNull _)           = True
 blocking (ProcessAction ac _ _ )   = isBlockingAct ac
 blocking (ProcessComb NDC _ pl pr) = blocking pl && blocking pr
+-- blocking (ProcessComb (Let _ _) _ _ _) = True
 blocking _                         =  False
 
 -- | next position to jump to

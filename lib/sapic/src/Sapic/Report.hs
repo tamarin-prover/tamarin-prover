@@ -85,6 +85,7 @@ reportMapTermsComb:: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
 reportMapTermsComb f loc c
         | (Cond _) <- c = Cond $ undefined -- same problem as above
         | (CondEq t1 t2) <- c = CondEq (f loc t1) (f loc t2)
+        | (Let t1 t2) <- c = Let (f loc t1) (f loc t2)
         | (Lookup t v) <- c = Lookup (f loc t) v
         | otherwise = c
 

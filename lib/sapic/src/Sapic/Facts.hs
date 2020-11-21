@@ -89,6 +89,7 @@ data TransAction =
 data StateKind  = LState | PState | LSemiState | PSemiState
 data TransFact =  Fr LVar | In LNTerm
             | Out LNTerm
+            | FLet LNTerm
             | Message LNTerm LNTerm
             | Ack LNTerm LNTerm
             | State StateKind ProcessPosition (S.Set LVar)
@@ -225,6 +226,7 @@ factToFact :: TransFact -> Fact LNTerm
 factToFact (Fr v) = freshFact $ varTerm (v)
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
+factToFact (FLet t) = protoFact Linear "Let" [t]
 factToFact (Message t t') = protoFact Linear "Message" [t, t']
 factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
 factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMID p ]

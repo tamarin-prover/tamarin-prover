@@ -186,13 +186,30 @@ baseTransComb c _ p tildex
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
         if vars_f `isSubsetOf` tildex then
-                ([ ([def_state], [PredicateA fa], [def_state1 tildex], []),
+                ([ ([def_state],  [PredicateA fa], [def_state1 tildex], []),
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
                     throw (
                     ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
+    | Let t1' t2' <- c
+    , t1 <- toLNTerm t1' , t2 <- toLNTerm t2',
+      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
+      =
+        let freevars = freeset t1 in
+        let faN = fold (\v f -> hinted forall v f ) fa freevars in
+        let tildexl = freevars `union` tildex in
+        let faP = toLNFact (protoFact Linear "Eq" [t1',t2']) in
+        let semistate = State LSemiState (p++[1]) tildex in
+          ([
+
+              ([def_state], [], [FLet t2,semistate], []),
+              ([semistate, FLet t1], [PredicateA faP], [def_state1 tildexl], []),
+              ([semistate], [] , [def_state2 tildex], [faN])
+           ],
+           tildexl, tildex)
+
     | Lookup t' v' <- c
       , t <- toLNTerm t', v <- toLVar v' =
            let tx' = v `insert` tildex in
@@ -205,6 +222,7 @@ baseTransComb c _ p tildex
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
+        freeset = fromList . frees
 
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
@@ -349,6 +367,8 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
          else [])
         ++
         addIf (contains isEq) [resEq, resNotEq]
+        ++
+        addIf (contains isLet) [resEq]
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++

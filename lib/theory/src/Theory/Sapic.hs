@@ -158,7 +158,7 @@ deriving instance (Data v, Generic v) => Data (SapicAction v)
 
 -- | When the process tree splits, it is connected with one of these connectives
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
-        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v
+        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v | Let (SapicNTerm v) (SapicNTerm v)
             deriving (Functor,Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -228,6 +228,7 @@ mapTermsComb :: (SapicNTerm t -> SapicNTerm v)
 mapTermsComb f ff fv c
         | (Cond fa) <- c = Cond $ ff fa
         | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
+        | (Let t1 t2) <- c  = Let (f t1) (f t2)
         | (Lookup t v) <- c = Lookup (f t) (fv v)
         | Parallel <- c = Parallel
         | NDC    <- c   = NDC
@@ -344,6 +345,7 @@ traverseTermsComb :: Applicative f =>
 traverseTermsComb ft ff fv c
         | (Cond fa)      <- c = Cond <$> ff fa
         | (CondEq t1 t2) <- c = CondEq <$> ft t1 <*> ft t2
+        | (Let t1 t2) <- c    = Let <$> ft t1 <*> ft t2
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
@@ -512,6 +514,8 @@ prettySapicComb Parallel = "|"
 prettySapicComb NDC = "+"
 prettySapicComb (Cond a) = "if "++ render (prettySyntacticSapicFormula a)
 prettySapicComb (CondEq t t') = "if "++ p t ++ "=" ++ p t'
+                                    where p = render . prettySapicTerm
+prettySapicComb (Let t t') = "let "++ p t ++ "=" ++ p t'
                                     where p = render . prettySapicTerm
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm

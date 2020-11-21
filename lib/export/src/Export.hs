@@ -99,6 +99,13 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   ),
   (pairFunSig,  [Eq "reduc forall a:bitstring,b:bitstring; fst((a,b))=a.",
   Eq  "reduc forall a:bitstring,b:bitstring; snd((a,b))=b."]
+  ),
+  (asymEncFunSig, [
+      Sym "type skey.",
+      Sym "type pkey.",
+      Fun "fun aenc(bitstring,pkey):bitstring.",
+      Fun "fun pk(skey):pkey.",
+      Eq "reduc forall m:bitstring,sk:skey; adec(aenc(m,pk(sk)),sk) = m."]
   )
   ]
 

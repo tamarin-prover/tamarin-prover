@@ -410,7 +410,6 @@ genericletBlock varp =
     toSubst = foldr1 compose . map (substFromList . return)
     definition = (,) <$> (varp <* equalSign) <*> msetterm False (vlit varp)
 
-
 letBlock :: Parser LNSubst
 letBlock = genericletBlock (sortedLVar [LSortMsg])
 
@@ -535,7 +534,7 @@ transferProto = do
     name <- symbol "anb-proto" *> identifier
     braced (convTransferProto name <$> abbrevs <*> many1 transfer)
   where
-    abbrevs = (symbol "let" *> many1 abbrev) <|> pure []
+    abbrevs = (symbol "let"*> many1 abbrev) <|> pure []
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
 -}
 
@@ -1137,13 +1136,13 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         return p)
-            <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar
-                        p <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
-                        )
+            -- <|>    try  (do -- let expression parser
+            --             subst <- genericletBlock sapicvar
+            --             p <- process thy
+            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
+            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
+            --                 (Right p') -> return p'
+            --             )
             <|>    do       -- action at top-level
                         p <- actionprocess thy
                         return p
@@ -1184,6 +1183,25 @@ actionprocess thy=
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
                         return (ProcessComb (CondEq t1 t2  ) mempty p q)
                         <?> "conditional process (with equality)"
+                   )
+            <|>    try  (do -- let expression parser
+                        subst <- genericletBlock sapicvar
+                        p     <- process thy
+                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
+                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
+                            (Right p') -> return p'
+                        )
+
+            <|> try (do
+                        _ <- symbol "let"
+                        t1 <- msetterm False ltypedlit
+                        _ <- opEqual
+                        t2 <- msetterm False ltypedlit
+                        _ <- symbol "in"
+                        p <- process thy
+                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
+                        return (ProcessComb (Let t1 t2) mempty p q)
+                        <?> "let binding"
                    )
             <|> try (do
                         _ <- symbol "if"
@@ -1227,13 +1245,6 @@ actionprocess thy=
                         a <- let p = checkProcess (BC.unpack i) thy in
                              (\x -> paddAnn x [ProcessName $ BC.unpack i]) <$> p
                         return a
-                        )
-            <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar
-                        p     <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
                         )
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
