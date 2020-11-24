@@ -177,27 +177,27 @@ ppTheory msig = BC.unlines $
     ++
     (if enableMSet msig
        then
-       [ theoryOp "mun : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpAC "mun : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     (if enableDH msig
        then
-       [ theoryOp "one : -> Msg"
-       , theoryOp "exp : Msg Msg -> Msg"
-       , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
-       , theoryOp "inv : Msg -> Msg" ]
+       [ theoryOpEq "one : -> Msg"
+       , theoryOpEq "exp : Msg Msg -> Msg"
+       , theoryOpAC "mult : Msg Msg -> Msg [comm assoc]"
+       , theoryOpEq "inv : Msg -> Msg" ]
        else [])
     ++
     (if enableBP msig
        then
-       [ theoryOp "pmult : Msg Msg -> Msg"
-       , theoryOp "em : Msg Msg -> Msg [comm]" ]
+       [ theoryOpEq "pmult : Msg Msg -> Msg"
+       , theoryOpEq "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
     (if enableXor msig
        then
-       [ theoryOp "zero : -> Msg"
-       , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpEq "zero : -> Msg"
+       , theoryOpAC "xor : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)
@@ -206,11 +206,14 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    theoryOpNoEq priv cnstr fsort =
-        "  op " <> funSymPrefix <> funSymEncodeAttr priv cnstr <> fsort <>" ."
-    theoryOp = theoryOpNoEq Public Constructor
+    maybeEncode (Just (priv,cnstr)) = funSymEncodeAttr priv cnstr
+    maybeEncode Nothing             = ""
+    theoryOp attr fsort =
+        "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
+    theoryOpEq = theoryOp (Just (Public,Constructor))
+    theoryOpAC = theoryOp Nothing
     theoryFunSym (s,(ar,priv,cnstr)) =
-        theoryOpNoEq priv cnstr (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+        theoryOp  (Just(priv,cnstr)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
