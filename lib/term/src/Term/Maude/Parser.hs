@@ -191,7 +191,7 @@ ppTheory msig = BC.unlines $
     (if enableBP msig
        then
        [ theoryOpEq "pmult : Msg Msg -> Msg"
-       , theoryOpEq "em : Msg Msg -> Msg [comm]" ]
+       , theoryOpC "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
     (if enableXor msig
@@ -212,6 +212,7 @@ ppTheory msig = BC.unlines $
         "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
     theoryOpEq = theoryOp (Just (Public,Constructor))
     theoryOpAC = theoryOp Nothing
+    theoryOpC  = theoryOp Nothing
     theoryFunSym (s,(ar,priv,cnstr)) =
         theoryOp  (Just(priv,cnstr)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
