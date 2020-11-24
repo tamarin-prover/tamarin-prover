@@ -370,17 +370,16 @@ protoRule = do
     return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)
 
 -- | Parse a let block with bottom-up application semantics.
--- genericletBlock :: Parser (Term (Lit c v)) -> Parser (Subst c v)
-genericletBlock :: (IsVar v) =>  Parser v -> Parser (Subst Name v)
-genericletBlock varp = 
+genericletBlock :: (IsConst c, IsVar v) => Parser v -> Parser (VTerm c v) -> Parser (Subst c v)
+genericletBlock varp termp = 
     toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
   where
     toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (varp <* equalSign) <*> msetterm (vlit varp)
+    definition = (,) <$> (varp <* equalSign) <*> termp
 
 
 letBlock :: Parser LNSubst
-letBlock = genericletBlock (sortedLVar [LSortMsg])
+letBlock = genericletBlock (sortedLVar [LSortMsg]) (msetterm llit)
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -990,6 +989,10 @@ processDef thy= do
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p )
 
+-- | Parse a variable in SAPIC that is typed
+sapicterm :: Parser (Term (Lit Name SapicLVar))
+sapicterm = msetterm (vlit sapicvar)
+
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
@@ -1116,7 +1119,7 @@ process thy=
                         _ <- symbol ")"
                         return p)
             <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar
+                        subst <- genericletBlock sapicvar sapicterm
                         p <- process thy
                         case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
@@ -1191,7 +1194,7 @@ actionprocess thy=
                         return a 
                         )
             <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar
+                        subst <- genericletBlock sapicvar sapicterm
                         p     <- process thy
                         case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of 
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
