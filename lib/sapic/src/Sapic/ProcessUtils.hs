@@ -12,7 +12,6 @@ module Sapic.ProcessUtils (
 ,  processContains
 ,  isLookup
 ,  isEq
-, isLet
 ,  isDelete
 ,  isLock
 ,  isUnlock
@@ -80,7 +79,3 @@ isChOut _  = False
 isEq :: Process ann v -> Bool
 isEq (ProcessComb (CondEq _ _) _ _ _) = True
 isEq _  = False
-
-isLet :: Process ann v -> Bool
-isLet (ProcessComb (Let _ _) _ _ _) = True
-isLet _  = False

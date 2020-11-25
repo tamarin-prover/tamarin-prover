@@ -164,7 +164,7 @@ baseTransAction needsAssImmediate ac an p tildex
 --      the set of bound variables for the lhs process
 --      the set of bound variables for the rhs process
 baseTransComb :: TransFComb TranslationResultComb
-baseTransComb c _ p tildex
+baseTransComb c an p tildex
     | Parallel <- c = (
                [([def_state], [], [def_state1 tildex,def_state2 tildex], [])]
              , tildex, tildex )
@@ -195,20 +195,35 @@ baseTransComb c _ p tildex
                         :: SapicException AnnotatedProcess)
     | Let t1' t2' <- c
     , t1 <- toLNTerm t1' , t2 <- toLNTerm t2',
-      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
+      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False),
+      Nothing <- destructorEquation an
       =
         let freevars = freeset t1 in
         let faN = fold (\v f -> hinted forall v f ) fa freevars in
         let tildexl = freevars `union` tildex in
-        let faP = toLNFact (protoFact Linear "Eq" [t1',t2']) in
-        let semistate = State LSemiState (p++[1]) tildex in
+        let pos = p++[1] in
           ([
-
-              ([def_state], [], [FLet t2,semistate], []),
-              ([semistate, FLet t1], [PredicateA faP], [def_state1 tildexl], []),
-              ([semistate], [] , [def_state2 tildex], [faN])
+              ([def_state], [], [FLet pos t2 tildex], []),
+              ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
+              ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
            ],
-           tildexl, tildex)
+            tildexl, tildex)
+    | Let _ _ <- c,
+      Just (t1, t2) <- destructorEquation an,
+      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
+      =
+        let freevars = freeset t1 in
+        let faN = fold (\v f -> hinted forall v f ) fa (freevars `difference` tildex) in
+        let tildexl = freevars `union` tildex in
+        let pos = p++[1] in
+          ([
+              ([def_state], [],  [FLet pos t2 tildex], []),
+              ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
+              ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
+           ],
+            tildexl, tildex)
+
+
 
     | Lookup t' v' <- c
       , t <- toLNTerm t', v <- toLVar v' =
@@ -367,8 +382,6 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
          else [])
         ++
         addIf (contains isEq) [resEq, resNotEq]
-        ++
-        addIf (contains isLet) [resEq]
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++

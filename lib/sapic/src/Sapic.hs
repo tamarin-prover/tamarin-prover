@@ -33,6 +33,7 @@ import Sapic.Report
 import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
+import Sapic.LetDestructors
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
@@ -108,7 +109,7 @@ translate th = case theoryProcesses th of
 
       [p] -> if all allUnique (bindings p) then do
                 -- annotate
-                an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
+                an_proc <- evalFreshT (annotateLocks $ (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
@@ -142,6 +143,7 @@ translate th = case theoryProcesses th of
         translateTermsReport anp
       else
         anp
+    sigRules =  stRules (L.get sigpMaudeSig (L.get thySignature th))
     checkOps lens x
         | L.get lens ops = Just x
         | otherwise = Nothing

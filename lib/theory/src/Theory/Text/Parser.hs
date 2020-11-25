@@ -1150,13 +1150,13 @@ process thy=
                         p <- process thy
                         _ <- symbol ")"
                         return p)
-            <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar sapicterm
-                        p <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
-                        )
+            -- <|>    try  (do -- let expression parser
+            --             subst <- genericletBlock sapicvar sapicterm
+            --             p <- process thy
+            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
+            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
+            --                 (Right p') -> return p'
+            --             )
             <|>    do       -- action at top-level
                         p <- actionprocess thy
                         return p
@@ -1198,14 +1198,13 @@ actionprocess thy=
                         return (ProcessComb (CondEq t1 t2  ) mempty p q)
                         <?> "conditional process (with equality)"
                    )
-            <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar sapicterm
-                        p     <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
-                        )
-
+            -- <|>    try  (do -- let expression parser
+            --             subst <- genericletBlock sapicvar sapicterm
+            --             p     <- process thy
+            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
+            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
+            --                 (Right p') -> return p'
+            --             )
             <|> try (do
                         _ <- symbol "let"
                         t1 <- msetterm False ltypedlit

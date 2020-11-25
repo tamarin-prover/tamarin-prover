@@ -67,6 +67,7 @@ library
       , Sapic.ProcessUtils
       , Sapic.Locks
       , Sapic.SecretChannels
+      , Sapic.LetDestructors
       , Sapic.Facts
       , Sapic.Basetranslation
       , Sapic.ProgressFunction
