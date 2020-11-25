@@ -1,0 +1,116 @@
+theory AssImmediateTestAll begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma intuitiveTest:
+  all-traces
+  "∀ #a #b.
+    ((A( ) @ #a) ∧ (B( ) @ #b)) ⇒
+    (∃ #i x. ((K( x ) @ #i) ∧ (#a < #i)) ∧ (#i < #b))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #a #b.
+  (A( ) @ #a) ∧ (B( ) @ #b)
+ ∧
+  ∀ #i x. (K( x ) @ #i) ⇒ ((¬(#a < #i)) ∨ (¬(#i < #b)))"
+*/
+simplify
+solve( state_11( x ) ▶₀ #a )
+  case outx_0_1
+  solve( state_1111( x ) ▶₀ #b )
+    case inxx_0_111
+    by contradiction /* cyclic */
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff process=new x;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_[color=#ffffff process=new x;]:
+   [ state_( ), Fr( x ) ] --> [ state_1( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outx_0_1[color=#ffffff process=out(x);]:
+   [ state_1( x ) ] --> [ state_11( x ), Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_11[color=#ffffff process=event A( );]:
+   [ state_11( x ) ] --[ A( ), Event( ) ]-> [ state_111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inxx_0_111[color=#ffffff process=in(x,x);]:
+   [ state_111( x ), In( <x, x> ) ]
+  --[ ChannelIn( <x, x> ) ]->
+   [ state_1111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inxx_1_111[color=#ffffff process=in(x,x);]:
+   [ state_111( x ), Message( x, x ) ] --> [ Ack( x, x ), state_1111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventB_0_1111[color=#ffffff process=event B( );]:
+   [ state_1111( x ) ] --[ B( ), Event( ) ]-> [ state_11111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11111[color=#ffffff process=0]:
+   [ state_11111( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction ass_immediate:
+  "∀ x #t3.
+    (ChannelIn( x ) @ #t3) ⇒
+    (∃ #t2.
+      (((K( x ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 xp.
+        (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-ass-immediate/test-all.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-ass-immediate/test-all.spthy
+
+  output:          examples/sapic/fast/feature-ass-immediate/test-all.spthy.tmp
+  processing time: 0.091447s
+  intuitiveTest (all-traces): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-ass-immediate/test-all.spthy
+
+  output:          examples/sapic/fast/feature-ass-immediate/test-all.spthy.tmp
+  processing time: 0.091447s
+  intuitiveTest (all-traces): verified (4 steps)
+
+==============================================================================
+*/

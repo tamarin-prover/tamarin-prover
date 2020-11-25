@@ -1,0 +1,228 @@
+theory alethea_sel_ShHh_A
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea's selection phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+* Notes:
+- as S is honest, we do not model the environment E and say that "S knows the decision who is chosen" and acts accordingly (we model this by saying that S knows that the voter at the first position (in S's knowledge) will be chosen).
+Also we merge S's first rule into the setup. As an adversary cannot access an agent's knowledge, this does not prevent any attacks
+- as S is honest, we do not model the auditors. nevertheless we model the posting of messages to BB, such that the adversary can still learn everything that auditors normally learn.
+
+=========
+RESULTS: 
+=========
+
+- lemma functional: 
+	LHS:			verified w/o oracle, checked 		
+	RHS:			verified w/o oracle, checked 		
+
+- lemma indivVerif_ps: 
+	LHS:			verified w/o oracle
+	RHS: 			verified w/o oracle
+- lemma indivVerif_sel: 	
+	LHS:			verified w/o oracle
+	RHS: 			verified w/o oracle
+
+- lemma Observational_equivalence (anonymity):	
+				verified w/o oracle
+
+
+*/
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: signing, asymmetric-encryption, hashing, symmetric-encryption, multiset
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~eskD1), !Ltk('D2',~eskD2), Fr(~x1), Fr(~x2) ] 
+  	--[ 	Setup(), 
+		Voter('H1'), 
+		Voter('H2'),
+		Device('H1','D1'),
+		Device('H2','D2'),
+		Pseudonym(diff(<'H1', pk(h('H1',~x1))>,<'H2', pk(h('H2',~x2))>),
+			  diff(<'H2', pk(h('H2',~x2))>,<'H1', pk(h('H1',~x1))>) )
+
+	]-> 
+	[ AgSt_D0(diff(<'D1',<'H1','S',~eskD1,pk(~skS)>>,<'D2',<'H2','S',~eskD2,pk(~skS)>>) )
+	, AgSt_D0(diff(<'D2',<'H2','S',~eskD2,pk(~skS)>>,<'D1',<'H1','S',~eskD1,pk(~skS)>>) )
+	
+	, AgSt_S0('S', <'E',~skS, diff(<'H1','D1',pk(~eskD1),~x1>,<'H2','D2',pk(~eskD2),~x2>), 
+				  diff(<'H2','D2',pk(~eskD2),~x2>,<'H1','D1',pk(~eskD1),~x1>) >) 
+
+	, AgSt_BB0('BB',<'S'>) 
+		
+	, AgSt_H0(diff(<'H1',<'D1','BB'>>,<'H2',<'D2','BB'>>))
+	, AgSt_H0(diff(<'H2',<'D2','BB'>>,<'H1',<'D1','BB'>>))
+
+	//first events of S:
+	//in left system choose H1 and send this information out first, in right one choose H2 and send this code out first.
+	//the reodering is done such that Tamarin cannot find attacks just by seeing if something is sent out as 1st or 2nd fact (this models that the adverary cannot learn anything from the order of the codes in the lists)
+	, Out_A('S', diff(aenc(~x1,pk(~eskD1)),aenc(~x2,pk(~eskD2))) )	
+	, Out_A('S', diff(aenc(~x2,pk(~eskD2)),aenc(~x1,pk(~eskD1))) )
+	, Out_A('S', <'spkDs', diff(pk(h('H1',~x1)),pk(h('H2',~x2))),diff(pk(h('H2',~x2)),pk(h('H1',~x1)))>)		
+
+	]
+
+rule BB_1:
+	[ AgSt_BB0($BB,<$S>) 
+	, In_A($S,<'spkDs',spkDa,spkDb >)
+	]
+	--[ 	BB_spkDs($BB,<'spkDs',spkDa,spkDb >), //corresponds to signal BBps in thesis
+		Running_DBB($BB,spkDa), 
+		Running_DBB($BB,spkDb)
+	]->
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, Out_A($BB,<'spkDs',spkDa,spkDb >)
+
+	]
+
+rule D_1: 
+	[ AgSt_D0(<$D,<$H,$S,~eskD,pkS> >)
+	, In_A($S, aenc(x,pk(~eskD)) )
+	
+	]
+	--[ 	D($D), 
+		Running_DS($D,$S,<pk(~eskD),pkS,h($H,x)>),
+		Commit_DBB($D,<pk(h($H,x))>),
+	    	Secret($D,x)	
+	]->
+	[ Out_S($D,$H,pk(h($H,x)) ) ]
+
+rule H_5: 
+	[ AgSt_H0(<$H,< $D,$BB >>)
+	, In_S($D,$H,spkDD)
+	, In_A($BB,<'spkDs',spkDa,spkDb >)
+	] 
+	--[ 	Verify_spkDD($H,spkDD,spkDa,spkDb)  // corresponds to signal verify_ps(H, pkD \in [pkD]) in thesis
+	]-> 
+	[ AgSt_H1($H,<$D,$BB,spkDD,spkDa,spkDb >)]
+
+rule S_2a: 
+	[ AgSt_S0($S, <$E,~skS, <$Hs,$Ds,epkDs,~xs>,   //always choose the H in the first position (s= selected, o= other)
+				<$Ho,$Do,epkDo,~xo> >) 
+	]
+ 	--[ 	Commit_DS($Ds,$S,<epkDs,pk(~skS),h($Hs,~xs)>),
+		Commit_DS($Do,$S,<epkDo,pk(~skS),h($Ho,~xo)>),
+		Running_SBB($S,pk(h($Hs,~xs)))
+	]->  
+	[ Out_A($S,<'SG',pk(h($Hs,~xs))>)	
+	] 
+
+rule BB_2:
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, In_A($S,<'SG',spkDsel>)
+	]
+	--[ 	BB_SG($BB,<'SG',spkDsel >),
+		Commit_SBB($BB,spkDsel)
+	]->
+	[ Out_A($BB,<'SG',spkDsel>)
+	]
+
+rule H_9: 
+	[ AgSt_H1($H,<$D,$BB,spkDD,spkDa,spkDb >),
+	  In_A($BB,<'SG',spkDsel>)
+	]
+	--[    	H($H),		
+		Sel($H, spkDD, spkDsel) // corresponds to signal verify_sel(H,pkD\in[pkDSG]) in thesis
+	]->
+	[ ]
+
+/* =========
+RESTRICTIONS
+========== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+lemma functional: exists-trace  //spkD2,spkD1 in list and spkD2 chosen in SG
+	" Ex H1 H2 #i spkD2 spkD1 BB  #j  #k #l  #n #o  #p
+	      	.
+		not (H1 = H2)
+		& Pseudonym(<H1,spkD1>,<H2,spkD2>) @i 
+		& BB_spkDs(BB,<'spkDs',spkD1,spkD2 >) @j
+		& Verify_spkDD(H1,spkD1,spkD1,spkD2 ) @k
+		& Verify_spkDD(H2,spkD2,spkD1,spkD2 ) @l
+		& BB_SG(BB,<'SG',spkD1 >) @n
+		& Sel(H1, spkD1, spkD1) @o
+		& Sel(H2, spkD2, spkD1) @p
+	 "
+
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_ps: // pkD \in [pkD] from thesis is expressed as "either pkD is first or second element of [pkD]"
+	" (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDD,spkDb) @i  
+	==> (Ex BB spkD2 x #j. 
+		BB_spkDs(BB,<'spkDs',spkDD,spkD2 >) @j
+		& spkDD =pk(h(H,x))
+	     )
+	 )
+	& (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDb,spkDD) @i  
+	==> (Ex BB spkD2 x #j.  
+		BB_spkDs(BB,<'spkDs',spkD2,spkDD >) @j
+		& spkDD =pk(h(H,x)) 
+	     )
+	 )	
+	"
+
+lemma indivVerif_sel:
+	" All H spkDD #i .
+		Sel(H, spkDD, spkDD) @i
+	==> Ex x BB #j. 
+		BB_SG(BB,<'SG',spkDD >) @j
+		& spkDD = pk(h(H,x)) 
+		"
+
+
+
+
+end
+

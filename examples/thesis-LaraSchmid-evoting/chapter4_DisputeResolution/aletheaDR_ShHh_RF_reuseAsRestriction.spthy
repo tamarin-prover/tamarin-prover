@@ -1,0 +1,405 @@
+theory aletheaDR_ShHh_RF_reuseAsRestriction
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-DR's voting phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+* Notes: 
+- By Trust Assumption AL 2 [1], for modeling receipt-freeness, we consider a voter who sends all his secrets to the adversary. We model this as follows: Whenever the voter learns a new term (including his initial knowledge), this term is sent to the adversary by an "Out()" fact. 
+
+- As S is honest by Trust Assumption AL 4 [1], we optimize the efficiency of the model by leaving away or merging rules. We make the following simplifications:
+-- BB and S are modeled in the same role "S". (With an honest S, the BB's content always agrees with the knowledge of S)
+-- we do not model the auditors and not analyze the universal verifiability properties. (An honest S always behaves as expected)
+-- we merge the rule H_1 (the first rule of the voter) into the setup rule. (The transition from the setup rule to the rule H_1 only forwards the knowledge of the voter. As the adversary in our model cannot see/change the internal storage of the voter, there is no difference in including these facts in the same or in two differnet rules.)
+-- we abstract the fact that there is a reliable channel from H to P and from P to S and that P is partially trusted to forward messages, by modeling a reliable channel from H to S. Similalry, we model by a reliable channel from S to H that there is a reliable channel from S to P, that P is partially trusted to forward messages, and that the channel (P,H) is reliable.
+
+- The files aletheaDR_ShHh_RF.spthy and mixvote_ShHh_RF_reuseAsRestriction.spthy model the same protocol under the same adversary model. The only difference is that the reuse lemmas in mixvote_ShHh_RF.spthy are modeled as restrictions in mixvote_ShHh_RF_reuseAsRestriction.spthy. 
+We proved all reuse lemmas as well as (normal) lemmas in mixvote_ShHh_RF.spthy, except for observational equivalence which we proved in mixvote_ShHh_RF_reuseAsRestriction.spthy. 
+As we proved in the former that all reuse lemmas hold, we can safely use them as restriction in the latter (the reuse lemmas and restrictions exclude the same set of traces), which helps in proving the observational equivalence property.
+
+========
+RESULTS:
+========
+- lemma Observational_equivalence: verified  (1617899 steps)
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+functions and equations 
+======================= */
+builtins: hashing, asymmetric-encryption, multiset
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+// the function models that given a signature, one can also see the signed plaintext (only if one has the public key, but adversary has all public keys). With this, we do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+
+
+/* ==========
+Channel rules
+============= */
+
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+//reliable insecure channel from H to P to S: all messages sent on a reliable channel, are received unchanged; merged assumptions here for simplicity
+
+rule ChanOut_IR_HP:  	[ Out_IR_HP($A,$B,m) ]--[ ChanOut_IR_HP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PS:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PS($A,$B,m) ]->[ In_IR_PS($A,$B,m) ] 
+restriction Chan_R_HS:
+	"All A B m #i. Send_R_HP(A,B,m) @i ==> Ex #j C. Receive_R_PS(B,C,m) @j " 
+
+ 
+//reliable insecure channel from S to P to H: all messages sent on a reliable channel, are received unchanged; merged assumptions here for simplicity
+rule ChanOut_IR_SP:  	[ Out_IR_SP($A,$B,m) ]--[ ChanOut_IR_SP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PH:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PH($A,$B,m) ]->[ In_IR_PH($A,$B,m) ] 
+restriction Chan_R_SH:
+	"All A B m #i. Send_R_SP(A,B,m) @i ==> Ex C #j. Receive_R_PH(B,C,m) @j "
+
+
+/* ======================
+Adversary's fake evidence
+====================== */
+// the adversary can claim any term that he knows to be evidence
+rule fakeEvidence:
+	[ In(<ballot,evidence>) ] --[ Evidence(ballot,evidence) ]-> [ ] 
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~sskD1), !Ltk('D2',~sskD2) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkD', pk(~sskD1)+pk(~sskD2) >), //corresponds to signal BBps in thesis
+		BB_pkS('BB',<'spkS', pk(~skS)>),	
+		BB_H('BB',<'H','H1'+'H2'>),
+		// castBy is defined over the relation of the voters and their devices' keys
+		CastByCorresp('H1', pk(~sskD1)),  //corresponds to signal "Corr" in thesis
+		CastByCorresp('H2', pk(~sskD2)),  //corresponds to signal "Corr" in thesis
+		Voter('H1'),
+		Voter('H2'),
+		SecretKeyD(~sskD1),
+		SecretKeyD(~sskD2),
+		Server('S'), Honest('S'),
+		Vote('H1',diff($v1,$v2)),
+		Vote('H2',diff($v2,$v1))		
+	]-> 
+  	[ AgSt_H1('H1',< 'D1',$P1,'BB',diff($v1,$v2)>)
+	, AgSt_H1('H2',< 'D2',$P2,'BB',diff($v2,$v1)>) //leave open whether P1 and P2 are instantiated by same agent or not
+		
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),~sskD1 >)
+	, AgSt_D0('D2',< 'H2','S',pk(~skS),~sskD2 >)	
+	
+	
+	, Out_A('BB',<'spkD', pk(~sskD1)+pk(~sskD2)>)
+	, Out_A('BB',<'spkS', pk(~skS)>)
+	, Out_A('BB',<'H','H1'+'H2'>)
+	
+	, AgSt_S0('S','BB', <~skS, pk(~sskD1)+pk(~sskD2)>) // S and BB merged
+
+
+	//merged rule H_1 here, as adversary cannot change internal knowledge of a voter
+	, Out_S('H1','D1',diff($v1,$v2))
+	, Out_S('H2','D2',diff($v2,$v1))
+	
+	// for receipt-freeness (RF): H1 reaveals all his knowledge to adversary except that he always claims to have voter for $v1
+	, Out(<'D1',$P1,'BB',$v1>)
+  	]
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,~sskD >), In_S($H,$D,v), Fr(~r) ]
+	--[  	D1() ]->
+	[ Out_S($D,$H, sg(encp(v,~r,pkS),~sskD) )
+	]
+
+rule H_2:
+	[ AgSt_H1($H, <$D, $P, $BB, $v>), In_S($D,$H, b) ]
+	--[	Ballot($H,b),
+		Send($H,$P,b),
+		Comm_H_vote($H,$S,$v),
+		Comm_H_ballot($H,$S,b),
+		Send_R_HP($H,$P,b),
+		H2($H)	
+	]->
+	[ AgSt_H2($H, <$D, $P, $BB, $v, b>),
+	  Out_IR_HP($H,$P,b)
+	  // RF: all new knowledge of H is already sent on an insecure channel, so adversary can learn it
+	]
+
+rule S_1a: 
+	[ AgSt_S0($S,$BB, <~skS, pk(~sskDa)+pk(~sskDb)>),
+	  In_IR_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)) ]
+	--[ Learn_S_ballot($S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Receive_R_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Send_R_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS)),
+	    S1a()
+	]->
+	[ AgSt_S1a($S,$BB, < ~skS, sg(encp(va,ra,pk(~skS)),~sskDa), pk(~sskDb) >), // pk(~sskDa) is taken out of knowledge, as S will not accept another vote with this signature
+	  Out_IR_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS))]
+
+rule S_1b:
+	[ AgSt_S1a($S,$BB, < ~skS, sg(encp(va,ra,pk(~skS)),~sskDa), pk(~sskDb) >), 
+	  In_IR_PS($P,$S,sg(encp(vb,rb,pk(~skS)),~sskDb)) ]
+	--[ Learn_S_ballot($S,sg(encp(vb,rb,pk(~skS)),~sskDb)),
+	    Receive_R_PS($P,$S,sg(encp(vb,rb,pk(~skS)),~sskDb)),
+	    Send_R_SP($S,$P,sg(sg(encp(vb,rb,pk(~skS)),~sskDb),~skS)),
+	    S1b()
+	]->
+	[ AgSt_S1a($S,$BB, < ~skS, sg(encp(va,ra,pk(~skS)),~sskDa) + sg(encp(vb,rb,pk(~skS)),~sskDb) >), 
+	  Out_IR_SP($S,$P,sg(sg(encp(vb,rb,pk(~skS)),~sskDb),~skS))
+	]
+
+rule H_3:
+	[ AgSt_H2($H, <$D, $P, $BB, $v, b>), In_IR_PH($P,$H,c)]
+	--[ Receive_R_PH($P,$H,c),
+	    Evidence(b,c),
+	    H3($H)
+	]->
+	[ AgSt_H3($H, <$D, $P, $BB, $v, b, c>)
+	  // RF: all new knolwedge of H1 is already received on an insecure channel, so adversary can learn it
+	]
+
+rule SandBB: 
+	[ AgSt_S1a($S,$BB, < ~skS, sg(encp(va,ra,pk(~skS)),~sskDa) + sg(encp(vb,rb,pk(~skS)),~sskDb) >)
+	]
+ 	--[ 	BB_rec($BB,<'b', sg(encp(va,ra,pk(~skS)),~sskDa) + sg(encp(vb,rb,pk(~skS)),~sskDb)>),
+		BB_woS($BB,<'bPrime', encp(va,ra,pk(~skS)) + encp(vb,rb,pk(~skS)) >),
+		BB_tal($BB,<'v', va + vb >),
+		BB_zkp($BB,<'zkp', zkp(<encp(va,ra,pk(~skS)),encp(vb,rb,pk(~skS))>,<va,vb>,~skS)>),
+		End()
+	]->  
+	[ Out_A($BB, <'b', sg(encp(va,ra,pk(~skS)),~sskDa) + sg(encp(vb,rb,pk(~skS)),~sskDb)>)
+	, Out_A($BB, <'bPrime', encp(va,ra,pk(~skS)) + encp(vb,rb,pk(~skS)) >)
+	, Out_A($BB, <'v', va + vb>)
+	, Out_A($BB, <'zkp', zkp(<encp(va,ra,pk(~skS)),encp(vb,rb,pk(~skS))>,<va,vb>,~skS)>)
+
+	]
+
+rule H_4: 
+	[ AgSt_H3($H, <$D, $P, $BB, $v, b, c>),
+	  In_A($BB, <'b', ba + bc >)
+	]
+	--[	Verify($H,b,ba + bc), //captures both VerifyC and VerifyH from [1]
+	  	H4()
+	]->
+	[  // RF: all new knowledge of H1 is already received on an authentic channel, so adversary can learn it
+	 ]
+
+
+
+/* =========
+RESTRICTIONS
+========= */
+// there is only one setup
+restriction OneSetup: 
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+
+/* ====
+LEMMAS 
+======= */
+//reuse lemmas are now modeled as restrictions:
+restriction onlyonce1: " All #i #j. S1a() @i & S1a() @j ==> #i = #j "
+restriction onlyonce2: " All #i #j. S1b() @i & S1b() @j ==> #i = #j "
+restriction onlyonce3: " All #i #j H. H2(H) @i & H2(H) @j ==> #i = #j "
+restriction onlyonce4: " All #i #j H. H2(H) @i & H2(H) @j ==> (H='H1' | H='H2') "
+restriction onlyonce5: " All #i #j H. H3(H) @i & H3(H) @j ==> #i = #j "
+restriction onlyonce6: " All #i #j H. H3(H) @i & H3(H) @j ==> (H='H1' | H='H2') "
+
+
+/* ================
+FUNCTIONAL PROPERTY
+=================== */
+
+lemma functional: exists-trace
+	" Ex H1 H2 v1 v2 #i #j #k #i2 #j2 #k2 b1 b2
+		S #s1 #s2 skS #o #o2 #p #q BB #r #s 
+		.
+		not(H1=H2) & not(v1=v2)
+		& Vote(H1,v1) @i	
+		& D1() @j
+		& Ballot(H1,b1) @k
+		& Vote(H2,v2) @i2
+		& D1() @j2
+		& Ballot(H2,b2) @k2
+				
+		& Learn_S_ballot(S,b1) @s1
+		& Learn_S_ballot(S,b2) @s2
+
+		& Evidence(b1,sg(b1,skS)) @o		
+		& Evidence(b2,sg(b2,skS)) @o2
+
+		& BB_rec(BB,<'b', b1 +b2  >) @p
+		& BB_tal(BB,<'v', v1 +v2 >) @q
+		
+		& Verify(H1,b1,b1 +b2 ) @r
+		& Verify(H2,b2,b1 +b2 ) @s
+	"
+
+
+/*======================
+INDIVIDUAL VERIFIABILITY:
+=======================*/
+
+lemma indivVerif_v:
+	"All H v #i b #j bOther .
+		Vote(H,v) @i 			
+		& Verify(H,b,b + bOther) @j	
+	==> Ex BB b2 #l r pkS sskD . 
+		BB_rec(BB,<'b', b + b2 >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) " 	
+
+lemma indivVerif_b:
+	"All H b #j bOther .
+		Verify(H,b,b + bOther) @j
+	==> Ex BB b2 #l . 
+		BB_rec(BB,<'b', b + b2 >) @l 
+  	" 
+
+/*================
+DISPUTE RESOLUTION
+==================*/
+
+lemma DRvoterC: 
+	"All H b #j b1 b2 .
+		Verify(H,b,b1+b2 ) @j
+	==> ( Ex BB #k b3.					
+		BB_rec(BB,<'b', b+b3 >) @k )	
+	|   //Faulty(S,b)
+	    ( Ex BB skS #k #l #m ba b3 . 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& not (b=ba) 
+		& not (b=b3)
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)
+	|   //Faulty's second disjunct
+	    ( Ex BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m. 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& BB_woS(BB,<'bPrime', bPrimea + bPrimeb >)@l 
+		& BB_pskDs(BB,<'spkD', pk(sskDa)+pk(sskDb) >)@m 	
+		& not (ba = sg(bPrimea,sskDa) & b3 = sg(bPrimeb,sskDb))
+		& not (ba = sg(bPrimea,sskDb) & b3 = sg(bPrimeb,sskDa))
+		& not (ba = sg(bPrimeb,sskDa) & b3 = sg(bPrimea,sskDb))
+		& not (ba = sg(bPrimeb,sskDb) & b3 = sg(bPrimea,sskDa))
+		) 
+	"
+
+// As BB is honest, BB_recorded is always executed before End(), i.e., k<j holds as required by [1]. We thus omit this for optimization.
+lemma DRvoterT: 
+	"All H b #i #j.
+		Ballot(H,b) @i & End() @j & i<j 
+	==> ( Ex BB #k b3.					
+		BB_rec(BB,<'b', b+b3 >) @k )	
+	|   //Faulty(S,b)
+	    ( Ex BB skS #k #l #m ba b3 . 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& not (b=ba) 
+		& not (b=b3)
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)
+	|   //Faulty's second disjunct
+	    ( Ex BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m. 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& BB_woS(BB,<'bPrime', bPrimea + bPrimeb >)@l 
+		& BB_pskDs(BB,<'spkD', pk(sskDa)+pk(sskDb) >)@m 	
+		& not (ba = sg(bPrimea,sskDa) & b3 = sg(bPrimeb,sskDb))
+		& not (ba = sg(bPrimea,sskDb) & b3 = sg(bPrimeb,sskDa))
+		& not (ba = sg(bPrimeb,sskDa) & b3 = sg(bPrimea,sskDb))
+		& not (ba = sg(bPrimeb,sskDb) & b3 = sg(bPrimea,sskDa))
+		) 
+	"
+
+lemma DRauth: 
+	"All  S #i.
+		Honest(S) @i 
+	==> // not exists b. Faulty(S,b)
+	not (Ex b BB skS #k #l #m ba b3 . 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& not (b=ba) 
+		& not (b=b3)
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)
+	&   //Faulty's second disjunct
+	not ( Ex BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m. 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& BB_woS(BB,<'bPrime', bPrimea + bPrimeb >)@l 
+		& BB_pskDs(BB,<'spkD', pk(sskDa)+pk(sskDb) >)@m 	
+		& not (ba = sg(bPrimea,sskDa) & b3 = sg(bPrimeb,sskDb))
+		& not (ba = sg(bPrimea,sskDb) & b3 = sg(bPrimeb,sskDa))
+		& not (ba = sg(bPrimeb,sskDa) & b3 = sg(bPrimea,sskDb))
+		& not (ba = sg(bPrimeb,sskDb) & b3 = sg(bPrimea,sskDa))
+		) "	
+
+
+lemma Uniqueness:  
+"All #i b1 b2 BB
+	. 
+	// not exists b. Faulty(S,b)
+	not (Ex b BB skS #k #l #m ba b3 . 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& not (b=ba) 
+		& not (b=b3)
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)
+	&   //Faulty's second disjunct
+	not ( Ex BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m. 
+		BB_rec(BB,<'b', ba+b3 >) @k
+		& BB_woS(BB,<'bPrime', bPrimea + bPrimeb >)@l 
+		& BB_pskDs(BB,<'spkD', pk(sskDa)+pk(sskDb) >)@m 	
+		& not (ba = sg(bPrimea,sskDa) & b3 = sg(bPrimeb,sskDb))
+		& not (ba = sg(bPrimea,sskDb) & b3 = sg(bPrimeb,sskDa))
+		& not (ba = sg(bPrimeb,sskDa) & b3 = sg(bPrimea,sskDb))
+		& not (ba = sg(bPrimeb,sskDb) & b3 = sg(bPrimea,sskDa))
+		)
+	& BB_rec(BB,<'b', b1 + b2 >) @i
+==> (Ex BB H1 H2 bPrime1 bPrime2 sskD1 sskD2 #bb #s #h1 #h2 P1 P2.
+	BB_H(BB,<'H', H1 + H2 >) @bb	
+	& not (H1 =H2)
+	& b1 = sg(bPrime1,sskD1) 
+	& CastByCorresp(H1,pk(sskD1)) @s
+	& b2 = sg(bPrime2,sskD2) 
+	& CastByCorresp(H2,pk(sskD2)) @s
+ 	& Send(H1,P1,b1) @h1
+	& Send(H2,P2,b2) @h2
+     )"
+
+
+end
+
+	     			   
+
+

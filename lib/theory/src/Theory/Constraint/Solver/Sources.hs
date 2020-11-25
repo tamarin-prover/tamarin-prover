@@ -131,8 +131,8 @@ solveAllSafeGoals ths' =
     safeGoal _       _          (_,   (_, LoopBreaker)) = False
     safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
-        ChainG _ _    -> if (chainsLeft > 0) 
-                            then True 
+        ChainG _ _    -> if (chainsLeft > 0)
+                            then True
                             else (trace "Stopping precomputation, too many chain goals." False)
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
@@ -437,6 +437,3 @@ refineWithSourceAsms assumptions ctxt cases0 =
 
     isNoDisjGoal (DisjG _)  _ = False
     isNoDisjGoal _          _ = True
-
-
-

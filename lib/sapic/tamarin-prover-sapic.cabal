@@ -2,7 +2,7 @@ name:               tamarin-prover-sapic
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            1.5.1
+version:            1.7.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -69,9 +69,10 @@ library
       , Sapic.SecretChannels
       , Sapic.Facts
       , Sapic.Basetranslation
---      , Sapic.ProgressFunction
---      , Sapic.ProgressTranslation
---      , Sapic.ReliableChannelTranslation
+      , Sapic.ProgressFunction
+      , Sapic.ProgressTranslation
+      , Sapic.ReliableChannelTranslation
+      , Sapic.Report
       , Sapic
 
     other-modules:

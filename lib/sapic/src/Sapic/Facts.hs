@@ -48,28 +48,38 @@ import Data.Color
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
-data TransAction =  InitEmpty
-  -- to implement with accountability extension
-  -- | InitId
-  -- | StopId 
-  -- | EventEmpty
-  -- | EventId
-  | PredicateA LNFact
-  | NegPredicateA LNFact
-  | ProgressFrom ProcessPosition
-  | ProgressTo ProcessPosition ProcessPosition
-  | Receive ProcessPosition LNTerm
+data TransAction =
+  -- base translation
+  InitEmpty
+  --    storage
   | IsIn LNTerm LVar
   | IsNotSet LNTerm
   | InsertA LNTerm LNTerm
   | DeleteA LNTerm
-  | ChannelIn LNTerm
-  | Send ProcessPosition LNTerm
+  --    locks
   | LockUnnamed LNTerm LVar
   | LockNamed LNTerm LVar
   | UnlockUnnamed LNTerm LVar
   | UnlockNamed LNTerm LVar
+  --     ass_immedeate
+  | ChannelIn LNTerm
+  | EventEmpty
   | TamarinAct LNFact
+  --    predicate support
+  | PredicateA LNFact
+  | NegPredicateA LNFact
+  -- progress translation
+  | ProgressFrom ProcessPosition
+  | ProgressTo ProcessPosition ProcessPosition
+  -- reliable channels
+  | Send ProcessPosition LNTerm
+  | Receive ProcessPosition LNTerm
+  -- location
+  | Report LVar LVar
+  -- to implement with accountability extension
+  --- | InitId
+  --- | StopId
+  --- | EventId
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -79,6 +89,7 @@ data TransAction =  InitEmpty
 data StateKind  = LState | PState | LSemiState | PSemiState
 data TransFact =  Fr LVar | In LNTerm
             | Out LNTerm
+            | FLet LNTerm
             | Message LNTerm LNTerm
             | Ack LNTerm LNTerm
             | State StateKind ProcessPosition (S.Set LVar)
@@ -105,8 +116,8 @@ data AnnotatedRule ann = AnnotatedRule {
 mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
            -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
-mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
-                                           concs anrule, restr anrule) 
+mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule,
+                                           concs anrule, restr anrule)
                   in
                   anrule { prems = l', acts = a', concs = r', restr = res' }
 
@@ -183,6 +194,7 @@ actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
 actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
+actionToFact (EventEmpty)   =   protoFact Linear "Event" []
 actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
 actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
@@ -192,13 +204,14 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
+actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
 toFreeMsgVariable v = Free $ v
 
 actionToFactFormula :: TransAction -> Fact (Term (Lit Name (BVar LVar)))
-actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact 
+actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
 varMID :: ProcessPosition -> LVar
@@ -213,6 +226,7 @@ factToFact :: TransFact -> Fact LNTerm
 factToFact (Fr v) = freshFact $ varTerm (v)
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
+factToFact (FLet t) = protoFact Linear "Let" [t]
 factToFact (Message t t') = protoFact Linear "Message" [t, t']
 factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
 factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMID p ]
@@ -236,7 +250,7 @@ getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 propagateNames :: (GoodAnnotation an) => Process an v-> Process an v
 propagateNames = propagate' []
     where
-      propagate' n (ProcessComb c an pl pr) = ProcessComb c 
+      propagate' n (ProcessComb c an pl pr) = ProcessComb c
                                                 (setProcessNames (n ++ getProcessNames an) an)
                                                 (propagate' (n ++ getProcessNames an) pl)
                                                 (propagate' (n ++ getProcessNames an) pr)

@@ -22,17 +22,18 @@ module Sapic.Basetranslation (
    , toLNFact
    -- types
    , TransFact
-   , TranslationResultNull 
-   , TranslationResultAct 
-   , TranslationResultComb 
-   , TransFNull 
+   , TranslationResultNull
+   , TranslationResultAct
+   , TranslationResultComb
+   , TransFNull
    , TransFAct
    , TransFComb
 ) where
 
 import           Control.Exception
 import           Control.Monad.Catch
-import           Data.Set             hiding (map)
+import           Data.Set             hiding (map, (\\))
+import           Data.List (nub, (\\))
 import qualified Extension.Data.Label as L
 import           Sapic.Annotation
 import           Sapic.Exceptions
@@ -66,12 +67,12 @@ type TransFComb t = ProcessCombinator SapicLVar
 -- | The basetranslation has three functions, one for translating the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
-baseTrans :: MonadThrow m =>
+baseTrans :: MonadThrow m => Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction ac an p tx,
+baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction needsAssImmediate ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -79,8 +80,8 @@ baseTrans = (\ a p tx ->  return $ baseTransNull a p tx,
 baseTransNull :: TransFNull TranslationResultNull
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [], [])]
 
-baseTransAction :: TransFAct TranslationResultAct
-baseTransAction ac an p tildex
+baseTransAction :: Bool -> TransFAct TranslationResultAct
+baseTransAction needsAssImmediate ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -97,54 +98,54 @@ baseTransAction ac an p tildex
           let tx' = freeset tc `union` freeset t `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
-          ([def_state, In ts], [ ChannelIn ts], [def_state' tx'], []),
+          ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
-    | (ChIn Nothing t') <- ac 
+    | (ChIn Nothing t') <- ac
       , t <- toLNTerm t' =
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
-    | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an 
+    | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
           ([def_state], [], [Message tc t,semistate], []),
           ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
-    | (ChOut (Just tc') t') <- ac, Nothing <- secretChannel an 
+    | (ChOut (Just tc') t') <- ac, Nothing <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state, In tc], [ ChannelIn tc], [Out t, def_state' tildex], []),
+          ([def_state, In tc], if needsAssImmediate then [ ChannelIn tc] else [], [Out t, def_state' tildex], []),
           ([def_state], [], [Message tc t,semistate], []),
           ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
-    | (ChOut Nothing t') <- ac 
+    | (ChOut Nothing t') <- ac
       , t <- toLNTerm t' =
           ([
           ([def_state], [], [def_state' tildex, Out t], [])], tildex)
-    | (Insert t1' t2' ) <- ac 
+    | (Insert t1' t2' ) <- ac
       , t1 <- toLNTerm t1' , t2 <- toLNTerm t2'  =
           ([
           ([def_state], [InsertA t1 t2], [def_state' tildex], [])], tildex)
-    | (Delete t') <- ac 
+    | (Delete t') <- ac
       , t <- toLNTerm t' =
           ([
           ([def_state], [DeleteA t ], [def_state' tildex], [])], tildex)
-    | (Lock t') <- ac, (Just (AnVar v)) <- lock an 
+    | (Lock t') <- ac, (Just (AnVar v)) <- lock an
       , t <- toLNTerm t' =
           let tx' = v `insert` tildex in
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'], [])], tx')
     | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
-    | (Unlock t') <- ac, (Just (AnVar v)) <- unlock an 
+    | (Unlock t') <- ac, (Just (AnVar v)) <- unlock an
       , t <- toLNTerm t' =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
-    | (Event f' ) <- ac 
+    | (Event f' ) <- ac
       , f <- toLNFact f' =
-          ([([def_state], [TamarinAct f], [def_state' tildex], [])], tildex)
+          ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
     | (MSR (l',a',r',res')) <- ac
-      , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') = 
-          let tx' = freeset' r `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a, def_state' tx':map TamarinFact r, res)], tx')
+      , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
+          let tx' = freeset' l `union` tildex in
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
@@ -170,7 +171,7 @@ baseTransComb c _ p tildex
     | NDC <- c = (
                []
              , tildex, tildex )
-    | Cond f' <- c 
+    | Cond f' <- c
       , f <- toLFormula f' =
         let freevars_f = fromList $ freesList  f in
         if freevars_f `isSubsetOf` tildex then
@@ -178,21 +179,38 @@ baseTransComb c _ p tildex
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
         else
-                    throw ( 
+                    throw (
                     ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
     | CondEq t1 t2 <- c =
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
         if vars_f `isSubsetOf` tildex then
-                ([ ([def_state], [PredicateA fa], [def_state1 tildex], []),
+                ([ ([def_state],  [PredicateA fa], [def_state1 tildex], []),
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
-                    throw ( 
+                    throw (
                     ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
-    | Lookup t' v' <- c 
+    | Let t1' t2' <- c
+    , t1 <- toLNTerm t1' , t2 <- toLNTerm t2',
+      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
+      =
+        let freevars = freeset t1 in
+        let faN = fold (\v f -> hinted forall v f ) fa freevars in
+        let tildexl = freevars `union` tildex in
+        let faP = toLNFact (protoFact Linear "Eq" [t1',t2']) in
+        let semistate = State LSemiState (p++[1]) tildex in
+          ([
+
+              ([def_state], [], [FLet t2,semistate], []),
+              ([semistate, FLet t1], [PredicateA faP], [def_state1 tildexl], []),
+              ([semistate], [] , [def_state2 tildex], [faN])
+           ],
+           tildexl, tildex)
+
+    | Lookup t' v' <- c
       , t <- toLNTerm t', v <- toLVar v' =
            let tx' = v `insert` tildex in
                 (
@@ -204,6 +222,7 @@ baseTransComb c _ p tildex
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
+        freeset = fromList . frees
 
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
@@ -229,31 +248,31 @@ toEx s
     | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
 resSetIn :: String
-resSetIn = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+resSetIn = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotIn :: String
 resSetNotIn = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
-  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3  
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 |]
 
 resSetInNoDelete :: String
-resSetInNoDelete = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+resSetInNoDelete = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotInNoDelete :: String
 resSetNotInNoDelete = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
 |]
 
@@ -266,12 +285,12 @@ resSingleSession = [QQ.r|restrictionsingle_session: // for a single session
 -- should be modified below.
 resLockingL :: String
 resLockingL  = [QQ.r|restriction locking:
-"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
-        ==> 
-        ( #t1<#t3 
-                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3 
-                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
-                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3
+        ==>
+        ( #t1<#t3
+                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3
+                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2)
+                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0)
                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
                 ))
         | #t3<#t1 | #t1=#t3"
@@ -280,18 +299,18 @@ resLockingL  = [QQ.r|restriction locking:
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingLNoUnlockPOS :: String
 resLockingLNoUnlockPOS  = [QQ.r|restriction locking:
-"All p l x #t1 . LockPOS(p,l,x)@t1 
+"All p l x #t1 . LockPOS(p,l,x)@t1
                    ==> (All pp lp #t2. LockPOS(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingNoUnlock :: String
 resLockingNoUnlock  = [QQ.r|restriction locking:
-"All p l x #t1 . Lock(p,l,x)@t1 
+"All p l x #t1 . Lock(p,l,x)@t1
                    ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
--- | Produce locking lemma for variable v by instantiating resLockingL 
+-- | Produce locking lemma for variable v by instantiating resLockingL
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
 resLocking :: MonadThrow m => Bool -> LVar -> m SyntacticRestriction
@@ -326,10 +345,19 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 "All #i a b. Pred_Not_Eq(a,b)@i ==> not(a = b)"
 |]
 
+
+resInEv :: String
+resInEv = [QQ.r|restriction ass_immediate:
+"All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
+                                & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
+                                & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
+|]
+
+
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => LProcess (ProcessAnnotation LVar) -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
+baseRestr :: (MonadThrow m, MonadCatch m) => LProcess (ProcessAnnotation LVar) -> Bool -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -340,29 +368,33 @@ baseRestr anP hasAccountabilityLemmaWithControl prevRestr =
         ++
         addIf (contains isEq) [resEq, resNotEq]
         ++
+        addIf (contains isLet) [resEq]
+        ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
+        ++
+        addIf (needsAssImmediate && containChannelIn) [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l
-        locking   <- mapM (resLocking $ contains isUnlock) (getLockPositions anP) 
+        lockingWithUnlock <- mapM (resLocking True) (nub $ getUnlockPositions anP)
+        lockingOnlyLock   <- mapM (resLocking False) ((getLockPositions anP) \\ (getUnlockPositions anP))
         singleLocking <- toEx resLockingNoUnlock
-
-        return $ prevRestr ++ hardcoded ++ locking 
-                 ++ 
-                 addIf (not (contains isUnlock) && contains isLock) [singleLocking]
+        return $ prevRestr
+              ++ hardcoded
+              ++ lockingWithUnlock
+              ++ lockingOnlyLock
+              ++ addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
         getLock p
             | (ProcessAction (Lock _) an _) <- p, (Just (AnVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
+        getUnlock p
+            | (ProcessAction (Unlock _) an _) <- p, (Just (AnVar v)) <- unlock an = [v] -- annotation is Maybe type
+            | otherwise  = []
         getLockPositions = pfoldMap getLock
+        getUnlockPositions = pfoldMap getUnlock
 
-        -- TODO add feature checking lemmas for wellformedness, adding ass_immeadiate_in if necessary 
         -- This is what SAPIC did
           -- @ (if op.accountability then [] else [res_single_session_l])
-        -- (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
-         -- *                  it would be better if we would actually check whether each lemma
-         -- *                  is of the right form so we can leave it out...
-         -- *                  *)
-    -- in

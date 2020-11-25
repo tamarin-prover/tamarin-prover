@@ -1,0 +1,1510 @@
+theory aletheaDR_ShHh_RF_functional_LHS begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: adec/2, aenc/2, decp/2, encp/3, fst/1, h/1, pair/2,
+           pk/1, sg/2, snd/1, ver/2, verzkp/4, zkp/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    decp(encp(x, r, pk(sk)), sk) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    ver(sg(m, sk), pk(sk)) = m
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+rule (modulo E) ChanOut_IR_HP:
+   [ Out_IR_HP( $A, $B, m ) ]
+  --[ ChanOut_IR_HP( $A, $B, m ) ]->
+   [ Out( <$A, $B, m> ) ]
+
+rule (modulo E) ChanIn_IR_PS:
+   [ In( <$A, $B, m> ) ]
+  --[ ChanIn_IR_PS( $A, $B, m ) ]->
+   [ In_IR_PS( $A, $B, m ) ]
+
+restriction Chan_R_HS [right]:
+  "∀ A B m #i.
+    (Send_R_HP( A, B, m ) @ #i) ⇒
+    (∃ #j C. Receive_R_PS( B, C, m ) @ #j)"
+
+restriction Chan_R_HS [left]:
+  "∀ A B m #i.
+    (Send_R_HP( A, B, m ) @ #i) ⇒
+    (∃ #j C. Receive_R_PS( B, C, m ) @ #j)"
+
+rule (modulo E) ChanOut_IR_SP:
+   [ Out_IR_SP( $A, $B, m ) ]
+  --[ ChanOut_IR_SP( $A, $B, m ) ]->
+   [ Out( <$A, $B, m> ) ]
+
+rule (modulo E) ChanIn_IR_PH:
+   [ In( <$A, $B, m> ) ]
+  --[ ChanIn_IR_PH( $A, $B, m ) ]->
+   [ In_IR_PH( $A, $B, m ) ]
+
+restriction Chan_R_SH [right]:
+  "∀ A B m #i.
+    (Send_R_SP( A, B, m ) @ #i) ⇒
+    (∃ C #j. Receive_R_PH( B, C, m ) @ #j)"
+
+restriction Chan_R_SH [left]:
+  "∀ A B m #i.
+    (Send_R_SP( A, B, m ) @ #i) ⇒
+    (∃ C #j. Receive_R_PH( B, C, m ) @ #j)"
+
+rule (modulo E) fakeEvidence:
+   [ In( <ballot, evidence> ) ]
+  --[ Evidence( ballot, evidence ) ]->
+   [ ]
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+rule (modulo E) Setup:
+   [ !Ltk( 'S', ~skS ), !Ltk( 'D1', ~sskD1 ), !Ltk( 'D2', ~sskD2 ) ]
+  --[
+  Setup( ), BB_pskDs( 'BB', <'spkD', (pk(~sskD1)+pk(~sskD2))> ),
+  BB_pkS( 'BB', <'spkS', pk(~skS)> ),
+  BB_H( 'BB', <'H', ('H1'+'H2')> ),
+  CastByCorresp( 'H1', pk(~sskD1) ),
+  CastByCorresp( 'H2', pk(~sskD2) ), Voter( 'H1' ), Voter( 'H2' ),
+  SecretKeyD( ~sskD1 ), SecretKeyD( ~sskD2 ), Server( 'S' ),
+  Honest( 'S' ), Vote( 'H1', diff($v1, $v2) ),
+  Vote( 'H2', diff($v2, $v1) )
+  ]->
+   [
+   AgSt_H1( 'H1', <'D1', $P1, 'BB', diff($v1, $v2)> ),
+   AgSt_H1( 'H2', <'D2', $P2, 'BB', diff($v2, $v1)> ),
+   AgSt_D0( 'D1', <'H1', 'S', pk(~skS), ~sskD1> ),
+   AgSt_D0( 'D2', <'H2', 'S', pk(~skS), ~sskD2> ),
+   Out_A( 'BB', <'spkD', (pk(~sskD1)+pk(~sskD2))> ),
+   Out_A( 'BB', <'spkS', pk(~skS)> ),
+   Out_A( 'BB', <'H', ('H1'+'H2')> ),
+   AgSt_S0( 'S', 'BB', <~skS, (pk(~sskD1)+pk(~sskD2))> ),
+   Out_S( 'H1', 'D1', diff($v1, $v2) ),
+   Out_S( 'H2', 'D2', diff($v2, $v1) ), Out( <'D1', $P1, 'BB', $v1> )
+   ]
+
+rule (modulo E) D_1:
+   [ AgSt_D0( $D, <$H, $S, pkS, ~sskD> ), In_S( $H, $D, v ), Fr( ~r )
+   ]
+  --[ D1( ) ]->
+   [ Out_S( $D, $H, sg(encp(v, ~r, pkS), ~sskD) ) ]
+
+rule (modulo E) H_2:
+   [ AgSt_H1( $H, <$D, $P, $BB, $v> ), In_S( $D, $H, b ) ]
+  --[
+  Ballot( $H, b ), Send( $H, $P, b ), Comm_H_vote( $H, $S, $v ),
+  Comm_H_ballot( $H, $S, b ), Send_R_HP( $H, $P, b ), H2( $H )
+  ]->
+   [ AgSt_H2( $H, <$D, $P, $BB, $v, b> ), Out_IR_HP( $H, $P, b ) ]
+
+rule (modulo E) S_1a:
+   [
+   AgSt_S0( $S, $BB, <~skS, (pk(~sskDa)+pk(~sskDb))> ),
+   In_IR_PS( $P, $S, sg(encp(va, ra, pk(~skS)), ~sskDa) )
+   ]
+  --[
+  Learn_S_ballot( $S, sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+  Receive_R_PS( $P, $S, sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+  Send_R_SP( $S, $P, sg(sg(encp(va, ra, pk(~skS)), ~sskDa), ~skS) ),
+  S1a( )
+  ]->
+   [
+   AgSt_S1a( $S, $BB,
+             <~skS, sg(encp(va, ra, pk(~skS)), ~sskDa), pk(~sskDb)>
+   ),
+   Out_IR_SP( $S, $P, sg(sg(encp(va, ra, pk(~skS)), ~sskDa), ~skS) )
+   ]
+
+rule (modulo E) S_1b:
+   [
+   AgSt_S1a( $S, $BB,
+             <~skS, sg(encp(va, ra, pk(~skS)), ~sskDa), pk(~sskDb)>
+   ),
+   In_IR_PS( $P, $S, sg(encp(vb, rb, pk(~skS)), ~sskDb) )
+   ]
+  --[
+  Learn_S_ballot( $S, sg(encp(vb, rb, pk(~skS)), ~sskDb) ),
+  Receive_R_PS( $P, $S, sg(encp(vb, rb, pk(~skS)), ~sskDb) ),
+  Send_R_SP( $S, $P, sg(sg(encp(vb, rb, pk(~skS)), ~sskDb), ~skS) ),
+  S1b( )
+  ]->
+   [
+   AgSt_S1a( $S, $BB,
+             <~skS, 
+              (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+               sg(encp(vb, rb, pk(~skS)), ~sskDb))
+             >
+   ),
+   Out_IR_SP( $S, $P, sg(sg(encp(vb, rb, pk(~skS)), ~sskDb), ~skS) )
+   ]
+
+rule (modulo E) H_3:
+   [ AgSt_H2( $H, <$D, $P, $BB, $v, b> ), In_IR_PH( $P, $H, c ) ]
+  --[ Receive_R_PH( $P, $H, c ), Evidence( b, c ), H3( $H ) ]->
+   [ AgSt_H3( $H, <$D, $P, $BB, $v, b, c> ) ]
+
+rule (modulo E) SandBB:
+   [
+   AgSt_S1a( $S, $BB,
+             <~skS, 
+              (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+               sg(encp(vb, rb, pk(~skS)), ~sskDb))
+             >
+   )
+   ]
+  --[
+  BB_rec( $BB,
+          <'b', 
+           (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+            sg(encp(vb, rb, pk(~skS)), ~sskDb))
+          >
+  ),
+  BB_woS( $BB,
+          <'bPrime', (encp(va, ra, pk(~skS))+encp(vb, rb, pk(~skS)))>
+  ),
+  BB_tal( $BB, <'v', (va+vb)> ),
+  BB_zkp( $BB,
+          <'zkp', 
+           zkp(<encp(va, ra, pk(~skS)), encp(vb, rb, pk(~skS))>, <va, vb>,
+               ~skS)
+          >
+  ),
+  End( )
+  ]->
+   [
+   Out_A( $BB,
+          <'b', 
+           (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+            sg(encp(vb, rb, pk(~skS)), ~sskDb))
+          >
+   ),
+   Out_A( $BB,
+          <'bPrime', (encp(va, ra, pk(~skS))+encp(vb, rb, pk(~skS)))>
+   ),
+   Out_A( $BB, <'v', (va+vb)> ),
+   Out_A( $BB,
+          <'zkp', 
+           zkp(<encp(va, ra, pk(~skS)), encp(vb, rb, pk(~skS))>, <va, vb>,
+               ~skS)
+          >
+   )
+   ]
+
+rule (modulo E) H_4:
+   [
+   AgSt_H3( $H, <$D, $P, $BB, $v, b, c> ), In_A( $BB, <'b', (ba+bc)> )
+   ]
+  --[ Verify( $H, b, (ba+bc) ), H4( ) ]->
+   [ ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma onlyonce1 [right, reuse]:
+  all-traces "∀ #i #j. ((S1a( ) @ #i) ∧ (S1a( ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j. (S1a( ) @ #i) ∧ (S1a( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+lemma onlyonce1 [left, reuse]:
+  all-traces "∀ #i #j. ((S1a( ) @ #i) ∧ (S1a( ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j. (S1a( ) @ #i) ∧ (S1a( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry /* removed */
+
+lemma onlyonce2 [right, reuse]:
+  all-traces "∀ #i #j. ((S1b( ) @ #i) ∧ (S1b( ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j. (S1b( ) @ #i) ∧ (S1b( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+lemma onlyonce2 [left, reuse]:
+  all-traces "∀ #i #j. ((S1b( ) @ #i) ∧ (S1b( ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j. (S1b( ) @ #i) ∧ (S1b( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry /* removed */
+
+lemma onlyonce3 [right, reuse]:
+  all-traces
+  "∀ #i #j H. ((H2( H ) @ #i) ∧ (H2( H ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H. (H2( H ) @ #i) ∧ (H2( H ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+lemma onlyonce3 [left, reuse]:
+  all-traces
+  "∀ #i #j H. ((H2( H ) @ #i) ∧ (H2( H ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H. (H2( H ) @ #i) ∧ (H2( H ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry /* removed */
+
+lemma onlyonce4 [right, reuse]:
+  all-traces
+  "∀ #i #j H.
+    ((H2( H ) @ #i) ∧ (H2( H ) @ #j)) ⇒ ((H = 'H1') ∨ (H = 'H2'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H.
+  (H2( H ) @ #i) ∧ (H2( H ) @ #j) ∧ (¬(H = 'H1')) ∧ (¬(H = 'H2'))"
+*/
+by sorry
+
+lemma onlyonce4 [left, reuse]:
+  all-traces
+  "∀ #i #j H.
+    ((H2( H ) @ #i) ∧ (H2( H ) @ #j)) ⇒ ((H = 'H1') ∨ (H = 'H2'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H.
+  (H2( H ) @ #i) ∧ (H2( H ) @ #j) ∧ (¬(H = 'H1')) ∧ (¬(H = 'H2'))"
+*/
+by sorry /* removed */
+
+lemma onlyonce5 [right, reuse]:
+  all-traces
+  "∀ #i #j H. ((H3( H ) @ #i) ∧ (H3( H ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H. (H3( H ) @ #i) ∧ (H3( H ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+lemma onlyonce5 [left, reuse]:
+  all-traces
+  "∀ #i #j H. ((H3( H ) @ #i) ∧ (H3( H ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H. (H3( H ) @ #i) ∧ (H3( H ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry /* removed */
+
+lemma onlyonce6 [right, reuse]:
+  all-traces
+  "∀ #i #j H.
+    ((H3( H ) @ #i) ∧ (H3( H ) @ #j)) ⇒ ((H = 'H1') ∨ (H = 'H2'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H.
+  (H3( H ) @ #i) ∧ (H3( H ) @ #j) ∧ (¬(H = 'H1')) ∧ (¬(H = 'H2'))"
+*/
+by sorry
+
+lemma onlyonce6 [left, reuse]:
+  all-traces
+  "∀ #i #j H.
+    ((H3( H ) @ #i) ∧ (H3( H ) @ #j)) ⇒ ((H = 'H1') ∨ (H = 'H2'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j H.
+  (H3( H ) @ #i) ∧ (H3( H ) @ #j) ∧ (¬(H = 'H1')) ∧ (¬(H = 'H2'))"
+*/
+by sorry /* removed */
+
+lemma functional [right]:
+  exists-trace
+  "∃ H1 H2 v1 v2 #i #j #k #i2 #j2 #k2 b1 b2 S #s1 #s2 skS #o #o2 #p
+     #q BB #r #s.
+    (((((((((((((((¬(H1 = H2)) ∧ (¬(v1 = v2))) ∧
+                 (Vote( H1, v1 ) @ #i)) ∧
+                (D1( ) @ #j)) ∧
+               (Ballot( H1, b1 ) @ #k)) ∧
+              (Vote( H2, v2 ) @ #i2)) ∧
+             (D1( ) @ #j2)) ∧
+            (Ballot( H2, b2 ) @ #k2)) ∧
+           (Learn_S_ballot( S, b1 ) @ #s1)) ∧
+          (Learn_S_ballot( S, b2 ) @ #s2)) ∧
+         (Evidence( b1, sg(b1, skS) ) @ #o)) ∧
+        (Evidence( b2, sg(b2, skS) ) @ #o2)) ∧
+       (BB_rec( BB, <'b', (b1+b2)> ) @ #p)) ∧
+      (BB_tal( BB, <'v', (v1+v2)> ) @ #q)) ∧
+     (Verify( H1, b1, (b1+b2) ) @ #r)) ∧
+    (Verify( H2, b2, (b1+b2) ) @ #s)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ H1 H2 v1 v2 #i #j #k #i2 #j2 #k2 b1 b2 S #s1 #s2 skS #o #o2 #p
+   #q BB #r #s.
+  (Vote( H1, v1 ) @ #i) ∧
+  (D1( ) @ #j) ∧
+  (Ballot( H1, b1 ) @ #k) ∧
+  (Vote( H2, v2 ) @ #i2) ∧
+  (D1( ) @ #j2) ∧
+  (Ballot( H2, b2 ) @ #k2) ∧
+  (Learn_S_ballot( S, b1 ) @ #s1) ∧
+  (Learn_S_ballot( S, b2 ) @ #s2) ∧
+  (Evidence( b1, sg(b1, skS) ) @ #o) ∧
+  (Evidence( b2, sg(b2, skS) ) @ #o2) ∧
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #p) ∧
+  (BB_tal( BB, <'v', (v1+v2)> ) @ #q) ∧
+  (Verify( H1, b1, (b1+b2) ) @ #r) ∧
+  (Verify( H2, b2, (b1+b2) ) @ #s)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(v1 = v2))"
+*/
+by sorry
+
+lemma functional [left]:
+  exists-trace
+  "∃ H1 H2 v1 v2 #i #j #k #i2 #j2 #k2 b1 b2 S #s1 #s2 skS #o #o2 #p
+     #q BB #r #s.
+    (((((((((((((((¬(H1 = H2)) ∧ (¬(v1 = v2))) ∧
+                 (Vote( H1, v1 ) @ #i)) ∧
+                (D1( ) @ #j)) ∧
+               (Ballot( H1, b1 ) @ #k)) ∧
+              (Vote( H2, v2 ) @ #i2)) ∧
+             (D1( ) @ #j2)) ∧
+            (Ballot( H2, b2 ) @ #k2)) ∧
+           (Learn_S_ballot( S, b1 ) @ #s1)) ∧
+          (Learn_S_ballot( S, b2 ) @ #s2)) ∧
+         (Evidence( b1, sg(b1, skS) ) @ #o)) ∧
+        (Evidence( b2, sg(b2, skS) ) @ #o2)) ∧
+       (BB_rec( BB, <'b', (b1+b2)> ) @ #p)) ∧
+      (BB_tal( BB, <'v', (v1+v2)> ) @ #q)) ∧
+     (Verify( H1, b1, (b1+b2) ) @ #r)) ∧
+    (Verify( H2, b2, (b1+b2) ) @ #s)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ H1 H2 v1 v2 #i #j #k #i2 #j2 #k2 b1 b2 S #s1 #s2 skS #o #o2 #p
+   #q BB #r #s.
+  (Vote( H1, v1 ) @ #i) ∧
+  (D1( ) @ #j) ∧
+  (Ballot( H1, b1 ) @ #k) ∧
+  (Vote( H2, v2 ) @ #i2) ∧
+  (D1( ) @ #j2) ∧
+  (Ballot( H2, b2 ) @ #k2) ∧
+  (Learn_S_ballot( S, b1 ) @ #s1) ∧
+  (Learn_S_ballot( S, b2 ) @ #s2) ∧
+  (Evidence( b1, sg(b1, skS) ) @ #o) ∧
+  (Evidence( b2, sg(b2, skS) ) @ #o2) ∧
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #p) ∧
+  (BB_tal( BB, <'v', (v1+v2)> ) @ #q) ∧
+  (Verify( H1, b1, (b1+b2) ) @ #r) ∧
+  (Verify( H2, b2, (b1+b2) ) @ #s)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(v1 = v2))"
+*/
+simplify
+  case 1
+  solve( In_S( $H, $D, v ) ▶₁ #j )
+    case ChanIn_S_case_1
+    solve( In_S( $H, $D, v ) ▶₁ #j2 )
+      case ChanIn_S_case_1
+      solve( AgSt_D0( 'D1', <'H1', $S, pkS, ~sskD> ) ▶₀ #j )
+        case Setup
+        solve( AgSt_D0( 'D1', <'H1', $S, pkS, ~sskD.1> ) ▶₀ #j2 )
+          case Setup
+          solve( In_S( $D, $H, sg(encp(va, ra, pk(~skS.1)), ~sskDa) ) ▶₁ #k )
+            case ChanIn_S_case_1
+            solve( In_S( $D, $H, sg(encp(vb, rb, pk(~skS)), ~sskDb) ) ▶₁ #k2 )
+              case ChanIn_S_case_1
+              by contradiction /* from formulas */
+            next
+              case ChanIn_S_case_2
+              solve( In_S( 'H2', 'D2', vb ) ▶₁ #vr.10 )
+                case ChanIn_S
+                solve( AgSt_H1( 'H1', <'D1', $P, $BB, $v> ) ▶₀ #k )
+                  case Setup
+                  solve( AgSt_H1( 'H2', <'D2', $P.1, $BB, $v.1> ) ▶₀ #k2 )
+                    case Setup
+                    solve( Vote( 'H1', v1 ) @ #i )
+                      case Setup
+                      solve( Vote( 'H2', v2.1 ) @ #i2 )
+                        case Setup
+                        solve( AgSt_S1a( $S.2, $BB,
+                                         <~skS, 
+                                          (sg(encp($v, ~r, pk(~skS)), ~sskD)+
+                                           sg(encp($v2, ~r.1, pk(~skS)), ~sskD2))
+                                         >
+                               ) ▶₀ #p )
+                          case S_1b_case_1
+                          solve( AgSt_S1a( $S.2, 'BB',
+                                           <~skS.1, 
+                                            (sg(encp($v, ra, pk(~skS.1)), ~sskDa)+
+                                             sg(encp($v2, rb, pk(~skS.1)), ~sskDb))
+                                           >
+                                 ) ▶₀ #q )
+                            case S_1b
+                            solve( Learn_S_ballot( S.2, sg(encp($v, ~r, pk(~skS)), ~sskD)
+                                   ) @ #s1 )
+                              case S_1a
+                              solve( Learn_S_ballot( 'S', sg(encp($v2, ~r.1, pk(~skS)), ~sskD2)
+                                     ) @ #s2 )
+                                case S_1b
+                                solve( !KU( sg(encp($v2, ~r.1, pk(~skS)), ~sskD2) ) @ #vk.6 )
+                                  case ChanOut_A_case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_2
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_3
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_IR_HP_case_1
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case ChanOut_IR_HP_case_2
+                                  solve( !KU( sg(encp($v, ~r, pk(~skS)), ~sskD) ) @ #vk.8 )
+                                    case ChanOut_A_case_1
+                                    by contradiction /* cyclic */
+                                  next
+                                    case ChanOut_A_case_2
+                                    by contradiction /* cyclic */
+                                  next
+                                    case ChanOut_A_case_3
+                                    by contradiction /* cyclic */
+                                  next
+                                    case ChanOut_IR_HP_case_1
+                                    solve( Evidence( sg(encp($v, ~r, pk(~skS)), ~sskD),
+                                                     sg(sg(encp($v, ~r, pk(~skS)), ~sskD), skS.1)
+                                           ) @ #o )
+                                      case H_3
+                                      solve( Evidence( sg(encp($v2, ~r.1, pk(~skS)), ~sskD2),
+                                                       sg(sg(encp($v2, ~r.1, pk(~skS)), ~sskD2),
+                                                          skS.1)
+                                             ) @ #o2 )
+                                        case H_3
+                                        solve( AgSt_H2( $H.2, <$D.2, $P.4, $BB.2, $v.3, b>
+                                               ) ▶₀ #j.1 )
+                                          case H_2_case_1
+                                          solve( AgSt_H2( $H.2, <$D.2, $P.3, $BB.2, $v.3, b>
+                                                 ) ▶₀ #j.2 )
+                                            case H_2
+                                            solve( AgSt_H2( $H.2, <$D.2, $P, $BB.2, $v.3, b>
+                                                   ) ▶₀ #j.3 )
+                                              case H_2
+                                              solve( AgSt_H2( $H.2, <$D.2, $P2, $BB.2, $v.3, b>
+                                                     ) ▶₀ #j.3 )
+                                                case H_2
+                                                by solve( AgSt_H2( $H,
+                                                                   <$D, $P.1, $BB, $v.1, 
+                                                                    sg(encp($v, ~r, pk(~skS)),
+                                                                       ~sskD)
+                                                                   >
+                                                          ) ▶₀ #o )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case H_2_case_2
+                                          solve( AgSt_H2( $H,
+                                                          <$D, $P.1, $BB, $v.1, 
+                                                           sg(encp($v, ~r, pk(~skS)), ~sskD)>
+                                                 ) ▶₀ #o )
+                                            case H_2
+                                            solve( AgSt_H2( $H,
+                                                            <$D, $P.1, $BB, $v.1, 
+                                                             sg(encp($v2, ~r.1, pk(~skS)), ~sskD2)>
+                                                   ) ▶₀ #o2 )
+                                              case H_2
+                                              solve( AgSt_H2( $H, <$D, $P.1, $BB, $v.1, b>
+                                                     ) ▶₀ #j.1 )
+                                                case H_2
+                                                solve( AgSt_H2( $H, <$D, $P2, $BB, $v.1, b>
+                                                       ) ▶₀ #j.1 )
+                                                  case H_2
+                                                  solve( AgSt_H2( $H, <$D, $P, $BB, $v.1, b>
+                                                         ) ▶₀ #j.1 )
+                                                    case H_2
+                                                    solve( AgSt_H2( $H, <$D, $P, $BB, $v.1, b>
+                                                           ) ▶₀ #j.1 )
+                                                      case H_2
+                                                      solve( AgSt_H2( $H, <$D, $P2, $BB, $v.1, b>
+                                                             ) ▶₀ #j.1 )
+                                                        case H_2
+                                                        solve( Verify( 'H1',
+                                                                       sg(encp($v, ~r, pk(~skS)),
+                                                                          ~sskD),
+                                                                       (
+                                                                        sg(encp($v, ~r, pk(~skS)),
+                                                                           ~sskD)+
+                                                                        sg(encp($v2, ~r.1,
+                                                                                pk(~skS)),
+                                                                           ~sskD2)
+                                                                       )
+                                                               ) @ #r.2 )
+                                                          case H_4
+                                                          solve( AgSt_H3( 'H1',
+                                                                          <$D, $P.1, $BB, $v.1, 
+                                                                           sg(encp($v, ~r,
+                                                                                   pk(~skS)),
+                                                                              ~sskD), 
+                                                                           c>
+                                                                 ) ▶₀ #r.2 )
+                                                            case H_3
+                                                            solve( Verify( 'H2',
+                                                                           sg(encp($v2, ~r.1,
+                                                                                   pk(~skS)),
+                                                                              ~sskD2),
+                                                                           (
+                                                                            sg(encp($v, ~r,
+                                                                                    pk(~skS)),
+                                                                               ~sskD)+
+                                                                            sg(encp($v2, ~r.1,
+                                                                                    pk(~skS)),
+                                                                               ~sskD2)
+                                                                           )
+                                                                   ) @ #s )
+                                                              case H_4
+                                                              solve( AgSt_H3( 'H2',
+                                                                              <$D, $P.1, $BB, $v.1, 
+                                                                               sg(encp($v2, ~r.1,
+                                                                                       pk(~skS)),
+                                                                                  ~sskD2), 
+                                                                               c>
+                                                                     ) ▶₀ #s )
+                                                                case H_3
+                                                                solve( In_A( 'BB',
+                                                                             <'b', 
+                                                                              (
+                                                                               sg(encp($v, ~r,
+                                                                                       pk(~skS)),
+                                                                                  ~sskD)+
+                                                                               sg(encp($v2, ~r.1,
+                                                                                       pk(~skS)),
+                                                                                  ~sskD2)
+                                                                              )
+                                                                             >
+                                                                       ) ▶₁ #r.2 )
+                                                                  case ChanIn_A
+                                                                  solve( AgSt_H2( $H,
+                                                                                  <$D, $P2, $BB, 
+                                                                                   $v.1, b>
+                                                                         ) ▶₀ #j.1 )
+                                                                    case H_2
+                                                                    solve( In_A( 'BB',
+                                                                                 <'b', 
+                                                                                  (
+                                                                                   sg(encp($v, ~r,
+                                                                                           pk(~skS)),
+                                                                                      ~sskD)+
+                                                                                   sg(encp($v2,
+                                                                                           ~r.1,
+                                                                                           pk(~skS)),
+                                                                                      ~sskD2)
+                                                                                  )
+                                                                                 >
+                                                                           ) ▶₁ #s )
+                                                                      case ChanIn_A
+                                                                      solve( AgSt_H2( $H,
+                                                                                      <$D, $P, $BB, 
+                                                                                       $v.1, b>
+                                                                             ) ▶₀ #j.1 )
+                                                                        case H_2
+                                                                        solve( AgSt_H2( $H,
+                                                                                        <$D, $P2, 
+                                                                                         $BB, $v.1, 
+                                                                                         b>
+                                                                               ) ▶₀ #j.1 )
+                                                                          case H_2
+                                                                          solve( AgSt_H2( $H,
+                                                                                          <$D, $P, 
+                                                                                           $BB, 
+                                                                                           $v.1, b>
+                                                                                 ) ▶₀ #j.1 )
+                                                                            case H_2
+                                                                            solve( !KU( sg(sg(encp($v,
+                                                                                                   ~r,
+                                                                                                   pk(~skS)),
+                                                                                              ~sskD),
+                                                                                           ~skS)
+                                                                                   ) @ #vk.13 )
+                                                                              case ChanOut_A_case_1
+                                                                              by contradiction
+                                                                                 /*
+                                                                                 forbidden KD-fact
+                                                                                 */
+                                                                            next
+                                                                              case ChanOut_A_case_2
+                                                                              by contradiction
+                                                                                 /*
+                                                                                 forbidden KD-fact
+                                                                                 */
+                                                                            next
+                                                                              case ChanOut_A_case_3
+                                                                              by contradiction
+                                                                                 /*
+                                                                                 forbidden KD-fact
+                                                                                 */
+                                                                            next
+                                                                              case ChanOut_IR_HP_case_1
+                                                                              by contradiction
+                                                                                 /*
+                                                                                 forbidden KD-fact
+                                                                                 */
+                                                                            next
+                                                                              case ChanOut_IR_HP_case_2
+                                                                              by contradiction
+                                                                                 /*
+                                                                                 forbidden KD-fact
+                                                                                 */
+                                                                            next
+                                                                              case ChanOut_IR_SP
+                                                                              solve( !KU( sg(sg(encp($v2,
+                                                                                                     ~r.1,
+                                                                                                     pk(~skS)),
+                                                                                                ~sskD2),
+                                                                                             ~skS)
+                                                                                     ) @ #vk.16 )
+                                                                                case ChanOut_A_case_1
+                                                                                by contradiction
+                                                                                   /*
+                                                                                   forbidden KD-fact
+                                                                                   */
+                                                                              next
+                                                                                case ChanOut_A_case_2
+                                                                                by contradiction
+                                                                                   /*
+                                                                                   forbidden KD-fact
+                                                                                   */
+                                                                              next
+                                                                                case ChanOut_A_case_3
+                                                                                by contradiction
+                                                                                   /*
+                                                                                   forbidden KD-fact
+                                                                                   */
+                                                                              next
+                                                                                case ChanOut_IR_HP_case_1
+                                                                                by contradiction
+                                                                                   /*
+                                                                                   forbidden KD-fact
+                                                                                   */
+                                                                              next
+                                                                                case ChanOut_IR_HP_case_2
+                                                                                by contradiction
+                                                                                   /*
+                                                                                   forbidden KD-fact
+                                                                                   */
+                                                                              next
+                                                                                case ChanOut_IR_SP
+                                                                                solve( AgSt_H2( $H,
+                                                                                                <
+                                                                                                 $D, 
+                                                                                                 $P, 
+                                                                                                 $BB, 
+                                                                                                 $v.1, 
+                                                                                                 b>
+                                                                                       ) ▶₀ #j.1 )
+                                                                                  case H_2
+                                                                                  solve( AgSt_H2( $H,
+                                                                                                  <
+                                                                                                   $D, 
+                                                                                                   $P2, 
+                                                                                                   $BB, 
+                                                                                                   $v.1, 
+                                                                                                   b
+                                                                                                  >
+                                                                                         ) ▶₀ #j.1 )
+                                                                                    case H_2
+                                                                                    solve( AgSt_H2( $H,
+                                                                                                    <
+                                                                                                     $D, 
+                                                                                                     $P, 
+                                                                                                     $BB, 
+                                                                                                     $v.1, 
+                                                                                                     b
+                                                                                                    >
+                                                                                           ) ▶₀ #j.1 )
+                                                                                      case H_2
+                                                                                      solve( Receive_R_PS( $P2,
+                                                                                                           C.1,
+                                                                                                           sg(encp($v2,
+                                                                                                                   ~r.1,
+                                                                                                                   pk(~skS)),
+                                                                                                              ~sskD2)
+                                                                                             ) @ #j.2 )
+                                                                                        case S_1b
+                                                                                        solve( Receive_R_PS( $P2,
+                                                                                                             C.1,
+                                                                                                             sg(encp($v2,
+                                                                                                                     ~r.1,
+                                                                                                                     pk(~skS)),
+                                                                                                                ~sskD2)
+                                                                                               ) @ #j.2 )
+                                                                                          case S_1b
+                                                                                          solve( Receive_R_PS( $P,
+                                                                                                               C.1,
+                                                                                                               sg(encp($v,
+                                                                                                                       ~r,
+                                                                                                                       pk(~skS)),
+                                                                                                                  ~sskD)
+                                                                                                 ) @ #j.2 )
+                                                                                            case S_1a
+                                                                                            solve( Receive_R_PS( $P2,
+                                                                                                                 C.1,
+                                                                                                                 sg(encp($v2,
+                                                                                                                         ~r.1,
+                                                                                                                         pk(~skS)),
+                                                                                                                    ~sskD2)
+                                                                                                   ) @ #j.2 )
+                                                                                              case S_1b
+                                                                                              solve( Receive_R_PS( $P,
+                                                                                                                   C.1,
+                                                                                                                   sg(encp($v,
+                                                                                                                           ~r,
+                                                                                                                           pk(~skS)),
+                                                                                                                      ~sskD)
+                                                                                                     ) @ #j.2 )
+                                                                                                case S_1a
+                                                                                                solve( Receive_R_PS( $P2,
+                                                                                                                     C.1,
+                                                                                                                     sg(encp($v2,
+                                                                                                                             ~r.1,
+                                                                                                                             pk(~skS)),
+                                                                                                                        ~sskD2)
+                                                                                                       ) @ #j.2 )
+                                                                                                  case S_1b
+                                                                                                  solve( Receive_R_PS( $P,
+                                                                                                                       C.1,
+                                                                                                                       sg(encp($v,
+                                                                                                                               ~r,
+                                                                                                                               pk(~skS)),
+                                                                                                                          ~sskD)
+                                                                                                         ) @ #j.2 )
+                                                                                                    case S_1a
+                                                                                                    solve( Receive_R_PS( $P2,
+                                                                                                                         C.1,
+                                                                                                                         sg(encp($v2,
+                                                                                                                                 ~r.1,
+                                                                                                                                 pk(~skS)),
+                                                                                                                            ~sskD2)
+                                                                                                           ) @ #j.2 )
+                                                                                                      case S_1b
+                                                                                                      solve( Receive_R_PS( $P,
+                                                                                                                           C.1,
+                                                                                                                           sg(encp($v,
+                                                                                                                                   ~r,
+                                                                                                                                   pk(~skS)),
+                                                                                                                              ~sskD)
+                                                                                                             ) @ #j.2 )
+                                                                                                        case S_1a
+                                                                                                        solve( Receive_R_PS( $P,
+                                                                                                                             C.1,
+                                                                                                                             sg(encp($v,
+                                                                                                                                     ~r,
+                                                                                                                                     pk(~skS)),
+                                                                                                                                ~sskD)
+                                                                                                               ) @ #j.2 )
+                                                                                                          case S_1a
+                                                                                                          solve( Receive_R_PS( $P2,
+                                                                                                                               C.1,
+                                                                                                                               sg(encp($v2,
+                                                                                                                                       ~r.1,
+                                                                                                                                       pk(~skS)),
+                                                                                                                                  ~sskD2)
+                                                                                                                 ) @ #j.2 )
+                                                                                                            case S_1b
+                                                                                                            solve( Receive_R_PS( $P,
+                                                                                                                                 C.1,
+                                                                                                                                 sg(encp($v,
+                                                                                                                                         ~r,
+                                                                                                                                         pk(~skS)),
+                                                                                                                                    ~sskD)
+                                                                                                                   ) @ #j.2 )
+                                                                                                              case S_1a
+                                                                                                              solve( Receive_R_PS( $P2,
+                                                                                                                                   C.1,
+                                                                                                                                   sg(encp($v2,
+                                                                                                                                           ~r.1,
+                                                                                                                                           pk(~skS)),
+                                                                                                                                      ~sskD2)
+                                                                                                                     ) @ #j.2 )
+                                                                                                                case S_1b
+                                                                                                                solve( Receive_R_PS( $P2,
+                                                                                                                                     C.1,
+                                                                                                                                     sg(encp($v2,
+                                                                                                                                             ~r.1,
+                                                                                                                                             pk(~skS)),
+                                                                                                                                        ~sskD2)
+                                                                                                                       ) @ #j.2 )
+                                                                                                                  case S_1b
+                                                                                                                  solve( Receive_R_PS( $P,
+                                                                                                                                       C.1,
+                                                                                                                                       sg(encp($v,
+                                                                                                                                               ~r,
+                                                                                                                                               pk(~skS)),
+                                                                                                                                          ~sskD)
+                                                                                                                         ) @ #j.2 )
+                                                                                                                    case S_1a
+                                                                                                                    solve( Receive_R_PS( $P2,
+                                                                                                                                         C.1,
+                                                                                                                                         sg(encp($v2,
+                                                                                                                                                 ~r.1,
+                                                                                                                                                 pk(~skS)),
+                                                                                                                                            ~sskD2)
+                                                                                                                           ) @ #j.2 )
+                                                                                                                      case S_1b
+                                                                                                                      solve( Receive_R_PS( $P,
+                                                                                                                                           C.1,
+                                                                                                                                           sg(encp($v,
+                                                                                                                                                   ~r,
+                                                                                                                                                   pk(~skS)),
+                                                                                                                                              ~sskD)
+                                                                                                                             ) @ #j.2 )
+                                                                                                                        case S_1a
+                                                                                                                        solve( Receive_R_PS( $P,
+                                                                                                                                             C.1,
+                                                                                                                                             sg(encp($v,
+                                                                                                                                                     ~r,
+                                                                                                                                                     pk(~skS)),
+                                                                                                                                                ~sskD)
+                                                                                                                               ) @ #j.2 )
+                                                                                                                          case S_1a
+                                                                                                                          solve( Receive_R_PS( $P2,
+                                                                                                                                               C.1,
+                                                                                                                                               sg(encp($v2,
+                                                                                                                                                       ~r.1,
+                                                                                                                                                       pk(~skS)),
+                                                                                                                                                  ~sskD2)
+                                                                                                                                 ) @ #j.2 )
+                                                                                                                            case S_1b
+                                                                                                                            solve( Receive_R_PS( $P,
+                                                                                                                                                 C.1,
+                                                                                                                                                 sg(encp($v,
+                                                                                                                                                         ~r,
+                                                                                                                                                         pk(~skS)),
+                                                                                                                                                    ~sskD)
+                                                                                                                                   ) @ #j.2 )
+                                                                                                                              case S_1a
+                                                                                                                              solve( Receive_R_PS( $P,
+                                                                                                                                                   C,
+                                                                                                                                                   sg(encp($v,
+                                                                                                                                                           ~r,
+                                                                                                                                                           pk(~skS)),
+                                                                                                                                                      ~sskD)
+                                                                                                                                     ) @ #j.1 )
+                                                                                                                                case S_1a
+                                                                                                                                SOLVED // trace found
+                                                                                                                              qed
+                                                                                                                            qed
+                                                                                                                          qed
+                                                                                                                        qed
+                                                                                                                      qed
+                                                                                                                    qed
+                                                                                                                  qed
+                                                                                                                qed
+                                                                                                              qed
+                                                                                                            qed
+                                                                                                          qed
+                                                                                                        qed
+                                                                                                      qed
+                                                                                                    qed
+                                                                                                  qed
+                                                                                                qed
+                                                                                              qed
+                                                                                            qed
+                                                                                          qed
+                                                                                        qed
+                                                                                      qed
+                                                                                    qed
+                                                                                  qed
+                                                                                qed
+                                                                              next
+                                                                                case c_sg
+                                                                                by sorry
+                                                                              qed
+                                                                            next
+                                                                              case c_sg
+                                                                              by sorry
+                                                                            qed
+                                                                          qed
+                                                                        qed
+                                                                      qed
+                                                                    qed
+                                                                  qed
+                                                                qed
+                                                              qed
+                                                            qed
+                                                          qed
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      next
+                                        case fakeEvidence
+                                        by sorry
+                                      qed
+                                    next
+                                      case fakeEvidence
+                                      by sorry
+                                    qed
+                                  next
+                                    case ChanOut_IR_HP_case_2
+                                    by contradiction /* forbidden KD-fact */
+                                  next
+                                    case ChanOut_IR_HP_case_3
+                                    by contradiction /* forbidden KD-fact */
+                                  next
+                                    case c_sg
+                                    by sorry
+                                  qed
+                                next
+                                  case ChanOut_IR_HP_case_3
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case c_sg
+                                  by sorry
+                                qed
+                              qed
+                            qed
+                          qed
+                        next
+                          case S_1b_case_2
+                          by sorry
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case ChanIn_S_case_2
+            by sorry
+          qed
+        qed
+      qed
+    next
+      case ChanIn_S_case_2
+      by sorry
+    next
+      case ChanIn_S_case_3
+      by sorry
+    next
+      case ChanIn_S_case_4
+      by sorry
+    qed
+  next
+    case ChanIn_S_case_2
+    by sorry
+  next
+    case ChanIn_S_case_3
+    by sorry
+  next
+    case ChanIn_S_case_4
+    by sorry
+  qed
+next
+  case 10
+  by sorry
+next
+  case 11
+  by sorry
+next
+  case 12
+  by sorry
+next
+  case 13
+  by sorry
+next
+  case 14
+  by sorry
+next
+  case 2
+  by sorry
+next
+  case 3
+  by sorry
+next
+  case 4
+  by sorry
+next
+  case 5
+  by sorry
+next
+  case 6
+  by sorry
+next
+  case 7
+  by sorry
+next
+  case 8
+  by sorry
+next
+  case 9
+  by sorry
+qed
+
+lemma indivVerif_v [right]:
+  all-traces
+  "∀ H v #i b #j bOther.
+    ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
+    (∃ BB b2 #l r pkS sskD.
+      (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+      (b = sg(encp(v, r, pkS), sskD)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H v #i b #j bOther.
+  (Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l r pkS sskD.
+   (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+   (b = sg(encp(v, r, pkS), sskD))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma indivVerif_v [left]:
+  all-traces
+  "∀ H v #i b #j bOther.
+    ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
+    (∃ BB b2 #l r pkS sskD.
+      (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+      (b = sg(encp(v, r, pkS), sskD)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H v #i b #j bOther.
+  (Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l r pkS sskD.
+   (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+   (b = sg(encp(v, r, pkS), sskD))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma indivVerif_b [right]:
+  all-traces
+  "∀ H b #j bOther.
+    (Verify( H, b, (b+bOther) ) @ #j) ⇒
+    (∃ BB b2 #l. BB_rec( BB, <'b', (b+b2)> ) @ #l)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j bOther.
+  (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l. (BB_rec( BB, <'b', (b+b2)> ) @ #l) ⇒ ⊥"
+*/
+by sorry
+
+lemma indivVerif_b [left]:
+  all-traces
+  "∀ H b #j bOther.
+    (Verify( H, b, (b+bOther) ) @ #j) ⇒
+    (∃ BB b2 #l. BB_rec( BB, <'b', (b+b2)> ) @ #l)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j bOther.
+  (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l. (BB_rec( BB, <'b', (b+b2)> ) @ #l) ⇒ ⊥"
+*/
+by sorry
+
+lemma DRvoterC [right]:
+  all-traces
+  "∀ H b #j b1 b2.
+    (Verify( H, b, (b1+b2) ) @ #j) ⇒
+    (((∃ BB #k b3. BB_rec( BB, <'b', (b+b3)> ) @ #k) ∨
+      (∃ BB skS #k #l #m ba b3.
+        ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+          (¬(b = b3))) ∧
+         (Evidence( b, sg(b, skS) ) @ #l)) ∧
+        (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∨
+     (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+       ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+            (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+           (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+          (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+         (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+        (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+       (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j b1 b2.
+  (Verify( H, b, (b1+b2) ) @ #j)
+ ∧
+  (∀ BB #k b3. (BB_rec( BB, <'b', (b+b3)> ) @ #k) ⇒ ⊥) ∧
+  (∀ BB skS #k #l #m ba b3.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))"
+*/
+by sorry
+
+lemma DRvoterC [left]:
+  all-traces
+  "∀ H b #j b1 b2.
+    (Verify( H, b, (b1+b2) ) @ #j) ⇒
+    (((∃ BB #k b3. BB_rec( BB, <'b', (b+b3)> ) @ #k) ∨
+      (∃ BB skS #k #l #m ba b3.
+        ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+          (¬(b = b3))) ∧
+         (Evidence( b, sg(b, skS) ) @ #l)) ∧
+        (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∨
+     (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+       ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+            (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+           (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+          (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+         (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+        (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+       (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j b1 b2.
+  (Verify( H, b, (b1+b2) ) @ #j)
+ ∧
+  (∀ BB #k b3. (BB_rec( BB, <'b', (b+b3)> ) @ #k) ⇒ ⊥) ∧
+  (∀ BB skS #k #l #m ba b3.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))"
+*/
+by sorry
+
+lemma DRvoterT [right]:
+  all-traces
+  "∀ H b #i #j.
+    (((Ballot( H, b ) @ #i) ∧ (End( ) @ #j)) ∧ (#i < #j)) ⇒
+    (((∃ BB #k b3. BB_rec( BB, <'b', (b+b3)> ) @ #k) ∨
+      (∃ BB skS #k #l #m ba b3.
+        ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+          (¬(b = b3))) ∧
+         (Evidence( b, sg(b, skS) ) @ #l)) ∧
+        (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∨
+     (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+       ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+            (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+           (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+          (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+         (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+        (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+       (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #i #j.
+  (Ballot( H, b ) @ #i) ∧ (End( ) @ #j)
+ ∧
+  (#i < #j) ∧
+  (∀ BB #k b3. (BB_rec( BB, <'b', (b+b3)> ) @ #k) ⇒ ⊥) ∧
+  (∀ BB skS #k #l #m ba b3.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))"
+*/
+by sorry
+
+lemma DRvoterT [left]:
+  all-traces
+  "∀ H b #i #j.
+    (((Ballot( H, b ) @ #i) ∧ (End( ) @ #j)) ∧ (#i < #j)) ⇒
+    (((∃ BB #k b3. BB_rec( BB, <'b', (b+b3)> ) @ #k) ∨
+      (∃ BB skS #k #l #m ba b3.
+        ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+          (¬(b = b3))) ∧
+         (Evidence( b, sg(b, skS) ) @ #l)) ∧
+        (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∨
+     (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+       ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+            (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+           (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+          (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+         (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+        (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+       (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #i #j.
+  (Ballot( H, b ) @ #i) ∧ (End( ) @ #j)
+ ∧
+  (#i < #j) ∧
+  (∀ BB #k b3. (BB_rec( BB, <'b', (b+b3)> ) @ #k) ⇒ ⊥) ∧
+  (∀ BB skS #k #l #m ba b3.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))"
+*/
+by sorry
+
+lemma DRauth [right]:
+  all-traces
+  "∀ S #i.
+    (Honest( S ) @ #i) ⇒
+    ((¬(∃ b BB skS #k #l #m ba b3.
+         ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+           (¬(b = b3))) ∧
+          (Evidence( b, sg(b, skS) ) @ #l)) ∧
+         (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∧
+     (¬(∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+         ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+              (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+             (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+            (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+           (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+          (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+         (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S #i.
+  (Honest( S ) @ #i)
+ ∧
+  ((∃ b BB skS #k #l #m ba b3.
+     (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+     (Evidence( b, sg(b, skS) ) @ #l) ∧
+     (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+    ∧
+     (¬(b = ba)) ∧ (¬(b = b3))) ∨
+   (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+     (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+     (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+     (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+    ∧
+     (((¬(ba = sg(bPrimea, sskDa))) ∨ (¬(b3 = sg(bPrimeb, sskDb))))) ∧
+     (((¬(ba = sg(bPrimea, sskDb))) ∨ (¬(b3 = sg(bPrimeb, sskDa))))) ∧
+     (((¬(ba = sg(bPrimeb, sskDa))) ∨ (¬(b3 = sg(bPrimea, sskDb))))) ∧
+     (((¬(ba = sg(bPrimeb, sskDb))) ∨ (¬(b3 = sg(bPrimea, sskDa)))))))"
+*/
+by sorry
+
+lemma DRauth [left]:
+  all-traces
+  "∀ S #i.
+    (Honest( S ) @ #i) ⇒
+    ((¬(∃ b BB skS #k #l #m ba b3.
+         ((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+           (¬(b = b3))) ∧
+          (Evidence( b, sg(b, skS) ) @ #l)) ∧
+         (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m))) ∧
+     (¬(∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+         ((((((BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+              (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+             (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+            (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+           (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+          (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+         (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa)))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S #i.
+  (Honest( S ) @ #i)
+ ∧
+  ((∃ b BB skS #k #l #m ba b3.
+     (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+     (Evidence( b, sg(b, skS) ) @ #l) ∧
+     (BB_pkS( BB, <'spkS', pk(skS)> ) @ #m)
+    ∧
+     (¬(b = ba)) ∧ (¬(b = b3))) ∨
+   (∃ BB ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+     (BB_rec( BB, <'b', (b3+ba)> ) @ #k) ∧
+     (BB_woS( BB, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+     (BB_pskDs( BB, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+    ∧
+     (((¬(ba = sg(bPrimea, sskDa))) ∨ (¬(b3 = sg(bPrimeb, sskDb))))) ∧
+     (((¬(ba = sg(bPrimea, sskDb))) ∨ (¬(b3 = sg(bPrimeb, sskDa))))) ∧
+     (((¬(ba = sg(bPrimeb, sskDa))) ∨ (¬(b3 = sg(bPrimea, sskDb))))) ∧
+     (((¬(ba = sg(bPrimeb, sskDb))) ∨ (¬(b3 = sg(bPrimea, sskDa)))))))"
+*/
+by sorry
+
+lemma Uniqueness [right]:
+  all-traces
+  "∀ #i b1 b2 BB.
+    (((¬(∃ b BB.1 skS #k #l #m ba b3.
+          ((((BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+            (¬(b = b3))) ∧
+           (Evidence( b, sg(b, skS) ) @ #l)) ∧
+          (BB_pkS( BB.1, <'spkS', pk(skS)> ) @ #m))) ∧
+      (¬(∃ BB.1 ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+          ((((((BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+               (BB_woS( BB.1, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+              (BB_pskDs( BB.1, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+             (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+            (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+           (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+          (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))) ∧
+     (BB_rec( BB, <'b', (b1+b2)> ) @ #i)) ⇒
+    (∃ BB.1 H1 H2 bPrime1 bPrime2 sskD1 sskD2 #bb #s #h1 #h2 P1 P2.
+      (((((((BB_H( BB.1, <'H', (H1+H2)> ) @ #bb) ∧ (¬(H1 = H2))) ∧
+           (b1 = sg(bPrime1, sskD1))) ∧
+          (CastByCorresp( H1, pk(sskD1) ) @ #s)) ∧
+         (b2 = sg(bPrime2, sskD2))) ∧
+        (CastByCorresp( H2, pk(sskD2) ) @ #s)) ∧
+       (Send( H1, P1, b1 ) @ #h1)) ∧
+      (Send( H2, P2, b2 ) @ #h2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i b1 b2 BB.
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #i)
+ ∧
+  (∀ b BB.1 skS #k #l #m ba b3.
+    (BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB.1, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB.1 ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB.1, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB.1, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))) ∧
+  (∀ BB.1 H1 H2 bPrime1 bPrime2 sskD1 sskD2 #bb #s #h1 #h2 P1 P2.
+    (BB_H( BB.1, <'H', (H1+H2)> ) @ #bb) ∧
+    (b1 = sg(bPrime1, sskD1)) ∧
+    (CastByCorresp( H1, pk(sskD1) ) @ #s) ∧
+    (b2 = sg(bPrime2, sskD2)) ∧
+    (CastByCorresp( H2, pk(sskD2) ) @ #s) ∧
+    (Send( H1, P1, b1 ) @ #h1) ∧
+    (Send( H2, P2, b2 ) @ #h2)
+   ⇒
+    H1 = H2)"
+*/
+by sorry
+
+lemma Uniqueness [left]:
+  all-traces
+  "∀ #i b1 b2 BB.
+    (((¬(∃ b BB.1 skS #k #l #m ba b3.
+          ((((BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧ (¬(b = ba))) ∧
+            (¬(b = b3))) ∧
+           (Evidence( b, sg(b, skS) ) @ #l)) ∧
+          (BB_pkS( BB.1, <'spkS', pk(skS)> ) @ #m))) ∧
+      (¬(∃ BB.1 ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+          ((((((BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+               (BB_woS( BB.1, <'bPrime', (bPrimea+bPrimeb)> ) @ #l)) ∧
+              (BB_pskDs( BB.1, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)) ∧
+             (¬((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))))) ∧
+            (¬((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))))) ∧
+           (¬((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))))) ∧
+          (¬((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))))) ∧
+     (BB_rec( BB, <'b', (b1+b2)> ) @ #i)) ⇒
+    (∃ BB.1 H1 H2 bPrime1 bPrime2 sskD1 sskD2 #bb #s #h1 #h2 P1 P2.
+      (((((((BB_H( BB.1, <'H', (H1+H2)> ) @ #bb) ∧ (¬(H1 = H2))) ∧
+           (b1 = sg(bPrime1, sskD1))) ∧
+          (CastByCorresp( H1, pk(sskD1) ) @ #s)) ∧
+         (b2 = sg(bPrime2, sskD2))) ∧
+        (CastByCorresp( H2, pk(sskD2) ) @ #s)) ∧
+       (Send( H1, P1, b1 ) @ #h1)) ∧
+      (Send( H2, P2, b2 ) @ #h2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i b1 b2 BB.
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #i)
+ ∧
+  (∀ b BB.1 skS #k #l #m ba b3.
+    (BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+    (Evidence( b, sg(b, skS) ) @ #l) ∧
+    (BB_pkS( BB.1, <'spkS', pk(skS)> ) @ #m)
+   ⇒
+    ((b = ba) ∨ (b = b3))) ∧
+  (∀ BB.1 ba b3 bPrimea bPrimeb sskDa sskDb #k #l #m.
+    (BB_rec( BB.1, <'b', (b3+ba)> ) @ #k) ∧
+    (BB_woS( BB.1, <'bPrime', (bPrimea+bPrimeb)> ) @ #l) ∧
+    (BB_pskDs( BB.1, <'spkD', (pk(sskDa)+pk(sskDb))> ) @ #m)
+   ⇒
+    (((ba = sg(bPrimea, sskDa)) ∧ (b3 = sg(bPrimeb, sskDb))) ∨
+     ((ba = sg(bPrimea, sskDb)) ∧ (b3 = sg(bPrimeb, sskDa))) ∨
+     ((ba = sg(bPrimeb, sskDa)) ∧ (b3 = sg(bPrimea, sskDb))) ∨
+     ((ba = sg(bPrimeb, sskDb)) ∧ (b3 = sg(bPrimea, sskDa))))) ∧
+  (∀ BB.1 H1 H2 bPrime1 bPrime2 sskD1 sskD2 #bb #s #h1 #h2 P1 P2.
+    (BB_H( BB.1, <'H', (H1+H2)> ) @ #bb) ∧
+    (b1 = sg(bPrime1, sskD1)) ∧
+    (CastByCorresp( H1, pk(sskD1) ) @ #s) ∧
+    (b2 = sg(bPrime2, sskD2)) ∧
+    (CastByCorresp( H2, pk(sskD2) ) @ #s) ∧
+    (Send( H1, P1, b1 ) @ #h1) ∧
+    (Send( H2, P2, b2 ) @ #h2)
+   ⇒
+    H1 = H2)"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+by sorry
+
+end

@@ -61,6 +61,7 @@ data ProcessAnnotation v = ProcessAnnotation {
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
+  , location :: Maybe SapicTerm -- The location of a process, for the IEE extention.
   } deriving (Show, Typeable)
 
 -- | Any annotation that is good enough to be converted back into a Process
@@ -76,21 +77,23 @@ instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessNames = processnames
         setProcessNames pn an = an { processnames = pn }
-  
+
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation [] Nothing Nothing Nothing
-    mappend p1 p2 = ProcessAnnotation 
+    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing
+    mappend p1 p2 = ProcessAnnotation
         (processnames p1 `mappend` processnames p2)
         (lock p1 `mappend` lock p2)
         (unlock p1 `mappend` unlock p2)
         (secretChannel p1 `mappend` secretChannel p2)
+        (location p2)
 
 instance Semigroup (ProcessAnnotation v) where
-    (<>) p1 p2 = ProcessAnnotation 
+    (<>) p1 p2 = ProcessAnnotation
         (processnames p1 `mappend` processnames p2)
         (lock p1 <> lock p2)
         (unlock p1 <> unlock p2)
         (secretChannel p1 <> secretChannel p2)
+        (location p2)
 
 newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
     deriving (Typeable, Monoid,Semigroup,Show)
@@ -100,8 +103,8 @@ data AnProcess ann = AnProcess (LProcess ann)
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
-    fmap f (AnProcess process) = AnProcess (f' process) 
-        where 
+    fmap f (AnProcess process) = AnProcess (f' process)
+        where
         f' (ProcessNull an) = ProcessNull (f an)
         f' (ProcessAction a an p)   =  ProcessAction a (f an) (f' p)
         f' (ProcessComb c an pl pr)  = ProcessComb c (f an) (f' pl) (f' pr)
@@ -112,21 +115,24 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing }
+annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing, location = Nothing}
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing}
+annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing, location = Nothing}
 annSecretChannel :: AnVar v -> ProcessAnnotation v
-annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v}
+annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v, location = Nothing}
 
 -- | Convert to and from Process, i.e., LProcess with processnames only.
 toAnProcess :: PlainProcess -> LProcess (ProcessAnnotation v0)
 toAnProcess = unAnProcess . fmap f . AnProcess
-    where
-        f l = ProcessAnnotation { processnames = l
-                                , lock = Nothing
-                                , unlock = Nothing
-                                , secretChannel = Nothing
-                                }
+  where
+        f l =
+          let (names, loc) = getNamesLoc l in
+          ProcessAnnotation { processnames = names, lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = loc}
+        getNamesLoc [] = ([], Nothing)
+        getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
+        getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
 
 toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
-toProcess = unAnProcess . fmap getProcessNames . AnProcess
+toProcess = unAnProcess . fmap f . AnProcess
+    where
+        f l = map ProcessName $ getProcessNames l

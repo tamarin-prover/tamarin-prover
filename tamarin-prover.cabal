@@ -1,7 +1,7 @@
 cabal-version:      >= 1.10
 build-type:         Simple
 name:               tamarin-prover
-version:            1.5.1
+version:            1.7.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -12,7 +12,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
+copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2020
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -44,8 +44,8 @@ description:
     prover are given at <http://tamarin-prover.github.io>.
     .
     The paper describing the theory underlying the extension for observational
-    equivalence is published at CCS 2015. Its extended version is available from 
-    <http://tamarin-prover.github.io>. For observational equivalence proofs just 
+    equivalence is published at CCS 2015. Its extended version is available from
+    <http://tamarin-prover.github.io>. For observational equivalence proofs just
     add the "--diff" flag when calling the @tamarin-prover@.
 
 homepage:           https://tamarin-prover.github.io
@@ -106,11 +106,11 @@ executable tamarin-prover
     default-language: Haskell2010
 
     if flag(threaded)
-        ghc-options:   -threaded -eventlog 
-    
+        ghc-options:   -threaded -eventlog
+
     -- -XFlexibleInstances
 
-    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing
+    ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
     ghc-prof-options:  -auto-all
 
     -- Parallelize by default. Only activated for GHC 7.4, as this flag was
@@ -127,6 +127,7 @@ executable tamarin-prover
       , base
       , binary
       , binary-orphans
+      , binary-instances
       , blaze-builder
       , blaze-html
       , bytestring
@@ -156,17 +157,16 @@ executable tamarin-prover
       , warp
       , yesod-core
       , yesod-static
-
-      , tamarin-prover-utils  == 1.5.1
-      , tamarin-prover-term   == 1.5.1
-      , tamarin-prover-theory == 1.5.1
-      , tamarin-prover-sapic == 1.5.1
-      , tamarin-prover-export == 1.5.1
+      , tamarin-prover-utils  == 1.7.0
+      , tamarin-prover-term   == 1.7.0
+      , tamarin-prover-theory == 1.7.0
+      , tamarin-prover-sapic == 1.7.0
+      , tamarin-prover-export == 1.7.0
 
     other-modules:
       Paths_tamarin_prover
 
-      Main
+      -- Main
       Main.Console
       Main.Environment
       Main.TheoryLoader
@@ -185,7 +185,7 @@ executable tamarin-prover
       Web.Types
 
       Test.ParserTests
-      
+
     other-extensions:
       TemplateHaskell
 

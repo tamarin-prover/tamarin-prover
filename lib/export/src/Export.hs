@@ -26,22 +26,41 @@ import         Term.SubtermRule
 import         Theory
 import         Theory.Sapic
 import         Text.PrettyPrint.Class
+import           Theory.Text.Pretty
+
+import           Control.Monad.Fresh
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 
 import qualified Data.Set as S
 import qualified Data.Label as L
 import Data.List as List
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.Functor.Identity
 
-template :: Document d => [d] -> [d] -> d -> d
-template headers queries process =
-  (vcat headers)
+------------------------------------------------------------------------------
+-- Core Export
+------------------------------------------------------------------------------
+
+template :: Document d => [d] -> [d] -> d -> [d] -> d
+template headers queries process lemmas =
+  vcat headers
   $$
-  (vcat queries)
+  vcat queries
   $$
-  (text "process")
+  vcat lemmas
   $$
-  (nest 4 process)
+  text "process"
+  $$
+  nest 4 process
+
+
+prettyProVerifTheory :: OpenTheory -> Doc
+prettyProVerifTheory thy =  template hd queries proc lemmas
+  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
+        (proc, prochd) = loadProc thy
+        queries = loadQueries thy
+        lemmas = loadLemmas thy
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProverifHeader =
@@ -80,29 +99,30 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   ),
   (pairFunSig,  [Eq "reduc forall a:bitstring,b:bitstring; fst((a,b))=a.",
   Eq  "reduc forall a:bitstring,b:bitstring; snd((a,b))=b."]
+  ),
+  (asymEncFunSig, [
+      Sym "type skey.",
+      Sym "type pkey.",
+      Fun "fun aenc(bitstring,pkey):bitstring.",
+      Fun "fun pk(skey):pkey.",
+      Eq "reduc forall m:bitstring,sk:skey; adec(aenc(m,pk(sk)),sk) = m."]
   )
   ]
 
 builtins_rules :: S.Set CtxtStRule
 builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules]
 
--- utility function, generate a sequence of type arguments, for events and function declaration
-make_args :: Int -> String
-make_args 0 = ""
-make_args 1 = "bitstring"
-make_args n = "bitstring,"++(make_args (n-1))
-
--- main pp function
-prettyProVerifTheory :: OpenTheory -> Doc
-prettyProVerifTheory thy =  template hd queries proc
-  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
-        (proc, prochd) = loadProc thy
-        queries = loadQueries thy
-
+-- Loader of the export functions
+------------------------------------------------------------------------------
 loadQueries :: Theory sig c b p SapicElement -> [Doc]
 loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
   where get_text Nothing = ""
         get_text (Just m) = L.get eText m
+
+
+------------------------------------------------------------------------------
+-- Term Printers
+------------------------------------------------------------------------------
 
 ppTypeVar :: Document p => SapicLVar -> p
 ppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
@@ -122,6 +142,7 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
         Lit  (Con (Name PubName n))               -> text $ show n
         Lit  v                    |    b          -> ppTypeLit v
         Lit  (Var (SapicLVar (LVar n _ _)  _))    -> (text n)
+        Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -162,8 +183,9 @@ pppLNTerm b t = (ppTerm t, getHdTerm t)
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             -> text $ show n
         Lit  (Con (Name PubName n))               -> text $ show n
-        Lit  (tm2)              | b                 -> text $ show tm2 <> ":bitstring"
-        Lit  (tm2)                                  -> text $ show tm2
+        Lit  (tm2)              | b               -> text $ show tm2 <> ":bitstring"
+        Lit  (Var (LVar tm2 _ _ ))                -> text tm2
+        Lit  (tm2)                                -> text $ show tm2
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -209,7 +231,7 @@ ppFact (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New v@(SapicLVar (LVar n s i) t)) = (text "new " <> (ppTypeVar v), S.empty)
+ppAction (New v@(SapicLVar (LVar _ _ _) _)) = (text "new " <> (ppTypeVar v), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1
@@ -242,7 +264,7 @@ ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic pl
         (pa, sh) = ppFact' a
-        ppFact' formula@(Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
+        ppFact' (Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
                                                     --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
         ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
 
@@ -285,27 +307,157 @@ loadProc thy = case theoryProcesses thy of
   _  -> (text "Multiple sapic processes detected, error", S.empty)
 
 
-make_str :: (BC.ByteString, Int) -> [Char]
-make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
 
-make_argtypes :: [SapicType] -> String
-make_argtypes [] = ""
-make_argtypes [Just t] = t
-make_argtypes ((Just p):t) = p ++ "," ++ (make_argtypes t)
 
+------------------------------------------------------------------------------
+-- Printer for Lemmas
+------------------------------------------------------------------------------
+
+
+showFactAnnotation :: FactAnnotation -> [Char]
+showFactAnnotation an = case an of
+    SolveFirst     -> "+"
+    SolveLast      -> "-"
+    NoSources      -> "no_precomp"
+
+ppProtoAtom :: (HighlightDocument d, Show a) => (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
+ppProtoAtom _ ppT  (Action v (Fact tag an ts))
+  | factTagArity tag /= length ts = ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an
+  | tag == KUFact = ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v
+  | otherwise                     =
+        text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> ppAnn an  <> opAction <> ppT v
+  where
+    ppFactL n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppT t
+    ppAnn ann = if S.null ann then text "" else
+        brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
+
+
+ppProtoAtom ppS _ (Syntactic s) = ppS s
+ppProtoAtom _ ppT (EqE l r) =
+    sep [ppT l <-> opEqual, ppT r]
+    -- sep [ppNTerm l <-> text "≈", ppNTerm r]
+ppProtoAtom _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
+ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
+
+
+ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
+ppAtom = ppProtoAtom (const emptyDoc)
+
+ppNAtom :: ProtoAtom s LNTerm -> Doc
+ppNAtom  = ppAtom (fst . ppLNTerm)
+
+mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
+mapLits f t = case viewTerm t of
+    Lit l     -> lit . f $ l
+    FApp o as -> fApp o (map (mapLits f) as)
+
+ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
+ppLFormula ppAt =
+    pp
+  where
+    extractFree (Free v)  = v
+    extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
+
+    pp (Ato a)    = return ([],  ppAt (fmap (mapLits (fmap extractFree)) a))
+    pp (TF True)  = return ([], operator_ "true")    -- "T"
+    pp (TF False) = return ([], operator_ "false")    -- "F"
+
+    pp (Not p)    = do
+      (vs,p') <- pp p
+      return (vs, operator_ "not" <> opParens p') -- text "¬" <> parens (pp a)
+      -- return $ operator_ "not" <> opParens p' -- text "¬" <> parens (pp a)
+
+    pp (Conn op p q) = do
+        (vsp,p') <- pp p
+        (vsq,q') <- pp q
+        return (vsp ++ vsq, sep [opParens p' <-> ppOp op, opParens q'])
+      where
+        ppOp And = text "&&"
+        ppOp Or  = text "||"
+        ppOp Imp = text "==>"
+        ppOp Iff = opIff
+
+    pp fm@(Qua _ _ _) =
+        scopeFreshness $ do
+            (vs, _, fm') <- openFormulaPrefix fm
+            (vsp,d') <- pp fm'
+            return (vs++vsp,d')
+
+isPropFormula :: LNFormula -> Bool
+isPropFormula (Qua _ _ _ ) = False
+isPropFormula (Ato _) = True
+isPropFormula (TF _) = True
+isPropFormula (Not _) = False
+isPropFormula (Conn _ p q) = isPropFormula p && isPropFormula q
+
+ppQueryFormula :: (MonadFresh m, Functor s) => ProtoFormula s (String, LSort) Name LVar -> [LVar] -> m Doc
+ppQueryFormula fm extravs = do
+  (vs,p) <- ppLFormula ppNAtom fm
+  return $
+    sep [text "query " <>  fsep (punctuate comma (map ppTimeTypeVar (extravs++vs))) <> text ";",
+         nest 1 p,
+         text "."]
+
+ppTimeTypeVar :: Document p => LVar-> p
+ppTimeTypeVar (LVar n LSortNode _ ) = text n <> text ":time"
+ppTimeTypeVar (LVar n _ _ ) = text n <> text ":bitstring"
+
+
+ppQueryFormulaEx :: LNFormula -> [LVar] -> Doc
+ppQueryFormulaEx fm vs =
+    Precise.evalFresh (ppQueryFormula fm vs) (avoidPrecise fm)
+ppRestrictFormula :: ProtoFormula Unit2 (String, LSort) Name LVar -> Precise.FreshT Data.Functor.Identity.Identity Doc
+ppRestrictFormula =
+  pp
+  where
+    pp (Not fm@(Qua Ex _ _)) = do
+           (vs,_,fm') <- openFormulaPrefix fm
+           return $ (if isPropFormula fm' then
+                        ppOk fm' vs
+                      else
+                        ppFail fm)
+    pp fm@(Qua All _ _) = do
+                (_,_,fm') <- openFormulaPrefix fm
+                pp2 fm fm'
+
+    pp fm  =  return $ ppFail fm
+    ppOk = ppQueryFormulaEx
+    ppFail fm =  text "(*" <> prettyLNFormula fm <> text "*)"
+
+    pp2 fm_original fm | isPropFormula fm = return $ ppOk fm_original []
+
+    pp2 fm_original (Conn Imp p fm@(Qua Ex _ _)) | isPropFormula p  = do
+                (_,_,fm') <- openFormulaPrefix fm
+                return $ (if isPropFormula fm' then
+                            ppOk fm_original []
+                          else
+                            ppFail fm_original)
+    pp2 fm_original _ = return $ ppFail fm_original
+
+ppLemma :: Lemma ProofSkeleton -> Doc
+ppLemma p = text "(*" <> text (L.get lName p) <> text "*)"
+            $$ Precise.evalFresh (ppRestrictFormula fm) (avoidPrecise fm)
+  where fm = L.get lFormula p
+
+loadLemmas :: OpenTheory -> [Doc]
+loadLemmas thy = map ppLemma (theoryLemmas thy)
+
+
+------------------------------------------------------------------------------
+-- Header Generation
+------------------------------------------------------------------------------
 
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
 headerOfFunSym []  (f,(k,Public,_))  =  Fun (make_str (f,k) ++ ".")
 headerOfFunSym []  (f,(k,Private,_)) =  Fun ((make_str (f,k))  ++ " [private].")
-headerOfFunSym  (((f,(k,Public,_)),inTypes,Just outType):rem)  fs2@(f2,(k2,Public,_)) =
+headerOfFunSym  (((f,(k,Public,_)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
-  else headerOfFunSym rem fs2
-headerOfFunSym  (((f,(k,Private,_)),inTypes,Just outType):rem)  fs2@(f2,(k2,Private,_)) =
+  else headerOfFunSym remainder fs2
+headerOfFunSym  (((f,(k,Private,_)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Private,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
-  else headerOfFunSym rem fs2
-
+  else headerOfFunSym remainder fs2
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
@@ -346,3 +498,23 @@ attribHeaders hd =
           | Fun s <- x =  (e1,(text s):f1,s1)
           | Eq s <- x =  ((text s):e1,f1,s1)
           where (e1,f1,s1) = splitHeaders xs
+
+
+
+------------------------------------------------------------------------------
+-- Some utility functions
+------------------------------------------------------------------------------
+
+make_str :: (BC.ByteString, Int) -> [Char]
+make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
+
+make_argtypes :: [SapicType] -> String
+make_argtypes [] = ""
+make_argtypes [Just t] = t
+make_argtypes ((Just p):t) = p ++ "," ++ (make_argtypes t)
+make_argtypes _ = "Error: ill-defined type"
+
+make_args :: Int -> String
+make_args 0 = ""
+make_args 1 = "bitstring"
+make_args n = "bitstring,"++(make_args (n-1))
