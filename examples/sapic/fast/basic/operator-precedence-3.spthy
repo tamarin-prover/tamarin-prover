@@ -4,6 +4,7 @@ section{* A few test cases for operator precedence *}
 
 predicate: True() <=> T
 
+insert 'x','x'; // for well-formedness
 if True() then
     event PositiveBranch();
     lookup 'x' as x in
