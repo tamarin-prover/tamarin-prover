@@ -256,6 +256,14 @@ ppSapic (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$
 ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
+ppSapic (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+                                                 $$ (nest 4 (parens ppl))
+                                                 $$ text "else" <> (nest 4 (parens ppr))
+                                               ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (ppr, pshr) = ppSapic pr
+                                           (pt1, sh1) = pppSapicTerm True t1
+                                           (pt2, sh2) = ppSapicTerm t2
 
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
@@ -448,16 +456,21 @@ loadLemmas thy = map ppLemma (theoryLemmas thy)
 ------------------------------------------------------------------------------
 
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
-headerOfFunSym []  (f,(k,Public,_))  =  Fun (make_str (f,k) ++ ".")
-headerOfFunSym []  (f,(k,Private,_)) =  Fun ((make_str (f,k))  ++ " [private].")
-headerOfFunSym  (((f,(k,Public,_)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
+headerOfFunSym []  (_,(_,_,Destructor)) = Fun ("")
+headerOfFunSym []  (f,(k,Public,Constructor))  =  Fun (make_str (f,k) ++ ".")
+headerOfFunSym []  (f,(k,Private,Constructor)) =  Fun ((make_str (f,k))  ++ " [private].")
+headerOfFunSym  (((f,(k,Public,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
   else headerOfFunSym remainder fs2
-headerOfFunSym  (((f,(k,Private,_)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Private,_)) =
+headerOfFunSym  (((f,(k,Private,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Private,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
   else headerOfFunSym remainder fs2
+
+headerOfFunSym  (((_,(_,_,Destructor)),_,_):remainder)  fs2 =
+   headerOfFunSym remainder fs2
+
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: OpenTheory -> S.Set ProverifHeader
@@ -475,10 +488,11 @@ loadHeaders thy =
 
 headersOfRule :: CtxtStRule -> S.Set ProverifHeader
 headersOfRule r = case ctxtStRuleToRRule r of
-  (lhs `RRule` rhs) -> (S.singleton hrule)  `S.union` lsh `S.union` rsh
+  (lhs `RRule` rhs) ->
+    (S.singleton hrule)  `S.union` lsh `S.union` rsh
     where (plhs,lsh) = ppLNTerm lhs
           (prhs,rsh) = ppLNTerm rhs
-          hrule = Eq  ("equation forall " ++
+          hrule = Eq  (prefix <> " forall " ++
                        make_frees (map show freesr)  ++
                        ";" ++
                        (render $ sep [ nest 2 $ plhs
@@ -487,6 +501,10 @@ headersOfRule r = case ctxtStRuleToRRule r of
           make_frees [] = ""
           make_frees [x] = x ++ ":bitstring"
           make_frees (x:xs) =  x ++ ":bitstring," ++ (make_frees xs)
+          prefix = case viewTerm lhs of
+            FApp (NoEq (_, (_,_,Destructor))) _ -> "reduc"
+            _ -> "equation"
+
 
 attribHeaders :: [ProverifHeader] -> [Doc]
 attribHeaders hd =
