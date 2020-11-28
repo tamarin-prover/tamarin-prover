@@ -208,13 +208,14 @@ baseTransComb c an p tildex
               ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
            ],
             tildexl, tildex)
-    | Let _ _ <- c,
+    | Let t1' _ <- c,
+      t1or <- toLNTerm t1',
       Just (t1, t2) <- destructorEquation an,
       fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
       =
         let freevars = freeset t1 in
         let faN = fold (\v f -> hinted forall v f ) fa (freevars `difference` tildex) in
-        let tildexl = freevars `union` tildex in
+        let tildexl = (freeset t1or) `union` tildex in
         let pos = p++[1] in
           ([
               ([def_state], [],  [FLet pos t2 tildex], []),
