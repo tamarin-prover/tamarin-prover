@@ -469,9 +469,13 @@ loadLemmas thy = map ppLemma (theoryLemmas thy)
 ------------------------------------------------------------------------------
 
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
+
 headerOfFunSym []  (_,(_,_,Destructor)) = Fun ("")
 headerOfFunSym []  (f,(k,Public,Constructor))  =  Fun (make_str (f,k) ++ ".")
 headerOfFunSym []  (f,(k,Private,Constructor)) =  Fun ((make_str (f,k))  ++ " [private].")
+
+
+
 headerOfFunSym  (((f,(k,Public,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
   if f2==f && k2 == k then
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
@@ -481,7 +485,7 @@ headerOfFunSym  (((f,(k,Private,Constructor)),inTypes,Just outType):remainder)  
     Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
   else headerOfFunSym remainder fs2
 
-headerOfFunSym  (((_,(_,_,Destructor)),_,_):remainder)  fs2 =
+headerOfFunSym  (_:remainder)  fs2 =
    headerOfFunSym remainder fs2
 
 
