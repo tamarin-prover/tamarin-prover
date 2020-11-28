@@ -35,6 +35,7 @@ module Theory.Text.Parser.Token (
   , msgvar
   , nodevar
   , sapicvar
+  , sapicpatternvar
   , sapicnodevar
 
   , letIdentifier
@@ -326,12 +327,23 @@ sapicvar :: Parser SapicLVar
 sapicvar = do
         v <- lvar
         t <- option Nothing $ colon *> (Just <$> identifier)
-        return (SapicLVar v t )
+        return (SapicLVar v t False)
+
+sapicpatternvar :: Parser SapicLVar
+sapicpatternvar = do
+        p <- option False parseq
+        v <- lvar
+        t <- option Nothing $ colon *> (Just <$> identifier)
+        return (SapicLVar v t p)
+        where parseq = do
+                _ <- opEqual
+                return True
+
 
 sapicnodevar :: Parser SapicLVar
 sapicnodevar = do
     v <- nodevar
-    return (SapicLVar v defaultSapicNodeType)
+    return (SapicLVar v defaultSapicNodeType False)
 
 -- Term Operators
 -----------------

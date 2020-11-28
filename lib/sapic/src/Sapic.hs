@@ -66,8 +66,10 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
         typeWith' a' t
             | Lit (Var v) <- viewTerm t
             , lvar' <- slvar v
-            , Just stype' <- Map.lookup lvar' a' =
-                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
+            , Just stype' <- Map.lookup lvar' a'
+            , ispat <- ispattern v
+          =
+                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype' ispat)), stype')
             | FApp (NoEq fs) ts   <- viewTerm t
             , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
             = do
@@ -85,7 +87,7 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
             | otherwise = return (t, defaultSapicType) -- TODO no idea how to type here...
         typeWithVar  v -- variables are correctly typed, as we just inserted them
-            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
+            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType (ispattern v)
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a

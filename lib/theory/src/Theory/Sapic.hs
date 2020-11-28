@@ -85,7 +85,7 @@ import Control.Monad.Catch
 
 -- | In general, terms we use in the translation have logical veriables
 type SapicType = Maybe String
-data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType }
+data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType, ispattern::Bool}
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
 type LNTTerm = VTerm Name SapicLVar
 type SapicNTerm v = VTerm Name v
@@ -101,7 +101,7 @@ type SapicFunSym = (NoEqSym, [SapicType], SapicType)
 
 -- TODO alternative definition.
 -- 1. If we need to extend, switch to this tyoe
--- 2. If we are done and merge into main and have not used it, 
+-- 2. If we are done and merge into main and have not used it,
 --    then delete this comment.
 -- data SapicFunSym = SapicFunSym
 --        { _sfSym            :: NoEqSym
@@ -124,11 +124,13 @@ defaultSapicNodeType = Just "node"
 type SapicSubst = Subst Name SapicLVar
 
 instance Show SapicLVar where
-    show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
-    show (SapicLVar v Nothing ) = show  v
+    show (SapicLVar v (Just t) False) = show  v ++ ":" ++ t
+    show (SapicLVar v Nothing False ) = show  v
+    show (SapicLVar v (Just t) True) = "=" ++ show  v ++ ":" ++ t
+    show (SapicLVar v Nothing True ) = "=" ++ show  v
 
 instance Hinted SapicLVar where
-    hint (SapicLVar v _) = hint v
+    hint (SapicLVar v _ _) = hint v
 
 -- conversion functions for sapic types
 toLVar:: SapicLVar -> LVar
@@ -415,7 +417,7 @@ applySapicActionError subst ac
                             else
                                   return $ ChIn (apply subst mt) (apply subst t)
         | otherwise = return $ apply subst ac
-    where lvarName' (SapicLVar v _) = lvarName v
+    where lvarName' (SapicLVar v _ _) = lvarName v
 
 instance Apply SapicSubst (LProcess ann) where
 -- We are ignoring capturing here, use applyProcess below to get warnings.

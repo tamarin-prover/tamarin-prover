@@ -147,17 +147,22 @@ parseRestriction = parseString "<unknown source>" (restriction msgvar nodevar)
 vlit :: Parser v -> Parser (NTerm v)
 vlit varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> varp]
 
--- | Parse an lit with logical variables.
+-- | Parse a lit with logical variables.
 llit :: Parser LNTerm
 llit = vlit msgvar
 
--- | Parse an lit with logical variables without public names in single constants.
+-- | Parse a lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
 llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 
--- | Parse an lit with logical typed variables for SAPIC
+-- | Parse a lit with logical typed variables for SAPIC
 ltypedlit :: Parser SapicTerm
 ltypedlit = vlit sapicvar
+
+-- | Parse a lit with logical typed variables and pattern matching for SAPIC
+ltypedpatternlit :: Parser SapicTerm
+ltypedpatternlit = vlit sapicpatternvar
+
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
@@ -1037,7 +1042,7 @@ sapicAction = try (do
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm False ltypedlit
+                        t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
                         return (ChIn Nothing t)
                    )
@@ -1046,7 +1051,7 @@ sapicAction = try (do
                         _ <- symbol "("
                         t <- msetterm False ltypedlit
                         _ <- comma
-                        t' <- msetterm False ltypedlit
+                        t' <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
                         return (ChIn (Just t) t')
                    )
@@ -1141,7 +1146,7 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm False ltypedlit
-                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of
+                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType False,m)]) p) (fail . prettyLetExceptions) of
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
@@ -1207,7 +1212,7 @@ actionprocess thy=
             --             )
             <|> try (do
                         _ <- symbol "let"
-                        t1 <- msetterm False ltypedlit
+                        t1 <- msetterm False ltypedpatternlit
                         _ <- opEqual
                         t2 <- msetterm False ltypedlit
                         _ <- symbol "in"

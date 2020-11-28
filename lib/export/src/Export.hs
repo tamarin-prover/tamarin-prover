@@ -125,8 +125,9 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
 ------------------------------------------------------------------------------
 
 ppTypeVar :: Document p => SapicLVar -> p
-ppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
-ppTypeVar (SapicLVar (LVar n _ _ ) (Just t)) = text n <> text ":" <> (text t)
+ppTypeVar (SapicLVar (LVar n _ _ )  Nothing _) = text n <> text ":bitstring"
+ppTypeVar (SapicLVar (LVar n _ _ ) (Just t) _) = text n <> text ":" <> (text t)
+
 
 ppTypeLit :: (Show c, Document p) => Lit c SapicLVar -> p
 ppTypeLit (Var v) = ppTypeVar v
@@ -134,14 +135,16 @@ ppTypeLit (Con c) = text $ show c
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
-pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-pppSapicTerm b t = (ppTerm t, getHdTerm t)
+auxppSapicTerm :: Bool -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm b0 b t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
+        Lit  (Con (Name PubName n))     | b0      -> text "=" <> (text $ show n)
         Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (Var (SapicLVar (LVar n _ _) _ True)) -> text "=" <> text n
         Lit  v                    |    b          -> ppTypeLit v
-        Lit  (Var (SapicLVar (LVar n _ _)  _))    -> (text n)
+        Lit  (Var (SapicLVar (LVar n _ _)  _ _))  -> (text n)
         Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -171,6 +174,9 @@ pppSapicTerm b t = (ppTerm t, getHdTerm t)
             S.singleton   (Sym ("free " ++ show n ++":bitstring."))
         Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
+
+pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+pppSapicTerm = auxppSapicTerm False
 
 ppSapicTerm :: SapicTerm -> (Doc, S.Set ProverifHeader)
 ppSapicTerm = pppSapicTerm False
@@ -231,13 +237,13 @@ ppFact (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New v@(SapicLVar (LVar _ _ _) _)) = (text "new " <> (ppTypeVar v), S.empty)
+ppAction (New v@(SapicLVar (LVar _ _ _) _ _)) = (text "new " <> (ppTypeVar v), S.empty)
 ppAction Rep  = (text "!", S.empty)
 ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1
-        (pt2, sh2) = pppSapicTerm True t2
+        (pt2, sh2) = auxppSapicTerm True True t2
 ppAction (ChIn Nothing t2 )  = (text "in(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = pppSapicTerm True t2
+  where (pt2, sh2) = auxppSapicTerm True True t2
 
 ppAction (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm t1
@@ -256,13 +262,20 @@ ppSapic (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$
 ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
+ppSapic (ProcessComb (Let t1 t2) _ pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+                                                 $$ ppl
+                                               ,sh1 `S.union` sh2 `S.union` pshl)
+                                     where (ppl, pshl) = ppSapic pl
+                                           (pt1, sh1) = auxppSapicTerm True True t1
+                                           (pt2, sh2) = ppSapicTerm t2
+
 ppSapic (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
-                                                 $$ (nest 4 (parens ppl))
-                                                 $$ text "else" <> (nest 4 (parens ppr))
+                                                 $$ ppl
+                                                 $$ text "else" <> ppr
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic pl
                                            (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = pppSapicTerm True t1
+                                           (pt1, sh1) = auxppSapicTerm True True t1
                                            (pt2, sh2) = ppSapicTerm t2
 
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
