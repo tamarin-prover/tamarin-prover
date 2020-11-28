@@ -193,38 +193,32 @@ baseTransComb c an p tildex
                     throw (
                     ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
-    | Let t1' t2' <- c
-    , t1 <- toLNTerm t1' , t2 <- toLNTerm t2',
-      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False),
-      Nothing <- destructorEquation an
+    | Let t1' t2' <- c,
+      elsBranch <- elseBranch an
       =
-        let freevars = freeset t1 in
+        let t1or = toLNTerm t1' in
+        let (t1, t2, freevars) =
+              case destructorEquation an of
+                Nothing -> (t1or, toLNTerm t2', freeset t1or)
+                Just (tl1,tl2) -> (tl1, tl2, freeset tl1 `difference` tildex)
+        in
+        let fa = Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False) in
+        let tildexl =  freeset t1or `union` tildex in
         let faN = fold (\v f -> hinted forall v f ) fa freevars in
-        let tildexl = freevars `union` tildex in
         let pos = p++[1] in
+        if elsBranch then
           ([
               ([def_state], [], [FLet pos t2 tildex], []),
               ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
               ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
            ],
             tildexl, tildex)
-    | Let t1' _ <- c,
-      t1or <- toLNTerm t1',
-      Just (t1, t2) <- destructorEquation an,
-      fa <- Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False)
-      =
-        let freevars = freeset t1 in
-        let faN = fold (\v f -> hinted forall v f ) fa (freevars `difference` tildex) in
-        let tildexl = (freeset t1or) `union` tildex in
-        let pos = p++[1] in
+        else
           ([
-              ([def_state], [],  [FLet pos t2 tildex], []),
-              ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
-              ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
+              ([def_state], [], [FLet pos t2 tildex], []),
+              ([FLet pos t1 tildex], [], [def_state1 tildexl], [])
            ],
             tildexl, tildex)
-
-
 
     | Lookup t' v' <- c
       , t <- toLNTerm t', v <- toLVar v' =

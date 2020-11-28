@@ -32,7 +32,7 @@ mapProc rules (ProcessAction ac ann p') = ProcessAction (ac) ann
   $ mapProc rules p'
 
 
-mapProc rules (ProcessComb c ann pl pr) = ProcessComb c (annComb rules c ann)
+mapProc rules (ProcessComb c ann pl pr) = ProcessComb c (annComb rules c ann pr)
   (mapProc rules pl)
   (mapProc rules pr)
 
@@ -43,12 +43,12 @@ findRule funsym acc rule =
         (FApp fs y, (Lit (Var v))) | fs == funsym -> Just (y, v)
         _ -> acc
 
-annComb rules (Let t1 t2) ann =
+annComb rules (Let t1 t2) _ pr =
   case (viewTerm t1', viewTerm t2') of
     ((Lit (Var _)), FApp funsym@(NoEq (f, (_,_,Destructor))) rightterms) ->
       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
       case  L.foldl (findRule funsym) Nothing rules of
-        Nothing -> ann
+        Nothing -> annElse elsebranch
         Just  (leftterms, outvar) ->
           -- We extract the equation of the dest, in the case where it is of the
           -- form dest(lefTerms) = outvar.
@@ -60,16 +60,20 @@ annComb rules (Let t1 t2) ann =
           -- sdec(m,sk) in" with the equation "sdec(senc(v,key),key) = v" into
           -- the binding "let senc(x,key),key = m,sk in"
 
-          annDestructorEquation leftermssubst $ toPairs rightterms
+          annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
           where leftermssubst = apply subst $ toPairs leftterms
                 subst = substFromList [(outvar, t1')]
-    _ -> ann
+    _ -> annElse elsebranch
     where t1'= toLNTerm t1
           t2'= toLNTerm t2
           toPairs [] = fAppOne
           toPairs [s] = s
           toPairs (p:q) = fAppPair (p, toPairs q)
-annComb _ _ ann = ann
+          elsebranch = case pr of
+            ProcessNull _ -> False
+            _ -> True
+
+annComb _ _ ann _ = ann
 
 translateLetDestr ::  Set CtxtStRule -> LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
 translateLetDestr rules anp = mapProc rules anp

@@ -28,7 +28,7 @@ module Sapic.Annotation (
     , GoodAnnotation
     , getProcessNames
     , setProcessNames
-) where
+,annElse) where
 import           Data.Data
 -- import Data.Maybe
 -- import Data.Foldable
@@ -64,6 +64,7 @@ data ProcessAnnotation v = ProcessAnnotation {
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
   , location :: Maybe SapicTerm -- The location of a process, for the IEE extention.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
+  , elseBranch :: Bool
   } deriving (Show, Typeable)
 
 -- | Any annotation that is good enough to be converted back into a Process
@@ -81,7 +82,7 @@ instance GoodAnnotation (ProcessAnnotation v)
         setProcessNames pn an = an { processnames = pn }
 
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing Nothing
+    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing Nothing True
     mappend p1 p2 = ProcessAnnotation
         (processnames p1 `mappend` processnames p2)
         (lock p1 `mappend` lock p2)
@@ -89,6 +90,7 @@ instance Monoid (ProcessAnnotation v) where
         (secretChannel p1 `mappend` secretChannel p2)
         (location p2)
         (destructorEquation p2)
+        (elseBranch p2)
 
 instance Semigroup (ProcessAnnotation v) where
     (<>) p1 p2 = ProcessAnnotation
@@ -98,6 +100,7 @@ instance Semigroup (ProcessAnnotation v) where
         (secretChannel p1 <> secretChannel p2)
         (location p2)
         (destructorEquation p2)
+        (elseBranch p2)
 
 newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
     deriving (Typeable, Monoid,Semigroup,Show)
@@ -119,14 +122,18 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Nothing}
+annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = True}
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing, location = Nothing, destructorEquation = Nothing}
+annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = True}
 annSecretChannel :: AnVar v -> ProcessAnnotation v
-annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v, location = Nothing, destructorEquation = Nothing}
+annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v, location = Nothing, destructorEquation = Nothing, elseBranch = True}
 
-annDestructorEquation :: LNTerm -> LNTerm -> ProcessAnnotation v
-annDestructorEquation v1 v2 = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Just (v1, v2)}
+annDestructorEquation :: LNTerm -> LNTerm -> Bool -> ProcessAnnotation v
+annDestructorEquation v1 v2 b = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Just (v1, v2), elseBranch = b}
+
+annElse ::  Bool -> ProcessAnnotation v
+annElse b = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = b}
+
 
 -- | Convert to and from Process, i.e., LProcess with processnames only.
 toAnProcess :: PlainProcess -> LProcess (ProcessAnnotation v0)
@@ -134,7 +141,7 @@ toAnProcess = unAnProcess . fmap f . AnProcess
   where
         f l =
           let (names, loc) = getNamesLoc l in
-          ProcessAnnotation { processnames = names, lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = loc, destructorEquation = Nothing}
+          ProcessAnnotation { processnames = names, lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = loc, destructorEquation = Nothing, elseBranch = True}
         getNamesLoc [] = ([], Nothing)
         getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
         getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
