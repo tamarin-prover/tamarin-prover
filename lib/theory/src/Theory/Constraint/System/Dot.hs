@@ -136,7 +136,7 @@ dotNode v = dotOnce dsNodes v $ do
         nameAndActs = case filter isNotDiffAnnotation $ get rActs ru of
             [] -> ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru);
             xs -> ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
-                brackets (vcat $ punctuate comma $ map prettyLNFact xs);
+                brackets (vcat $ punctuate comma $ map prettyLNFactSubscript xs);
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
             
 
@@ -165,7 +165,7 @@ dotSingleEdge :: (NodeConc, NodePrem) -> SeDot D.NodeId
 dotSingleEdge edge@(_, to) = dotOnce dsSingles edge $ do
     se <- asks fst
     let fa    = nodePremFact to se
-        label = render $ prettyLNFact fa
+        label = render $ prettyLNFactSubscript fa
     liftDot $ D.node $ [("label", label),("shape", "hexagon")]
                        ++ factNodeStyle fa
 
@@ -186,7 +186,7 @@ dotPrem prem@(v, i) =
             (label, moreStyle) = fromMaybe (ppPrem, []) $ do
                 ru <- M.lookup v nodes
                 fa <- lookupPrem i ru
-                return ( render $ prettyLNFact fa
+                return ( render $ prettyLNFactSubscript fa
                        , factNodeStyle fa
                        )
         liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -206,7 +206,7 @@ dotConc =
             let (label, moreStyle) = fromMaybe (show x, []) $ do
                     ru <- M.lookup (fst x) nodes
                     fa <- (`atMay` snd x) $ get ruleSel ru
-                    return ( render $ prettyLNFact fa
+                    return ( render $ prettyLNFactSubscript fa
                            , factNodeStyle fa
                            )
             liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -324,7 +324,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     case M.lookup v $ get sNodes se of
       Nothing -> case filter ((v ==) . fst) (unsolvedActionAtoms se) of
         [] -> mkSimpleNode (show v) []
-        as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFact . snd) as)
+        as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFactSubscript . snd) as)
                         <-> opAction <-> text (show v)
                   attrs | any (isKUFact . snd) as = [("color","gray")]
                         | otherwise               = [("color","darkblue")]
@@ -366,15 +366,15 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $
             filter (not . null) [ps, as, cs]
       where
-        ps = renderRow [ (Just (Left i),  prettyLNFact p) | (i, p) <- enumPrems ru ]
+        ps = renderRow [ (Just (Left i),  prettyLNFactSubscript p) | (i, p) <- enumPrems ru ]
         as = renderRow [ (Nothing,        ruleLabel ) ]
-        cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
+        cs = renderRow [ (Just (Right i), prettyLNFactSubscript c) | (i, c) <- enumConcs ru ]
 
         ruleLabel = case filter isNotDiffAnnotation $ get rActs ru of
             [] -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru);
             xs -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru) <>
                 (brackets $ vcat $ punctuate comma $
-                map prettyLNFact $ xs)
+                map prettyLNFactSubscript $ xs)
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
         renderRow annDocs =
