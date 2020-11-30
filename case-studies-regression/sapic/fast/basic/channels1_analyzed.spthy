@@ -1,0 +1,143 @@
+theory ChannelsTestOne begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma secret:
+  all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( state_111( x, c ) ▶₀ #i )
+  case newa_0_11
+  solve( !KU( ~n ) @ #vk )
+    case outca_0_1111
+    by solve( !KU( ~n.1 ) @ #vk.1 )
+  qed
+qed
+
+lemma received:
+  exists-trace "∃ x #i. Received( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Received( x ) @ #i)"
+*/
+simplify
+solve( state_121( c, x ) ▶₀ #i )
+  case incx_1_12
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff process=new c;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newc_0_[color=#ffffff process=new c;]:
+   [ state_( ), Fr( c ) ] --> [ state_1( c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1[color=#ffffff process=|]:
+   [ state_1( c ) ] --> [ state_11( c ), state_12( c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_11[color=#6c8040 process=new a;]:
+   [ state_11( c ), Fr( a ) ] --> [ state_111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSecreta_0_111[color=#6c8040 process=event Secret( a );]:
+   [ state_111( a, c ) ] --[ Secret( a ) ]-> [ state_1111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_0_1111[color=#6c8040 process=out(c,a);]:
+   [ state_1111( a, c ), In( c ) ] --> [ Out( a ), state_11111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_1_1111[color=#6c8040 process=out(c,a);]:
+   [ state_1111( a, c ) ] --> [ Message( c, a ), semistate_11111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_2_1111[color=#6c8040 process=out(c,a);]:
+   [ semistate_11111( a, c ), Ack( c, a ) ] --> [ state_11111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outc_0_11111[color=#6c8040 process=out(c);]:
+   [ state_11111( a, c ) ] --> [ state_111111( a, c ), Out( c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111111[color=#6c8040 process=0]:
+   [ state_111111( a, c ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_0_12[color=#807140 process=in(c,x);]:
+   [ state_12( c ), In( <c, x> ) ] --> [ state_121( c, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_1_12[color=#807140 process=in(c,x);]:
+   [ state_12( c ), Message( c, x ) ] --> [ Ack( c, x ), state_121( c, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventReceivedx_0_121[color=#807140 process=event Received( x );]:
+   [ state_121( c, x ) ] --[ Received( x ) ]-> [ state_1211( c, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1211[color=#807140 process=0]:
+   [ state_1211( c, x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/channels1.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/channels1.spthy
+
+  output:          examples/sapic/fast/basic/channels1.spthy.tmp
+  processing time: 0.192221s
+  secret (all-traces): verified (4 steps)
+  received (exists-trace): verified (3 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels1.spthy
+
+  output:          examples/sapic/fast/basic/channels1.spthy.tmp
+  processing time: 0.192221s
+  secret (all-traces): verified (4 steps)
+  received (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

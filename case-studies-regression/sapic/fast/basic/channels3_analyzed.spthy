@@ -1,0 +1,145 @@
+theory ChannelsTestThree begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma not_secret:
+  exists-trace "∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
+*/
+simplify
+solve( state_21( x ) ▶₀ #i )
+  case incx_0_2
+  solve( (#vf < #t2)  ∥ (#vf = #t2) )
+    case case_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma internal_comm:
+  exists-trace
+  "∃ x #i. (Received( x ) @ #i) ∧ (∀ y #j. (K( y ) @ #j) ⇒ (¬(x = y)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Received( x ) @ #i) ∧ ∀ y #j. (K( y ) @ #j) ⇒ ¬(x = y)"
+*/
+simplify
+solve( state_21( x ) ▶₀ #i )
+  case incx_0_2
+  solve( (#vf < #t2)  ∥ (#vf = #t2) )
+    case case_1
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff process=|]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_[color=#ffffff process=|]:
+   [ state_( ) ] --> [ state_1( ), state_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_1[color=#6c8040 process=new a;]:
+   [ state_1( ), Fr( a ) ] --> [ state_11( a ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_0_11[color=#6c8040 process=out('c',a);]:
+   [ state_11( a ), In( 'c' ) ]
+  --[ ChannelIn( 'c' ) ]->
+   [ Out( a ), state_111( a ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_1_11[color=#6c8040 process=out('c',a);]:
+   [ state_11( a ) ] --> [ Message( 'c', a ), semistate_111( a ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outca_2_11[color=#6c8040 process=out('c',a);]:
+   [ semistate_111( a ), Ack( 'c', a ) ] --> [ state_111( a ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111[color=#6c8040 process=0]:
+   [ state_111( a ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_0_2[color=#807140 process=in('c',x);]:
+   [ state_2( ), In( <'c', x> ) ]
+  --[ ChannelIn( <'c', x> ) ]->
+   [ state_21( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_1_2[color=#807140 process=in('c',x);]:
+   [ state_2( ), Message( 'c', x ) ] --> [ Ack( 'c', x ), state_21( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventReceivedx_0_21[color=#807140 process=event Received( x );]:
+   [ state_21( x ) ] --[ Received( x ), Event( ) ]-> [ state_211( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_211[color=#807140 process=0]:
+   [ state_211( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction ass_immediate:
+  "∀ x #t3.
+    (ChannelIn( x ) @ #t3) ⇒
+    (∃ #t2.
+      (((K( x ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 xp.
+        (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/channels3.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/channels3.spthy
+
+  output:          examples/sapic/fast/basic/channels3.spthy.tmp
+  processing time: 0.117261s
+  not_secret (exists-trace): verified (4 steps)
+  internal_comm (exists-trace): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels3.spthy
+
+  output:          examples/sapic/fast/basic/channels3.spthy.tmp
+  processing time: 0.117261s
+  not_secret (exists-trace): verified (4 steps)
+  internal_comm (exists-trace): verified (4 steps)
+
+==============================================================================
+*/

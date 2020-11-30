@@ -1,0 +1,156 @@
+theory OperatorPrecedenceLookup begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+section{* A few test cases for operator precedence *}
+
+predicate: True( )<->⊤
+
+lemma elseIsResolvedInnerFirst:
+  exists-trace
+  "(∃ #l. LookupElse( ) @ #l) ∧ (∃ #p. PositiveBranch( ) @ #p)"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #l. (LookupElse( ) @ #l)) ∧ (∃ #p. (PositiveBranch( ) @ #p))"
+*/
+simplify
+solve( state_112( ) ▶₀ #l )
+  case lookupxasx_1_11
+  solve( state_1( ) ▶₀ #p )
+    case ifTrue_0_
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff process=if True( )]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTrue_0__1:
+  "∀ #NOW. (restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+rule (modulo E) ifTrue_0_[color=#ffffff process=if True( )]:
+   [ state_( ) ] --[ restr_ifTrue_0__1( ) ]-> [ state_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction restr_ifTrue_1__1:
+  "∀ #NOW. (restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
+  // safety formula
+
+rule (modulo E) ifTrue_1_[color=#ffffff process=if True( )]:
+   [ state_( ) ] --[ restr_ifTrue_1__1( ) ]-> [ state_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPositiveBranch_0_1[color=#ffffff process=event PositiveBranch( );]:
+   [ state_1( ) ] --[ PositiveBranch( ) ]-> [ state_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupxasx_0_11[color=#ffffff process=lookup 'x' as x]:
+   [ state_11( ) ] --[ IsIn( 'x', x ) ]-> [ state_111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupxasx_1_11[color=#ffffff process=lookup 'x' as x]:
+   [ state_11( ) ] --[ IsNotSet( 'x' ) ]-> [ state_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111[color=#ffffff process=0]:
+   [ state_111( x ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventLookupElse_0_112[color=#ffffff process=event LookupElse( );]:
+   [ state_112( ) ] --[ LookupElse( ) ]-> [ state_1121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1121[color=#ffffff process=0]:
+   [ state_1121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_2[color=#ffffff process=0]:
+   [ state_2( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Restriction actions:
+  restriction `set_in' references action 
+    (ProtoFact Linear "Insert" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `set_in' references action 
+    (ProtoFact Linear "Insert" 2,2,Linear)
+  but no rule has such an action.
+  
+  restriction `set_notin' references action 
+    (ProtoFact Linear "Insert" 2,2,Linear)
+  but no rule has such an action.
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/operator-precedence-3.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
+
+  output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
+  processing time: 0.12706s
+  WARNING: 3 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
+
+  output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
+  processing time: 0.12706s
+  WARNING: 3 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
+
+==============================================================================
+*/

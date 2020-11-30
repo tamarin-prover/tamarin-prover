@@ -1,0 +1,546 @@
+theory AC_counter begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2, fst/1, get_rep/1, list/2, null/0, pair/2, prog/3,
+           rep/2 [private], report/1, snd/1, succ/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = true,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, y )<->¬(y = 'l')
+
+lemma attested_comput_second_step [reuse]:
+  all-traces
+  "∀ #t1 #t0 o2 i2 o i init.
+    ((Initial( init ) @ #t0) ∧
+     (Voutput( <o2, i2, o, list(i, init)> ) @ #t1)) ⇒
+    (∃ #t2. (Poutput( <o2, i2, o, list(i, init)> ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t0 o2 i2 o i init.
+  (Initial( init ) @ #t0) ∧ (Voutput( <o2, i2, o, list(i, init)> ) @ #t1)
+ ∧
+  ∀ #t2. (Poutput( <o2, i2, o, list(i, init)> ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+by solve( state_1112111111111( init, i2, o2, signedios,
+                               <<o, list(i, init.1)>, x>, state, lock
+          ) ▶₀ #t1 )
+
+lemma attested_comput:
+  all-traces
+  "∀ #t1 h.
+    (Voutput( h ) @ #t1) ⇒ (∃ #t2. (Poutput( h ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 h.
+  (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+by solve( state_1112111111111( init, ip, o, signedios, st, state, lock
+          ) ▶₀ #t1 )
+
+rule (modulo E) Report-rule[color=#ffffff process=new init;]:
+   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff process=new init;]:
+   [ ] --[ Init( ) ]-> [ state_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newinit_0_[color=#ffffff process=new init;]:
+   [ state_( ), Fr( init ) ] --> [ state_1( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventInitialinit_0_1[color=#ffffff process=event Initial( init );]:
+   [ state_1( init ) ] --[ Initial( init ) ]-> [ state_11( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11[color=#ffffff process=!]:
+   [ state_11( init ) ] --> [ !semistate_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_11[color=#ffffff process=!]:
+   [ !semistate_111( init ) ] --> [ state_111( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111[color=#ffffff process=|]:
+   [ state_111( init ) ] --> [ state_1111( init ), state_1112( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_1111[color=#ffffff process=new state;]:
+   [ state_1111( init ), Fr( state ) ] --> [ state_11111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstateinitnull_0_11111[color=#ffffff process=insert state,<init, null>;]:
+   [ state_11111( init, state ) ]
+  --[ Insert( state, <init, null> ) ]->
+   [ state_111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111111[color=#ffffff process=!]:
+   [ state_111111( init, state ) ] --> [ !semistate_1111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_111111[color=#ffffff process=!]:
+   [ !semistate_1111111( init, state ) ]
+  -->
+   [ state_1111111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstate_0_1111111[color=#405280 process=lock state;]:
+   [ state_1111111( init, state ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, state ), Lock( '0', lock, state ) ]->
+   [ state_11111111( init, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstateasst_0_11111111[color=#405280 process=lookup state as st]:
+   [ state_11111111( init, lock, state ) ]
+  --[ IsIn( state, st ) ]->
+   [ state_111111111( init, lock, st, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupstateasst_1_11111111[color=#405280 process=lookup state as st]:
+   [ state_11111111( init, lock, state ) ]
+  --[ IsNotSet( state ) ]->
+   [ state_111111112( init, lock, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inip_0_111111111[color=#405280 process=in(ip);]:
+   [ state_111111111( init, lock, st, state ), In( ip ) ]
+  -->
+   [ state_1111111111( init, ip, lock, st, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newr_0_1111111111[color=#405280 process=new r;]:
+   [ state_1111111111( init, ip, lock, st, state ), Fr( r ) ]
+  -->
+   [ state_11111111111( init, ip, lock, r, st, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPoutputprogripfststipfstst_0_11111111111[color=#405280 process=event Poutput( <prog(r, ip, fst(st)), ip, fst(st)> );]:
+   [ state_11111111111( init, ip, lock, r, st, state ) ]
+  --[ Poutput( <prog(r, ip, fst(st)), ip, fst(st)> ) ]->
+   [ state_111111111111( init, ip, lock, r, st, state ) ]
+
+  /*
+  rule (modulo AC) eventPoutputprogripfststipfstst_0_11111111111[color=#405280 process=event Poutput( <prog(r, ip, fst(st)), ip, fst(st)> );]:
+     [ state_11111111111( init, ip, lock, r, st, state ) ]
+    --[ Poutput( <prog(r, ip, z), ip, z> ) ]->
+     [ state_111111111111( init, ip, lock, r, st, state ) ]
+    variants (modulo AC)
+    1. st    = st.8
+       z     = fst(st.8)
+    
+    2. st    = <x.8, x.9>
+       z     = x.8
+  */
+
+rule (modulo E) outprogripfststrepprogripfststipsndstl_0_111111111111[color=#405280 process=out(<prog(r, ip, fst(st)), 
+ rep(<prog(r, ip, fst(st)), ip, snd(st)>, 'l')>);]:
+   [ state_111111111111( init, ip, lock, r, st, state ) ]
+  -->
+   [
+   state_1111111111111( init, ip, lock, r, st, state ),
+   Out( <prog(r, ip, fst(st)), rep(<prog(r, ip, fst(st)), ip, snd(st)>, 'l')
+        >
+   )
+   ]
+
+  /*
+  rule (modulo AC) outprogripfststrepprogripfststipsndstl_0_111111111111[color=#405280 process=out(<prog(r, ip, fst(st)), 
+ rep(<prog(r, ip, fst(st)), ip, snd(st)>, 'l')>);]:
+     [ state_111111111111( init, ip, lock, r, st, state ) ]
+    -->
+     [
+     state_1111111111111( init, ip, lock, r, st, state ),
+     Out( <prog(r, ip, z), rep(<prog(r, ip, z), ip, z.1>, 'l')> )
+     ]
+    variants (modulo AC)
+    1. st    = st.10
+       z     = fst(st.10)
+       z.1   = snd(st.10)
+    
+    2. st    = <z.11, z.12>
+       z     = z.11
+       z.1   = z.12
+  */
+
+rule (modulo E) insertstateprogripfststlistipfststsuccsndst_0_1111111111111[color=#405280 process=insert state,<<prog(r, ip, fst(st)), list(ip, fst(st))>, succ(snd(st))>;]:
+   [ state_1111111111111( init, ip, lock, r, st, state ) ]
+  --[
+  Insert( state, <<prog(r, ip, fst(st)), list(ip, fst(st))>, succ(snd(st))>
+  )
+  ]->
+   [ state_11111111111111( init, ip, lock, r, st, state ) ]
+
+  /*
+  rule (modulo AC) insertstateprogripfststlistipfststsuccsndst_0_1111111111111[color=#405280 process=insert state,<<prog(r, ip, fst(st)), list(ip, fst(st))>, succ(snd(st))>;]:
+     [ state_1111111111111( init, ip, lock, r, st, state ) ]
+    --[ Insert( state, <<prog(r, ip, z), list(ip, z)>, succ(z.1)> ) ]->
+     [ state_11111111111111( init, ip, lock, r, st, state ) ]
+    variants (modulo AC)
+    1. st    = st.9
+       z     = fst(st.9)
+       z.1   = snd(st.9)
+    
+    2. st    = <x.9, x.10>
+       z     = x.9
+       z.1   = x.10
+  */
+
+rule (modulo E) unlockstate_0_11111111111111[color=#405280 process=unlock state;]:
+   [ state_11111111111111( init, ip, lock, r, st, state ) ]
+  --[ Unlock_0( '0', lock, state ), Unlock( '0', lock, state ) ]->
+   [ state_111111111111111( init, ip, lock, r, st, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111111111111111[color=#405280 process=0]:
+   [ state_111111111111111( init, ip, lock, r, st, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_111111112[color=#405280 process=0]:
+   [ state_111111112( init, lock, state ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1112[color=#ffffff process=!]:
+   [ state_1112( init ) ] --> [ !semistate_11121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1112[color=#ffffff process=!]:
+   [ !semistate_11121( init ) ] --> [ state_11121( init ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_11121[color=#ffffff process=new state;]:
+   [ state_11121( init ), Fr( state ) ] --> [ state_111211( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertstateinitnull_0_111211[color=#ffffff process=insert state,<init, null>;]:
+   [ state_111211( init, state ) ]
+  --[ Insert( state, <init, null> ) ]->
+   [ state_1112111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_1112111[color=#ffffff process=!]:
+   [ state_1112111( init, state ) ]
+  -->
+   [ !semistate_11121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __1_1112111[color=#ffffff process=!]:
+   [ !semistate_11121111( init, state ) ]
+  -->
+   [ state_11121111( init, state ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockstate_0_11121111[color=#658040 process=lock state;]:
+   [ state_11121111( init, state ), Fr( lock.1 ) ]
+  --[ Lock_1( '1', lock.1, state ), Lock( '1', lock.1, state ) ]->
+   [ state_111211111( init, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lockstate_0_11121111[color=#658040 process=lock state;]:
+     [ state_11121111( init, state ), Fr( lock ) ]
+    --[ Lock_1( '1', lock, state ), Lock( '1', lock, state ) ]->
+     [ state_111211111( init, state, lock ) ]
+  */
+
+rule (modulo E) lookupstateasst_0_111211111[color=#658040 process=lookup state as st]:
+   [ state_111211111( init, state, lock.1 ) ]
+  --[ IsIn( state, st ) ]->
+   [ state_1112111111( init, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasst_0_111211111[color=#658040 process=lookup state as st]:
+     [ state_111211111( init, state, lock ) ]
+    --[ IsIn( state, st ) ]->
+     [ state_1112111111( init, st, state, lock ) ]
+  */
+
+rule (modulo E) lookupstateasst_1_111211111[color=#658040 process=lookup state as st]:
+   [ state_111211111( init, state, lock.1 ) ]
+  --[ IsNotSet( state ) ]->
+   [ state_1112111112( init, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasst_1_111211111[color=#658040 process=lookup state as st]:
+     [ state_111211111( init, state, lock ) ]
+    --[ IsNotSet( state ) ]->
+     [ state_1112111112( init, state, lock ) ]
+  */
+
+rule (modulo E) inip_0_1112111111[color=#658040 process=in(ip);]:
+   [ state_1112111111( init, st, state, lock.1 ), In( ip ) ]
+  -->
+   [ state_11121111111( init, ip, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) inip_0_1112111111[color=#658040 process=in(ip);]:
+     [ state_1112111111( init, st, state, lock ), In( ip ) ]
+    -->
+     [ state_11121111111( init, ip, st, state, lock ) ]
+  */
+
+rule (modulo E) inosignedios_0_11121111111[color=#658040 process=in(<o, signedios>);]:
+   [ state_11121111111( init, ip, st, state, lock.1 ), In( <o, signedios> )
+   ]
+  -->
+   [ state_111211111111( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) inosignedios_0_11121111111[color=#658040 process=in(<o, signedios>);]:
+     [ state_11121111111( init, ip, st, state, lock ), In( <o, signedios> ) ]
+    -->
+     [ state_111211111111( init, ip, o, signedios, st, state, lock ) ]
+  */
+
+rule (modulo E) ifoipsndstcheckrepsignediosl_0_111211111111[color=#658040 process=if <o, ip, snd(st)>=check_rep(signedios, 'l')]:
+   [ state_111211111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Pred_Eq( <o, ip, snd(st)>, check_rep(signedios, 'l') ) ]->
+   [ state_1112111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) ifoipsndstcheckrepsignediosl_0_111211111111[color=#658040 process=if <o, ip, snd(st)>=check_rep(signedios, 'l')]:
+     [ state_111211111111( init, ip, o, signedios, st, state, lock ) ]
+    --[ Pred_Eq( <o, ip, z>, check_rep(signedios, 'l') ) ]->
+     [ state_1112111111111( init, ip, o, signedios, st, state, lock ) ]
+    variants (modulo AC)
+    1. st    = st.15
+       z     = snd(st.15)
+    
+    2. st    = <x.50, z.32>
+       z     = z.32
+  */
+
+rule (modulo E) ifoipsndstcheckrepsignediosl_1_111211111111[color=#658040 process=if <o, ip, snd(st)>=check_rep(signedios, 'l')]:
+   [ state_111211111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Pred_Not_Eq( <o, ip, snd(st)>, check_rep(signedios, 'l') ) ]->
+   [ state_1112111111112( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) ifoipsndstcheckrepsignediosl_1_111211111111[color=#658040 process=if <o, ip, snd(st)>=check_rep(signedios, 'l')]:
+     [ state_111211111111( init, ip, o, signedios, st, state, lock ) ]
+    --[ Pred_Not_Eq( <o, ip, z>, check_rep(signedios, 'l') ) ]->
+     [ state_1112111111112( init, ip, o, signedios, st, state, lock ) ]
+    variants (modulo AC)
+    1. st    = st.15
+       z     = snd(st.15)
+    
+    2. st    = <x.50, z.32>
+       z     = z.32
+  */
+
+rule (modulo E) eventVoutputoipfstst_0_1112111111111[color=#658040 process=event Voutput( <o, ip, fst(st)> );]:
+   [ state_1112111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Voutput( <o, ip, fst(st)> ) ]->
+   [ state_11121111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) eventVoutputoipfstst_0_1112111111111[color=#658040 process=event Voutput( <o, ip, fst(st)> );]:
+     [ state_1112111111111( init, ip, o, signedios, st, state, lock ) ]
+    --[ Voutput( <o, ip, z> ) ]->
+     [ state_11121111111111( init, ip, o, signedios, st, state, lock ) ]
+    variants (modulo AC)
+    1. st    = st.10
+       z     = fst(st.10)
+    
+    2. st    = <x.10, x.11>
+       z     = x.10
+  */
+
+rule (modulo E) insertstateolistipfststsuccsndst_0_11121111111111[color=#658040 process=insert state,<<o, list(ip, fst(st))>, succ(snd(st))>;]:
+   [ state_11121111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Insert( state, <<o, list(ip, fst(st))>, succ(snd(st))> ) ]->
+   [ state_111211111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) insertstateolistipfststsuccsndst_0_11121111111111[color=#658040 process=insert state,<<o, list(ip, fst(st))>, succ(snd(st))>;]:
+     [ state_11121111111111( init, ip, o, signedios, st, state, lock ) ]
+    --[ Insert( state, <<o, list(ip, z)>, succ(z.1)> ) ]->
+     [ state_111211111111111( init, ip, o, signedios, st, state, lock ) ]
+    variants (modulo AC)
+    1. st    = st.11
+       z     = fst(st.11)
+       z.1   = snd(st.11)
+    
+    2. st    = <x.11, x.12>
+       z     = x.11
+       z.1   = x.12
+  */
+
+rule (modulo E) unlockstate_0_111211111111111[color=#658040 process=unlock state;]:
+   [ state_111211111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Unlock_1( '1', lock.1, state ), Unlock( '1', lock.1, state ) ]->
+   [ state_1112111111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) unlockstate_0_111211111111111[color=#658040 process=unlock state;]:
+     [ state_111211111111111( init, ip, o, signedios, st, state, lock ) ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [ state_1112111111111111( init, ip, o, signedios, st, state, lock ) ]
+  */
+
+rule (modulo E) __0_1112111111111111[color=#658040 process=0]:
+   [ state_1112111111111111( init, ip, o, signedios, st, state, lock.1 ) ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) __0_1112111111111111[color=#658040 process=0]:
+     [ state_1112111111111111( init, ip, o, signedios, st, state, lock ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) eventFail_0_1112111111112[color=#658040 process=event Fail( );]:
+   [ state_1112111111112( init, ip, o, signedios, st, state, lock.1 ) ]
+  --[ Fail( ) ]->
+   [ state_11121111111121( init, ip, o, signedios, st, state, lock.1 ) ]
+
+  /*
+  rule (modulo AC) eventFail_0_1112111111112[color=#658040 process=event Fail( );]:
+     [ state_1112111111112( init, ip, o, signedios, st, state, lock ) ]
+    --[ Fail( ) ]->
+     [ state_11121111111121( init, ip, o, signedios, st, state, lock ) ]
+  */
+
+rule (modulo E) __0_11121111111121[color=#658040 process=0]:
+   [ state_11121111111121( init, ip, o, signedios, st, state, lock.1 ) ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) __0_11121111111121[color=#658040 process=0]:
+     [ state_11121111111121( init, ip, o, signedios, st, state, lock ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) __0_1112111112[color=#658040 process=0]:
+   [ state_1112111112( init, state, lock.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) __0_1112111112[color=#658040 process=0]:
+     [ state_1112111112( init, state, lock ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+restriction locking_1:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
+  processing time: 2.016676s
+  attested_comput_second_step (all-traces): verified (2 steps)
+  attested_comput (all-traces): verified (2 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
+  processing time: 2.016676s
+  attested_comput_second_step (all-traces): verified (2 steps)
+  attested_comput (all-traces): verified (2 steps)
+
+==============================================================================
+*/

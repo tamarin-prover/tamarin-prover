@@ -100,8 +100,8 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
                 putStrLn $ "Detailed results from testing '" ++ prog ++ "'"
                 putStrLn $ " command: " ++ commandLine prog args
                 putStrLn $ " stdin:   " ++ inp
-                putStrLn $ " stdout:\n" ++ out
-                putStrLn $ " stderr:\n" ++ err
+                putStrLn $ " stdout:  " ++ out
+                putStrLn $ " stderr:  " ++ err
                 return False
 
         case exitCode of
@@ -164,22 +164,24 @@ ensureMaude as = do
   where
     maude = maudePath as
     checkVersion out _
---        Maude versions prior to 2.7.1 are no longer supported,
---        because the 'get variants' command is incompatible.
-      | filter (not . isSpace) out == "2.7.1" = Right "2.7.1. OK."
-      | otherwise                           = Left  $ errMsg $
-          " 'maude --version' returned wrong version '" ++ out ++ "'"
+      | strip out `elem` supportedVersions = Right (strip out ++ ". OK.")
+      | otherwise                          = Left  $ errMsg $
+          " 'maude --version' returned unsupported version '" ++ strip out ++ "'"
+
+    strip = reverse . dropWhile isSpace . reverse
 
     checkInstall _ []  = Right "OK."
     checkInstall _ err = Left  $ errMsg err
 
+--  Maude versions prior to 2.7.1 are no longer supported,
+--  because the 'get variants' command is incompatible.
+    supportedVersions = ["2.7.1", "3.0", "3.1"]
+
     errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
+
     errMsg reason = unlines
           [ "WARNING:"
           , ""
           , reason
-          , " " ++ programName ++ " will likely not work."
-          , " Please download 'Core Maude 2.7.1' from:"
-          , "    http://maude.cs.uiuc.edu/download/"
-          , " Note that 'prelude.maude' must be in the same directory as the 'maude' executable."
+          , " Please install one of the following versions of Maude: " ++ intercalate ", " supportedVersions
           ]
