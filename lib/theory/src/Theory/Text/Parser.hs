@@ -180,7 +180,7 @@ naryOpApp eqn plit = do
     --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    ar@(k,priv,_) <- lookupArity op
+    ar@(k,_,_) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
@@ -197,7 +197,7 @@ binaryAlgApp eqn plit = do
     op <- identifier
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    ar@(k,priv,_) <- lookupArity op
+    ar@(k,_,_) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit eqn
     when (k /= 2) $ fail
@@ -1017,14 +1017,15 @@ export thy = do
 -- println str = traceShowM str
 
 
--- | parse a process definition (let P = .. )
+-- | parse a process definition (let P = .. ) or (let P (v1,...,vn) = ..)
 processDef :: OpenTheory -> Parser ProcessDef
 processDef thy= do
                 letIdentifier
                 i <- BC.pack <$> identifier
+                vs <- option [] $ parens $ commaSep (sapicvar)
                 equalSign
                 p <- process thy
-                return (ProcessDef (BC.unpack i) p )
+                return (ProcessDef (BC.unpack i) p vs)
 
 -- | Parse a variable in SAPIC that is typed
 sapicterm :: Parser (Term (Lit Name SapicLVar))
@@ -1260,9 +1261,12 @@ actionprocess thy=
             <|> try   (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
-                        a <- let p = checkProcess (BC.unpack i) thy in
-                             (\x -> paddAnn x [ProcessName $ BC.unpack i]) <$> p
-                        return a
+                        ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
+                        (p, vars) <- checkProcess (BC.unpack i) thy
+                        return (ProcessComb
+                                (ProcessCall (BC.unpack i) vars ts) mempty
+                                (paddAnn p [ProcessName $ BC.unpack i])
+                                (ProcessNull mempty))
                         )
             <|>    try  (do -- let expression parser
                         subst <- genericletBlock sapicvar sapicterm
@@ -1411,9 +1415,9 @@ liftedAddProtoRule thy ru
 
 
 -- | checks if process exists, if not -> error
-checkProcess :: String -> OpenTheory -> Parser PlainProcess
+checkProcess :: String -> OpenTheory -> Parser (PlainProcess, [SapicLVar])
 checkProcess i thy = case lookupProcessDef i thy of
-    Just p -> return $ get pBody p
+    Just p -> return $ (get pBody p, get pVars p)
     Nothing -> fail $ "process not defined: " ++ i
 
 -- We can throw exceptions, but not catch them

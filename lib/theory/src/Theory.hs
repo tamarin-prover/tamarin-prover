@@ -38,6 +38,7 @@ module Theory (
   , lookupFunctionTypingInfo
   , pName
   , pBody
+  , pVars
   , addFunctionTypingInfo
 
   -- * Options
@@ -109,6 +110,7 @@ module Theory (
   , theoryLemmas
   , theoryRestrictions
   , theoryProcesses
+  , theoryProcessDefs
   , theoryFunctionTypingInfos
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
@@ -526,6 +528,7 @@ addActionClosedProtoRule (ClosedProtoRule e ac) f
 data ProcessDef = ProcessDef
         { _pName            :: String
         , _pBody            :: PlainProcess
+        , _pVars            :: [SapicLVar]
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -996,7 +999,7 @@ theoryProcesses = foldSapicItem return (const []) (const [])  (const [])  <=< sa
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return (const [])  (const [])  <=< sapicElements
+theoryProcessDefs = foldSapicItem (const []) return (const [])  (const []) <=< sapicElements
 
 theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
 theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const [])  <=< sapicElements

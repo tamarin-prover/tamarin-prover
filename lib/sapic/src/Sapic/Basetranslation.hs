@@ -227,6 +227,10 @@ baseTransComb c an p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
+    | ProcessCall _ _ [] <- c =
+       ([ ([def_state], [], [def_state1 tildex ], [])],
+        tildex,tildex)
+
     | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex

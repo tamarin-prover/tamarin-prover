@@ -173,7 +173,7 @@ deriving instance (Data v, Generic v) => Data (SapicAction v)
 
 -- | When the process tree splits, it is connected with one of these connectives
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
-        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v | Let (SapicNTerm v) (SapicNTerm v)
+        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v | Let (SapicNTerm v) (SapicNTerm v) | ProcessCall String [v] [SapicNTerm v]
             deriving (Functor,Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -247,6 +247,7 @@ mapTermsComb f ff fv c
         | (Lookup t v) <- c = Lookup (f t) (fv v)
         | Parallel <- c = Parallel
         | NDC    <- c   = NDC
+        | ProcessCall s vs ts <- c = ProcessCall s (map fv vs) (map f ts)
 
 
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
@@ -364,6 +365,7 @@ traverseTermsComb ft ff fv c
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
+        | ProcessCall s vs ts <- c = ProcessCall s <$> (traverse fv vs) <*> (traverse ft ts)
 
 -------------------------
 -- Applying substitutions
@@ -534,6 +536,11 @@ prettySapicComb (Let t t') = "let "++ p t ++ "=" ++ p t'
                                     where p = render . prettySapicTerm
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm
+prettySapicComb (ProcessCall s _ ts) = s ++ "("++ p ts ++ ")"
+                                    where p pts = render $
+                                            fsep (punctuate comma (map prettySapicTerm pts))
+
+
 
 -- | Printer for SAPIC processes..
 -- TODO At the moment, the process structure is not used to properly print how
