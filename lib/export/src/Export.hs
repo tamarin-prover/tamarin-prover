@@ -278,6 +278,10 @@ ppSapic (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "="
                                            (pt1, sh1) = auxppSapicTerm True True t1
                                            (pt2, sh2) = ppSapicTerm t2
 
+ppSapic (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
+                                     where (ppl, pshl) = ppSapic pl
+
+
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
 -- be translated to Vars
