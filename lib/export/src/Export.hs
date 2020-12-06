@@ -42,13 +42,15 @@ import qualified Data.Functor.Identity
 -- Core Export
 ------------------------------------------------------------------------------
 
-template :: Document d => [d] -> [d] -> d -> [d] -> d
-template headers queries process lemmas =
+template :: Document d => [d] -> [d] -> d -> [d] -> [d] -> d
+template headers queries process macroproc lemmas =
   vcat headers
   $$
   vcat queries
   $$
   vcat lemmas
+  $$
+  vcat macroproc
   $$
   text "process"
   $$
@@ -56,11 +58,13 @@ template headers queries process lemmas =
 
 
 prettyProVerifTheory :: OpenTheory -> Doc
-prettyProVerifTheory thy =  template hd queries proc lemmas
-  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy) `S.union` prochd)
+prettyProVerifTheory thy =  template hd queries proc macroproc lemmas
+  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy)
+                                       `S.union` prochd `S.union` macroprochd)
         (proc, prochd) = loadProc thy
         queries = loadQueries thy
         lemmas = loadLemmas thy
+        (macroproc, macroprochd) = loadMacroProc thy
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProverifHeader =
@@ -124,12 +128,12 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
 -- Term Printers
 ------------------------------------------------------------------------------
 
-ppTypeVar :: Document p => SapicLVar -> p
+ppTypeVar :: SapicLVar -> Doc
 ppTypeVar (SapicLVar (LVar n _ _ )  Nothing _) = text n <> text ":bitstring"
 ppTypeVar (SapicLVar (LVar n _ _ ) (Just t) _) = text n <> text ":" <> (text t)
 
 
-ppTypeLit :: (Show c, Document p) => Lit c SapicLVar -> p
+ppTypeLit :: (Show c) => Lit c SapicLVar -> Doc
 ppTypeLit (Var v) = ppTypeVar v
 ppTypeLit (Con c) = text $ show c
 
@@ -281,6 +285,13 @@ ppSapic (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "="
 ppSapic (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
                                      where (ppl, pshl) = ppSapic pl
 
+ppSapic (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
+                                                        parens (fsep (punctuate comma ppts ))
+                                                       ,
+                                                       foldl S.union S.empty shs)
+                                     where pts = map ppSapicTerm ts
+                                           (ppts, shs) = unzip pts
+
 
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
@@ -332,6 +343,16 @@ loadProc thy = case theoryProcesses thy of
   _  -> (text "Multiple sapic processes detected, error", S.empty)
 
 
+loadMacroProc :: OpenTheory -> ([Doc], S.Set ProverifHeader)
+loadMacroProc thy = load (theoryProcessDefs thy)
+  where load [] = ([text ""], S.empty)
+        load (p:q) =
+          let (docs, heads) = load q in
+          let (new_text, new_heads) = ppSapic (L.get pBody p) in
+            let vars  = text "(" <> (fsep (punctuate comma (map ppTypeVar (L.get pVars p) ))) <> text ")"in
+          let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
+                (nest 4 new_text) <> text "." in
+            (macro_def : docs, new_heads `S.union` heads)
 
 
 ------------------------------------------------------------------------------

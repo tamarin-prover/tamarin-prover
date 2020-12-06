@@ -230,6 +230,16 @@ baseTransComb c an p tildex
     | ProcessCall _ _ [] <- c =
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)
+    | ProcessCall _ vs ts <- c,
+      args <- map toLNTerm ts,
+      vars <- map toLVar vs  =
+        let tildexl =  fromList vars in -- `union` tildex in
+        let pos = p++[1] in
+          ([
+              ([def_state], [], [FLet pos (toPairs args) tildex], []),
+              ([FLet pos (toPairs $ map (\x -> termViewToTerm $ Lit( Var x)) vars) tildex], [], [def_state1 tildexl], [])
+           ],
+            tildexl, tildex)
 
     | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
@@ -237,6 +247,10 @@ baseTransComb c an p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
         freeset = fromList . frees
+        toPairs [] = fAppOne
+        toPairs [s] = s
+        toPairs (p:q) = fAppPair (p, toPairs q)
+
 
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
