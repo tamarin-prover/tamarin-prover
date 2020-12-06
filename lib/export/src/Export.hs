@@ -348,11 +348,14 @@ loadMacroProc thy = load (theoryProcessDefs thy)
   where load [] = ([text ""], S.empty)
         load (p:q) =
           let (docs, heads) = load q in
-          let (new_text, new_heads) = ppSapic (L.get pBody p) in
-            let vars  = text "(" <> (fsep (punctuate comma (map ppTypeVar (L.get pVars p) ))) <> text ")"in
-          let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
-                (nest 4 new_text) <> text "." in
-            (macro_def : docs, new_heads `S.union` heads)
+            case L.get pVars p of
+              [] -> (docs, heads)
+              pvars ->
+                let (new_text, new_heads) = ppSapic (L.get pBody p) in
+                let vars  = text "(" <> (fsep (punctuate comma (map ppTypeVar pvars ))) <> text ")"in
+                let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
+                      (nest 4 new_text) <> text "." in
+                  (macro_def : docs, new_heads `S.union` heads)
 
 
 ------------------------------------------------------------------------------
