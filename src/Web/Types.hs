@@ -637,6 +637,9 @@ instance Yesod WebUI where
   -- cleanPath function forces canonical URLs.
   cleanPath _ = Right
 
+  -- | Override makeSessionBackend to disable sessions (and no artefact generation)
+  makeSessionBackend _ = return Nothing
+
 ------------------------------------------------------------------------------
 -- Default layout
 ------------------------------------------------------------------------------
