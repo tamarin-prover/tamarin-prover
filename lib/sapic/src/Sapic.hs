@@ -29,6 +29,7 @@ import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
 import Sapic.SecretChannels
+import Sapic.Compression
 import Sapic.Report
 import Sapic.Facts
 import Sapic.Locks
@@ -117,7 +118,9 @@ translate th = case theoryProcesses th of
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map (\x -> (OpenProtoRule (toRule x) [])) $ initRules ++ protoRule
+                eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
+
+                th1 <- foldM liftedAddProtoRule th $ map (\x -> (OpenProtoRule x [])) eProtoRule
                 -- add restrictions
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
