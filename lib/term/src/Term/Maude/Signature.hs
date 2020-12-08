@@ -200,10 +200,13 @@ prettyMaudeSigExcept sig excl = P.vcat
       , (enableXor,  "xor")
       ]
 
-    ppFunSymb (f,(k,priv,constr)) = P.text $ BC.unpack f ++ "/" ++ show k 
+    ppFunSymb (f,(k,priv,constr)) = P.text $ BC.unpack f ++ "/" ++ show k
                                              ++ showAttr (priv,constr)
-      where 
-            showAttr (p,c)= "[" ++ show p ++ "," ++ show c ++ "]"
+      where
+            showAttr (Public,Destructor) = "[destructor]"
+            showAttr (Private,Destructor) = "[private,destructor]"
+            showAttr (Private,Constructor) = "[private,destructor]"
+            showAttr (Public,Constructor) = ""
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig  = prettyMaudeSigExcept sig S.empty

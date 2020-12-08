@@ -235,7 +235,7 @@ factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMI
 factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTerm$ varMID p ]
 factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
-        name k = if isSemiState k then "semistate" else "state"
+        name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
@@ -300,7 +300,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
           where
             name = case processName of
                 Just s -> s
-                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
+                Nothing -> (prefixName process)
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
@@ -308,4 +308,6 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
+            prefixName p = let pname = stripNonAlphanumerical (prettySapicTopLevel p) in
+              if pname == "" then "Init" else pname
             stripNonAlphanumerical = filter (\x -> isAlpha x)
