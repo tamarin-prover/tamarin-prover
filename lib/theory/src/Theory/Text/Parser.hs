@@ -341,6 +341,7 @@ ruleAttribute :: Parser RuleAttribute
 ruleAttribute = asum
     [ symbol "colour=" *> (RuleColor <$> parseColor)
     , symbol "color="  *> (RuleColor <$> parseColor)
+    , symbol "process="  *> (Process <$> parseProcess)
     ]
   where
     parseColor = do
@@ -348,6 +349,11 @@ ruleAttribute = asum
         case hexToRGB hc of
             Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
+    -- parseProcess = process -- would need theory argument
+    parseProcess = do 
+            _ <- noneOf " ,]"
+            return $ ProcessNull mempty --- TODO would be nice to recover process from top-level
+        
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo

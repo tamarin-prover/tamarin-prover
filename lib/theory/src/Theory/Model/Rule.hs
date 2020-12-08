@@ -1097,6 +1097,7 @@ prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
     RuleColor c -> text "color=" <> text (rgbToHex c)
     Process   p -> text "process=" <> text (prettySapicTopLevel' f p)
+    -- Process   p -> text "process=" <> text (prettySapic' f p)
         where f l a r rest = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula
@@ -1161,7 +1162,8 @@ prettyNamedRule prefix ppInfo ru =
     facts proj     = L.get proj ru
     ppAttributes = case ruleAttributes ru of
         []    -> text ""
-        attrs -> hcat [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
+        attrs -> hcat [text "[", ppList $ map prettyRuleAttribute attrs, text "]"]
+    ppList           = fsep . punctuate comma
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =
