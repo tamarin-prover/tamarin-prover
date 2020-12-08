@@ -85,9 +85,9 @@ builtins :: [(NoEqFunSig, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
   (hashFunSig, [Fun "fun hash(bitstring):bitstring."] ),
   (signatureFunSig, [
-      Fun "fun sign(bitstring,bitstring):bitstring.",
-      Fun "fun pk(bitstring):bitstring.",
-      Eq "reduc forall m:bitstring,sk:bitstring; verify(sign(m,sk),m,pk(sk)) = true."
+      Fun "fun sign(bitstring,skey):bitstring.",
+      Fun "fun pk(skey):pkey.",
+      Eq "reduc forall m:bitstring,sk:skey; verify(sign(m,sk),m,pk(sk)) = true."
       ]
   ),
   (S.fromList [expSym], [
@@ -199,7 +199,7 @@ pppLNTerm b t = (ppTerm t, getHdTerm t)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq _)      _       | isPair t -> ppTerms ", " 1 "(" ")" (split tm)
+        FApp (NoEq _)      _       | isPair tm -> ppTerms ", " 1 "(" ")" (split tm)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
@@ -293,10 +293,11 @@ ppSapic (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
                                            (ppts, shs) = unzip pts
 
 
+
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
 -- be translated to Vars
-ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
+ppSapic (ProcessComb (Cond a)  _ pl _)  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic pl
         (pa, sh) = ppFact' a
