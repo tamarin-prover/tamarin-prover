@@ -387,6 +387,8 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
           pretty CapturedLookup = "lookup"
           pretty CapturedNew = "new"
 
+
+
 -- | Apply a substitution, but raise an error if necessary
 applyProcessCombinatorError :: MonadThrow m => Subst Name SapicLVar
             -> ProcessCombinator SapicLVar -> m (ProcessCombinator SapicLVar)

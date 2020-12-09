@@ -110,9 +110,10 @@ translate th = case theoryProcesses th of
              else
                     return (removeSapicItems th)
 
-      [p] -> if all allUnique (bindings p) then do
+      [p] -> if all allUnique (bindings p []) then do
                 -- annotate
-                an_proc <- evalFreshT (annotateLocks $ (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
+                an_proc_pre <- (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
+                an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc
                 -- generate protocol rules, starting from variables in initial tilde x
@@ -128,17 +129,31 @@ translate th = case theoryProcesses th of
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
              else
-                throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p)
+                throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p [])
                             :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr)
-    bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p)
-    bindings (ProcessNull _) = [[]]
-    bindingsComb (Lookup _ v) = [v]
-    bindingsComb _            = []
-    bindingsAct (New v) = [v]
-    bindingsAct _       = []
+    freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
+    bindings (ProcessComb c _ pl pr) acc =
+      let new_acc = acc ++ bindingsComb c acc in
+        bindings pl new_acc ++ bindings pr new_acc
+    bindings (ProcessAction ac _ p) acc =
+      let new_acc = acc ++ bindingsAct ac acc in
+        bindings p new_acc
+    bindings (ProcessNull _) acc = [acc]
+    bindingsComb (Lookup _ v) _ = [v]
+    bindingsComb (Let t1 _) acc =
+      case viewTerm t1 of
+        Lit (Var v) -> [v]   -- if we are in a single variable let declaration, we return the variable v
+        _ -> let v = freesSapicTerm t1 in -- else, we have a pattern matching, and return the difference with currently bound variables.
+          -- TODO, if we actually have an explicit = appearing in the pattern matching, we should check that there is no double variable bindings
+          (List.\\) v acc
+    bindingsComb _  _           = []
+    bindingsAct (New v) _ = [v]
+    bindingsAct (ChIn _ t) acc =
+      let v = freesSapicTerm t in
+        (List.\\) v acc
+    bindingsAct _       _ = []
     allUnique = all ( (==) 1 . length) . List.group . List.sort
     repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
 
