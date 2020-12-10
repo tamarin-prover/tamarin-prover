@@ -69,11 +69,12 @@ batchMode = tamarinMode
     outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
-      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|spthytyped|msr|proverif" 
+      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|spthytyped|msr|proverif|deepsec"
         "What to output:\
 \- spthy (including processes),\
 \- spthy with explicit types,\
 \- pure msrs (processes translated to msrs) or\
+\- DeepSec or\
 \- ProVerif."
       ]
 
@@ -94,7 +95,7 @@ run thisMode as
       putStrLn $ ""
       putStrLn $ renderDoc $ Pretty.vcat $ intersperse (Pretty.text "") summaries
       putStrLn $ ""
-      putStrLn $ replicate 78 '='           
+      putStrLn $ replicate 78 '='
   where
     -- handles to arguments
     -----------------------
@@ -163,6 +164,7 @@ run thisMode as
         choosePretty (Just "spthytyped") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- additionally type
         choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate <=< Sapic.typeTheory
         choosePretty (Just "proverif") = (return . prettyProVerifTheory) <=< Sapic.typeTheory
+        choosePretty (Just "deepsec") = (return . prettyDeepSecTheory) <=< Sapic.typeTheory
         choosePretty _ = error "output mode not supported."
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
