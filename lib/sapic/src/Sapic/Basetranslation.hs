@@ -227,6 +227,7 @@ baseTransComb c an p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
+-- Process Calls are currently optimized inside LetDestructors.hs, and the following should not be used. they could be use to enable variants on the process call modeling.
     | ProcessCall _ _ [] <- c =
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)

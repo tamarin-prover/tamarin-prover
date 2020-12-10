@@ -1,0 +1,110 @@
+theory NeedhamSchroeder begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2[destructor], aenc/2, fst/1, pair/2, pk/1, snd/1,
+           test/1[private,destructor]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+lemma source [sources, reuse]:
+  all-traces
+  "(∀ ni m1 #i.
+     (IN_R_1_ni( ni, m1 ) @ #i) ⇒
+     ((∃ #j. (!KU( ni ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
+   (∀ nr m2 #i.
+     (IN_I_2_nr( nr, m2 ) @ #i) ⇒
+     ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
+*/
+
+
+lemma secrecy:
+  all-traces
+  "¬(∃ pka pkb k #t1 #t2.
+      (((SessionA( pka, pkb, k ) @ #t1) ∧ (K( k ) @ #t2)) ∧
+       (∃ #i. HonestA( pka ) @ #i)) ∧
+      (∃ #i. HonestB( pkb ) @ #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka pkb k #t1 #t2.
+  (SessionA( pka, pkb, k ) @ #t1) ∧ (K( k ) @ #t2)
+ ∧
+  (∃ #i. (HonestA( pka ) @ #i)) ∧ (∃ #i. (HonestB( pkb ) @ #i))"
+*/
+
+
+rule (modulo E) Init[color=#ffffff]:
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
+
+rule (modulo E) I__1_[color=#ffffff]:
+   [ !Semistate_1( ) ] --> [  State_11( ), State_12( ) ]
+
+
+rule (modulo E) newskAbitstring_0_11[color=#ffffff]:
+   [ State_11( ), Fr( skA ) ] --[ HonestA( pk(skA) ) ]-> [  !Semistate_111111( skA ), Out( pk(skA) ) ]
+
+rule (modulo E) I__1_11111[color=#ffffff]:
+   [ !Semistate_111111( skA ), In( pk(xB) ), Fr( Na )  ]   --[ OUT_I_1( aenc(<Na, pk(skA)>, pk(xB)) ) ]->
+   [ State_1111111111( Na, skA, xB ), Out( aenc(<Na, pk(skA)>, pk(xB)) ) ]
+
+rule (modulo E) inaencNabitstringxNbbitstringpkxBbitstringpkskAbitstring_0_1111111111[color=#ffffff]:
+   [ State_1111111111( Na, skA, xB ), In( aenc(<Na, xNb, pk(xB)>, pk(skA)) ) , Fr( k )
+   ]
+  --[ IN_I_2_nr( xNb, aenc(<Na, xNb, pk(xB)>, pk(skA)) ) ]->
+   [
+   State_11111111111111( Na, k, skA, xB, xNb ),
+   Out( aenc(<xNb, k>, pk(xB)) )
+   ]
+
+rule (modulo E) eventSessionApkskAbitstringpkxBbitstringkbitstring_0_11111111111111[color=#ffffff]:
+   [ State_11111111111111( Na, k, skA, xB, xNb ) ]
+  --[ SessionA( pk(skA), pk(xB), k ) ]->
+   [ ]
+
+rule (modulo E) I__0_12[color=#ffffff]:
+   [ State_12( ) ] --> [ !Semistate_121( ) ]
+
+rule (modulo E) I__1_12[color=#ffffff]:
+   [ !Semistate_121( ) ] --> [ State_121( ) ]
+
+rule (modulo E) newskBbitstring_0_121[color=#ffffff]:
+   [ State_121( ), Fr( skB ) ] --[ HonestB( pk(skB) ) ]->  [ !Semistate_1211111( skB ), Out( pk(skB) ) ]
+
+rule (modulo E) I__1_121111[color=#ffffff]:
+   [ !Semistate_1211111( skB ),  In( aenc(<xNa, pk(xA)>, pk(skB)) ), Fr( Nb)]
+  --[ IN_R_1_ni( xNa, aenc(<xNa, pk(xA)>, pk(skB)) ), OUT_R_1( aenc(<xNa, Nb, pk(skB)>, pk(xA)) ) ]->
+   [
+   State_121111111111( Nb, skB, xA, xNa ),
+   Out( aenc(<xNa, Nb, pk(skB)>, pk(xA)) )
+   ]
+
+rule (modulo E) inaencNbbitstringxkbitstringpkskBbitstring_0_121111111111[color=#ffffff]:
+   [ State_121111111111( Nb, skB, xA, xNa ), In( aenc(<Nb, xk>, pk(skB)) ) ]
+  --[ SessionB( pk(xA), pk(skB), xk ) ]->
+   [ ]
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+end
