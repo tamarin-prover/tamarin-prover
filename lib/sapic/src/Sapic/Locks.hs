@@ -18,7 +18,7 @@ import           Sapic.Exceptions
 import           Theory
 import           Theory.Sapic
 
--- This exceptions is thrown im annotateEachClosestUnlock finds 
+-- This exceptions is thrown im annotateEachClosestUnlock finds
 -- a parallel or replications below the locks. The calling function
 -- annotate_locks catches it and outputs the proper exception with the
 -- complete process.
@@ -33,8 +33,8 @@ annotateEachClosestUnlock :: (Eq v1, MonadThrow m) =>
                              -> Process (ProcessAnnotation v2) v1
                              -> m (Process (ProcessAnnotation v2) v1)
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
-annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) = 
-            if t == t' then 
+annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) =
+            if t == t' then
                 return $ ProcessAction (Unlock t') (a' `mappend` annUnlock v) p
             else do
                 p' <- annotateEachClosestUnlock t v p
@@ -56,7 +56,7 @@ annotateLocks :: ( MonadThrow m,
                 )
                     => LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
                     -- => AnnotatedProcess -> m AnnotatedProcess
-annotateLocks (ProcessAction (Lock t) a p) = do 
+annotateLocks (ProcessAction (Lock t) a p) = do
             v <- freshLVar "lock" LSortMsg
             p' <- annotateEachClosestUnlock t (AnVar v) p
             p'' <- annotateLocks p'
@@ -65,7 +65,7 @@ annotateLocks (ProcessAction (Lock t) a p) = do
 annotateLocks (ProcessAction ac an p) = do
             p' <- annotateLocks p
             return (ProcessAction ac an p')
-annotateLocks (ProcessNull an ) = 
+annotateLocks (ProcessNull an ) =
             return (ProcessNull an)
 annotateLocks (ProcessComb comb an pl pr ) = do
             pl' <- annotateLocks pl

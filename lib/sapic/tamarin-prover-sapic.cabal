@@ -67,6 +67,7 @@ library
       , Sapic.ProcessUtils
       , Sapic.Locks
       , Sapic.SecretChannels
+      , Sapic.Compression
       , Sapic.LetDestructors
       , Sapic.Facts
       , Sapic.Basetranslation

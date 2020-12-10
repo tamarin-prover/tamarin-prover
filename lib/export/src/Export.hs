@@ -14,7 +14,8 @@
 -- Translation from Sapic processes to Proverif
 
 module Export (
-    prettyProVerifTheory
+    prettyProVerifTheory,
+    prettyDeepSecTheory
 
 ) where
 
@@ -37,13 +38,14 @@ import qualified Data.Label as L
 import Data.List as List
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Functor.Identity
+import Data.Char
 
 ------------------------------------------------------------------------------
--- Core Export
+-- Core Proverif Export
 ------------------------------------------------------------------------------
 
-template :: Document d => [d] -> [d] -> d -> [d] -> [d] -> d
-template headers queries process macroproc lemmas =
+proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> d
+proverifTemplate headers queries process macroproc lemmas =
   vcat headers
   $$
   vcat queries
@@ -58,58 +60,64 @@ template headers queries process macroproc lemmas =
 
 
 prettyProVerifTheory :: OpenTheory -> Doc
-prettyProVerifTheory thy =  template hd queries proc macroproc lemmas
-  where hd = attribHeaders $ S.toList (base_headers `S.union` (loadHeaders thy)
+prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
+  where hd = attribHeaders Proverif $ S.toList (base_headers `S.union` (loadHeaders Proverif thy)
                                        `S.union` prochd `S.union` macroprochd)
         (proc, prochd) = loadProc thy
         queries = loadQueries thy
         lemmas = loadLemmas thy
-        (macroproc, macroprochd) = loadMacroProc thy
+        (macroproc, macroprochd) = loadMacroProc Proverif thy
+
+data Translation =
+   Proverif
+   | DeepSec
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProverifHeader =
-  Sym String
-  | Fun String
-  | Eq String
+   Type String  -- type declaration
+  | Sym String String String [String] -- symbol declaration, (symkind,name,type,attr)
+  | Fun String String Int String [String] -- symbol declaration, (symkind,name,arity,types,attr)
+  | HEvent String
+  | Eq String String String -- eqtype, quantif, equation
   -- | Type String -- will  be used to define types
   deriving (Ord, Show, Eq)
 
 -- We declare some base headers. Notably, we need a dedicated attacker channel.
 base_headers :: S.Set ProverifHeader
 base_headers = S.fromList [
-  Sym ("free attacker_channel:channel.")
+  Sym "free" "attacker_channel" ":channel" []
   ]
 
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
 builtins :: [(NoEqFunSig, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
-  (hashFunSig, [Fun "fun hash(bitstring):bitstring."] ),
+  (hashFunSig, [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
   (signatureFunSig, [
-      Fun "fun sign(bitstring,skey):bitstring.",
-      Fun "fun pk(skey):pkey.",
-      Eq "reduc forall m:bitstring,sk:skey; verify(sign(m,sk),m,pk(sk)) = true."
+      Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
+      Fun "fun" "pk" 1 "(skey):pkey" [],
+      Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
       ]
   ),
   (S.fromList [expSym], [
-      Sym "const g:bitstring.",
-      Fun "fun exp(bitstring,bitstring):bitstring.",
-      Eq "equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a)."
+      Sym "const" "g" ":bitstring" [],
+      Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
+      Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
       ]
   ),
   (symEncFunSig, [
-      Sym "type skey.",
-      Fun "fun senc(bitstring,skey):bitstring.",
-      Eq "reduc forall m:bitstring,sk:skey; sdec(senc(m,sk),sk) = m."]
+      Type "skey",
+      Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
+      Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
   ),
-  (pairFunSig,  [Eq "reduc forall a:bitstring,b:bitstring; fst((a,b))=a.",
-  Eq  "reduc forall a:bitstring,b:bitstring; snd((a,b))=b."]
-  ),
+  -- (pairFunSig,  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
+  -- Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
+  -- ),
   (asymEncFunSig, [
-      Sym "type skey.",
-      Sym "type pkey.",
-      Fun "fun aenc(bitstring,pkey):bitstring.",
-      Fun "fun pk(skey):pkey.",
-      Eq "reduc forall m:bitstring,sk:skey; adec(aenc(m,pk(sk)),sk) = m."]
+      Type "skey",
+      Type "pkey",
+      Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
+      Fun "fun" "pk" 1 "(skey):pkey" [],
+      Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
   )
   ]
 
@@ -128,26 +136,30 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
 -- Term Printers
 ------------------------------------------------------------------------------
 
-ppTypeVar :: SapicLVar -> Doc
-ppTypeVar (SapicLVar (LVar n _ _ )  Nothing _) = text n <> text ":bitstring"
-ppTypeVar (SapicLVar (LVar n _ _ ) (Just t) _) = text n <> text ":" <> (text t)
+ppTypeVar :: Translation -> SapicLVar -> Doc
+ppTypeVar trans v = case trans of
+  Proverif -> auxppTypeVar v
+  DeepSec -> auxppUnTypeVar v
+  where auxppTypeVar (SapicLVar (LVar n _ _ )  Nothing _) = text n <> text ":bitstring"
+        auxppTypeVar (SapicLVar (LVar n _ _ ) (Just t) _) = text n <> text ":" <> (text t)
+        auxppUnTypeVar (SapicLVar (LVar n _ _ )  _ _) = text n
 
 
-ppTypeLit :: (Show c) => Lit c SapicLVar -> Doc
-ppTypeLit (Var v) = ppTypeVar v
-ppTypeLit (Con c) = text $ show c
+ppTypeLit :: (Show c) => Translation -> Lit c SapicLVar -> Doc
+ppTypeLit trans (Var v) = ppTypeVar trans v
+ppTypeLit _ (Con c) = text $ show c
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
-auxppSapicTerm :: Bool -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-auxppSapicTerm b0 b t = (ppTerm t, getHdTerm t)
+auxppSapicTerm :: Translation -> Bool -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))     | b0      -> text "=" <> (text $ show n)
         Lit  (Con (Name PubName n))               -> text $ show n
         Lit  (Var (SapicLVar (LVar n _ _) _ True)) -> text "=" <> text n
-        Lit  v                    |    b          -> ppTypeLit v
+        Lit  v                    |    b          -> ppTypeLit trans v
         Lit  (Var (SapicLVar (LVar n _ _)  _ _))  -> (text n)
         Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
@@ -175,20 +187,20 @@ auxppSapicTerm b0 b t = (ppTerm t, getHdTerm t)
           if show n=="g" then
             S.empty
           else
-            S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+            S.singleton   (Sym "free" (show n) ":bitstring" [])
         Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
-pppSapicTerm :: Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-pppSapicTerm = auxppSapicTerm False
+pppSapicTerm :: Translation -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+pppSapicTerm trans = auxppSapicTerm trans False
 
-ppSapicTerm :: SapicTerm -> (Doc, S.Set ProverifHeader)
-ppSapicTerm = pppSapicTerm False
+ppSapicTerm :: Translation -> SapicTerm -> (Doc, S.Set ProverifHeader)
+ppSapicTerm trans = pppSapicTerm trans False
 
 -- TODO: we should generalise functionality so pppSapicTerm and pppLNTerm share
 -- the code they have in common
-pppLNTerm :: Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
-pppLNTerm b t = (ppTerm t, getHdTerm t)
+pppLNTerm :: Translation -> Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
+pppLNTerm _ b t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             -> text $ show n
@@ -221,75 +233,100 @@ pppLNTerm b t = (ppTerm t, getHdTerm t)
           if show n=="g" then
             S.empty
           else
-            S.singleton   (Sym ("free " ++ show n ++":bitstring."))
+            S.singleton   (Sym "free" (show n) ":bitstring" [])
         Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
-ppLNTerm :: LNTerm -> (Doc, S.Set ProverifHeader)
-ppLNTerm = pppLNTerm False
+ppLNTerm :: Translation -> LNTerm -> (Doc, S.Set ProverifHeader)
+ppLNTerm trans = pppLNTerm trans False
 
 -- pretty print a Fact, collecting the constant that need to be declared
-ppFact :: Fact SapicTerm -> (Doc, S.Set ProverifHeader)
-ppFact (Fact tag _ ts)
+ppFact :: Translation -> Fact SapicTerm -> (Doc, S.Set ProverifHeader)
+ppFact trans (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
   | otherwise                     = sppFact (showFactTag tag) ts
   where
     sppFact name ts2 =
       (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
-      where (pts, shs) = unzip $ map ppSapicTerm ts2
+      where (pts, shs) = unzip $ map (ppSapicTerm trans) ts2
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared
-ppAction :: LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction (New v@(SapicLVar (LVar _ _ _) _ _)) = (text "new " <> (ppTypeVar v), S.empty)
-ppAction Rep  = (text "!", S.empty)
-ppAction (ChIn (Just t1) t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
-  where (pt1, sh1) = ppSapicTerm t1
-        (pt2, sh2) = auxppSapicTerm True True t2
-ppAction (ChIn Nothing t2 )  = (text "in(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = auxppSapicTerm True True t2
+ppAction :: Translation -> LSapicAction -> (Doc, S.Set ProverifHeader)
+ppAction trans (New v@(SapicLVar (LVar _ _ _) _ _)) = (text "new " <> (ppTypeVar trans v) <> text ";", S.empty)
 
-ppAction (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2)
-  where (pt1, sh1) = ppSapicTerm t1
-        (pt2, sh2) = ppSapicTerm t2
-ppAction (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ")", sh2)
-  where (pt2, sh2) = ppSapicTerm t2
-ppAction (Event (Fact tag m ts) )  = (text "event " <> pa, sh `S.union` (S.singleton (Eq ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
-  where (pa, sh) = ppFact (Fact tag m ts)
-ppAction _  = (text "Action not supported for translation", S.empty)
+ppAction Proverif Rep  = (text "!", S.empty)
+ppAction DeepSec Rep  = (text "", S.empty)
 
-ppSapic :: LProcess ann -> (Doc, S.Set ProverifHeader)
-ppSapic (ProcessNull _) = (text "0", S.empty)
-ppSapic (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (ppr, pshr) = ppSapic pr
-ppSapic (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (ppr, pshr) = ppSapic pr
-ppSapic (ProcessComb (Let t1 t2) _ pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppAction Proverif (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
+                                       , sh1 `S.union` sh2)
+  where (pt1, sh1) = case t1 of
+          Just tt1 -> ppSapicTerm Proverif tt1
+          Nothing ->  (text "attacker_channel",S.empty)
+        (pt2, sh2) = auxppSapicTerm Proverif True True t2
+
+ppAction DeepSec (ChIn t1 t2@(LIT (Var (SapicLVar _ _ False))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
+                                       , sh1 `S.union` sh2)
+  where (pt1, sh1) = case t1 of
+          Just tt1 -> ppSapicTerm DeepSec tt1
+          Nothing ->  (text "attacker_channel",S.empty)
+        (pt2, sh2) = auxppSapicTerm DeepSec True True t2
+
+-- pattern matching on input for deepsec is not supported
+ppAction DeepSec (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
+                                  $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
+                                       , sh1 `S.union` sh2)
+  where (pt1, sh1) = case t1 of
+          Just tt1 -> ppSapicTerm DeepSec tt1
+          Nothing ->  (text "attacker_channel",S.empty)
+        (pt2, sh2) = auxppSapicTerm DeepSec True True t2
+        pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
+
+ppAction trans (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
+  where (pt1, sh1) = ppSapicTerm trans t1
+        (pt2, sh2) = ppSapicTerm trans t2
+ppAction trans (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ");", sh2)
+  where (pt2, sh2) = ppSapicTerm trans t2
+
+ppAction Proverif (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh `S.union` (S.singleton (HEvent ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
+  where (pa, sh) = ppFact Proverif (Fact tag m ts)
+
+ppAction DeepSec (Event _ )  = (text "", S.empty)
+
+ppAction _ _  = (text "Action not supported for translation", S.empty)
+
+ppSapic :: Translation -> LProcess ann -> (Doc, S.Set ProverifHeader)
+ppSapic _ (ProcessNull _) = (text "0", S.empty)
+ppSapic trans (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (ppr, pshr) = ppSapic trans pr
+ppSapic trans (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (ppr, pshr) = ppSapic trans pr
+ppSapic trans (ProcessComb (Let t1 t2) _ pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                ,sh1 `S.union` sh2 `S.union` pshl)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (pt1, sh1) = auxppSapicTerm True True t1
-                                           (pt2, sh2) = ppSapicTerm t2
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (pt1, sh1) = auxppSapicTerm trans True True t1
+                                           (pt2, sh2) = ppSapicTerm trans t2
 
-ppSapic (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppSapic trans (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                  $$ text "else" <> ppr
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = auxppSapicTerm True True t1
-                                           (pt2, sh2) = ppSapicTerm t2
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (ppr, pshr) = ppSapic trans pr
+                                           (pt1, sh1) = auxppSapicTerm trans True True t1
+                                           (pt2, sh2) = ppSapicTerm trans t2
 
-ppSapic (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
-                                     where (ppl, pshl) = ppSapic pl
+ppSapic trans (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
+                                     where (ppl, pshl) = ppSapic trans pl
 
-ppSapic (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
+ppSapic trans (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
                                                         parens (fsep (punctuate comma ppts ))
                                                        ,
                                                        foldl S.union S.empty shs)
-                                     where pts = map ppSapicTerm ts
+                                     where pts = map (ppSapicTerm trans) ts
                                            (ppts, shs) = unzip pts
 
 
@@ -297,18 +334,18 @@ ppSapic (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
 -- be translated to Vars
-ppSapic (ProcessComb (Cond a)  _ pl _)  =
+ppSapic trans (ProcessComb (Cond a)  _ pl _)  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
-  where (ppl, pshl) = ppSapic pl
+  where (ppl, pshl) = ppSapic trans pl
         (pa, sh) = ppFact' a
         ppFact' (Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
                                                     --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
         ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
 
-ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (pt1, sh1) = ppSapicTerm t1
-                                           (pt2, sh2) = ppSapicTerm t2
+ppSapic trans (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (pt1, sh1) = ppSapicTerm trans t1
+                                           (pt2, sh2) = ppSapicTerm trans t2
 
 -- ROBERTBROKEIT: commented out ... isn't this clashing with the previous defiition.
 -- ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
@@ -316,47 +353,50 @@ ppSapic (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt
 --   where (ppl, pshl) = ppSapic pl
 --         (pa , sh  ) = ppFact a
 
-ppSapic (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = ppSapicTerm t1
-                                           (pt2, sh2) = ppSapicTerm t2
+ppSapic trans (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (ppr, pshr) = ppSapic trans pr
+                                           (pt1, sh1) = ppSapicTerm trans t1
+                                           (pt2, sh2) = ppSapicTerm trans t2
 
-ppSapic (ProcessComb (Lookup t v )  _ pl pr)  = (text "lookup " <> pt1 <> text " as " <> (text $ show v) $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic pl
-                                           (ppr, pshr) = ppSapic pr
-                                           (pt1, sh1) = ppSapicTerm t
+ppSapic trans (ProcessComb (Lookup t v )  _ pl pr)  = (text "lookup " <> pt1 <> text " as " <> (text $ show v) $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` pshl `S.union` pshr)
+                                     where (ppl, pshl) = ppSapic trans pl
+                                           (ppr, pshr) = ppSapic trans pr
+                                           (pt1, sh1) = ppSapicTerm trans t
 
 
 
-ppSapic (ProcessAction Rep _ p)  = (text "!" <> parens pp, psh)
-                                   where (pp, psh) = ppSapic p
-ppSapic  (ProcessAction a _ (ProcessNull _))  = (pa, sh)
-                                     where (pa, sh) = ppAction a
-ppSapic  (ProcessAction a _ p)  = (pa <> text ";" $$ pp , sh `S.union` psh)
-                                     where (pa, sh) = ppAction a
-                                           (pp, psh) = ppSapic p
+ppSapic Proverif (ProcessAction Rep _ p)  = (text "!" <> parens pp, psh)
+                                   where (pp, psh) = ppSapic Proverif p
+ppSapic DeepSec (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
+                                   where (pp, psh) = ppSapic DeepSec p
+ppSapic trans  (ProcessAction a _ (ProcessNull _))  = (pa <> text "0", sh)
+                                     where (pa, sh) = ppAction trans a
+ppSapic trans  (ProcessAction a _ p)  = (pa $$ pp , sh `S.union` psh)
+                                     where (pa, sh) = ppAction trans a
+                                           (pp, psh) = ppSapic trans p
 
 loadProc :: OpenTheory -> (Doc, S.Set ProverifHeader)
 loadProc thy = case theoryProcesses thy of
   []  -> (text "", S.empty)
-  [p] -> ppSapic p
+  [p] -> ppSapic Proverif p
   _  -> (text "Multiple sapic processes detected, error", S.empty)
 
 
-loadMacroProc :: OpenTheory -> ([Doc], S.Set ProverifHeader)
-loadMacroProc thy = load (theoryProcessDefs thy)
-  where load [] = ([text ""], S.empty)
-        load (p:q) =
-          let (docs, heads) = load q in
-            case L.get pVars p of
-              [] -> (docs, heads)
-              pvars ->
-                let (new_text, new_heads) = ppSapic (L.get pBody p) in
-                let vars  = text "(" <> (fsep (punctuate comma (map ppTypeVar pvars ))) <> text ")"in
-                let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
-                      (nest 4 new_text) <> text "." in
-                  (macro_def : docs, new_heads `S.union` heads)
+loadMacroProc :: Translation -> OpenTheory -> ([Doc], S.Set ProverifHeader)
+loadMacroProc trans thy = load (theoryProcessDefs thy)
+  where
+    load [] = ([text ""], S.empty)
+    load (p:q) =
+      let (docs, heads) = load q in
+        case L.get pVars p of
+          [] -> (docs, heads)
+          pvars ->
+            let (new_text, new_heads) = ppSapic trans (L.get pBody p) in
+            let vars  = text "(" <> (fsep (punctuate comma (map (ppTypeVar trans) pvars ))) <> text ")"in
+             let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
+                             (nest 4 new_text) <> text "." in
+               (macro_def : docs, new_heads `S.union` heads)
 
 
 ------------------------------------------------------------------------------
@@ -393,8 +433,9 @@ ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
 ppAtom = ppProtoAtom (const emptyDoc)
 
+-- only used for Proverif queries display
 ppNAtom :: ProtoAtom s LNTerm -> Doc
-ppNAtom  = ppAtom (fst . ppLNTerm)
+ppNAtom  = ppAtom (fst . (ppLNTerm Proverif))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
@@ -497,21 +538,22 @@ loadLemmas thy = map ppLemma (theoryLemmas thy)
 -- Header Generation
 ------------------------------------------------------------------------------
 
+make_fun :: (BC.ByteString, Int) -> Bool -> ProverifHeader
+make_fun (f,k) ispriv = Fun "fun " (BC.unpack f) k ("(" ++ (make_args k) ++ "):bitstring") arg
+ where arg = if ispriv then ["private"] else []
+
+
 headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
-
-headerOfFunSym []  (_,(_,_,Destructor)) = Fun ("")
-headerOfFunSym []  (f,(k,Public,Constructor))  =  Fun (make_str (f,k) ++ ".")
-headerOfFunSym []  (f,(k,Private,Constructor)) =  Fun ((make_str (f,k))  ++ " [private].")
-
-
-
+headerOfFunSym []  (_,(_,_,Destructor)) = Fun "" "" 0 "" []
+headerOfFunSym []  (f,(k,Public,Constructor))  =  make_fun (f,k) False
+headerOfFunSym []  (f,(k,Private,Constructor)) =  make_fun (f,k) True
 headerOfFunSym  (((f,(k,Public,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
   if f2==f && k2 == k then
-    Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ ".")
+    Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) []
   else headerOfFunSym remainder fs2
 headerOfFunSym  (((f,(k,Private,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Private,_)) =
   if f2==f && k2 == k then
-    Fun ("fun " ++ BC.unpack f ++ "(" ++ (make_argtypes inTypes) ++ "):" ++ outType ++ "[private].")
+    Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) ["private"]
   else headerOfFunSym remainder fs2
 
 headerOfFunSym  (_:remainder)  fs2 =
@@ -519,9 +561,9 @@ headerOfFunSym  (_:remainder)  fs2 =
 
 
 -- Load the proverif headers from the OpenTheory
-loadHeaders :: OpenTheory -> S.Set ProverifHeader
-loadHeaders thy =
-  (S.map  typedHeaderOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule y)) S.empty sigRules)
+loadHeaders :: Translation -> OpenTheory -> S.Set ProverifHeader
+loadHeaders trans thy =
+  (S.map  typedHeaderOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule trans y)) S.empty sigRules)
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- generating headers for function symbols, both for builtins and user defined functions
         sigFunSyms = funSyms sig
@@ -532,17 +574,17 @@ loadHeaders thy =
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
 
-headersOfRule :: CtxtStRule -> S.Set ProverifHeader
-headersOfRule r = case ctxtStRuleToRRule r of
+headersOfRule :: Translation -> CtxtStRule -> S.Set ProverifHeader
+headersOfRule trans r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) ->
     (S.singleton hrule)  `S.union` lsh `S.union` rsh
-    where (plhs,lsh) = ppLNTerm lhs
-          (prhs,rsh) = ppLNTerm rhs
-          hrule = Eq  (prefix <> " forall " ++
+    where (plhs,lsh) = ppLNTerm trans lhs
+          (prhs,rsh) = ppLNTerm trans rhs
+          hrule = Eq  prefix  ("forall " ++
                        make_frees (map show freesr)  ++
-                       ";" ++
+                       ";")
                        (render $ sep [ nest 2 $ plhs
-                           , text "=" <-> prhs ])++".")
+                           , text "=" <-> prhs ])
           freesr = List.union (frees lhs) (frees rhs)
           make_frees [] = ""
           make_frees [x] = x ++ ":bitstring"
@@ -552,25 +594,65 @@ headersOfRule r = case ctxtStRuleToRRule r of
             _ -> "equation"
 
 
-attribHeaders :: [ProverifHeader] -> [Doc]
-attribHeaders hd =
+
+
+prettyProverifHeader :: ProverifHeader -> Doc
+prettyProverifHeader (Type s) = text "type " <> text s <> text "."
+prettyProverifHeader (HEvent s) = text s
+prettyProverifHeader (Eq eqtype quant eq) = text eqtype <> text " " <> text quant <>  text " " <> text eq <>  text "."
+prettyProverifHeader (Sym symkind name symtype []) = text symkind <> text " " <> text name <> text symtype  <> text "."
+prettyProverifHeader (Sym symkind name symtype attr) = text symkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
+
+prettyProverifHeader  (Fun "" _ _ _ _ ) = text ""
+prettyProverifHeader (Fun fkind name _ symtype [] ) =  text fkind <> text " " <> text name <> text symtype  <> text "."
+prettyProverifHeader (Fun fkind name _ symtype attr ) =
+   text fkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
+
+prettyDeepSecHeader :: ProverifHeader -> Doc
+prettyDeepSecHeader (Type _) = text "" -- no types in deepsec
+prettyDeepSecHeader (Eq eqtype _ eq) = text eqtype <> text " " <> text eq <>  text "."
+prettyDeepSecHeader (HEvent _) = text ""
+-- drop symtypes in symbol declarations
+prettyDeepSecHeader (Sym symkind name _ []) = text symkind <> text " " <> text name <> text "."
+prettyDeepSecHeader (Sym symkind name _ attr) =
+  if List.elem "private" attr then
+    text symkind <> text " " <> text name <> text "[private]"  <> text "."
+  else
+    text symkind <> text " " <> text name  <> text "."
+
+  -- only keep arity for fun declarations
+prettyDeepSecHeader  (Fun "" _ _ _ _ ) = text ""
+prettyDeepSecHeader  (Fun fkind name arity _ [] ) =  text fkind <> text " " <> text name
+  <> text "/"  <> text (show arity)  <> text "."
+
+prettyDeepSecHeader  (Fun fkind name arity _ attr ) =
+  if List.elem "private" attr then
+    text fkind <> text " " <> text name
+    <> text "/" <> text (show arity) <> text "[private]"  <> text "."
+  else
+    text fkind <> text " " <> text name <> text "/" <> text (show arity)  <> text "."
+
+
+
+attribHeaders :: Translation -> [ProverifHeader] -> [Doc]
+attribHeaders trans hd =
   sym ++ fun ++ eq
   where (eq,fun,sym) = splitHeaders hd
+        pph = case trans of
+          Proverif -> prettyProverifHeader
+          DeepSec -> prettyDeepSecHeader
         splitHeaders [] = ([],[],[])
         splitHeaders (x:xs)
-          | Sym s <- x = (e1,f1,(text s):s1)
-          | Fun s <- x =  (e1,(text s):f1,s1)
-          | Eq s <- x =  ((text s):e1,f1,s1)
+          | Sym _ _ _ _ <- x = (e1,f1,(pph x):s1)
+          | Fun _ _ _ _ _<- x =  (e1,(pph x):f1,s1)
+          | Eq _ _ _ <- x =  ((pph x):e1,f1,s1)
+          | HEvent _ <- x =  ((pph x):e1,f1,s1)
+          | Type _ <- x = (e1,f1,(pph x):s1)
           where (e1,f1,s1) = splitHeaders xs
-
-
 
 ------------------------------------------------------------------------------
 -- Some utility functions
 ------------------------------------------------------------------------------
-
-make_str :: (BC.ByteString, Int) -> [Char]
-make_str (f,k) = "fun " ++ BC.unpack f ++ "(" ++ (make_args k) ++ "):bitstring"
 
 make_argtypes :: [SapicType] -> String
 make_argtypes [] = ""
@@ -582,3 +664,33 @@ make_args :: Int -> String
 make_args 0 = ""
 make_args 1 = "bitstring"
 make_args n = "bitstring,"++(make_args (n-1))
+
+
+stripNonAlphanumerical :: [Char] -> [Char]
+stripNonAlphanumerical = filter (\x -> isAlpha x)
+------------------------------------------------------------------------------
+-- Core DeepSec Export
+------------------------------------------------------------------------------
+
+deepsecTemplate :: Document d => [d] -> [d] ->  [d]  -> d
+deepsecTemplate headers macroproc requests =
+  vcat headers
+  $$
+  vcat macroproc
+  $$
+  vcat requests
+
+
+prettyDeepSecTheory :: OpenTheory -> Doc
+prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
+  where hd = attribHeaders DeepSec $ S.toList (base_headers `S.union` (loadHeaders DeepSec thy)
+                                       `S.union` macroprochd)
+        requests = loadRequests thy
+        (macroproc, macroprochd) = loadMacroProc DeepSec thy
+
+        -- Loader of the export functions
+------------------------------------------------------------------------------
+loadRequests :: Theory sig c b p SapicElement -> [Doc]
+loadRequests thy = [text $ get_text (lookupExportInfo "requests" thy)]
+  where get_text Nothing = ""
+        get_text (Just m) = L.get eText m
