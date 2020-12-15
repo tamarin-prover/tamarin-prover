@@ -23,7 +23,7 @@ want to use an unreleased feature. However, if you do want to install it from so
 
 ### Manually install dependencies
 
-Tamarin requires Haskell Stack to build and GraphViz and Maude 2.7 to run. The easiest way to
+Tamarin requires Haskell Stack to build and GraphViz and Maude 2.7.1 (or newer) to run. The easiest way to
 install these is
 
 ```
