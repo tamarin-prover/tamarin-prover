@@ -1180,7 +1180,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
               premise   <- lookupPrem pid $ L.get cprRuleAC rule
-              t'        <- protoOrInFactView premise
+              t'        <- protoFactView premise
               t         <- atMay t' tidx
               return $ do
                 -- iterate over all positions found
@@ -1266,9 +1266,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             update (RuleItem r) = RuleItem $ foldr up r $
                    filter ((ruleName r ==). ruleName . fst) acts
               where
-                up (n, Left (k, Left y, z))     r' = addActionClosedProtoRule r' (inputFact k n [y] z)
+                up (n, Left (k, Left y, z))      r' = addActionClosedProtoRule r' (inputFact k n [y] z)
                 up (n, Left (k, Right y, z))     r' = addActionClosedProtoRule r' (inputFact k n (getFactTerms y) z)
-                up (n, Right (k, cidx, Left y)) r' = addActionClosedProtoRule r' (outputFact k cidx n [y])
+                up (n, Right (k, cidx, Left y))  r' = addActionClosedProtoRule r' (outputFact k cidx n [y])
                 up (n, Right (k, cidx, Right y)) r' = addActionClosedProtoRule r' (outputFact k cidx n (getFactTerms y))
             update it           = it
 
@@ -1279,7 +1279,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 map (\(x, cidx, k, y) -> (x, Right (k, cidx, y))) $ concatMap (\(_, _, _, _, x) -> x) matches
 
         listOfM :: Int -> [String]
-        listOfM n = zipWith (++) (replicate n "m") $ fmap (show) [1..n]
+        listOfM n = zipWith (++) (replicate n "m") $ fmap show [1..n]
 
         -- add formula to lemma
         addFormula ::
