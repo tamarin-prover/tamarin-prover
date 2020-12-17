@@ -708,7 +708,7 @@ formulaReports thy = do
     checkQuantifiers header fm
       | null disallowed = []
       | otherwise       = return $ fsep $
-          (text $ header ++ "uses quantifiers with wrong sort:") :
+          (text $ header ++ " uses quantifiers with wrong sort:") :
           (punctuate comma $ map (nest 2 . text . show) disallowed)
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
@@ -774,7 +774,7 @@ formulaReportsDiff thy = do
     checkQuantifiers header fm
       | null disallowed = []
       | otherwise       = return $ fsep $
-          (text $ header ++ "uses quantifiers with wrong sort:") :
+          (text $ header ++ " uses quantifiers with wrong sort:") :
           (punctuate comma $ map (nest 2 . text . show) disallowed)
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)

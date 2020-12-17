@@ -682,7 +682,7 @@ protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE 
                       <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted parseFormula
-                      <*> (proofSkeleton <|> pure (unproven ()))
+                      <*> (startProofSkeleton <|> pure (unproven ()))
 
 -- | Parse a lemma.
 lemma :: Parser (SyntacticLemma ProofSkeleton)
@@ -752,12 +752,22 @@ proofMethod = asum
   , symbol "induction"     *> pure Induction
   ]
 
+-- | Start parsing a proof skeleton. 
+-- | If the first step of the proof is a SOLVED, mark it as an inavalid proof step.
+-- | If that is not the case, call proofSkeleton
+startProofSkeleton :: Parser ProofSkeleton
+startProofSkeleton =
+    solvedProof <|> otherProof
+  where
+    solvedProof = symbol "SOLVED" *> error "SOLVED without a proof was found."
+    otherProof = proofSkeleton
+
 -- | Parse a proof skeleton.
 proofSkeleton :: Parser ProofSkeleton
 proofSkeleton =
     solvedProof <|> finalProof <|> interProof
   where
-    solvedProof =
+    solvedProof = 
         symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
 
     finalProof = do
