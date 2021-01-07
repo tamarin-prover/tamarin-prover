@@ -133,7 +133,7 @@ the `git` tool installed.
 
 1. Change Directory to Sublime Text packages directory:
     + Mac OS X: `cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/`
-    + Linux: `~/.config/sublime-text-3/Packages/`
+    + Linux: `cd ~/.config/sublime-text-3/Packages/`
 
 2. Clone the directory into the Packages folder.
     + SSH: `git clone git@github.com:tamarin-prover/editor-sublime.git`
