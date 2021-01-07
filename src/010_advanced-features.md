@@ -303,7 +303,9 @@ We can model this protocol as follows.
 We state the nonce secrecy property for the 
 initiator and responder with the `nonce_secret_initiator` and the
 `nonce_secret_receiver` lemma, respectively. The lemma
-`message_authentication` specifies a [message authentication](006_property-specification.html#sec:message-authentication) property for the responder role. 
+`message_authentication` specifies a [message
+authentication](007_property-specification.html#sec:message-authentication)
+property for the responder role. 
 
 If we analyze the protocol with insecure channels, none of the
 properties hold because the adversary can learn the nonce sent by the
