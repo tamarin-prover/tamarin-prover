@@ -35,7 +35,7 @@ annotateEachClosestUnlock :: (Eq v1, MonadThrow m) =>
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) =
             if t == t' then
-                return $ ProcessAction (Unlock t') (a' `mappend` annUnlock v) p
+                return $ ProcessAction (Unlock t') (a' <> annUnlock v) p
             else do
                 p' <- annotateEachClosestUnlock t v p
                 return $ProcessAction (Unlock t') a' p'

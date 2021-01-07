@@ -62,7 +62,7 @@ data ProcessAnnotation v = ProcessAnnotation {
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
-  , location :: Maybe SapicTerm -- The location of a process, for the IEE extention.
+  , location      :: Maybe SapicTerm -- The location of a process, for the IEE extention.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
   , elseBranch :: Bool
   } deriving (Show, Typeable)
@@ -122,18 +122,19 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = True}
+annLock v = mempty {lock = Just v} 
+
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = True}
+annUnlock v = mempty {unlock = Just v} 
+
 annSecretChannel :: AnVar v -> ProcessAnnotation v
-annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v, location = Nothing, destructorEquation = Nothing, elseBranch = True}
+annSecretChannel v = mempty { secretChannel = Just v}
 
 annDestructorEquation :: LNTerm -> LNTerm -> Bool -> ProcessAnnotation v
-annDestructorEquation v1 v2 b = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Just (v1, v2), elseBranch = b}
+annDestructorEquation v1 v2 b =  mempty { destructorEquation = Just (v1, v2), elseBranch = b }
 
 annElse ::  Bool -> ProcessAnnotation v
-annElse b = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = Nothing, destructorEquation = Nothing, elseBranch = b}
-
+annElse b = mempty {elseBranch = b}
 
 -- | Convert to and from Process, i.e., LProcess with processnames only.
 toAnProcess :: PlainProcess -> LProcess (ProcessAnnotation v0)
@@ -141,7 +142,7 @@ toAnProcess = unAnProcess . fmap f . AnProcess
   where
         f l =
           let (names, loc) = getNamesLoc l in
-          ProcessAnnotation { processnames = names, lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = loc, destructorEquation = Nothing, elseBranch = True}
+            mempty { processnames = names, location = loc}
         getNamesLoc [] = ([], Nothing)
         getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
         getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
