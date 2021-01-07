@@ -127,7 +127,7 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a public key encryption scheme. It defines the
   function symbols `aenc/2`, `adec/2`, and `pk/1`, which are
   related by the equation `adec(aenc(m, pk(sk)), sk) = m`.
-  Note that as described in [Syntax Description](014_syntax_description.html),
+  Note that as described in [Syntax Description](015_syntax_description.html),
   `aenc{x,y}pkB` is syntactic sugar for `aenc(<x,y>, pkB)`.
   <!-- This is otherwise not mentioned until Ch14: Syntax Description -->
 
@@ -204,7 +204,7 @@ x ⊕ x       = zero
 ``reliable-channel`:
 
 : This theory introduces support for reliable channel in the [process
-calculus](006_protocol-specification-processes.md).
+calculus](006_protocol-specification-processes.html).
 Messages on the channel (i.e., public name) `'r'` are guaranteed to arrive
 eventually. There is only one other channel, the public and unreliable channel
 `'c'`. Note that multiple reliable channels can be modelled using pattern matchting:
