@@ -327,14 +327,13 @@ sapicvar :: Parser SapicLVar
 sapicvar = do
         v <- lvar
         t <- option Nothing $ colon *> (Just <$> identifier)
-        return (SapicLVar v t False)
+        return (SapicLVar v t)
 
-sapicpatternvar :: Parser SapicLVar
+sapicpatternvar :: Parser PatternSapicLVar
 sapicpatternvar = do
-        p <- option False parseq
-        v <- lvar
-        t <- option Nothing $ colon *> (Just <$> identifier)
-        return (SapicLVar v t p)
+        eq <- option False parseq
+        v  <- sapicvar
+        return (if eq then PatternMatch v else PatternBind v)
         where parseq = do
                 _ <- opEqual
                 return True

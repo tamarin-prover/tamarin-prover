@@ -26,6 +26,7 @@ module Theory.Sapic (
     , defaultSapicNodeType
     , SapicAction(..)
     , SapicLVar(..)
+    , PatternSapicLVar(..)
     , SapicTerm
     , SapicNTerm
     , SapicLNFact
@@ -85,8 +86,11 @@ import Control.Monad.Catch
 
 -- | In general, terms we use in the translation have logical veriables
 type SapicType = Maybe String
-data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType, ispattern::Bool}
+data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType}
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
+data PatternSapicLVar =  PatternBind SapicLVar | PatternMatch PatternSapicLVar
+     deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
+
 type LNTTerm = VTerm Name SapicLVar
 type SapicNTerm v = VTerm Name v
 type SapicTerm = LNTTerm
@@ -124,13 +128,15 @@ defaultSapicNodeType = Just "node"
 type SapicSubst = Subst Name SapicLVar
 
 instance Show SapicLVar where
-    show (SapicLVar v (Just t) False) = show  v ++ ":" ++ t
-    show (SapicLVar v Nothing False ) = show  v
-    show (SapicLVar v (Just t) True) = "=" ++ show  v ++ ":" ++ t
-    show (SapicLVar v Nothing True ) = "=" ++ show  v
+    show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
+    show (SapicLVar v Nothing ) = show  v
+
+instance Show PatternSapicLVar where
+    show (PatternBind v) = show v
+    show (PatternMatch v) = "=" ++ show v
 
 instance Hinted SapicLVar where
-    hint (SapicLVar v _ _) = hint v
+    hint (SapicLVar v _) = hint v
 
 -- conversion functions for sapic types
 toLVar:: SapicLVar -> LVar
@@ -421,7 +427,7 @@ applySapicActionError subst ac
                             else
                                   return $ ChIn (apply subst mt) (apply subst t)
         | otherwise = return $ apply subst ac
-    where lvarName' (SapicLVar v _ _) = lvarName v
+    where lvarName' (SapicLVar v _ ) = lvarName v
 
 instance Apply SapicSubst (LProcess ann) where
 -- We are ignoring capturing here, use applyProcess below to get warnings.
