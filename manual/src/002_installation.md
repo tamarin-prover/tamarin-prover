@@ -128,11 +128,11 @@ editor-sublime can be install in two ways:
 
 The first and preferred method is with [PackageControl.io](https://packagecontrol.io/). editor-sublime can now be installed via the sublime package manager. See the [install](https://packagecontrol.io/installation) and [usage](https://packagecontrol.io/docs/usage) documentation, then search and install Tamarin​Prover.
 
-Alternatively it can be installed from source. For Linux / OS X this process can be followed. We assume you have
+Alternatively it can be installed from source. For Linux / macOS this process can be followed. We assume you have
 the `git` tool installed.
 
 1. Change Directory to Sublime Text packages directory:
-    + Mac OS X: `cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/`
+    + macOS: `cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/`
     + Linux: `cd ~/.config/sublime-text-3/Packages/`
 
 2. Clone the directory into the Packages folder.
