@@ -133,13 +133,13 @@ the `git` tool installed.
 
 1. Change Directory to Sublime Text packages directory:
     + Mac OS X: `cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/`
-    + Linux: `~/.Sublime\ Text\ 3/Packages/`
+    + Linux: `~/.config/sublime-text-3/Packages/`
 
-2. Pull directory into Packages folder.
-    + SSH: `git pull git@github.com:tamarin-prover/editor-sublime.git`
-    + HTTPS: `git pull https://github.com/tamarin-prover/editor-sublime.git`
+2. Clone the directory into the Packages folder.
+    + SSH: `git clone git@github.com:tamarin-prover/editor-sublime.git`
+    + HTTPS: `git clone https://github.com/tamarin-prover/editor-sublime.git`
 
-3. Open Sublime and bottom right syntaxes 'Tamarin' should be in the list.
+3. Close and re-open Sublime, and in the bottom right list of syntaxes 'Tamarin' should now be in the list.
 
 *Please be aware that this plugin is under active development and as such, several of the features are still implemented in a prototypical manner. If you experience any problems or have any questions on running any parts of the plug-in please [visit the project GitHub page](https://github.com/tamarin-prover/editor-sublime).*
 
