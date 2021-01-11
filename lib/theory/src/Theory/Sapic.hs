@@ -68,12 +68,14 @@ module Theory.Sapic (
     , prettyLetExceptions
     -- TODO external
     , PatternSapicLVar(..)
-    , validatePattern
+    , unpattern
+    , extractMatchingVariables
 ) where
 
 import Data.Binary
 import Data.Data
 import Data.List
+import qualified Data.Set as S
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Theory.Model.Fact
@@ -138,12 +140,18 @@ instance Show PatternSapicLVar where
     show (PatternBind v) = show v
     show (PatternMatch v) = "=" ++ show v
 
-unpattern :: PatternSapicLVar -> SapicLVar
-unpattern (PatternBind  v) = v
-unpattern (PatternMatch v) = v
 
-validatePattern :: SapicNTerm PatternSapicLVar -> SapicNTerm SapicLVar
-validatePattern pt = fmap (fmap unpattern) pt
+unpattern :: SapicNTerm PatternSapicLVar -> SapicNTerm SapicLVar
+unpattern = fmap (fmap unpattern')
+    where
+        unpattern' (PatternBind  v) = v
+        unpattern' (PatternMatch v) = v
+
+extractMatchingVariables :: SapicNTerm PatternSapicLVar -> S.Set SapicLVar
+extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
+    where
+        isPatternMatch (PatternMatch v) = [v]
+        isPatternMatch (PatternBind _ ) = []
 
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
@@ -471,7 +479,8 @@ applyProcess subst (ProcessAction ac ann p) = do
 
 data ProcessParsedAnnotation =
   ProcessName String -- String used in annotation to identify processes
-  | ProcessLoc SapicTerm
+  | ProcessLoc SapicTerm -- additional information for Isolated Execution Environments feature
+  | ProcessMatchVar (S.Set SapicLVar) -- Variables in in() or let-actions that are intended to match already bound variables
   deriving( Eq, Ord, Show, Data, Generic)
 instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation

@@ -1040,34 +1040,34 @@ sapicterm = msetterm False (vlit sapicvar)
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
-sapicAction :: Parser LSapicAction
+sapicAction :: Parser (LSapicAction, [ProcessParsedAnnotation])
 sapicAction = try (do
                         _ <- symbol "new"
                         s <- sapicvar
-                        return (New s)
+                        return (New s,[])
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
                         t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn Nothing (validatePattern t))
+                        return (ChIn Nothing (unpattern t), [ProcessMatchVar $ extractMatchingVariables t])
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm False ltypedlit
+                        c <- msetterm False ltypedlit
                         _ <- comma
-                        t' <- msetterm False ltypedpatternlit
+                        t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn (Just t) (validatePattern t'))
+                        return (ChIn (Just c) (unpattern t), [ProcessMatchVar $ extractMatchingVariables t])
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
                         t <- msetterm False ltypedlit
                         _ <- symbol ")"
-                        return (ChOut Nothing t)
+                        return (ChOut Nothing t, [])
                    )
                <|> try (do
                         _ <- symbol "out"
@@ -1076,38 +1076,38 @@ sapicAction = try (do
                         _ <- comma
                         t' <- msetterm False ltypedlit
                         _ <- symbol ")"
-                        return (ChOut (Just t) t')
+                        return (ChOut (Just t) t', [])
                    )
                <|> try (do
                         _ <- symbol "insert"
                         t <- msetterm False ltypedlit
                         _ <- comma
                         t' <- msetterm False ltypedlit
-                        return (Insert t t')
+                        return (Insert t t', [])
                    )
                <|> try (do
                         _ <- symbol "delete"
                         t <- msetterm False ltypedlit
-                        return (Delete t)
+                        return (Delete t, [])
                    )
                <|> try (do
                         _ <- symbol "lock"
                         t <- msetterm False ltypedlit
-                        return (Lock t)
+                        return (Lock t, [])
                    )
                <|> try (do
                         _ <- symbol "unlock"
                         t <- msetterm False ltypedlit
-                        return (Unlock t)
+                        return (Unlock t, [])
                    )
                <|> try (do
                         _ <- symbol "event"
                         f <- fact ltypedlit
-                        return (Event f)
+                        return (Event f, [])
                    )
                <|> try (do
                         r <- genericRule sapicvar sapicnodevar
-                        return (MSR r)
+                        return (MSR r, [])
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that
@@ -1225,7 +1225,8 @@ actionprocess thy=
                         _ <- symbol "in"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        return (ProcessComb (Let (validatePattern t1) t2) mempty p q)
+                        let annot = ProcessMatchVar $ extractMatchingVariables t1
+                        return (ProcessComb (Let (unpattern t1) t2) annot p q)
                         <?> "let binding"
                    )
             <|> try (do
