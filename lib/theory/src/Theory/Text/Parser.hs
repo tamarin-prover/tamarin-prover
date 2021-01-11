@@ -160,7 +160,7 @@ ltypedlit :: Parser SapicTerm
 ltypedlit = vlit sapicvar
 
 -- | Parse a lit with logical typed variables and pattern matching for SAPIC
-ltypedpatternlit :: Parser SapicTerm
+ltypedpatternlit :: Parser (SapicNTerm PatternSapicLVar)
 ltypedpatternlit = vlit sapicpatternvar
 
 
@@ -1051,7 +1051,7 @@ sapicAction = try (do
                         _ <- symbol "("
                         t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn Nothing t)
+                        return (ChIn Nothing (validatePattern t))
                    )
                <|> try (do
                         _ <- symbol "in"
@@ -1060,7 +1060,7 @@ sapicAction = try (do
                         _ <- comma
                         t' <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn (Just t) t')
+                        return (ChIn (Just t) (validatePattern t'))
                    )
                <|> try (do
                         _ <- symbol "out"
@@ -1153,7 +1153,7 @@ process thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm False ltypedlit
-                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType False,m)]) p) (fail . prettyLetExceptions) of
+                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
@@ -1225,7 +1225,7 @@ actionprocess thy=
                         _ <- symbol "in"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        return (ProcessComb (Let t1 t2) mempty p q)
+                        return (ProcessComb (Let (validatePattern t1) t2) mempty p q)
                         <?> "let binding"
                    )
             <|> try (do

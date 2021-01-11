@@ -342,7 +342,7 @@ sapicpatternvar = do
 sapicnodevar :: Parser SapicLVar
 sapicnodevar = do
     v <- nodevar
-    return (SapicLVar v defaultSapicNodeType False)
+    return (SapicLVar v defaultSapicNodeType)
 
 -- Term Operators
 -----------------

@@ -26,7 +26,6 @@ module Theory.Sapic (
     , defaultSapicNodeType
     , SapicAction(..)
     , SapicLVar(..)
-    , PatternSapicLVar(..)
     , SapicTerm
     , SapicNTerm
     , SapicLNFact
@@ -67,6 +66,9 @@ module Theory.Sapic (
     -- exception type for lets
     , LetExceptions (..)
     , prettyLetExceptions
+    -- TODO external
+    , PatternSapicLVar(..)
+    , validatePattern
 ) where
 
 import Data.Binary
@@ -88,7 +90,7 @@ import Control.Monad.Catch
 type SapicType = Maybe String
 data SapicLVar = SapicLVar { slvar:: LVar, stype:: SapicType}
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
-data PatternSapicLVar =  PatternBind SapicLVar | PatternMatch PatternSapicLVar
+data PatternSapicLVar =  PatternBind SapicLVar | PatternMatch SapicLVar
      deriving( Ord, Eq, Typeable, Data, Generic, NFData, Binary, IsVar )
 
 type LNTTerm = VTerm Name SapicLVar
@@ -131,9 +133,17 @@ instance Show SapicLVar where
     show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
     show (SapicLVar v Nothing ) = show  v
 
+--- TODO move this stuff into separate file.
 instance Show PatternSapicLVar where
     show (PatternBind v) = show v
     show (PatternMatch v) = "=" ++ show v
+
+unpattern :: PatternSapicLVar -> SapicLVar
+unpattern (PatternBind  v) = v
+unpattern (PatternMatch v) = v
+
+validatePattern :: SapicNTerm PatternSapicLVar -> SapicNTerm SapicLVar
+validatePattern pt = fmap (fmap unpattern) pt
 
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
