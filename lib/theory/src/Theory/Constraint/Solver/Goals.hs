@@ -21,6 +21,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+  , plainOpenGoals
   ) where
 
 -- import           Debug.Trace
@@ -42,7 +43,7 @@ import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
 import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
 import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
-import           Extension.Data.Label
+import           Extension.Data.Label                    as L
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -83,7 +84,7 @@ openGoals sys = do
     -- check whether the goal is still open
     guard $ case goal of
         ActionG i (kFactView -> Just (UpK, m)) ->
-          if get sDiffSystem sys 
+          if get sDiffSystem sys
              -- In a diff proof, all action goals need to be solved.
              then not (solved)
              else
@@ -91,7 +92,7 @@ openGoals sys = do
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
                     || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
                     -- handled by 'insertAction'
-                    || isPair m || isInverse m || isProduct m -- || isXor m
+                    || isPair m || isInverse m || isProduct m --- || isXor m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
@@ -103,9 +104,10 @@ openGoals sys = do
         ChainG c p     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
-                  not solved && allMsgVarsKnownEarlier c args
+              -- do not solve Union conclusions if they contain only known msg vars
+                  not solved && not (allMsgVarsKnownEarlier c args)
               -- open chains for msg vars are only solved if N5'' is applicable
-              Just (DnK,  m) | isMsgVar m          -> (not solved) && 
+              Just (DnK,  m) | isMsgVar m          -> (not solved) &&
                                                       (chainToEquality m c p)
                              | otherwise           -> not solved
               fa -> error $ "openChainGoals: impossible fact: " ++ show fa
@@ -168,15 +170,14 @@ openGoals sys = do
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
-
-    allMsgVarsKnownEarlier (i,_) args =
-        all (`elem` earlierMsgVars) (filter isMsgVar args)
+    allMsgVarsKnownEarlier (i,_) args = (all isMsgVar args) &&
+        (all (`elem` earlierMsgVars) args)
       where earlierMsgVars = do (j, _, t) <- allKUActions sys
                                 guard $ isMsgVar t && alwaysBefore sys j i
                                 return t
-                                
-    -- check whether we have a chain that fits N5'' (an open chain between an 
-    -- equality rule and a simple msg var conclusion that exists as a K up 
+
+    -- check whether we have a chain that fits N5'' (an open chain between an
+    -- equality rule and a simple msg var conclusion that exists as a K up
     -- previously) which needs to be resolved even if it is an open chain
     chainToEquality :: LNTerm -> NodeConc -> NodePrem -> Bool
     chainToEquality t_start conc p = is_msg_var && is_equality && ku_before
@@ -186,11 +187,20 @@ openGoals sys = do
             -- and whether we do have an equality rule instance at the end
             is_equality = isIEqualityRule $ nodeRule (fst p) sys
             -- get all KU-facts with the same msg var
-            ku_start    = filter (\x -> (fst x) == t_start) $ 
+            ku_start    = filter (\x -> (fst x) == t_start) $
                               map (\(i, _, m) -> (m, i)) $ allKUActions sys
             -- and check whether any of them happens before the KD-conclusion
-            ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start 
-                                
+            ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start
+ 
+
+-- | The list of all open goals left together with their status.
+plainOpenGoals:: System -> [(Goal, GoalStatus)]
+plainOpenGoals sys = openGoalsLeft
+  where
+    openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
+    isOpen(_, status) = case status of
+      GoalStatus s _ _ -> not s
+       
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------
@@ -329,7 +339,7 @@ solveChain rules (c, p) = do
          Just (DnK, m) ->
              do -- If the chain does not start at a union message,
                 -- the usual *DG2_chain* extension is perfomed.
-                -- But we ignore open chains, as we only resolve 
+                -- But we ignore open chains, as we only resolve
                 -- open chains with a direct chain
                 contradictoryIf (isMsgVar m)
                 cRule <- gets $ nodeRule (nodeConcNode c)
@@ -342,9 +352,9 @@ solveChain rules (c, p) = do
          _ -> error "solveChain: not a down fact"
      )
   where
-    extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact 
-      -> Control.Monad.Trans.State.Lazy.StateT System 
-      (Control.Monad.Trans.FastFresh.FreshT 
+    extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact
+      -> Control.Monad.Trans.State.Lazy.StateT System
+      (Control.Monad.Trans.FastFresh.FreshT
       (DisjT (Control.Monad.Trans.Reader.Reader ProofContext))) String
     extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
@@ -369,8 +379,8 @@ solveChain rules (c, p) = do
     illegalCoerce pRule mPrem = isCoerceRule pRule && isPair    mPrem ||
                                 isCoerceRule pRule && isInverse mPrem ||
     -- Also: Coercing of products is unnecessary, since the protocol is *-restricted.
-                                isCoerceRule pRule && isProduct mPrem 
-    
+                                isCoerceRule pRule && isProduct mPrem
+
 
 -- | Solve an equation split. There is no corresponding CR-rule in the rule
 -- system on paper because there we eagerly split over all variants of a rule.
@@ -399,4 +409,3 @@ solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
     insertFormula gfm
     return $ "case_" ++ show i
-

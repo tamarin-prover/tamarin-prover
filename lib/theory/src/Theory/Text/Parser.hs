@@ -214,14 +214,14 @@ term plit eqn = asum
     , parens (msetterm eqn plit)
     , symbol "1" *> pure fAppOne
     , application <?> "function application"
-    , nullaryApp (eqn)
+    , nullaryApp
     , plit
     ]
     <?> "term"
   where
     application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm eqn plit)
-    nullaryApp eqn = do
+    nullaryApp = do
       maudeSig <- getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
@@ -307,8 +307,8 @@ modulo :: String -> Parser ()
 modulo thy = parens $ symbol_ "modulo" *> symbol_ thy
 
 moduloE, moduloAC :: Parser ()
-moduloE  = modulo "E"
-moduloAC = modulo "AC"
+moduloE   = modulo "E"
+moduloAC  = modulo "AC"
 
 {- -- This has not been renamed from typing to source, as it is unclear.
 -- | Parse a typing assertion modulo E.
@@ -351,7 +351,21 @@ protoRuleInfo = do
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
-protoRule :: Parser ProtoRuleE
+diffRule :: Parser (DiffProtoRule)
+diffRule = do
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
+    leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
+    return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
+
+-- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
+-- 'Knows', and 'Learn' no rule is returned as the default theory already
+-- contains them
+protoRule :: Parser (OpenProtoRule)
 protoRule = do
     ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
@@ -359,7 +373,27 @@ protoRule = do
     subst <- option emptySubst letBlock
     (ps0,as0,cs0,rs0) <- genericRule
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
-    return $ Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)
+    variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
+    return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
+
+-- | Parse RuleInfo
+protoRuleACInfo :: Parser ProtoRuleACInfo
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
+                                        (symbol "rule" *> moduloAC *> identifier))
+                               <*> (option [] $ list ruleAttribute))
+                               <*> pure (Disj [emptySubstVFresh]) <*> pure []
+                               <*  colon
+
+-- | Parse a protocol rule variant modulo AC.
+protoRuleAC :: Parser ProtoRuleAC
+protoRuleAC = do
+    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
+    when (name `elem` reservedRuleNames) $
+        fail $ "cannot use reserved rule name '" ++ name ++ "'"
+    subst <- option emptySubst letBlock
+    (ps0,as0,cs0,rs0) <- genericRule
+    let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
+    return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 
 -- | Parse a let block with bottom-up application semantics.
 letBlock :: Parser LNSubst
@@ -650,7 +684,7 @@ protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE 
                       <*> (option [] $ list (lemmaAttribute False))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted parseFormula
-                      <*> (proofSkeleton <|> pure (unproven ()))
+                      <*> (startProofSkeleton <|> pure (unproven ()))
 
 -- | Parse a lemma.
 lemma :: Parser (SyntacticLemma ProofSkeleton)
@@ -739,12 +773,22 @@ proofMethod = asum
   , symbol "induction"     *> pure Induction
   ]
 
+-- | Start parsing a proof skeleton. 
+-- | If the first step of the proof is a SOLVED, mark it as an inavalid proof step.
+-- | If that is not the case, call proofSkeleton
+startProofSkeleton :: Parser ProofSkeleton
+startProofSkeleton =
+    solvedProof <|> otherProof
+  where
+    solvedProof = symbol "SOLVED" *> error "SOLVED without a proof was found."
+    otherProof = proofSkeleton
+
 -- | Parse a proof skeleton.
 proofSkeleton :: Parser ProofSkeleton
 proofSkeleton =
     solvedProof <|> finalProof <|> interProof
   where
-    solvedProof =
+    solvedProof = 
         symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
 
     finalProof = do
@@ -1076,7 +1120,7 @@ process thy=
                         return p
 
 actionprocess :: OpenTheory -> Parser Process
-actionprocess thy= 
+actionprocess thy=
             try (do         -- replication parser
                         _ <- symbol "!"
                         p <- process thy
@@ -1201,7 +1245,7 @@ instance Show (ParsingException) where
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
-    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName ru)
+    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
     show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
@@ -1240,7 +1284,7 @@ liftedExpandRestriction :: Catch.MonadThrow m =>
 liftedExpandRestriction thy = liftEitherToEx UndefinedPredicate . expandRestriction thy
 
 liftedAddProtoRuleNoExpand :: Catch.MonadThrow m => OpenTheory -> Theory.OpenProtoRule -> m OpenTheory
-liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addProtoRule ru thy)
+liftedAddProtoRuleNoExpand thy ru = liftMaybeToEx (DuplicateItem (RuleItem ru)) (addOpenProtoRule ru thy)
 
 liftedAddPredicate :: Catch.MonadThrow m =>
                       Theory sig c r p SapicElement
@@ -1290,12 +1334,15 @@ liftedAddCaseTest thy cTest =
 --  3. add action names to rule
 --  4. add rule, fail if duplicate
 --  5. add restrictions, fail if duplicate
-liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> Rule ProtoRuleEInfo -> m (OpenTheory)
+-- FIXME: we only deal we the rule modulo E here, if variants modulo AC are
+--        imported we do not check if they have _restrict annotations
+--        (but they should not, as they will not be exported)
+liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m (OpenTheory)
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo) ru = do
-        rformulas <- mapM (liftedExpandFormula thy) (rfacts ru)
-        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulas)
-        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulas) -- TODO was ru instead of rformulas
+    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
         return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
@@ -1303,7 +1350,7 @@ liftedAddProtoRule thy ru
                 addExpandedRestriction thy' xrstr = liftMaybeToEx
                                                      (DuplicateItem $ RestrictionItem xrstr)
                                                      (addRestriction xrstr thy')
-                addActions   rname rformulas = modify rActs (++ actions rname rformulas) ru
+                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
@@ -1371,9 +1418,6 @@ theory flags0 = do
            thy' <- liftedAddProtoRule thy ru
            -- thy'' <- foldM liftedAddRestriction thy' $
            --  map (Restriction "name") [get (preRestriction . rInfo) ru]
-           addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoRule thy ru
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACs [r] thy)
@@ -1452,8 +1496,8 @@ diffTheory flags0 = do
            addItems flags thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma
            addItems flags thy'
-      , do ru <- protoRule
-           thy' <- liftedAddProtoDiffRule thy ru
+      , do ru <- diffRule
+           thy' <- liftedAddDiffRule thy ru
            addItems flags thy'
       , do r <- intrRule
            addItems flags (addIntrRuleACsDiffAll [r] thy)
@@ -1484,9 +1528,9 @@ diffTheory flags0 = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddProtoDiffRule thy ru = case addProtoDiffRule ru thy of
+    liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule: " ++ render (prettyRuleName ru)
+        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'

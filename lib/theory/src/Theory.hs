@@ -139,7 +139,6 @@ module Theory (
   , addStringComment
   , addFormalComment
   , addFormalCommentDiff
-  , cprRuleE
   , filterSide
   , addDefaultDiffLemma
   , addProtoRuleLabel
@@ -158,6 +157,8 @@ module Theory (
   , defaultOpenDiffTheory
   , addProtoRule
   , addProtoDiffRule
+  , addOpenProtoRule
+  , addOpenProtoDiffRule
   , applyPartialEvaluation
   , applyPartialEvaluationDiff
   , addIntrRuleACsAfterTranslate
@@ -172,13 +173,23 @@ module Theory (
   , ClosedDiffTheory
   , ClosedRuleCache(..) -- FIXME: this is only exported for the Binary instances
   , closeTheory
+  , closeTheoryWithMaude
   , closeDiffTheory
+  , closeDiffTheoryWithMaude
   , openTheory
   , openTranslatedTheory
   , openDiffTheory
 
-  , OpenProtoRule
   , ClosedProtoRule(..)
+  , OpenProtoRule(..)
+  , oprRuleE
+  , oprRuleAC
+  , cprRuleE
+  , cprRuleAC
+  , DiffProtoRule(..)
+  , dprRule
+  , dprLeftRight
+  , unfoldRuleVariants
 
   , getLemmas
   , getDiffLemmas
@@ -223,6 +234,9 @@ module Theory (
   , prettyOpenTheory
   , prettyOpenTranslatedTheory
   , prettyOpenDiffTheory
+
+  , prettyOpenProtoRule
+  , prettyDiffRule
 
   , prettyClosedSummary
   , prettyClosedDiffSummary
@@ -318,13 +332,33 @@ incrementalToSkeletonDiffProof = fmap (fmap (const ()))
 
 -- | A protocol rewriting rule modulo E together with its possible assertion
 -- soundness proof.
-type OpenProtoRule = ProtoRuleE
+-- Optionally, the variant(s) modulo AC can be present if they were loaded
+-- or contain additional actions.
+data OpenProtoRule = OpenProtoRule
+       { _oprRuleE  :: ProtoRuleE             -- original rule modulo E
+       , _oprRuleAC :: [ProtoRuleAC]          -- variant(s) modulo AC
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- | A diff protocol rewriting rule modulo E
+-- Optionally, the left and right rules can be present if they were loaded
+-- or contain additional actions.
+data DiffProtoRule = DiffProtoRule
+       { _dprRule       :: ProtoRuleE         -- original rule with diff
+       , _dprLeftRight  :: Maybe (OpenProtoRule, OpenProtoRule)
+                                              -- left and right instances
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | A closed proto rule lists its original rule modulo E, the corresponding
--- variant modulo AC, and if required the assertion soundness proof.
+-- variant(s) modulo AC, and if required the assertion soundness proof.
+-- When using auto-sources, all non-trivial variants of a ClosedProtoRule are
+-- split up into multiple ClosedProtoRules. Auto-sources also only adds
+-- actions only to closed rules. Opening such rules keeps the AC rules s.t.
+-- they can be exported.
 data ClosedProtoRule = ClosedProtoRule
-       { _cprRuleE  :: ProtoRuleE             -- original rule modulo E
-       , _cprRuleAC :: ProtoRuleAC            -- variant modulo AC
+       { _cprRuleE         :: ProtoRuleE      -- original rule modulo E
+       , _cprRuleAC        :: ProtoRuleAC     -- variant(s) modulo AC
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -338,12 +372,29 @@ data ClosedRuleCache = ClosedRuleCache
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+$(mkLabels [''OpenProtoRule, ''DiffProtoRule, ''ClosedProtoRule, ''ClosedRuleCache])
 
-$(mkLabels [''ClosedProtoRule, ''ClosedRuleCache])
+instance HasRuleName OpenProtoRule where
+    ruleName = ruleName . L.get oprRuleE
+
+instance HasRuleName DiffProtoRule where
+    ruleName = ruleName . L.get dprRule
 
 instance HasRuleName ClosedProtoRule where
     ruleName = ruleName . L.get cprRuleAC
 
+-- | Get an OpenProtoRule's name
+getOpenProtoRuleName :: OpenProtoRule -> String
+getOpenProtoRuleName (OpenProtoRule ruE _) = getRuleName ruE
+
+-- | Add the diff label to an OpenProtoRule
+addProtoDiffLabel :: OpenProtoRule -> String -> OpenProtoRule
+addProtoDiffLabel (OpenProtoRule ruE ruAC) label = OpenProtoRule (addDiffLabel ruE label) (fmap ((flip addDiffLabel) label) ruAC)
+
+equalOpenRuleUpToDiffAnnotation :: OpenProtoRule -> OpenProtoRule -> Bool
+equalOpenRuleUpToDiffAnnotation (OpenProtoRule ruE1 ruAC1) (OpenProtoRule ruE2 ruAC2) =
+  equalRuleUpToDiffAnnotationSym ruE1 ruE2 && length ruAC1 == length ruAC2 &&
+  all (uncurry equalRuleUpToDiffAnnotationSym) (zip ruAC1 ruAC2)
 
 -- Relation between open and closed rule sets
 ---------------------------------------------
@@ -360,14 +411,20 @@ openRuleCache = intruderRules . L.get crcRules
 
 -- | Open a protocol rule; i.e., drop variants and proof annotations.
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
-openProtoRule = L.get cprRuleE
+openProtoRule r = OpenProtoRule ruleE ruleAC
+  where
+    ruleE   = L.get cprRuleE r
+    ruleAC' = L.get cprRuleAC r
+    ruleAC  = if equalUpToTerms ruleAC' ruleE
+               then []
+               else [ruleAC']
 
 -- | Unfold rule variants, i.e., return one ClosedProtoRule for each
 -- variant
 unfoldRuleVariants :: ClosedProtoRule -> [ClosedProtoRule]
-unfoldRuleVariants (ClosedProtoRule ruE@(Rule ruEInfo _ _ _ _) ruAC@(Rule ruACInfoOld ps cs as nvs))
+unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
    | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
-   | otherwise = map toClosedRule variants
+   | otherwise = map toClosedProtoRule variants
         where
           ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
           rAttributes = L.get pracAttributes ruACInfoOld
@@ -376,16 +433,16 @@ unfoldRuleVariants (ClosedProtoRule ruE@(Rule ruEInfo _ _ _ _) ruAC@(Rule ruACIn
             FreshRule -> FreshRule
             StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
 
-          toClosedRule (i, (ps', cs', as', nvs'))
-            = ClosedProtoRule (Rule ruEInfo ps' cs' as' nvs')
-                (Rule (ruACInfo i) ps' cs' as' nvs')
+          toClosedProtoRule (i, (ps', cs', as', nvs'))
+            = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
           variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
           substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
-closeProtoRule :: MaudeHandle -> OpenProtoRule -> ClosedProtoRule
-closeProtoRule hnd ruE = ClosedProtoRule ruE (variantsProtoRule hnd ruE)
+closeProtoRule :: MaudeHandle -> OpenProtoRule -> [ClosedProtoRule]
+closeProtoRule hnd (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
+closeProtoRule _   (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
@@ -422,7 +479,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
-        (all isSubtermRule {-$ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
     injFactInstances =
@@ -464,9 +521,11 @@ containsPartialDeconstructions :: ClosedRuleCache    -- ^ Cached rules and case 
 containsPartialDeconstructions (ClosedRuleCache _ _ cases _) =
       sum (map (sum . unsolvedChainConstraints) cases) /= 0
 
+-- | Add an action to a closed Proto Rule.
+--   Note that we only add the action to the variants modulo AC, not the initial rule.
 addActionClosedProtoRule :: ClosedProtoRule -> LNFact -> ClosedProtoRule
 addActionClosedProtoRule (ClosedProtoRule e ac) f
-   = ClosedProtoRule (addAction e f) (addAction ac f)
+   = ClosedProtoRule e (addAction ac f)
 
 ------------------------------------------------------------------------------
 -- Processes
@@ -783,7 +842,7 @@ type OpenTranslatedTheory =
 -- | Open diff theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenDiffTheory =
-    DiffTheory SignaturePure [IntrRuleAC] OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
+    DiffTheory SignaturePure [IntrRuleAC] DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
 
 -- | Closed theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -799,7 +858,7 @@ type ClosedTheory =
 --        closed rule set of the theory.
 --     3. Maude is running under the given handle.
 type ClosedDiffTheory =
-    DiffTheory SignatureWithMaude ClosedRuleCache OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
+    DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
 
 -- | Either Therories can be Either a normal or a diff theory
 
@@ -1044,8 +1103,8 @@ addAutoSourcesLemmaDiff :: MaudeHandle
                         -> String
                         -> ClosedRuleCache
                         -> ClosedRuleCache
-                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
-                        -> [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+                        -> [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+                        -> [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
 addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
     diffPart ++ lhsPart ++ rhsPart
   where
@@ -1096,7 +1155,7 @@ addAutoSourcesLemma :: MaudeHandle
 addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
   -- We only add the lemma if there is no lemma of the same name
   case find lemma items of
-    Nothing  -> LemmaItem l:items'
+    Nothing  -> items'++[LemmaItem l]
     (Just _) -> items'
   where
     runMaude   = (`runReader` hnd)
@@ -1115,7 +1174,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     allOutConcs :: [(ClosedProtoRule, ConcIdx, Int, LNTerm)]
     allOutConcs = do
         ru                                   <- rules
-        (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleE ru
+        (cidx, protoOrOutFactView -> Just t) <- enumConcs $ L.get cprRuleAC ru
         (nr, m)                              <- zip [1::Int ..] $ concatMap allProtSubterms t
         return (ru, cidx, nr, m)
 
@@ -1151,7 +1210,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               position  <- findPos v term
               ruleSys   <- nodeRuleSafe nodeid source
               rule      <- find ((ruleName ruleSys ==).ruleName) rules
-              premise   <- lookupPrem pid $ L.get cprRuleE rule
+              premise   <- lookupPrem pid $ L.get cprRuleAC rule
               t'        <- protoOrInFactView premise
               t         <- atMay t' tidx
               return $ do
@@ -1454,7 +1513,17 @@ addDefaultDiffLemma thy = fromMaybe thy $ addDiffLemma (unprovenDiffLemma "Obser
 
 -- Add the rule labels to an Open Diff Theory
 addProtoRuleLabel :: OpenProtoRule -> OpenProtoRule
-addProtoRuleLabel rule = addDiffLabel rule ("DiffProto" ++ (getRuleName rule))
+addProtoRuleLabel rule = addProtoDiffLabel rule ("DiffProto" ++ (getOpenProtoRuleName rule))
+
+-- Get the left openProtoRules
+getLeftProtoRule :: DiffProtoRule -> OpenProtoRule
+getLeftProtoRule (DiffProtoRule ruE Nothing)       = OpenProtoRule (getLeftRule ruE) []
+getLeftProtoRule (DiffProtoRule _   (Just (l, _))) = l
+
+-- Get the rigth openProtoRules
+getRightProtoRule :: DiffProtoRule -> OpenProtoRule
+getRightProtoRule (DiffProtoRule ruE Nothing)       = OpenProtoRule (getRightRule ruE) []
+getRightProtoRule (DiffProtoRule _   (Just (_, r))) = r
 
 -- Add the rule labels to an Open Diff Theory
 addIntrRuleLabels:: OpenDiffTheory -> OpenDiffTheory
@@ -1464,52 +1533,182 @@ addIntrRuleLabels thy =
     addRuleLabel :: IntrRuleAC -> IntrRuleAC
     addRuleLabel rule = addDiffLabel rule ("DiffIntr" ++ (getRuleName rule))
 
+-- | Returns true if there are OpenProtoRules containing manual variants
+containsManualRuleVariants :: [TheoryItem OpenProtoRule p s] -> Bool
+containsManualRuleVariants = foldl f False
+  where
+    f hasVariants (RuleItem (OpenProtoRule _ [])) = hasVariants
+    f _           (RuleItem (OpenProtoRule _ _ )) = True
+    f hasVariants _                               = hasVariants
+
+-- | Merges variants of the same protocol rule modulo E
+mergeOpenProtoRules :: [TheoryItem OpenProtoRule p s] -> [TheoryItem OpenProtoRule p s]
+mergeOpenProtoRules = concatMap (foldr mergeRules []) . groupBy comp
+  where
+    comp (RuleItem (OpenProtoRule ruE _)) (RuleItem (OpenProtoRule ruE' _)) = ruE == ruE'
+    comp (RuleItem _) _ = False
+    comp _ (RuleItem _) = False
+    comp _ _            = True
+
+    mergeRules (RuleItem r)                          []                                              = [RuleItem r]
+    mergeRules (RuleItem (OpenProtoRule ruE' ruAC')) [RuleItem (OpenProtoRule ruE ruAC)] | ruE==ruE' = [RuleItem (OpenProtoRule ruE (ruAC'++ruAC))]
+    mergeRules (RuleItem _)                          _                                               = error "Error in mergeOpenProtoRules. Please report bug."
+    mergeRules item                                  l                                               = item:l
+
+-- | Returns true if there are DiffProtoRules containing manual instances or variants
+containsManualRuleVariantsDiff :: [DiffTheoryItem DiffProtoRule r p p2] -> Bool
+containsManualRuleVariantsDiff = foldl f False
+  where
+    f hasVariants (DiffRuleItem (DiffProtoRule _ Nothing )) = hasVariants
+    f _           (DiffRuleItem (DiffProtoRule _ (Just _))) = True
+    f hasVariants _                                         = hasVariants
+
+-- | Merges variants of the same protocol rule modulo E
+mergeOpenProtoRulesDiff :: [DiffTheoryItem r OpenProtoRule p p2] -> [DiffTheoryItem r OpenProtoRule p p2]
+mergeOpenProtoRulesDiff = concatMap (foldr mergeRules []) . groupBy comp
+  where
+    comp (EitherRuleItem (s, OpenProtoRule ruE _)) (EitherRuleItem (s', OpenProtoRule ruE' _)) = ruE==ruE' && s==s'
+    comp (EitherRuleItem _) _ = False
+    comp _ (EitherRuleItem _) = False
+    comp _ _                  = True
+
+    mergeRules (EitherRuleItem r)                             [] = [EitherRuleItem r]
+    mergeRules (EitherRuleItem (s, OpenProtoRule ruE' ruAC')) [EitherRuleItem (s', OpenProtoRule ruE ruAC)]
+                                            | ruE==ruE' && s==s' = [EitherRuleItem (s, OpenProtoRule ruE (ruAC'++ruAC))]
+    mergeRules (EitherRuleItem _)                             _  = error "Error in mergeOpenProtoRulesDiff. Please report bug."
+    mergeRules item                                           l  = item:l
+
+-- | Merges left and right instances with initial diff rule
+mergeLeftRightRulesDiff :: (Show p, Show p2) => [DiffTheoryItem DiffProtoRule OpenProtoRule p p2] -> [DiffTheoryItem DiffProtoRule OpenProtoRule p p2]
+mergeLeftRightRulesDiff rs = map clean $ concatMap (foldr mergeRules []) $ groupBy comp' $ sortBy comp rs
+  where
+    comp (EitherRuleItem (_, OpenProtoRule ruE _)) (EitherRuleItem (_, OpenProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
+    comp (EitherRuleItem (_, OpenProtoRule ruE _)) (DiffRuleItem (DiffProtoRule ruE' _))      = compare (ruleName ruE) (ruleName ruE')
+    comp (DiffRuleItem (DiffProtoRule ruE _))      (EitherRuleItem (_, OpenProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
+    comp (DiffRuleItem (DiffProtoRule ruE _))      (DiffRuleItem (DiffProtoRule ruE' _))      = compare (ruleName ruE) (ruleName ruE')
+    comp (EitherRuleItem _) _ = LT
+    comp _ (EitherRuleItem _) = GT
+    comp (DiffRuleItem _) _   = LT
+    comp _ (DiffRuleItem _)   = GT
+    comp _ _                  = EQ
+
+    comp' a b = comp a b == EQ
+
+    mergeRules (EitherRuleItem r)                                 [] = [EitherRuleItem r]
+    mergeRules (DiffRuleItem r)                                   [] = [DiffRuleItem r]
+    mergeRules (EitherRuleItem (s, ru@(OpenProtoRule ruE _)))     [EitherRuleItem (s', ru'@(OpenProtoRule ruE' _))]
+                                            | ruleName ruE==ruleName ruE' && s==LHS && s'==RHS = [DiffRuleItem (DiffProtoRule ruE (Just (ru, ru')))]
+    mergeRules (EitherRuleItem (s, ru@(OpenProtoRule ruE _)))     [EitherRuleItem (s', ru'@(OpenProtoRule ruE' _))]
+                                            | ruleName ruE==ruleName ruE' && s==RHS && s'==LHS = [DiffRuleItem (DiffProtoRule ruE (Just (ru', ru)))]
+    mergeRules (EitherRuleItem (_, ru@(OpenProtoRule ruE _)))     [DiffRuleItem (DiffProtoRule dru Nothing)]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru)))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru Nothing))         [EitherRuleItem (_, ru@(OpenProtoRule ruE _))]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru)))]
+    mergeRules (EitherRuleItem (LHS, ru@(OpenProtoRule ruE _)))   [DiffRuleItem (DiffProtoRule dru (Just (_, ru')))]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru')))]
+    mergeRules (EitherRuleItem (RHS, ru@(OpenProtoRule ruE _)))   [DiffRuleItem (DiffProtoRule dru (Just (ru', _)))]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru', ru)))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (_, ru')))) [EitherRuleItem (LHS, ru@(OpenProtoRule ruE _))]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru')))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (ru', _)))) [EitherRuleItem (RHS, ru@(OpenProtoRule ruE _))]
+                                            | ruleName ruE==ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru', ru)))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))) [DiffRuleItem (DiffProtoRule dru' Nothing)]
+                                            | ruleName dru==ruleName dru' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru Nothing))         [DiffRuleItem (DiffProtoRule dru' (Just (lr, rr)))]
+                                            | ruleName dru==ruleName dru' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
+    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))) [DiffRuleItem (DiffProtoRule dru' (Just (lr', rr')))]
+                                            | ruleName dru==ruleName dru' && equalOpenRuleUpToDiffAnnotation lr lr' && equalOpenRuleUpToDiffAnnotation rr rr' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
+    mergeRules (EitherRuleItem _)                                 _  = error "Error in mergeLeftRightRulesDiff. Please report bug."
+    mergeRules (DiffRuleItem _)                                   _  = error "Error in mergeLeftRightRulesDiff. Please report bug."
+    mergeRules item                                               l  = item:l
+
+    clean (DiffRuleItem (DiffProtoRule ruE (Just (OpenProtoRule ruEL [], OpenProtoRule ruER []))))
+       | getLeftRule ruE `equalRuleUpToDiffAnnotation` ruEL
+        && getRightRule ruE `equalRuleUpToDiffAnnotation` ruER = DiffRuleItem (DiffProtoRule ruE Nothing)
+    clean i                                                    = i
+
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n h sig c items opts) = openTranslatedTheory(
     Theory n h (toSignaturePure sig) (openRuleCache c)
-      (map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
+    -- We merge duplicate rules if they were split into variants
+      (mergeOpenProtoRules $ map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts)
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items) =
+    -- We merge duplicate rules if they were split into variants
     DiffTheory n h (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
+      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
 
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
-    find ((name ==) . L.get (preName . rInfo)) . theoryRules
+    find ((name ==) . L.get (preName . rInfo . oprRuleE)) . theoryRules
 
 -- | Find the open protocol rule with the given name.
-lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe OpenProtoRule
+lookupOpenDiffProtoDiffRule :: ProtoRuleName -> OpenDiffTheory -> Maybe DiffProtoRule
 lookupOpenDiffProtoDiffRule name =
-    find ((name ==) . L.get (preName . rInfo)) . diffTheoryDiffRules
+    find ((name ==) . L.get (preName . rInfo . dprRule)) . diffTheoryDiffRules
+
+-- | Add new protocol rules. Fails, if a protocol rule with the same name
+-- exists.
+addOpenProtoRule :: OpenProtoRule -> OpenTheory -> Maybe OpenTheory
+addOpenProtoRule ru@(OpenProtoRule ruE ruAC) thy = do
+    guard nameNotUsedForDifferentRule
+    guard allRuleNamesAreDifferent
+    return $ modify thyItems (++ [RuleItem ru]) thy
+  where
+    nameNotUsedForDifferentRule =
+        maybe True (ru ==) $ lookupOpenProtoRule (L.get (preName . rInfo . oprRuleE) ru) thy
+    allRuleNamesAreDifferent = (S.size (S.fromList (ruleName ruE:map ruleName ruAC)))
+        == ((length ruAC) + 1)
+
+-- | Add a new protocol rules. Fails, if a protocol rule with the same name
+-- exists.
+addOpenProtoDiffRule :: DiffProtoRule -> OpenDiffTheory -> Maybe OpenDiffTheory
+addOpenProtoDiffRule ru@(DiffProtoRule _ Nothing)  thy = do
+    guard nameNotUsedForDifferentRule
+    return $ modify diffThyItems (++ [DiffRuleItem ru]) thy
+  where
+    nameNotUsedForDifferentRule =
+        maybe True (ru ==) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo . dprRule) ru) thy
+addOpenProtoDiffRule ru@(DiffProtoRule _ (Just (lr, rr))) thy = do
+    guard nameNotUsedForDifferentRule
+    guard $ allRuleNamesAreDifferent lr
+    guard $ allRuleNamesAreDifferent rr
+    guard leftAndRightHaveSameName
+    return $ modify diffThyItems (++ [DiffRuleItem ru]) thy
+  where
+    nameNotUsedForDifferentRule =
+        maybe True (ru ==) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo . dprRule) ru) thy
+    allRuleNamesAreDifferent (OpenProtoRule ruE ruAC) = (S.size (S.fromList (ruleName ruE:map ruleName ruAC)))
+        == ((length ruAC) + 1)
+    leftAndRightHaveSameName = ruleName ru == ruleName lr && ruleName lr == ruleName rr
 
 -- | Add new protocol rules. Fails, if a protocol rule with the same name
 -- exists. Ignore _restrict construct.
 addProtoRule :: ProtoRuleE -> OpenTheory -> Maybe OpenTheory
 addProtoRule ruE thy = do
     guard nameNotUsedForDifferentRule
-    return $ modify thyItems (++ [RuleItem ruE]) thy
+    return $ modify thyItems (++ [RuleItem (OpenProtoRule ruE [])]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True (ruE ==) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
-
+        maybe True (ruE ==) $ fmap (L.get oprRuleE) $ lookupOpenProtoRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add a new protocol rules. Fails, if a protocol rule with the same name
 -- exists.
 addProtoDiffRule :: ProtoRuleE -> OpenDiffTheory -> Maybe OpenDiffTheory
 addProtoDiffRule ruE thy = do
     guard nameNotUsedForDifferentRule
-    return $ modify diffThyItems (++ [DiffRuleItem ruE]) thy
+    return $ modify diffThyItems (++ [DiffRuleItem (DiffProtoRule ruE Nothing)]) thy
   where
     nameNotUsedForDifferentRule =
-        maybe True ((ruE ==)) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo) ruE) thy
+        maybe True (ruE ==) $ fmap (L.get dprRule) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo) ruE) thy
 
 -- | Add intruder proof rules after Translate.
 addIntrRuleACsAfterTranslate :: [IntrRuleAC] -> OpenTranslatedTheory -> OpenTranslatedTheory
@@ -1608,11 +1807,13 @@ getIntrVariantsDiff s
 
 -- | All protocol rules modulo E.
 getProtoRuleEs :: ClosedTheory -> [ProtoRuleE]
-getProtoRuleEs = map openProtoRule . theoryRules
+-- we remove duplicates if they exist due to variant unfolding
+getProtoRuleEs = S.toList . S.fromList . map ((L.get oprRuleE) . openProtoRule) . theoryRules
 
 -- | All protocol rules modulo E.
 getProtoRuleEsDiff :: Side -> ClosedDiffTheory -> [ProtoRuleE]
-getProtoRuleEsDiff s = map openProtoRule . (diffTheorySideRules s)
+-- we remove duplicates if they exist due to variant unfolding
+getProtoRuleEsDiff s = S.toList . S.fromList . map ((L.get oprRuleE) . openProtoRule) . diffTheorySideRules s
 
 -- | Get the proof context for a lemma of the closed theory.
 getProofContext :: Lemma a -> ClosedTheory -> ProofContext
@@ -1698,7 +1899,10 @@ getProofContextDiff s l thy = case s of
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
-getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RHS) (diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy) (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy) ((LHS, restrictionsLeft):[(RHS, restrictionsRight)]) gatherReusableLemmas
+getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RHS)
+    (map (L.get dprRule) $ diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy)
+    (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy)
+    ((LHS, restrictionsLeft):[(RHS, restrictionsRight)]) gatherReusableLemmas
   where
     items = L.get diffThyItems thy
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
@@ -1795,7 +1999,7 @@ getDiffSource RHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCa
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
-closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, ClosedProtoRule)
+closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, [ClosedProtoRule])
 closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 
 -- -- | Convert a lemma to the corresponding guarded formula.
@@ -1851,8 +2055,8 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = diffTheoryDiffRules thy0
-    leftOpenRules  = map (getLeftRule  . addProtoRuleLabel) diffRules
-    rightOpenRules = map (getRightRule . addProtoRuleLabel) diffRules
+    leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules
+    rightOpenRules = map (addProtoRuleLabel . getRightProtoRule) diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
@@ -1862,10 +2066,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
-    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
+    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers $ unfoldClosedRules
        ((closeDiffTheoryItem <$> theoryItems) `using` parList rdeepseq)
 
-    closeDiffTheoryItem :: DiffTheoryItem OpenProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
+    closeDiffTheoryItem :: DiffTheoryItem DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> DiffTheoryItem DiffProtoRule [ClosedProtoRule] IncrementalDiffProof IncrementalProof
     closeDiffTheoryItem = foldDiffTheoryItem
       DiffRuleItem
       (EitherRuleItem . closeEitherProtoRule hnd)
@@ -1873,6 +2077,15 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
       EitherRestrictionItem
       DiffTextItem
+
+    unfoldClosedRules :: [DiffTheoryItem DiffProtoRule [ClosedProtoRule] IncrementalDiffProof IncrementalProof] -> [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
+    unfoldClosedRules    (EitherRuleItem (s,r):is) = map (\x -> EitherRuleItem (s,x)) r ++ unfoldClosedRules is
+    unfoldClosedRules          (DiffRuleItem i:is) = DiffRuleItem i:unfoldClosedRules is
+    unfoldClosedRules         (DiffLemmaItem i:is) = DiffLemmaItem i:unfoldClosedRules is
+    unfoldClosedRules       (EitherLemmaItem i:is) = EitherLemmaItem i:unfoldClosedRules is
+    unfoldClosedRules (EitherRestrictionItem i:is) = EitherRestrictionItem i:unfoldClosedRules is
+    unfoldClosedRules          (DiffTextItem i:is) = DiffTextItem i:unfoldClosedRules is
+    unfoldClosedRules                           [] = []
 
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
@@ -1895,9 +2108,9 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
                      return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
-    leftClosedRules  :: [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
+    leftClosedRules  :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
     leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose its)
-    rightClosedRules :: [DiffTheoryItem OpenProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
+    rightClosedRules :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
     rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose its)
     errClose  = error "closeDiffTheory"
 
@@ -1939,7 +2152,7 @@ closeTheoryWithMaude sig thy0 autoSources =
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
-    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers
+    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers $ unfoldClosedRules
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd)
@@ -1948,6 +2161,15 @@ closeTheoryWithMaude sig thy0 autoSources =
        TextItem
        PredicateItem
        SapicItem
+
+    unfoldClosedRules :: [TheoryItem [ClosedProtoRule] IncrementalProof s] -> [TheoryItem ClosedProtoRule IncrementalProof s]
+    unfoldClosedRules        (RuleItem r:is) = map RuleItem r ++ unfoldClosedRules is
+    unfoldClosedRules (RestrictionItem i:is) = RestrictionItem i:unfoldClosedRules is
+    unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
+    unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
+    unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
+    unfoldClosedRules       (SapicItem i:is) = SapicItem i:unfoldClosedRules is
+    unfoldClosedRules                     [] = []
 
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
@@ -2006,8 +2228,8 @@ applyPartialEvaluation evalStyle autosources thy0 =
     replaceProtoRules (item:items)
       | isRuleItem item  =
           [ TextItem ("text", render ppAbsState)
-
-          ] ++ map RuleItem ruEs' ++ filter (not . isRuleItem) items
+       -- Here we loose imported variants!
+          ] ++ map (\x -> RuleItem (OpenProtoRule x [])) ruEs' ++ filter (not . isRuleItem) items
       | otherwise        = item : replaceProtoRules items
 
     ppAbsState =
@@ -2036,8 +2258,8 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
     replaceProtoRules (item:items)
       | isEitherRuleItem item  =
           [ DiffTextItem ("text", render ppAbsState)
-
-          ] ++ map (\x -> EitherRuleItem (LHS, x)) ruEsL' ++ map (\x -> EitherRuleItem (RHS, x)) ruEsR' ++ filter (not . isEitherRuleItem) items
+       -- Here we loose imported variants!
+          ] ++ map (\x -> EitherRuleItem (LHS, (OpenProtoRule x []))) ruEsL' ++ map (\x -> EitherRuleItem (RHS, (OpenProtoRule x []))) ruEsR' ++ filter (not . isEitherRuleItem) items
       | otherwise        = item : replaceProtoRules items
 
     isEitherRuleItem (EitherRuleItem _) = True
@@ -2365,7 +2587,7 @@ prettyAccLemma alem =
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
                  => (sig -> d) -> (c -> d) -> ((Side, r2) -> d) -> (p -> d) -> (p2 -> d)
-                 -> DiffTheory sig c OpenProtoRule r2 p p2 -> d
+                 -> DiffTheory sig c DiffProtoRule r2 p p2 -> d
 prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
@@ -2497,15 +2719,44 @@ prettyIntrVariantsSection rules =
 
 -- | Pretty print an open rule together with its assertion soundness proof.
 prettyOpenProtoRule :: HighlightDocument d => OpenProtoRule -> d
-prettyOpenProtoRule = prettyProtoRuleE
+prettyOpenProtoRule (OpenProtoRule ruE [])       = prettyProtoRuleE ruE
+prettyOpenProtoRule (OpenProtoRule _   [ruAC])   = prettyProtoRuleACasE ruAC
+prettyOpenProtoRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
+    nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
+  where
+    ppList pp = fsep . punctuate comma . map pp
 
 -- | Pretty print an open rule together with its assertion soundness proof.
-prettyDiffRule :: HighlightDocument d => OpenProtoRule -> d
-prettyDiffRule = prettyProtoRuleE
+prettyOpenProtoRuleAsClosedRule :: HighlightDocument d => OpenProtoRule -> d
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE [])
+    = prettyProtoRuleE ruE $--$
+    -- cannot show loop breakers here, as we do not have the information
+    (nest 2 $ emptyDoc $-$
+     multiComment_ ["has exactly the trivial AC variant"])
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule _ [ruAC@(Rule (ProtoRuleACInfo _ _ (Disj disj) _) _ _ _ _)])
+    = prettyProtoRuleACasE ruAC $--$
+    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+     if length disj == 1 then
+       multiComment_ ["has exactly the trivial AC variant"]
+     else
+       multiComment $ prettyProtoRuleAC ruAC
+    )
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
+    nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
+  where
+    ppList pp = fsep . punctuate comma . map pp
 
--- | Pretty print an open rule together with its assertion soundness proof.
+-- | Pretty print a diff rule
+prettyDiffRule :: HighlightDocument d => DiffProtoRule -> d
+prettyDiffRule (DiffProtoRule ruE Nothing           ) = prettyProtoRuleE ruE
+prettyDiffRule (DiffProtoRule ruE (Just (ruL,  ruR))) = prettyProtoRuleE ruE $-$
+    nest 1
+    (kwLeft  $-$ nest 1 (prettyOpenProtoRule ruL) $-$
+     kwRight $-$ nest 1 (prettyOpenProtoRule ruR))
+
+-- | Pretty print an either rule
 prettyEitherRule :: HighlightDocument d => (Side, OpenProtoRule) -> d
-prettyEitherRule (_, p) = prettyProtoRuleE p
+prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 prettyIncrementalProof :: HighlightDocument d => IncrementalProof -> d
 prettyIncrementalProof = prettyProofWith ppStep (const id)
@@ -2528,17 +2779,39 @@ prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
 -- | Pretty print an closed rule.
 prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
 prettyClosedProtoRule cru =
-  if ruleName ruAC == ruleName ruE then
+  if isTrivialProtoVariantAC ruAC ruE then
+  -- We have a rule that only has one trivial variant, and without added annotations
+  -- Hence showing the initial rule modulo E
     (prettyProtoRuleE ruE) $--$
-    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
+    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+     multiComment_ ["has exactly the trivial AC variant"])
   else
-    (prettyProtoRuleAC ruAC)
-  where
-    ruAC = L.get cprRuleAC cru
-    ruE  = L.get cprRuleE cru
-    ppRuleAC
-      | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
-      | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
+    if ruleName ruAC == ruleName ruE then
+      if not (equalUpToTerms ruAC ruE) then
+      -- Here we have a rulewith added annotations,
+      -- hence showing the annotated rule as if it was a rule mod E
+      -- note that we can do that, as we unfolded variants
+        (prettyProtoRuleACasE ruAC) $--$
+        (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+         multiComment_ ["has exactly the trivial AC variant"])
+      else
+      -- Here we have a rule with one or multiple variants, but without other annotations
+      -- Hence showing the rule mod E with commented variants
+        (prettyProtoRuleE ruE) $--$
+        (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+         (multiComment $ prettyProtoRuleAC ruAC))
+    else
+    -- Here we have a variant of a rule that has multiple variants.
+    -- Hence showing only the variant as a rule modulo AC. This should not
+    -- normally be used, as it breaks the ability to re-import.
+      (prettyProtoRuleAC ruAC) $--$
+      (nest 3 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+          (multiComment_ ["variant of"]) $-$
+          (multiComment $ prettyProtoRuleE ruE)
+      )
+ where
+    ruAC      = L.get cprRuleAC cru
+    ruE       = L.get cprRuleE cru
 
 -- -- | Pretty print an closed rule.
 -- prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
@@ -2576,15 +2849,33 @@ prettyOpenTranslatedTheory =
 
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
-prettyClosedTheory thy =
-    prettyTheory prettySignatureWithMaude
-                 ppInjectiveFactInsts
-                 -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                 prettyClosedProtoRule
-                 prettyIncrementalProof
-                 emptyString
-                 thy
+prettyClosedTheory thy = if containsManualRuleVariants mergedRules
+    then
+      prettyTheory prettySignatureWithMaude
+                       ppInjectiveFactInsts
+                       -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                       prettyOpenProtoRuleAsClosedRule
+                       prettyIncrementalProof
+                       emptyString
+                       thy'
+    else
+      prettyTheory prettySignatureWithMaude
+               ppInjectiveFactInsts
+               -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+               prettyClosedProtoRule
+               prettyIncrementalProof
+               emptyString
+               thy
   where
+    items = L.get thyItems thy
+    mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
+    thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
+    thy' = Theory {_thyName=(L.get thyName thy)
+            ,_thyHeuristic=(L.get thyHeuristic thy)
+            ,_thySignature=(L.get thySignature thy)
+            ,_thyCache=(L.get thyCache thy)
+            ,_thyItems = mergedRules
+            ,_thyOptions =(L.get thyOptions thy)}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
@@ -2592,17 +2883,38 @@ prettyClosedTheory thy =
                       [ text "looping facts with injective instances:"
                       , nest 2 $ fsepList (text . showFactTagArity) tags ]
 
--- | Pretty print a closed theory.
+-- | Pretty print a closed diff theory.
 prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
-prettyClosedDiffTheory thy =
-    prettyDiffTheory prettySignatureWithMaude
+prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
+    then
+      prettyDiffTheory prettySignatureWithMaude
                  ppInjectiveFactInsts
                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
                  (\_ -> emptyDoc) --prettyClosedEitherRule
                  prettyIncrementalDiffProof
                  prettyIncrementalProof
-                 thy
+                 thy'
+    else
+        prettyDiffTheory prettySignatureWithMaude
+                   ppInjectiveFactInsts
+                   -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                   (\_ -> emptyDoc) --prettyClosedEitherRule
+                   prettyIncrementalDiffProof
+                   prettyIncrementalProof
+                   thy
   where
+    items = L.get diffThyItems thy
+    mergedRules = mergeLeftRightRulesDiff $ mergeOpenProtoRulesDiff $
+       map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) id id) items
+    thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
+    thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
+            ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
+            ,_diffThySignature=(L.get diffThySignature thy)
+            ,_diffThyCacheLeft=(L.get diffThyCacheLeft thy)
+            ,_diffThyCacheRight=(L.get diffThyCacheRight thy)
+            ,_diffThyDiffCacheLeft=(L.get diffThyDiffCacheLeft thy)
+            ,_diffThyDiffCacheRight=(L.get diffThyDiffCacheRight thy)
+            ,_diffThyItems = mergedRules}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc

@@ -26,7 +26,8 @@ module Sapic.Basetranslation (
 ) where
 import           Control.Exception
 import           Control.Monad.Catch
-import           Data.Set             hiding (map)
+import           Data.Set             hiding (map, (\\))
+import           Data.List (nub, (\\))
 import qualified Extension.Data.Label as L
 import           Sapic.Annotation
 import           Sapic.Exceptions
@@ -37,6 +38,7 @@ import           Theory
 import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Parser
+import           Debug.Trace
 
 type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])])
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
@@ -337,19 +339,26 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
     in
     do
         hardcoded <- mapM toEx hardcoded_l
-        locking   <- mapM (resLocking $ contains isUnlock) (getLockPositions anP) 
+        lockingWithUnlock <- mapM (resLocking True) (nub $ getUnlockPositions anP)
+        lockingOnlyLock   <- mapM (resLocking False) ((getLockPositions anP) \\ (getUnlockPositions anP))
         singleLocking <- toEx resLockingNoUnlock
 
-        return $ prevRestr ++ hardcoded ++ locking 
-                 ++ 
-                 addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
+        return $ prevRestr
+              ++ hardcoded
+              ++ lockingWithUnlock
+              ++ lockingOnlyLock
+              ++ addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
         getLock p
             | (ProcessAction (Lock _) an _) <- p, (Just (AnLVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
+        getUnlock p
+            | (ProcessAction (Unlock _) an _) <- p, (Just (AnLVar v)) <- unlock an = [v] -- annotation is Maybe type
+            | otherwise  = []
         getLockPositions = pfoldMap getLock
+        getUnlockPositions = pfoldMap getUnlock
 
         -- This is what SAPIC did
           -- @ (if op.accountability then [] else [res_single_session_l])

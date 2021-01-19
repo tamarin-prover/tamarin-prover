@@ -103,7 +103,9 @@ rule S:
   , In(msg)
   ]
   --[ Secret(a, b, ~kab)
-    , Running_S(a,b, <m,~kab>) ]->
+    , Running_S(a,b, <m,~kab>)
+    , Commit_S_A(a,b, <m,na>)
+    , Commit_S_B(a,b, <m,nb>) ]->
   [ Out(msg2) ]
 
 // 4.   B	->	A	:  	M, {Na, Kab}Kas
@@ -149,7 +151,7 @@ lemma Secrecy:
 lemma injectiveagreement_B:
    "All A B t #i.
      Commit_B(A,B,t) @i
-     ==> (Ex #j. Running_A(A,B,t) @j
+     ==> (Ex #j. Running_S(A,B,t) @j
          & j < i
          & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
                             & not (#i2 = #i)))
@@ -160,7 +162,7 @@ lemma injectiveagreement_B:
 lemma agreement_B:
   "All A B t #i.
     Commit_B(A,B,t) @i
-    ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+    ==> (Ex #j. Running_S(A,B,t) @j  & j < i)
               | (Ex #r. Reveal(A)@r)
               | (Ex #r. Reveal(B)@r)"
 
@@ -168,7 +170,7 @@ lemma agreement_B:
 lemma injectiveagreement_A:
    "All A B t #i.
      Commit_A(A,B,t) @i
-     ==> (Ex #j. Running_B(A,B,t) @j
+     ==> (Ex #j. Running_S(A,B,t) @j
          & j < i
          & not (Ex A2 B2 #i2. Commit_A(A2,B2,t) @i2
                             & not (#i2 = #i)))
@@ -179,9 +181,41 @@ lemma injectiveagreement_A:
 lemma agreement_A:
   "All A B t #i.
     Commit_A(A,B,t) @i
-    ==> (Ex #j. Running_B(A,B,t) @j  & j < i)
+    ==> (Ex #j. Running_S(A,B,t) @j  & j < i)
               | (Ex #r. Reveal(A)@r)
               | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity and freshness of the transaction from the server's point of view
+lemma injectiveagreement_S:
+   "(All A B t #i.
+     Commit_S_A(A,B,t) @i
+     ==> (Ex #j. Running_A(A,B,t) @j
+         & j < i
+         & not (Ex A2 B2 #i2. Commit_S_A(A2,B2,t) @i2
+                            & not (#i2 = #i)))
+               | (Ex #r. Reveal(A)@r)
+               | (Ex #r. Reveal(B)@r))
+  & (All A B t #i.
+     Commit_S_B(A,B,t) @i
+     ==> (Ex #j. Running_B(A,B,t) @j
+         & j < i
+         & not (Ex A2 B2 #i2. Commit_S_B(A2,B2,t) @i2
+                            & not (#i2 = #i)))
+               | (Ex #r. Reveal(A)@r)
+               | (Ex #r. Reveal(B)@r))"
+
+// check the authenticity of the transaction from the server's point of view
+lemma agreement_S:
+  "(All A B t #i.
+    Commit_S_A(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r))
+  & (All A B t #i.
+    Commit_S_B(A,B,t) @i
+    ==> (Ex #j. Running_B(A,B,t) @j  & j < i)
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r))"
 
 // sanity check: check if honest execution is possible
 lemma executability:

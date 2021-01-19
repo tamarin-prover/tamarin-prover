@@ -58,7 +58,7 @@ translate th = case theoryProcesses th of
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map toRule $ initRules ++ protoRule
+                th1 <- foldM liftedAddProtoRule th $ map (\x -> (OpenProtoRule (toRule x) [])) $ initRules ++ protoRule
                 -- add restrictions
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
@@ -72,8 +72,8 @@ translate th = case theoryProcesses th of
                             :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr) 
-    bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p) 
+    bindings (ProcessComb c _ pl pr) = fmap (++ bindingsComb c) (bindings pl ++ bindings pr)
+    bindings (ProcessAction ac _ p) = fmap (++ bindingsAct ac) (bindings p)
     bindings (ProcessNull _) = [[]]
     bindingsComb (Lookup _ v) = [v]
     bindingsComb _            = []
@@ -149,7 +149,7 @@ translate th = case theoryProcesses th of
   -- in
   -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
   -- predicate_restrictions ^ lemmas_tamarin
-  -- ^ "end"
+  --- ^ "end"
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
