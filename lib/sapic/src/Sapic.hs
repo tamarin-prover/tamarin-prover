@@ -133,7 +133,7 @@ translate th = case theoryProcesses th of
                             :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
+    freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars -- TODO filter this on =x vars, because <=x,=x> is okay
     bindings (ProcessComb c _ pl pr) acc =
       let new_acc = acc ++ bindingsComb c acc in
         bindings pl new_acc ++ bindings pr new_acc
