@@ -129,7 +129,7 @@ translate th = case theoryProcesses th of
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
              else
-                throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p [])
+               throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ bindings p [])
                             :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
@@ -155,8 +155,8 @@ translate th = case theoryProcesses th of
         (List.\\) v acc
     bindingsAct _       _ = []
     allUnique = all ( (==) 1 . length) . List.group . List.sort
-    repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
-
+    -- given a list of list of bindings, obtain the list from which there is a duplicate and extract the duplicate. Must only be called on  a list where all AllUnique is false.
+    getNonUnique = head . head . filter ((/=) 1 . length) . List.group . List.sort . head . filter (not . allUnique)
     ops = L.get thyOptions th
     translateReport anp =
       if L.get transReport ops then
