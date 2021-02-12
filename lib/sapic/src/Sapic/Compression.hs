@@ -111,7 +111,10 @@ merge rule1 rule2 ruleset =
 -- Given two set of rules, such that the leftrules all produce a state (the same) consumed by the right rules, try to compress rules for each possible pairing between rules in leftrules and rightrules
 mergeRules::  [Rule ProtoRuleEInfo] -> [Rule ProtoRuleEInfo] -> [Rule ProtoRuleEInfo]
 mergeRules leftrules rightrules =
-  S.toList rulesset
+  if List.length leftrules == 1 && List.length rightrules == 1 then
+    S.toList rulesset
+  else
+    leftrules ++ rightrules
   where rulesset = List.foldl (\set l -> List.foldl (\set2 r-> merge l r set2) set rightrules) S.empty leftrules
 
 

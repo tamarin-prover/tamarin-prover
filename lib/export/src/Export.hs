@@ -85,7 +85,13 @@ data ProverifHeader =
 -- We declare some base headers. Notably, we need a dedicated attacker channel.
 base_headers :: S.Set ProverifHeader
 base_headers = S.fromList [
-  Sym "free" "attacker_channel" ":channel" []
+  Sym "free" "attacker_channel" ":channel" [],
+  Fun "fun" "flock" 1 "(bitstring):channel" ["private"],
+  Fun "fun" "fcell" 1 "(bitstring):channel" ["private"],
+  HEvent "event Lock(bitstring).",
+  HEvent "event Unlock(bitstring).",
+  HEvent "event CellRead(bitstring).",
+  HEvent "event CellWrite(bitstring)."
   ]
 
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
@@ -94,6 +100,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   (hashFunSig, [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
   (signatureFunSig, [
       Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
+      Type "pkey",
       Fun "fun" "pk" 1 "(skey):pkey" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
       ]
@@ -120,6 +127,12 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
   )
   ]
+
+
+ppPubName :: NameId -> Doc
+ppPubName (NameId "zero") = text "0"
+ppPubName (NameId "one") = text "1"
+ppPubName (NameId t) = text t
 
 builtins_rules :: S.Set CtxtStRule
 builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules]
@@ -157,7 +170,7 @@ auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))     | b0      -> text "=" <> (text $ show n)
-        Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (Con (Name PubName n))               ->  ppPubName n
         Lit  (Var (SapicLVar (LVar n _ _) _ True)) -> text "=" <> text n
         Lit  v                    |    b          -> ppTypeLit trans v
         Lit  (Var (SapicLVar (LVar n _ _)  _ _))  -> (text n)
@@ -184,7 +197,7 @@ auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
       text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm tm =  case viewTerm tm of
         Lit  (Con (Name PubName n))               ->
-          if show n=="g" then
+          if List.elem (show n) ["g","one","zero"] then
             S.empty
           else
             S.singleton   (Sym "free" (show n) ":bitstring" [])
@@ -197,6 +210,8 @@ pppSapicTerm trans = auxppSapicTerm trans False
 ppSapicTerm :: Translation -> SapicTerm -> (Doc, S.Set ProverifHeader)
 ppSapicTerm trans = pppSapicTerm trans False
 
+
+
 -- TODO: we should generalise functionality so pppSapicTerm and pppLNTerm share
 -- the code they have in common
 pppLNTerm :: Translation -> Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
@@ -204,7 +219,7 @@ pppLNTerm _ b t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             -> text $ show n
-        Lit  (Con (Name PubName n))               -> text $ show n
+        Lit  (Con (Name PubName n))               -> ppPubName n
         Lit  (tm2)              | b               -> text $ show tm2 <> ":bitstring"
         Lit  (Var (LVar tm2 _ _ ))                -> text tm2
         Lit  (tm2)                                -> text $ show tm2
@@ -293,10 +308,35 @@ ppAction Proverif (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", 
 
 ppAction DeepSec (Event _ )  = (text "", S.empty)
 
+
+ppAction Proverif (Lock t) =  (text "in(flock(" <> pt <> text ")," <> text ptcounter <> text ":nat);"
+                              $$ text "event Lock((" <> pt <> text "," <> text ptcounter <> text "));"
+                              , sh)
+  where (pt, sh) = ppSapicTerm Proverif t
+        ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt) -- improve name of counter, fresh variable and propagate the name
+
+ppAction Proverif (Unlock t) =  ( text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" -- do not make event as tuple, but need to infer
+                                  $$ text "out(flock(" <> pt <> text ")," <> text ptcounter <> text ");"
+                                , sh)
+  where (pt, sh) = ppSapicTerm Proverif t
+        ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt)++ "+1"
+
+
+ppAction Proverif (Insert t c) = (text "event CellWrite((" <> pt <> text "," <> pc
+--                              <> text "," <> text ptcounter
+                              <> text "));"
+                              $$ text "out(fcell(" <> pt <> text "), " <> pc
+--                                  <> text "," <> text ptcounter
+                                  <> text ");"
+                                , sh `S.union` shc)
+  where (pt, sh) = ppSapicTerm Proverif t
+        (pc, shc) = ppSapicTerm Proverif c
+--        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
+
 ppAction _ _  = (text "Action not supported for translation", S.empty)
 
 ppSapic :: Translation -> LProcess ann -> (Doc, S.Set ProverifHeader)
-ppSapic _ (ProcessNull _) = (text "0", S.empty)
+ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
 ppSapic trans (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic trans pl
                                            (ppr, pshr) = ppSapic trans pr
@@ -359,14 +399,25 @@ ppSapic trans (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> te
                                            (pt1, sh1) = ppSapicTerm trans t1
                                            (pt2, sh2) = ppSapicTerm trans t2
 
-ppSapic trans (ProcessComb (Lookup t v )  _ pl pr)  = (text "lookup " <> pt1 <> text " as " <> (text $ show v) $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` pshl `S.union` pshr)
-                                     where (ppl, pshl) = ppSapic trans pl
-                                           (ppr, pshr) = ppSapic trans pr
-                                           (pt1, sh1) = ppSapicTerm trans t
+ppSapic trans (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  = (text "in(fcell(" <> pt <> text "), " <> pc
+--                                                                    <> text "," <> text ptcounter <> text ":bitstring"
+                                                                    <> text ");"
+                                                       $$ text "event CellRead( (" <> pt <> text "," <> pc'
+--                                                       <> text "," <> text ptcounter
+                                                       <> text "));"
+                                                       $$ ppl
+                                                      , sh `S.union` pshl)
+  where (pt, sh) = ppSapicTerm Proverif t
+        pc = ppTypeVar Proverif c
+        pc' = ppTypeVar DeepSec c
+--        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
+        (ppl, pshl) = ppSapic trans pl
 
 
 
-ppSapic Proverif (ProcessAction Rep _ p)  = (text "!" <> parens pp, psh)
+
+
+ppSapic Proverif (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
                                    where (pp, psh) = ppSapic Proverif p
 ppSapic DeepSec (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
                                    where (pp, psh) = ppSapic DeepSec p
