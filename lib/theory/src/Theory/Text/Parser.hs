@@ -1225,7 +1225,7 @@ actionprocess thy=
                         _ <- symbol "in"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        let annot = ProcessMatchVar $ extractMatchingVariables t1
+                        let annot = [ProcessMatchVar $ extractMatchingVariables t1]
                         return (ProcessComb (Let (unpattern t1) t2) annot p q)
                         <?> "let binding"
                    )
@@ -1255,13 +1255,13 @@ actionprocess thy=
             --             return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
             --        )
             <|> try ( do  -- sapic actions are constructs separated by ";"
-                        s <- sapicAction
+                        (s,ann) <- sapicAction
                         _ <- opSeq
                         p <- actionprocess thy
-                        return (ProcessAction s mempty p))
+                        return (ProcessAction s ann p))
             <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
-                        s <- sapicAction
-                        return (ProcessAction s mempty (ProcessNull mempty)))
+                        (s,ann) <- sapicAction
+                        return (ProcessAction s ann (ProcessNull mempty)))
             <|> try (do   -- null process: terminating element
                         _ <- opNull
                         return (ProcessNull mempty) )
