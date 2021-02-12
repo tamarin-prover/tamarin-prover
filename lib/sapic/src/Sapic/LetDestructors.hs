@@ -84,7 +84,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
           elsebranch = case pr of
             ProcessNull _ -> False
             _ -> True
-            -- TODO cam we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
+            -- TODO can we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
           make_all_variants svar@(SapicLVar sl_var (Just t) True) =
             [svar, (SapicLVar sl_var Nothing False), (SapicLVar sl_var Nothing True),  (SapicLVar sl_var (Just t) False)]
           make_all_variants svar@(SapicLVar sl_var (Just t) False) =

@@ -146,6 +146,7 @@ toAnProcess = unAnProcess . fmap f . AnProcess
         getNamesLoc [] = ([], Nothing)
         getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
         getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
+        getNamesLoc ((ProcessMatchVar _):xs) =  getNamesLoc xs -- ignore matches
 
 toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
 toProcess = unAnProcess . fmap f . AnProcess
