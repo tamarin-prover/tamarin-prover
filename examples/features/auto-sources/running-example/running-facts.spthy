@@ -1,0 +1,42 @@
+theory runningFacts
+begin
+
+/*
+We formalize the following toy protocol
+    1. I -> R: n
+    2. I <- R: n
+where n is  a fresh nonce, and I and R share a private channel
+(which might be corrupted)
+*/
+
+rule Rule_I:
+    [ Fr(~n) ]
+  --[ SecretI(~n) ]->
+    [ Channel(~n) ]
+
+rule Rule_R:
+    [ Channel(x) ]
+  -->
+    [ Channel(x)]
+
+// Channel corruption
+
+rule Out:
+    [ Channel(x) ]
+  --[ Reveal(x) ]->
+    [ Out(x) ]
+
+rule In:
+    [ In(x) ]
+  --[ Input(x) ]->
+    [ Channel(x) ]
+
+// Lemmas
+
+lemma nonce_secrecy:
+  "     not(
+        Ex s #i. SecretI(s) @ i  & (Ex #j. K(s) @ j)
+       & not (Ex #r. Reveal(s) @ r)
+       )"
+
+end
