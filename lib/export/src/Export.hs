@@ -153,9 +153,9 @@ ppTypeVar :: Translation -> SapicLVar -> Doc
 ppTypeVar trans v = case trans of
   Proverif -> auxppTypeVar v
   DeepSec -> auxppUnTypeVar v
-  where auxppTypeVar (SapicLVar (LVar n _ _ )  Nothing _) = text n <> text ":bitstring"
-        auxppTypeVar (SapicLVar (LVar n _ _ ) (Just t) _) = text n <> text ":" <> (text t)
-        auxppUnTypeVar (SapicLVar (LVar n _ _ )  _ _) = text n
+  where auxppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
+        auxppTypeVar (SapicLVar (LVar n _ _ ) (Just t)) = text n <> text ":" <> (text t)
+        auxppUnTypeVar (SapicLVar (LVar n _ _ )  _) = text n
 
 
 ppTypeLit :: (Show c) => Translation -> Lit c SapicLVar -> Doc
@@ -171,9 +171,9 @@ auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n))     | b0      -> text "=" <> (text $ show n)
         Lit  (Con (Name PubName n))               ->  ppPubName n
-        Lit  (Var (SapicLVar (LVar n _ _) _ True)) -> text "=" <> text n
+        Lit  (Var (SapicLVar (LVar n _ _) _ )) -> text "=" <> text n ---- TODO need to handle pattern matched variables based on the new set up
         Lit  v                    |    b          -> ppTypeLit trans v
-        Lit  (Var (SapicLVar (LVar n _ _)  _ _))  -> (text n)
+        Lit  (Var (SapicLVar (LVar n _ _)  _ ))  -> (text n)
         Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -268,7 +268,7 @@ ppFact trans (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction :: Translation -> LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction trans (New v@(SapicLVar (LVar _ _ _) _ _)) = (text "new " <> (ppTypeVar trans v) <> text ";", S.empty)
+ppAction trans (New v@(SapicLVar (LVar _ _ _) _ )) = (text "new " <> (ppTypeVar trans v) <> text ";", S.empty)
 
 ppAction Proverif Rep  = (text "!", S.empty)
 ppAction DeepSec Rep  = (text "", S.empty)
@@ -280,7 +280,7 @@ ppAction Proverif (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text
           Nothing ->  (text "attacker_channel",S.empty)
         (pt2, sh2) = auxppSapicTerm Proverif True True t2
 
-ppAction DeepSec (ChIn t1 t2@(LIT (Var (SapicLVar _ _ False))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
+ppAction DeepSec (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = case t1 of
           Just tt1 -> ppSapicTerm DeepSec tt1

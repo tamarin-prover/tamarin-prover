@@ -43,7 +43,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
       (case  L.foldl (findRule funsym) Nothing rules of
         -- if the desrtructor does not have any associated rule, we simply substitute in the process, to optimize. TODO -> should it be possible to declare a destructor without an equation ?
         Nothing -> do
-            res <- applyProcess (substFromList (L.map (\x -> (x,t2)) (make_all_variants svar))) pl
+            res <- applyProcess (substFromList (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
 --          ProcessComb c (annElse elsebranch)  (mapProc rules pl) (mapProc rules pr)
@@ -67,7 +67,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
                 new_an = annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
           )
     ( (LIT (Var svar)) , _ , _ ) -> do
-            res <- applyProcess (substFromList  (L.map (\x -> (x,t2)) (make_all_variants svar))) pl
+            res <- applyProcess (substFromList  (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
     _ -> do
@@ -85,15 +85,9 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
             ProcessNull _ -> False
             _ -> True
             -- TODO can we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
-          make_all_variants svar@(SapicLVar sl_var (Just t) True) =
-            [svar, (SapicLVar sl_var Nothing False), (SapicLVar sl_var Nothing True),  (SapicLVar sl_var (Just t) False)]
-          make_all_variants svar@(SapicLVar sl_var (Just t) False) =
-            [svar, (SapicLVar sl_var Nothing False), (SapicLVar sl_var Nothing True),  (SapicLVar sl_var (Just t) True)]
-          make_all_variants svar@(SapicLVar sl_var Nothing True) =
-            [svar, (SapicLVar sl_var Nothing False)]
-          make_all_variants svar@(SapicLVar sl_var Nothing False) =
-            [svar, (SapicLVar sl_var Nothing True)]
-
+          make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
+            [svar, (SapicLVar sl_var Nothing)]
+          make_untyped_variant svar = [svar]
 
 -- For Process calls, we substitute in place inside the process, before translating to MSR.
 mapProc rules (ProcessComb c@(ProcessCall _ vs ts) _ pl pr) =
@@ -103,18 +97,12 @@ mapProc rules (ProcessComb c@(ProcessCall _ vs ts) _ pl pr) =
             return npl
     where base_subst = zip vs ts
           extend_sup = L.foldl (\acc (svar,t) ->
-                                  (L.map (\x -> (x,t)) (make_all_variants svar))
+                                  (L.map (\x -> (x,t)) (make_untyped_variant svar))
                                   ++ acc) [] base_subst
             -- TODO cam we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
-          make_all_variants svar@(SapicLVar sl_var (Just t) True) =
-            [svar, (SapicLVar sl_var Nothing False), (SapicLVar sl_var Nothing True),  (SapicLVar sl_var (Just t) False)]
-          make_all_variants svar@(SapicLVar sl_var (Just t) False) =
-            [svar, (SapicLVar sl_var Nothing False), (SapicLVar sl_var Nothing True),  (SapicLVar sl_var (Just t) True)]
-          make_all_variants svar@(SapicLVar sl_var Nothing True) =
-            [svar, (SapicLVar sl_var Nothing False)]
-          make_all_variants svar@(SapicLVar sl_var Nothing False) =
-            [svar, (SapicLVar sl_var Nothing True)]
-
+          make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
+            [svar, (SapicLVar sl_var Nothing)]
+          make_untyped_variant svar = [svar]
 
 
 mapProc rules (ProcessComb c ann pl pr) = do
