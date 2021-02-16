@@ -61,7 +61,8 @@ instance Semigroup (AnVar v) where  -- override annotations if necessary
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
 data ProcessAnnotation v = ProcessAnnotation {
-    parsingAnn    :: ProcessParsedAnnotation -- processes identifiers recovered from "let P = "  bindings
+    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes 
+                                             -- processes identifiers recovered from "let P = "  bindings
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
