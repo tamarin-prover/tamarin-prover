@@ -90,7 +90,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
           make_untyped_variant svar = [svar]
 
 -- For Process calls, we substitute in place inside the process, before translating to MSR.
-mapProc rules (ProcessComb c@(ProcessCall _ vs ts) _ pl pr) =
+mapProc rules (ProcessComb (ProcessCall _ vs ts) _ pl _) =
   do
             res <- applyProcess (substFromList extend_sup) pl
             npl <- mapProc rules res
@@ -110,6 +110,10 @@ mapProc rules (ProcessComb c ann pl pr) = do
   npr <- mapProc rules pr
   return $ ProcessComb c ann npl npr
 
+findRule :: FunSym
+            -> Maybe ([Term (Lit Name LVar)], LVar)
+            -> CtxtStRule
+            -> Maybe ([Term (Lit Name LVar)], LVar)
 findRule funsym acc rule =
   case ctxtStRuleToRRule rule of
     (fhs `RRule` rhs) ->
