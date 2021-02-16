@@ -1040,18 +1040,18 @@ sapicterm = msetterm False (vlit sapicvar)
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
-sapicAction :: Parser (LSapicAction, [ProcessParsedAnnotation])
+sapicAction :: Parser (LSapicAction, ProcessParsedAnnotation)
 sapicAction = try (do
                         _ <- symbol "new"
                         s <- sapicvar
-                        return (New s,[])
+                        return (New s,mempty)
                    )
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
                         t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn Nothing (unpattern t), [ProcessMatchVar $ extractMatchingVariables t])
+                        return (ChIn Nothing (unpattern t), mempty { matchVars =  extractMatchingVariables t} )
                    )
                <|> try (do
                         _ <- symbol "in"
@@ -1060,14 +1060,14 @@ sapicAction = try (do
                         _ <- comma
                         t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn (Just c) (unpattern t), [ProcessMatchVar $ extractMatchingVariables t])
+                        return (ChIn (Just c) (unpattern t), mempty { matchVars = extractMatchingVariables t})
                    )
                <|> try (do
                         _ <- symbol "out"
                         _ <- symbol "("
                         t <- msetterm False ltypedlit
                         _ <- symbol ")"
-                        return (ChOut Nothing t, [])
+                        return (ChOut Nothing t, mempty)
                    )
                <|> try (do
                         _ <- symbol "out"
@@ -1076,38 +1076,38 @@ sapicAction = try (do
                         _ <- comma
                         t' <- msetterm False ltypedlit
                         _ <- symbol ")"
-                        return (ChOut (Just t) t', [])
+                        return (ChOut (Just t) t', mempty)
                    )
                <|> try (do
                         _ <- symbol "insert"
                         t <- msetterm False ltypedlit
                         _ <- comma
                         t' <- msetterm False ltypedlit
-                        return (Insert t t', [])
+                        return (Insert t t', mempty)
                    )
                <|> try (do
                         _ <- symbol "delete"
                         t <- msetterm False ltypedlit
-                        return (Delete t, [])
+                        return (Delete t, mempty)
                    )
                <|> try (do
                         _ <- symbol "lock"
                         t <- msetterm False ltypedlit
-                        return (Lock t, [])
+                        return (Lock t, mempty)
                    )
                <|> try (do
                         _ <- symbol "unlock"
                         t <- msetterm False ltypedlit
-                        return (Unlock t, [])
+                        return (Unlock t, mempty)
                    )
                <|> try (do
                         _ <- symbol "event"
                         f <- fact ltypedlit
-                        return (Event f, [])
+                        return (Event f, mempty)
                    )
                <|> try (do
                         r <- genericRule sapicvar sapicnodevar
-                        return (MSR r, [])
+                        return (MSR r, mempty)
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that
@@ -1225,7 +1225,7 @@ actionprocess thy=
                         _ <- symbol "in"
                         p <- process thy
                         q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        let annot = [ProcessMatchVar $ extractMatchingVariables t1]
+                        let annot = mempty { matchVars = extractMatchingVariables t1}
                         return (ProcessComb (Let (unpattern t1) t2) annot p q)
                         <?> "let binding"
                    )
@@ -1272,7 +1272,7 @@ actionprocess thy=
                         (p, vars) <- checkProcess (BC.unpack i) thy
                         return (ProcessComb
                                 (ProcessCall (BC.unpack i) vars ts) mempty
-                                (paddAnn p [ProcessName $ BC.unpack i])
+                                (paddAnn p (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )
             <|>    try  (do -- let expression parser
@@ -1288,7 +1288,7 @@ actionprocess thy=
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm False ltypedlit
-                        return $ paddAnn p [ProcessLoc m]
+                        return $ paddAnn p (mempty {location = (Just m)})
                         )
             <|> try (do        -- parens parser
                         _ <- symbol "("
@@ -1326,9 +1326,11 @@ instance Show (ParsingException) where
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
-    show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
     show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
         "duplicate process: " ++ get pName pDef
+    show (DuplicateItem (SapicItem (ProcessItem _))) = "duplicate process item"
+    show (DuplicateItem (SapicItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
+    show (DuplicateItem (SapicItem (ExportInfoItem _))) = "duplicate exportinfo  item"
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException

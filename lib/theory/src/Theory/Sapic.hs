@@ -477,15 +477,30 @@ applyProcess subst (ProcessAction ac ann p) = do
 --    has two Null-rules with annotation [A,B].
 --  This will be helpful to recognise protocols roles and visualise them.
 
-data ProcessParsedAnnotation =
-  ProcessName String -- String used in annotation to identify processes
-  | ProcessLoc SapicTerm -- additional information for Isolated Execution Environments feature
-  | ProcessMatchVar (S.Set SapicLVar) -- Variables in in() or let-actions that are intended to match already bound variables
-  deriving( Eq, Ord, Show, Data, Generic)
+data ProcessParsedAnnotation = ProcessParsedAnnotation
+    { processnames      :: [String]
+    -- String used in annotation to identify processes. Always a singleton list
+    , location       :: Maybe SapicTerm
+    -- additional information for Isolated Execution Environments feature
+    , matchVars :: S.Set SapicLVar
+    -- Variables in in() or let-actions that are intended to match already bound variables
+    }
+    deriving (Eq, Ord, Show, Data, Generic)
 instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation
-type ProcessAnnotation = [ProcessParsedAnnotation]
-type PlainProcess = LProcess ProcessAnnotation
+
+instance Monoid (ProcessParsedAnnotation) where
+    mempty = ProcessParsedAnnotation [] Nothing S.empty
+    mappend p1 p2 = ProcessParsedAnnotation
+        (processnames p1 `mappend` processnames  p2)
+        (location p2)
+        (matchVars p1 `mappend` matchVars p2)
+
+instance Semigroup (ProcessParsedAnnotation) where
+    (<>) p1 p2 = p1 `mappend` p2
+        
+
+type PlainProcess = LProcess ProcessParsedAnnotation
 type ProcessPosition = [Int]
 
 -- | Positions are to be read left-to-right, 1 is left, 2 is right.
@@ -500,7 +515,7 @@ descendant :: Eq a => [a] -> [a] -> Bool
 descendant child parent = parent `isPrefixOf` child
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
-paddAnn :: PlainProcess -> ProcessAnnotation -> PlainProcess
+paddAnn :: PlainProcess -> ProcessParsedAnnotation -> PlainProcess
 paddAnn (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
 paddAnn (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr
 paddAnn (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p

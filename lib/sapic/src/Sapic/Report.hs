@@ -45,7 +45,7 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
 
 opt_loc :: Maybe SapicTerm -> (ProcessAnnotation LVar) -> Maybe SapicTerm
 opt_loc loc ann =
- case (location ann) of
+ case (location $ parsingAnn ann) of
   Nothing -> loc
   Just x -> Just x
 
