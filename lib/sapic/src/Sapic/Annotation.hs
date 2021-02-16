@@ -30,7 +30,7 @@ module Sapic.Annotation (
     , setProcessNames
 ,annElse) where
 import           Data.Data
--- import Data.Maybe
+-- import Data.List
 -- import Data.Foldable
 -- import Control.Exception
 -- import Control.Monad.Fresh
@@ -42,7 +42,7 @@ import           GHC.Generics                     (Generic)
 import           Data.Binary
 -- import Theory.Model.Rule
 -- import Data.Typeable
--- import qualified Data.Set                   as S
+import qualified Data.Set                   as S
 -- import Control.Monad.Trans.FastFresh
 -- import Control.Monad.Trans.FastFresh
 import Term.LTerm
@@ -62,9 +62,10 @@ data ProcessAnnotation v = ProcessAnnotation {
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
-  , location      :: Maybe SapicTerm -- The location of a process, for the IEE extention.
+  , location      :: Maybe SapicTerm   -- The location of a process, for the IEE extention.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
-  , elseBranch :: Bool
+  , elseBranch         :: Bool
+  , matchVar    :: S.Set SapicLVar -- Variables in in() or let-actions that are intended to match already bound variables
   } deriving (Show, Typeable)
 
 -- | Any annotation that is good enough to be converted back into a Process
@@ -82,7 +83,7 @@ instance GoodAnnotation (ProcessAnnotation v)
         setProcessNames pn an = an { processnames = pn }
 
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing Nothing True
+    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing Nothing True S.empty
     mappend p1 p2 = ProcessAnnotation
         (processnames p1 `mappend` processnames p2)
         (lock p1 `mappend` lock p2)
@@ -91,6 +92,7 @@ instance Monoid (ProcessAnnotation v) where
         (location p2)
         (destructorEquation p2)
         (elseBranch p2)
+        (matchVar p1 `mappend` matchVar p2)
 
 instance Semigroup (ProcessAnnotation v) where
     (<>) p1 p2 = ProcessAnnotation
@@ -101,6 +103,7 @@ instance Semigroup (ProcessAnnotation v) where
         (location p2)
         (destructorEquation p2)
         (elseBranch p2)
+        (matchVar p1 <> matchVar p2)
 
 newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
     deriving (Typeable, Monoid,Semigroup,Show)
@@ -141,12 +144,11 @@ toAnProcess :: PlainProcess -> LProcess (ProcessAnnotation v0)
 toAnProcess = unAnProcess . fmap f . AnProcess
   where
         f l =
-          let (names, loc) = getNamesLoc l in
-            mempty { processnames = names, location = loc}
-        getNamesLoc [] = ([], Nothing)
-        getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
-        getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
-        getNamesLoc ((ProcessMatchVar _):xs) =  getNamesLoc xs -- ignore matches
+          let (names, loc, m) = foldl getNamesLocMatch ([], Nothing,S.empty) l in
+            mempty { processnames = names, location = loc, matchVar = m}
+        getNamesLocMatch (names,_,m) (ProcessLoc x) = (names, Just x,m)
+        getNamesLocMatch (names,loc,m) (ProcessName x) = (x:names, loc,m)
+        getNamesLocMatch (names,loc,m) (ProcessMatchVar x) = (names, loc,x `S.union` m)
 
 toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
 toProcess = unAnProcess . fmap f . AnProcess
