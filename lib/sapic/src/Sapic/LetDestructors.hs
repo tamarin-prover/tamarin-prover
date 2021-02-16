@@ -78,9 +78,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
 
     where t1'= toLNTerm t1
           t2'= toLNTerm t2
-          toPairs [] = fAppOne
-          toPairs [s] = s
-          toPairs (p:q) = fAppPair (p, toPairs q)
+          toPairs = fAppList -- TODO remove and inline if everything works
           elsebranch = case pr of
             ProcessNull _ -> False
             _ -> True
