@@ -1156,7 +1156,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
         v     = head $ getFactTerms $ nodeConcFact conc source
 
         -- Compute all rules that contain v, and the position of v inside the input term
-        inputRules :: [(ClosedProtoRule, Either LNTerm (LNFact, LNTerm), ExtendedPosition)]
+        inputRules :: [(ClosedProtoRule, Either LNTerm LNFact, ExtendedPosition)]
         inputRules = concat $ mapMaybe g $ allPrems source
           where
             g (nodeid, pid, tidx, term) = do
@@ -1168,15 +1168,18 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               t        <- atMay t' tidx
               return (terms position rule t ++ facts position rule t premise)
                 where
-                  -- iterate over all positions found
                   terms position rule t = do
+                    -- iterate over all positions found
                     pos     <- position
                     return (rule, Left t, (pid, tidx, pos))
                   facts position rule t premise = do
+                        -- we only consider protocol facts and unprotected terms
+                    guard $ isProtoFact premise && (isPair t || isAC t || isMsgVar t)
+                        -- we only consider facts which are not already solved in the source
+                        && ((nodeid, pid) `elem` map fst (unsolvedPremises source))
+                    -- iterate over all positions found
                     pos     <- position
-                    guard $ isProtoFact premise
-                            && (isPair t || isAC t || isMsgVar t)
-                    return (rule, Right (premise, t), (pid, tidx, pos))
+                    return (rule, Right premise, (pid, tidx, pos))
 
         -- a list of all input subterms to unify : Left for protected subterm and Right for non protected subterm
         premiseTermU :: [(ClosedProtoRule, Either (LNTerm, LNTerm) LNFact, ExtendedPosition)]
@@ -1200,9 +1203,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                 else Just protTerm'
               return (x, Left (protTerm, v'), (pidx, tidx, z))
             -- cases for non-protected subterms : we consider the Fact
-            f (x, Right (fact, t), (pidx, tidx, z)) = do
-              -- this check is necessary to filter out inconsistent positions
-              _ <- t `atPosMay` z
+            f (x, Right fact, (pidx, tidx, z)) =
               return (x, Right fact, (pidx, tidx, z))
 
         -- compute matching outputs
@@ -1311,7 +1312,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                            (Qua All ("i", LSortNode)
                            (Conn Imp (Ato (Action (varTerm (Bound 0))
                            (inputFactFact p ru (listVarTerm (toInteger $ factArity m) 1))))
-                           (lfalse))) (listOfM nb)
+                           lfalse)) (listOfM nb)
             -- facts
             addForm (ru, Right (m, outs:_), p) f' = f' .&&. formulaMultArity (factArity m)
               where formulaMultArity nb = foldr (\h -> Qua All (h,LSortMsg))
