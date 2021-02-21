@@ -363,7 +363,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
       -- full record syntax
       | otherwise =
             fmap snd $ liftDot $ (`D.record` attrs) $
-            D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $
+            D.vcat $ map D.hcat $ map (map (uncurry D.portHTMLField)) $
             filter (not . null) [ps, as, cs]
       where
         ps = renderRow [ (Just (Left i),  prettyLNFactSubscript p) | (i, p) <- enumPrems ru ]

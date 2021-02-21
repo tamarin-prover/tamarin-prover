@@ -519,7 +519,7 @@ prettyFact ppTerm (Fact tag an ts)
 prettyFactSubscript :: Document d => (t -> d) -> Fact t -> d
 prettyFactSubscript ppTerm (Fact tag an ts)
   | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
-  | otherwise                     = ppFact ("<"++subscript (showFactTag tag)++">") ts <> ppAnn an
+  | otherwise                     = ppFact (subscript (showFactTag tag)) ts <> ppAnn an
   where
     subscript [] = []
     subscript xs = if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else [head xs]++(subscript (tail xs))
