@@ -45,6 +45,7 @@ typeProcess :: MonadThrow m => Theory sig c r p1 SapicElement
 typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
     where
         lift3 f a b c = return $ f a b c -- compose ternary function with return
+        -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  = return . ProcessNull
         fAct  a _ (New v)       = insertVar v a
         fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
@@ -52,6 +53,7 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
         fAct  a _ _             =  a
         fComb a _ (Lookup _ v) = insertVar v a
         fComb a _ _ = a
+        -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct a' ac ann r = do
                        -- a' is map variables to types
                        -- r is typed subprocess
@@ -68,9 +70,8 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
             | Lit (Var v) <- viewTerm t
             , lvar' <- slvar v
             , Just stype' <- Map.lookup lvar' a'
-            , ispat <- ispattern v
           =
-                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype' ispat)), stype')
+                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
             | FApp (NoEq fs) ts   <- viewTerm t
             , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
             = do
@@ -88,7 +89,7 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
             | otherwise = return (t, defaultSapicType) -- TODO no idea how to type here...
         typeWithVar  v -- variables are correctly typed, as we just inserted them
-            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType (ispattern v)
+            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a
