@@ -35,10 +35,13 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 import qualified Data.Set as S
 import qualified Data.Label as L
 import Data.List as List
+import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Functor.Identity
 import Data.Char
 import Data.Data
+
+import States
 
 ------------------------------------------------------------------------------
 -- Core Proverif Export
@@ -62,13 +65,15 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: OpenTheory -> Doc
 prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
   where
-    tc = TranslationContext {trans = Proverif, attackerChannel = Nothing}
+    tc = TranslationContext {trans = Proverif, attackerChannel = Nothing, stateMap = M.empty}
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` prochd `S.union` macroprochd)
-    (proc, prochd) = loadProc tc thy
+    (proc, prochd, stateM) = loadProc tc thy
     queries = loadQueries thy
     lemmas = loadLemmas thy
-    (macroproc, macroprochd) = loadMacroProc tc thy
+    (macroproc, macroprochd) =
+      -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
+      if stateM == M.empty then loadMacroProc tc thy else ([text ""], S.empty)
 
 data Translation =
    Proverif
@@ -78,7 +83,8 @@ data Translation =
 
 data TranslationContext = TranslationContext
   { trans :: Translation,
-    attackerChannel :: Maybe LVar
+    attackerChannel :: Maybe LVar,
+    stateMap :: StateMap
   }
     deriving (Eq, Ord, Data)
 
@@ -271,7 +277,15 @@ ppFact tc (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction ::  ProcessParsedAnnotation -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction _ tc (New v@(SapicLVar (LVar _ _ _) _ )) = (text "new " <> (ppTypeVar tc v) <> text ";", S.empty)
+ppAction _ tc (New v@(SapicLVar (LVar n _ _) _ )) =
+ if List.elem v (M.elems $ stateMap tc) then -- the new declaration corresponds to a state channel
+  (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
+  $$ text "new lock_" <> (ppTypeVar tc v) <> text "[assumeCell];"
+  -- we also declare the corresponding lock channel, and initialize it
+  $$ text "out(lock_" <> (text n) <> text ",0);"
+  , S.empty)
+  else
+   (text "new " <> (ppTypeVar tc v) <> text ";", S.empty)
 
 ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty)
 ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
@@ -304,28 +318,29 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (te
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =  (text "in(flock(" <> pt <> text ")," <> text ptcounter <> text ":nat);"
-                              $$ text "event Lock((" <> pt <> text "," <> text ptcounter <> text "));"
-                              , sh)
-  where (pt, sh) = ppSapicTerm tc t
-        ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt) -- improve name of counter, fresh variable and propagate the name
+ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =  (text "in(lock_" <> text pt <> text "," <> text ptcounter <> text ":nat);"
+--                              $$ text "event Lock((" <> text pt <> text "," <> text ptcounter <> text "));"
+                              , S.empty)
+  where -- (pt, sh) = ppSapicTerm tc t
+        pt = getStateChannel tc t
+        ptcounter = "counterlock" ++ stripNonAlphanumerical pt -- improve name of counter, fresh variable and propagate the name
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =  ( text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" -- do not make event as tuple, but need to infer
-                                  $$ text "out(flock(" <> pt <> text ")," <> text ptcounter <> text ");"
-                                , sh)
-  where (pt, sh) = ppSapicTerm tc t
-        ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt)++ "+1"
+ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =  (
+  -- text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" $$ -- do not make event as tuple, but need to infer
+                                  text "out(lock_" <> text pt <> text "," <> text ptcounter <> text ");"
+                                , S.empty)
+  where -- (pt, sh) = ppSapicTerm tc t
+    pt = getStateChannel tc t
+    ptcounter = "counterlock" ++ stripNonAlphanumerical pt ++ "+1"
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) = (text "event CellWrite((" <> pt <> text "," <> pc
---                              <> text "," <> text ptcounter
-                              <> text "));"
-                              $$ text "out(fcell(" <> pt <> text "), " <> pc
---                                  <> text "," <> text ptcounter
-                                  <> text ");"
-                                , sh `S.union` shc)
-  where (pt, sh) = ppSapicTerm tc t
-        (pc, shc) = ppSapicTerm tc c
+ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) = (
+   text "out(" <> text pt <> text ", " <> pc <> text ");"
+                                , shc)
+  where
+    pt = getStateChannel tc t
+--    (pt, sh) = ppSapicTerm tc t
+    (pc, shc) = ppSapicTerm tc c
 --        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty)
@@ -354,15 +369,23 @@ ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text
                                            (pt1, sh1) = auxppSapicTerm tc (matchVars an) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
+-- if the process call does not have any argument, we just inline
 ppSapic tc (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
                                      where (ppl, pshl) = ppSapic tc pl
 
-ppSapic tc (ProcessComb (ProcessCall name _ ts) _ _ _)  = (text name <>
-                                                        parens (fsep (punctuate comma ppts ))
-                                                       ,
-                                                       foldl S.union S.empty shs)
-                                     where pts = map (ppSapicTerm tc) ts
-                                           (ppts, shs) = unzip pts
+-- if there are state or lock channels created by addStateChannels, we must inline
+ppSapic tc (ProcessComb (ProcessCall name _ ts) _ pl _)  =
+  if stateMap tc == M.empty then
+      (text name <>
+       parens (fsep (punctuate comma ppts ))
+      ,
+       foldl S.union S.empty shs)
+  else
+     (ppl, pshl)
+  where pts = map (ppSapicTerm tc) ts
+        (ppts, shs) = unzip pts
+        (ppl, pshl) = ppSapic tc pl
+
 
 
 
@@ -394,17 +417,15 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
-ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  = (text "in(fcell(" <> pt <> text "), " <> pc
+ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  = (text "in(" <> text pt <> text ", " <> pc
 --                                                                    <> text "," <> text ptcounter <> text ":bitstring"
                                                                     <> text ");"
-                                                       $$ text "event CellRead( (" <> pt <> text "," <> pc'
---                                                       <> text "," <> text ptcounter
-                                                       <> text "));"
+
                                                        $$ ppl
-                                                      , sh `S.union` pshl)
-  where (pt, sh) = ppSapicTerm tc t
+                                                      , pshl)
+  where -- (pt, sh) = ppSapicTerm tc t
+        pt = getStateChannel tc t
         pc = ppTypeVar tc c
-        pc' = ppTypeVar tc c
 --        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
         (ppl, pshl) = ppSapic tc pl
 
@@ -422,13 +443,15 @@ ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
                                      where (pa, sh) = ppAction an tc a
                                            (pp, psh) = ppSapic tc p
 
-loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader)
+loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, StateMap)
 loadProc tc thy = case theoryProcesses thy of
-  []  -> (text "", S.empty)
-  [p] -> let (d,headers) = ppSapic tc2 p in
-           (d,S.union hd headers)
+  []  -> (text "", S.empty, M.empty)
+  [p] -> let (d,headers) = ppSapic tc3 proc in
+           (d,S.union hd headers, stateM)
    where (tc2, hd) = mkAttackerContext tc p
-  _  -> (text "Multiple sapic processes detected, error", S.empty)
+         (proc, stateM) = addStatesChannels p
+         tc3 = tc2{stateMap=stateM}
+  _  -> (text "Multiple sapic processes detected, error", S.empty, M.empty)
 
 
 loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProverifHeader)
@@ -487,7 +510,9 @@ ppAtom = ppProtoAtom (const emptyDoc)
 
 -- only used for Proverif queries display
 ppNAtom ::  ProtoAtom s LNTerm -> Doc
-ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif, attackerChannel = Nothing}))
+ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif,
+                                                      attackerChannel = Nothing,
+                                                      stateMap = M.empty}))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
@@ -727,6 +752,13 @@ getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
           (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)
           _ -> (text "TRANSLATION ERROR", S.empty)
 
+getStateChannel :: TranslationContext -> SapicTerm -> String
+getStateChannel tc t =
+   case channel of
+     Nothing -> "TRANSLATION ERROR"
+     Just (SapicLVar (LVar channelname _ _) _) -> channelname
+  where channel = M.lookup t (stateMap tc)
+
 ------------------------------------------------------------------------------
 -- Some utility functions
 ------------------------------------------------------------------------------
@@ -761,7 +793,7 @@ deepsecTemplate headers macroproc requests =
 prettyDeepSecTheory :: OpenTheory -> Doc
 prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
-        tc = TranslationContext{trans=DeepSec, attackerChannel = Nothing}
+        tc = TranslationContext{trans=DeepSec, attackerChannel = Nothing, stateMap=M.empty}
         hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` macroprochd)
         requests = loadRequests thy
