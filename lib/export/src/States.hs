@@ -11,8 +11,8 @@
 
 module States (
   addStatesChannels,
-  StateMap
-) where
+  StateMap,
+  getPureStates) where
 
 import         Theory
 import         Theory.Sapic
@@ -62,3 +62,47 @@ declareStateChannel p tD@(v:toDeclare) boundNames stateMap =
       ProcessAction act an pr -> do
         (pr', stateMap') <- declareStateChannel pr tD boundNames stateMap
         return (ProcessAction act an pr', stateMap')
+
+
+-- a state channel such that, 1) there is a single insert outside of a lock (this is the state initialisation); 2) every occurence of the state channel is either lock t; lookup t or insert t; unlock t.
+--getPureStates p currentPures oneOutside =
+computePureStates :: PlainProcess -> S.Set SapicTerm -> S.Set SapicTerm -> (S.Set SapicTerm, S.Set SapicTerm)
+computePureStates p currentPures oneOutside =
+  case p of
+     (ProcessAction (Insert t _) _  (ProcessAction (Unlock t2) _ pl)) | t == t2
+          ->  computePureStates pl currentPures oneOutside
+     (ProcessAction (Lock t) _   (ProcessComb (Lookup t2 _ )  _ pl (ProcessNull _)) ) | t == t2
+          ->  computePureStates pl currentPures oneOutside
+     (ProcessAction (Insert t _) _ pl)
+          ->
+       -- when we see a lone insert, if there is another lone insert somewhere else we remove it from the pureStates
+       let (cP, oO) = computePureStates pl currentPures oneOutside in
+         if S.member t oO then
+           (S.delete t cP, oO)
+         else (cP, S.insert t oO)
+     (ProcessAction (Lock t ) _ pl)
+          ->
+       let (cP, oO) = computePureStates pl currentPures oneOutside in
+           (S.delete t cP, oO)
+     (ProcessAction (Unlock t) _ pl)
+          ->
+       let (cP, oO) = computePureStates pl currentPures oneOutside in
+           (S.delete t cP, oO)
+
+     (ProcessAction _ _ pl)
+          ->
+       computePureStates pl currentPures oneOutside
+     ProcessComb Parallel _ pl pr ->
+       -- in parallel, we sum the oneOutSide, and in all other cases, we just merge them (as the two branches can never be taken
+       let (cP, oO) = computePureStates pl currentPures oneOutside in
+       let (cP', oO') = computePureStates pr currentPures oneOutside in
+       let newUnpure =  oO `S.intersection` oO' in
+         (cP `S.intersection` cP' `S.difference` newUnpure, oO `S.union` oO')
+     ProcessComb _ _ pl pr ->
+       let (cP, oO) = computePureStates pl currentPures oneOutside in
+       let (cP', oO') = computePureStates pr currentPures oneOutside in
+         (cP `S.intersection` cP', oO `S.union` oO')
+     ProcessNull _ -> (currentPures, oneOutside)
+
+getPureStates :: PlainProcess  -> S.Set SapicTerm -> S.Set SapicTerm
+getPureStates p currentPures = fst $ computePureStates p currentPures S.empty

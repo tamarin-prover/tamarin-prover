@@ -65,7 +65,10 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: OpenTheory -> Doc
 prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
   where
-    tc = TranslationContext {trans = Proverif, attackerChannel = Nothing, stateMap = M.empty}
+    tc = TranslationContext {trans = Proverif,
+                             attackerChannel = Nothing,
+                             stateMap = M.empty,
+                             pureStates = S.empty}
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` prochd `S.union` macroprochd)
     (proc, prochd, stateM) = loadProc tc thy
@@ -84,7 +87,8 @@ data Translation =
 data TranslationContext = TranslationContext
   { trans :: Translation,
     attackerChannel :: Maybe LVar,
-    stateMap :: StateMap
+    stateMap :: StateMap,
+    pureStates :: S.Set SapicTerm
   }
     deriving (Eq, Ord, Data)
 
@@ -279,13 +283,19 @@ ppFact tc (Fact tag _ ts)
 ppAction ::  ProcessParsedAnnotation -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
 ppAction _ tc (New v@(SapicLVar (LVar n _ _) _ )) =
  if List.elem v (M.elems $ stateMap tc) then -- the new declaration corresponds to a state channel
-  (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
-  $$ text "new lock_" <> (ppTypeVar tc v) <> text "[assumeCell];"
-  -- we also declare the corresponding lock channel, and initialize it
-  $$ text "out(lock_" <> (text n) <> text ",0);"
-  , S.empty)
+   if pureTerms == S.empty then
+     (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
+       $$ text "new lock_" <> (ppTypeVar tc v) <> text "[assumeCell];"
+     -- we also declare the corresponding lock channel, and initialize it
+       $$ text "out(lock_" <> (text n) <> text ",0);"
+     , S.empty)
+   else
+     (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
+     , S.empty)
   else
    (text "new " <> (ppTypeVar tc v) <> text ";", S.empty)
+ where correspondingTerms = M.keys $ M.filter (\name -> name == v) (stateMap tc)
+       pureTerms = S.fromList correspondingTerms `S.intersection`  pureStates tc
 
 ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty)
 ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
@@ -318,14 +328,22 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (te
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =  (text "in(lock_" <> text pt <> text "," <> text ptcounter <> text ":nat);"
+ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =
+  if t `S.member` pureStates tc then
+    (text "", S.empty)
+  else
+    (text "in(lock_" <> text pt <> text "," <> text ptcounter <> text ":nat);"
 --                              $$ text "event Lock((" <> text pt <> text "," <> text ptcounter <> text "));"
                               , S.empty)
   where -- (pt, sh) = ppSapicTerm tc t
         pt = getStateChannel tc t
         ptcounter = "counterlock" ++ stripNonAlphanumerical pt -- improve name of counter, fresh variable and propagate the name
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =  (
+ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =
+  if t `S.member` pureStates tc then
+    (text "", S.empty)
+  else
+    (
   -- text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" $$ -- do not make event as tuple, but need to infer
                                   text "out(lock_" <> text pt <> text "," <> text ptcounter <> text ");"
                                 , S.empty)
@@ -334,9 +352,13 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =  (
     ptcounter = "counterlock" ++ stripNonAlphanumerical pt ++ "+1"
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) = (
-   text "out(" <> text pt <> text ", " <> pc <> text ");"
-                                , shc)
+ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) =
+    if t `S.member` pureStates tc then
+      (
+        text "out(" <> text pt <> text ", " <> pc <> text ");"
+      , shc)
+  else
+    (text "NOT IMPLEMENTED YET", S.empty)
   where
     pt = getStateChannel tc t
 --    (pt, sh) = ppSapicTerm tc t
@@ -417,12 +439,17 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
-ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  = (text "in(" <> text pt <> text ", " <> pc
+ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  =
+  if t `S.member` pureStates tc then
+  (text "in(" <> text pt <> text ", " <> pc
 --                                                                    <> text "," <> text ptcounter <> text ":bitstring"
                                                                     <> text ");"
 
                                                        $$ ppl
                                                       , pshl)
+  else
+    (text "NOT IMPLEMENTED YET", S.empty)
+
   where -- (pt, sh) = ppSapicTerm tc t
         pt = getStateChannel tc t
         pc = ppTypeVar tc c
@@ -450,7 +477,8 @@ loadProc tc thy = case theoryProcesses thy of
            (d,S.union hd headers, stateM)
    where (tc2, hd) = mkAttackerContext tc p
          (proc, stateM) = addStatesChannels p
-         tc3 = tc2{stateMap=stateM}
+         pStates = getPureStates p (S.fromList $ M.keys stateM)
+         tc3 = tc2{stateMap=stateM, pureStates = pStates}
   _  -> (text "Multiple sapic processes detected, error", S.empty, M.empty)
 
 
@@ -512,7 +540,8 @@ ppAtom = ppProtoAtom (const emptyDoc)
 ppNAtom ::  ProtoAtom s LNTerm -> Doc
 ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif,
                                                       attackerChannel = Nothing,
-                                                      stateMap = M.empty}))
+                                                      stateMap = M.empty,
+                                                      pureStates = S.empty}))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
@@ -793,7 +822,10 @@ deepsecTemplate headers macroproc requests =
 prettyDeepSecTheory :: OpenTheory -> Doc
 prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
-        tc = TranslationContext{trans=DeepSec, attackerChannel = Nothing, stateMap=M.empty}
+        tc = TranslationContext{trans = DeepSec,
+                                attackerChannel = Nothing,
+                                stateMap = M.empty,
+                                pureStates = S.empty}
         hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` macroprochd)
         requests = loadRequests thy
