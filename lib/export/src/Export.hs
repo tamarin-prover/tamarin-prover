@@ -32,7 +32,6 @@ import           Theory.Text.Pretty
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
-
 import qualified Data.Set as S
 import qualified Data.Label as L
 import Data.List as List
@@ -164,15 +163,18 @@ ppTypeLit _ (Con c) = text $ show c
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- a boolean b allows to add types to variables (for input bindings)
-auxppSapicTerm :: Translation -> Bool -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
+-- matchVars is the set of vars that correspond to pattern matching
+-- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
+auxppSapicTerm :: Translation ->  S.Set SapicLVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm trans matchVars isPattern t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
-        Lit  (Con (Name PubName n))     | b0      -> text "=" <> (text $ show n)
+        Lit  (Con (Name PubName n)) | isPattern   -> text "=" <> (text $ show n)
         Lit  (Con (Name PubName n))               ->  ppPubName n
-        Lit  (Var (SapicLVar (LVar n _ _) _ )) -> text "=" <> text n ---- TODO need to handle pattern matched variables based on the new set up
-        Lit  v                    |    b          -> ppTypeLit trans v
+        Lit  (Var v@(SapicLVar (LVar n _ _) _ ))
+          | S.member v matchVars                  -> text "=" <> text n
+        Lit  v                    |    isPattern          -> ppTypeLit trans v
         Lit  (Var (SapicLVar (LVar n _ _)  _ ))  -> (text n)
         Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
@@ -204,11 +206,8 @@ auxppSapicTerm trans b0 b t = (ppTerm t, getHdTerm t)
         Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
-pppSapicTerm :: Translation -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-pppSapicTerm trans = auxppSapicTerm trans False
-
 ppSapicTerm :: Translation -> SapicTerm -> (Doc, S.Set ProverifHeader)
-ppSapicTerm trans = pppSapicTerm trans False
+ppSapicTerm trans = auxppSapicTerm trans S.empty False
 
 
 
@@ -267,62 +266,62 @@ ppFact trans (Fact tag _ ts)
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared
-ppAction :: Translation -> LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction trans (New v@(SapicLVar (LVar _ _ _) _ )) = (text "new " <> (ppTypeVar trans v) <> text ";", S.empty)
+ppAction ::  ProcessParsedAnnotation -> Translation -> LSapicAction -> (Doc, S.Set ProverifHeader)
+ppAction an trans (New v@(SapicLVar (LVar _ _ _) _ )) = (text "new " <> (ppTypeVar trans v) <> text ";", S.empty)
 
-ppAction Proverif Rep  = (text "!", S.empty)
-ppAction DeepSec Rep  = (text "", S.empty)
+ppAction an Proverif Rep  = (text "!", S.empty)
+ppAction an DeepSec Rep  = (text "", S.empty)
 
-ppAction Proverif (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
+ppAction an Proverif (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = case t1 of
           Just tt1 -> ppSapicTerm Proverif tt1
           Nothing ->  (text "attacker_channel",S.empty)
-        (pt2, sh2) = auxppSapicTerm Proverif True True t2
+        (pt2, sh2) = auxppSapicTerm Proverif (matchVars an) True t2
 
-ppAction DeepSec (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
+ppAction an DeepSec (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = case t1 of
           Just tt1 -> ppSapicTerm DeepSec tt1
           Nothing ->  (text "attacker_channel",S.empty)
-        (pt2, sh2) = auxppSapicTerm DeepSec True True t2
+        (pt2, sh2) = auxppSapicTerm DeepSec (matchVars an) True t2
 
 -- pattern matching on input for deepsec is not supported
-ppAction DeepSec (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
+ppAction an DeepSec (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = case t1 of
           Just tt1 -> ppSapicTerm DeepSec tt1
           Nothing ->  (text "attacker_channel",S.empty)
-        (pt2, sh2) = auxppSapicTerm DeepSec True True t2
+        (pt2, sh2) = auxppSapicTerm DeepSec (matchVars an) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
-ppAction trans (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
+ppAction an trans (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
   where (pt1, sh1) = ppSapicTerm trans t1
         (pt2, sh2) = ppSapicTerm trans t2
-ppAction trans (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ");", sh2)
+ppAction an trans (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ");", sh2)
   where (pt2, sh2) = ppSapicTerm trans t2
 
-ppAction Proverif (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh `S.union` (S.singleton (HEvent ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
+ppAction an Proverif (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh `S.union` (S.singleton (HEvent ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
   where (pa, sh) = ppFact Proverif (Fact tag m ts)
 
-ppAction DeepSec (Event _ )  = (text "", S.empty)
+ppAction an DeepSec (Event _ )  = (text "", S.empty)
 
 
-ppAction Proverif (Lock t) =  (text "in(flock(" <> pt <> text ")," <> text ptcounter <> text ":nat);"
+ppAction an Proverif (Lock t) =  (text "in(flock(" <> pt <> text ")," <> text ptcounter <> text ":nat);"
                               $$ text "event Lock((" <> pt <> text "," <> text ptcounter <> text "));"
                               , sh)
   where (pt, sh) = ppSapicTerm Proverif t
         ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt) -- improve name of counter, fresh variable and propagate the name
 
-ppAction Proverif (Unlock t) =  ( text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" -- do not make event as tuple, but need to infer
+ppAction an Proverif (Unlock t) =  ( text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" -- do not make event as tuple, but need to infer
                                   $$ text "out(flock(" <> pt <> text ")," <> text ptcounter <> text ");"
                                 , sh)
   where (pt, sh) = ppSapicTerm Proverif t
         ptcounter = "counterlock" ++ stripNonAlphanumerical (render pt)++ "+1"
 
 
-ppAction Proverif (Insert t c) = (text "event CellWrite((" <> pt <> text "," <> pc
+ppAction an Proverif (Insert t c) = (text "event CellWrite((" <> pt <> text "," <> pc
 --                              <> text "," <> text ptcounter
                               <> text "));"
                               $$ text "out(fcell(" <> pt <> text "), " <> pc
@@ -333,9 +332,9 @@ ppAction Proverif (Insert t c) = (text "event CellWrite((" <> pt <> text "," <> 
         (pc, shc) = ppSapicTerm Proverif c
 --        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
 
-ppAction _ _  = (text "Action not supported for translation", S.empty)
+ppAction an _ _  = (text "Action not supported for translation", S.empty)
 
-ppSapic :: Translation -> LProcess ann -> (Doc, S.Set ProverifHeader)
+ppSapic :: Translation -> PlainProcess -> (Doc, S.Set ProverifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
 ppSapic trans (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic trans pl
@@ -343,20 +342,20 @@ ppSapic trans (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text 
 ppSapic trans (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic trans pl
                                            (ppr, pshr) = ppSapic trans pr
-ppSapic trans (ProcessComb (Let t1 t2) _ pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppSapic trans (ProcessComb (Let t1 t2) an pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                ,sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic trans pl
-                                           (pt1, sh1) = auxppSapicTerm trans True True t1
+                                           (pt1, sh1) = auxppSapicTerm trans (matchVars an) True t1
                                            (pt2, sh2) = ppSapicTerm trans t2
 
-ppSapic trans (ProcessComb (Let t1 t2) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppSapic trans (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                  $$ text "else" <> ppr
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic trans pl
                                            (ppr, pshr) = ppSapic trans pr
-                                           (pt1, sh1) = auxppSapicTerm trans True True t1
+                                           (pt1, sh1) = auxppSapicTerm trans (matchVars an) True t1
                                            (pt2, sh2) = ppSapicTerm trans t2
 
 ppSapic trans (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
@@ -421,10 +420,10 @@ ppSapic Proverif (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
                                    where (pp, psh) = ppSapic Proverif p
 ppSapic DeepSec (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
                                    where (pp, psh) = ppSapic DeepSec p
-ppSapic trans  (ProcessAction a _ (ProcessNull _))  = (pa <> text "0", sh)
-                                     where (pa, sh) = ppAction trans a
-ppSapic trans  (ProcessAction a _ p)  = (pa $$ pp , sh `S.union` psh)
-                                     where (pa, sh) = ppAction trans a
+ppSapic trans  (ProcessAction a an (ProcessNull _))  = (pa <> text "0", sh)
+                                     where (pa, sh) = ppAction an trans a
+ppSapic trans  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
+                                     where (pa, sh) = ppAction an trans a
                                            (pp, psh) = ppSapic trans p
 
 loadProc :: OpenTheory -> (Doc, S.Set ProverifHeader)
