@@ -22,10 +22,6 @@ import           Control.Monad.Fresh
 
 type StateMap = M.Map SapicTerm SapicLVar
 
--- freesSapicTerm :: S.Set a
-freesSapicTerm :: Term (Lit Name a) -> [a]
-freesSapicTerm =   foldMap $ foldMap (: [])
-
 
 addStatesChannels :: PlainProcess -> (PlainProcess, StateMap)
 addStatesChannels p = (p', stateMap)

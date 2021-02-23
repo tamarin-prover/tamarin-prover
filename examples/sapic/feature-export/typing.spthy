@@ -12,7 +12,7 @@ let P() = new x:lol; new y;
        out(<x,y>); out(x + y); // should succeed
         out(f(<x,y>));  // should succeed
         /* out(g(<x,y>));  // should fail */
-        in(<=x,=x>); // shouldfail
+        in(<=x,=x>); // should fail
         0
 
 P
