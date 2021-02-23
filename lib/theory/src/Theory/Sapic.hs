@@ -41,6 +41,8 @@ module Theory.Sapic (
     , toLNFact
     , toLFormula
     -- utitlities
+    , freesSapicTerm
+    , freesSapicFact
     , paddAnn
     , foldProcess
     , foldMProcess
@@ -69,6 +71,7 @@ module Theory.Sapic (
     -- TODO external
     , PatternSapicLVar(..)
     , unpattern
+    , validPattern
     , extractMatchingVariables
 ) where
 
@@ -147,14 +150,41 @@ unpattern = fmap (fmap unpattern')
         unpattern' (PatternBind  v) = v
         unpattern' (PatternMatch v) = v
 
+-- | Check a pattern for validity w.r.t. a set of variables or names that are
+--    already bound, i.e.,
+--   1. no variable that is already bound should occur as PatternBind
+--   2. no variable that already occurs as PatternMatch should occur as PatternBind
+validPattern :: S.Set SapicLVar -> Term (Lit n PatternSapicLVar) -> Bool
+validPattern alreadybound pt = (alreadybound `S.union` matched) `S.disjoint` tobind
+    where
+        (tobind',matched') = freesPatternSapicLVar pt
+        tobind  = S.fromList tobind'
+        matched = S.fromList matched'
+
 extractMatchingVariables :: SapicNTerm PatternSapicLVar -> S.Set SapicLVar
 extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
     where
         isPatternMatch (PatternMatch v) = [v]
-        isPatternMatch (PatternBind _ ) = []
+        isPatternMatch (PatternBind  _) = []
 
+-- | return free variabes in SapicTerm  (frees from HasFrees only returns LVars)
+freesSapicTerm :: VTerm n v -> [v]
+freesSapicTerm = foldMap $ foldMap (: []) 
+
+-- | return free variabes in SapicFact  
+---- fold over terms in fact and use freesSapicTerm to get list monoid
+freesSapicFact :: Fact (VTerm n v) -> [v]
+freesSapicFact = foldMap freesSapicTerm 
+
+freesPatternSapicLVar :: VTerm n PatternSapicLVar -> ([SapicLVar], [SapicLVar])
+freesPatternSapicLVar pt = foldr f ([],[]) (freesSapicTerm pt)
+    where
+        f (PatternBind  v) (bs,ms) = (v:bs,ms)
+        f (PatternMatch v) (bs,ms) = (bs,v:ms)
+    
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
+
 
 -- conversion functions for sapic types
 toLVar:: SapicLVar -> LVar

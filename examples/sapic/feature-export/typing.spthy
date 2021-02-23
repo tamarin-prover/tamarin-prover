@@ -5,13 +5,14 @@ functions: f(bitstring):bitstring, g(lol):lol
 
 builtins: multiset
 
-let P = new x:lol; new y; 
+let P() = new x:lol; new y; 
         out(x); out(y); 
         out(f(y));
         /* out(f(x)); // should fail */
-        out(<x,y>); out(x + y) // should succeed
+       out(<x,y>); out(x + y); // should succeed
         out(f(<x,y>));  // should succeed
         /* out(g(<x,y>));  // should fail */
+        in(<=x,=x>); // shouldfail
         0
 
 P

@@ -1049,9 +1049,12 @@ sapicAction = try (do
                <|> try (do
                         _ <- symbol "in"
                         _ <- symbol "("
-                        t <- msetterm False ltypedpatternlit
+                        pt <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
-                        return (ChIn Nothing (unpattern t), mempty { matchVars =  extractMatchingVariables t} )
+                        let annotation =  mempty { matchVars =  extractMatchingVariables pt}
+                        if validPattern S.empty pt -- TODO collect variables bound so far
+                            then return (ChIn Nothing (unpattern pt), annotation)
+                            else fail $ "Invalid pattern: " ++ show pt
                    )
                <|> try (do
                         _ <- symbol "in"
@@ -1060,6 +1063,7 @@ sapicAction = try (do
                         _ <- comma
                         t <- msetterm False ltypedpatternlit
                         _ <- symbol ")"
+                        -- TODO add stuff from above ... 
                         return (ChIn (Just c) (unpattern t), mempty { matchVars = extractMatchingVariables t})
                    )
                <|> try (do

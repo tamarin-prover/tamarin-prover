@@ -49,7 +49,10 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
         fNull _  = return . ProcessNull
         fAct  a _ (New v)       = insertVar v a
         fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
-        fAct  a _ (MSR (l,_,r,_)) =  foldr insertVar a (freesSapicFact r List.\\ freesSapicFact l)
+        fAct  a _ (MSR (l,_,r,_)) =  foldr insertVar a (
+                                                (foldMap freesSapicFact r)
+                                                List.\\ 
+                                                (foldMap freesSapicFact l))
         fAct  a _ _             =  a
         fComb a _ (Lookup _ v) = insertVar v a
         fComb a _ _ = a
@@ -95,8 +98,6 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
         insertVar v a
                | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
                | otherwise          =  Map.insert (slvar v) (stype v) a
-        freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars
-        freesSapicFact = foldMap $ foldMap freesSapicTerm -- fold over terms in fact and use freesSapicTerm to get list monoid
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
