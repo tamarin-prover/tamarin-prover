@@ -78,6 +78,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
 
     where t1'= toLNTerm t1
           t2'= toLNTerm t2
+        -- toPairs produce a pattern match over a list. We do not use fAppList, because List is reducible and cannot be used to pattern match.
           toPairs [] = fAppOne
           toPairs [s] = s
           toPairs (p:q) = fAppPair (p, toPairs q)

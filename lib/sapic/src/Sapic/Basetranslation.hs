@@ -248,9 +248,10 @@ baseTransComb c an p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
         freeset = fromList . frees
+        -- toPairs produce a pattern match over a list. We do not use fAppList, because List is reducible and cannot be used to pattern match.
         toPairs [] = fAppOne
         toPairs [s] = s
-        toPairs (p:q) = fAppPair (p, toPairs q)
+        toPairs (r:s) = fAppPair (r, toPairs s)
 
 
 -- | @baseInit@ provides the initial rule that is used to create the first
