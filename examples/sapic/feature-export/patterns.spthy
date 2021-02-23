@@ -1,0 +1,9 @@
+theory Patterns
+begin
+
+in(x); // allowed
+in(=x); // allowed
+/* in(<=x,x>); // disallowed because ambigous */
+0
+
+end

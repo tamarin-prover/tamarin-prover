@@ -1041,34 +1041,31 @@ sapicterm = msetterm False (vlit sapicvar)
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
 sapicAction :: Parser (LSapicAction, ProcessParsedAnnotation)
-sapicAction = try (do
-                        _ <- symbol "new"
+sapicAction = (do 
+                        _ <- try $ symbol "new"
                         s <- sapicvar
                         return (New s,mempty)
-                   )
-               <|> try (do
-                        _ <- symbol "in"
+              )
+               <|> (do
+                        _ <- try $ symbol "in"
                         _ <- symbol "("
-                        pt <- msetterm False ltypedpatternlit
-                        _ <- symbol ")"
+                        (maybeChannel,pt) <- 
+                            try (do
+                                pt <- msetterm False ltypedpatternlit
+                                _ <- symbol ")"
+                                return (Nothing,pt)
+                                )
+                            <|>(do
+                                c <- msetterm False ltypedlit
+                                _ <- comma
+                                pt<- msetterm False ltypedpatternlit
+                                _ <- symbol ")"
+                                return (Just c, pt)
+                                )
                         let annotation =  mempty { matchVars =  extractMatchingVariables pt}
                         if validPattern S.empty pt -- TODO collect variables bound so far
-                            then return (ChIn Nothing (unpattern pt), annotation)
+                            then return (ChIn maybeChannel (unpattern pt), annotation)
                             else fail $ "Invalid pattern: " ++ show pt
-                   )
-               <|> try (do
-                        _ <- symbol "in"
-                        _ <- symbol "("
-                        c <- msetterm False ltypedlit
-                        _ <- comma
-                        pt<- msetterm False ltypedpatternlit
-                        _ <- symbol ")"
-                        let annotation =  mempty { matchVars =  extractMatchingVariables pt}
-                        if validPattern S.empty pt -- TODO collect variables bound so far
-                            then return (ChIn (Just c) (unpattern pt), annotation)
-                            else fail $ "Invalid pattern: " ++ show pt
-                        -- TODO merge with previous case
-                        -- TODO error message is pretty useless
                    )
                <|> try (do
                         _ <- symbol "out"
@@ -1155,6 +1152,7 @@ process thy=
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   ))
+            -- TODO uncomment this again and integrate with parens parser
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
                         p <- process thy
@@ -1165,59 +1163,65 @@ process thy=
                             (Left err) -> fail $ show err -- Should never occur, we handle everything above
                             (Right p') -> return p'
                         )
-            <|>    try  (do -- parens parser
-                        _ <- symbol "("
+            <|>   do -- parens parser
+                        _ <- try $ symbol "("
                         p <- process thy
                         _ <- symbol ")"
-                        return p)
-            -- <|>    try  (do -- let expression parser
-            --             subst <- genericletBlock sapicvar sapicterm
-            --             p <- process thy
-            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
-            --                 (Right p') -> return p'
-            --             )
+                        return p
             <|>    do       -- action at top-level
                         p <- actionprocess thy
                         return p
 
+elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
+
 actionprocess :: OpenTheory -> Parser PlainProcess
 actionprocess thy=
-            try (do         -- replication parser
-                        _ <- symbol "!"
+                (do     -- replication parser
+                        _ <- try $ symbol "!"
                         p <- process thy
                         return (ProcessAction Rep mempty p))
-            <|> try (do     -- lookup / if with and w/o else branches
-                        _ <- symbol "lookup"
+            <|> (do     -- lookup / if with and w/o else branches
+                        _ <- try $ symbol "lookup"
                         t <- msetterm False ltypedlit
                         _ <- symbol "as"
                         v <- sapicvar
                         _ <- symbol "in"
                         p <- process thy
-                        _ <- symbol "else"
-                        q <- process thy
+                        q <- elseprocess thy
                         return (ProcessComb (Lookup t v) mempty p q)
                    )
-            <|> try (do
-                        _ <- symbol "lookup"
-                        t <- msetterm False ltypedlit
-                        _ <- symbol "as"
-                        v <- sapicvar
-                        _ <- symbol "in"
-                        p <- process thy
-                        return (ProcessComb (Lookup t v) mempty p (ProcessNull mempty))
-                   )
-            <|> try (do
-                        _ <- symbol "if"
-                        t1 <- msetterm False ltypedlit
-                        _ <- opEqual
-                        t2 <- msetterm False ltypedlit
+            <|> (do
+                        _ <- try $ symbol "if"
+                        cond <- try (do
+                                t1 <- msetterm False ltypedlit
+                                _ <- opEqual
+                                t2 <- msetterm False ltypedlit
+                                return (CondEq t1 t2)
+                                <?> "equality between two terms"
+                                )
+                               <|> (do
+                                frml <- standardFormula sapicvar sapicnodevar
+                                return (Cond frml)
+                                )
                         _ <- symbol "then"
                         p <- process thy
-                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        return (ProcessComb (CondEq t1 t2  ) mempty p q)
-                        <?> "conditional process (with equality)"
+                        q <- elseprocess thy
+                        return (ProcessComb cond mempty p q)
+                        <?> "conditional process"
                    )
+            <|> (do
+                        _ <- symbol "let"
+                        t1 <- msetterm False ltypedpatternlit
+                        _ <- opEqual
+                        t2 <- msetterm False ltypedlit
+                        _ <- symbol "in"
+                        p <- process thy
+                        q <- elseprocess thy
+                        let annot = mempty { matchVars = extractMatchingVariables t1}
+                        return (ProcessComb (Let (unpattern t1) t2) annot p q)
+                        <?> "let binding"
+                )
+            -- TODO can we use the genericletBlock parser instead?
             -- <|>    try  (do -- let expression parser
             --             subst <- genericletBlock sapicvar sapicterm
             --             p     <- process thy
@@ -1225,71 +1229,14 @@ actionprocess thy=
             --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
             --                 (Right p') -> return p'
             --             )
-            <|> try (do
-                        _ <- symbol "let"
-                        t1 <- msetterm False ltypedpatternlit
-                        _ <- opEqual
-                        t2 <- msetterm False ltypedlit
-                        _ <- symbol "in"
-                        p <- process thy
-                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        let annot = mempty { matchVars = extractMatchingVariables t1}
-                        return (ProcessComb (Let (unpattern t1) t2) annot p q)
-                        <?> "let binding"
-                   )
-            <|> try (do
-                        _ <- symbol "if"
-                        frml <- standardFormula sapicvar sapicnodevar
-                        _ <- symbol "then"
-                        p <- process thy
-                        q <- option (ProcessNull mempty) (symbol "else" *> process thy)
-                        return (ProcessComb (Cond frml) mempty p q)
-                        <?> "conditional process (with predicate)"
-                   )
-            -- <|> try (do
-            --             _ <- symbol "if"
-            --             t1 <- msetterm llit
-            --             _ <- opEqual
-            --             t2 <- msetterm llit
-            --             _ <- symbol "then"
-            --             p <- process thy
-            --             return (ProcessComb (CondEq t1 t2  ) mempty p (ProcessNull mempty))
-            --        )
-            -- <|> try (do
-            --             _ <- symbol "if"
-            --             pr <- fact llit
-            --             _ <- symbol "then"
-            --             p <- process thy
-            --             return (ProcessComb (Cond pr) mempty p (ProcessNull mempty))
-            --        )
-            <|> try ( do  -- sapic actions are constructs separated by ";"
-                        (s,ann) <- sapicAction
-                        _ <- opSeq
-                        p <- actionprocess thy
-                        return (ProcessAction s ann p))
-            <|> try ( do  -- allow trailing actions (syntactic sugar for action; 0)
-                        (s,ann) <- sapicAction
-                        return (ProcessAction s ann (ProcessNull mempty)))
-            <|> try (do   -- null process: terminating element
-                        _ <- opNull
+            <|> (do   -- null process: terminating element
+                        _ <- try opNull
                         return (ProcessNull mempty) )
-            <|> try   (do -- parse identifier
-                        -- println ("test process identifier parsing Start")
-                        i <- BC.pack <$> identifier
-                        ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
-                        (p, vars) <- checkProcess (BC.unpack i) thy
-                        return (ProcessComb
-                                (ProcessCall (BC.unpack i) vars ts) mempty
-                                (paddAnn p (mempty {processnames =  [BC.unpack i]}))
-                                (ProcessNull mempty))
-                        )
-            <|>    try  (do -- let expression parser
-                        subst <- genericletBlock sapicvar sapicterm
-                        p     <- process thy
-                        case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
-                        )
+            <|> ( do  -- sapic actions are separated by ";"
+                      -- but allow trailing actions (syntactic sugar for action; 0)
+                        (s,ann) <- try sapicAction
+                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy) 
+                        return (ProcessAction s ann p))
             <|>   try (do    -- parens parser + at multterm
                         _ <- symbol "("
                         p <- process thy
@@ -1304,6 +1251,23 @@ actionprocess thy=
                         _ <- symbol ")"
                         return p
                     )
+            <|> try   (do -- parse identifier
+                        -- println ("test process identifier parsing Start")
+                        i <- BC.pack <$> identifier
+                        ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
+                        (p, vars) <- checkProcess (BC.unpack i) thy
+                        return (ProcessComb
+                                (ProcessCall (BC.unpack i) vars ts) mempty
+                                (paddAnn p (mempty {processnames =  [BC.unpack i]}))
+                                (ProcessNull mempty))
+                        )
+            -- <|>    try  (do -- let expression parser
+            --             subst <- genericletBlock sapicvar sapicterm
+            --             p     <- process thy
+            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
+            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
+            --                 (Right p') -> return p'
+            --             )
 
 heuristic :: Bool -> Parser [GoalRanking]
 heuristic diff = do
