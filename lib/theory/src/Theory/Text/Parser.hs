@@ -1067,50 +1067,51 @@ sapicAction = (do
                             then return (ChIn maybeChannel (unpattern pt), annotation)
                             else fail $ "Invalid pattern: " ++ show pt
                    )
-               <|> try (do
-                        _ <- symbol "out"
+               <|> (do
+                        _ <- try $ symbol "out"
                         _ <- symbol "("
-                        t <- msetterm False ltypedlit
-                        _ <- symbol ")"
-                        return (ChOut Nothing t, mempty)
+                        (maybeChannel,t) <- 
+                            try (do
+                                t <- msetterm False ltypedlit
+                                _ <- symbol ")"
+                                return (Nothing,t))
+                            <|>(do
+                                t <- msetterm False ltypedlit
+                                _ <- comma
+                                t' <- msetterm False ltypedlit
+                                _ <- symbol ")"
+                                return (Just t, t')
+                                )
+                        return (ChOut maybeChannel t, mempty)
                    )
-               <|> try (do
-                        _ <- symbol "out"
-                        _ <- symbol "("
-                        t <- msetterm False ltypedlit
-                        _ <- comma
-                        t' <- msetterm False ltypedlit
-                        _ <- symbol ")"
-                        return (ChOut (Just t) t', mempty)
-                   )
-               <|> try (do
-                        _ <- symbol "insert"
+               <|> (do
+                        _ <- try $ symbol "insert"
                         t <- msetterm False ltypedlit
                         _ <- comma
                         t' <- msetterm False ltypedlit
                         return (Insert t t', mempty)
                    )
-               <|> try (do
-                        _ <- symbol "delete"
+               <|> (do
+                        _ <- try $ symbol "delete"
                         t <- msetterm False ltypedlit
                         return (Delete t, mempty)
                    )
-               <|> try (do
-                        _ <- symbol "lock"
+               <|> (do
+                        _ <- try $ symbol "lock"
                         t <- msetterm False ltypedlit
                         return (Lock t, mempty)
                    )
-               <|> try (do
-                        _ <- symbol "unlock"
+               <|> (do
+                        _ <- try $ symbol "unlock"
                         t <- msetterm False ltypedlit
                         return (Unlock t, mempty)
                    )
-               <|> try (do
-                        _ <- symbol "event"
+               <|> (do
+                        _ <- try $ symbol "event"
                         f <- fact ltypedlit
                         return (Event f, mempty)
                    )
-               <|> try (do
+               <|> (do
                         r <- genericRule sapicvar sapicnodevar
                         return (MSR r, mempty)
                    )
@@ -1147,30 +1148,11 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  try  (chainl1 (actionprocess thy) (
+                  (chainl1 (actionprocess thy) (
                              do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   ))
-            -- TODO uncomment this again and integrate with parens parser
-            <|>   try (do    -- parens parser + at multterm
-                        _ <- symbol "("
-                        p <- process thy
-                        _ <- symbol ")"
-                        _ <- symbol "@"
-                        m <- msetterm False ltypedlit
-                        case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of
-                            (Left err) -> fail $ show err -- Should never occur, we handle everything above
-                            (Right p') -> return p'
-                        )
-            <|>   do -- parens parser
-                        _ <- try $ symbol "("
-                        p <- process thy
-                        _ <- symbol ")"
-                        return p
-            <|>    do       -- action at top-level
-                        p <- actionprocess thy
-                        return p
 
 elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
 
@@ -1210,10 +1192,12 @@ actionprocess thy=
                         <?> "conditional process"
                    )
             <|> (do
-                        _ <- symbol "let"
-                        t1 <- msetterm False ltypedpatternlit
-                        _ <- opEqual
-                        t2 <- msetterm False ltypedlit
+                        (t1,t2) <- try $ do
+                                _  <- letIdentifier
+                                t1 <- msetterm False ltypedpatternlit
+                                _  <- opEqual
+                                t2 <- msetterm False ltypedlit
+                                return (t1,t2)
                         _ <- symbol "in"
                         p <- process thy
                         q <- elseprocess thy
@@ -1237,21 +1221,35 @@ actionprocess thy=
                         (s,ann) <- try sapicAction
                         p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy) 
                         return (ProcessAction s ann p))
-            <|>   try (do    -- parens parser + at multterm
-                        _ <- symbol "("
+                -- TODO merge with parens parser below ..
+            <|>  (do    -- parens parser + at multterm
+                        _ <- try $ symbol "("
                         p <- process thy
                         _ <- symbol ")"
                         _ <- symbol "@"
                         m <- msetterm False ltypedlit
                         return $ paddAnn p (mempty {location = (Just m)})
                         )
+            -- TODO talk with charlie which parser code is correct. this one was defined for non-action processes
+            -- reintegrate this code in action process..
+            --
+            -- <|>   try (do    -- parens parser + at multterm
+            --             _ <- symbol "("
+            --             p <- process thy
+            --             _ <- symbol ")"
+            --             _ <- symbol "@"
+            --             m <- msetterm False ltypedlit
+            --             case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of
+            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
+            --                 (Right p') -> return p'
+            --             )
             <|> try (do        -- parens parser
                         _ <- symbol "("
                         p <- process thy
                         _ <- symbol ")"
                         return p
                     )
-            <|> try   (do -- parse identifier
+            <|> (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)

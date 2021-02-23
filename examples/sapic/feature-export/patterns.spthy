@@ -1,9 +1,17 @@
 theory Patterns
 begin
 
-in(x); // allowed
-in(=x); // allowed
-/* in(<=x,x>); // disallowed because ambigous */
-0
+
+/* in(x); // allowed */
+/* in(=x); // allowed */
+/* /1* in(<=x,x>); // disallowed because ambigous *1/ */
+/* 0 */
+
+/* 0 | (new x) */
+
+// TODO somethings wrong with insert
+/* insert ct, 'aborted' */
+/* insert 't' | 0 */
+
 
 end
