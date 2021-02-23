@@ -62,7 +62,7 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: OpenTheory -> Doc
 prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
   where
-    tc = TranslationContext {trans = Proverif}
+    tc = TranslationContext {trans = Proverif, attackerChannel = Nothing}
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` prochd `S.union` macroprochd)
     (proc, prochd) = loadProc tc thy
@@ -77,7 +77,9 @@ data Translation =
 
 
 data TranslationContext = TranslationContext
-  { trans :: Translation }
+  { trans :: Translation,
+    attackerChannel :: Maybe LVar
+  }
     deriving (Eq, Ord, Data)
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
@@ -93,7 +95,6 @@ data ProverifHeader =
 -- We declare some base headers. Notably, we need a dedicated attacker channel.
 base_headers :: S.Set ProverifHeader
 base_headers = S.fromList [
-  Sym "free" "attacker_channel" ":channel" [],
   Fun "fun" "flock" 1 "(bitstring):channel" ["private"],
   Fun "fun" "fcell" 1 "(bitstring):channel" ["private"],
   HEvent "event Lock(bitstring).",
@@ -277,33 +278,25 @@ ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
 
 ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
-  where (pt1, sh1) = case t1 of
-          Just tt1 -> ppSapicTerm tc tt1
-          Nothing ->  (text "attacker_channel",S.empty)
+  where (pt1, sh1) = getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
 
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
-  where (pt1, sh1) = case t1 of
-          Just tt1 -> ppSapicTerm tc tt1
-          Nothing ->  (text "attacker_channel",S.empty)
+  where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
 
 -- pattern matching on input for deepsec is not supported
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
                                        , sh1 `S.union` sh2)
-  where (pt1, sh1) = case t1 of
-          Just tt1 -> ppSapicTerm tc tt1
-          Nothing ->  (text "attacker_channel",S.empty)
+  where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
-ppAction _ tc (ChOut (Just t1) t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
-  where (pt1, sh1) = ppSapicTerm tc t1
+ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
+  where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = ppSapicTerm tc t2
-ppAction _ tc (ChOut Nothing t2 )  = (text "out(attacker_channel," <> pt2 <> text ");", sh2)
-  where (pt2, sh2) = ppSapicTerm tc t2
 
 ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh `S.union` (S.singleton (HEvent ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
   where (pa, sh) = ppFact tc (Fact tag m ts)
@@ -432,25 +425,31 @@ ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader)
 loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty)
-  [p] -> ppSapic tc p
+  [p] -> let (d,headers) = ppSapic tc2 p in
+           (d,S.union hd headers)
+   where (tc2, hd) = mkAttackerContext tc p
   _  -> (text "Multiple sapic processes detected, error", S.empty)
 
 
 loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProverifHeader)
-loadMacroProc tc thy = load (theoryProcessDefs thy)
-  where
-    load [] = ([text ""], S.empty)
-    load (p:q) =
-      let (docs, heads) = load q in
+loadMacroProc tc thy = loadMacroProcs tc (theoryProcessDefs thy)
+
+loadMacroProcs :: TranslationContext -> [ProcessDef] ->  ([Doc], S.Set ProverifHeader)
+loadMacroProcs _ [] = ([text ""], S.empty)
+loadMacroProcs tc  (p:q) =
+      let (docs,  heads) = loadMacroProcs tc2 q in
         case L.get pVars p of
-          [] -> (docs, heads)
+          [] -> (docs, hd `S.union` heads)
           pvars ->
-            let (new_text, new_heads) = ppSapic tc (L.get pBody p) in
-            let vars  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc) pvars ))) <> text ")"in
+            let (new_text, new_heads) = ppSapic tc2 (L.get pBody p) in
+            let vars  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc2) pvars ))) <> text ")"in
              let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
                              (nest 4 new_text) <> text "." in
-               (macro_def : docs, new_heads `S.union` heads)
-
+               (macro_def : docs, hd `S.union` new_heads `S.union` heads)
+  where (tc2,hd) = case attackerChannel tc of
+          -- we set up the attacker channel if it does not already exists
+          Nothing -> mkAttackerContext tc (L.get pBody p)
+          Just _ -> (tc, S.empty)
 
 ------------------------------------------------------------------------------
 -- Printer for Lemmas
@@ -488,7 +487,7 @@ ppAtom = ppProtoAtom (const emptyDoc)
 
 -- only used for Proverif queries display
 ppNAtom ::  ProtoAtom s LNTerm -> Doc
-ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif}))
+ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif, attackerChannel = Nothing}))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
@@ -703,6 +702,31 @@ attribHeaders tc hd =
           | Type _ <- x = (e1,f1,(pph x):s1)
           where (e1,f1,s1) = splitHeaders xs
 
+
+mkAttackerChannel :: (-- MonadThrow m,
+                   MonadFresh m
+                 -- , Monoid (m (AnProcess ProcessAnnotation))
+                  -- ,Foldable (AnProcess ProcessAnnotation)
+                )
+                    => PlainProcess -> m LVar
+mkAttackerChannel _ = (freshLVar "attacker" LSortMsg)
+
+mkAttackerContext :: TranslationContext -> PlainProcess -> (TranslationContext, S.Set ProverifHeader)
+mkAttackerContext tc p =
+  (tc{attackerChannel = Just attackerVar}, S.singleton hd)
+  where
+    attackerVar@(LVar n _ _)  = (evalFresh (mkAttackerChannel p) 0)
+    hd =  (Sym "free" n ":channel" [])
+
+
+-- given an optional channel name and a translation context, returns the corresponding printer
+getAttackerChannel :: TranslationContext
+                   -> Maybe SapicTerm -> (Doc, S.Set ProverifHeader)
+getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
+          (Just tt1, _) -> ppSapicTerm tc tt1
+          (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)
+          _ -> (text "TRANSLATION ERROR", S.empty)
+
 ------------------------------------------------------------------------------
 -- Some utility functions
 ------------------------------------------------------------------------------
@@ -737,7 +761,7 @@ deepsecTemplate headers macroproc requests =
 prettyDeepSecTheory :: OpenTheory -> Doc
 prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
-        tc = TranslationContext{trans=DeepSec}
+        tc = TranslationContext{trans=DeepSec, attackerChannel = Nothing}
         hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` macroprochd)
         requests = loadRequests thy
