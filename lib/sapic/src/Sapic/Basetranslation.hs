@@ -227,7 +227,7 @@ baseTransComb c an p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
--- process Calls are currently optimized inside LetDestructors.hs, and the following should not be used. they could be use to enable variants on the process call modeling.
+-- Process Calls are currently optimized inside LetDestructors.hs, and the following should not be used. they could be use to enable variants on the process call modeling.
     | ProcessCall _ _ [] <- c =
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)
@@ -248,7 +248,9 @@ baseTransComb c an p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
         freeset = fromList . frees
-        toPairs = fAppList -- TODO remove and inline if everything works
+        toPairs [] = fAppOne
+        toPairs [s] = s
+        toPairs (p:q) = fAppPair (p, toPairs q)
 
 
 -- | @baseInit@ provides the initial rule that is used to create the first
