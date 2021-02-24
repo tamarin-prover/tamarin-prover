@@ -25,6 +25,7 @@ import Data.Maybe
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
 import qualified Data.List as List
+import qualified Data.Foldable as F
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Annotation
@@ -41,15 +42,20 @@ import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
 
-typeProcess :: MonadThrow m => Theory sig c r p1 SapicElement
-                        -> Process p2 SapicLVar -> m (Process p2 SapicLVar)
+typeProcess :: (MonadThrow m, Monoid ann) => Theory sig c r p1 SapicElement
+                        -> Process ann SapicLVar -> m (Process ann SapicLVar)
 typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
     where
         lift3 f a b c = return $ f a b c -- compose ternary function with return
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  = return . ProcessNull
-        fAct  a ann ac       = foldr insertVar a (bindingsAct ann ac)
-        fComb a ann c        = foldr insertVar a (bindingsComb ann c)
+        fAct  a ann ac       = F.foldrM insertVar a (bindingsAct ann ac)
+        fComb a ann c        = F.foldrM insertVar a (bindingsComb ann c)
+             -- TODO recogonise double binding while typing
+             -- throw exception if variable is already in there...
+             -- else 
+             --   throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ accBindings p )
+             --                :: SapicException AnnotatedProcess)
         -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct a' ac ann r = do
                        -- a' is map variables to types
@@ -89,9 +95,13 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
-        insertVar v a
-               | Nothing <- stype v =  Map.insert (slvar v) defaultSapicType a
-               | otherwise          =  Map.insert (slvar v) (stype v) a
+        insertVar v a 
+            | Just _ <- Map.lookup (slvar v) a = -- if variable is already in map, it must have been bound for the second time..
+                                                 -- TODO need to make sure that bindsAct etc. return list without doubles ...
+                        throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
+            | otherwise = return $ Map.insert (slvar v) (maybeToDefault $ stype v) a
+        maybeToDefault Nothing   = defaultSapicType -- not quite the same as maybe, different type
+        maybeToDefault something = something
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
@@ -106,9 +116,7 @@ translate th = case theoryProcesses th of
              else
                     return (removeSapicItems th)
 
-      [p] -> if True -- all allUnique (bindings p []) TODO commented out for testing.
-                     then do
-                -- annotate
+      [p] -> do -- annotate
                 an_proc_pre <- (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
@@ -125,15 +133,8 @@ translate th = case theoryProcesses th of
                 -- add heuristic, if not already defined:
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
-             else
-               throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ accBindings p )
-                            :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars -- TODO filter this on =x vars, because <=x,=x> is okay
-    allUnique = all ( (==) 1 . length) . List.group . List.sort
-    -- given a list of list of bindings, obtain the list from which there is a duplicate and extract the duplicate. Must only be called on  a list where all AllUnique is false.
-    getNonUnique = head . head . filter ((/=) 1 . length) . List.group . List.sort . head . filter (not . allUnique)
     ops = L.get thyOptions th
     translateReport anp =
       if L.get transReport ops then
