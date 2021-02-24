@@ -8,6 +8,7 @@ one secret can be learned
 theory NoReplication
 begin
 
+process:
 new s; event Secret(s); out(s); 0
 
 

@@ -12,6 +12,7 @@ let Q = in(c);
 	in(<t,'toto'>);
 	event AcceptQ()
 
+process:
 P | Q
 
 lemma no_acceptP:

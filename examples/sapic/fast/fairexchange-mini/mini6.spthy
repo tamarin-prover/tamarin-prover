@@ -5,6 +5,7 @@ section{* small example for progression function *}
 builtins: signing, hashing, reliable-channel
 options: translation-progress
 
+process:
 new a; !( if a=a then in('r',m); event A() else event B())
 
 lemma A_possible: 

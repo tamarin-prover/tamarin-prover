@@ -83,6 +83,7 @@ let Device=(
 
 let User=new lm; new rm; event Exclusive(lm,rm); out(aenc{<lm,rm>}pk(sk))
 
+process:
 !( new sk; new s; insert <'F_status',s>,'init'; ( Device || ! User ))
 
 // As we use a backwards search, we must specify the possible structure of

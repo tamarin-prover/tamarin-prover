@@ -58,6 +58,7 @@ let v =
 
  
 
+process:
 new init; ( (!r) || (!v))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */

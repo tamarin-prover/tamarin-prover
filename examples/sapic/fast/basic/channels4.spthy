@@ -13,6 +13,7 @@ begin
 let P = new a; event Secret(a); out (c, a)
 let Q = in(c, x); event Received(x)
 
+process:
 new c; (P || Q)
 
 lemma secret : 

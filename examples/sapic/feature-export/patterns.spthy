@@ -1,0 +1,14 @@
+theory Patterns
+begin
+
+
+in(x); // allowed
+in(=x); // allowed
+/* in(<=x,x>); // disallowed because ambigous */
+0
+|
+lookup 'x' as y in 0 else
+insert x,y
+
+
+end

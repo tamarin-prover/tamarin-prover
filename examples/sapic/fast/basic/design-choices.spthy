@@ -1,6 +1,7 @@
 theory DesignChoices
 begin
 
+process:
 !(lock 's'; 
   lookup 'visited' as v 
   in unlock 's'

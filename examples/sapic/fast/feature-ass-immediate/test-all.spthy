@@ -1,6 +1,7 @@
 theory AssImmediateTestAll
 begin
 
+process:
 new x; out(x);
 event A();
 in(x,x); 

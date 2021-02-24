@@ -33,6 +33,7 @@ let v =                                        // The verifier
 		unlock state)
 	else unlock state
 
+process:
 new init;
  ( !(new state;  insert state,init; !r) || !(new state;  insert state,init; !v)  )
 

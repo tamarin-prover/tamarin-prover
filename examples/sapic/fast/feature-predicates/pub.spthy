@@ -12,6 +12,7 @@ predicates:
 // Test if we can have public names in predicates used in restrictions.
 // Fixed a bug in the parser that disallowed this legitimate use.
 
+process:
 let 
     z = eq(x,'test')
 in

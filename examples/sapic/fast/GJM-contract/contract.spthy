@@ -145,10 +145,8 @@ if <ct,pk(sk1),pk2> = check_getmsg(signed2,pk(sk1)) then
 
 
 let WitnessResolved =
-//in (sign(<sign(ct,sk1), sign(=ct,sk2)>,skT));
-in (sign(<sign(ct,sk1), signed2>,skT));
-if ct = check_getmsg(signed2,pk(sk2)) then
-   event ResolveCert(ct)
+in (sign(<sign(=ct,sk1), sign(=ct,sk2)>,skT));
+event ResolveCert(ct)
 
 /* Honest client specification, useless here because all clients are dishonest
  * and play against the Trusted Third Party. Kept for reference.
@@ -171,6 +169,7 @@ let HonestClient =
 	0
 */
 
+process:
 !( new skT;
    out(pk(skT));
    (  !Abort1 || !Resolve2 || !Resolve1
