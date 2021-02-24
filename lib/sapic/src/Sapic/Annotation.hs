@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
+
 {-# LANGUAGE TypeSynonymInstances #-}
 -- {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -26,8 +25,6 @@ module Sapic.Annotation (
     , AnProcess (..)
     , unAnProcess
     , GoodAnnotation(..)
-    , getProcessParsedAnnotation
-    , setProcessParsedAnnotation
     , getProcessNames
     , setProcessNames
 ,annElse) where
@@ -97,10 +94,10 @@ instance Monoid (ProcessAnnotation v) where
         (elseBranch p2)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
-getProcessNames = processnames . getProcessParsedAnnotation 
+getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn}) 
+setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 
 instance Semigroup (ProcessAnnotation v) where
@@ -126,10 +123,10 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = mempty {lock = Just v} 
+annLock v = mempty {lock = Just v}
 
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = mempty {unlock = Just v} 
+annUnlock v = mempty {unlock = Just v}
 
 annSecretChannel :: AnVar v -> ProcessAnnotation v
 annSecretChannel v = mempty { secretChannel = Just v}

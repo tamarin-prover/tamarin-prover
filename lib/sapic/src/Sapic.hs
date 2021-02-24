@@ -24,7 +24,6 @@ import Data.Typeable
 import Data.Maybe
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as S
-import qualified Data.List as List
 import qualified Data.Foldable as F
 import qualified Extension.Data.Label                as L
 import Control.Monad.Trans.FastFresh   ()
@@ -44,9 +43,8 @@ import Theory.Text.Parser
 
 typeProcess :: (MonadThrow m, Monoid ann) => Theory sig c r p1 SapicElement
                         -> Process ann SapicLVar -> m (Process ann SapicLVar)
-typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.empty
+typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
     where
-        lift3 f a b c = return $ f a b c -- compose ternary function with return
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  = return . ProcessNull
         fAct  a ann ac       = F.foldrM insertVar a (bindingsAct ann ac)
@@ -95,11 +93,12 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
-        insertVar v a 
+        insertVar v a
             | Just _ <- Map.lookup (slvar v) a = -- if variable is already in map, it must have been bound for the second time..
                                                  -- TODO need to make sure that bindsAct etc. return list without doubles ...
                         throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
-            | otherwise = return $ Map.insert (slvar v) (maybeToDefault $ stype v) a
+            | otherwise =
+                return $ Map.insert (slvar v) (maybeToDefault $ stype v) a
         maybeToDefault Nothing   = defaultSapicType -- not quite the same as maybe, different type
         maybeToDefault something = something
 
@@ -117,7 +116,7 @@ translate th = case theoryProcesses th of
                     return (removeSapicItems th)
 
       [p] -> do -- annotate
-                an_proc_pre <- (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
+                an_proc_pre <- translateLetDestr sigRules $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc
@@ -126,7 +125,7 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
 
-                th1 <- foldM liftedAddProtoRule th $ map (\x -> (OpenProtoRule x [])) eProtoRule
+                th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
                 -- add restrictions
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
