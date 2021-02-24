@@ -1,7 +1,6 @@
 theory Patterns
 begin
 
-
 process:
 in(x); // allowed
 in(=x); // allowed
