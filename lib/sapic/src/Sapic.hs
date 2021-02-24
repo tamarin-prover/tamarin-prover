@@ -35,6 +35,7 @@ import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
 import Sapic.LetDestructors
+import Sapic.Bindings
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
@@ -47,15 +48,8 @@ typeProcess th = foldMProcess fNull (lift3 fAct) (lift3 fComb) gAct gComb Map.em
         lift3 f a b c = return $ f a b c -- compose ternary function with return
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  = return . ProcessNull
-        fAct  a _ (New v)       = insertVar v a
-        fAct  a _ (ChIn _ t)    = foldr insertVar a (freesSapicTerm t)
-        fAct  a _ (MSR (l,_,r,_)) =  foldr insertVar a (
-                                                (foldMap freesSapicFact r)
-                                                List.\\ 
-                                                (foldMap freesSapicFact l))
-        fAct  a _ _             =  a
-        fComb a _ (Lookup _ v) = insertVar v a
-        fComb a _ _ = a
+        fAct  a ann ac       = foldr insertVar a (bindingsAct ann ac)
+        fComb a ann c        = foldr insertVar a (bindingsComb ann c)
         -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct a' ac ann r = do
                        -- a' is map variables to types
@@ -132,7 +126,7 @@ translate th = case theoryProcesses th of
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
              else
-               throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ bindings p [])
+               throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ accBindings p )
                             :: SapicException AnnotatedProcess)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where

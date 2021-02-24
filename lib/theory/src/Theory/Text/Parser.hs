@@ -414,6 +414,7 @@ protoRuleAC = do
 
 -- | Parse a let block with bottom-up application semantics.
 
+genericletBlock :: Parser a1 -> Parser a2 -> Parser [(a1, a2)]
 genericletBlock varp termp = many1 definition 
     where
         definition = (,) <$> (varp <* equalSign) <*> termp
@@ -1038,6 +1039,7 @@ processDef thy= do
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p vs)
 
+toplevelprocess :: OpenTheory -> Parser PlainProcess
 toplevelprocess thy = do
                     _ <- try (symbol "process")
                     _ <- colon
@@ -1051,6 +1053,7 @@ sapicterm :: Parser (Term (Lit Name SapicLVar))
 sapicterm = msetterm False ltypedlit
 
 -- | Parse a sapic pattern
+sapicpatternterm :: Parser (Term (Lit Name PatternSapicLVar))
 sapicpatternterm = msetterm False ltypedpatternlit
 
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
@@ -1086,7 +1089,7 @@ sapicAction = (do
                                 return (Just c, pt)
                                 )
                         let annotation =  mempty { matchVars =  extractMatchingVariables pt}
-                        if validPattern S.empty pt -- TODO collect variables bound so far
+                        if validPattern S.empty pt -- only validate that freshly bound variable do not intersect with matches.
                             then return (ChIn maybeChannel (unpattern pt), annotation)
                             else fail $ "Invalid pattern: " ++ show pt
                    )

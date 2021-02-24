@@ -25,7 +25,7 @@ module Sapic.Annotation (
     , AnVar (..)
     , AnProcess (..)
     , unAnProcess
-    , GoodAnnotation
+    , GoodAnnotation(..)
     , getProcessParsedAnnotation
     , setProcessParsedAnnotation
     , getProcessNames
