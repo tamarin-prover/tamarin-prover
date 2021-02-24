@@ -136,26 +136,6 @@ translate th = case theoryProcesses th of
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     freesSapicTerm = foldMap $ foldMap (: []) -- frees from HasFrees only returns LVars -- TODO filter this on =x vars, because <=x,=x> is okay
-    bindings (ProcessComb c _ pl pr) acc =
-      let new_acc = acc ++ bindingsComb c acc in
-        bindings pl new_acc ++ bindings pr new_acc
-    bindings (ProcessAction ac _ p) acc =
-      let new_acc = acc ++ bindingsAct ac acc in
-        bindings p new_acc
-    bindings (ProcessNull _) acc = [acc]
-    bindingsComb (Lookup _ v) _ = [v]
-    bindingsComb (Let t1 _) acc =
-      case viewTerm t1 of
-        Lit (Var v) -> [v]   -- if we are in a single variable let declaration, we return the variable v
-        _ -> let v = freesSapicTerm t1 in -- else, we have a pattern matching, and return the difference with currently bound variables.
-          -- TODO, if we actually have an explicit = appearing in the pattern matching, we should check that there is no double variable bindings
-          (List.\\) v acc
-    bindingsComb _  _           = []
-    bindingsAct (New v) _ = [v]
-    bindingsAct (ChIn _ t) acc =
-      let v = freesSapicTerm t in
-        (List.\\) v acc
-    bindingsAct _       _ = []
     allUnique = all ( (==) 1 . length) . List.group . List.sort
     -- given a list of list of bindings, obtain the list from which there is a duplicate and extract the duplicate. Must only be called on  a list where all AllUnique is false.
     getNonUnique = head . head . filter ((/=) 1 . length) . List.group . List.sort . head . filter (not . allUnique)

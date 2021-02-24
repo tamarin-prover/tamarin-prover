@@ -65,6 +65,7 @@ library
         Sapic.Annotation
       , Sapic.Exceptions
       , Sapic.ProcessUtils
+      , Sapic.Bindings
       , Sapic.Locks
       , Sapic.SecretChannels
       , Sapic.Compression

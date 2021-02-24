@@ -1148,12 +1148,13 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  (chainl1 (actionprocess thy) (
+                  chainl1 (actionprocess thy) (
                              do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
-                  ))
+                  )
 
+elseprocess :: OpenTheory -> ParsecT String MaudeSig Identity (Process ProcessParsedAnnotation SapicLVar)
 elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
 
 actionprocess :: OpenTheory -> Parser PlainProcess
