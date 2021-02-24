@@ -990,7 +990,7 @@ predicate = do
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
 preddeclaration thy = do
-                    _          <- try (symbol "predicates") <|> symbol "predicate"
+                    _          <- try (symbol "predicates" <|> symbol "predicate")
                     _          <- colon
                     predicates <- commaSep1 predicate
                     thy'       <-  foldM liftedAddPredicate thy predicates
@@ -1026,12 +1026,22 @@ export thy = do
 -- | parse a process definition (let P = .. ) or (let P (v1,...,vn) = ..)
 processDef :: OpenTheory -> Parser ProcessDef
 processDef thy= do
-                letIdentifier
-                i <- BC.pack <$> identifier
+                i <- try $ do
+                    _ <- letIdentifier
+                    i <- BC.pack <$> identifier
+                    return i
                 vs <- option [] $ parens $ commaSep (sapicvar)
                 equalSign
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p vs)
+
+toplevelprocess thy = do
+                    _ <- try (symbol "process")
+                    _ <- colon
+                    p <- process thy
+                    return p
+                    <?> "top-level process"
+                
 
 -- | Parse a variable in SAPIC that is typed
 sapicterm :: Parser (Term (Lit Name SapicLVar))
@@ -1112,7 +1122,7 @@ sapicAction = (do
                         return (Event f, mempty)
                    )
                <|> (do
-                        r <- genericRule sapicvar sapicnodevar
+                        r <- try $ genericRule sapicvar sapicnodevar
                         return (MSR r, mempty)
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
@@ -1238,6 +1248,7 @@ actionprocess thy=
                  )
             -- TODO talk with charlie which parser code is correct. this one was defined for non-action processes
             -- reintegrate this code in action process..
+            -- NOTE: Charlie set both should be in the parser
             -- <|>   try (do    -- parens parser + at multterm
             --             _ <- symbol "("
             --             p <- process thy
@@ -1449,7 +1460,7 @@ theory flags0 = do
            addItems flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems flags (addFormalComment c thy)
-      , do procc <- process thy                          -- try parsing a process
+      , do procc <- toplevelprocess thy                          -- try parsing a process
            addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'

@@ -1,6 +1,7 @@
 theory AssImmediateChannelIn
 begin
 
+process:
 new x; out(x);
 in(x); 
 event A()

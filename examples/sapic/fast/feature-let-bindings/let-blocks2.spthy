@@ -10,5 +10,5 @@ let P =
    let h='g'^a in
    out(h)
 
-P
+process: P
 end

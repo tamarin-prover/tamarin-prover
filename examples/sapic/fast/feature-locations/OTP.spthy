@@ -47,6 +47,7 @@ let server =
     )
      else (0)
  
+process:
 new skV; new pc; new cu; new pw; event Chan(cu); event Chan(pc); out(pw); event Key(skV);out(pk(skV));(!server||!user || !enclave)
 
 lemma secrecy_key[reuse]:

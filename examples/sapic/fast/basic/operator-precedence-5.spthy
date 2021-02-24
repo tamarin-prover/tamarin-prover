@@ -2,6 +2,7 @@ theory OperatorPrecedenceLetTriple
 begin
 section{* A few test cases for operator precedence *}
 
+process:
 let pat_x = '1' in
     in(pat_x); event E(pat_x)
     |

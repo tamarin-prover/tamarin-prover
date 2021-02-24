@@ -5,6 +5,7 @@ example illustrates replication (!)
 theory Replication
 begin
 
+process:
 ! new s; event Secret(s); out(s); 0
 
 // only a single secret can be learned by the attacker

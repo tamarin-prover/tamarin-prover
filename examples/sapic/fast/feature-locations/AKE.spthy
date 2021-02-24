@@ -35,7 +35,7 @@ let v =                                   // Initiator of the Key Exchange
 
 
  
-
+process:
 new init; ( (!r) || (!v))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */

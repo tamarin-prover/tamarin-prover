@@ -5,6 +5,7 @@ section{* small example for progression function *}
 builtins: signing, hashing, reliable-channel
 options: translation-progress
 
+process:
  (in('r',m); event A())
  +
  (new n; out('r',n); event B() )

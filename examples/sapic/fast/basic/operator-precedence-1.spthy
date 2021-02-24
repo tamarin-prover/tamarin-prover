@@ -2,6 +2,7 @@ theory OperatorPrecedencePar
 begin
 section{* A few test cases for operator precedence *}
 
+process:
 event A(); event B() | event C()
 // Should read: ( A; B) | C
 // instead of

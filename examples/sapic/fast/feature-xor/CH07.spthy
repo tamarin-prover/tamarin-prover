@@ -55,6 +55,7 @@ let Tag =
    event Alive( ~k, 'Reader' );
    event Commit(<'T','R',<~k XOR r1 XOR ~r2>>)
 
+process:
 ! new ~k; new ~id; ! (Reader || Tag)
 
 // FINDS ATTACK AUTOMATICALLY
