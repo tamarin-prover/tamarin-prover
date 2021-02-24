@@ -227,20 +227,10 @@ baseTransComb c an p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
--- Process Calls are currently optimized inside LetDestructors.hs, and the following should not be used. they could be use to enable variants on the process call modeling.
-    | ProcessCall _ _ [] <- c =
+-- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
+    | ProcessCall _ _ _ <- c =
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)
-    | ProcessCall _ vs ts <- c,
-      args <- map toLNTerm ts,
-      vars <- map toLVar vs  =
-        let tildexl =  fromList vars in -- `union` tildex in
-        let pos = p++[1] in
-          ([
-              ([def_state], [], [FLet pos (toPairs args) tildex], []),
-              ([FLet pos (toPairs $ map (\x -> termViewToTerm $ Lit( Var x)) vars) tildex], [], [def_state1 tildexl], [])
-           ],
-            tildexl, tildex)
 
     | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
@@ -248,10 +238,6 @@ baseTransComb c an p tildex
         def_state1 tx = State LState (p++[1]) tx
         def_state2 tx = State LState (p++[2]) tx
         freeset = fromList . frees
-        -- toPairs produce a pattern match over a list. We do not use fAppList, because List is reducible and cannot be used to pattern match.
-        toPairs [] = fAppOne
-        toPairs [s] = s
-        toPairs (r:s) = fAppPair (r, toPairs s)
 
 
 -- | @baseInit@ provides the initial rule that is used to create the first

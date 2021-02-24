@@ -350,10 +350,10 @@ ruleAttribute = asum
             Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
     -- parseProcess = process -- would need theory argument
-    parseProcess = do 
+    parseProcess = do
             _ <- noneOf " ,]"
             return $ ProcessNull mempty --- TODO would be nice to recover process from top-level
-        
+
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -414,7 +414,7 @@ protoRuleAC = do
 
 -- | Parse a let block with bottom-up application semantics.
 
-genericletBlock varp termp = many1 definition 
+genericletBlock varp termp = many1 definition
     where
         definition = (,) <$> (varp <* equalSign) <*> termp
 
@@ -1044,7 +1044,7 @@ toplevelprocess thy = do
                     p <- process thy
                     return p
                     <?> "top-level process"
-                
+
 
 -- | Parse a variable in SAPIC that is typed
 sapicterm :: Parser (Term (Lit Name SapicLVar))
@@ -1057,7 +1057,7 @@ sapicpatternterm = msetterm False ltypedpatternlit
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
 sapicAction :: Parser (LSapicAction, ProcessParsedAnnotation)
-sapicAction = (do 
+sapicAction = (do
                         _ <- try $ symbol "new"
                         s <- sapicvar
                         return (New s,mempty)
@@ -1072,7 +1072,7 @@ sapicAction = (do
                <|> (do
                         _ <- try $ symbol "in"
                         _ <- symbol "("
-                        (maybeChannel,pt) <- 
+                        (maybeChannel,pt) <-
                             try (do
                                 pt <- msetterm False ltypedpatternlit
                                 _ <- symbol ")"
@@ -1093,7 +1093,7 @@ sapicAction = (do
                <|> (do
                         _ <- try $ symbol "out"
                         _ <- symbol "("
-                        (maybeChannel,t) <- 
+                        (maybeChannel,t) <-
                             try (do
                                 t <- msetterm False ltypedlit
                                 _ <- symbol ")"
@@ -1227,9 +1227,9 @@ actionprocess thy=
             <|> ( do  -- sapic actions are separated by ";"
                       -- but allow trailing actions (syntactic sugar for action; 0)
                         (s,ann) <- try sapicAction
-                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy) 
+                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy)
                         return (ProcessAction s ann p))
-            <|>  (do    -- combined parser for `(p)` and `(p)@t` 
+            <|>  (do    -- combined parser for `(p)` and `(p)@t`
                         _ <- try $ symbol "("
                         p <- process thy
                         _ <- symbol ")"
@@ -1259,9 +1259,20 @@ actionprocess thy=
                         i <- BC.pack <$> identifier
                         ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
                         (p, vars) <- checkProcess (BC.unpack i) thy
+                        let base_subst = zip vars ts
+                        let extend_sup = foldl (\acc (svar,t) ->
+                                  (map (\x -> (x,t))
+                                   (case svar of
+                                      (SapicLVar sl_var (Just _)) ->
+                                        [svar, (SapicLVar sl_var Nothing)]
+                                      _ -> [svar]
+                                   )
+                                  )
+                                  ++ acc) [] base_subst
+                        substP <- applyProcess (substFromList extend_sup) p
                         return (ProcessComb
                                 (ProcessCall (BC.unpack i) vars ts) mempty
-                                (paddAnn p (mempty {processnames =  [BC.unpack i]}))
+                                (paddAnn substP (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )
 
