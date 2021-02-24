@@ -1241,19 +1241,6 @@ actionprocess thy=
                               <|> (return p)
                         return p'
                  )
-            -- TODO talk with charlie which parser code is correct. this one was defined for non-action processes
-            -- reintegrate this code in action process..
-            -- NOTE: Charlie set both should be in the parser
-            -- <|>   try (do    -- parens parser + at multterm
-            --             _ <- symbol "("
-            --             p <- process thy
-            --             _ <- symbol ")"
-            --             _ <- symbol "@"
-            --             m <- msetterm False ltypedlit
-            --             case Catch.catch (applyProcess (substFromList [(SapicLVar (LVar "_loc_" LSortMsg 0) defaultSapicType,m)]) p) (fail . prettyLetExceptions) of
-            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
-            --                 (Right p') -> return p'
-            --             )
             <|> try (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
