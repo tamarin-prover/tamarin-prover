@@ -1046,6 +1046,13 @@ sapicAction = (do
                         s <- sapicvar
                         return (New s,mempty)
               )
+               <|> (do -- insert must appear before in to not confuse the parser
+                        _ <- try $ symbol "insert"
+                        t <- msetterm False ltypedlit
+                        _ <- comma
+                        t' <- msetterm False ltypedlit
+                        return (Insert t t', mempty)
+                   )
                <|> (do
                         _ <- try $ symbol "in"
                         _ <- symbol "("
@@ -1083,13 +1090,6 @@ sapicAction = (do
                                 return (Just t, t')
                                 )
                         return (ChOut maybeChannel t, mempty)
-                   )
-               <|> (do
-                        _ <- try $ symbol "insert"
-                        t <- msetterm False ltypedlit
-                        _ <- comma
-                        t' <- msetterm False ltypedlit
-                        return (Insert t t', mempty)
                    )
                <|> (do
                         _ <- try $ symbol "delete"
@@ -1161,7 +1161,9 @@ actionprocess thy=
                 (do     -- replication parser
                         _ <- try $ symbol "!"
                         p <- process thy
-                        return (ProcessAction Rep mempty p))
+                        return (ProcessAction Rep mempty p)
+                        <?> "replication"
+                )
             <|> (do     -- lookup / if with and w/o else branches
                         _ <- try $ symbol "lookup"
                         t <- msetterm False ltypedlit
@@ -1171,6 +1173,7 @@ actionprocess thy=
                         p <- process thy
                         q <- elseprocess thy
                         return (ProcessComb (Lookup t v) mempty p q)
+                        <?> "lookup process"
                    )
             <|> (do
                         _ <- try $ symbol "if"
@@ -1221,18 +1224,20 @@ actionprocess thy=
                         (s,ann) <- try sapicAction
                         p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy) 
                         return (ProcessAction s ann p))
-                -- TODO merge with parens parser below ..
-            <|>  (do    -- parens parser + at multterm
+            <|>  (do    -- combined parser for `(p)` and `(p)@t` 
                         _ <- try $ symbol "("
                         p <- process thy
                         _ <- symbol ")"
-                        _ <- symbol "@"
-                        m <- msetterm False ltypedlit
-                        return $ paddAnn p (mempty {location = (Just m)})
-                        )
+                        p' <- (do
+                                _ <- try $ symbol "@"
+                                m <- msetterm False ltypedlit
+                                return $ paddAnn p (mempty {location = (Just m)})
+                               )
+                              <|> (return p)
+                        return p'
+                 )
             -- TODO talk with charlie which parser code is correct. this one was defined for non-action processes
             -- reintegrate this code in action process..
-            --
             -- <|>   try (do    -- parens parser + at multterm
             --             _ <- symbol "("
             --             p <- process thy
@@ -1243,13 +1248,7 @@ actionprocess thy=
             --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
             --                 (Right p') -> return p'
             --             )
-            <|> try (do        -- parens parser
-                        _ <- symbol "("
-                        p <- process thy
-                        _ <- symbol ")"
-                        return p
-                    )
-            <|> (do -- parse identifier
+            <|> try (do -- parse identifier
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
