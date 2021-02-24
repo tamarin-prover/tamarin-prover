@@ -6,7 +6,8 @@ process:
 in(x); // allowed
 in(=x); // allowed
 /* in(<=x,x>); // disallowed because ambigous */
-in(x);
+/* in(x); // disallowed because x is bound in top-level process */
+in(<y,y>); // allowed 
 0
 
 

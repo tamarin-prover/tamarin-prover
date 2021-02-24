@@ -41,7 +41,7 @@ import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
 
-typeProcess :: (MonadThrow m, Monoid ann) => Theory sig c r p1 SapicElement
+typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
                         -> Process ann SapicLVar -> m (Process ann SapicLVar)
 typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
     where

@@ -83,6 +83,12 @@ instance GoodAnnotation (ProcessAnnotation v)
         setProcessParsedAnnotation pn an = an { parsingAnn = pn }
         defaultAnnotation   = mempty
 
+instance GoodAnnotation (ProcessParsedAnnotation)
+    where
+        getProcessParsedAnnotation = id
+        setProcessParsedAnnotation pn _ = pn
+        defaultAnnotation   = mempty
+
 instance Monoid (ProcessAnnotation v) where
     mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True
     mappend p1 p2 = ProcessAnnotation
