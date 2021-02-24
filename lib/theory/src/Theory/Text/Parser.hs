@@ -414,15 +414,18 @@ protoRuleAC = do
 
 -- | Parse a let block with bottom-up application semantics.
 
-genericletBlock :: (IsConst c, IsVar v) => Parser v -> Parser (VTerm c v) -> Parser (Subst c v)
-genericletBlock varp termp =
-    toSubst <$> (symbol "let" *> many1 definition <* symbol "in")
-  where
-    toSubst = foldr1 compose . map (substFromList . return)
-    definition = (,) <$> (varp <* equalSign) <*> termp
+genericletBlock varp termp = many1 definition 
+    where
+        definition = (,) <$> (varp <* equalSign) <*> termp
 
 letBlock :: Parser LNSubst
-letBlock = genericletBlock (sortedLVar [LSortMsg]) (msetterm False llit)
+letBlock = do
+        _  <- letIdentifier
+        ls <-genericletBlock (sortedLVar [LSortMsg]) (msetterm False llit)
+        _  <- symbol "in"
+        return $ toSubst ls
+  where
+    toSubst = foldr1 compose . map (substFromList . return)
 
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
@@ -1045,7 +1048,10 @@ toplevelprocess thy = do
 
 -- | Parse a variable in SAPIC that is typed
 sapicterm :: Parser (Term (Lit Name SapicLVar))
-sapicterm = msetterm False (vlit sapicvar)
+sapicterm = msetterm False ltypedlit
+
+-- | Parse a sapic pattern
+sapicpatternterm = msetterm False ltypedpatternlit
 
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
@@ -1176,7 +1182,7 @@ actionprocess thy=
                 )
             <|> (do     -- lookup / if with and w/o else branches
                         _ <- try $ symbol "lookup"
-                        t <- msetterm False ltypedlit
+                        t <- sapicterm
                         _ <- symbol "as"
                         v <- sapicvar
                         _ <- symbol "in"
@@ -1188,9 +1194,9 @@ actionprocess thy=
             <|> (do
                         _ <- try $ symbol "if"
                         cond <- try (do
-                                t1 <- msetterm False ltypedlit
+                                t1 <- sapicterm
                                 _ <- opEqual
-                                t2 <- msetterm False ltypedlit
+                                t2 <- sapicterm
                                 return (CondEq t1 t2)
                                 <?> "equality between two terms"
                                 )
@@ -1204,28 +1210,17 @@ actionprocess thy=
                         return (ProcessComb cond mempty p q)
                         <?> "conditional process"
                    )
-            <|> (do
-                        (t1,t2) <- try $ do
-                                _  <- letIdentifier
-                                t1 <- msetterm False ltypedpatternlit
-                                _  <- opEqual
-                                t2 <- msetterm False ltypedlit
-                                return (t1,t2)
-                        _ <- symbol "in"
-                        p <- process thy
-                        q <- elseprocess thy
-                        let annot = mempty { matchVars = extractMatchingVariables t1}
-                        return (ProcessComb (Let (unpattern t1) t2) annot p q)
+            <|>    (do -- let expressions:
+                        _  <- try $ letIdentifier
+                        ls  <-genericletBlock sapicpatternterm sapicterm
+                        _  <- symbol "in"
+                        p   <- process thy
+                        q   <- elseprocess thy
+                        let f (t1,t2) p' =  let annot = mempty { matchVars = extractMatchingVariables t1} in
+                                    (ProcessComb (Let (unpattern t1) t2) annot p' q)
+                        return $ foldr f p ls
                         <?> "let binding"
                 )
-            -- TODO can we use the genericletBlock parser instead?
-            -- <|>    try  (do -- let expression parser
-            --             subst <- genericletBlock sapicvar sapicterm
-            --             p     <- process thy
-            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
-            --                 (Right p') -> return p'
-            --             )
             <|> (do   -- null process: terminating element
                         _ <- try opNull
                         return (ProcessNull mempty) )
@@ -1240,7 +1235,7 @@ actionprocess thy=
                         _ <- symbol ")"
                         p' <- (do
                                 _ <- try $ symbol "@"
-                                m <- msetterm False ltypedlit
+                                m <- sapicterm
                                 return $ paddAnn p (mempty {location = (Just m)})
                                )
                               <|> (return p)
@@ -1269,13 +1264,6 @@ actionprocess thy=
                                 (paddAnn p (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )
-            -- <|>    try  (do -- let expression parser
-            --             subst <- genericletBlock sapicvar sapicterm
-            --             p     <- process thy
-            --             case Catch.catch (applyProcess subst p) (\ e  -> fail $ prettyLetExceptions e) of
-            --                 (Left err) -> fail $ show err -- Should never occur, we handle everything above
-            --                 (Right p') -> return p'
-            --             )
 
 heuristic :: Bool -> Parser [GoalRanking]
 heuristic diff = do
