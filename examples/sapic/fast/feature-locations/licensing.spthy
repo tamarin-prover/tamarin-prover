@@ -53,7 +53,7 @@ let vendor =
 	)
 
 
- 
+process:
 new prog; event Auth(prog);   // initialisiation of the licensed program
  (  (!p) || (!vendor) )
 

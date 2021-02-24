@@ -9,5 +9,6 @@ let P =
    let h=a in
    out(h)
 
-P
+process: P
+
 end

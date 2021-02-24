@@ -51,10 +51,11 @@ let Tag =
    event Running(<'R','T',<~k XOR r1 XOR ~r2>>);
 // event Running(<'R','T',<~k, r1, ~r2>>);
    out( <~r2,lh(rot(~id, h((r1 XOR ~r2 XOR ~k))) XOR  h((r1 XOR ~r2 XOR ~k)) )>);
-   in( rh(rot(~id, h((=r1 XOR =~r2 XOR =~k))) XOR  h((r1 XOR ~r2 XOR ~k))) );
+   in( rh(rot(~id, h((=r1 XOR =~r2 XOR =~k))) XOR  h((=r1 XOR =~r2 XOR =~k))) );
    event Alive( ~k, 'Reader' );
    event Commit(<'T','R',<~k XOR r1 XOR ~r2>>)
 
+process:
 ! new ~k; new ~id; ! (Reader || Tag)
 
 // FINDS ATTACK AUTOMATICALLY

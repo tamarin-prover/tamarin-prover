@@ -169,6 +169,7 @@ let HonestClient =
 	0
 */
 
+process:
 !( new skT;
    out(pk(skT));
    (  !Abort1 || !Resolve2 || !Resolve1

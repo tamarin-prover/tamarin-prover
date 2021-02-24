@@ -112,7 +112,8 @@ translate th = case theoryProcesses th of
              else
                     return (removeSapicItems th)
 
-      [p] -> if all allUnique (bindings p []) then do
+      [p] -> if True -- all allUnique (bindings p []) TODO commented out for testing.
+                     then do
                 -- annotate
                 an_proc_pre <- (translateLetDestr sigRules) $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0

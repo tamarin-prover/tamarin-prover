@@ -5,6 +5,7 @@ section{* small example for progression function *}
 builtins: signing, hashing, reliable-channel
 options: translation-progress
 
+process:
 event A(); in('c',m); event B()
 
 lemma A_enforced:

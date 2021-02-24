@@ -46,7 +46,7 @@ let B = (
 )
 
 /* Main process */
-
+process:
 !(
 new a; new b;
 new kSign; new kEnc;

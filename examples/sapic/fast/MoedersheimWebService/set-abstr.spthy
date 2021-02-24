@@ -48,6 +48,7 @@ ClientKey(user,~sk)];
 	out(sign(<'confirm',sign(<'renew',user,pk(nsk)>,sk)>,pki))
 ))
 
+process:
 !(new pki; ! Server || (new user; ! Client) ) 
 
 lemma Knows_Honest_Key_imp_Revoked:

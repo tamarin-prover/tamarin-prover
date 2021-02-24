@@ -35,6 +35,7 @@ let v =                                        // The verifier
 		event Fail()
 
 
+process:
 new init; event Initial(init);
  ( !(new state; insert state,<init,null()>;!r) ||
  !(new state; insert state,<init,null()>; !v)  )
