@@ -168,13 +168,15 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
 -- Term Printers
 ------------------------------------------------------------------------------
 
+ppUnTypeVar :: SapicLVar -> Doc
+ppUnTypeVar (SapicLVar (LVar n _ _ )  _) = text n
+
 ppTypeVar :: TranslationContext -> SapicLVar -> Doc
 ppTypeVar tc v = case trans tc of
   Proverif -> auxppTypeVar v
-  DeepSec -> auxppUnTypeVar v
+  DeepSec -> ppUnTypeVar v
   where auxppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
         auxppTypeVar (SapicLVar (LVar n _ _ ) (Just t)) = text n <> text ":" <> (text t)
-        auxppUnTypeVar (SapicLVar (LVar n _ _ )  _) = text n
 
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
@@ -354,11 +356,13 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =
 
 ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) =
     if t `S.member` pureStates tc then
-      (
-        text "out(" <> text pt <> text ", " <> pc <> text ");"
+      (text "out(" <> text pt <> text ", " <> pc <> text ");"
       , shc)
   else
-    (text "NOT IMPLEMENTED YET", S.empty)
+      (text "in(" <> text pt <> text ", " <> text pt <> text "_dump:bitstring);"
+       $$ text "out(" <> text pt <> text ", " <> pc <> text ");"
+      , shc)
+
   where
     pt = getStateChannel tc t
 --    (pt, sh) = ppSapicTerm tc t
@@ -441,18 +445,18 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
 
 ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  =
   if t `S.member` pureStates tc then
-  (text "in(" <> text pt <> text ", " <> pc
---                                                                    <> text "," <> text ptcounter <> text ":bitstring"
-                                                                    <> text ");"
-
-                                                       $$ ppl
+  (text "in(" <> text pt <> text ", " <> pc  <> text ");" $$ ppl
                                                       , pshl)
   else
-    (text "NOT IMPLEMENTED YET", S.empty)
+  (text "in(" <> text pt <> text ", " <> pc  <> text ");"
+   $$ text "out(" <> text pt <> text ", " <> pc2  <> text ");"
+   $$ ppl
+                                                      , pshl)
 
   where -- (pt, sh) = ppSapicTerm tc t
         pt = getStateChannel tc t
         pc = ppTypeVar tc c
+        pc2 = ppUnTypeVar c
 --        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
         (ppl, pshl) = ppSapic tc pl
 
