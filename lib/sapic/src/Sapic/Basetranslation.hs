@@ -121,6 +121,21 @@ baseTransAction needsAssImmediate ac an p tildex
       , t <- toLNTerm t' =
           ([
           ([def_state], [], [def_state' tildex, Out t], [])], tildex)
+
+      -- Pure cell translation
+    | (Insert t1' t2' ) <- ac, True <- pureState an,
+      t1 <- toLNTerm t1' , t2 <- toLNTerm t2' =
+          ([
+          ([def_state], [], [def_state' tildex, PureCell t1 t2], [])], tildex)
+    | (Lock _) <- ac, True <- pureState an =
+      ([
+      ([def_state], [ ], [def_state' tildex], [])], tildex)
+
+    | (Unlock _) <- ac, True <- pureState an =
+      ([
+      ([def_state], [ ], [def_state' tildex], [])], tildex)
+
+    -- Classical state translation
     | (Insert t1' t2' ) <- ac
       , t1 <- toLNTerm t1' , t2 <- toLNTerm t2'  =
           ([
@@ -220,6 +235,18 @@ baseTransComb c an p tildex
            ],
             tildexl, tildex)
 
+    -- Pure cell translation
+    | Lookup t' v' <- c,  True <- pureState an
+      , t <- toLNTerm t', v <- toLVar v' =
+           let tx' = v `insert` tildex in
+                (
+       [ ([def_state,  PureCell t (varTerm v)], [], [def_state1 tx' ], [])
+--        , ([def_state], [IsNotSet t], [def_state2 tildex], [])
+       ]
+             , tx', tildex )
+
+
+    -- Classical state translation
     | Lookup t' v' <- c
       , t <- toLNTerm t', v <- toLVar v' =
            let tx' = v `insert` tildex in
@@ -402,10 +429,10 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
         addIf phi list = if phi then list else []
         contains = processContains anP
         getLock p
-            | (ProcessAction (Lock _) an _) <- p, (Just (AnVar v)) <- lock an = [v] -- annotation is Maybe type
+            | (ProcessAction (Lock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- lock an = [v] -- annotation is Maybe type
             | otherwise  = []
         getUnlock p
-            | (ProcessAction (Unlock _) an _) <- p, (Just (AnVar v)) <- unlock an = [v] -- annotation is Maybe type
+            | (ProcessAction (Unlock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- unlock an = [v] -- annotation is Maybe type
             | otherwise  = []
         getLockPositions = pfoldMap getLock
         getUnlockPositions = pfoldMap getUnlock

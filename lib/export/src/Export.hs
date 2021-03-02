@@ -46,8 +46,6 @@ import Data.Data
 
 import States
 
-import Debug.Trace
-
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -342,7 +340,7 @@ ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (L
     (text "", S.empty)
 
 ppAction an@ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
-    trace (show an) (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
+  (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
                               , S.empty)
   where
         pt = getStateChannel tc t
@@ -486,7 +484,7 @@ loadProc tc thy = case theoryProcesses thy of
          (tc2, hd) = mkAttackerContext tc p
          (proc, stateM) = addStatesChannels p
          pStates = getPureStates p (S.fromList $ M.keys stateM)
-         tc3 = trace (show pStates) tc2{stateMap=stateM, pureStates = pStates}
+         tc3 = tc2{stateMap=stateM, pureStates = pStates}
   _  -> (text "Multiple sapic processes detected, error", S.empty, M.empty)
 
 

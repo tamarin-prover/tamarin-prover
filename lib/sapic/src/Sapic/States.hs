@@ -20,10 +20,6 @@ import         Theory.Sapic
 
 import qualified  Data.Set as S
 
-import Debug.Trace
-
-
-
 getAllStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
 getAllStates (ProcessAction (Insert t _) _ p) = S.insert t (getAllStates p)
 getAllStates (ProcessAction _ _ p) = (getAllStates p)
@@ -77,7 +73,7 @@ getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
 
 
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
-annotatePureStates p = trace (show pureStates) annotateEachPureStates p pureStates
+annotatePureStates p = annotateEachPureStates p pureStates
   where pureStates = getPureStates p (getAllStates p)
 
 

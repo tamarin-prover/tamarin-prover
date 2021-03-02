@@ -28,7 +28,10 @@ import qualified Data.Monoid            as M
 -- import Sapic.Exceptions
 -- import Theory
 import Theory.Sapic
+import Theory
 import Sapic.Exceptions
+import Sapic.Annotation
+
 -- import Theory.Model.Rule
 -- import Data.Typeable
 -- import qualified Data.Set                   as S
@@ -52,12 +55,12 @@ processAt _ p = throwM (InvalidPosition p :: SapicException (Process ann v))
 processContains :: Process ann v -> (Process ann v -> Bool) -> Bool
 processContains anP f = M.getAny $ pfoldMap  (M.Any . f) anP
 
-isLookup :: Process ann v -> Bool
-isLookup (ProcessComb (Lookup _ _) _ _ _) = True
+isLookup :: Process  (ProcessAnnotation LVar) v -> Bool
+isLookup (ProcessComb (Lookup _ _) ProcessAnnotation{pureState=False} _ _) = True
 isLookup _  = False
 
-isDelete :: Process ann v -> Bool
-isDelete (ProcessAction (Delete _) _ _) = True
+isDelete :: Process (ProcessAnnotation LVar) v -> Bool
+isDelete (ProcessAction (Delete _) ProcessAnnotation{pureState=False} _) = True
 isDelete _  = False
 
 isLock :: Process ann v -> Bool

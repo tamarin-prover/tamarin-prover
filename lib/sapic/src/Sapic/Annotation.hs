@@ -99,7 +99,7 @@ instance Monoid (ProcessAnnotation v) where
         (secretChannel p1 `mappend` secretChannel p2)
         (destructorEquation p2)
         (elseBranch p2)
-        (pureState p2)
+        (pureState p1 || pureState p2)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation
