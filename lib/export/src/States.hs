@@ -28,7 +28,7 @@ addStatesChannels :: PlainProcess -> (PlainProcess, StateMap)
 addStatesChannels p = (p', stateMap)
  where
    allStates = getAllStates p
-   (p', stateMap) =  evalFresh (declareStateChannel p (S.toList allStates) S.empty M.empty) 0
+   (p', stateMap) =   evalFresh (declareStateChannel p (S.toList allStates) S.empty M.empty) 0
 
 
 getAllStates :: PlainProcess -> (S.Set SapicTerm)
@@ -37,7 +37,6 @@ getAllStates (ProcessAction _ _ p) = (getAllStates p)
 getAllStates (ProcessNull _) = S.empty
 getAllStates (ProcessComb  (Lookup t _)  _ pl pr) =  t `S.insert` (getAllStates pl) `S.union` (getAllStates pr)
 getAllStates (ProcessComb _ _ pl pr) = (getAllStates pl) `S.union` (getAllStates pr)
-
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
 declareStateChannel ::  MonadFresh m => PlainProcess -> [SapicTerm] -> (S.Set SapicLVar) -> StateMap -> m (PlainProcess,  M.Map SapicTerm SapicLVar)

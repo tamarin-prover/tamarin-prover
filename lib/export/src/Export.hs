@@ -168,15 +168,19 @@ loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
 -- Term Printers
 ------------------------------------------------------------------------------
 
+ppLVar :: LVar -> Doc
+ppLVar (LVar n _ 0) = text n
+ppLVar (LVar n _ i) = text $ n <> "_" <> (show i)
+
 ppUnTypeVar :: SapicLVar -> Doc
-ppUnTypeVar (SapicLVar (LVar n _ _ )  _) = text n
+ppUnTypeVar (SapicLVar lvar  _) = ppLVar lvar
 
 ppTypeVar :: TranslationContext -> SapicLVar -> Doc
 ppTypeVar tc v = case trans tc of
   Proverif -> auxppTypeVar v
   DeepSec -> ppUnTypeVar v
-  where auxppTypeVar (SapicLVar (LVar n _ _ )  Nothing) = text n <> text ":bitstring"
-        auxppTypeVar (SapicLVar (LVar n _ _ ) (Just t)) = text n <> text ":" <> (text t)
+  where auxppTypeVar (SapicLVar lvar Nothing) = ppLVar lvar <> text ":bitstring"
+        auxppTypeVar (SapicLVar lvar (Just t)) = ppLVar lvar <> text ":" <> (text t)
 
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
@@ -334,12 +338,12 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =
   if t `S.member` pureStates tc then
     (text "", S.empty)
   else
-    (text "in(lock_" <> text pt <> text "," <> text ptcounter <> text ":nat);"
+    (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
 --                              $$ text "event Lock((" <> text pt <> text "," <> text ptcounter <> text "));"
                               , S.empty)
   where -- (pt, sh) = ppSapicTerm tc t
         pt = getStateChannel tc t
-        ptcounter = "counterlock" ++ stripNonAlphanumerical pt -- improve name of counter, fresh variable and propagate the name
+        ptcounter = text "counterlock" <> pt -- improve name of counter, fresh variable and propagate the name
 
 ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =
   if t `S.member` pureStates tc then
@@ -347,20 +351,20 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =
   else
     (
   -- text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" $$ -- do not make event as tuple, but need to infer
-                                  text "out(lock_" <> text pt <> text "," <> text ptcounter <> text ");"
+                                  text "out(lock_" <> pt <> text "," <>  ptcounter <> text ");"
                                 , S.empty)
   where -- (pt, sh) = ppSapicTerm tc t
     pt = getStateChannel tc t
-    ptcounter = "counterlock" ++ stripNonAlphanumerical pt ++ "+1"
+    ptcounter = text "counterlock" <> pt <> text "+1"
 
 
 ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) =
     if t `S.member` pureStates tc then
-      (text "out(" <> text pt <> text ", " <> pc <> text ");"
+      (text "out(" <> pt <> text ", " <> pc <> text ");"
       , shc)
   else
-      (text "in(" <> text pt <> text ", " <> text pt <> text "_dump:bitstring);"
-       $$ text "out(" <> text pt <> text ", " <> pc <> text ");"
+      (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
+       $$ text "out(" <> pt <> text ", " <> pc <> text ");"
       , shc)
 
   where
@@ -445,11 +449,11 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
 
 ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  =
   if t `S.member` pureStates tc then
-  (text "in(" <> text pt <> text ", " <> pc  <> text ");" $$ ppl
+  (text "in(" <> pt <> text ", " <> pc  <> text ");" $$ ppl
                                                       , pshl)
   else
-  (text "in(" <> text pt <> text ", " <> pc  <> text ");"
-   $$ text "out(" <> text pt <> text ", " <> pc2  <> text ");"
+  (text "in(" <> pt <> text ", " <> pc  <> text ");"
+   $$ text "out(" <> pt <> text ", " <> pc2  <> text ");"
    $$ ppl
                                                       , pshl)
 
@@ -785,11 +789,11 @@ getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
           (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)
           _ -> (text "TRANSLATION ERROR", S.empty)
 
-getStateChannel :: TranslationContext -> SapicTerm -> String
+getStateChannel :: TranslationContext -> SapicTerm -> Doc
 getStateChannel tc t =
    case channel of
-     Nothing -> "TRANSLATION ERROR"
-     Just (SapicLVar (LVar channelname _ _) _) -> channelname
+     Nothing -> text "TRANSLATION ERROR"
+     Just (SapicLVar lvar _) -> ppLVar lvar
   where channel = M.lookup t (stateMap tc)
 
 ------------------------------------------------------------------------------
