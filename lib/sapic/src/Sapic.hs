@@ -36,6 +36,7 @@ import Sapic.Locks
 import Sapic.ProcessUtils
 import Sapic.LetDestructors
 import Sapic.Bindings
+import Sapic.States
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
@@ -51,7 +52,7 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
         fComb a ann c        = F.foldrM insertVar a (bindingsComb ann c)
              -- TODO recogonise double binding while typing
              -- throw exception if variable is already in there...
-             -- else 
+             -- else
              --   throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ accBindings p )
              --                :: SapicException AnnotatedProcess)
         -- gAct/gComb reconstruct process tree assigning types to the terms
@@ -116,7 +117,10 @@ translate th = case theoryProcesses th of
                     return (removeSapicItems th)
 
       [p] -> do -- annotate
-                an_proc_pre <- translateLetDestr sigRules $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)
+                an_proc_pre <- translateLetDestr sigRules
+                  $ translateReport
+                  $ annotatePureStates
+                  $ annotateSecretChannels (propagateNames $ toAnProcess p)
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc

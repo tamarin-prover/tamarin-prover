@@ -58,13 +58,14 @@ instance Semigroup (AnVar v) where  -- override annotations if necessary
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
 data ProcessAnnotation v = ProcessAnnotation {
-    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes 
+    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
                                              -- processes identifiers recovered from "let P = "  bindings
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
   , elseBranch         :: Bool --- do we have a non-zero else branch? Used for let translation
+  , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized
   } deriving (Show, Typeable)
 
 -- | Any annotation that is good enough to be converted back into a Process
@@ -90,7 +91,7 @@ instance GoodAnnotation (ProcessParsedAnnotation)
         defaultAnnotation   = mempty
 
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True
+    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True False
     mappend p1 p2 = ProcessAnnotation
         (parsingAnn p1 `mappend` parsingAnn p2)
         (lock p1 `mappend` lock p2)
@@ -98,6 +99,7 @@ instance Monoid (ProcessAnnotation v) where
         (secretChannel p1 `mappend` secretChannel p2)
         (destructorEquation p2)
         (elseBranch p2)
+        (pureState p2)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation

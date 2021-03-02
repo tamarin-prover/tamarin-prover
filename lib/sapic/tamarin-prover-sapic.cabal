@@ -76,6 +76,7 @@ library
       , Sapic.ProgressTranslation
       , Sapic.ReliableChannelTranslation
       , Sapic.Report
+      , Sapic.States
       , Sapic
 
     other-modules:

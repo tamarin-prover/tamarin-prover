@@ -30,6 +30,7 @@ import         Text.PrettyPrint.Class
 import           Theory.Text.Pretty
 
 import         Sapic.Annotation
+import         Sapic.States
 
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
@@ -44,6 +45,8 @@ import Data.Char
 import Data.Data
 
 import States
+
+import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Core Proverif Export
@@ -90,8 +93,7 @@ data TranslationContext = TranslationContext
   { trans :: Translation,
     attackerChannel :: Maybe LVar,
     stateMap :: StateMap,
-    pureStates :: S.Set SapicTerm
-  }
+    pureStates :: S.Set SapicTerm}
     deriving (Eq, Ord, Data)
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
@@ -336,44 +338,42 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (te
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Lock t) =
-  if t `S.member` pureStates tc then
+ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Lock _) =
     (text "", S.empty)
-  else
-    (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
---                              $$ text "event Lock((" <> text pt <> text "," <> text ptcounter <> text "));"
-                              , S.empty)
-  where -- (pt, sh) = ppSapicTerm tc t
-        pt = getStateChannel tc t
-        ptcounter = text "counterlock" <> pt -- improve name of counter, fresh variable and propagate the name
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Unlock t) =
-  if t `S.member` pureStates tc then
+ppAction an@ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
+    trace (show an) (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
+                              , S.empty)
+  where
+        pt = getStateChannel tc t
+        ptcounter = text "counterlock" <> pt
+
+
+ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Unlock _) =
     (text "", S.empty)
-  else
-    (
-  -- text "event Unlock((" <> pt <> text "," <> text ptcounter <> text "));" $$ -- do not make event as tuple, but need to infer
-                                  text "out(lock_" <> pt <> text "," <>  ptcounter <> text ");"
-                                , S.empty)
-  where -- (pt, sh) = ppSapicTerm tc t
+
+ppAction ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Unlock t) =
+  (text "out(lock_" <> pt <> text "," <>  ptcounter <> text ");"
+  , S.empty)
+  where
     pt = getStateChannel tc t
     ptcounter = text "counterlock" <> pt <> text "+1"
 
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) =
-    if t `S.member` pureStates tc then
+ppAction ProcessAnnotation{pureState=True} tc@TranslationContext{trans=Proverif} (Insert t c) =
       (text "out(" <> pt <> text ", " <> pc <> text ");"
       , shc)
-  else
+  where
+    pt = getStateChannel tc t
+    (pc, shc) = ppSapicTerm tc c
+
+ppAction ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Insert t c) =
       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
        $$ text "out(" <> pt <> text ", " <> pc <> text ");"
       , shc)
-
   where
     pt = getStateChannel tc t
---    (pt, sh) = ppSapicTerm tc t
     (pc, shc) = ppSapicTerm tc c
---        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty)
 
@@ -418,9 +418,6 @@ ppSapic tc (ProcessComb (ProcessCall name _ ts) _ pl _)  =
         (ppts, shs) = unzip pts
         (ppl, pshl) = ppSapic tc pl
 
-
-
-
 -- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
 -- syntactic sugar for predicates, but this contains BVars, which first need to
 -- be translated to Vars
@@ -449,24 +446,24 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
-ppSapic tc (ProcessComb (Lookup t c )  _ pl (ProcessNull _))  =
-  if t `S.member` pureStates tc then
+ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{pureState=True} pl (ProcessNull _))  =
   (text "in(" <> pt <> text ", " <> pc  <> text ");" $$ ppl
                                                       , pshl)
-  else
+  where
+        pt = getStateChannel tc t
+        pc = ppTypeVar tc c
+        (ppl, pshl) = ppSapic tc pl
+
+ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{pureState=False} pl (ProcessNull _))  =
   (text "in(" <> pt <> text ", " <> pc  <> text ");"
    $$ text "out(" <> pt <> text ", " <> pc2  <> text ");"
    $$ ppl
-                                                      , pshl)
-
-  where -- (pt, sh) = ppSapicTerm tc t
+       , pshl)
+  where
         pt = getStateChannel tc t
         pc = ppTypeVar tc c
         pc2 = ppUnTypeVar c
---        ptcounter = "countercell" ++ stripNonAlphanumerical (render pt)
         (ppl, pshl) = ppSapic tc pl
-
-
 
 
 
@@ -485,11 +482,11 @@ loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty, M.empty)
   [pr] -> let (d,headers) = ppSapic tc3 proc in
            (d,S.union hd headers, stateM)
-   where p = toAnProcess pr
+   where p = makeAnnotations pr
          (tc2, hd) = mkAttackerContext tc p
          (proc, stateM) = addStatesChannels p
          pStates = getPureStates p (S.fromList $ M.keys stateM)
-         tc3 = tc2{stateMap=stateM, pureStates = pStates}
+         tc3 = trace (show pStates) tc2{stateMap=stateM, pureStates = pStates}
   _  -> (text "Multiple sapic processes detected, error", S.empty, M.empty)
 
 
@@ -509,7 +506,7 @@ loadMacroProcs tc  (p:q) =
                              (nest 4 new_text) <> text "." in
                (macro_def : docs, hd `S.union` new_heads `S.union` heads)
   where
-    mainProc = toAnProcess $ L.get pBody p
+    mainProc = makeAnnotations $ L.get pBody p
     (tc2,hd) = case attackerChannel tc of
           -- we set up the attacker channel if it does not already exists
           Nothing -> mkAttackerContext tc mainProc
@@ -819,6 +816,10 @@ make_args n = "bitstring,"++(make_args (n-1))
 
 stripNonAlphanumerical :: [Char] -> [Char]
 stripNonAlphanumerical = filter (\x -> isAlpha x)
+
+makeAnnotations :: PlainProcess -> LProcess (ProcessAnnotation LVar)
+makeAnnotations p = annotatePureStates $ toAnProcess p
+
 ------------------------------------------------------------------------------
 -- Core DeepSec Export
 ------------------------------------------------------------------------------
