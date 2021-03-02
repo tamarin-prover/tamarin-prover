@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
+
 {-# LANGUAGE TypeSynonymInstances #-}
 -- {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -25,9 +24,7 @@ module Sapic.Annotation (
     , AnVar (..)
     , AnProcess (..)
     , unAnProcess
-    , GoodAnnotation
-    , getProcessParsedAnnotation
-    , setProcessParsedAnnotation
+    , GoodAnnotation(..)
     , getProcessNames
     , setProcessNames
 ,annElse) where
@@ -86,6 +83,12 @@ instance GoodAnnotation (ProcessAnnotation v)
         setProcessParsedAnnotation pn an = an { parsingAnn = pn }
         defaultAnnotation   = mempty
 
+instance GoodAnnotation (ProcessParsedAnnotation)
+    where
+        getProcessParsedAnnotation = id
+        setProcessParsedAnnotation pn _ = pn
+        defaultAnnotation   = mempty
+
 instance Monoid (ProcessAnnotation v) where
     mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True
     mappend p1 p2 = ProcessAnnotation
@@ -97,10 +100,10 @@ instance Monoid (ProcessAnnotation v) where
         (elseBranch p2)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
-getProcessNames = processnames . getProcessParsedAnnotation 
+getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn}) 
+setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 
 instance Semigroup (ProcessAnnotation v) where
@@ -126,10 +129,10 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = mempty {lock = Just v} 
+annLock v = mempty {lock = Just v}
 
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = mempty {unlock = Just v} 
+annUnlock v = mempty {unlock = Just v}
 
 annSecretChannel :: AnVar v -> ProcessAnnotation v
 annSecretChannel v = mempty { secretChannel = Just v}

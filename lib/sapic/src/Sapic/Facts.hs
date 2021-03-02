@@ -184,9 +184,9 @@ varMsgId p = LVar n s i
 
 actionToFact :: TransAction -> Fact LNTerm
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | StopId
-  -- | EventEmpty
-  -- | EventId
+  --  | StopId
+  --  | EventEmpty
+  --  | EventId
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
