@@ -29,6 +29,8 @@ import         Theory.Sapic
 import         Text.PrettyPrint.Class
 import           Theory.Text.Pretty
 
+import         Sapic.Annotation
+
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
@@ -286,7 +288,7 @@ ppFact tc (Fact tag _ ts)
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared
-ppAction ::  ProcessParsedAnnotation -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
+ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
 ppAction _ tc (New v@(SapicLVar (LVar n _ _) _ )) =
  if List.elem v (M.elems $ stateMap tc) then -- the new declaration corresponds to a state channel
    if pureTerms == S.empty then
@@ -309,19 +311,19 @@ ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
 ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
 
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
 
 -- pattern matching on input for deepsec is not supported
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
 ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
@@ -375,7 +377,7 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Insert t c) =
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty)
 
-ppSapic :: TranslationContext -> PlainProcess -> (Doc, S.Set ProverifHeader)
+ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProverifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
 ppSapic tc (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
@@ -387,7 +389,7 @@ ppSapic tc (ProcessComb (Let t1 t2) an pl (ProcessNull _))  =   ( text "let "  <
                                                  $$ ppl
                                                ,sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic tc pl
-                                           (pt1, sh1) = auxppSapicTerm tc (matchVars an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
@@ -396,7 +398,7 @@ ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
-                                           (pt1, sh1) = auxppSapicTerm tc (matchVars an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 -- if the process call does not have any argument, we just inline
@@ -481,9 +483,10 @@ ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, StateMap)
 loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty, M.empty)
-  [p] -> let (d,headers) = ppSapic tc3 proc in
+  [pr] -> let (d,headers) = ppSapic tc3 proc in
            (d,S.union hd headers, stateM)
-   where (tc2, hd) = mkAttackerContext tc p
+   where p = toAnProcess pr
+         (tc2, hd) = mkAttackerContext tc p
          (proc, stateM) = addStatesChannels p
          pStates = getPureStates p (S.fromList $ M.keys stateM)
          tc3 = tc2{stateMap=stateM, pureStates = pStates}
@@ -500,14 +503,16 @@ loadMacroProcs tc  (p:q) =
         case L.get pVars p of
           [] -> (docs, hd `S.union` heads)
           pvars ->
-            let (new_text, new_heads) = ppSapic tc2 (L.get pBody p) in
+            let (new_text, new_heads) = ppSapic tc2 mainProc in
             let vars  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc2) pvars ))) <> text ")"in
              let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
                              (nest 4 new_text) <> text "." in
                (macro_def : docs, hd `S.union` new_heads `S.union` heads)
-  where (tc2,hd) = case attackerChannel tc of
+  where
+    mainProc = toAnProcess $ L.get pBody p
+    (tc2,hd) = case attackerChannel tc of
           -- we set up the attacker channel if it does not already exists
-          Nothing -> mkAttackerContext tc (L.get pBody p)
+          Nothing -> mkAttackerContext tc mainProc
           Just _ -> (tc, S.empty)
 
 ------------------------------------------------------------------------------
@@ -765,15 +770,15 @@ attribHeaders tc hd =
           where (e1,f1,s1) = splitHeaders xs
 
 
-mkAttackerChannel :: (-- MonadThrow m,
+mkAttackerChannel :: (-- MonadThrow m,PlainProcess
                    MonadFresh m
                  -- , Monoid (m (AnProcess ProcessAnnotation))
                   -- ,Foldable (AnProcess ProcessAnnotation)
                 )
-                    => PlainProcess -> m LVar
+                    => LProcess (ProcessAnnotation LVar) -> m LVar
 mkAttackerChannel _ = (freshLVar "attacker" LSortMsg)
 
-mkAttackerContext :: TranslationContext -> PlainProcess -> (TranslationContext, S.Set ProverifHeader)
+mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProverifHeader)
 mkAttackerContext tc p =
   (tc{attackerChannel = Just attackerVar}, S.singleton hd)
   where

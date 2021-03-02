@@ -58,6 +58,7 @@ library
       , tamarin-prover-utils
       , tamarin-prover-term
       , tamarin-prover-theory
+      , tamarin-prover-sapic
 
     hs-source-dirs: src
 

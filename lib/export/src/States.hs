@@ -16,6 +16,8 @@ module States (
 
 import         Theory
 import         Theory.Sapic
+
+import         Sapic.Annotation
 import qualified  Data.Set as S
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -24,14 +26,14 @@ import           Control.Monad.Fresh
 type StateMap = M.Map SapicTerm SapicLVar
 
 
-addStatesChannels :: PlainProcess -> (PlainProcess, StateMap)
+addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> (LProcess (ProcessAnnotation LVar), StateMap)
 addStatesChannels p = (p', stateMap)
  where
    allStates = getAllStates p
    (p', stateMap) =   evalFresh (declareStateChannel p (S.toList allStates) S.empty M.empty) 0
 
 
-getAllStates :: PlainProcess -> (S.Set SapicTerm)
+getAllStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
 getAllStates (ProcessAction (Insert t _) _ p) = S.insert t (getAllStates p)
 getAllStates (ProcessAction _ _ p) = (getAllStates p)
 getAllStates (ProcessNull _) = S.empty
@@ -39,7 +41,7 @@ getAllStates (ProcessComb  (Lookup t _)  _ pl pr) =  t `S.insert` (getAllStates 
 getAllStates (ProcessComb _ _ pl pr) = (getAllStates pl) `S.union` (getAllStates pr)
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
-declareStateChannel ::  MonadFresh m => PlainProcess -> [SapicTerm] -> (S.Set SapicLVar) -> StateMap -> m (PlainProcess,  M.Map SapicTerm SapicLVar)
+declareStateChannel ::  MonadFresh m =>  LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> (S.Set SapicLVar) -> StateMap -> m (LProcess (ProcessAnnotation LVar),  M.Map SapicTerm SapicLVar)
 declareStateChannel p [] _ stateMap = return (p, stateMap)
 declareStateChannel p toDeclare boundNames stateMap =
   let (declarables, undeclarables) =  L.partition (\v -> (S.fromList $ freesSapicTerm v) `S.isSubsetOf` boundNames) toDeclare in
@@ -64,7 +66,7 @@ declareStateChannel p toDeclare boundNames stateMap =
       where addNews pr [] = pr
             addNews pr (v:d) = ProcessAction (New v) mempty (addNews pr d)
 
-newStates :: MonadFresh m => PlainProcess -> [SapicTerm] -> [SapicLVar]
+newStates :: MonadFresh m =>  LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> [SapicLVar]
   -> StateMap -> m ([SapicLVar], StateMap)
 newStates _ [] declared stateMap = return (declared, stateMap)
 newStates p (v:declarables) declared stateMap = do
@@ -75,7 +77,7 @@ newStates p (v:declarables) declared stateMap = do
 
 -- a state channel such that, 1) there is a single insert outside of a lock (this is the state initialisation); 2) every occurence of the state channel is either lock t; lookup t or insert t; unlock t.
 --getPureStates p currentPures oneOutside =
-computePureStates :: PlainProcess -> S.Set SapicTerm -> S.Set SapicTerm -> (S.Set SapicTerm, S.Set SapicTerm)
+computePureStates ::  LProcess (ProcessAnnotation LVar) -> S.Set SapicTerm -> S.Set SapicTerm -> (S.Set SapicTerm, S.Set SapicTerm)
 computePureStates p currentPures oneOutside =
   case p of
      (ProcessAction (Insert t _) _  (ProcessAction (Unlock t2) _ pl)) | t == t2
@@ -113,5 +115,5 @@ computePureStates p currentPures oneOutside =
          (cP `S.intersection` cP', oO `S.union` oO')
      ProcessNull _ -> (currentPures, oneOutside)
 
-getPureStates :: PlainProcess  -> S.Set SapicTerm -> S.Set SapicTerm
+getPureStates ::  LProcess (ProcessAnnotation LVar)  -> S.Set SapicTerm -> S.Set SapicTerm
 getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
