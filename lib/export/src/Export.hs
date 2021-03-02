@@ -3,6 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns               #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme and Robert Künnemann
@@ -193,17 +194,17 @@ ppTypeLit _ (Con c) = text $ show c
 -- a boolean b allows to add types to variables (for input bindings)
 -- matchVars is the set of vars that correspond to pattern matching
 -- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
-auxppSapicTerm :: TranslationContext ->  S.Set SapicLVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm :: TranslationContext ->  S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
 auxppSapicTerm tc mVars isPattern t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
         Lit  (Con (Name PubName n)) | isPattern   -> text "=" <> (text $ show n)
         Lit  (Con (Name PubName n))               ->  ppPubName n
-        Lit  (Var v@(SapicLVar (LVar n _ _) _ ))
-          | S.member v mVars                  -> text "=" <> text n
+        Lit  (Var (SapicLVar (lvar) _ ))
+          | S.member lvar mVars                  -> text "=" <> ppLVar lvar
         Lit  v                    |    isPattern          -> ppTypeLit tc v
-        Lit  (Var (SapicLVar (LVar n _ _)  _ ))  -> (text n)
+        Lit  (Var (SapicLVar (lvar)  _ ))  -> ppLVar lvar
         Lit  v                                    -> (text $ show v)
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -245,7 +246,7 @@ pppLNTerm _ b t = (ppTerm t, getHdTerm t)
         Lit  (Con (Name FreshName n))             -> text $ show n
         Lit  (Con (Name PubName n))               -> ppPubName n
         Lit  (tm2)              | b               -> text $ show tm2 <> ":bitstring"
-        Lit  (Var (LVar tm2 _ _ ))                -> text tm2
+        Lit  (Var (lvar))                         -> ppLVar lvar
         Lit  (tm2)                                -> text $ show tm2
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
@@ -289,13 +290,13 @@ ppFact tc (Fact tag _ ts)
 
 -- pretty print an Action, collecting the constant and events that need to be declared
 ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
-ppAction _ tc (New v@(SapicLVar (LVar n _ _) _ )) =
+ppAction _ tc (New v@(SapicLVar lvar _ )) =
  if List.elem v (M.elems $ stateMap tc) then -- the new declaration corresponds to a state channel
    if pureTerms == S.empty then
      (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
        $$ text "new lock_" <> (ppTypeVar tc v) <> text "[assumeCell];"
      -- we also declare the corresponding lock channel, and initialize it
-       $$ text "out(lock_" <> (text n) <> text ",0);"
+       $$ text "out(lock_" <> ppLVar lvar <> text ",0);"
      , S.empty)
    else
      (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
@@ -311,19 +312,20 @@ ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
 ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) = getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
+        mvars = getMatchVars an
+        (pt2, sh2) = auxppSapicTerm tc mvars True t2
 
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
 
 -- pattern matching on input for deepsec is not supported
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
                                        , sh1 `S.union` sh2)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
 ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
@@ -339,7 +341,7 @@ ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Lock _) =
     (text "", S.empty)
 
-ppAction an@ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
+ppAction ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
   (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
                               , S.empty)
   where
@@ -387,7 +389,7 @@ ppSapic tc (ProcessComb (Let t1 t2) an pl (ProcessNull _))  =   ( text "let "  <
                                                  $$ ppl
                                                ,sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic tc pl
-                                           (pt1, sh1) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (getMatchVars an) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
@@ -396,7 +398,7 @@ ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
-                                           (pt1, sh1) = auxppSapicTerm tc (matchVars $ parsingAnn an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (getMatchVars an) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 -- if the process call does not have any argument, we just inline
@@ -423,6 +425,9 @@ ppSapic tc (ProcessComb (Cond a)  _ pl _)  =
   ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic tc pl
         (pa, sh) = ppFact' a
+        ppFact' (Ato (Syntactic (Pred (Fact (ProtoFact _ "Smaller" _) _ [v1, v2 ]))))
+          | Lit (Var (Free vn1)) <- viewTerm v1,
+            Lit (Var (Free vn2)) <- viewTerm v2 = (text $ show vn1 <> "<" <> show vn2, S.empty )
         ppFact' (Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
                                                     --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
         ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
@@ -603,9 +608,9 @@ ppQueryFormula fm extravs = do
          nest 1 p,
          text "."]
 
-ppTimeTypeVar :: Document p => LVar-> p
-ppTimeTypeVar (LVar n LSortNode _ ) = text n <> text ":time"
-ppTimeTypeVar (LVar n _ _ ) = text n <> text ":bitstring"
+ppTimeTypeVar :: LVar -> Doc
+ppTimeTypeVar lvar@(LVar _ LSortNode _ ) = ppLVar lvar <> text ":time"
+ppTimeTypeVar lvar = ppLVar lvar <> text ":bitstring"
 
 
 ppQueryFormulaEx :: LNFormula -> [LVar] -> Doc
@@ -818,6 +823,8 @@ stripNonAlphanumerical = filter (\x -> isAlpha x)
 makeAnnotations :: PlainProcess -> LProcess (ProcessAnnotation LVar)
 makeAnnotations p = annotatePureStates $ toAnProcess p
 
+getMatchVars :: ProcessAnnotation v -> S.Set LVar
+getMatchVars an =  S.map (\(SapicLVar lvar _) -> lvar) (matchVars $ parsingAnn an)
 ------------------------------------------------------------------------------
 -- Core DeepSec Export
 ------------------------------------------------------------------------------
