@@ -117,23 +117,23 @@ base_headers = S.fromList [
   ]
 
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
-builtins :: [(NoEqFunSig, S.Set ProverifHeader)]
+builtins :: [(String, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
-  (hashFunSig, [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
-  (signatureFunSig, [
+  ("hashing", [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
+  ("signing", [
       Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
       Type "pkey",
       Fun "fun" "pk" 1 "(skey):pkey" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
       ]
   ),
-  (S.fromList [expSym], [
+  ("diffie-hellman", [
       Sym "const" "g" ":bitstring" [],
       Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
       Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
       ]
   ),
-  (symEncFunSig, [
+  ("symmetric-encryption", [
       Type "skey",
       Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
@@ -141,7 +141,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   -- (pairFunSig,  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
   -- Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
   -- ),
-  (asymEncFunSig, [
+  ("asymmetric-encryption", [
       Type "skey",
       Type "pkey",
       Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
@@ -252,6 +252,7 @@ pppLNTerm _ b t = (ppTerm t, getHdTerm t)
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
 --        FApp (NoEq _)      _       | isPair tm -> ppTerms ", " 1 "(" ")" (split tm)
+        FApp (NoEq _)      [t1,t2] | isPair tm    -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
@@ -657,39 +658,27 @@ loadLemmas thy = map ppLemma (theoryLemmas thy)
 -- Header Generation
 ------------------------------------------------------------------------------
 
-make_fun :: (BC.ByteString, Int) -> Bool -> ProverifHeader
-make_fun (f,k) ispriv = Fun "fun " (BC.unpack f) k ("(" ++ (make_args k) ++ "):bitstring") arg
- where arg = if ispriv then ["private"] else []
+headerOfFunSym :: SapicFunSym-> Maybe ProverifHeader
+headerOfFunSym  ((f,(k,Public,Constructor)),inTypes,Just outType) =
+  Just $ Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) []
 
+headerOfFunSym ((f,(k,Private,Constructor)),inTypes,Just outType) =
+  Just $ Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) ["private"]
 
-headerOfFunSym :: [SapicFunSym] -> NoEqSym -> ProverifHeader
-headerOfFunSym []  (_,(_,_,Destructor)) = Fun "" "" 0 "" []
-headerOfFunSym []  (f,(k,Public,Constructor))  =  make_fun (f,k) False
-headerOfFunSym []  (f,(k,Private,Constructor)) =  make_fun (f,k) True
-headerOfFunSym  (((f,(k,Public,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Public,_)) =
-  if f2==f && k2 == k then
-    Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) []
-  else headerOfFunSym remainder fs2
-headerOfFunSym  (((f,(k,Private,Constructor)),inTypes,Just outType):remainder)  fs2@(f2,(k2,Private,_)) =
-  if f2==f && k2 == k then
-    Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) ["private"]
-  else headerOfFunSym remainder fs2
-
-headerOfFunSym  (_:remainder)  fs2 =
-   headerOfFunSym remainder fs2
-
+headerOfFunSym _ = Nothing
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: TranslationContext -> OpenTheory -> S.Set ProverifHeader
 loadHeaders tc thy =
-  (S.map  typedHeaderOfFunSym funSymsNoBuiltin) `S.union` funSymsBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules)
+  typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules)
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
-        -- generating headers for function symbols, both for builtins and user defined functions
-        sigFunSyms = funSyms sig
-        sigStFunSyms = stFunSyms sig
-        funSymsBuiltins = ((foldl (\x (y,z) -> if S.isSubsetOf (S.map NoEq y) sigFunSyms then  x `S.union` z else x )) S.empty builtins)
-        funSymsNoBuiltin = sigStFunSyms S.\\ ((foldl (\x (y, _) -> x `S.union` y)) S.empty builtins)
-        typedHeaderOfFunSym = headerOfFunSym (theoryFunctionTypingInfos thy)
+        thyBuiltins = theoryBuiltins thy
+        headerBuiltins = foldl (\y x -> case List.lookup x builtins of
+                                   Nothing -> y
+                                   Just t -> y `S.union` t) S.empty thyBuiltins
+        typedHeaderOfFunSym = foldl (\y x-> case headerOfFunSym x of
+                                        Nothing -> y
+                                        Just hd -> hd `S.insert` y) S.empty (theoryFunctionTypingInfos thy)
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
 

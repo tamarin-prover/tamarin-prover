@@ -7,7 +7,7 @@ begin
 
 builtins: symmetric-encryption,asymmetric-encryption,locations-report
 
-predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
+predicates: Report(x,y) <=> not(fst(y) = 'loc')
 
 
 let r=                            // IEE sides
@@ -25,7 +25,7 @@ let r=                            // IEE sides
 let v =                                   // Initiator of the Key Exchange
     new skV;
     event HonestP(pk(skV));
-    out(pk(skV));                         // publishs its public keys
+    out(pk(skV));                         // publishs its publilic keys
     in(<aenc(k,pk(=skV)),signed>);  // receives the shared key and checks the report
     if  aenc(k,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then
        (event Voutput(<aenc(k,pk(skV)),signed>);

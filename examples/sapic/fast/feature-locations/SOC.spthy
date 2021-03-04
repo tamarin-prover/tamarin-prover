@@ -8,7 +8,7 @@ builtins: symmetric-encryption,asymmetric-encryption, locations-report
 
 functions: prog/2,list/2
 
-predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
+predicates: Report(x,y) <=>  not(fst(y) = 'loc')
 
 let r=
         in(pk(skV));                   // we begin by a Key Exchange

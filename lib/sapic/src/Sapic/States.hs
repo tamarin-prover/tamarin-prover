@@ -20,8 +20,6 @@ import         Theory.Sapic
 
 import qualified  Data.Set as S
 
-import Debug.Trace
-
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
 getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
 getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
@@ -103,7 +101,7 @@ getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
 
 
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
-annotatePureStates p = trace (show pureStates) annotateEachPureStates p pureStates
+annotatePureStates p = annotateEachPureStates p pureStates
   where pureStates = getPureStates p (getAllBoundStates p)
 
 

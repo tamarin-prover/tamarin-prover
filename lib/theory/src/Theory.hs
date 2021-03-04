@@ -112,6 +112,7 @@ module Theory (
   , theoryProcesses
   , theoryProcessDefs
   , theoryFunctionTypingInfos
+  , theoryBuiltins
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
@@ -1013,6 +1014,10 @@ theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) r
 -- | All export info definitions of a theory.
 theoryExportInfos :: Theory sig c b p SapicElement -> [ExportInfo]
 theoryExportInfos =  foldSapicItem (const []) (const []) (const []) return (const [])  <=< sapicElements
+
+-- | All Builtins of a theory
+theoryBuiltins :: Theory sig c r p SapicElement -> [String]
+theoryBuiltins = foldSapicItem (const []) (const [])  (const []) (const []) return <=< sapicElements
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
