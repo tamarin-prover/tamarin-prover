@@ -113,6 +113,7 @@ module Theory (
   , theoryProcessDefs
   , theoryFunctionTypingInfos
   , theoryBuiltins
+  , theoryPredicates
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction

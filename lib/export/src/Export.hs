@@ -32,6 +32,7 @@ import           Theory.Text.Pretty
 
 import         Sapic.Annotation
 import         Sapic.States
+import         Sapic.Report
 
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
@@ -147,6 +148,13 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
       Fun "fun" "pk" 1 "(skey):pkey" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
+  ),
+  ("locations-report",
+   [
+    Fun "fun"  "rep" 2 "(bitstring,bitstring):bitstring" ["private"],
+    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = true",
+    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "get_rep(rep(x_1, x_2)) = x_1"
+   ]
   )
   ]
 
@@ -157,7 +165,7 @@ ppPubName (NameId "one") = text "1"
 ppPubName (NameId t) = text t
 
 builtins_rules :: S.Set CtxtStRule
-builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules]
+builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules, locationReportRules]
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
@@ -481,11 +489,27 @@ ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
                                      where (pa, sh) = ppAction an tc a
                                            (pp, psh) = ppSapic tc p
 
+addAttackerReportProc :: TranslationContext -> OpenTheory -> Doc -> Doc
+addAttackerReportProc tc thy p =
+  text "(" $$ p $$ text "| in(" <> att <> text ",(x:bitstring,y:bitstring)); if " <> formula <> text " then out(" <> att  <> text ", rep(x,y))"
+  where att = fst $ getAttackerChannel tc Nothing
+        reportPreds = List.find (\(Predicate (Fact tag an ts) form) -> showFactTag tag == "Report")
+          $ theoryPredicates thy
+        (_,formula) = case reportPreds of
+                     Nothing -> ([], text "Translation Error, no Report predicate provided")
+                     Just (Predicate f form) -> Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form)
+
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, StateMap)
 loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty, M.empty)
   [pr] -> let (d,headers) = ppSapic tc3 proc in
-           (d,S.union hd headers, stateM)
+          let finald =
+                  if (List.find (\x -> x=="locations-report") $ theoryBuiltins thy) == Nothing
+                  then d
+                  else addAttackerReportProc tc3 thy d
+          in
+           (finald,S.union hd headers, stateM)
+
    where p = makeAnnotations pr
          (tc2, hd) = mkAttackerContext tc p
          (proc, stateM) = addStatesChannels p
@@ -527,8 +551,8 @@ showFactAnnotation an = case an of
     SolveLast      -> "-"
     NoSources      -> "no_precomp"
 
-ppProtoAtom :: (HighlightDocument d, Show a) => (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
-ppProtoAtom _ ppT  (Action v (Fact tag an ts))
+ppProtoAtom :: (HighlightDocument d, Show a) => Bool ->  (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
+ppProtoAtom _ _ ppT  (Action v (Fact tag an ts))
   | factTagArity tag /= length ts = ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an
   | tag == KUFact = ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v
   | otherwise                     =
@@ -539,37 +563,44 @@ ppProtoAtom _ ppT  (Action v (Fact tag an ts))
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 
-ppProtoAtom ppS _ (Syntactic s) = ppS s
-ppProtoAtom _ ppT (EqE l r) =
+ppProtoAtom _ ppS _ (Syntactic s) = ppS s
+ppProtoAtom True _ ppT (EqE l r) =
     sep [ppT l <-> opEqual, ppT r]
+
+ppProtoAtom False _ ppT (EqE l r) =
+    sep [ppT l <-> text "<>", ppT r]
     -- sep [ppNTerm l <-> text "≈", ppNTerm r]
-ppProtoAtom _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
-ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
+ppProtoAtom _ _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
+ppProtoAtom _ _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 
 
-ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
-ppAtom = ppProtoAtom (const emptyDoc)
+ppAtom :: Bool ->  (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
+ppAtom b = ppProtoAtom b (const emptyDoc)
+
+emptyTC = TranslationContext{trans=Proverif,
+                              attackerChannel = Nothing,
+                              stateMap = M.empty,
+                              pureStates = S.empty}
 
 -- only used for Proverif queries display
-ppNAtom ::  ProtoAtom s LNTerm -> Doc
-ppNAtom  = ppAtom (fst . (ppLNTerm TranslationContext{trans=Proverif,
-                                                      attackerChannel = Nothing,
-                                                      stateMap = M.empty,
-                                                      pureStates = S.empty}))
+-- the Bool is set to False when we must negate the atom
+ppNAtom ::  Bool -> ProtoAtom s LNTerm -> Doc
+ppNAtom b  = ppAtom b (fst . (ppLNTerm emptyTC))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
     Lit l     -> lit . f $ l
     FApp o as -> fApp o (map (mapLits f) as)
 
-ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
+ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (Bool -> ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
 ppLFormula ppAt =
     pp
   where
     extractFree (Free v)  = v
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
-    pp (Ato a)    = return ([],  ppAt (fmap (mapLits (fmap extractFree)) a))
+    pp (Not(Ato  a)) = return ([],  ppAt False (fmap (mapLits (fmap extractFree)) a))
+    pp (Ato a)    = return ([],  ppAt True (fmap (mapLits (fmap extractFree)) a))
     pp (TF True)  = return ([], operator_ "true")    -- "T"
     pp (TF False) = return ([], operator_ "false")    -- "F"
 
@@ -672,15 +703,22 @@ loadHeaders :: TranslationContext -> OpenTheory -> S.Set ProverifHeader
 loadHeaders tc thy =
   typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules)
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
+        -- all builtins are contained in Sapic Element
         thyBuiltins = theoryBuiltins thy
         headerBuiltins = foldl (\y x -> case List.lookup x builtins of
                                    Nothing -> y
                                    Just t -> y `S.union` t) S.empty thyBuiltins
+
+        -- all user declared function symbols have typinginfos
+        userDeclaredFunctions = theoryFunctionTypingInfos thy
         typedHeaderOfFunSym = foldl (\y x-> case headerOfFunSym x of
                                         Nothing -> y
-                                        Just hd -> hd `S.insert` y) S.empty (theoryFunctionTypingInfos thy)
+                                        Just hd -> hd `S.insert` y) S.empty userDeclaredFunctions
+
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
+
+
 
 headersOfRule :: TranslationContext -> CtxtStRule -> S.Set ProverifHeader
 headersOfRule tc r = case ctxtStRuleToRRule r of
@@ -810,7 +848,7 @@ stripNonAlphanumerical :: [Char] -> [Char]
 stripNonAlphanumerical = filter (\x -> isAlpha x)
 
 makeAnnotations :: PlainProcess -> LProcess (ProcessAnnotation LVar)
-makeAnnotations p = annotatePureStates $ toAnProcess p
+makeAnnotations p = annotatePureStates $ translateTermsReport $ toAnProcess p
 
 getMatchVars :: ProcessAnnotation v -> S.Set LVar
 getMatchVars an =  S.map (\(SapicLVar lvar _) -> lvar) (matchVars $ parsingAnn an)
