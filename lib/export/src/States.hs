@@ -31,7 +31,7 @@ type StateMap = M.Map SapicTerm SapicLVar
 addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> (LProcess (ProcessAnnotation LVar), StateMap)
 addStatesChannels p = (p', stateMap)
  where
-   allStates = getAllStates p
+   allStates = getAllBoundStates p
    (p', stateMap) =   evalFresh (declareStateChannel p (S.toList allStates) S.empty M.empty) 0
 
 

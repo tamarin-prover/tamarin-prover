@@ -117,10 +117,13 @@ translate th = case theoryProcesses th of
                     return (removeSapicItems th)
 
       [p] -> do -- annotate
+                typedP <- typeProcess th p
                 an_proc_pre <- translateLetDestr sigRules
                   $ translateReport
                   $ annotatePureStates
-                  $ annotateSecretChannels (propagateNames $ toAnProcess p)
+                  $ annotateSecretChannels
+                  $ propagateNames
+                  $ toAnProcess typedP
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
                 (initRules,initTx) <- initialRules an_proc

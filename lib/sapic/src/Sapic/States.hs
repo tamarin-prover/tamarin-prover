@@ -9,7 +9,7 @@
 
 module Sapic.States (
     annotatePureStates,
-    getAllStates,
+    getAllBoundStates,
     getPureStates
 ) where
 
@@ -20,12 +20,42 @@ import         Theory.Sapic
 
 import qualified  Data.Set as S
 
-getAllStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
-getAllStates (ProcessAction (Insert t _) _ p) = S.insert t (getAllStates p)
-getAllStates (ProcessAction _ _ p) = (getAllStates p)
-getAllStates (ProcessNull _) = S.empty
-getAllStates (ProcessComb  (Lookup t _)  _ pl pr) =  t `S.insert` (getAllStates pl) `S.union` (getAllStates pr)
-getAllStates (ProcessComb _ _ pl pr) = (getAllStates pl) `S.union` (getAllStates pr)
+import Debug.Trace
+
+-- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
+getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
+getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
+    where (boundStates,freeStates) = getAllStates p S.empty
+
+isBound :: S.Set LVar -> SapicTerm -> Bool
+isBound boundNames t = (S.fromList $ frees $ toLNTerm t) `S.isSubsetOf` boundNames
+
+getAllStates ::  LProcess (ProcessAnnotation LVar) ->  (S.Set LVar)-> (S.Set SapicTerm, S.Set SapicTerm)
+getAllStates (ProcessAction (Insert t _) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+getAllStates (ProcessAction (Insert t _) _ p) boundNames  = (boundStates, S.insert t freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+
+
+getAllStates (ProcessAction (New (SapicLVar v _)) _ p) boundNames = getAllStates p (v `S.insert` boundNames)
+getAllStates (ProcessAction _ _ p) boundNames = getAllStates p boundNames
+getAllStates (ProcessNull _) _ = (S.empty, S.empty)
+
+getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames | isBound boundNames t  =
+  (t `S.insert` boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
+  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
+        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames  =
+  (boundStatesL `S.union` boundStatesR, t `S.insert`  freeStatesL `S.union` freeStatesR)
+  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
+        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+
+
+getAllStates (ProcessComb _ _ pl pr) boundNames =
+    (boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
+  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
+        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+
 
 
 -- a state channel such that, 1) there is a single insert outside of a lock (this is the state initialisation); 2) every occurence of the state channel is either lock t; lookup t or insert t; unlock t.
@@ -73,8 +103,8 @@ getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
 
 
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
-annotatePureStates p = annotateEachPureStates p pureStates
-  where pureStates = getPureStates p (getAllStates p)
+annotatePureStates p = trace (show pureStates) annotateEachPureStates p pureStates
+  where pureStates = getPureStates p (getAllBoundStates p)
 
 
 -- | For each input or output, if the variable is secret, we annotate the process

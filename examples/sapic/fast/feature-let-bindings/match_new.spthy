@@ -4,12 +4,12 @@ begin
 
 let P = in(c); new a;
     let t = <a,'test'> in
-	in(<t,'toto'>);
+	in(<=t,'toto'>);
 	event AcceptP()
 
-let Q = in(c); 
+let Q = in(c);
     let t = <c,'test'> in
-	in(<t,'toto'>);
+	in(<=t,'toto'>);
 	event AcceptQ()
 
 process:
@@ -23,5 +23,3 @@ exists-trace
   "(Ex #i . AcceptQ()@i)"
 
 end
-
-

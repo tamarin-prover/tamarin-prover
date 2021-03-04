@@ -12,7 +12,7 @@ import Data.List
 import qualified Data.Set as S
 
 -- | bindings returns the variables bound precisely at this point. Guarantees uniqueness of the list.
---   we need the annotations to handle patterns correctly   
+--   we need the annotations to handle patterns correctly
 bindings :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
 bindings (ProcessComb c ann _ _) = bindingsComb ann c
 bindings (ProcessAction ac ann _) = bindingsAct ann ac
@@ -23,7 +23,8 @@ bindingsAct :: GoodAnnotation a => a -> SapicAction SapicLVar -> [SapicLVar]
 bindingsAct  ann ac
     | (New v) <- ac = [v]
     | (ChIn _ t) <- ac = nub (freesSapicTerm t) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
-    | (MSR (l,_,r,_)) <- ac = nub (foldMap freesSapicFact r) \\ foldMap freesSapicFact l
+--    | (MSR (l,_,r,_)) <- ac = nub (foldMap freesSapicFact r) \\ foldMap freesSapicFact l
+--    TODO  Can we handle MSR betters ? we will currently never consider that a MSR rules binds a new variable. The issue is that to know this, we need to have the contexts of which variables are currently bound.
     | otherwise = []
 
 bindingsComb :: GoodAnnotation a => a -> ProcessCombinator SapicLVar -> [SapicLVar]

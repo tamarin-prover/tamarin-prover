@@ -7,11 +7,11 @@ section{* The ASW contract signing protocol *}
  * Protocol:    ASW
  * Date:        Jan 2016
  * Status:      working
- * 
+ *
  * ASW protocol with the following modifications:
  *      - The third and fourth message are modified according to [1], in particular:
- *      m3 = sign {<na,h(nb)>}sk($A) 
- *      m4 = sign {<nb,h(na)>}sk($B) 
+ *      m3 = sign {<na,h(nb)>}sk($A)
+ *      m4 = sign {<nb,h(na)>}sk($B)
  *      - The response from the TTP to a resolving responder, in case the initiator
  *        has already requested abortion contains h(nb) within the signature,
  *        so as to uniquely identify the responder's current session, i.e.
@@ -19,8 +19,8 @@ section{* The ASW contract signing protocol *}
  *        Note that the Abort-Protocol remains otherwise unmodified, in
  *        particular the messages to the initiator.
  *
- * [1] V. Shmatikov, J.C. Mitchell. Analysis of a Fair Exchange Protocol. NDSS 2000. 
- *      
+ * [1] V. Shmatikov, J.C. Mitchell. Analysis of a Fair Exchange Protocol. NDSS 2000.
+ *
  */
 
 builtins:  hashing
@@ -41,7 +41,7 @@ options: translation-progress
 
 let A = in ('c',t);
       	new na;
-	let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
+	let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in
 	let pat_m2 = sign {<h(m1),h(nb)>}sk($B) in
 	let m3 = sign {<na,h(nb)>}sk($A) in
 	let pat_m4 = sign {<nb,h(na)>}sk($B) in
@@ -50,11 +50,11 @@ let A = in ('c',t);
       	out('c', m1);
         (
 	(
-	in('c', pat_m2);
+	in('c',=pat_m2);
 	out('c', m3);
             (
             (
-             in('c', pat_m4);
+             in('c', =pat_m4);
              event ContractA($A,$B,m1,pat_m2,na,nb)
             )
             +
@@ -63,7 +63,7 @@ let A = in ('c',t);
              out('r', <'originator',$A,TTPID,<m1,pat_m2>>);
                      /* simplification: original protocol specification
                       * contained case where originator receives abort token at
-                      * this point. 
+                      * this point.
                       */
                      /* ( */
                      /* in('r',<'originator',sign{<'Aborted', a1>}sk(TTPID)>); */
@@ -75,10 +75,10 @@ let A = in ('c',t);
                       * because of the nonce na, this message should never
                       * arrive. Since if the TTP sends this message after
                       * A sent resolve, A must have had sent an abort, but m1
-                      * is fresh. 
+                      * is fresh.
                       */
                      (
-                     in ('r',<'originator',$A,TTPID,sign{<m1, pat_m2>}sk(TTPID)>);
+                     in ('r',<'originator',=$A,=TTPID,sign{<=m1, =pat_m2>}sk(=TTPID)>);
                      event ContractA($A,$B,m1,pat_m2,na,nb)
                      )
             )
@@ -90,12 +90,12 @@ let A = in ('c',t);
 	out('r', <'originator',$A,TTPID,a1>);
                  (
 		 (
-		 in('r',<'originator',$A,TTPID,sign{<'Aborted', a1>}sk(TTPID)>);
+		 in('r',<'originator',=$A,=TTPID,sign{<'Aborted', =a1>}sk(=TTPID)>);
 		 event AbortA($A,m1,na)
 		 )
 		 +
 		 (
-		 in ('r',<'originator',$A,TTPID,sign{<m1, pat_m2>}sk(TTPID)>);
+		 in ('r',<'originator',=$A,=TTPID,sign{<=m1, =pat_m2>}sk(=TTPID)>);
 		 event ContractA($A,$B,m1,pat_m2,na,nb)
 		 )
                  )
@@ -105,19 +105,19 @@ let A = in ('c',t);
 /* Role of Bob */
 
 let B = (
-	let pat_m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
+	let pat_m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in
 	let m2 = sign {<h(pat_m1),h(nb)>}sk($B) in
 	let pat_m3 = sign {<na,h(nb)>}sk($A) in
 	let m4 = sign {<nb,h(na)>}sk($B) in
 	let a1 = sign {<'Abort', pat_m1>}sk($A) in
-        in ('c', pat_m1 );
+        in ('c', =pat_m1 );
       	new nb;
         event StartB($A,$B,pat_m1,m2,na,nb);
         out ('c', m2);
         (
         (
-        in ('c', pat_m3);
-        event ContractB($A,$B,pat_m1,m2,na,nb); 
+        in ('c', =pat_m3);
+        event ContractB($A,$B,pat_m1,m2,na,nb);
         out ('c',m4)
 	)
         +
@@ -125,14 +125,14 @@ let B = (
 	 /* Resolve */
 	 out('r', <'responder',$B,TTPID,<pat_m1,m2>>);
 	 	 (
-		 in('r',<'responder',$B,TTPID,sign{<'Aborted', a1, h(nb)>}sk(TTPID)>);
-                 /* modified -- aborted message contains h(nb) to link 
+		 in('r',<'responder',=$B,=TTPID,sign{<'Aborted', =a1, h(=nb)>}sk(=TTPID)>);
+                 /* modified -- aborted message contains h(nb) to link
                   * response to right responder session */
 		 event AbortB($A,$B, pat_m1, m2, na, nb)
 		 )
 		 +
 		 (
-		 in ('r',<'responder',$B,TTPID,sign{<pat_m1, m2>}sk(TTPID)>);
+		 in ('r',<'responder',=$B,=TTPID,sign{<=pat_m1, =m2>}sk(=TTPID)>);
                  event ContractB($A,$B,pat_m1,m2,na,nb)
 		 )
 	)
@@ -140,11 +140,11 @@ let B = (
 )
 
 let TTP =
-  let m1 = sign {<$A, $B, TTPID, xt, h(xna)>}sk($A) in 
+  let m1 = sign {<$A, $B, TTPID, xt, h(xna)>}sk($A) in
   let m2 = sign {<h(m1),h(xnb)>}sk($B) in
   let a1 = sign{<'Abort', m1>}sk($A) in
   ( /*Abort */
-  in('r', <'originator',$A,TTPID,a1>);
+  in('r', <'originator',=$A,=TTPID,=a1>);
   lock m1;
   lookup <'F_Resolved',TTPID,m1> as y in
    	out ('r', <'originator',$A,TTPID,sign{<m1, y>}sk(TTPID)>);
@@ -155,7 +155,7 @@ let TTP =
   )
   ||
   ( /* Resolve A */
-  in('r',<'originator',$A,<m1,m2>>);  
+  in('r',<'originator',=$A,<=m1,=m2>>);
   lock m1;
   lookup <'Aborted',TTPID,m1> as x in
          out('r',<'originator',$A,TTPID,sign{<'Aborted', a1>}sk(TTPID)>);
@@ -169,7 +169,7 @@ let TTP =
   )
   ||
   ( /* Resolve B */
-  in('r',<'responder',$B,TTPID,<m1,m2>>);  
+  in('r',<'responder',=$B,=TTPID,<=m1,=m2>>);
   lock m1;
   lookup <'Aborted',TTPID,m1> as x in
          out('r',<'responder',$B,TTPID,sign{<'Aborted', a1, h(xnb)>}sk(TTPID)>);
@@ -180,30 +180,31 @@ let TTP =
   )
 
 
-let Judge = 
-  let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in 
+let Judge =
+  let m1 = sign {<$A, $B, TTPID, t, h(na)>}sk($A) in
   let m2 = sign {<h(m1),h(nb)>}sk($B) in
   let pat_m3 = sign {<na,h(nb)>}sk($A) in
   let m4 = sign {<nb,h(na)>}sk($B) in
-             (in('c',<m1,m2,pat_m3,m4>); event ContractJudge($A,$B,m1,m2,na,nb))
-         ||  (in('c', sign{<m1,m2>}sk(TTPID)); event ContractJudge($A,$B,m1,m2,na,nb))
+             (in('c',<=m1,=m2,=pat_m3,=m4>); event ContractJudge($A,$B,m1,m2,na,nb))
+         ||  (in('c', sign{<=m1,=m2>}sk(=TTPID)); event ContractJudge($A,$B,m1,m2,na,nb))
 
+process:
 let TTPID=<'TTP',$TTP> in
 !(
-in('c',<$A,$B,TTPID>);
+in('c',<$A,$B,=TTPID>);
  (A || B || TTP || Judge)
 )
-|| !( in('c',<'corrupt',$x>); 
+|| !( in('c',<'corrupt',=$x>);
         event Corrupt($x);
         out('c',sk($x));
-        (!(in('r',<'responder',$x,m>);0) || !(in('r',<'originator',$x,m>);0))
+        (!(in('r',<'responder',=$x,m>);0) || !(in('r',<'originator',=$x,m>);0))
    )
 
 /* auto */
 lemma sanity_optimistic_AB:
 exists-trace
- "Ex #i #j a b m1 m2 na nb. 
-    ContractA(a,b,m1,m2,na,nb)@i 
+ "Ex #i #j a b m1 m2 na nb.
+    ContractA(a,b,m1,m2,na,nb)@i
   & ContractB(a,b,m1,m2,na,nb)@j
   & not (Ex #k. Corrupt(a)@k)
   & not (Ex #k. Corrupt(b)@k)
@@ -236,13 +237,13 @@ lemma timelinessB:
 
 /* auto */
 lemma partialfairnessA:
-    "All #i a m1 na.  AbortA(a, m1, na)@i ==> 
+    "All #i a m1 na.  AbortA(a, m1, na)@i ==>
        ((Ex #j. K(na)@j ) ==> (Ex #k. Corrupt(a)@k))
        "
 
 /* auto */
 lemma partialfairnessB:
-    "All #i a b m1 m2 na nb.  AbortB(a, b, m1, m2, na, nb)@i ==> 
+    "All #i a b m1 m2 na nb.  AbortB(a, b, m1, m2, na, nb)@i ==>
        ((Ex #j. K(nb)@j ) ==> (Ex #k. Corrupt(b)@k))
        "
 
@@ -250,7 +251,7 @@ lemma partialfairnessB:
 lemma fullfairnessAattack:
     exists-trace
     "not (All #i #l  a b m1 m2 na nb . ContractJudge(a,b,m1,m2,na,nb)@i & Corrupt(b)@l
-        ==> (Ex #j. ContractA(a,b,m1,m2,na,nb)@j) | (Ex #k. Corrupt(a)@k) 
+        ==> (Ex #j. ContractA(a,b,m1,m2,na,nb)@j) | (Ex #k. Corrupt(a)@k)
         )
 "
 
