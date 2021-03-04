@@ -40,6 +40,8 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
+import qualified Data.Label.Point
+import qualified Data.Label.Poly
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -839,6 +841,35 @@ diffProofSkeleton =
 -- Parsing Signatures
 ------------------------------------------------------------------------------
 
+
+ -- Describes the mapping between Maude Signatures and the builtin Name
+builtinsDiffNames :: [(String,
+                       MaudeSig)]
+builtinsDiffNames = [
+  ("diffie-hellman", dhMaudeSig),
+  ("bilinear-pairing", bpMaudeSig),
+  ("multiset", msetMaudeSig),
+  ("xor", xorMaudeSig),
+  ("symmetric-encryption", symEncMaudeSig),
+  ("asymmetric-encryption", asymEncMaudeSig),
+  ("signing", signatureMaudeSig),
+  ("revealing-signing", revealSignatureMaudeSig),
+  ("hashing", hashMaudeSig)
+              ]
+
+-- Describes the mapping between a builtin name, its potential Maude Signatures
+-- and its potential option
+builtinsNames ::  [(String,
+                       Maybe MaudeSig,
+                       Maybe (Data.Label.Poly.Lens
+               Data.Label.Point.Total (Option -> Option) (Bool -> Bool)))]
+builtinsNames =
+  [
+  ("locations-report",  Just locationReportMaudeSig, Just transReport),
+  ("reliable-channel",  Nothing, Just transReliable)
+  ]
+  ++ map (\(x,y) -> (x, Just y, Nothing)) builtinsDiffNames
+
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
 builtins thy0 =do
@@ -848,64 +879,27 @@ builtins thy0 =do
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
   where
-    setOption' thy Nothing  = thy
-    setOption' thy (Just l) = setOption l thy
-    extendSig msig = do
+    setName thy name = modify thyItems (++ [SapicItem (SignatureBuiltin name)]) thy
+    setOption' thy (Nothing, name)  = setName thy name
+    setOption' thy (Just l, name) = setOption l (setName thy name)
+    extendSig (name, Just msig, opt) = do
+        _ <- symbol name
         modifyState (`mappend` msig)
-        return Nothing
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , try (symbol "locations-report")
-          *>  do
-          modifyState (`mappend` locationReportMaudeSig)
-          return (Just transReport)
-      , try ( symbol "reliable-channel")
-             *> return (Just transReliable)
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
+        return (opt, name)
+    extendSig (name, Nothing, opt) = do
+        _ <- symbol name
+        return (opt, name)
+    builtinTheory = asum $ map (try . extendSig) builtinsNames
+
 
 diffbuiltins :: Parser ()
 diffbuiltins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
-    extendSig msig = modifyState (`mappend` msig)
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
-
+    extendSig (name, msig) =
+        symbol name *>
+        modifyState (`mappend` msig)
+    builtinTheory = asum $ map (try . extendSig) builtinsDiffNames
 
 functionType :: Parser ([SapicType], SapicType)
 functionType = try (do
