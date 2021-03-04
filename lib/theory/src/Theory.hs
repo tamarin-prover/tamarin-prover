@@ -2560,7 +2560,7 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulast
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => PlainProcess -> d
-prettyProcess p = text (prettySapic p)
+prettyProcess p = text "process" <> colon $-$ (nest 2 $ text (prettySapic p))
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
 prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
