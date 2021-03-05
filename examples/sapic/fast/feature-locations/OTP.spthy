@@ -1,8 +1,8 @@
 theory OTP
-// Use Tamarin command line options '--heuristic=S'
 
 begin
 
+heuristic:S
 
 builtins: asymmetric-encryption, symmetric-encryption, locations-report
 

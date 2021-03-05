@@ -5,6 +5,8 @@ begin
 builtins: locations-report
 
 functions: prog/3,list/2
+heuristic: s
+
 
 predicates:
 Report(x,y) <=> not  (y= 'l')
@@ -27,7 +29,7 @@ let r =                                        // The remote server who runs the
 let v =                                        // The verifier
         in(<i,o,r>);
 	lock state; lookup state as lio in
-	if <o,i,lio>= check_rep(r,'l') then // verification of the validity of the report 
+	if <o,i,lio>= check_rep(r,'l') then // verification of the validity of the report
 		(event Local(<o,i,lio>,'l');
 		insert state,list(o,list(i,lio));
 		unlock state)
@@ -38,13 +40,13 @@ new init;
  ( !(new state;  insert state,init; !r) || !(new state;  insert state,init; !v)  )
 
 /*
-lemma can_run_v: //for sanity 
- 	exists-trace 
-	"Ex #i m . Local(m,'l')@i" 
+lemma can_run_v: //for sanity
+ 	exists-trace
+	"Ex #i m . Local(m,'l')@i"
 */
 
 // Attested computation theorem
-lemma attested_comput:  
-	"All #i m . Local(m,'l')@i ==> (Ex #j . Remote(m,'l')@j & j<i)" 
+lemma attested_comput:
+	"All #i m . Local(m,'l')@i ==> (Ex #j . Remote(m,'l')@j & j<i)"
 
 end
