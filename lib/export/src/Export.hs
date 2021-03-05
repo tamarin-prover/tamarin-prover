@@ -139,9 +139,9 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
   ),
-  -- (pairFunSig,  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
-  -- Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
-  -- ),
+  ("pair",  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
+   Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
+  ),
   ("asymmetric-encryption", [
       Type "skey",
       Type "pkey",
@@ -491,7 +491,7 @@ ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
 
 addAttackerReportProc :: TranslationContext -> OpenTheory -> Doc -> Doc
 addAttackerReportProc tc thy p =
-  text "(" $$ p $$ text "| in(" <> att <> text ",(x:bitstring,y:bitstring)); if " <> formula <> text " then out(" <> att  <> text ", rep(x,y))"
+  text "(" $$ p $$ text ")| in(" <> att <> text ",(x:bitstring,y:bitstring)); if " <> formula <> text " then out(" <> att  <> text ", rep(x,y))"
   where att = fst $ getAttackerChannel tc Nothing
         reportPreds = List.find (\(Predicate (Fact tag an ts) form) -> showFactTag tag == "Report")
           $ theoryPredicates thy
@@ -551,8 +551,8 @@ showFactAnnotation an = case an of
     SolveLast      -> "-"
     NoSources      -> "no_precomp"
 
-ppProtoAtom :: (HighlightDocument d, Show a) => Bool ->  (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
-ppProtoAtom _ _ ppT  (Action v (Fact tag an ts))
+ppProtoAtom :: (HighlightDocument d, Show a) =>  (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
+ppProtoAtom _ ppT  (Action v (Fact tag an ts))
   | factTagArity tag /= length ts = ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an
   | tag == KUFact = ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v
   | otherwise                     =
@@ -563,19 +563,17 @@ ppProtoAtom _ _ ppT  (Action v (Fact tag an ts))
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 
-ppProtoAtom _ ppS _ (Syntactic s) = ppS s
-ppProtoAtom True _ ppT (EqE l r) =
+ppProtoAtom ppS _ (Syntactic s) = ppS s
+ppProtoAtom _ ppT (EqE l r) =
     sep [ppT l <-> opEqual, ppT r]
 
-ppProtoAtom False _ ppT (EqE l r) =
-    sep [ppT l <-> text "<>", ppT r]
     -- sep [ppNTerm l <-> text "≈", ppNTerm r]
-ppProtoAtom _ _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
-ppProtoAtom _ _ _ (Last i)   = operator_ "last" <> parens (text (show i))
+ppProtoAtom _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
+ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 
 
-ppAtom :: Bool ->  (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
-ppAtom b = ppProtoAtom b (const emptyDoc)
+ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
+ppAtom = ppProtoAtom (const emptyDoc)
 
 emptyTC = TranslationContext{trans=Proverif,
                               attackerChannel = Nothing,
@@ -584,23 +582,22 @@ emptyTC = TranslationContext{trans=Proverif,
 
 -- only used for Proverif queries display
 -- the Bool is set to False when we must negate the atom
-ppNAtom ::  Bool -> ProtoAtom s LNTerm -> Doc
-ppNAtom b  = ppAtom b (fst . (ppLNTerm emptyTC))
+ppNAtom :: ProtoAtom s LNTerm -> Doc
+ppNAtom = ppAtom (fst . (ppLNTerm emptyTC))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
     Lit l     -> lit . f $ l
     FApp o as -> fApp o (map (mapLits f) as)
 
-ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (Bool -> ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
+ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
 ppLFormula ppAt =
     pp
   where
     extractFree (Free v)  = v
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
-    pp (Not(Ato  a)) = return ([],  ppAt False (fmap (mapLits (fmap extractFree)) a))
-    pp (Ato a)    = return ([],  ppAt True (fmap (mapLits (fmap extractFree)) a))
+    pp (Ato a)    = return ([],  ppAt (fmap (mapLits (fmap extractFree)) a))
     pp (TF True)  = return ([], operator_ "true")    -- "T"
     pp (TF False) = return ([], operator_ "false")    -- "F"
 

@@ -7,29 +7,34 @@ begin
 
 builtins: symmetric-encryption,asymmetric-encryption,locations-report
 
-predicates: Report(x,y) <=> not(fst(y) = 'loc')
+functions: first/1
+
+equations: first(<x,y>)=x
+
+predicates: Report(x,y) <=> not(first(y) = 'loc')
 
 
 let r=                            // IEE sides
-        in(pk(skV));
+        in(pkV:pkey);
         !(                        // For everay pk received, an instance is launched at the corresponding trusted location
         new k;
-		event SessionP(pk(skV),k);
-        let signed = report(aenc(k,pk(skV))) in
-        event Poutput(<aenc(k,pk(skV)),signed>);
-	    out(<aenc(k,pk(skV)),signed>)
-        )@<'loc',pk(skV)>
+		event SessionP(<pkV,k>);
+        let signed = report(aenc(k,pkV)) in
+        event Poutput(<aenc(k,pkV),signed>);
+	    out(<aenc(k,pkV),signed>)
+        )@<'loc',pkV>
 
 
 
 let v =                                   // Initiator of the Key Exchange
-    new skV;
-    event HonestP(pk(skV));
+    new skV:skey;
+    event HonestP(<pk(skV), 'pubkey'>);
     out(pk(skV));                         // publishs its publilic keys
-    in(<aenc(k,pk(=skV)),signed>);  // receives the shared key and checks the report
-    if  aenc(k,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then
+    in(<cypher,signed>);  // receives the shared key and checks the report
+    let k = adec(cypher,skV) in
+    if  aenc(k,pk(skV)) = get_rep(signed,<'loc',pk(skV)>) then
        (event Voutput(<aenc(k,pk(skV)),signed>);
-	   event SessionV(pk(skV),k)
+	   event SessionV(<pk(skV),k>)
 
         )
 
@@ -55,15 +60,15 @@ lemma can_run_v: //for sanity
 */
 
  lemma sanity3[reuse]:
-      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1"
+      "All pka k #t1 . SessionV(<pka,k>)@t1 ==> Ex #t2. SessionP(<pka,k>)@t2 & t2<t1"
 
 
 
 lemma secrecy[reuse]:
         "not (
                 Ex pka k #t1 #t2 .
-                 SessionV(pka,k)@t1
-                & K(k)@t2
+                 SessionV(<pka,k>)@t1
+                & KU(k)@t2
 
         )"
 
