@@ -32,24 +32,27 @@ module Text.Dot
         , share
         , same
         , cluster
-          -- * Record specification
+          -- * HTML-like labeled nodes specification
         , HTMLLabel       -- abstract
-        , htmlField
-        , portHTMLField
+        , cell
+        , portHTMLCell
+        , portSpanHTMLCell
         , hcat
         , hcat'
         , vcat
         , vcat'
         , renderHTMLNode
-        , genHTMLLabel
-          -- * Record node construction
-        , record
-        , record'
-        , record_
-
-        , mrecord
-        , mrecord'
-        , mrecord_
+          -- * HTML-like labeled construction
+        , createPlainHTMLNode
+        , createPlainHTMLNode'
+        , createPlainHTMLNode_
+        , createRoundedHTMLNode
+        , createRoundedHTMLNode'
+        , createRoundedHTMLNode_
+        -- Utilities for formatting HTMLl-like labels
+        , subscript
+        , escape
+        , esc
         ) where
 
 import Data.Char           (isSpace)
@@ -201,112 +204,137 @@ fixMultiLineLabel lbl
 ------------------------------------------------------------------------------
 -- HTML-labels
 ------------------------------------------------------------------------------
--- | Specifies the construction of a record; i.e., mentions all fields possibly
--- together with ports and their horizontal and vertical nesting. (see: record
--- shapes in the DOT documentation.)
+-- | Specifies the construction of the cells of node with HTML-like labels; i.e., 
+-- mentions all cells possibly together with ports and their horizontal and vertical nesting. 
+--(see: HTML-like lables in the DOT documentation.)
 data HTMLLabel a =
-    HTMLField (Maybe a) String
-  | HCat [HTMLLabel a]
-  | VCat [HTMLLabel a]
+    Cell (Maybe a) String
+  | HCat Int [HTMLLabel a]
+  | VCat Int [HTMLLabel a]
   deriving(Eq, Ord, Show )
 
--- | Smart constructor for fields that massages the multi-line labels such
--- that dot understands them.
-mkHTMLField :: Maybe a -> String -> HTMLLabel a
-mkHTMLField port = HTMLField port . fixMultiLineLabel
+-- | Smart constructor for HTML-like labels that DOT understands them.
+makeHTMLLabel :: Maybe a -> Maybe Int-> String -> HTMLLabel a
+makeHTMLLabel port  colspan = Cell port . fixMultiLineLabel
 
--- | A simple field of a record.
-htmlField :: String -> HTMLLabel a
-htmlField = mkHTMLField Nothing
+-- | A simple cell content.
+cell :: String -> HTMLLabel a
+cell = makeHTMLLabel Nothing Nothing
 
--- | A field together with a port which can be used to create direct edges to
--- this field. Note that you can use any type to identify the ports. When
--- creating a record node you will get back an association list between your
--- record identifiers and their concrete node ids.
-portHTMLField :: a -> String -> HTMLLabel a
-portHTMLField port = mkHTMLField (Just port)
+-- | A cell together with a port which can be used to create direct edges to
+-- this cell. Note that you can use any type to identify the ports. When
+-- creating a node you will get back an association list between your
+-- identifiers and their concrete node ids.
+portHTMLCell :: a -> String -> HTMLLabel a
+portHTMLCell port = makeHTMLLabel (Just port) Nothing
 
--- | Concatenate records horizontally.
+-- | A cell together with a port which can be used to create direct edges to
+-- this cell. Note that you can use any type to identify the ports. When
+-- creating a node you will get back an association list between your
+-- identifiers and their concrete node ids.
+portSpanHTMLCell :: a -> Int -> String -> HTMLLabel a
+portSpanHTMLCell port colspan = makeHTMLLabel (Just port) (Just colspan)
+
+-- |  Concatenate cell contents horizontally and count how many cells does the structure include.
 hcat :: [HTMLLabel a] -> HTMLLabel a
-hcat = HCat
+hcat xs = HCat (length xs) xs
 
--- | Concatenate a list strings interpreted as simple fields horizontally.
+-- | Concatenate a list strings interpreted as cell content horizontally.
 hcat' :: [String] -> HTMLLabel a
-hcat' = hcat . map htmlField
+hcat' = hcat . map cell
 
--- | Concatenate records vertically.
+-- | Concatenate cell contents vertically and count how many cells does the structure include.
 vcat :: [HTMLLabel a] -> HTMLLabel a
-vcat = VCat
+vcat xs = VCat (length xs) xs
 
--- | Concatenate a list strings interpreted as simple fields vertically.
+-- | Concatenate a list strings interpreted as cell content vertically.
 vcat' :: [String] -> HTMLLabel a
-vcat' = vcat . map htmlField
+vcat' = vcat . map cell
 
--- | Render a record in the Dot monad. It exploits the internal counter in
+-- | Render an HTML-like label in the Dot monad. It exploits the internal counter in
 -- order to generate unique port-ids. However, they must be combined with the
--- actual node id of the node with the record shape. Thus the returned
+-- actual node id of the node with. Thus the returned
 -- association list is parametrized over this missing node id.
-renderHTMLNode :: HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
-renderHTMLNode = render True
+renderHTMLNode  :: HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
+renderHTMLNode = render True 1.0
   where
-  render _ (HTMLField Nothing l) = return (escape l, const [])
-  render _ (HTMLField (Just p) l) =
+  -- render a node, we handle the "top level" rendering in a special way 
+  render::Bool -> Float -> HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
+  render toplevel maxspan (Cell Nothing l) = return (createHTMLTable toplevel ("<TD COLSPAN='"++show maxspan++"'>"++subscript (escape l)++"</TD>"), const [])
+  render toplevel maxspan (Cell (Just p) l)=
     Dot $ \uq -> let pid = "n" ++ show uq
-                     lbl = "<TD PORT='"++ pid ++ "'>"++escape l++"</TD>"
+                     lbl = createHTMLTable toplevel ("<TD PORT='"++pid++"'"++ " COLSPAN='"++show maxspan++"'>"++subscript (escape l)++"</TD>")
                  in  ([], succ uq, (lbl, \nId -> [(p,NodeId (show nId++":"++pid))]))
-  render horiz (HCat rs) = do
-    (lbls, ids) <- fmap unzip $ mapM (render True) rs
-    let rawLbl = intercalate "\n" lbls
-        lbl = if horiz then "<<TABLE>"++rawLbl++"</TABLE>>" else "<TR>"++rawLbl++"</TR>"
+  render toplevel maxspan (HCat n rs) = do
+    (lbls, ids) <- unzip <$> mapM (render False (maxspan/(fromInteger (toInteger n) :: Float))) rs
+    let rawLbl = intercalate "" lbls
+        lbl = createHTMLTable toplevel ("<TR>"++rawLbl++"</TR>")
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
-  render horiz (VCat rs) = do
-    (lbls, ids) <- fmap unzip $ mapM (render False) rs
-    let rawLbl = intercalate "\n" lbls
-        lbl = if horiz then "<<TABLE>"++rawLbl++"</TABLE>>" else "<TR>"++rawLbl++"</TR>"
+  render toplevel _ (VCat n rs) = 
+    do
+    let maxspan = getRowsMaxCells rs
+    (lbls, ids) <- unzip <$> mapM (render False maxspan) rs
+    let rawLbl = intercalate "" lbls
+        lbl = createHTMLTable toplevel (rawLbl)
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
-  -- escape chars used for record label construction
-  escape = concatMap esc
-  esc '|'  = "\\|"
-  esc '{'  = "\\{"
-  esc '}'  = "\\}"
-  -- esc '<'  = "\\<"
-  -- esc '>'  = "\\>"
-  esc c    = [c]
+  
+  -- create a formatted HTML table from a string if needed
+  createHTMLTable True s = "<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' COLUMNS='*'>"++s++"</TABLE>>"
+  createHTMLTable False s = s
 
+  -- get the number of cells in a row
+  cellsInARow (HCat n _) = n
+  cellsInARow (Cell _ _) = 1
+  cellsInARow _ = error "Tried to use cellsInARow on a column/some columns!"
 
--- | A generic version of record creation.
-genHTMLLabel :: String -> HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
-genHTMLLabel  shape rec attrs = do
+  -- get the number of cells in the row/column with the most cells
+  getRowsMaxCells xs = fromInteger (toInteger (maximum $ map cellsInARow xs)) :: Float
+
+-- add the subscript tag where it is needed
+subscript::[Char]->[Char]
+subscript [] = []
+subscript xs = if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else head xs : subscript (tail xs)
+-- escape chars that interfere with HTML tags
+escape::[Char]->[Char]
+escape = concatMap esc
+esc::Char->[Char]
+esc '<'  = "&lt;"
+esc '>'  = "&gt;"
+esc c    = [c]
+
+-- | A generic version of a node with an HTML-like label.
+genHTMLNode :: String -> HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+genHTMLNode  shape rec attrs = do
   (lbl, ids) <- renderHTMLNode rec
   i <- rawNode ([("shape",shape),("label",lbl)] ++ attrs)
   return (i, ids i)
 
--- | Create a record node with the given attributes. It returns the node-id of
+-- | Create a node with the given attributes. It returns the node-id of
 -- the created node together with an association list mapping the port
--- idenfiers given in the record to their corresponding node-ids. This list is
--- ordered according to a left-to-rigth traversal of the record description.
-record :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
-record = genHTMLLabel "plaintext"
+-- idenfiers given in the node to their corresponding node-ids. This list is
+-- ordered according to a left-to-rigth traversal of the node description.
+createPlainHTMLNode :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+createPlainHTMLNode = genHTMLNode "plaintext"
 
--- | A variant of "record" ignoring the port identifiers.
-record' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-record' rec attrs = do (nId, ids) <- record rec attrs
-                       return (nId, map snd ids)
+-- | A variant of a node ignoring the port identifiers.
+createPlainHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
+createPlainHTMLNode' rec attrs = do (nId, ids) <- createPlainHTMLNode rec attrs
+                                    return (nId, map snd ids)
 
--- | A variant of "record" ignoring the port to node-id association list.
-record_ :: HTMLLabel a -> [(String,String)] -> Dot NodeId
-record_ rec attrs = fmap fst $ record rec attrs
+-- | A variant of node creation ignoring the port to node-id association list.
+createPlainHTMLNode_:: HTMLLabel a -> [(String,String)] -> Dot NodeId
+createPlainHTMLNode_ rec attrs = fst <$> createPlainHTMLNode rec attrs
 
--- | Like "record", but creates record nodes with rounded corners; i.e. uses
--- the \"Mrecord\" shape instead of the \"record\" shape.
-mrecord :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
-mrecord = genHTMLLabel "plaintext"
+-- | Like "createPlainNode", but creates nodes with rounded corners; i.e. uses
+-- the "rounded" shape instead of the "plaintext" shape.
+createRoundedHTMLNode :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+createRoundedHTMLNode = genHTMLNode "rounded"
 
--- | A variant of "mrecord" ignoring the port identifiers.
-mrecord' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-mrecord' rec attrs = do (nId, ids) <- mrecord rec attrs
-                        return (nId, map snd ids)
+-- | A variant of "createRoundedNode" ignoring the port identifiers.
+createRoundedHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
+createRoundedHTMLNode' rec attrs = do (nId, ids) <- createRoundedHTMLNode rec attrs
+                                      return (nId, map snd ids)
 
--- | A variant of "mrecord" ignoring the port to node-id association list.
-mrecord_ :: HTMLLabel a -> [(String,String)] -> Dot NodeId
-mrecord_ rec attrs = fmap fst $ mrecord rec attrs
+-- | A variant of "createRoundedNode" ignoring the port to node-id association list.
+createRoundedHTMLNode_ :: HTMLLabel a -> [(String,String)] -> Dot NodeId
+createRoundedHTMLNode_ rec attrs = fst <$> createRoundedHTMLNode rec attrs

@@ -522,7 +522,7 @@ prettyFactSubscript ppTerm (Fact tag an ts)
   | otherwise                     = ppFact (subscript (showFactTag tag)) ts <> ppAnn an
   where
     subscript [] = []
-    subscript xs = if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else [head xs]++(subscript (tail xs))
+    subscript xs = xs --if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else [head xs]++(subscript (tail xs))
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
