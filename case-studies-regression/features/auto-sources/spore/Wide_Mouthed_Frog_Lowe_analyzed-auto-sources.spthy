@@ -24,7 +24,7 @@ rule (modulo E) Reveal_Longterm_Key:
 rule (modulo E) A_to_S:
    [ !Ltk( ~kas, $A ), Fr( ~ta ), Fr( ~kab ) ]
   --[
-  AUTO_OUT_0_1_A_to_S( senc(<'1', ~ta, $B, ~kab>, ~kas) ),
+  AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( senc(<'1', ~ta, $B, ~kab>, ~kas) ),
   Secret( $A, $B, ~kab ), Running_A( $A, $B, <'A', 'B', ~kab> )
   ]->
    [
@@ -40,7 +40,7 @@ rule (modulo E) S_to_B:
    !Ltk( ~kbs, b ), Fr( ~ts )
    ]
   --[
-  AUTO_IN_1_1_S_to_B( senc(<'1', ta, b, kab>, ~kas), kab ),
+  AUTO_IN_TERM_0_0_1_0_1_1_1__S_to_B( senc(<'1', ta, b, kab>, ~kas), kab ),
   Secret( a, b, kab ), Running_S( a, b, <'A', 'B', kab> ),
   Commit_S( a, b, <'A', 'B', kab> )
   ]->
@@ -51,8 +51,8 @@ rule (modulo E) S_to_B:
 rule (modulo E) B_to_A:
    [ In( senc(<'2', ts, a, kab>, ~kbs) ), !Ltk( ~kbs, $B ), Fr( ~nb ) ]
   --[
-  AUTO_OUT_1_1_B_to_A( senc(<'3', ~nb>, kab) ), Secret( a, $B, kab ),
-  Running_B( a, $B, <'A', 'B', kab> )
+  AUTO_OUT_TERM_2_0_0_1__A_to_B( senc(<'3', ~nb>, kab) ),
+  Secret( a, $B, kab ), Running_B( a, $B, <'A', 'B', kab> )
   ]->
    [ StateB( a, $B, ~kbs, kab, ~nb ), Out( senc(<'3', ~nb>, kab) ) ]
 
@@ -64,7 +64,7 @@ rule (modulo E) A_to_B:
    In( senc(<'3', nb>, ~kab) )
    ]
   --[
-  AUTO_IN_2_1_A_to_B( senc(<'3', nb>, ~kab), nb ),
+  AUTO_IN_TERM_2_0_0_1__A_to_B( senc(<'3', nb>, ~kab), nb ),
   Commit_A( $A, $B, <'A', 'B', ~kab> )
   ]->
    [ Out( senc(<'4', succ(nb)>, ~kab) ) ]
@@ -1003,25 +1003,25 @@ lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
     (∀ x m #i.
-      (AUTO_IN_1_1_S_to_B( m, x ) @ #i) ⇒
+      (AUTO_IN_TERM_0_0_1_0_1_1_1__S_to_B( m, x ) @ #i) ⇒
       ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-       (∃ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
+       (∃ #j. (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( m ) @ #j) ∧ (#j < #i))))) ∧
    (∀ x m #i.
-     (AUTO_IN_2_1_A_to_B( m, x ) @ #i) ⇒
+     (AUTO_IN_TERM_2_0_0_1__A_to_B( m, x ) @ #i) ⇒
      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_1_1_B_to_A( m ) @ #j) ∧ (#j < #i))))"
+      (∃ #j. (AUTO_OUT_TERM_2_0_0_1__A_to_B( m ) @ #j) ∧ (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "((∃ x m #i.
-    (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
+    (AUTO_IN_TERM_0_0_1_0_1_1_1__S_to_B( m, x ) @ #i)
    ∧
     (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
+    (∀ #j. (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( m ) @ #j) ⇒ ¬(#j < #i))) ∨
   (∃ x m #i.
-    (AUTO_IN_2_1_A_to_B( m, x ) @ #i)
+    (AUTO_IN_TERM_2_0_0_1__A_to_B( m, x ) @ #i)
    ∧
     (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_1_1_B_to_A( m ) @ #j) ⇒ ¬(#j < #i))))"
+    (∀ #j. (AUTO_OUT_TERM_2_0_0_1__A_to_B( m ) @ #j) ⇒ ¬(#j < #i))))"
 */
 induction
   case empty_trace
@@ -1030,20 +1030,20 @@ next
   case non_empty_trace
   simplify
   solve( (∃ x m #i.
-           (AUTO_IN_1_1_S_to_B( m, x ) @ #i)
+           (AUTO_IN_TERM_0_0_1_0_1_1_1__S_to_B( m, x ) @ #i)
           ∧
            (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_A_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
+           (∀ #j. (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
          (∃ x m #i.
-           (AUTO_IN_2_1_A_to_B( m, x ) @ #i)
+           (AUTO_IN_TERM_2_0_0_1__A_to_B( m, x ) @ #i)
           ∧
            (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_1_1_B_to_A( m ) @ #j) ⇒ ¬(#j < #i))) )
+           (∀ #j. (AUTO_OUT_TERM_2_0_0_1__A_to_B( m ) @ #j) ⇒ ¬(#j < #i))) )
     case case_1
     solve( (last(#i))  ∥
            (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j.
-             (AUTO_OUT_0_1_A_to_S( senc(<'1', ta, b, x>, ~kas) ) @ #j)
+             (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( senc(<'1', ta, b, x>, ~kas) ) @ #j)
             ∧
              (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
@@ -1055,7 +1055,7 @@ next
             case A_to_B
             solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
-                     (AUTO_OUT_1_1_B_to_A( senc(<'3', nb>, ~kab) ) @ #j)
+                     (AUTO_OUT_TERM_2_0_0_1__A_to_B( senc(<'3', nb>, ~kab) ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.2)) )
               case case_1
@@ -1071,7 +1071,9 @@ next
             case S_to_B
             solve( (∃ #j. (!KU( kab ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
-                     (AUTO_OUT_0_1_A_to_S( senc(<'1', ta.1, $X.3, kab>, ~kas.1) ) @ #j)
+                     (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( senc(<'1', ta.1, $X.3, kab>,
+                                                                ~kas.1)
+                      ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.2)) )
               case case_1
@@ -1098,7 +1100,7 @@ next
     solve( (last(#i))  ∥
            (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j.
-             (AUTO_OUT_1_1_B_to_A( senc(<'3', x>, ~kab) ) @ #j)
+             (AUTO_OUT_TERM_2_0_0_1__A_to_B( senc(<'3', x>, ~kab) ) @ #j)
             ∧
              (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
@@ -1110,7 +1112,7 @@ next
             case A_to_B
             solve( (∃ #j. (!KU( nb ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
-                     (AUTO_OUT_1_1_B_to_A( senc(<'3', nb>, ~kab.1) ) @ #j)
+                     (AUTO_OUT_TERM_2_0_0_1__A_to_B( senc(<'3', nb>, ~kab.1) ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.2)) )
               case case_1
@@ -1126,7 +1128,9 @@ next
             case S_to_B
             solve( (∃ #j. (!KU( kab.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                    (∃ #j.
-                     (AUTO_OUT_0_1_A_to_S( senc(<'1', ta.1, $X.1, kab.1>, ~kas.1) ) @ #j)
+                     (AUTO_OUT_TERM_0_0_1_0_1_1_1__S_to_B( senc(<'1', ta.1, $X.1, kab.1>,
+                                                                ~kas.1)
+                      ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.2)) )
               case case_1
@@ -1164,7 +1168,7 @@ analyzing: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 4.249609134s
+  processing time: 3.225430638s
   executability (exists-trace): verified (16 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): verified (102 steps)
@@ -1183,7 +1187,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 4.249609134s
+  processing time: 3.225430638s
   executability (exists-trace): verified (16 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): verified (102 steps)

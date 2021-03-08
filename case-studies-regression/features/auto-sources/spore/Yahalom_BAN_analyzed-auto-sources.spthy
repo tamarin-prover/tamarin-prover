@@ -35,7 +35,7 @@ rule (modulo E) A_1:
 rule (modulo E) B_1:
    [ In( <yA, yna> ), !LongtermKey( ykbs, yB ), Fr( ~nb ) ]
   --[
-  AUTO_OUT_0_1_B_1( senc(<'1', yA, yna>, ykbs) ),
+  AUTO_OUT_TERM_1_0_1_1_0_1_1__S_1( senc(<'1', yA, yna>, ykbs) ),
   RunningB( yB, yA, <yna, ~nb> )
   ]->
    [
@@ -50,7 +50,7 @@ rule (modulo E) S_1:
    !LongtermKey( zkbs, zB ), !LongtermKey( zkas, zA )
    ]
   --[
-  AUTO_IN_1_1_S_1( senc(<'1', zA, zna>, zkbs), zna ),
+  AUTO_IN_TERM_1_0_1_1_0_1_1__S_1( senc(<'1', zA, zna>, zkbs), zna ),
   Serveur( zA, zB, <~kab, zna, znb> )
   ]->
    [
@@ -313,16 +313,16 @@ lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
    (∀ x m #i.
-     (AUTO_IN_1_1_S_1( m, x ) @ #i) ⇒
+     (AUTO_IN_TERM_1_0_1_1_0_1_1__S_1( m, x ) @ #i) ⇒
      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ∧ (#j < #i))))"
+      (∃ #j. (AUTO_OUT_TERM_1_0_1_1_0_1_1__S_1( m ) @ #j) ∧ (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "∃ x m #i.
-  (AUTO_IN_1_1_S_1( m, x ) @ #i)
+  (AUTO_IN_TERM_1_0_1_1_0_1_1__S_1( m, x ) @ #i)
  ∧
   (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_0_1_B_1( m ) @ #j) ⇒ ¬(#j < #i))"
+  (∀ #j. (AUTO_OUT_TERM_1_0_1_1_0_1_1__S_1( m ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case empty_trace
@@ -333,7 +333,7 @@ next
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
-           (AUTO_OUT_0_1_B_1( senc(<'1', zA, x>, zkbs) ) @ #j)
+           (AUTO_OUT_TERM_1_0_1_1_0_1_1__S_1( senc(<'1', zA, x>, zkbs) ) @ #j)
           ∧
            (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
@@ -348,7 +348,7 @@ next
           case S_1
           solve( (∃ #j. (!KU( zna ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ #j.
-                   (AUTO_OUT_0_1_B_1( senc(<'1', $X.3, zna>, ~kxs.3) ) @ #j)
+                   (AUTO_OUT_TERM_1_0_1_1_0_1_1__S_1( senc(<'1', $X.3, zna>, ~kxs.3) ) @ #j)
                   ∧
                    (¬(last(#j))) ∧ (#j < #vr.2)) )
             case case_1
@@ -385,7 +385,7 @@ analyzing: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 1.08143878s
+  processing time: 0.88263839s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
@@ -400,7 +400,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 1.08143878s
+  processing time: 0.88263839s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
