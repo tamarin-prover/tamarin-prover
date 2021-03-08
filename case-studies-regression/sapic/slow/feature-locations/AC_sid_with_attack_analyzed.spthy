@@ -5,7 +5,7 @@ theory AC_sid begin
 functions: check_rep/2, fst/1, get_rep/1, list/2, pair/2, prog/3,
            rep/2 [private], report/1, snd/1
 equations:
-    check_rep(rep(x.1, x.2), x.2) = true,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
@@ -24,12 +24,142 @@ guarded formula characterizing all counter-examples:
   (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-by solve( state_112111111111111( init, ip, ipo, o, r_sid, sid, signedios,
-                                 state, lock
-          ) ▶₀ #t1 )
+solve( state_112111111111111( init, ip, ipo, o, r_sid, sid, signedios,
+                              state, lock
+       ) ▶₀ #t1 )
+  case ifoipsidcheckrepsignediosl_0_11211111111111
+  solve( (#vr.11 < #t2)  ∥ (#vr.11 = #t2) )
+    case case_1
+    solve( (#vr.33 < #t2.1)  ∥ (#vr.33 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.3, ipo ) @ #t2 )
+        case insertstateolistipipo_0_1121111111111111
+        solve( state_1121111111111111( init, ip.1, ipo, o, r_sid, sid, signedios,
+                                       ~n.3, lock
+               ) ▶₀ #t2 )
+          case eventVoutputoipipo_0_112111111111111
+          solve( ((#vr.4 < #vr.42) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.5, ~n.4 ) @ #t2)
+                   ∧
+                    (#vr.4 < #t2) ∧
+                    (#t2 < #vr.42) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.5, ~n.4 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.4 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.4 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.42 < #vr.4)  ∥ (#vr.4 = #vr.42) )
+            case case_2
+            solve( (#vr.11 < #t2.3)  ∥ (#vr.11 = #t2.3) )
+              case case_2
+              solve( (#vr.60 < #t2.4)  ∥ (#vr.60 = #t2.4) )
+                case case_2
+                solve( state_11211111111111111( init, ip.2, ipo.3, o, r_sid, sid,
+                                                signedios, ~n.4, ~n.7
+                       ) ▶₀ #t2.1 )
+                  case insertstateolistipipo_0_1121111111111111
+                  solve( (#t2.2 < #t2.5)  ∥ (#t2.2 = #t2.5) )
+                    case case_2
+                    solve( (#t2.3 < #t2.5)  ∥ (#t2.3 = #t2.5) )
+                      case case_2
+                      solve( Insert( ~n.10, ipo.2 ) @ #t2.4 )
+                        case insertstateprogripipolistipipo_0_111111111111111
+                        solve( state_111111111111111( init, ip.2, ipo.2, lock, r, sid, ~n.9
+                               ) ▶₀ #t2.4 )
+                          case outprogripiporepprogripipoipsidl_0_11111111111111
+                          solve( ((#vr.25 < #vr.68) ∧
+                                  (∃ #t2.
+                                    (Unlock_0( '0', ~n.13, ~n.12 ) @ #t2)
+                                   ∧
+                                    (#vr.25 < #t2) ∧
+                                    (#t2 < #vr.68) ∧
+                                    (∀ #t0 pp. (Unlock( pp, ~n.13, ~n.12 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                    (∀ pp lpp #t0.
+                                      (Lock( pp, lpp, ~n.12 ) @ #t0)
+                                     ⇒
+                                      ((#t0 < #vr.25) ∨ (#t0 = #vr.25) ∨ (#t2 < #t0))) ∧
+                                    (∀ pp lpp #t0.
+                                      (Unlock( pp, lpp, ~n.12 ) @ #t0)
+                                     ⇒
+                                      ((#t0 < #vr.25) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                 (#vr.68 < #vr.25)  ∥ (#vr.25 = #vr.68) )
+                            case case_2
+                            solve( (#vr.32 < #t2.6)  ∥ (#vr.32 = #t2.6) )
+                              case case_2
+                              solve( state_1111111111111111( init, ip.3, ipo.3, ~n.10, r, sid, ~n.12
+                                     ) ▶₀ #t2.5 )
+                                case insertstateprogripipolistipipo_0_111111111111111
+                                solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
+                                  case case_2
+                                  solve( Insert( ~n.5, ipo.1 ) @ #t2.2 )
+                                    case insertstateinit_0_11211
+                                    solve( Insert( ~n.9, ipo ) @ #t2.3 )
+                                      case insertstateinit_0_1111
+                                      solve( Insert( ~n.12, ipo ) @ #t2.6 )
+                                        case insertstateinit_0_1111
+                                        solve( !KU( rep(~n.4, 'l') ) @ #vk.8 )
+                                          case outsidrepsidl_0_1111111
+                                          solve( !KU( rep(~n.7, 'l') ) @ #vk.13 )
+                                            case outsidrepsidl_0_1111111
+                                            solve( !KU( prog(~n.2, ip, <prog(~n.3, ip.2, ~n), list(ip.2, ~n)>)
+                                                   ) @ #vk.7 )
+                                              case outprogripiporepprogripipoipsidl_0_11111111111111_case_1
+                                              solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
+                                                case case_1
+                                                solve( (#t2.4 < #t2.7)  ∥ (#t2.4 = #t2.7) )
+                                                  case case_2
+                                                  solve( !KU( ~n.4 ) @ #vk.10 )
+                                                    case outsidrepsidl_0_1111111_case_1
+                                                    solve( !KU( prog(~n.1, ip.1, ~n) ) @ #vk.11 )
+                                                      case outprogripiporepprogripipoipsidl_0_11111111111111_case_1
+                                                      solve( (#t2.3 < #t2.7)  ∥ (#t2.3 = #t2.7) )
+                                                        case case_2
+                                                        solve( !KU( ~n.7 ) @ #vk.13 )
+                                                          case outsidrepsidl_0_1111111_case_1
+                                                          SOLVED // trace found
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+restriction restr_Report-rule_1:
+  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
+  // safety formula
 
 rule (modulo E) Report-rule[color=#ffffff process=new init;]:
-   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+   [ In( <x, loc> ) ]
+  --[ restr_Report-rule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -230,14 +360,36 @@ rule (modulo E) ifsidcheckreprsidl_0_11211111[color=#658040 process=if sid=check
   --[ Pred_Eq( sid, check_rep(r_sid, 'l') ) ]->
    [ state_112111111( init, r_sid, sid, state ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifsidcheckreprsidl_0_11211111[color=#658040 process=if sid=check_rep(r_sid, 'l')]:
+     [ state_11211111( init, r_sid, sid, state ) ]
+    --[ Pred_Eq( sid, z ) ]->
+     [ state_112111111( init, r_sid, sid, state ) ]
+    variants (modulo AC)
+    1. r_sid = r_sid.6
+       z     = check_rep(r_sid.6, 'l')
+    
+    2. r_sid = rep(x.6, 'l')
+       z     = x.6
+  */
 
 rule (modulo E) ifsidcheckreprsidl_1_11211111[color=#658040 process=if sid=check_rep(r_sid, 'l')]:
    [ state_11211111( init, r_sid, sid, state ) ]
   --[ Pred_Not_Eq( sid, check_rep(r_sid, 'l') ) ]->
    [ state_112111112( init, r_sid, sid, state ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifsidcheckreprsidl_1_11211111[color=#658040 process=if sid=check_rep(r_sid, 'l')]:
+     [ state_11211111( init, r_sid, sid, state ) ]
+    --[ Pred_Not_Eq( sid, z ) ]->
+     [ state_112111112( init, r_sid, sid, state ) ]
+    variants (modulo AC)
+    1. r_sid = r_sid.6
+       z     = check_rep(r_sid.6, 'l')
+    
+    2. r_sid = rep(x.6, 'l')
+       z     = x.6
+  */
 
 rule (modulo E) __0_112111111[color=#658040 process=!]:
    [ state_112111111( init, r_sid, sid, state ) ]
@@ -347,12 +499,20 @@ rule (modulo E) ifoipsidcheckrepsignediosl_0_11211111111111[color=#658040 proces
                            lock
      )
      ]
-    --[ Pred_Eq( <o, ip, sid>, check_rep(signedios, 'l') ) ]->
+    --[ Pred_Eq( <o, ip, sid>, z ) ]->
      [
      state_112111111111111( init, ip, ipo, o, r_sid, sid, signedios, state,
                             lock
      )
      ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.12
+       z     = check_rep(signedios.12, 'l')
+    
+    2. signedios
+             = rep(x.12, 'l')
+       z     = x.12
   */
 
 rule (modulo E) ifoipsidcheckrepsignediosl_1_11211111111111[color=#658040 process=if <o, ip, sid>=check_rep(signedios, 'l')]:
@@ -375,12 +535,20 @@ rule (modulo E) ifoipsidcheckrepsignediosl_1_11211111111111[color=#658040 proces
                            lock
      )
      ]
-    --[ Pred_Not_Eq( <o, ip, sid>, check_rep(signedios, 'l') ) ]->
+    --[ Pred_Not_Eq( <o, ip, sid>, z ) ]->
      [
      state_112111111111112( init, ip, ipo, o, r_sid, sid, signedios, state,
                             lock
      )
      ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.12
+       z     = check_rep(signedios.12, 'l')
+    
+    2. signedios
+             = rep(x.12, 'l')
+       z     = x.12
   */
 
 rule (modulo E) eventVoutputoipipo_0_112111111111111[color=#658040 process=event Voutput( <o, ip, ipo> );]:
@@ -614,25 +782,25 @@ maude tool: 'maude'
  checking installation: OK.
 
 
-analyzing: examples/sapic/fast/feature-locations/AC_sid_with_attack.spthy
+analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-locations/AC_sid_with_attack.spthy
+analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
-  output:          examples/sapic/fast/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 1.023172s
-  attested_comput (all-traces): verified (2 steps)
+  output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
+  processing time: 43.322526478s
+  attested_comput (all-traces): falsified - found trace (31 steps)
 
 ------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/sapic/fast/feature-locations/AC_sid_with_attack.spthy
+analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
-  output:          examples/sapic/fast/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 1.023172s
-  attested_comput (all-traces): verified (2 steps)
+  output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
+  processing time: 43.322526478s
+  attested_comput (all-traces): falsified - found trace (31 steps)
 
 ==============================================================================
 */
