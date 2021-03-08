@@ -1125,8 +1125,13 @@ sapicAction = (do
                         return (Event f, mempty)
                    )
                <|> (do
-                        r <- try $ genericRule sapicvar sapicnodevar
-                        return (MSR r, mempty)
+                        (l,a,r,phi) <- try $ genericRule sapicpatternvar (PatternBind <$> sapicnodevar)
+                        let annotation =  mempty { matchVars =  foldMap (foldMap extractMatchingVariables) l}
+                        let f = fmap (fmap unpattern)
+                        let g = fmap (fmap unpatternVar)
+                        if validMSR S.empty (l,a,r) -- only validate that freshly bound variable do not intersect with matches.
+                            then return (MSR (f l,f a,f r,g phi), annotation)
+                            else fail $ "Invalid pattern in lhs of embedded MSR: " ++ show l
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that

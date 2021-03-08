@@ -50,11 +50,6 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
         fNull _  = return . ProcessNull
         fAct  a ann ac       = F.foldrM insertVar a (bindingsAct ann ac)
         fComb a ann c        = F.foldrM insertVar a (bindingsComb ann c)
-             -- TODO recogonise double binding while typing
-             -- throw exception if variable is already in there...
-             -- else
-             --   throw ( ProcessNotWellformed ( WFBoundTwice $ getNonUnique $ accBindings p )
-             --                :: SapicException AnnotatedProcess)
         -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct a' ac ann r = do
                        -- a' is map variables to types
@@ -175,14 +170,14 @@ translate th = case theoryProcesses th of
                                                                  -- else
                                                                  --   restrs
                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True] ++
+                        $ BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True :
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
-    needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
-    containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
+    needsAssImmediate = not (all checkAssImmediate (theoryLemmas th))
+    containChannelIn rules = not $ null [a | anR <- rules, a@ChannelIn {} <- acts anR]
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:

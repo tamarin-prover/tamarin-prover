@@ -23,8 +23,7 @@ bindingsAct :: GoodAnnotation a => a -> SapicAction SapicLVar -> [SapicLVar]
 bindingsAct  ann ac
     | (New v) <- ac = [v]
     | (ChIn _ t) <- ac = nub (freesSapicTerm t) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
---    | (MSR (l,_,r,_)) <- ac = nub (foldMap freesSapicFact r) \\ foldMap freesSapicFact l
---    TODO  Can we handle MSR betters ? we will currently never consider that a MSR rules binds a new variable. The issue is that to know this, we need to have the contexts of which variables are currently bound.
+    | (MSR (l,_,_,_)) <- ac = nub (foldMap freesSapicFact l) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
     | otherwise = []
 
 bindingsComb :: GoodAnnotation a => a -> ProcessCombinator SapicLVar -> [SapicLVar]

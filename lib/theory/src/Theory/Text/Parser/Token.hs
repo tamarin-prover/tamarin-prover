@@ -344,6 +344,7 @@ sapicnodevar = do
     v <- nodevar
     return (SapicLVar v defaultSapicNodeType)
 
+
 -- Term Operators
 -----------------
 

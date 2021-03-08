@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
+
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveTraversable       #-}
 {-# LANGUAGE DeriveAnyClass       #-}
@@ -71,7 +71,9 @@ module Theory.Sapic (
     -- TODO external
     , PatternSapicLVar(..)
     , unpattern
+    , unpatternVar
     , validPattern
+    , validMSR
     , extractMatchingVariables
 ) where
 
@@ -84,7 +86,6 @@ import Control.Parallel.Strategies
 import Theory.Model.Fact
 import Theory.Model.Atom
 import Theory.Model.Formula
-import Term.LTerm
 import Term.Substitution
 import Theory.Text.Pretty
 import Control.Monad.Catch
@@ -138,28 +139,47 @@ instance Show SapicLVar where
     show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
     show (SapicLVar v Nothing ) = show  v
 
+
 --- TODO move this stuff into separate file.
 instance Show PatternSapicLVar where
     show (PatternBind v) = show v
     show (PatternMatch v) = "=" ++ show v
 
+instance Hinted PatternSapicLVar where
+  hint (PatternBind v) = hint v
+  hint (PatternMatch v) = hint v
+
 
 unpattern :: SapicNTerm PatternSapicLVar -> SapicNTerm SapicLVar
-unpattern = fmap (fmap unpattern')
-    where
-        unpattern' (PatternBind  v) = v
-        unpattern' (PatternMatch v) = v
+unpattern = fmap (fmap unpatternVar)
+
+unpatternVar :: PatternSapicLVar -> SapicLVar
+unpatternVar (PatternBind  v) = v
+unpatternVar (PatternMatch v) = v
 
 -- | Check a pattern for validity w.r.t. a set of variables or names that are
 --    already bound, i.e.,
 --   1. no variable that is already bound should occur as PatternBind
 --   2. no variable that already occurs as PatternMatch should occur as PatternBind
 validPattern :: S.Set SapicLVar -> Term (Lit n PatternSapicLVar) -> Bool
-validPattern alreadybound pt = (alreadybound `S.union` matched) `S.disjoint` tobind
+validPattern alreadyBound pt = (alreadyBound `S.union` matched) `S.disjoint` tobind
     where
         (tobind',matched') = freesPatternSapicLVar pt
         tobind  = S.fromList tobind'
         matched = S.fromList matched'
+
+validMSR :: (Foldable t1, Foldable t2) => S.Set SapicLVar -> (t1 (t2 (VTerm n1 PatternSapicLVar)), t1 (t2 (VTerm n2 PatternSapicLVar)), t1 (t2 (VTerm n3 PatternSapicLVar))) -> Bool
+validMSR alreadyBound (l,a,r)
+    | (tobind_l',matched_l') <- freesPatternFactList l
+    , (_,[]) <- freesPatternFactList a
+    , (_,[]) <- freesPatternFactList r
+    , matched_l <- S.fromList matched_l'
+    , tobind_l <- S.fromList tobind_l'
+      =  (alreadyBound `S.union` matched_l) `S.disjoint`  tobind_l
+    | otherwise = False
+    where
+        freesPatternFactList = foldMap (foldMap freesPatternSapicLVar)
+
 
 extractMatchingVariables :: SapicNTerm PatternSapicLVar -> S.Set SapicLVar
 extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
@@ -169,19 +189,19 @@ extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
 
 -- | return free variabes in SapicTerm  (frees from HasFrees only returns LVars)
 freesSapicTerm :: VTerm n v -> [v]
-freesSapicTerm = foldMap $ foldMap (: []) 
+freesSapicTerm = foldMap $ foldMap (: [])
 
 -- | return free variabes in SapicFact  
 ---- fold over terms in fact and use freesSapicTerm to get list monoid
 freesSapicFact :: Fact (VTerm n v) -> [v]
-freesSapicFact = foldMap freesSapicTerm 
+freesSapicFact = foldMap freesSapicTerm
 
 freesPatternSapicLVar :: VTerm n PatternSapicLVar -> ([SapicLVar], [SapicLVar])
 freesPatternSapicLVar pt = foldr f ([],[]) (freesSapicTerm pt)
     where
         f (PatternBind  v) (bs,ms) = (v:bs,ms)
         f (PatternMatch v) (bs,ms) = (bs,v:ms)
-    
+
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
 
@@ -345,14 +365,12 @@ foldMProcess fNull fAct fComb gAct gComb a p
     | (ProcessAction ac ann p') <- p = do
             a' <- fAct a ann ac -- 1. update accumulator
             p''<- foldMProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
-            f  <- gAct a' ac ann p'' -- 3. reconstruct result from accumulator and subtree's result
-            return f
+            gAct a' ac ann p'' -- 3. reconstruct result from accumulator and subtree's result
     | (ProcessComb c ann pl pr) <- p = do
             a' <- fComb a ann c
             rl <- foldMProcess fNull fAct fComb gAct gComb a' pl
             rr <- foldMProcess fNull fAct fComb gAct gComb a' pr
-            r  <- gComb a' c ann rl rr
-            return r
+            gComb a' c ann rl rr
 
 -- | Traverses process. Simplified variant of @foldMProcces@ that avoids accumulator (can store in monad)
 traverseProcess :: Monad m =>
@@ -387,16 +405,16 @@ traverseTermsAction :: Applicative f =>
                        -> SapicAction t
                        -> f (SapicAction v)
 traverseTermsAction ft ff fv ac
-        -- | (New v) <- ac = (New . termVar') <$> ft (varTerm v)
+        --  | (New v) <- ac = (New . termVar') <$> ft (varTerm v)
         | (New v) <- ac = New <$> fv v
         | (ChIn  mt t) <- ac   = ChIn <$> traverse ft mt <*> ft t
         | (ChOut mt t) <- ac   = ChOut<$> traverse ft mt <*> ft t
-        | (Insert t1 t2) <- ac = Insert <$> ft t1 <*> (ft t2)
+        | (Insert t1 t2) <- ac = Insert <$> ft t1 <*> ft t2
         | (Delete t) <- ac     = Delete <$> ft t
         | (Lock t) <- ac       = Lock   <$> ft t
         | (Unlock t) <- ac     = Unlock <$> ft t
         | (Event fa) <- ac      = Event <$> traverse ft fa
-        | (MSR (l,a,r,rest)) <- ac  = do
+        | (MSR (l,a,r,rest)) <- ac  =
                     (\l' a' r' rest' -> MSR (l',a',r',rest'))
                     <$>
                          t2f l
@@ -419,7 +437,7 @@ traverseTermsComb ft ff fv c
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
-        | ProcessCall s vs ts <- c = ProcessCall s <$> (traverse fv vs) <*> (traverse ft ts)
+        | ProcessCall s vs ts <- c = ProcessCall s <$> traverse fv vs <*> traverse ft ts
 
 -------------------------
 -- Applying substitutions
@@ -519,16 +537,16 @@ data ProcessParsedAnnotation = ProcessParsedAnnotation
 instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation
 
-instance Monoid (ProcessParsedAnnotation) where
+instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing S.empty
     mappend p1 p2 = ProcessParsedAnnotation
         (processnames p1 `mappend` processnames  p2)
         (location p2)
         (matchVars p1 `mappend` matchVars p2)
 
-instance Semigroup (ProcessParsedAnnotation) where
+instance Semigroup ProcessParsedAnnotation where
     (<>) p1 p2 = p1 `mappend` p2
-        
+
 
 type PlainProcess = LProcess ProcessParsedAnnotation
 type ProcessPosition = [Int]
