@@ -1306,7 +1306,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               (Conn Imp (Ato (Action (varTerm (Bound 0))
               (inputFactTerm p ru [varTerm (Bound 1)] (varTerm (Bound 2)))))
               (toFactsTerm ru p orKU))))
-            -- facts: if there are no matching outputs, add a formula
+            -- facts: even if there are no matching outputs, do add a formula with "false"
             addForm (ru, Right (m, []),     p) f' = f' .&&. formulaMultArity (factArity m)
               where formulaMultArity nb = foldr (\h -> Qua All (h,LSortMsg))
                            (Qua All ("i", LSortNode)
@@ -1332,10 +1332,10 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               (outputFactTerm p ru [varTerm (Bound 2)]) ))
               (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1))))))
             toFactsFact ru p outn =
-              (Qua Ex ("j",LSortNode)
+              Qua Ex ("j",LSortNode)
               (Conn And (Ato (Action (varTerm (Bound 0))
               (outputFactFact p ru (listVarTerm (toInteger $ 1 + factArity outn) 2)) ))
-              (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1))))))
+              (Ato (Less (varTerm (Bound 0)) (varTerm (Bound 1)))))
             listVarTerm q s | q == s    = [varTerm (Bound q)]
             listVarTerm q s | otherwise = varTerm (Bound q) : listVarTerm (q-1) s
 
