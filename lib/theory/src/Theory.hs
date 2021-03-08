@@ -2706,7 +2706,9 @@ prettyOpenProtoRule (OpenProtoRule _   [ruAC])   = prettyProtoRuleACasE ruAC
 prettyOpenProtoRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
     nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
   where
-    ppList pp = fsep . punctuate comma . map pp
+    ppList _  []     = emptyDoc
+    ppList pp [x]    = pp x
+    ppList pp (x:xr) = pp x $-$ comma $-$ ppList pp xr
 
 -- | Pretty print an open rule together with its assertion soundness proof.
 prettyOpenProtoRuleAsClosedRule :: HighlightDocument d => OpenProtoRule -> d
@@ -2726,7 +2728,9 @@ prettyOpenProtoRuleAsClosedRule (OpenProtoRule _ [ruAC@(Rule (ProtoRuleACInfo _ 
 prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
     nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
   where
-    ppList pp = fsep . punctuate comma . map pp
+    ppList _  []     = emptyDoc
+    ppList pp [x]    = pp x
+    ppList pp (x:xr) = pp x $-$ comma $-$ ppList pp xr
 
 -- | Pretty print a diff rule
 prettyDiffRule :: HighlightDocument d => DiffProtoRule -> d
@@ -2770,7 +2774,7 @@ prettyClosedProtoRule cru =
   else
     if ruleName ruAC == ruleName ruE then
       if not (equalUpToTerms ruAC ruE) then
-      -- Here we have a rulewith added annotations,
+      -- Here we have a rule with added annotations,
       -- hence showing the annotated rule as if it was a rule mod E
       -- note that we can do that, as we unfolded variants
         (prettyProtoRuleACasE ruAC) $--$
