@@ -21,7 +21,7 @@ let Client=
 	(
 	/* Revoke key */
 	new ~nsk;
-    [ ClientKey(user, ~sk) ] --[ HonestKey(~nsk) ]-> [ ClientKey(user,~nsk) ];
+    [ ClientKey(=user, ~sk) ] --[ HonestKey(~nsk) ]-> [ ClientKey(user,~nsk) ];
 	out(<'renew',user,pk(~nsk)>);
 	out(sign(<'renew',user,pk(~nsk)>,~sk));
 	in(sign(<'confirm',sign(<'renew',=user,pk(=~nsk)>,=~sk)>,=pki));
@@ -44,7 +44,7 @@ ClientKey(user,~sk)];
 (
 	in(<'renew',user,pk(nsk)>);
 	in(sign(<'renew',=user,pk(=nsk)>,sk));
-	[ServerDB(pki,user,pk(sk))]-->[ServerDB(pki,user,pk(nsk))];
+	[ServerDB(=pki,=user,pk(=sk))]-->[ServerDB(pki,user,pk(nsk))];
 	out(sign(<'confirm',sign(<'renew',user,pk(nsk)>,sk)>,pki))
 ))
 
