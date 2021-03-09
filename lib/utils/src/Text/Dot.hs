@@ -36,7 +36,6 @@ module Text.Dot
         , HTMLLabel       -- abstract
         , cell
         , portHTMLCell
-        , portSpanHTMLCell
         , hcat
         , hcat'
         , vcat
@@ -214,26 +213,19 @@ data HTMLLabel a =
   deriving(Eq, Ord, Show )
 
 -- | Smart constructor for HTML-like labels that DOT understands them.
-makeHTMLLabel :: Maybe a -> Maybe Int-> String -> HTMLLabel a
-makeHTMLLabel port  colspan = Cell port . fixMultiLineLabel
+makeHTMLLabel :: Maybe a -> String -> HTMLLabel a
+makeHTMLLabel port = Cell port . fixMultiLineLabel
 
 -- | A simple cell content.
 cell :: String -> HTMLLabel a
-cell = makeHTMLLabel Nothing Nothing
+cell = makeHTMLLabel Nothing
 
 -- | A cell together with a port which can be used to create direct edges to
 -- this cell. Note that you can use any type to identify the ports. When
 -- creating a node you will get back an association list between your
 -- identifiers and their concrete node ids.
 portHTMLCell :: a -> String -> HTMLLabel a
-portHTMLCell port = makeHTMLLabel (Just port) Nothing
-
--- | A cell together with a port which can be used to create direct edges to
--- this cell. Note that you can use any type to identify the ports. When
--- creating a node you will get back an association list between your
--- identifiers and their concrete node ids.
-portSpanHTMLCell :: a -> Int -> String -> HTMLLabel a
-portSpanHTMLCell port colspan = makeHTMLLabel (Just port) (Just colspan)
+portHTMLCell port = makeHTMLLabel (Just port)
 
 -- |  Concatenate cell contents horizontally and count how many cells does the structure include.
 hcat :: [HTMLLabel a] -> HTMLLabel a
@@ -267,15 +259,15 @@ renderHTMLNode = render True 1.0
                  in  ([], succ uq, (lbl, \nId -> [(p,NodeId (show nId++":"++pid))]))
   render toplevel maxspan (HCat n rs) = do
     (lbls, ids) <- unzip <$> mapM (render False (maxspan/(fromInteger (toInteger n) :: Float))) rs
-    let rawLbl = intercalate "" lbls
+    let rawLbl = concat lbls
         lbl = createHTMLTable toplevel ("<TR>"++rawLbl++"</TR>")
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
-  render toplevel _ (VCat n rs) = 
+  render toplevel _ (VCat _ rs) = 
     do
     let maxspan = getRowsMaxCells rs
     (lbls, ids) <- unzip <$> mapM (render False maxspan) rs
-    let rawLbl = intercalate "" lbls
-        lbl = createHTMLTable toplevel (rawLbl)
+    let rawLbl = concat lbls
+        lbl = createHTMLTable toplevel rawLbl
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
   
   -- create a formatted HTML table from a string if needed
@@ -293,7 +285,10 @@ renderHTMLNode = render True 1.0
 -- add the subscript tag where it is needed
 subscript::[Char]->[Char]
 subscript [] = []
-subscript xs = if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else head xs : subscript (tail xs)
+subscript xs = xs
+subscript ('_':xr) = "<sub>"++subscript(tail xr)++"</sub>" --state facts
+subscript ('.':xr) = "<sub>"++subscript(tail xr)++"</sub>" -- variables
+subscript (x:xr) = x : subscript xr
 -- escape chars that interfere with HTML tags
 escape::[Char]->[Char]
 escape = concatMap esc
@@ -318,12 +313,12 @@ createPlainHTMLNode = genHTMLNode "plaintext"
 
 -- | A variant of a node ignoring the port identifiers.
 createPlainHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-createPlainHTMLNode' rec attrs = do (nId, ids) <- createPlainHTMLNode rec attrs
-                                    return (nId, map snd ids)
+createPlainHTMLNode' lbls attrs = do (nId, ids) <- createPlainHTMLNode lbls attrs
+                                     return (nId, map snd ids)
 
 -- | A variant of node creation ignoring the port to node-id association list.
 createPlainHTMLNode_:: HTMLLabel a -> [(String,String)] -> Dot NodeId
-createPlainHTMLNode_ rec attrs = fst <$> createPlainHTMLNode rec attrs
+createPlainHTMLNode_ lbls attrs = fst <$> createPlainHTMLNode lbls attrs
 
 -- | Like "createPlainNode", but creates nodes with rounded corners; i.e. uses
 -- the "rounded" shape instead of the "plaintext" shape.
@@ -332,9 +327,9 @@ createRoundedHTMLNode = genHTMLNode "rounded"
 
 -- | A variant of "createRoundedNode" ignoring the port identifiers.
 createRoundedHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-createRoundedHTMLNode' rec attrs = do (nId, ids) <- createRoundedHTMLNode rec attrs
-                                      return (nId, map snd ids)
+createRoundedHTMLNode' lbls attrs = do (nId, ids) <- createRoundedHTMLNode lbls attrs
+                                       return (nId, map snd ids)
 
 -- | A variant of "createRoundedNode" ignoring the port to node-id association list.
 createRoundedHTMLNode_ :: HTMLLabel a -> [(String,String)] -> Dot NodeId
-createRoundedHTMLNode_ rec attrs = fst <$> createRoundedHTMLNode rec attrs
+createRoundedHTMLNode_ lbls attrs = fst <$> createRoundedHTMLNode lbls attrs
