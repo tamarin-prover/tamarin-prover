@@ -191,7 +191,7 @@ extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
 freesSapicTerm :: VTerm n v -> [v]
 freesSapicTerm = foldMap $ foldMap (: [])
 
--- | return free variabes in SapicFact  
+-- | return free variabes in SapicFact
 ---- fold over terms in fact and use freesSapicTerm to get list monoid
 freesSapicFact :: Fact (VTerm n v) -> [v]
 freesSapicFact = foldMap freesSapicTerm
@@ -541,7 +541,10 @@ instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing S.empty
     mappend p1 p2 = ProcessParsedAnnotation
         (processnames p1 `mappend` processnames  p2)
-        (location p2)
+        (case (location p1, location p2) of
+             (Nothing, l2) -> l2
+             (l1, Nothing) -> l1
+             (_, l2) -> l2)
         (matchVars p1 `mappend` matchVars p2)
 
 instance Semigroup ProcessParsedAnnotation where

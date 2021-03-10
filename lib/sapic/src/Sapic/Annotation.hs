@@ -58,7 +58,7 @@ instance Semigroup (AnVar v) where  -- override annotations if necessary
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
 data ProcessAnnotation v = ProcessAnnotation {
-    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes 
+    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
                                              -- processes identifiers recovered from "let P = "  bindings
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
@@ -81,7 +81,7 @@ class GoodAnnotation a where
 instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessParsedAnnotation = parsingAnn
-        setProcessParsedAnnotation pn an = an { parsingAnn = pn }
+        setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = opn <> pn }
         defaultAnnotation   = mempty
 
 instance GoodAnnotation ProcessParsedAnnotation
