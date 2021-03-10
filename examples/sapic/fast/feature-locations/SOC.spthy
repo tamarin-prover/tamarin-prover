@@ -2,13 +2,16 @@ theory SOC
 
 begin
 
-heuristic:p
+//heuristic:p
 
 builtins: symmetric-encryption,asymmetric-encryption, locations-report
 
-functions: prog/2,list/2
+functions: prog/2
+//,list/2
 
-predicates: Report(x,y) <=>  not(fst(y) = 'loc')
+//predicates: Report(x,y) <=>  not(fst(y) = 'loc')
+ predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
+
 
 let r=
         in(pk(skV));                   // we begin by a Key Exchange
@@ -26,7 +29,7 @@ let r=
             in( senc(<ip,'input'>,=shared_k) );
             event Poutput(senc(<prog(ip,old_i),'output'>, shared_k));
             out(senc(<prog(ip,old_i),'output'>, shared_k));
-            insert storeP, list(ip,old_i); unlock storeP
+            insert storeP, <ip,old_i>; unlock storeP
             )
 
 
@@ -50,7 +53,7 @@ let v =
             out(senc(<ip,'input'>,shared_k));
             in(senc(<prog(=ip,=old_i),'output'>, =shared_k));
             event Voutput(senc(<prog(ip,old_i),'output'>, shared_k));
-            insert storeV,list(ip,old_i); unlock storeV
+            insert storeV,<ip,old_i>; unlock storeV
         )
         )
 
@@ -71,7 +74,7 @@ lemma secrecy[reuse]:
 
 lemma Input[use_induction,reuse]:
 	"All #t1 ip shared_key . Input(senc(ip, shared_key))@t1 ==> (Ex #t2 pk . SessionV(pk,shared_key)@t2 & t2<t1)"
-
+/*
 lemma secrecy_computes2[reuse]:
         "not (
                 Ex ip k   #t2 #t3 .
@@ -89,8 +92,8 @@ lemma secrecy_computes3[reuse]:
                 & KU(prog(ip,old_i))@t3
 
         )"
-
-lemma attested_computation:
+*/
+lemma attested_computation[use_induction]:
 	"All #t1 h . Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)"
 
 end

@@ -493,11 +493,11 @@ addAttackerReportProc :: TranslationContext -> OpenTheory -> Doc -> Doc
 addAttackerReportProc tc thy p =
   text "(" $$ p $$ text ")| in(" <> att <> text ",(x:bitstring,y:bitstring)); if " <> formula <> text " then out(" <> att  <> text ", rep(x,y))"
   where att = fst $ getAttackerChannel tc Nothing
-        reportPreds = List.find (\(Predicate (Fact tag an ts) form) -> showFactTag tag == "Report")
+        reportPreds = List.find (\(Predicate (Fact tag _ _) _) -> showFactTag tag == "Report")
           $ theoryPredicates thy
         (_,formula) = case reportPreds of
                      Nothing -> ([], text "Translation Error, no Report predicate provided")
-                     Just (Predicate f form) -> Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form)
+                     Just (Predicate _ form) -> Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form)
 
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, StateMap)
 loadProc tc thy = case theoryProcesses thy of
@@ -575,6 +575,7 @@ ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
 ppAtom = ppProtoAtom (const emptyDoc)
 
+emptyTC :: TranslationContext
 emptyTC = TranslationContext{trans=Proverif,
                               attackerChannel = Nothing,
                               stateMap = M.empty,
