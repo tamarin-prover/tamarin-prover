@@ -238,7 +238,7 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
-factToFact (PureCell t1 t2) = protoFact Linear ("PureState") [t1, t2]
+factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
 
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
