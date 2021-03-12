@@ -27,6 +27,7 @@ module Theory.Model.Fact (
   , isLinearFact
   , isPersistentFact
   , isProtoFact
+  , isInFact
 
   , factTagName
   , showFactTag
@@ -299,6 +300,11 @@ annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 isProtoFact :: Fact t -> Bool
 isProtoFact (Fact (ProtoFact _ _ _) _ _) = True
 isProtoFact _                            = False
+
+-- | True iff the fact is an input fact.
+isInFact :: Fact t -> Bool
+isInFact (Fact InFact _ _) = True
+isInFact _                 = False
 
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]
