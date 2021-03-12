@@ -116,7 +116,7 @@ translate th = case theoryProcesses th of
                 typedP <- typeProcess th p
                 an_proc_pre <- translateLetDestr sigRules
                   $ translateReport
-                  $ annotatePureStates
+--                  $ annotatePureStates
                   $ annotateSecretChannels
                   $ propagateNames
                   $ toAnProcess typedP

@@ -2,7 +2,7 @@ theory SOC
 
 begin
 
-//heuristic:p
+//heuristic:S
 
 builtins: symmetric-encryption,asymmetric-encryption, locations-report
 
@@ -63,7 +63,7 @@ new init; ( (!r) || (!v))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */
 
-
+/*
 lemma secrecy[reuse]:
         "not (
                 Ex pka k #t1 #t2 .
@@ -74,6 +74,7 @@ lemma secrecy[reuse]:
 
 lemma Input[use_induction,reuse]:
 	"All #t1 ip shared_key . Input(senc(ip, shared_key))@t1 ==> (Ex #t2 pk . SessionV(pk,shared_key)@t2 & t2<t1)"
+*/
 /*
 lemma secrecy_computes2[reuse]:
         "not (
@@ -93,7 +94,7 @@ lemma secrecy_computes3[reuse]:
 
         )"
 */
-lemma attested_computation[use_induction]:
+lemma attested_computation:
 	"All #t1 h . Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)"
 
 end
