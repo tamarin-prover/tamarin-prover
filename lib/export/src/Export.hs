@@ -20,10 +20,8 @@ module Export (
 
 ) where
 
-import         Term.Builtin.Signature
 import         Term.Builtin.Rules
 import         Term.SubtermRule
-
 
 import         Theory
 import         Theory.Sapic
@@ -40,7 +38,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 import qualified Data.Set as S
 import qualified Data.Label as L
 import Data.List as List
-import qualified Data.Map as M
+
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Functor.Identity
 import Data.Char
@@ -70,15 +68,17 @@ prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
   where
     tc = TranslationContext {trans = Proverif,
                              attackerChannel = Nothing,
-                             hasStates = False}
+                             hasBoundStates = False,
+                             hasUnboundStates = False}
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` prochd `S.union` macroprochd)
-    (proc, prochd, hasState) = loadProc tc thy
+    (proc, prochd, hasBoundState) = loadProc tc thy
+    base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
     lemmas = loadLemmas thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
-      if hasState then ([text ""], S.empty) else loadMacroProc tc thy
+      if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
 
 data Translation =
    Proverif
@@ -89,7 +89,8 @@ data Translation =
 data TranslationContext = TranslationContext
   { trans :: Translation,
     attackerChannel :: Maybe LVar,
-    hasStates :: Bool}
+    hasBoundStates :: Bool,
+    hasUnboundStates :: Bool}
     deriving (Eq, Ord, Data)
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
@@ -102,15 +103,11 @@ data ProverifHeader =
   -- | Type String -- will  be used to define types
   deriving (Ord, Show, Eq)
 
--- We declare some base headers. Notably, we need a dedicated attacker channel.
-base_headers :: S.Set ProverifHeader
-base_headers = S.fromList [
-  Fun "fun" "flock" 1 "(bitstring):channel" ["private"],
-  Fun "fun" "fcell" 1 "(bitstring):channel" ["private"],
-  HEvent "event Lock(bitstring).",
-  HEvent "event Unlock(bitstring).",
-  HEvent "event CellRead(bitstring).",
-  HEvent "event CellWrite(bitstring)."
+
+state_headers :: S.Set ProverifHeader
+state_headers = S.fromList [
+  HEvent "table tbl_states_handle(bitstring,channel).", --the table for linking states identifiers and channels
+  HEvent "table tbl_locks_handle(bitstring,channel)." --the table for linking locks identifiers and channels
   ]
 
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
@@ -135,9 +132,6 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
       Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
   ),
-  ("pair",  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
-   Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
-  ),
   ("asymmetric-encryption", [
       Type "skey",
       Type "pkey",
@@ -154,6 +148,8 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   )
   ]
 
+pairPRules = S.fromList  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
+   Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
 
 ppPubName :: NameId -> Doc
 ppPubName (NameId "zero") = text "0"
@@ -234,12 +230,12 @@ auxppSapicTerm tc mVars isPattern t = (ppTerm t, getHdTerm t)
           else
             S.singleton   (Sym "free" (show n) ":bitstring" [])
         Lit  (_)                                  -> S.empty
+        FApp (NoEq f) [t1] | f == fstSym -> (getHdTerm t1) `S.union` pairPRules
+        FApp (NoEq f) [t1] | f == sndSym -> (getHdTerm t1) `S.union` pairPRules
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
 ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProverifHeader)
 ppSapicTerm tc = auxppSapicTerm tc S.empty False
-
-
 
 -- TODO: we should generalise functionality so pppSapicTerm and pppLNTerm share
 -- the code they have in common
@@ -298,12 +294,20 @@ ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Do
 ppAction ProcessAnnotation{isStateChannel = Nothing} tc (New v) =
    (text "new " <> (ppTypeVar tc v) <> text ";", S.empty)
 
-ppAction ProcessAnnotation{pureState=False, isStateChannel = Just _} tc (New v@(SapicLVar lvar _ )) =
-     (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
-       $$ text "new lock_" <> (ppTypeVar tc v) <> text "[assumeCell];"
+ppAction ProcessAnnotation{pureState=False, isStateChannel = Just t} tc (New v@(SapicLVar lvar _ )) =
+     (extras $
+       text "new " <> channel <> text "[assumeCell];"
+       $$ text "new lock_" <> channel <> text "[assumeCell];"
      -- we also declare the corresponding lock channel, and initialize it
        $$ text "out(lock_" <> ppLVar lvar <> text ",0);"
-     , S.empty)
+
+     ,  if hasUnboundStates tc then sht else S.empty)
+  where channel = ppTypeVar tc v
+        (pt, sht) = ppSapicTerm tc t
+        extras x = if hasUnboundStates tc then x
+          $$ text "insert tbl_states_handle(" <> pt <> text", " <> ppLVar lvar <> text ");"
+          $$ text "insert tbl_locks_handle(" <> pt <> text", lock_" <> ppLVar lvar <> text ");"
+          else x
 
 ppAction ProcessAnnotation{pureState=True, isStateChannel = Just _} tc (New v) =
      (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
@@ -409,7 +413,7 @@ ppSapic tc (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
                                      where (ppl, pshl) = ppSapic tc pl
 
 -- if there are state or lock channels created by addStateChannels, we must inline
-ppSapic tc@TranslationContext{hasStates = True} (ProcessComb (ProcessCall _ _ _) _ pl _)  =
+ppSapic tc@TranslationContext{hasBoundStates = True} (ProcessComb (ProcessCall _ _ _) _ pl _)  =
    (ppl, pshl)
   where (ppl, pshl) = ppSapic tc pl
 
@@ -502,10 +506,11 @@ loadProc tc thy = case theoryProcesses thy of
                   then d
                   else addAttackerReportProc tc2 thy d
           in
-           (finald,S.union hd headers, hasState)
+           (finald,S.union hd headers, fst hasStates)
 
-   where (p, hasState) = makeAnnotations thy pr
-         (tc2, hd) = mkAttackerContext tc{hasStates = hasState} p
+   where p = makeAnnotations thy pr
+         hasStates =  hasBoundUnboundStates p
+         (tc2, hd) = mkAttackerContext tc{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
   _  -> (text "Multiple sapic processes detected, error", S.empty, False)
 
 
@@ -525,12 +530,14 @@ loadMacroProcs tc thy (p:q) =
                              (nest 4 new_text) <> text "." in
                (macro_def : docs, hd `S.union` new_heads `S.union` heads)
   where
-    (mainProc, hasState) = makeAnnotations thy $ L.get pBody p
+    mainProc = makeAnnotations thy $ L.get pBody p
+    hasStates = hasBoundUnboundStates mainProc
     (tc2,hd) = case attackerChannel tc of
           -- we set up the attacker channel if it does not already exists
           Nothing -> mkAttackerContext tc mainProc
           Just _ -> (tc, S.empty)
-    tc3 = tc2{hasStates = hasState}
+    tc3 = tc2{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates}
+
 ------------------------------------------------------------------------------
 -- Printer for Lemmas
 ------------------------------------------------------------------------------
@@ -569,7 +576,8 @@ ppAtom = ppProtoAtom (const emptyDoc)
 emptyTC :: TranslationContext
 emptyTC = TranslationContext{trans = Proverif,
                               attackerChannel = Nothing,
-                              hasStates = False}
+                              hasBoundStates = False,
+                              hasUnboundStates = False}
 
 -- only used for Proverif queries display
 -- the Bool is set to False when we must negate the atom
@@ -809,6 +817,8 @@ getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
           (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)
           _ -> (text "TRANSLATION ERROR", S.empty)
 
+
+-- TODO: Nothing should rely on a global id table
 getStateChannel :: ProcessAnnotation LVar -> Doc
 getStateChannel an =
    case stateChannel an of
@@ -834,9 +844,9 @@ make_args n = "bitstring,"++(make_args (n-1))
 stripNonAlphanumerical :: [Char] -> [Char]
 stripNonAlphanumerical = filter (\x -> isAlpha x)
 
--- return the annotated process, specifying if there exists a state somewhere in the process
-makeAnnotations :: OpenTheory -> PlainProcess -> (LProcess (ProcessAnnotation LVar), Bool)
-makeAnnotations thy p = (res, hasBoundStates p')
+-- return the annotated process
+makeAnnotations :: OpenTheory -> PlainProcess -> LProcess (ProcessAnnotation LVar)
+makeAnnotations thy p = res
   where p' = report $ toAnProcess p
         res = annotatePureStates p'
         report pr = if (List.find (\x -> x=="locations-report") $ theoryBuiltins thy) == Nothing then
@@ -863,8 +873,9 @@ prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
         tc = TranslationContext{trans = DeepSec,
                                 attackerChannel = Nothing,
-                                hasStates = False}
-        hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
+                                hasBoundStates = False,
+                                hasUnboundStates = False}
+        hd = attribHeaders tc $ S.toList (loadHeaders tc thy
                                        `S.union` macroprochd)
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy

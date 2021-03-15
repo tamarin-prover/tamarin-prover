@@ -9,7 +9,7 @@
 
 module Sapic.States (
     annotatePureStates,
-    hasBoundStates
+    hasBoundUnboundStates
 ) where
 
 import         Sapic.Annotation
@@ -22,7 +22,6 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import           Control.Monad.Fresh
 
-
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
 getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
 getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
@@ -31,8 +30,9 @@ getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
 isBound :: S.Set LVar -> SapicTerm -> Bool
 isBound boundNames t = (S.fromList $ frees $ toLNTerm t) `S.isSubsetOf` boundNames
 
-hasBoundStates ::  LProcess (ProcessAnnotation LVar) -> Bool
-hasBoundStates p = not(getAllBoundStates p == S.empty)
+hasBoundUnboundStates ::  LProcess (ProcessAnnotation LVar) -> (Bool, Bool)
+hasBoundUnboundStates p = (not(bounds == S.empty), not(unbounds == S.empty))
+  where (bounds, unbounds) = getAllStates p S.empty
 
 getAllStates ::  LProcess (ProcessAnnotation LVar) ->  (S.Set LVar)-> (S.Set SapicTerm, S.Set SapicTerm)
 getAllStates (ProcessAction (Insert t _) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
@@ -76,7 +76,6 @@ addStatesChannels p =  evalFresh (declareStateChannel p (S.toList allStates) S.e
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
 declareStateChannel ::  MonadFresh m => LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> (S.Set SapicLVar) -> StateMap -> m (LProcess (ProcessAnnotation LVar))
-declareStateChannel p [] _ _ = return p
 declareStateChannel p toDeclare boundNames stateMap =
   let (declarables, undeclarables) =  L.partition (\v -> (S.fromList $ freesSapicTerm v) `S.isSubsetOf` boundNames) toDeclare in
   if declarables == [] then  do
@@ -86,7 +85,7 @@ declareStateChannel p toDeclare boundNames stateMap =
         pl' <- declareStateChannel pl toDeclare boundNames stateMap
         pr' <- declareStateChannel pr toDeclare boundNames stateMap
         case a of
-          Lookup t _ -> return $ ProcessComb a  an{ stateChannel = M.lookup t stateMap} pl' pr'
+          Lookup t _ -> return $ ProcessComb a an{  stateChannel = M.lookup t stateMap} pl' pr'
           _ -> return $ ProcessComb a an pl' pr'
       ProcessAction (New var) an pr -> do
         pr' <-  declareStateChannel pr toDeclare (var `S.insert` boundNames) stateMap
@@ -147,48 +146,6 @@ existsAttackerUnpure p boundNames =
          bl || br
      ProcessNull _ -> False
 
--- computePuteStates outputs (pureStates, aux, existsUnpureUnboundState)
--- computePureStates ::  LProcess (ProcessAnnotation LVar) -> S.Set SapicTerm -> S.Set SapicTerm -> S.Set SapicTerm -> (S.Set SapicTerm, S.Set SapicTerm, S.Set SapicTerm)
--- computePureStates p currentPures oneOutside boundNames =
---   case p of
---      (ProcessAction  (New (SapicLVar v _)) _ pl)
---           -> computePureStates pl currentPures oneOutside (v `S.insert` boundNames)
---      (ProcessAction (Insert t _) _  (ProcessAction (Unlock t2) _ pl)) | t == t2
---           ->  computePureStates pl currentPures oneOutside boundNames
---      (ProcessAction (Lock t) _   (ProcessComb (Lookup t2 _ )  _ pl (ProcessNull _)) ) | t == t2
---           ->  computePureStates pl currentPures oneOutside boundNames
---      (ProcessAction (Insert t _) _ pl)
---           ->
---        -- when we see a lone insert, if there is another lone insert somewhere else we remove it from the pureStates
---        let (cP, oO, b) = computePureStates pl currentPures oneOutside in
---          if S.member t oO then
---            (S.delete t cP, oO, True)
---          else (cP, S.insert t oO, b)
---      (ProcessAction (Lock t ) _ pl)
---           ->
---        let (cP, oO, b) = computePureStates pl currentPures oneOutside in
---            (S.delete t cP, oO, True)
---      (ProcessAction (Unlock t) _ pl)
---           ->
---        let (cP, oO, b) = computePureStates pl currentPures oneOutside in
---            (S.delete t cP, oO, True)
-
---      (ProcessAction _ _ pl)
---           ->
---        computePureStates pl currentPures oneOutside
---      ProcessComb Parallel _ pl pr ->
---        -- in parallel, we sum the oneOutSide, and in all other cases, we just merge them (as the two branches can never be taken
---        let (cP, oO, b) = computePureStates pl currentPures oneOutside in
---        let (cP', oO', b') = computePureStates pr currentPures oneOutside in
---        let newUnpure =  oO `S.intersection` oO' in
---          (cP `S.intersection` cP' `S.difference` newUnpure, oO `S.union` oO', b || b')
---      ProcessComb _ _ pl pr ->
---        let (cP, oO, b) = computePureStates pl currentPures oneOutside in
---        let (cP', oO', b') = computePureStates pr currentPures oneOutside in
---          (cP `S.intersection` cP', oO `S.union` oO', b || b')
---      ProcessNull _ -> (currentPures, oneOutside, False)
-
-
 -- isPureState decides if a state is pure. It returns (isPure, loneInsert), where loneInsert describes that there is at least one lone insert for this state.
 isPureState ::  LProcess (ProcessAnnotation LVar) -> SapicTerm -> Bool -> (Bool, Bool)
 isPureState p target loneInsert =
@@ -224,7 +181,6 @@ isPureState p target loneInsert =
 -- getPureStates ::  LProcess (ProcessAnnotation LVar)  -> S.Set SapicTerm -> S.Set SapicTerm
 -- getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
 --    where (pureStates, unPureStates)
-
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
 annotatePureStates p = if existsAttackerUnpure p S.empty then
                          p
