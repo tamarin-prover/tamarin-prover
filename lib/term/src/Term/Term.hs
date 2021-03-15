@@ -74,6 +74,8 @@ module Term.Term (
     , pmultSym
     , oneSym
     , zeroSym
+    , fstSym
+    , sndSym
 
     -- ** concrete signatures
     , dhFunSig
