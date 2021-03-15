@@ -22,10 +22,11 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import           Control.Monad.Fresh
 
+import Debug.Trace
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
-getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
-getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
-    where (boundStates,freeStates) = getAllStates p S.empty
+-- getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
+-- getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
+--     where (boundStates,freeStates) = getAllStates p S.empty
 
 isBound :: S.Set LVar -> SapicTerm -> Bool
 isBound boundNames t = (S.fromList $ frees $ toLNTerm t) `S.isSubsetOf` boundNames
@@ -69,9 +70,9 @@ type StateMap = M.Map SapicTerm (AnVar LVar)
 
 
 addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
-addStatesChannels p =  evalFresh (declareStateChannel p (S.toList allStates) S.empty M.empty) 0
+addStatesChannels p = trace (show allBoundStates)  evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) 0
  where
-   allStates = getAllBoundStates p
+   allBoundStates =  fst $ getAllStates p S.empty
 
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
@@ -183,8 +184,8 @@ isPureState p target loneInsert =
 --    where (pureStates, unPureStates)
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
 annotatePureStates p = if existsAttackerUnpure p S.empty then
-                         p
-                       else if getAllBoundStates p  == S.empty then
+                              addStatesChannels p
+                       else if (fst $ getAllStates p S.empty)  == S.empty then
                               p
                         else
                          annotateEachPureStates (addStatesChannels p) S.empty

@@ -148,6 +148,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   )
   ]
 
+pairPRules :: S.Set ProverifHeader
 pairPRules = S.fromList  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
    Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
 
