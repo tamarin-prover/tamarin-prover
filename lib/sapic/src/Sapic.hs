@@ -36,7 +36,7 @@ import Sapic.Locks
 import Sapic.ProcessUtils
 import Sapic.LetDestructors
 import Sapic.Bindings
-import Sapic.States
+-- import Sapic.States (state optimisation disabled currently)
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
