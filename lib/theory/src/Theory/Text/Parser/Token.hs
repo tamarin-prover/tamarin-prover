@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -114,7 +113,8 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
-import           Theory.Sapic
+import           Theory.Sapic.Term
+import           Theory.Sapic.Pattern
 
 
 ------------------------------------------------------------------------------
@@ -424,7 +424,7 @@ opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
 
 -- | The requires-a-premise operator, @▶ subscript-idx@.
 opRequires :: Parser PremIdx
-opRequires = (PremIdx . fromIntegral) <$> (symbol "▶" *> naturalSubscript)
+opRequires = PremIdx . fromIntegral <$> (symbol "▶" *> naturalSubscript)
 
 -- | The chain operator @~~>@.
 opChain :: Parser ()

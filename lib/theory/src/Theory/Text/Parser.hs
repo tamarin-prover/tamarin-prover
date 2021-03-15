@@ -60,6 +60,7 @@ import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Sapic
+import           Theory.Sapic.Pattern
 import           Theory.Text.Parser.Token
 
 import           Debug.Trace
