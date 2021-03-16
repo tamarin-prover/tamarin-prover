@@ -566,11 +566,15 @@ blatom varp nodep = (fmap (fmapTerm (fmap Free))) <$> asum
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact (vlit varp))                    <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm False (vlit varp) <* opEqual) <*> msetterm False (vlit varp) <?> "term equality"
+  , smaller     <$> try (termp <* opLess) <*> termp  <?> "less between terms"
+  , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
-    nodevarTerm = (lit . Var) <$> nodep
+    nodevarTerm = lit . Var <$> nodep
+    termp =  msetterm False (vlit varp)
+    smaller a b = (Syntactic . Pred) $ protoFact Linear "Smaller" [a,b]
+
 
 -- | Parse an atom of a formula.
 fatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
