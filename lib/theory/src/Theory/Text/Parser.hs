@@ -1314,6 +1314,7 @@ instance Show (ParsingException) where
     show (DuplicateItem (SapicItem (ProcessItem _))) = "duplicate process item"
     show (DuplicateItem (SapicItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
     show (DuplicateItem (SapicItem (ExportInfoItem _))) = "duplicate exportinfo  item"
+    show (DuplicateItem (SapicItem (SignatureBuiltin s))) = "duplicate BuiltIn signature: " ++ show s
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException

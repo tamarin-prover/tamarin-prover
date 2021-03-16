@@ -6,7 +6,8 @@ in(x); // allowed
 in(=x); // allowed
 /* in(<=x,x>); // disallowed because ambigous */
 /* in(x); // disallowed because x is bound in top-level process */
-in(<y,y>); // allowed - TODO disallowed, because unclear semantics...
+/* in(<y,y>); // disallowed, because unclear semantics... */
+in(<=x,=x>); // allowed, because clear semantics...
 [In(z)]-->[]; // allowed
 /* [In(z)]-->[]; // disallowed because z is bound */
 [In(=z)]-->[]; // allowed
