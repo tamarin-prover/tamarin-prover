@@ -114,3 +114,4 @@ library
       Theory.Tools.Wellformedness
 
     other-modules:
+      Theory.Syntactic.Predicate
