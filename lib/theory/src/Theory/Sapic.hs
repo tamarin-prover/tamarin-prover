@@ -1,7 +1,7 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
+
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveTraversable       #-}
 {-# LANGUAGE DeriveAnyClass       #-}
@@ -14,6 +14,7 @@
 -- Portability : GHC only
 --
 -- Data types for SAPIC processes in theories
+{-# LANGUAGE FlexibleInstances #-}
 module Theory.Sapic (
     Process
     , ProcessCombinator(..)
@@ -48,6 +49,7 @@ import Term.LTerm
 import Term.Substitution
 import Theory.Text.Pretty
 import Control.Monad.Catch
+import qualified Control.Monad.Fail as Fail
 
 -- | A process data structure
 -- | In general, terms we use in the translation have logical veriables
@@ -86,8 +88,8 @@ deriving instance (NFData ann) => NFData (AnProcess ann)
 deriving instance (Binary ann) => Binary (AnProcess ann)
 deriving instance (Eq ann) => Eq (AnProcess ann)
 deriving instance (Show ann) => Show (AnProcess ann)
-deriving instance Foldable (AnProcess)
-deriving instance Traversable (AnProcess)
+deriving instance Foldable AnProcess
+deriving instance Traversable AnProcess
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
@@ -107,6 +109,8 @@ data CapturedTag = CapturedIn | CapturedLookup | CapturedNew
 data LetExceptions = CapturedEx CapturedTag LVar
     deriving (Typeable, Show, Exception)
     -- deriving (Typeable)
+instance Fail.MonadFail (Either LetExceptions) where
+  fail = Fail.fail
 
 prettyLetExceptions :: LetExceptions -> [Char]
 prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " appears in a let-expression that is captured in " ++ pretty tag ++ ". This is likely unintend. To proceed nonetheless, please rename the variable to pat_" ++ show v ++ " throughout."
@@ -117,7 +121,7 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
 applyProcessCombinatorError :: MonadThrow m => Subst Name LVar
             -> ProcessCombinator -> m ProcessCombinator
 applyProcessCombinatorError subst c
-        | (Lookup t v) <- c  = if v `elem` dom (subst) then
+        | (Lookup t v) <- c  = if v `elem` dom subst then
                                   throwM $ CapturedEx CapturedLookup v
                                else
                                   return $ Lookup (apply subst t) v

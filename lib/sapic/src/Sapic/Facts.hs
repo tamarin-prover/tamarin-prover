@@ -33,7 +33,7 @@ module Sapic.Facts (
 -- import Control.Monad.Catch
 -- import Sapic.Exceptions
 import Theory
-import Theory.Text.Parser
+-- import Theory.Text.Parser
 import Theory.Sapic
 import Theory.Sapic.Print
 import Sapic.Annotation

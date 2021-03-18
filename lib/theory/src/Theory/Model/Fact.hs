@@ -86,6 +86,7 @@ module Theory.Model.Fact (
   , LNFact
   , unifyLNFactEqs
   , unifiableLNFacts
+  , newVariables
 
   -- * Pretty-Printing
 
@@ -467,6 +468,13 @@ isTrivialFact (Fact _ _ ts) = case ts of
       combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
 
       noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
+
+newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
+newVariables prems concs = map varTerm $ S.toList newvars
+  where
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concatMap getFactVariables prems
+    concvars = S.fromList $ concatMap getFactVariables concs
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
