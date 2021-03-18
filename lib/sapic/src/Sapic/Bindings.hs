@@ -11,14 +11,14 @@ import Sapic.Annotation
 import Data.List
 import qualified Data.Set as S
 
--- | bindings returns the variables bound precisely at this point. Guarantees uniqueness of the list.
+-- | bindings returns the variables bound precisely at this point. Guarantees that no duplicates are in the list.
 --   we need the annotations to handle patterns correctly
 bindings :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
 bindings (ProcessComb c ann _ _) = bindingsComb ann c
 bindings (ProcessAction ac ann _) = bindingsAct ann ac
 bindings (ProcessNull _) = []
 
--- | for convenience
+-- | bindings for actions without duplicates
 bindingsAct :: GoodAnnotation a => a -> SapicAction SapicLVar -> [SapicLVar]
 bindingsAct  ann ac
     | (New v) <- ac = [v]
@@ -26,6 +26,7 @@ bindingsAct  ann ac
     | (MSR (l,_,_,_)) <- ac = nub (foldMap freesSapicFact l) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
     | otherwise = []
 
+-- | bindings for process combinators without duplicates
 bindingsComb :: GoodAnnotation a => a -> ProcessCombinator SapicLVar -> [SapicLVar]
 bindingsComb ann c
     | (Lookup _ v) <- c = [v]

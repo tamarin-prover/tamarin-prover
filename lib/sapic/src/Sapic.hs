@@ -55,7 +55,6 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
         gAct a' ac ann r = do
                        -- a' is map variables to types
                        -- r is typed subprocess
-                       -- type terms with variables and reconstruct process
             ac' <- traverseTermsAction (typeWith  a') typeWithFact typeWithVar ac
             return $ ProcessAction ac' ann r
         gComb a' c ann rl rr = do
@@ -92,7 +91,6 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v a
             | Just _ <- Map.lookup (slvar v) a = -- if variable is already in map, it must have been bound for the second time..
-                                                 -- TODO need to make sure that bindsAct etc. return list without doubles ...
                         throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
             | otherwise =
                 return $ Map.insert (slvar v) (maybeToDefault $ stype v) a
