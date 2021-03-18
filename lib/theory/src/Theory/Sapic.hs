@@ -1,7 +1,6 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveTraversable       #-}
 {-# LANGUAGE DeriveAnyClass       #-}

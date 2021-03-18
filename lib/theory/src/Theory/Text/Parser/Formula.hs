@@ -7,7 +7,6 @@
 -- Portability : portable
 --
 -- Parsing Standard and Guarded Formulas
-------------------------------------------------------------------------------
 
 module Theory.Text.Parser.Formula
   ( standardFormula,
@@ -40,7 +39,7 @@ blatom = fmap (fmapTerm (fmap Free)) <$> asum
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
-    nodevarTerm = (lit . Var) <$> nodevar
+    nodevarTerm = lit . Var <$> nodevar
 
 -- | Parse an atom of a formula.
 fatom :: Parser  SyntacticLNFormula

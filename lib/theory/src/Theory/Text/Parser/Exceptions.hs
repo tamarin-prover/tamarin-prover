@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleInstances #-}
-
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker

@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -7,7 +6,7 @@
 -- Portability : portable
 --
 -- Tokenizing infrastructure
-{-# LANGUAGE TypeSynonymInstances #-}
+
 {-# LANGUAGE FlexibleInstances #-}
 module Theory.Text.Parser.Token (
   -- * Symbols
@@ -397,7 +396,7 @@ opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
 
 -- | The requires-a-premise operator, @▶ subscript-idx@.
 opRequires :: Parser PremIdx
-opRequires = (PremIdx . fromIntegral) <$> (symbol "▶" *> naturalSubscript)
+opRequires = PremIdx . fromIntegral <$> (symbol "▶" *> naturalSubscript)
 
 -- | The chain operator @~~>@.
 opChain :: Parser ()

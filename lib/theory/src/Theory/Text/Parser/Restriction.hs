@@ -6,11 +6,7 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
--- Parsing protocol theories. See the MANUAL for a high-level description of
--- the syntax.
-------------------------------------------------------------------------------
 -- Parsing Restrictions
-------------------------------------------------------------------------------
 
 module Theory.Text.Parser.Restriction
   ( parseRestriction

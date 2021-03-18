@@ -7,7 +7,7 @@
 -- Portability : portable
 --
 -- Parsing Lemmas
-------------------------------------------------------------------------------
+
 module Theory.Text.Parser.Lemma(
       lemma
       , plainLemma

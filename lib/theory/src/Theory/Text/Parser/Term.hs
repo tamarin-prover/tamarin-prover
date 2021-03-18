@@ -113,7 +113,7 @@ term plit eqn = asum
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
-expterm eqn plit = chainl1 (term plit eqn) ((\a b -> fAppExp (a,b)) <$ opExp)
+expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -141,4 +141,4 @@ msetterm eqn plit = do
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
-tupleterm eqn plit = chainr1 (msetterm eqn plit) ((\a b -> fAppPair (a,b)) <$ comma)
+tupleterm eqn plit = chainr1 (msetterm eqn plit) (curry fAppPair <$ comma)

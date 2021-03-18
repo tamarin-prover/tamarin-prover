@@ -7,7 +7,6 @@
 -- Portability : portable
 --
 -- Parsing Rules
-------------------------------------------------------------------------------
 
 module Theory.Text.Parser.Rule (
        moduloE

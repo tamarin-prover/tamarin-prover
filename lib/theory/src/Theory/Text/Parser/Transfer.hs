@@ -6,11 +6,9 @@
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
--- Parsing protocol theories. See the MANUAL for a high-level description of
--- the syntax.
-------------------------------------------------------------------------------
--- Parsing transfer notation
-------------------------------------------------------------------------------
+-- Parsing transfer notation. Currently defunct. 
+
+-- Note: Found when refactoring, was commented out previously. -- Robert Künnemann
 
 {-
 -- | Parse an lit with strings for both constants as well as variables.
