@@ -1,11 +1,12 @@
 theory AC_counter
-// Use Tamarin command line options '--heuristic=S --bound=32' */
 
 begin
 
 builtins: locations-report
 
 functions: prog/3,null/0,succ/1,list/2
+
+heuristic:S
 
 predicates:
 Report(x,y) <=> not  (y= 'l')
@@ -27,29 +28,25 @@ let v =                                        // The verifier
      let ipo = fst(st) in
     let counter = snd(st) in
 	in(ip); in(<o,signedios>);
-	if <o,ip,counter>= check_rep(signedios,'l') then // verification of the validity of the report 
+	if <o,ip,counter>= check_rep(signedios,'l') then // verification of the validity of the report
 		(event Voutput(<o,ip,ipo>);
         insert state,<<o,list(ip,ipo)>,succ(counter)>;
 		unlock state)
-	else  
+	else
 		event Fail()
 
 
-new init; event Initial(init);
- ( !(new state; insert state,<init,null()>;!r) ||
- !(new state; insert state,<init,null()>; !v)  )
+
+ ( !(new state; insert state,<'init',null()>;!r) ||
+ !(new state; insert state,<'init',null()>; !v)  )
 
 /*
-lemma can_run_v: //for sanity 
- 	exists-trace 
-	"Ex #t h .Voutput(h)@t" 
+lemma can_run_v: //for sanity
+ 	exists-trace
+	"Ex #t h .Voutput(h)@t"
 */
 
-lemma attested_comput_second_step[reuse]:  
-	"All #t1 #t0 o2 i2 o i init.  (Initial(init)@t0 & Voutput(<o2,i2,<o,list(i,init)>>)@t1) ==> (Ex #t2 . Poutput(<o2,i2,<o,list(i,init)>>)@t2 & t2<t1)" 
-
-// Attested computation theorem
-lemma attested_comput:  
-	"All #t1 h .  Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)" 
+lemma attested_comput_second_step[reuse]:
+	"All #t1 o2 i2 o i.  Voutput(<o2,i2,<o,list(i,'init')>>)@t1 ==> (Ex #t2 . Poutput(<o2,i2,<o,list(i,'init')>>)@t2 & t2<t1)"
 
 end

@@ -8,7 +8,7 @@ functions: adec/2, aenc/2, cde/1, chall/1, chall2/1, check_rep/2, dcde/1,
            sdec/2, senc/2, shared/1, sko/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
-    check_rep(rep(x.1, x.2), x.2) = true,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
     dcde(cde(m)) = m,
     dscode(scode(m)) = m,
     dshared(shared(m)) = m,
@@ -18,7 +18,7 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-heuristic: p
+heuristic: S
 
 predicate: Report( x, y )<->¬(y = 'loc')
 
@@ -34,7 +34,10 @@ solve( state_1111111( cu, pc, pw, k ) ▶₀ #t1 )
   solve( !KU( ~n.3 ) @ #t2 )
     case outcdecode_0_111111111121111
     solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.10 )
-      case inpccode_0_1111111111211
+      case inpccode_0_1111111111211_case_1
+      by solve( (#vr.9, 0) ~~> (#t2, 0) )
+    next
+      case inpccode_0_1111111111211_case_2
       solve( (#vr.9, 0) ~~> (#t2, 0) )
         case d_0_fst
         by solve( state_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.25 )
@@ -59,7 +62,47 @@ guarded formula characterizing all counter-examples:
   ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-by solve( state_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+solve( state_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111
+  solve( !KU( shared(<aenc(k, pk(~n.3)), rep(aenc(k, pk(~n.3)), 'loc')>)
+         ) @ #vk )
+    case c_shared
+    solve( !KU( rep(aenc(k, pk(~n.3)), 'loc') ) @ #vk.3 )
+      case Reportrule
+      by contradiction /* from formulas */
+    next
+      case outcdecode_0_111111111121111
+      solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.17 )
+        case inpccode_0_1111111111211_case_1
+        by contradiction /* impossible chain */
+      next
+        case inpccode_0_1111111111211_case_2
+        solve( (#vr.16, 0) ~~> (#vk.1, 0) )
+          case d_0_fst
+          by solve( state_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.30 )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      qed
+    qed
+  next
+    case outcdecode_0_111111111121111
+    solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.17 )
+      case inpccode_0_1111111111211_case_1
+      by contradiction /* impossible chain */
+    next
+      case inpccode_0_1111111111211_case_2
+      solve( (#vr.16, 0) ~~> (#vk, 0) )
+        case d_0_fst
+        by solve( state_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.30 )
+      next
+        case d_0_snd
+        by contradiction /* impossible chain */
+      qed
+    qed
+  qed
+qed
 
 lemma secrecy_ex [reuse]:
   all-traces
@@ -69,7 +112,34 @@ guarded formula characterizing all counter-examples:
 "∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
 */
 simplify
-by solve( state_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+solve( state_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111
+  solve( state_111111111121211( cu, pc, pw, k, ~n.3 ) ▶₀ #t2 )
+    case newsharedk_0_11111111112121
+    solve( state_111111111121211( cu, pc, pw, ~n.3, ~n.4 ) ▶₀ #t2.1 )
+      case newsharedk_0_11111111112121
+      solve( !KU( ~n.3 ) @ #t2.1 )
+        case outcdecode_0_111111111121111
+        solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
+          case inpccode_0_1111111111211_case_1
+          by solve( (#vr.24, 0) ~~> (#t2.1, 0) )
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.24, 0) ~~> (#t2.1, 0) )
+            case d_0_fst
+            by solve( state_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+          next
+            case d_0_snd
+            by solve( (#vr.39, 0) ~~> (#t2.1, 0) )
+          qed
+        qed
+      next
+        case outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111212111
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
 
 lemma unic [reuse]:
   all-traces
@@ -118,7 +188,97 @@ solve( state_111111111121211111111111( chal, code, cu, fr, kOTP, pc, pw,
        ) ▶₀ #t1 )
   case insencchallengesharedk_0_11111111112121111111111
   solve( state_11111111112111( code.1, ~n, pc, ~n.3, skV ) ▶₀ #vr.15 )
-    case inpccode_0_1111111111211
+    case inpccode_0_1111111111211_case_1
+    solve( state_111111111121211( cu, pc, pw, shared_k, ~n.5 ) ▶₀ #t2 )
+      case newsharedk_0_11111111112121
+      solve( !KU( senc(chal, ~n.4) ) @ #vk )
+        case c_senc
+        solve( !KU( ~n.4 ) @ #vk.4 )
+          case outcdecode_0_111111111121111
+          solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.59 )
+            case inpccode_0_1111111111211_case_1
+            by solve( (#vr.58, 0) ~~> (#vk.1, 0) )
+          next
+            case inpccode_0_1111111111211_case_2
+            solve( (#vr.58, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( state_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.72 )
+            next
+              case d_0_snd
+              by solve( (#vr.73, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        next
+          case outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111212111
+          by contradiction /* from formulas */
+        qed
+      next
+        case outcdecode_0_111111111121111
+        solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.59 )
+          case inpccode_0_1111111111211_case_1
+          by contradiction /* impossible chain */
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.58, 0) ~~> (#vk, 0) )
+            case d_0_fst
+            by solve( state_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.72 )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case outsencchallengesharedk_0_11111111111111111111111
+        solve( state_111111111121211( cu, pc, pw, ~n.5, ~n.6 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( ~n ) @ #t2.2 )
+            case outcdecode_0_111111111121111
+            solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.81 )
+              case inpccode_0_1111111111211_case_1
+              by solve( (#vr.80, 0) ~~> (#t2.2, 0) )
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.80, 0) ~~> (#t2.2, 0) )
+                case d_0_fst
+                by solve( state_11111111112111( code.1, ~n.3, pc, pw, skV ) ▶₀ #vr.94 )
+              next
+                case d_0_snd
+                by solve( (#vr.95, 0) ~~> (#t2.2, 0) )
+              qed
+            qed
+          next
+            case outsencchallengesharedk_0_11111111111111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case outskosenckOTPsharedk_0_1111111111111111111
+        solve( state_111111111121211( cu, pc, pw, ~n.5, ~n.6 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( ~n ) @ #t2.2 )
+            case outcdecode_0_111111111121111
+            solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.77 )
+              case inpccode_0_1111111111211_case_1
+              by solve( (#vr.76, 0) ~~> (#t2.2, 0) )
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.76, 0) ~~> (#t2.2, 0) )
+                case d_0_fst
+                by solve( state_11111111112111( code.1, ~n.3, pc, pw, skV ) ▶₀ #vr.90 )
+              next
+                case d_0_snd
+                by solve( (#vr.91, 0) ~~> (#t2.2, 0) )
+              qed
+            qed
+          next
+            case outskosenckOTPsharedk_0_1111111111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  next
+    case inpccode_0_1111111111211_case_2
     by solve( state_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.48 )
   qed
 qed
@@ -136,9 +296,123 @@ guarded formula characterizing all counter-examples:
   ∀ #t2 fr k. (Ask( pw, ch, fr, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-by solve( state_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
-                                           shared_k, signed, skV
-          ) ▶₀ #t1 )
+solve( state_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
+                                        shared_k, signed, skV
+       ) ▶₀ #t1 )
+  case inhpwhashkOTPchallenge_0_111111111111111111111111
+  solve( state_111111111121211( cu, pc, pw, shared_k, ~n.6 ) ▶₀ #t2 )
+    case newsharedk_0_11111111112121
+    solve( !KU( h(~n.5) ) @ #vk.1 )
+      case c_h
+      solve( !KU( hash(~n.3, ~n) ) @ #vk.2 )
+        case c_hash
+        solve( !KU( ~n.3 ) @ #vk.6 )
+          case outcdecode_0_111111111121111
+          solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+            case inpccode_0_1111111111211_case_1
+            by solve( (#vr.44, 0) ~~> (#vk.2, 0) )
+          next
+            case inpccode_0_1111111111211_case_2
+            solve( (#vr.44, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( state_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+            next
+              case d_0_snd
+              by solve( (#vr.59, 0) ~~> (#vk.2, 0) )
+            qed
+          qed
+        next
+          case outskosenckOTPsharedk_0_1111111111111111111
+          by contradiction /* from formulas */
+        qed
+      next
+        case outcdecode_0_111111111121111
+        solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+          case inpccode_0_1111111111211_case_1
+          by contradiction /* impossible chain */
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.44, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( state_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case outhpwhashkOTPchallenge_0_1111111111212111111111111
+        by contradiction /* from formulas */
+      qed
+    next
+      case outcdecode_0_111111111121111
+      solve( state_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+        case inpccode_0_1111111111211_case_1
+        by contradiction /* impossible chain */
+      next
+        case inpccode_0_1111111111211_case_2
+        solve( (#vr.44, 0) ~~> (#vk, 0) )
+          case d_0_fst
+          by solve( state_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhpwhashkOTPchallenge_0_1111111111212111111111111
+      solve( state_11111111112111( code.1, ~n.2, pc, ~n.5, skV ) ▶₀ #vr.61 )
+        case inpccode_0_1111111111211_case_1
+        solve( state_111111111121211( cu, pc, pw, shared_k, ~n.7 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( hash(~n.3, ~n) ) @ #vk.2 )
+            case c_hash
+            solve( !KU( ~n.3 ) @ #vk.9 )
+              case outcdecode_0_111111111121111
+              solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.94 )
+                case inpccode_0_1111111111211_case_1
+                by solve( (#vr.93, 0) ~~> (#vk.2, 0) )
+              next
+                case inpccode_0_1111111111211_case_2
+                solve( (#vr.93, 0) ~~> (#vk.2, 0) )
+                  case d_0_fst
+                  by solve( state_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.107 )
+                next
+                  case d_0_snd
+                  by solve( (#vr.108, 0) ~~> (#vk.2, 0) )
+                qed
+              qed
+            next
+              case outskosenckOTPsharedk_0_1111111111111111111
+              by contradiction /* from formulas */
+            qed
+          next
+            case outcdecode_0_111111111121111
+            solve( state_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.94 )
+              case inpccode_0_1111111111211_case_1
+              by contradiction /* impossible chain */
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.93, 0) ~~> (#vk.1, 0) )
+                case d_0_fst
+                by solve( state_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.107 )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          next
+            case outhpwhashkOTPchallenge_0_1111111111212111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case inpccode_0_1111111111211_case_2
+        by solve( state_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.83 )
+      qed
+    qed
+  qed
+qed
 
 lemma unic_2 [reuse]:
   all-traces
@@ -205,12 +479,33 @@ guarded formula characterizing all counter-examples:
     (∃ #t6. (AskU( pw, fr ) @ #t6) ∧ ¬(#t3 = #t6)))"
 */
 simplify
-by solve( state_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
-                                           shared_k, signed, skV
-          ) ▶₀ #t1 )
+solve( state_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
+                                        shared_k, signed, skV
+       ) ▶₀ #t1 )
+  case inhpwhashkOTPchallenge_0_111111111111111111111111
+  solve( state_111111111121211111111111( ~n, code, cu, fr, kOTP, pc, ~n.5,
+                                         k, skV
+         ) ▶₀ #t2 )
+    case insencchallengesharedk_0_11111111112121111111111
+    solve( (∃ #t5. (Ask( ~n.5, ~n, ~n.7, ~n.8 ) @ #t5) ∧ ¬(#t2 = #t5))  ∥
+           (∃ #t6. (AskU( ~n.5, ~n.7 ) @ #t6) ∧ ¬(#vr.40 = #t6)) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+restriction restr_Report-rule_1:
+  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
+  // safety formula
 
 rule (modulo E) Report-rule[color=#ffffff process=new skV;]:
-   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+   [ In( <x, loc> ) ]
+  --[ restr_Report-rule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -315,14 +610,40 @@ rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111[color=#658040
   --[ Pred_Eq( aenc(shared_k, pk(skV)), check_rep(signed, 'loc') ) ]->
    [ state_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111[color=#658040 process=if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')]:
+     [ state_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    --[ Pred_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [ state_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       z     = check_rep(signed.8, 'loc')
+    
+    2. signed
+             = rep(x.8, 'loc')
+       z     = x.8
+  */
 
 rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111[color=#658040 process=if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')]:
    [ state_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
   --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), check_rep(signed, 'loc') ) ]->
    [ state_1111111111112( cu, pc, pw, shared_k, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111[color=#658040 process=if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')]:
+     [ state_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [ state_1111111111112( cu, pc, pw, shared_k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       z     = check_rep(signed.8, 'loc')
+    
+    2. signed
+             = rep(x.8, 'loc')
+       z     = x.8
+  */
 
 rule (modulo E) eventSessionVpkskVsharedk_0_1111111111111[color=#658040 process=event SessionV( pk(skV), shared_k );]:
    [ state_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
@@ -814,15 +1135,15 @@ analyzing: examples/sapic/fast/feature-locations/OTP.spthy
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 2.779823s
-  secrecy_key (all-traces): verified (7 steps)
-  key_ex (all-traces): verified (2 steps)
-  secrecy_ex (all-traces): verified (2 steps)
+  processing time: 5.166937345s
+  secrecy_key (all-traces): verified (8 steps)
+  key_ex (all-traces): verified (15 steps)
+  secrecy_ex (all-traces): verified (11 steps)
   unic (all-traces): verified (8 steps)
-  secrecy_chall (all-traces): verified (4 steps)
-  valid (all-traces): verified (2 steps)
+  secrecy_chall (all-traces): verified (34 steps)
+  valid (all-traces): verified (40 steps)
   unic_2 (all-traces): verified (8 steps)
-  valid_final (all-traces): verified (2 steps)
+  valid_final (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
 
@@ -832,15 +1153,15 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 2.779823s
-  secrecy_key (all-traces): verified (7 steps)
-  key_ex (all-traces): verified (2 steps)
-  secrecy_ex (all-traces): verified (2 steps)
+  processing time: 5.166937345s
+  secrecy_key (all-traces): verified (8 steps)
+  key_ex (all-traces): verified (15 steps)
+  secrecy_ex (all-traces): verified (11 steps)
   unic (all-traces): verified (8 steps)
-  secrecy_chall (all-traces): verified (4 steps)
-  valid (all-traces): verified (2 steps)
+  secrecy_chall (all-traces): verified (34 steps)
+  valid (all-traces): verified (40 steps)
   unic_2 (all-traces): verified (8 steps)
-  valid_final (all-traces): verified (2 steps)
+  valid_final (all-traces): verified (6 steps)
 
 ==============================================================================
 */
