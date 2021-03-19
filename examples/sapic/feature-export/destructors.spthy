@@ -8,6 +8,7 @@ equations: sdec(k,senc(k,m))=m
 
 builtins: multiset
 
+process:
 new k; out(k);
 in(c);
 /* if test(x) = true() then event A() */

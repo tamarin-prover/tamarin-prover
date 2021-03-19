@@ -5,12 +5,12 @@ theory AttestedComputation begin
 functions: check_rep/2, fst/1, get_rep/1, list/2, pair/2, prog/3,
            rep/2 [private], report/1, snd/1
 equations:
-    check_rep(rep(x.1, x.2), x.2) = true,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
 
-heuristic: p
+heuristic: s
 
 predicate: Report( x, y )<->¬(y = 'l')
 
@@ -24,10 +24,622 @@ guarded formula characterizing all counter-examples:
   (Local( m, 'l' ) @ #i) ∧ ∀ #j. (Remote( m, 'l' ) @ #j) ⇒ ¬(#j < #i)"
 */
 simplify
-by solve( state_11211111111( i.1, init, lio, o, r, state, lock ) ▶₀ #i )
+solve( state_11211111111( i.1, init, lio, o, r, state, lock ) ▶₀ #i )
+  case ifoiliocheckreprl_0_1121111111_case_1
+  by contradiction /* from formulas */
+next
+  case ifoiliocheckreprl_0_1121111111_case_2
+  solve( (#vr.6 < #t2)  ∥ (#vr.6 = #t2) )
+    case case_1
+    solve( (#vr.27 < #t2.1)  ∥ (#vr.27 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.1, lio ) @ #t2 )
+        case insertstateinit_0_1111
+        by solve( state_1111( lio, ~n.1 ) ▶₀ #t2 )
+      next
+        case insertstateinit_0_11211
+        solve( state_11211( lio, ~n.1 ) ▶₀ #t2 )
+          case newstate_0_1121
+          by contradiction /* cyclic */
+        qed
+      next
+        case insertstatelistolistilio_0_112111111111
+        solve( state_112111111111( i.2, init, lio, o, r, ~n.1, lock ) ▶₀ #t2 )
+          case eventLocaloiliol_0_11211111111_case_1
+          solve( ((#vr.2 < #vr.34) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.3, ~n.2 ) @ #t2)
+                   ∧
+                    (#vr.2 < #t2) ∧
+                    (#t2 < #vr.34) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.3, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.34 < #vr.2) )
+            case case_1
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.46 < #t2.4)  ∥ (#vr.46 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.1 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.1 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.1 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.45 < #t2.4)  ∥ (#vr.45 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.3 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.46 < #t2.3)  ∥ (#vr.46 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.1 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.1 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.1 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.3 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case eventLocaloiliol_0_11211111111_case_2
+          solve( ((#vr.2 < #vr.34) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.2, ~n.1 ) @ #t2)
+                   ∧
+                    (#vr.2 < #t2) ∧
+                    (#t2 < #vr.34) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.2, ~n.1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.34 < #vr.2) )
+            case case_1
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.49 < #t2.4)  ∥ (#vr.49 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.1 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.5 ) ▶₀ #t2.1 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.5 ) ▶₀ #t2.1 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.48 < #t2.4)  ∥ (#vr.48 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.3 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.49 < #t2.3)  ∥ (#vr.49 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.1 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.5 ) ▶₀ #t2.1 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.5 ) ▶₀ #t2.1 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.19, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.7, lio.1 ) @ #t2.2 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.6 ) ▶₀ #t2.2 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.8, lio.1 ) @ #t2.3 )
+                  case insertstateinit_0_1111
+                  solve( state_1111( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                    case newstate_0_111
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case insertstateinit_0_11211
+                  by solve( state_11211( lio.1, ~n.7 ) ▶₀ #t2.3 )
+                next
+                  case insertstatelistolistilio_0_112111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                next
+                  case insertstatelistprogriliolistilio_0_111111111111
+                  by solve( (#vr.18, 0) ~~> (#vk, 0) )
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case insertstatelistprogriliolistilio_0_111111111111
+        by solve( state_111111111111( i.2, init, lio, lock, r, ~n.1 ) ▶₀ #t2 )
+      qed
+    next
+      case case_2
+      solve( Insert( ~n.1, lio ) @ #t2.1 )
+        case insertstateinit_0_1111
+        by solve( state_1111( lio, ~n.1 ) ▶₀ #t2.1 )
+      next
+        case insertstateinit_0_11211
+        solve( state_11211( lio, ~n.1 ) ▶₀ #t2.1 )
+          case newstate_0_1121
+          by contradiction /* cyclic */
+        qed
+      next
+        case insertstatelistolistilio_0_112111111111
+        solve( state_112111111111( i.2, init, lio, o, r, ~n.1, lock ) ▶₀ #t2.1 )
+          case eventLocaloiliol_0_11211111111_case_1
+          solve( ((#vr.2 < #vr.33) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.3, ~n.2 ) @ #t2)
+                   ∧
+                    (#vr.2 < #t2) ∧
+                    (#t2 < #vr.33) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.3, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.2 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.33 < #vr.2) )
+            case case_1
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.45 < #t2.4)  ∥ (#vr.45 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.44 < #t2.4)  ∥ (#vr.44 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.45 < #t2.3)  ∥ (#vr.45 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.44 < #t2.3)  ∥ (#vr.44 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.4, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          qed
+        next
+          case eventLocaloiliol_0_11211111111_case_2
+          solve( ((#vr.2 < #vr.33) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.2, ~n.1 ) @ #t2)
+                   ∧
+                    (#vr.2 < #t2) ∧
+                    (#t2 < #vr.33) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.2, ~n.1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.1 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.33 < #vr.2) )
+            case case_1
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.48 < #t2.4)  ∥ (#vr.48 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.47 < #t2.4)  ∥ (#vr.47 = #t2.4) )
+                case case_1
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          next
+            case case_2
+            solve( (#vr.6 < #t2.2)  ∥ (#vr.6 = #t2.2) )
+              case case_1
+              solve( (#vr.48 < #t2.3)  ∥ (#vr.48 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            next
+              case case_2
+              solve( (#vr.47 < #t2.3)  ∥ (#vr.47 = #t2.3) )
+                case case_1
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case case_2
+                solve( Insert( ~n.3, lio.1 ) @ #t2 )
+                  case insertstateinit_0_1111
+                  by contradiction /* impossible chain */
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case insertstatelistprogriliolistilio_0_111111111111
+        by solve( state_111111111111( i.2, init, lio, lock, r, ~n.1 ) ▶₀ #t2.1 )
+      qed
+    qed
+  next
+    case case_2
+    solve( (#vr.26 < #t2.1)  ∥ (#vr.26 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.1, lio ) @ #t2 )
+        case insertstateinit_0_11211
+        solve( Insert( ~n.5, lio ) @ #t2.1 )
+          case insertstateinit_0_1111
+          solve( state_1111( lio, ~n.4 ) ▶₀ #t2.1 )
+            case newstate_0_111
+            by contradiction /* cyclic */
+          qed
+        next
+          case insertstateinit_0_11211
+          by solve( state_11211( lio, ~n.4 ) ▶₀ #t2.1 )
+        next
+          case insertstatelistolistilio_0_112111111111
+          by solve( (#vr.18, 0) ~~> (#vk, 0) )
+        next
+          case insertstatelistprogriliolistilio_0_111111111111
+          by solve( (#vr.18, 0) ~~> (#vk, 0) )
+        qed
+      qed
+    next
+      case case_2
+      solve( Insert( ~n.1, lio ) @ #t2 )
+        case insertstateinit_0_11211
+        solve( Insert( ~n.4, lio ) @ #t2.1 )
+          case insertstateinit_0_1111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    qed
+  qed
+qed
+
+restriction restr_Report-rule_1:
+  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
+  // safety formula
 
 rule (modulo E) Report-rule[color=#ffffff process=new init;]:
-   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+   [ In( <x, loc> ) ]
+  --[ restr_Report-rule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -239,8 +851,14 @@ rule (modulo E) ifoiliocheckreprl_0_1121111111[color=#658040 process=if <o, i, l
   /*
   rule (modulo AC) ifoiliocheckreprl_0_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
      [ state_1121111111( i, init, lio, o, r, state, lock ) ]
-    --[ Pred_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+    --[ Pred_Eq( <o, i, lio>, z ) ]->
      [ state_11211111111( i, init, lio, o, r, state, lock ) ]
+    variants (modulo AC)
+    1. r     = r.10
+       z     = check_rep(r.10, 'l')
+    
+    2. r     = rep(x.10, 'l')
+       z     = x.10
   */
 
 rule (modulo E) ifoiliocheckreprl_1_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
@@ -251,8 +869,14 @@ rule (modulo E) ifoiliocheckreprl_1_1121111111[color=#658040 process=if <o, i, l
   /*
   rule (modulo AC) ifoiliocheckreprl_1_1121111111[color=#658040 process=if <o, i, lio>=check_rep(r, 'l')]:
      [ state_1121111111( i, init, lio, o, r, state, lock ) ]
-    --[ Pred_Not_Eq( <o, i, lio>, check_rep(r, 'l') ) ]->
+    --[ Pred_Not_Eq( <o, i, lio>, z ) ]->
      [ state_11211111112( i, init, lio, o, r, state, lock ) ]
+    variants (modulo AC)
+    1. r     = r.10
+       z     = check_rep(r.10, 'l')
+    
+    2. r     = rep(x.10, 'l')
+       z     = x.10
   */
 
 rule (modulo E) eventLocaloiliol_0_11211111111[color=#658040 process=event Local( <o, i, lio>, 'l' );]:
@@ -399,8 +1023,8 @@ analyzing: examples/sapic/fast/feature-locations/AC.spthy
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.621471s
-  attested_comput (all-traces): verified (2 steps)
+  processing time: 3.320691188s
+  attested_comput (all-traces): verified (184 steps)
 
 ------------------------------------------------------------------------------
 
@@ -410,8 +1034,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.621471s
-  attested_comput (all-traces): verified (2 steps)
+  processing time: 3.320691188s
+  attested_comput (all-traces): verified (184 steps)
 
 ==============================================================================
 */

@@ -19,12 +19,8 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
-  -- * Formulas
-    expandFormula
-
   -- * Restrictions
-  , expandRestriction
-
+    expandRestriction
 
   -- * Processes
   , ProcessDef(..)
@@ -48,10 +44,9 @@ module Theory (
   , transReport
   , thyOptions
   , setOption
-
+  , Option
   -- * Predicates
-  , Predicate(..)
-  , pFact
+  , module Theory.Syntactic.Predicate
   , addPredicate
 
   -- * Export blocks
@@ -112,6 +107,8 @@ module Theory (
   , theoryProcesses
   , theoryProcessDefs
   , theoryFunctionTypingInfos
+  , theoryBuiltins
+  , theoryPredicates
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
@@ -278,6 +275,7 @@ import           Safe                                (headMay, atMay)
 
 import           Theory.Model
 import           Theory.Proof
+import           Theory.Syntactic.Predicate
 import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Pretty
@@ -537,20 +535,6 @@ data ProcessDef = ProcessDef
 $(mkLabels [''ProcessDef])
 
 ------------------------------------------------------------------------------
--- Predicates
-------------------------------------------------------------------------------
-
-data Predicate = Predicate
-        { _pFact            :: Fact LVar
-        , _pFormula         :: LNFormula
-        }
-        deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-
--- generate accessors for Predicate data structure records
-$(mkLabels [''Predicate])
-
-------------------------------------------------------------------------------
 -- Export Info
 ------------------------------------------------------------------------------
 
@@ -751,6 +735,7 @@ type FormalComment = (String, String)
 data SapicElement=
       ProcessItem PlainProcess
       | ProcessDefItem ProcessDef
+      | SignatureBuiltin String
       | FunctionTypingInfo SapicFunSym
       | ExportInfoItem ExportInfo
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
@@ -926,13 +911,14 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
 
 -- fold a sapic item.
 foldSapicItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a)
+    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a) -> (String -> a)
     -> SapicElement -> a
-foldSapicItem fProcess fProcessDef fFunSym fExportInfo i = case i of
+foldSapicItem fProcess fProcessDef fFunSym fExportInfo fSignatureBuiltin i = case i of
     ProcessItem     proc  -> fProcess proc
     ProcessDefItem     pDef  -> fProcessDef pDef
     FunctionTypingInfo t -> fFunSym t
     ExportInfoItem ei -> fExportInfo ei
+    SignatureBuiltin s -> fSignatureBuiltin s
 
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
@@ -995,14 +981,14 @@ sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (cons
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
-theoryProcesses = foldSapicItem return (const []) (const [])  (const [])  <=< sapicElements
+theoryProcesses = foldSapicItem return (const []) (const [])  (const []) (const [])  <=< sapicElements
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return (const [])  (const []) <=< sapicElements
+theoryProcessDefs = foldSapicItem (const []) return (const [])  (const []) (const []) <=< sapicElements
 
 theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
-theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const [])  <=< sapicElements
+theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const []) (const []) <=< sapicElements
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
@@ -1010,7 +996,11 @@ theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) r
 
 -- | All export info definitions of a theory.
 theoryExportInfos :: Theory sig c b p SapicElement -> [ExportInfo]
-theoryExportInfos =  foldSapicItem (const []) (const []) (const []) return  <=< sapicElements
+theoryExportInfos =  foldSapicItem (const []) (const []) (const []) return (const [])  <=< sapicElements
+
+-- | All Builtins of a theory
+theoryBuiltins :: Theory sig c r p SapicElement -> [String]
+theoryBuiltins = foldSapicItem (const []) (const [])  (const []) (const []) return <=< sapicElements
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -1037,44 +1027,14 @@ diffTheoryDiffLemmas :: DiffTheory sig c r r2 p p2 -> [DiffLemma p]
 diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
--- | expand predicaates in formalua with those defined in theory. If this
--- fails, return FactTag of the predicate we could not find.
-expandFormula :: Theory sig c r p s
-                    -> SyntacticLNFormula
-                    -> Either FactTag LNFormula
-expandFormula thy = traverseFormulaAtom f
-  where
-        f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
-        f x | Syntactic (Pred fa)   <- x
-            , Just pr <- lookupPredicate fa thy
-              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr)
-
-            | (Syntactic (Pred fa))   <- x
-            , Nothing <- lookupPredicate fa thy = Left $ factTag fa
-
-            | otherwise = return $ Ato $ toAtom x
-        apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula
-        apply' subst = mapAtoms (\i a -> fmap (applyVTerm $ subst i) a)
-        compSubst (Fact _ _ ts1) (Fact _ _ ts2) i = substFromList $ zip ts1' ts2'
-        -- ts1 varTerms that are free in the predicate definition
-        -- ts2 terms used in reference, need to add the number of quantifiers we added
-        -- to correctly dereference.
-            where
-                  ts1':: [BVar LVar]
-                  ts1' = map Free ts1
-                  ts2' = map (fmap $ fmap up) ts2
-                  up (Free v) = Free v
-                  up (Bound i') = Bound $ i' + i
-
-
 expandRestriction :: Theory sig c r p s -> ProtoRestriction SyntacticLNFormula
     -> Either FactTag (ProtoRestriction LNFormula)
-expandRestriction thy (Restriction n f) =  (Restriction n) <$> expandFormula thy f
+expandRestriction thy (Restriction n f) =  (Restriction n) <$> expandFormula (theoryPredicates thy) f
 
 expandLemma :: Theory sig c r p1 s
                -> ProtoLemma SyntacticLNFormula p2
                -> Either FactTag (ProtoLemma LNFormula p2)
-expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormula thy f
+expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormula (theoryPredicates thy) f
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -1340,7 +1300,7 @@ addProcessDef pDef thy = do
 -- | Add a new process definition. fails if process with the same name already exists
 addPredicate :: Predicate -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
 addPredicate pDef thy = do
-    guard (isNothing $ lookupPredicate (L.get pFact pDef) thy)
+    guard (isNothing $ lookupPredicate (L.get pFact pDef) (theoryPredicates thy))
     return $ modify thyItems (++ [PredicateItem pDef]) thy
 
 -- | Add a new option. Overwrite previous settings
@@ -1429,12 +1389,6 @@ lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 -- | Find the process with the given name.
 lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef)
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
-
--- | Find the predicate with the fact name.
-lookupPredicate :: Fact t  -> Theory sig c r p s -> Maybe (Predicate)
-lookupPredicate fact = find ((sameName fact) . L.get pFact) . theoryPredicates
-    where
-        sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
 
 -- | Find the function typing info for a given function symbol.
 lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p SapicElement -> Maybe SapicFunSym
@@ -2552,6 +2506,7 @@ prettySapicElement (ExportInfoItem eInfo) =
     <->
     (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
 
+prettySapicElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)
@@ -2560,7 +2515,7 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulast
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => PlainProcess -> d
-prettyProcess p = text (prettySapic p)
+prettyProcess p = text "process" <> colon $-$ (nest 2 $ text (prettySapic p))
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
 prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))

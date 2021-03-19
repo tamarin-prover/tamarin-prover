@@ -33,7 +33,7 @@ revealVerifySym = ("revealVerify",(3, Public,Constructor))
 
 -- | Unary builtin function symbols.
 
-pkSym, hashSym, extractMessageSym :: NoEqSym
+pkSym, hashSym, extractMessageSym, getRepSym, reportSym :: NoEqSym
 pkSym =  ("pk",(1, Public, Constructor))
 hashSym = ("h",(1, Public, Constructor))
 extractMessageSym = ("getMessage",(1, Public, Constructor))

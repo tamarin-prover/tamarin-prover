@@ -23,7 +23,7 @@ import qualified Extension.Data.Label                as L
 import Theory
 
 import Sapic.Facts
-import Debug.Trace
+
 import Data.Text.Internal
 
 -- We compress as much as possible silent actions

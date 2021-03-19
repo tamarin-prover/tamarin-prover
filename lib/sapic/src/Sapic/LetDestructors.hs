@@ -90,21 +90,6 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
             [svar, (SapicLVar sl_var Nothing)]
           make_untyped_variant svar = [svar]
 
--- For Process calls, we substitute in place inside the process, before translating to MSR.
-mapProc rules (ProcessComb (ProcessCall _ vs ts) _ pl _) =
-  do
-            res <- applyProcess (substFromList extend_sup) pl
-            npl <- mapProc rules res
-            return npl
-    where base_subst = zip vs ts
-          extend_sup = L.foldl (\acc (svar,t) ->
-                                  (L.map (\x -> (x,t)) (make_untyped_variant svar))
-                                  ++ acc) [] base_subst
-            -- TODO cam we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
-          make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
-            [svar, (SapicLVar sl_var Nothing)]
-          make_untyped_variant svar = [svar]
-
 
 mapProc rules (ProcessComb c ann pl pr) = do
   npl <- mapProc rules pl
@@ -121,38 +106,6 @@ findRule funsym acc rule =
       case (viewTerm fhs, viewTerm rhs) of
         (FApp fs y, (Lit (Var v))) | fs == funsym -> Just (y, v)
         _ -> acc
-
--- annComb rules (Let t1 t2) _ pr =
---   case (viewTerm t1', viewTerm t2') of
---     ((Lit (Var _)), FApp funsym@(NoEq (f, (_,_,Destructor))) rightterms) ->
---       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
---       case  L.foldl (findRule funsym) Nothing rules of
---         Nothing -> annElse elsebranch
---         Just  (leftterms, outvar) ->
---           -- We extract the equation of the dest, in the case where it is of the
---           -- form dest(lefTerms) = outvar.
-
---           -- in this case, we are going to transform the let binding into a
---           -- binding of the form let leftterms Sigma = rightterms, where Sigma is the substitution outvar -> invar
-
---           -- e.g in the case of symmetric decryption, we turn "let x =
---           -- sdec(m,sk) in" with the equation "sdec(senc(v,key),key) = v" into
---           -- the binding "let senc(x,key),key = m,sk in"
-
---           annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
---           where leftermssubst = apply subst $ toPairs leftterms
---                 subst = substFromList [(outvar, t1')]
---     _ -> annElse elsebranch
---     where t1'= toLNTerm t1
---           t2'= toLNTerm t2
---           toPairs [] = fAppOne
---           toPairs [s] = s
---           toPairs (p:q) = fAppPair (p, toPairs q)
---           elsebranch = case pr of
---             ProcessNull _ -> False
---             _ -> True
-
--- annComb _ _ ann _ = ann
 
 translateLetDestr :: ( MonadThrow m)
                     =>  Set CtxtStRule -> LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))

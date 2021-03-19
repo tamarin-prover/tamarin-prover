@@ -23,13 +23,13 @@ let Yubikey=
  !(( //Plug
 	lock <'Yubikey',L_pid>;
 	  lookup <'L_Yubikey',L_pid> as sc in
-		in(sc); //just a trick to enforce adv learning sc
+		in(=sc); //just a trick to enforce adv learning sc
 		insert <'L_Yubikey',L_pid>, sc+'one';
 	unlock <'Yubikey',L_pid>
   )||( //ButtonPress
 	lock <'Yubikey',L_pid>;
 	  lookup <'L_Yubikey',L_pid> as tc in
-		in(tc); //just a trick to enforce adv learning tc
+		in(=sc); //just a trick to enforce adv learning tc
 		insert <'L_Yubikey',L_pid>, tc + 'one';
 		new nonce;
 		new npr;
@@ -55,6 +55,7 @@ let Server=
 	 unlock <'Server',L_pid>
  )
 
+process:
 (Server || !Yubikey)
 
 /* // For sanity: Ensure that a successful login is reachable. */
@@ -66,16 +67,16 @@ let Server=
 // There exists a Initialisation for every Login on the Server
 /* lemma init_server[sources]: */
 lemma init_server[sources]:
-		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
-		==> 
+		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i
+		==>
 		 tuple=<sid,k,otc>
 		&
 		 (Ex #j.  YubiInit(pid, sid, k)@j & #j<#i)
                  "
 
 lemma init_server_secrecy[use_induction, reuse]:
-		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i 
-		==> 
+		"All pid sid k tuple otc tc #i . InitStuff(pid,sid,k,tuple,otc,tc)@i
+		==>
                  (not Ex #j . KU(k)@j) "
 
 lemma init_yubikey[sources]:
@@ -101,14 +102,14 @@ restriction slightly_weaker_invariant:
 /* // event with the same counter value */
 lemma one_count_foreach_login[reuse,use_induction]:
         "All pid k x #t2 . Login(pid,k,x)@t2 ==>
-         ( Ex #t1 sid . YubiPress(pid,sid,k,x)@#t1 & #t1<#t2 
+         ( Ex #t1 sid . YubiPress(pid,sid,k,x)@#t1 & #t1<#t2
 		)"
 
 /* // It is not possible to have to distinct logins with the same counter */
 /* // value */
 lemma no_replay[reuse]:
         "not (Ex #i #j pid k x .
-         Login(pid,k,x)@i &  Login(pid,k,x)@j 
+         Login(pid,k,x)@i &  Login(pid,k,x)@j
          & not(#i=#j))"
 
 

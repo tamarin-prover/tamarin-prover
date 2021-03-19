@@ -74,8 +74,7 @@ data TransAction =
   -- reliable channels
   | Send ProcessPosition LNTerm
   | Receive ProcessPosition LNTerm
-  -- location
-  | Report LVar LVar
+
   -- to implement with accountability extension
   --- | InitId
   --- | StopId
@@ -96,6 +95,8 @@ data TransFact =  Fr LVar | In LNTerm
             | MessageIDSender ProcessPosition
             | MessageIDReceiver ProcessPosition
             | TamarinFact LNFact
+            -- pure storage
+            | PureCell LNTerm LNTerm
 
 data SpecialPosition = InitPosition -- initial position, is logically the predecessor of []
                      | NoPosition -- no real position, e.g., message id rule
@@ -184,9 +185,9 @@ varMsgId p = LVar n s i
 
 actionToFact :: TransAction -> Fact LNTerm
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | StopId
-  -- | EventEmpty
-  -- | EventId
+  --  | StopId
+  --  | EventEmpty
+  --  | EventId
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
@@ -204,7 +205,6 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
-actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
@@ -238,6 +238,8 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
+factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
+
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
 prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos

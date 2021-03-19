@@ -58,10 +58,9 @@ library
       , tamarin-prover-utils
       , tamarin-prover-term
       , tamarin-prover-theory
+      , tamarin-prover-sapic
 
     hs-source-dirs: src
 
     exposed-modules:
         Export
-    other-modules:
-        States

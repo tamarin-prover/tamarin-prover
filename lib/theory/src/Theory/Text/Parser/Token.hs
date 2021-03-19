@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -99,7 +98,7 @@ module Theory.Text.Parser.Token (
   , Parser
   , parseFile
   , parseString
-  ) where
+  ,opLessTerm) where
 
 import           Prelude             hiding (id, (.))
 
@@ -114,7 +113,8 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
-import           Theory.Sapic
+import           Theory.Sapic.Term
+import           Theory.Sapic.Pattern
 
 
 ------------------------------------------------------------------------------
@@ -344,6 +344,7 @@ sapicnodevar = do
     v <- nodevar
     return (SapicLVar v defaultSapicNodeType)
 
+
 -- Term Operators
 -----------------
 
@@ -373,6 +374,10 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
 opLess = symbol_ "<"
+
+-- | The multiset comparison operator @(<)@. 
+opLessTerm :: Parser ()
+opLessTerm = symbol_ "(<)"
 
 -- | The action-at-timepoint operator \@.
 opAt :: Parser ()
@@ -423,7 +428,7 @@ opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
 
 -- | The requires-a-premise operator, @▶ subscript-idx@.
 opRequires :: Parser PremIdx
-opRequires = (PremIdx . fromIntegral) <$> (symbol "▶" *> naturalSubscript)
+opRequires = PremIdx . fromIntegral <$> (symbol "▶" *> naturalSubscript)
 
 -- | The chain operator @~~>@.
 opChain :: Parser ()

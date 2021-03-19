@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
+
 {-# LANGUAGE TypeSynonymInstances #-}
 -- {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -25,12 +24,10 @@ module Sapic.Annotation (
     , AnVar (..)
     , AnProcess (..)
     , unAnProcess
-    , GoodAnnotation
-    , getProcessParsedAnnotation
-    , setProcessParsedAnnotation
+    , GoodAnnotation(..)
     , getProcessNames
     , setProcessNames
-,annElse) where
+    ,annElse) where
 import           Data.Data
 -- import Data.List
 -- import Data.Foldable
@@ -61,13 +58,16 @@ instance Semigroup (AnVar v) where  -- override annotations if necessary
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
 data ProcessAnnotation v = ProcessAnnotation {
-    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes 
+    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
                                              -- processes identifiers recovered from "let P = "  bindings
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
   , elseBranch         :: Bool --- do we have a non-zero else branch? Used for let translation
+  , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized
+  , stateChannel ::  Maybe (AnVar v) -- anotates state operations with the corresponding name identifier when possible.
+  , isStateChannel :: Maybe SapicTerm -- annotates binding of channels that corresponds to state channels with their corresponding identifier.
   } deriving (Show, Typeable)
 
 -- | Any annotation that is good enough to be converted back into a Process
@@ -83,24 +83,39 @@ class GoodAnnotation a where
 instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessParsedAnnotation = parsingAnn
-        setProcessParsedAnnotation pn an = an { parsingAnn = pn }
+        setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = opn <> pn }
         defaultAnnotation   = mempty
 
+instance GoodAnnotation ProcessParsedAnnotation
+    where
+        getProcessParsedAnnotation = id
+        setProcessParsedAnnotation pn _ = pn
+        defaultAnnotation   = mempty
+
+
+mayMerge :: Maybe a -> Maybe a -> Maybe a
+mayMerge t@(Just _) _ = t
+mayMerge _ t@(Just _) = t
+mayMerge Nothing Nothing = Nothing
+
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True
+    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True False mempty Nothing
     mappend p1 p2 = ProcessAnnotation
         (parsingAnn p1 `mappend` parsingAnn p2)
         (lock p1 `mappend` lock p2)
         (unlock p1 `mappend` unlock p2)
         (secretChannel p1 `mappend` secretChannel p2)
-        (destructorEquation p2)
+        (mayMerge (destructorEquation p1) (destructorEquation p2))
         (elseBranch p2)
+        (pureState p1 || pureState p2)
+        (stateChannel p1 `mappend` stateChannel p2)
+        (mayMerge (isStateChannel p1) (isStateChannel p2))
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
-getProcessNames = processnames . getProcessParsedAnnotation 
+getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn}) 
+setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 
 instance Semigroup (ProcessAnnotation v) where
@@ -126,10 +141,10 @@ unAnProcess (AnProcess p) = p
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
 annLock :: AnVar v -> ProcessAnnotation v
-annLock v = mempty {lock = Just v} 
+annLock v = mempty {lock = Just v}
 
 annUnlock :: AnVar v -> ProcessAnnotation v
-annUnlock v = mempty {unlock = Just v} 
+annUnlock v = mempty {unlock = Just v}
 
 annSecretChannel :: AnVar v -> ProcessAnnotation v
 annSecretChannel v = mempty { secretChannel = Just v}

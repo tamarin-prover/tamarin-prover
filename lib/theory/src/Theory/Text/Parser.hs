@@ -40,6 +40,8 @@ import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Color
+import qualified Data.Label.Point
+import qualified Data.Label.Poly
 
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
@@ -58,6 +60,7 @@ import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
 import           Theory.Sapic
+import           Theory.Sapic.Pattern
 import           Theory.Text.Parser.Token
 
 import           Debug.Trace
@@ -350,10 +353,10 @@ ruleAttribute = asum
             Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
     -- parseProcess = process -- would need theory argument
-    parseProcess = do 
+    parseProcess = do
             _ <- noneOf " ,]"
             return $ ProcessNull mempty --- TODO would be nice to recover process from top-level
-        
+
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -414,7 +417,8 @@ protoRuleAC = do
 
 -- | Parse a let block with bottom-up application semantics.
 
-genericletBlock varp termp = many1 definition 
+genericletBlock :: Parser a1 -> Parser a2 -> Parser [(a1, a2)]
+genericletBlock varp termp = many1 definition
     where
         definition = (,) <$> (varp <* equalSign) <*> termp
 
@@ -552,21 +556,34 @@ transferProto = do
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
 -}
 
+smallerp :: Ord v => Parser v -> Parser (ProtoAtom SyntacticSugar (Term (Lit Name v)))
+smallerp varp = do
+    mset <- enableMSet <$> getState
+    unless mset (fail "Need builtins: multiset to use multiset comparisson operator.")
+    a <- try (termp <* opLessTerm)
+    b <- termp
+    return $ (Syntactic . Pred) $ protoFact Linear "Smaller" [a,b]
+  where
+    termp =  msetterm False (vlit varp)
+
 ------------------------------------------------------------------------------
 -- Parsing Standard and Guarded Formulas
 ------------------------------------------------------------------------------
 -- | Parse an atom with possibly bound logical variables.
 blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VTerm Name (BVar v)))
-blatom varp nodep = (fmap (fmapTerm (fmap Free))) <$> asum
+blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact (vlit varp))                    <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm False (vlit varp) <* opEqual) <*> msetterm False (vlit varp) <?> "term equality"
+  , smallerp varp <?> "multiset comparisson"
+  , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
-    nodevarTerm = (lit . Var) <$> nodep
+    nodevarTerm = lit . Var <$> nodep
+    termp =  msetterm False (vlit varp)
+
 
 -- | Parse an atom of a formula.
 fatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
@@ -838,6 +855,35 @@ diffProofSkeleton =
 -- Parsing Signatures
 ------------------------------------------------------------------------------
 
+
+ -- Describes the mapping between Maude Signatures and the builtin Name
+builtinsDiffNames :: [(String,
+                       MaudeSig)]
+builtinsDiffNames = [
+  ("diffie-hellman", dhMaudeSig),
+  ("bilinear-pairing", bpMaudeSig),
+  ("multiset", msetMaudeSig),
+  ("xor", xorMaudeSig),
+  ("symmetric-encryption", symEncMaudeSig),
+  ("asymmetric-encryption", asymEncMaudeSig),
+  ("signing", signatureMaudeSig),
+  ("revealing-signing", revealSignatureMaudeSig),
+  ("hashing", hashMaudeSig)
+              ]
+
+-- Describes the mapping between a builtin name, its potential Maude Signatures
+-- and its potential option
+builtinsNames ::  [(String,
+                       Maybe MaudeSig,
+                       Maybe (Data.Label.Poly.Lens
+               Data.Label.Point.Total (Option -> Option) (Bool -> Bool)))]
+builtinsNames =
+  [
+  ("locations-report",  Just locationReportMaudeSig, Just transReport),
+  ("reliable-channel",  Nothing, Just transReliable)
+  ]
+  ++ map (\(x,y) -> (x, Just y, Nothing)) builtinsDiffNames
+
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
 builtins thy0 =do
@@ -847,64 +893,27 @@ builtins thy0 =do
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
   where
-    setOption' thy Nothing  = thy
-    setOption' thy (Just l) = setOption l thy
-    extendSig msig = do
+    setName thy name = modify thyItems (++ [SapicItem (SignatureBuiltin name)]) thy
+    setOption' thy (Nothing, name)  = setName thy name
+    setOption' thy (Just l, name) = setOption l (setName thy name)
+    extendSig (name, Just msig, opt) = do
+        _ <- symbol name
         modifyState (`mappend` msig)
-        return Nothing
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , try (symbol "locations-report")
-          *>  do
-          modifyState (`mappend` locationReportMaudeSig)
-          return (Just transReport)
-      , try ( symbol "reliable-channel")
-             *> return (Just transReliable)
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
+        return (opt, name)
+    extendSig (name, Nothing, opt) = do
+        _ <- symbol name
+        return (opt, name)
+    builtinTheory = asum $ map (try . extendSig) builtinsNames
+
 
 diffbuiltins :: Parser ()
 diffbuiltins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
-    extendSig msig = modifyState (`mappend` msig)
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
-
+    extendSig (name, msig) =
+        symbol name *>
+        modifyState (`mappend` msig)
+    builtinTheory = asum $ map (try . extendSig) builtinsDiffNames
 
 functionType :: Parser ([SapicType], SapicType)
 functionType = try (do
@@ -1038,26 +1047,28 @@ processDef thy= do
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p vs)
 
+toplevelprocess :: OpenTheory -> Parser PlainProcess
 toplevelprocess thy = do
                     _ <- try (symbol "process")
                     _ <- colon
                     p <- process thy
                     return p
                     <?> "top-level process"
-                
+
 
 -- | Parse a variable in SAPIC that is typed
 sapicterm :: Parser (Term (Lit Name SapicLVar))
 sapicterm = msetterm False ltypedlit
 
 -- | Parse a sapic pattern
+sapicpatternterm :: Parser (Term (Lit Name PatternSapicLVar))
 sapicpatternterm = msetterm False ltypedpatternlit
 
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
 -- (This includes almost all items that are followed by one instead of two
 -- processes, the exception is replication)
 sapicAction :: Parser (LSapicAction, ProcessParsedAnnotation)
-sapicAction = (do 
+sapicAction = (do
                         _ <- try $ symbol "new"
                         s <- sapicvar
                         return (New s,mempty)
@@ -1072,7 +1083,7 @@ sapicAction = (do
                <|> (do
                         _ <- try $ symbol "in"
                         _ <- symbol "("
-                        (maybeChannel,pt) <- 
+                        (maybeChannel,pt) <-
                             try (do
                                 pt <- msetterm False ltypedpatternlit
                                 _ <- symbol ")"
@@ -1086,14 +1097,14 @@ sapicAction = (do
                                 return (Just c, pt)
                                 )
                         let annotation =  mempty { matchVars =  extractMatchingVariables pt}
-                        if validPattern S.empty pt -- TODO collect variables bound so far
+                        if validPattern S.empty pt -- only validate that freshly bound variable do not intersect with matches.
                             then return (ChIn maybeChannel (unpattern pt), annotation)
                             else fail $ "Invalid pattern: " ++ show pt
                    )
                <|> (do
                         _ <- try $ symbol "out"
                         _ <- symbol "("
-                        (maybeChannel,t) <- 
+                        (maybeChannel,t) <-
                             try (do
                                 t <- msetterm False ltypedlit
                                 _ <- symbol ")"
@@ -1128,8 +1139,13 @@ sapicAction = (do
                         return (Event f, mempty)
                    )
                <|> (do
-                        r <- try $ genericRule sapicvar sapicnodevar
-                        return (MSR r, mempty)
+                        (l,a,r,phi) <- try $ genericRule sapicpatternvar (PatternBind <$> sapicnodevar)
+                        let annotation =  mempty { matchVars =  foldMap (foldMap extractMatchingVariables) l}
+                        let f = fmap (fmap unpattern)
+                        let g = fmap (fmap unpatternVar)
+                        if validMSR S.empty (l,a,r) -- only validate that freshly bound variable do not intersect with matches.
+                            then return (MSR (f l,f a,f r,g phi), annotation)
+                            else fail $ "Invalid pattern in lhs of embedded MSR: " ++ show l
                    )
 -- | Parse a process. Process combinators like | are left-associative (not that
 -- it matters), so we had to split the grammar for processes in two, so that
@@ -1164,12 +1180,13 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  (chainl1 (actionprocess thy) (
+                  chainl1 (actionprocess thy) (
                              do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
-                  ))
+                  )
 
+elseprocess :: OpenTheory -> ParsecT String MaudeSig Identity (Process ProcessParsedAnnotation SapicLVar)
 elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
 
 actionprocess :: OpenTheory -> Parser PlainProcess
@@ -1227,9 +1244,9 @@ actionprocess thy=
             <|> ( do  -- sapic actions are separated by ";"
                       -- but allow trailing actions (syntactic sugar for action; 0)
                         (s,ann) <- try sapicAction
-                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy) 
+                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy)
                         return (ProcessAction s ann p))
-            <|>  (do    -- combined parser for `(p)` and `(p)@t` 
+            <|>  (do    -- combined parser for `(p)` and `(p)@t`
                         _ <- try $ symbol "("
                         p <- process thy
                         _ <- symbol ")"
@@ -1246,9 +1263,20 @@ actionprocess thy=
                         i <- BC.pack <$> identifier
                         ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
                         (p, vars) <- checkProcess (BC.unpack i) thy
+                        let base_subst = zip vars ts
+                        let extend_sup = foldl (\acc (svar,t) ->
+                                  (map (\x -> (x,t))
+                                   (case svar of
+                                      (SapicLVar sl_var (Just _)) ->
+                                        [svar, (SapicLVar sl_var Nothing)]
+                                      _ -> [svar]
+                                   )
+                                  )
+                                  ++ acc) [] base_subst
+                        substP <- applyProcess (substFromList extend_sup) p
                         return (ProcessComb
                                 (ProcessCall (BC.unpack i) vars ts) mempty
-                                (paddAnn p (mempty {processnames =  [BC.unpack i]}))
+                                (paddAnn substP (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )
 
@@ -1286,6 +1314,7 @@ instance Show (ParsingException) where
     show (DuplicateItem (SapicItem (ProcessItem _))) = "duplicate process item"
     show (DuplicateItem (SapicItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
     show (DuplicateItem (SapicItem (ExportInfoItem _))) = "duplicate exportinfo  item"
+    show (DuplicateItem (SapicItem (SignatureBuiltin s))) = "duplicate BuiltIn signature: " ++ show s
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException
@@ -1304,7 +1333,7 @@ liftMaybeToEx constr Nothing  = Catch.throwM constr
 
 liftedExpandFormula :: Catch.MonadThrow m =>
                        Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
-liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula (theoryPredicates thy)
 
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)

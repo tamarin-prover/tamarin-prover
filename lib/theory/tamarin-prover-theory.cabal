@@ -85,6 +85,11 @@ library
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
+      Theory.Sapic.Term
+      Theory.Sapic.Pattern
+      Theory.Sapic.Process
+      Theory.Sapic.Position
+      Theory.Sapic.Annotation
       Theory.Sapic
       Theory.Sapic.Print
 
@@ -109,3 +114,4 @@ library
       Theory.Tools.Wellformedness
 
     other-modules:
+      Theory.Syntactic.Predicate

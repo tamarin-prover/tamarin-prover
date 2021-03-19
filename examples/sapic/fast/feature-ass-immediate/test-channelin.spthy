@@ -3,7 +3,7 @@ begin
 
 process:
 new x; out(x);
-in(x); 
+in(=x);
 event A()
 
 // should verifiy and NOT trigger addition of ass_immediate
