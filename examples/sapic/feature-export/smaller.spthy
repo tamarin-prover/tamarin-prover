@@ -1,0 +1,18 @@
+theory SmallerSyntax
+begin
+// syntactic sugar translates this to Smaller(a,b)
+
+builtins: multiset 
+
+/* predicate: Smaller(x,y) <=> Ex z. y = x+z */
+
+process:
+    in(x); in(y);
+    if x (<) y then
+        event A()
+
+lemma Ahappens:
+    exists-trace
+    "Ex #i. A()@i"
+
+end

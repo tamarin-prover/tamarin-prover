@@ -98,7 +98,7 @@ module Theory.Text.Parser.Token (
   , Parser
   , parseFile
   , parseString
-  ) where
+  ,opLessTerm) where
 
 import           Prelude             hiding (id, (.))
 
@@ -374,6 +374,10 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
 opLess = symbol_ "<"
+
+-- | The multiset comparison operator @(<)@. 
+opLessTerm :: Parser ()
+opLessTerm = symbol_ "(<)"
 
 -- | The action-at-timepoint operator \@.
 opAt :: Parser ()

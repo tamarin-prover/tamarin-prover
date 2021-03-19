@@ -556,21 +556,34 @@ transferProto = do
     abbrev = (,) <$> try (identifier <* kw EQUAL) <*> multterm tlit
 -}
 
+smallerp :: Ord v => Parser v -> Parser (ProtoAtom SyntacticSugar (Term (Lit Name v)))
+smallerp varp = do
+    mset <- enableMSet <$> getState
+    unless mset (fail "Need builtins: multiset to use multiset comparisson operator.")
+    a <- try (termp <* opLessTerm)
+    b <- termp
+    return $ (Syntactic . Pred) $ protoFact Linear "Smaller" [a,b]
+  where
+    termp =  msetterm False (vlit varp)
+
 ------------------------------------------------------------------------------
 -- Parsing Standard and Guarded Formulas
 ------------------------------------------------------------------------------
 -- | Parse an atom with possibly bound logical variables.
 blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VTerm Name (BVar v)))
-blatom varp nodep = (fmap (fmapTerm (fmap Free))) <$> asum
+blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
   , Syntactic . Pred <$> try (fact (vlit varp))                    <?> "predicate atom"
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm False (vlit varp) <* opEqual) <*> msetterm False (vlit varp) <?> "term equality"
+  , smallerp varp <?> "multiset comparisson"
+  , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
-    nodevarTerm = (lit . Var) <$> nodep
+    nodevarTerm = lit . Var <$> nodep
+    termp =  msetterm False (vlit varp)
+
 
 -- | Parse an atom of a formula.
 fatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
@@ -1333,7 +1346,7 @@ liftMaybeToEx constr Nothing  = Catch.throwM constr
 
 liftedExpandFormula :: Catch.MonadThrow m =>
                        Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
-liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula (theoryPredicates thy)
 
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)

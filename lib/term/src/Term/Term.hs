@@ -23,6 +23,7 @@ module Term.Term (
     , fAppInv
     , fAppPMult
     , fAppEMap
+    , fAppUnion
     , fAppPair
     , fAppFst
     , fAppSnd
@@ -90,7 +91,6 @@ module Term.Term (
 
     , module Term.Term.Classes
     , module Term.Term.Raw
-
     ) where
 
 -- import           Data.Monoid
@@ -122,8 +122,9 @@ fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
-fAppEMap :: Ord a => (Term a, Term a) -> Term a
+fAppEMap,fAppUnion :: Ord a => (Term a, Term a) -> Term a
 fAppEMap  (x,y) = fAppC    EMap     [x, y]
+fAppUnion (x,y) = fAppAC    Union     [x, y]
 
 -- | Smart constructors for inv, fst, and snd.
 fAppInv, fAppFst, fAppSnd :: Term a -> Term a
