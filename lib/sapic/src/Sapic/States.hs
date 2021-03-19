@@ -22,11 +22,7 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import           Control.Monad.Fresh
 
-import Debug.Trace
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
--- getAllBoundStates ::  LProcess (ProcessAnnotation LVar) -> (S.Set SapicTerm)
--- getAllBoundStates p = if freeStates == S.empty then boundStates else S.empty
---     where (boundStates,freeStates) = getAllStates p S.empty
 
 isBound :: S.Set LVar -> SapicTerm -> Bool
 isBound boundNames t = (S.fromList $ frees $ toLNTerm t) `S.isSubsetOf` boundNames
@@ -39,6 +35,14 @@ getAllStates ::  LProcess (ProcessAnnotation LVar) ->  (S.Set LVar)-> (S.Set Sap
 getAllStates (ProcessAction (Insert t _) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
   where (boundStates,freeStates) = (getAllStates p boundNames)
 getAllStates (ProcessAction (Insert t _) _ p) boundNames  = (boundStates, S.insert t freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+getAllStates (ProcessAction (Lock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+getAllStates (ProcessAction (Lock t) _ p) boundNames  = (boundStates, S.insert t freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+getAllStates (ProcessAction (Unlock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
+  where (boundStates,freeStates) = (getAllStates p boundNames)
+getAllStates (ProcessAction (Unlock t ) _ p) boundNames  = (boundStates, S.insert t freeStates)
   where (boundStates,freeStates) = (getAllStates p boundNames)
 
 
@@ -70,7 +74,7 @@ type StateMap = M.Map SapicTerm (AnVar LVar)
 
 
 addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
-addStatesChannels p = trace (show allBoundStates)  evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) 0
+addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) 0
  where
    allBoundStates =  fst $ getAllStates p S.empty
 

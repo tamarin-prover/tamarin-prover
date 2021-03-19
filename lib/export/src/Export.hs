@@ -346,42 +346,63 @@ ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (te
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
 
 
+-- For pure states, we do not put locks and unlocks
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Lock _) =
     (text "", S.empty)
 
-ppAction an@ProcessAnnotation{pureState=False} TranslationContext{trans=Proverif} (Lock _) =
-  (text "in(lock_" <> pt <> text "," <>  ptcounter <> text ":nat);"
+-- If there is a state channel, we simply use it
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Lock _) =
+  (text "in(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text ":nat);"
                               , S.empty)
-  where
-        pt = getStateChannel an
-        ptcounter = text "counterlock" <> pt
 
+-- If there is no state channel, we must use the table
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
+    (text "get tbl_locks_handle(" <> pt <> text "," <> text ptvar <> text ") in"
+     $$ text "in(" <> text ptvar <> text" , counter" <> text ptvar <> text ":nat);", sh)
+  where
+    freevars = S.fromList $  map (\(SapicLVar lvar _) -> lvar) $ freesSapicTerm t
+    (pt, sh) = auxppSapicTerm tc freevars True t
+    ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Unlock _) =
     (text "", S.empty)
-
-ppAction an@ProcessAnnotation{pureState=False} TranslationContext{trans=Proverif} (Unlock _) =
-  (text "out(lock_" <> pt <> text "," <>  ptcounter <> text ");"
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Unlock _) =
+  (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ");"
   , S.empty)
+
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Unlock t) =
+    (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1);", sh)
   where
-    pt = getStateChannel an
-    ptcounter = text "counterlock" <> pt <> text "+1"
+    (pt, sh) = ppSapicTerm tc t
+    ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
-
-ppAction an@ProcessAnnotation{pureState=True} tc@TranslationContext{trans=Proverif} (Insert _ c) =
-      (text "out(" <> pt <> text ", " <> pc <> text ");"
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+      (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ");"
       , shc)
   where
-    pt = getStateChannel an
     (pc, shc) = ppSapicTerm tc c
 
-ppAction an@ProcessAnnotation{pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+-- Should never happen
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationContext{trans=Proverif} (Insert _ _) =
+  (text "TRANSLATIONERROR", S.empty)
+
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
        $$ text "out(" <> pt <> text ", " <> pc <> text ");"
       , shc)
   where
-    pt = getStateChannel an
+    pt = ppLVar lvar
     (pc, shc) = ppSapicTerm tc c
+
+-- must rely on the table
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Insert t t2) =
+    (text "in(" <> text ptvar <> text ", " <> pt <> text "_dump:bitstring);"
+     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ");", sh `S.union` sh2)
+  where
+    (pt, sh) = ppSapicTerm tc t
+    (pt2, sh2) = ppSapicTerm tc t2
+    ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
+
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty)
 
@@ -457,25 +478,65 @@ ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text 
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
-ppSapic tc (ProcessComb (Lookup _ c ) an@ProcessAnnotation{pureState=True} pl (ProcessNull _))  =
+ppSapic tc (ProcessComb (Lookup _ c ) ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} pl (ProcessNull _))  =
   (text "in(" <> pt <> text ", " <> pc  <> text ");" $$ ppl
                                                       , pshl)
   where
-        pt = getStateChannel an
+        pt = ppLVar lvar
         pc = ppTypeVar tc c
         (ppl, pshl) = ppSapic tc pl
 
-ppSapic tc (ProcessComb (Lookup _ c ) an@ProcessAnnotation{pureState=False} pl (ProcessNull _))  =
+-- Should never happen
+ppSapic _ (ProcessComb (Lookup _ _ ) ProcessAnnotation{stateChannel = Nothing, pureState=True} _ (ProcessNull _))  =
+  (text "TRANSLATIONERROR", S.empty)
+
+
+ppSapic tc (ProcessComb (Lookup _ c ) ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} pl (ProcessNull _)) =
   (text "in(" <> pt <> text ", " <> pc  <> text ");"
    $$ text "out(" <> pt <> text ", " <> pc2  <> text ");"
    $$ ppl
        , pshl)
   where
-        pt = getStateChannel an
+        pt = ppLVar lvar
         pc = ppTypeVar tc c
         pc2 = ppUnTypeVar c
         (ppl, pshl) = ppSapic tc pl
 
+ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{stateChannel = Nothing, pureState=False} pl (ProcessNull _)) =
+      (text "get tbl_states_handle(" <> pt <> text "," <> text ptvar <> text ") in"
+     $$ text "in(" <> text ptvar <> text" , " <> pc <> text ");"
+     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ");"
+     $$ ppl
+    , sh `S.union` pshl)
+  where
+    pc = ppTypeVar tc c
+    pc2 = ppUnTypeVar c
+    freevars = S.fromList $  map (\(SapicLVar lvar _) -> lvar) $ freesSapicTerm t
+    (pt, sh) = auxppSapicTerm tc freevars True t
+    ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
+    (ppl, pshl) = ppSapic tc pl
+
+
+ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{stateChannel = Nothing, pureState=False} pl pr) =
+    (text "get tbl_states_handle(" <> pt <> text "," <> text ptvar <> text ") in"
+     $$ (nest 4 (parens (
+      text "in(" <> text ptvar <> text" , " <> pc <> text ");"
+     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ");"
+     $$ ppl)))
+     $$ text "else"
+     $$ (nest 4 (parens (ppr)))
+    , sh `S.union` pshl `S.union` pshr)
+  where
+    pc = ppTypeVar tc c
+    pc2 = ppUnTypeVar c
+    freevars = S.fromList $  map (\(SapicLVar lvar _) -> lvar) $ freesSapicTerm t
+    (pt, sh) = auxppSapicTerm tc freevars True t
+    ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
+    (ppl, pshl) = ppSapic tc pl
+    (ppr, pshr) = ppSapic tc pr
+
+ppSapic _ (ProcessComb (Lookup _ _ ) _ _ _) =
+  (text "TRANSLATION ERROR, lookup with else branch unsupported", S.empty)
 
 
 ppSapic tc@TranslationContext{trans=Proverif} (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
@@ -817,14 +878,6 @@ getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
           (Just tt1, _) -> ppSapicTerm tc tt1
           (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)
           _ -> (text "TRANSLATION ERROR", S.empty)
-
-
--- TODO: Nothing should rely on a global id table
-getStateChannel :: ProcessAnnotation LVar -> Doc
-getStateChannel an =
-   case stateChannel an of
-     Nothing -> text "TRANSLATION ERROR"
-     Just (AnVar lvar) -> ppLVar lvar
 
 ------------------------------------------------------------------------------
 -- Some utility functions
