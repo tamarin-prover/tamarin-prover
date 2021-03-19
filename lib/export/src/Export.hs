@@ -66,10 +66,7 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: OpenTheory -> Doc
 prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
   where
-    tc = TranslationContext {trans = Proverif,
-                             attackerChannel = Nothing,
-                             hasBoundStates = False,
-                             hasUnboundStates = False}
+    tc = emptyTC{predicates = theoryPredicates thy }
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
                                        `S.union` prochd `S.union` macroprochd)
     (proc, prochd, hasBoundState) = loadProc tc thy
@@ -90,8 +87,17 @@ data TranslationContext = TranslationContext
   { trans :: Translation,
     attackerChannel :: Maybe LVar,
     hasBoundStates :: Bool,
-    hasUnboundStates :: Bool}
-    deriving (Eq, Ord, Data)
+    hasUnboundStates :: Bool,
+    predicates :: [Predicate] }
+    deriving (Eq, Ord)
+
+
+emptyTC :: TranslationContext
+emptyTC = TranslationContext{trans = Proverif,
+                              attackerChannel = Nothing,
+                              hasBoundStates = False,
+                              hasUnboundStates = False,
+                              predicates = []}
 
 -- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProverifHeader =
@@ -447,30 +453,27 @@ ppSapic tc (ProcessComb (ProcessCall name _ ts) _ _ _)  =
   where pts = map (ppSapicTerm tc) ts
         (ppts, shs) = unzip pts
 
--- ROBERTBROKEIT: a is now a SapicFormula. A special case is a single atom with
--- syntactic sugar for predicates, but this contains BVars, which first need to
--- be translated to Vars
-ppSapic tc (ProcessComb (Cond a)  _ pl _)  =
-  ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
+ppSapic tc (ProcessComb (Cond a)  _ pl pr)  =
+ addElseBranch ( text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
   where (ppl, pshl) = ppSapic tc pl
         (pa, sh) = ppFact' a
         ppFact' (Ato (Syntactic (Pred (Fact (ProtoFact _ "Smaller" _) _ [v1, v2 ]))))
           | Lit (Var (Free vn1)) <- viewTerm v1,
             Lit (Var (Free vn2)) <- viewTerm v2 = (text $ show vn1 <> "<" <> show vn2, S.empty )
-        ppFact' (Ato (Syntactic (Pred _))) = (text "non-predicate conditions not yet supported also not supported ;) ", S.empty )
-                                                    --- note though that we can get a printout by converting to LNFormula, like this ppFact (toLNFormula formula)
-        ppFact' _                          = (text "non-predicate conditions not yet supported", S.empty)
+        ppFact' p =
+          case expandFormula (predicates tc) (toLFormula p) of
+            Left _ -> (text "undefined predicate in condition ", S.empty )
+            Right form -> (snd $ Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form) , S.empty)
+        addElseBranch (d, s) = case pr of
+          ProcessNull _ -> (d, s)
+          _ -> let (ppr, pshr) = ppSapic tc pr in
+            (d $$ text "else"  $$ (nest 4 (parens ppr)) , s `S.union` pshr)
 
 ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
--- ROBERTBROKEIT: commented out ... isn't this clashing with the previous defiition.
--- ppSapic (ProcessComb (Cond a)  _ pl (ProcessNull _))  =
---   ( text "if" <> pa $$ (nest 4 (parens ppl)), sh `S.union` pshl)
---   where (ppl, pshl) = ppSapic pl
---         (pa , sh  ) = ppFact a
 
 ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
@@ -524,13 +527,19 @@ ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{stateChannel = Nothing, 
      $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ");"
      $$ ppl)))
      $$ text "else"
-     $$ (nest 4 (parens (ppr)))
+     $$ (nest 4 (parens (
+                    text "new " <> text ptvar <> text ":channel [assumeCell];" --the cell did not exists, we create it !
+                    $$ text "insert tbl_states_handle(" <> pt' <> text", " <> text ptvar <> text ");"
+                    $$ text "out(" <> text ptvar <> text ",0);"
+                    $$ ppr
+                    )))
     , sh `S.union` pshl `S.union` pshr)
   where
     pc = ppTypeVar tc c
     pc2 = ppUnTypeVar c
     freevars = S.fromList $  map (\(SapicLVar lvar _) -> lvar) $ freesSapicTerm t
     (pt, sh) = auxppSapicTerm tc freevars True t
+    (pt', _) = ppSapicTerm tc t
     ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
     (ppl, pshl) = ppSapic tc pl
     (ppr, pshr) = ppSapic tc pr
@@ -634,12 +643,6 @@ ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 
 ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
 ppAtom = ppProtoAtom (const emptyDoc)
-
-emptyTC :: TranslationContext
-emptyTC = TranslationContext{trans = Proverif,
-                              attackerChannel = Nothing,
-                              hasBoundStates = False,
-                              hasUnboundStates = False}
 
 -- only used for Proverif queries display
 -- the Bool is set to False when we must negate the atom
@@ -925,10 +928,7 @@ deepsecTemplate headers macroproc requests =
 prettyDeepSecTheory :: OpenTheory -> Doc
 prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
-        tc = TranslationContext{trans = DeepSec,
-                                attackerChannel = Nothing,
-                                hasBoundStates = False,
-                                hasUnboundStates = False}
+        tc = emptyTC{trans = DeepSec}
         hd = attribHeaders tc $ S.toList (loadHeaders tc thy
                                        `S.union` macroprochd)
         requests = loadRequests thy
