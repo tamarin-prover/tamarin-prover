@@ -37,17 +37,13 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
                     [In $ fAppPair (varTerm x,varTerm loc)] -- prem
                     []
                     [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
-                    [Ato toBL]
+                    [Ato protFact]
                     0
         var s = LVar s LSortMsg 0
         x = var "x"
         loc = var "loc"
-        protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm x, varTerm loc])
-        toBL = fmap (fmapTerm (fmap Free)) protFact
-
--- [In(<x,loc>)] -[Pred_rep(x,loc)]->[Out(rep(x,loc))]
-
-
+        protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm (Free x), varTerm (Free loc)])
+-- This rules use the builtin restriction system to bind the Report predicate (which must be defined by the user), to this rule.
 
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation -> Maybe SapicTerm
 opt_loc loc ann =
