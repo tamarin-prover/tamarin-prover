@@ -148,7 +148,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   ("locations-report",
    [
     Fun "fun"  "rep" 2 "(bitstring,bitstring):bitstring" ["private"],
-    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = true",
+    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = x_1",
     Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "get_rep(rep(x_1, x_2)) = x_1"
    ]
   )
