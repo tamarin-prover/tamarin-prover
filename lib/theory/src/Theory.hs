@@ -1302,6 +1302,12 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
                  (ClosedProtoRule, Either (LNTerm, LNTerm, [(ClosedProtoRule, LNTerm)]) (LNFact, [(ClosedProtoRule, LNFact)]), ExtendedPosition)
               -> LNFormula
               -> LNFormula
+            -- protected subterms: if there are no matching outputs, do add a formula with only KU
+            addForm (ru, Left (_, _, []), p) f' = f' .&&. Qua All ("x", LSortMsg)
+              (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
+              (Conn Imp (Ato (Action (varTerm (Bound 0))
+              (inputFactTerm p ru [varTerm (Bound 1)] (varTerm (Bound 2)))))
+              orKU)))
             -- protected subterms
             addForm (ru, Left _, p) f' = f' .&&. Qua All ("x", LSortMsg)
               (Qua All ("m", LSortMsg) (Qua All ("i", LSortNode)
