@@ -2563,7 +2563,7 @@ prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
-prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)
+prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
     where
         factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p

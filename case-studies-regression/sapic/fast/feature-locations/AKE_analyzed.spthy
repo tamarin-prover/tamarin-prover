@@ -6,7 +6,7 @@ functions: adec/2, aenc/2, check_rep/2, fst/1, get_rep/1, pair/2, pk/1,
            rep/2 [private], report/1, sdec/2, senc/2, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
-    check_rep(rep(x.1, x.2), x.2) = true,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -29,7 +29,10 @@ guarded formula characterizing all counter-examples:
   ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-by solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+  case eventVoutputaenckpkskVsigned_0_12111111
+  by contradiction /* from formulas */
+qed
 
 lemma secrecy [reuse]:
   all-traces
@@ -39,10 +42,31 @@ guarded formula characterizing all counter-examples:
 "∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (K( k ) @ #t2)"
 */
 simplify
-by solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+  case eventVoutputaenckpkskVsigned_0_12111111
+  solve( state_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.1 )
+    case newk_0_11111
+    solve( state_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.2 )
+      case newk_0_11111
+      solve( !KU( ~n.1 ) @ #vk.2 )
+        case outaenckpkskVrepaenckpkskVlocpkskV_0_11111111_case_1
+        by solve( !KU( ~n.2 ) @ #vk.5 )
+      next
+        case outaenckpkskVrepaenckpkskVlocpkskV_0_11111111_case_2
+        by solve( !KU( ~n.2 ) @ #vk.5 )
+      qed
+    qed
+  qed
+qed
+
+restriction restr_Report-rule_1:
+  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
+  // safety formula
 
 rule (modulo E) Report-rule[color=#ffffff process=new init;]:
-   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+   [ In( <x, loc> ) ]
+  --[ restr_Report-rule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -167,7 +191,22 @@ rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 proce
   --[ Pred_Eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) ) ]->
    [ state_12111111( init, k, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+     [ state_1211111( init, k, signed, skV ) ]
+    --[ Pred_Eq( aenc(k, pk(skV)), z ) ]->
+     [ state_12111111( init, k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.6
+       skV   = skV.6
+       z     = check_rep(signed.6, <'loc', pk(skV.6)>)
+    
+    2. signed
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
+  */
 
 rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
    [ state_1211111( init, k, signed, skV ) ]
@@ -175,7 +214,22 @@ rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 proce
   ]->
    [ state_12111112( init, k, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+     [ state_1211111( init, k, signed, skV ) ]
+    --[ Pred_Not_Eq( aenc(k, pk(skV)), z ) ]->
+     [ state_12111112( init, k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.6
+       skV   = skV.6
+       z     = check_rep(signed.6, <'loc', pk(skV.6)>)
+    
+    2. signed
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
+  */
 
 rule (modulo E) eventVoutputaenckpkskVsigned_0_12111111[color=#658040 process=event Voutput( <aenc(k, pk(skV)), signed> );]:
    [ state_12111111( init, k, signed, skV ) ]
@@ -228,9 +282,9 @@ analyzing: examples/sapic/fast/feature-locations/AKE.spthy
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.314906s
-  sanity3 (all-traces): verified (2 steps)
-  secrecy (all-traces): verified (2 steps)
+  processing time: 0.344346014s
+  sanity3 (all-traces): verified (3 steps)
+  secrecy (all-traces): verified (7 steps)
 
 ------------------------------------------------------------------------------
 
@@ -240,9 +294,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.314906s
-  sanity3 (all-traces): verified (2 steps)
-  secrecy (all-traces): verified (2 steps)
+  processing time: 0.344346014s
+  sanity3 (all-traces): verified (3 steps)
+  secrecy (all-traces): verified (7 steps)
 
 ==============================================================================
 */
