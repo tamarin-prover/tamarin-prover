@@ -7,17 +7,17 @@ functions: adec/2, aenc/2, ask/2, check_rep/2, dec/1, dec1/1, dec2/1,
            run/2, sdec/2, senc/2, snd/1, tkn/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
-    check_rep(rep(x.1, x.2), x.2) = true,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-heuristic: p
+heuristic: s
 
 predicate: Report( x, y )<->¬(∃ z. y = <'loc', z>)
 
-lemma attested_comput [reuse]:
+lemma attested_comput:
   all-traces
   "∀ #t1 inp pk.
     (Poutput( inp, pk ) @ #t1) ⇒ (∃ #t2. (Token( pk ) @ #t2) ∧ (#t2 < #t1))"
@@ -32,26 +32,56 @@ solve( state_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
   case insencokxtkntokensharedkey_0_11111111111111
   solve( !KU( senc(ok(~n.2, tkn(pk)), ~n.1) ) @ #vk )
     case c_senc
-    solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.5 )
-      case c_ok
+    solve( !KU( ~n.1 ) @ #vk.6 )
+      case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
       solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
         case c_senc
         solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
           case c_senc
-          solve( !KU( ~n.1 ) @ #vk.6 )
-            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
-            by solve( !KU( ~n.2 ) @ #vk.7 )
+          solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.6 )
+            case c_ok
+            by solve( !KU( ~n.2 ) @ #vk.10 )
           next
-            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
-            by solve( !KU( ~n.2 ) @ #vk.7 )
+            case outsencokxtkntokensharedkey_0_11211111111111111
+            by contradiction /* from formulas */
           qed
+        next
+          case outsencprgprogsharedkey_0_1121111111
+          by solve( !KU( ~n.2 ) @ #vk.9 )
         qed
+      next
+        case outsenctkntokensharedkey_0_11211111111111
+        by contradiction /* from formulas */
+      qed
+    next
+      case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+      solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
+        case c_senc
+        solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
+          case c_senc
+          solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.6 )
+            case c_ok
+            by solve( !KU( ~n.2 ) @ #vk.10 )
+          next
+            case outsencokxtkntokensharedkey_0_11211111111111111
+            by contradiction /* from formulas */
+          qed
+        next
+          case outsencprgprogsharedkey_0_1121111111
+          by solve( !KU( ~n.2 ) @ #vk.9 )
+        qed
+      next
+        case outsenctkntokensharedkey_0_11211111111111
+        by contradiction /* from formulas */
       qed
     qed
+  next
+    case outsencokxtkntokensharedkey_0_11211111111111111
+    by contradiction /* from formulas */
   qed
 qed
 
-lemma unique [reuse]:
+lemma unique:
   all-traces
   "¬(∃ #t1 #t2 pk inp inp2.
       ((Poutput( inp, pk ) @ #t1) ∧ (Poutput( inp2, pk ) @ #t2)) ∧
@@ -69,8 +99,247 @@ solve( state_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
                                 x
          ) ▶₀ #t2 )
     case insencokxtkntokensharedkey_0_11111111111111
-    by solve( state_1121111111111( prog, shared_key, signed, skV.2, pk
-              ) ▶₀ #t2.1 )
+    solve( !KU( senc(ok(~n.2, tkn(pk)), ~n.1) ) @ #vk )
+      case c_senc
+      solve( !KU( ~n.1 ) @ #vk.11 )
+        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+        solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
+          case c_senc
+          solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
+            case c_senc
+            solve( !KU( senc(ok(~n.4, tkn(pk)), ~n.3) ) @ #vk.6 )
+              case c_senc
+              solve( !KU( ~n.3 ) @ #vk.16 )
+                case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                solve( !KU( senc(tkn(pk), ~n.3) ) @ #vk.8 )
+                  case c_senc
+                  solve( !KU( senc(prg(prog2.1), ~n.3) ) @ #vk.10 )
+                    case c_senc
+                    solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.12 )
+                      case c_ok
+                      by solve( !KU( ~n.2 ) @ #vk.19 )
+                    next
+                      case outsencokxtkntokensharedkey_0_11211111111111111
+                      solve( !KU( ~n.6 ) @ #vk.21 )
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      next
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      qed
+                    qed
+                  next
+                    case outsencprgprogsharedkey_0_1121111111
+                    by solve( !KU( ~n.4 ) @ #vk.19 )
+                  qed
+                next
+                  case outsenctkntokensharedkey_0_11211111111111
+                  by solve( !KU( ~n.5 ) @ #vk.19 )
+                qed
+              next
+                case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                solve( !KU( senc(tkn(pk), ~n.3) ) @ #vk.8 )
+                  case c_senc
+                  solve( !KU( senc(prg(prog2.1), ~n.3) ) @ #vk.10 )
+                    case c_senc
+                    solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.12 )
+                      case c_ok
+                      by solve( !KU( ~n.2 ) @ #vk.19 )
+                    next
+                      case outsencokxtkntokensharedkey_0_11211111111111111
+                      solve( !KU( ~n.6 ) @ #vk.21 )
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      next
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      qed
+                    qed
+                  next
+                    case outsencprgprogsharedkey_0_1121111111
+                    by solve( !KU( ~n.4 ) @ #vk.19 )
+                  qed
+                next
+                  case outsenctkntokensharedkey_0_11211111111111
+                  by solve( !KU( ~n.5 ) @ #vk.19 )
+                qed
+              qed
+            next
+              case outsencokxtkntokensharedkey_0_11211111111111111
+              solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.10 )
+                case c_senc
+                solve( !KU( ~n.4 ) @ #vk.20 )
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                  by solve( !KU( ~n.5 ) @ #vk.21 )
+                next
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                  by solve( !KU( ~n.5 ) @ #vk.21 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.13 )
+                  case c_ok
+                  by solve( !KU( ~n.3 ) @ #vk.19 )
+                qed
+              qed
+            qed
+          next
+            case outsencprgprogsharedkey_0_1121111111
+            by solve( !KU( ~n.2 ) @ #vk.14 )
+          qed
+        next
+          case outsenctkntokensharedkey_0_11211111111111
+          by solve( !KU( ~n.2 ) @ #vk.14 )
+        qed
+      next
+        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+        solve( !KU( senc(tkn(pk), ~n.1) ) @ #vk.2 )
+          case c_senc
+          solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
+            case c_senc
+            solve( !KU( senc(ok(~n.4, tkn(pk)), ~n.3) ) @ #vk.6 )
+              case c_senc
+              solve( !KU( ~n.3 ) @ #vk.16 )
+                case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                solve( !KU( senc(tkn(pk), ~n.3) ) @ #vk.8 )
+                  case c_senc
+                  solve( !KU( senc(prg(prog2.1), ~n.3) ) @ #vk.10 )
+                    case c_senc
+                    solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.12 )
+                      case c_ok
+                      by solve( !KU( ~n.2 ) @ #vk.19 )
+                    next
+                      case outsencokxtkntokensharedkey_0_11211111111111111
+                      solve( !KU( ~n.6 ) @ #vk.21 )
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      next
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      qed
+                    qed
+                  next
+                    case outsencprgprogsharedkey_0_1121111111
+                    by solve( !KU( ~n.4 ) @ #vk.19 )
+                  qed
+                next
+                  case outsenctkntokensharedkey_0_11211111111111
+                  by solve( !KU( ~n.5 ) @ #vk.19 )
+                qed
+              next
+                case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                solve( !KU( senc(tkn(pk), ~n.3) ) @ #vk.8 )
+                  case c_senc
+                  solve( !KU( senc(prg(prog2.1), ~n.3) ) @ #vk.10 )
+                    case c_senc
+                    solve( !KU( ok(~n.2, tkn(pk)) ) @ #vk.12 )
+                      case c_ok
+                      by solve( !KU( ~n.2 ) @ #vk.19 )
+                    next
+                      case outsencokxtkntokensharedkey_0_11211111111111111
+                      solve( !KU( ~n.6 ) @ #vk.21 )
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      next
+                        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                        by solve( !KU( ~n.7 ) @ #vk.25 )
+                      qed
+                    qed
+                  next
+                    case outsencprgprogsharedkey_0_1121111111
+                    by solve( !KU( ~n.4 ) @ #vk.19 )
+                  qed
+                next
+                  case outsenctkntokensharedkey_0_11211111111111
+                  by solve( !KU( ~n.5 ) @ #vk.19 )
+                qed
+              qed
+            next
+              case outsencokxtkntokensharedkey_0_11211111111111111
+              solve( !KU( senc(prg(prog2.1), ~n.4) ) @ #vk.10 )
+                case c_senc
+                solve( !KU( ~n.4 ) @ #vk.20 )
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                  by solve( !KU( ~n.5 ) @ #vk.21 )
+                next
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                  by solve( !KU( ~n.5 ) @ #vk.21 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.13 )
+                  case c_ok
+                  by solve( !KU( ~n.3 ) @ #vk.19 )
+                qed
+              qed
+            qed
+          next
+            case outsencprgprogsharedkey_0_1121111111
+            by solve( !KU( ~n.2 ) @ #vk.14 )
+          qed
+        next
+          case outsenctkntokensharedkey_0_11211111111111
+          by solve( !KU( ~n.2 ) @ #vk.14 )
+        qed
+      qed
+    next
+      case outsencokxtkntokensharedkey_0_11211111111111111
+      solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.4 )
+        case c_senc
+        solve( !KU( ~n.1 ) @ #vk.15 )
+          case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+          by solve( !KU( ~n.2 ) @ #vk.16 )
+        next
+          case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+          by solve( !KU( ~n.2 ) @ #vk.16 )
+        qed
+      next
+        case outsencprgprogsharedkey_0_1121111111
+        solve( !KU( senc(ok(~n.6, tkn(~n.3)), ~n.5) ) @ #vk.7 )
+          case c_senc
+          solve( !KU( ~n.5 ) @ #vk.15 )
+            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+            solve( !KU( senc(tkn(~n.3), ~n.5) ) @ #vk.9 )
+              case c_senc
+              solve( !KU( senc(prg(prog2), ~n.5) ) @ #vk.11 )
+                case c_senc
+                solve( !KU( ok(~n.6, tkn(~n.3)) ) @ #vk.15 )
+                  case c_ok
+                  by solve( !KU( ~n.6 ) @ #vk.19 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                by solve( !KU( ~n.6 ) @ #vk.18 )
+              qed
+            next
+              case outsenctkntokensharedkey_0_11211111111111
+              by solve( !KU( ~n.2 ) @ #vk.13 )
+            qed
+          next
+            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+            solve( !KU( senc(tkn(~n.3), ~n.5) ) @ #vk.9 )
+              case c_senc
+              solve( !KU( senc(prg(prog2), ~n.5) ) @ #vk.11 )
+                case c_senc
+                solve( !KU( ok(~n.6, tkn(~n.3)) ) @ #vk.15 )
+                  case c_ok
+                  by solve( !KU( ~n.6 ) @ #vk.19 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                by solve( !KU( ~n.6 ) @ #vk.18 )
+              qed
+            next
+              case outsenctkntokensharedkey_0_11211111111111
+              by solve( !KU( ~n.2 ) @ #vk.13 )
+            qed
+          qed
+        next
+          case outsencokxtkntokensharedkey_0_11211111111111111
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
   qed
 qed
 
@@ -102,12 +371,142 @@ solve( state_1( prog ) ▶₀ #t2 )
     by solve( !KU( ~n ) @ #vk.1 )
   next
     case outrunproginput_0_1111111111111111
-    by contradiction /* from formulas */
+    solve( !KU( senc(ok(~n.2, tkn(token)), ~n.1) ) @ #vk.1 )
+      case c_senc
+      solve( !KU( ~n.2 ) @ #vk.7 )
+        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+        solve( !KU( senc(tkn(token), ~n.2) ) @ #vk.3 )
+          case c_senc
+          solve( !KU( senc(prg(~n), ~n.2) ) @ #vk.5 )
+            case c_senc
+            solve( !KU( ok(~n.1, tkn(token)) ) @ #vk.7 )
+              case c_ok
+              by solve( !KU( ~n.1 ) @ #vk.11 )
+            next
+              case outsencokxtkntokensharedkey_0_11211111111111111
+              solve( state_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
+                                            x
+                     ) ▶₀ #t5 )
+                case insencokxtkntokensharedkey_0_11111111111111
+                solve( !KU( ~n.6 ) @ #vk.13 )
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                  by solve( !KU( ~n.7 ) @ #vk.22 )
+                next
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                  by solve( !KU( ~n.7 ) @ #vk.22 )
+                qed
+              qed
+            qed
+          next
+            case outsencprgprogsharedkey_0_1121111111
+            by solve( !KU( ~n.3 ) @ #vk.10 )
+          qed
+        next
+          case outsenctkntokensharedkey_0_11211111111111
+          solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+                 ) ▶₀ #t5 )
+            case insencokxtkntokensharedkey_0_11111111111111
+            by solve( !KU( ~n.6 ) @ #vk.10 )
+          qed
+        qed
+      next
+        case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+        solve( !KU( senc(tkn(token), ~n.2) ) @ #vk.3 )
+          case c_senc
+          solve( !KU( senc(prg(~n), ~n.2) ) @ #vk.5 )
+            case c_senc
+            solve( !KU( ok(~n.1, tkn(token)) ) @ #vk.7 )
+              case c_ok
+              by solve( !KU( ~n.1 ) @ #vk.11 )
+            next
+              case outsencokxtkntokensharedkey_0_11211111111111111
+              solve( state_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
+                                            x
+                     ) ▶₀ #t5 )
+                case insencokxtkntokensharedkey_0_11111111111111
+                solve( !KU( ~n.6 ) @ #vk.13 )
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+                  by solve( !KU( ~n.7 ) @ #vk.22 )
+                next
+                  case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+                  by solve( !KU( ~n.7 ) @ #vk.22 )
+                qed
+              qed
+            qed
+          next
+            case outsencprgprogsharedkey_0_1121111111
+            by solve( !KU( ~n.3 ) @ #vk.10 )
+          qed
+        next
+          case outsenctkntokensharedkey_0_11211111111111
+          solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+                 ) ▶₀ #t5 )
+            case insencokxtkntokensharedkey_0_11111111111111
+            by solve( !KU( ~n.6 ) @ #vk.10 )
+          qed
+        qed
+      qed
+    next
+      case outsencokxtkntokensharedkey_0_11211111111111111
+      solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+             ) ▶₀ #t5 )
+        case insencokxtkntokensharedkey_0_11111111111111
+        solve( !KU( senc(ok(~n.3, tkn(~n.2)), ~n.1) ) @ #vk.10 )
+          case c_senc
+          solve( !KU( ~n.1 ) @ #vk.16 )
+            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_1
+            solve( !KU( senc(tkn(~n.2), ~n.1) ) @ #vk.12 )
+              case c_senc
+              solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.14 )
+                case c_senc
+                solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
+                  case c_ok
+                  by solve( !KU( ~n.3 ) @ #vk.20 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                by solve( !KU( ~n.2 ) @ #vk.19 )
+              qed
+            next
+              case outsenctkntokensharedkey_0_11211111111111
+              by solve( !KU( ~n.2 ) @ #vk.14 )
+            qed
+          next
+            case outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111_case_2
+            solve( !KU( senc(tkn(~n.2), ~n.1) ) @ #vk.12 )
+              case c_senc
+              solve( !KU( senc(prg(prog2), ~n.1) ) @ #vk.14 )
+                case c_senc
+                solve( !KU( ok(~n.3, tkn(~n.2)) ) @ #vk.16 )
+                  case c_ok
+                  by solve( !KU( ~n.3 ) @ #vk.20 )
+                qed
+              next
+                case outsencprgprogsharedkey_0_1121111111
+                by solve( !KU( ~n.2 ) @ #vk.19 )
+              qed
+            next
+              case outsenctkntokensharedkey_0_11211111111111
+              by solve( !KU( ~n.2 ) @ #vk.14 )
+            qed
+          qed
+        next
+          case outsencokxtkntokensharedkey_0_11211111111111111
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
   qed
 qed
 
+restriction restr_Report-rule_1:
+  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
+  // safety formula
+
 rule (modulo E) Report-rule[color=#ffffff process=new prog;]:
-   [ In( <x, loc> ) ] --[ Report( x, loc ) ]-> [ Out( rep(x, loc) ) ]
+   [ In( <x, loc> ) ]
+  --[ restr_Report-rule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -316,7 +715,22 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406
   ]->
    [ state_112111111( prog, shared_key, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+     [ state_11211111( prog, shared_key, signed, skV ) ]
+    --[ Pred_Eq( aenc(shared_key, pk(skV)), z ) ]->
+     [ state_112111111( prog, shared_key, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.6
+       skV   = skV.6
+       z     = check_rep(signed.6, <'loc', pk(skV.6)>)
+    
+    2. signed
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
+  */
 
 rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
    [ state_11211111( prog, shared_key, signed, skV ) ]
@@ -327,7 +741,22 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406
   ]->
    [ state_112111112( prog, shared_key, signed, skV ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
+     [ state_11211111( prog, shared_key, signed, skV ) ]
+    --[ Pred_Not_Eq( aenc(shared_key, pk(skV)), z ) ]->
+     [ state_112111112( prog, shared_key, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.6
+       skV   = skV.6
+       z     = check_rep(signed.6, <'loc', pk(skV.6)>)
+    
+    2. signed
+             = rep(x.6, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.6
+  */
 
 rule (modulo E) eventSessionVpkskVsharedkey_0_112111111[color=#406880 process=event SessionV( pk(skV), shared_key );]:
    [ state_112111111( prog, shared_key, signed, skV ) ]
@@ -486,10 +915,10 @@ analyzing: examples/sapic/fast/feature-locations/licensing.spthy
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 0.951935s
-  attested_comput (all-traces): verified (9 steps)
-  unique (all-traces): verified (4 steps)
-  final (all-traces): verified (5 steps)
+  processing time: 3.531357602s
+  attested_comput (all-traces): verified (19 steps)
+  unique (all-traces): verified (84 steps)
+  final (all-traces): verified (44 steps)
 
 ------------------------------------------------------------------------------
 
@@ -499,10 +928,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 0.951935s
-  attested_comput (all-traces): verified (9 steps)
-  unique (all-traces): verified (4 steps)
-  final (all-traces): verified (5 steps)
+  processing time: 3.531357602s
+  attested_comput (all-traces): verified (19 steps)
+  unique (all-traces): verified (84 steps)
+  final (all-traces): verified (44 steps)
 
 ==============================================================================
 */
