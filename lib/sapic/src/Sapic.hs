@@ -20,6 +20,7 @@ import Control.Monad.Catch
 import Sapic.Exceptions
 import Theory
 import Theory.Sapic
+import Theory.Sapic.Process
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Map.Strict as Map
@@ -41,26 +42,34 @@ import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
+import Control.Monad.Trans.State.Lazy
 
 
-typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
-                        -> Process ann SapicLVar -> m (Process ann SapicLVar)
-typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
+data TypingEnvironment = TypingEnvironment {
+        vars :: Map.Map LVar SapicType
+    ,   funs :: ()
+}
+
+-- typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
+--                         -> Process ann SapicLVar -> m (Process ann SapicLVar)
+typeProcess :: (GoodAnnotation a, MonadThrow m) => Theory sig c r p SapicElement -> Process a SapicLVar -> m (Process a SapicLVar)
+typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) initstate
     where
+        -- initial state
+        initstate = TypingEnvironment{ vars = Map.empty, funs = () }
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
-        fNull _  = return . ProcessNull
-        fAct  a ann ac       = F.foldrM insertVar a (bindingsAct ann ac)
-        fComb a ann c        = F.foldrM insertVar a (bindingsComb ann c)
+        fNull ann  = return (ProcessNull ann)
+        fAct  ann ac       = F.traverse_ insertVar (bindingsAct ann ac)
+        fComb ann c        = F.traverse_ insertVar (bindingsComb ann c)
         -- gAct/gComb reconstruct process tree assigning types to the terms
-        gAct a' ac ann r = do
-                       -- a' is map variables to types
-                       -- r is typed subprocess
-            ac' <- traverseTermsAction (typeWith  a') typeWithFact typeWithVar ac
-            return $ ProcessAction ac' ann r
-        gComb a' c ann rl rr = do
-            c' <- traverseTermsComb (typeWith a') typeWithFact typeWithVar c
+        gAct ac ann r = do -- r is typed subprocess
+            ac' <- traverseTermsAction typeWith typeWithFact typeWithVar ac
+            return (ProcessAction ac' ann r)
+        gComb c ann rl rr = do
+            c' <- traverseTermsComb typeWith typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        typeWith a' t = do
+        typeWith t = do
+            a' <- gets vars
             (t',_) <- typeWith' a' t
             return t'
         typeWith' a' t
@@ -81,7 +90,7 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
                     else
                         throwM (ProcessNotWellformed (TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
-                ts' <- mapM (typeWith a') ts
+                ts' <- mapM typeWith ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType)
                         -- NOTE: this means list,ac,c-symols are polymorphic in input types but not output
             | otherwise = return (t, defaultSapicType) -- TODO no idea how to type here...
@@ -89,11 +98,11 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb Map.empty
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
-        insertVar v a
-            | Just _ <- Map.lookup (slvar v) a = -- if variable is already in map, it must have been bound for the second time..
-                        throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
-            | otherwise =
-                return $ Map.insert (slvar v) (maybeToDefault $ stype v) a
+        insertVar v = do
+            te <- get
+            case Map.lookup (slvar v) (vars te) of
+                Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
+                Nothing -> put $te { vars = Map.insert (slvar v) (maybeToDefault $ stype v) (vars te)}
         maybeToDefault Nothing   = defaultSapicType -- not quite the same as maybe, different type
         maybeToDefault something = something
 

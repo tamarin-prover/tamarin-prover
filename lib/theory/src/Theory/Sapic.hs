@@ -39,8 +39,6 @@ module Theory.Sapic (
     , paddAnn
     , foldProcess
     , foldMProcess
-    , traverseProcess
-    , traverseProcess'
     , traverseTermsAction
     , traverseTermsComb
     , applyProcess

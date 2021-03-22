@@ -26,8 +26,6 @@ module Theory.Sapic.Process (
     -- utitlities
     , foldProcess
     , foldMProcess
-    , traverseProcess
-    , traverseProcess'
     , traverseTermsAction
     , traverseTermsComb
     , pfoldMap
@@ -182,53 +180,23 @@ foldProcess fNull fAct fComb gAct gComb a p
             in
                 gComb a' ann rl rr c
 
--- | fold process with side-effect. Just like @foldProcess@, but allows functions with side-effects.
-foldMProcess :: Monad m =>
-                (t1 -> t2 -> m t3)
-                -> (t1 -> t2 -> SapicAction v -> m t1)
-                -> (t1 -> t2 -> ProcessCombinator v -> m t1)
-                -> (t1 -> SapicAction v -> t2 -> t3 -> m t3)
-                -> (t1 -> ProcessCombinator v -> t2 -> t3 -> t3 -> m t3)
-                -> t1
-                -> Process t2 v
-                -> m t3
-foldMProcess fNull fAct fComb gAct gComb a p
-    | (ProcessNull ann) <- p = fNull a ann
+
+-- | fold process with side effects. Like @foldProcess@, but allows functions
+--   with side-effects and does not keep accumulator (use state monad for that.)
+foldMProcess :: Monad m => (t1 -> m t2) -> (t1 -> SapicAction v -> m ()) ->
+    (t1 -> ProcessCombinator v -> m ()) -> (SapicAction v -> t1 -> t2 -> m t2) ->
+    (ProcessCombinator v -> t1 -> t2 -> t2 -> m t2) -> Process t1 v -> m t2
+foldMProcess fNull fAct fComb gAct gComb p
+    | (ProcessNull ann) <- p = fNull ann
     | (ProcessAction ac ann p') <- p = do
-            a' <- fAct a ann ac -- 1. update accumulator
-            p''<- foldMProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
-            gAct a' ac ann p'' -- 3. reconstruct result from accumulator and subtree's result
+            fAct ann ac -- 1. act on current process, potentially updating state
+            p''<- foldMProcess fNull fAct fComb gAct gComb p'  -- 2. process subtree with updated trace 
+            gAct ac ann p'' -- 3. reconstruct result from state and subtree's result
     | (ProcessComb c ann pl pr) <- p = do
-            a' <- fComb a ann c
-            rl <- foldMProcess fNull fAct fComb gAct gComb a' pl
-            rr <- foldMProcess fNull fAct fComb gAct gComb a' pr
-            gComb a' c ann rl rr
-
--- | Traverses process. Simplified variant of @foldMProcces@ that avoids accumulator (can store in monad)
-traverseProcess :: Monad m =>
-                   (t2 -> m t3)
-                   -> (SapicAction v -> t2 -> t3 -> m t3)
-                   -> (ProcessCombinator v -> t2 -> t3 -> t3 -> m t3)
-                   -> Process t2 v
-                   -> m t3
-traverseProcess gNull gAct gComb = foldMProcess (const gNull) nothing nothing (const gAct) (const gComb) ()
-        where nothing = const $ const $ const $ return ()
-
-traverseProcess' :: Monad m =>
-                       (SapicNTerm t -> m (SapicNTerm v))
-                       -> (SapicNFormula t -> m (SapicNFormula v))
-                       -> (t -> m v)
-                       -> Process ann t
-                       -> m (Process ann v)
-traverseProcess' ft ff fv = traverseProcess gN gA gC
-    where
-        gN = return . ProcessNull
-        gA ac ann p = do
-             ac' <- traverseTermsAction ft ff fv ac
-             return $ ProcessAction ac' ann p
-        gC c ann pl pr = do
-             c'  <- traverseTermsComb ft ff fv c
-             return $ ProcessComb c' ann pl pr
+            fComb ann c
+            rl <- foldMProcess fNull fAct fComb gAct gComb pl
+            rr <- foldMProcess fNull fAct fComb gAct gComb pr
+            gComb c ann rl rr
 
 traverseTermsAction :: Applicative f =>
                        (SapicNTerm t -> f (SapicNTerm v))
