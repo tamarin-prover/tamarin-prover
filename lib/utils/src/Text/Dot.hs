@@ -55,6 +55,7 @@ module Text.Dot
 
 import Data.Char           (isSpace)
 import Control.Monad       (ap)
+import Data.List (intercalate)
 -- import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
@@ -193,15 +194,11 @@ showAttr (name, val)
 -- are terminated with a newline.
 fixMultiLineLabel :: String -> String
 fixMultiLineLabel lbl
-  | '\n' `elem` lbl = unlines $ map useNonBreakingSpace $ lines lbl
+  | '\n' `elem` lbl = intercalate "<br/>" $ map useNonBreakingSpace $ lines lbl
   | otherwise       = lbl
   where
     useNonBreakingSpace line = case span isSpace line of
-      (spaces, rest) -> if length spaces > 1 then rest else concat (replicate (length spaces) "&nbsp;") ++ rest
-      where
-        emptyLine:: String -> Bool
-        emptyLine = foldr ((&&) . isSpace) False
-
+      (spaces, rest) -> concat (replicate (length spaces) "") ++ rest
 
 ------------------------------------------------------------------------------
 -- HTML-labels
@@ -290,6 +287,7 @@ renderHTMLNode = render True 1.0
 escape::[Char]->[Char]
 escape ('<':'s':'u':'b':'>':xs) = '<':'s':'u':'b':'>':escape xs
 escape ('<':'/':'s':'u':'b':'>':xs) = '<':'/':'s':'u':'b':'>':escape xs
+escape ('<':'b':'r':'/':'>':xs) = '<':'b':'r':'/':'>':escape xs
 escape ('<':xs) = "&lt;"++escape xs;
 escape ('>':xs) = "&gt;"++escape xs;
 escape (x:xs) = x:escape xs;
