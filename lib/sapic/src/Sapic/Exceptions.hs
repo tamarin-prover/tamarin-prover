@@ -20,6 +20,7 @@ import Control.Exception
 import Theory
 import Theory.Sapic
 import Data.Label
+import qualified Data.Maybe
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -35,6 +36,7 @@ data WFerrror p = WFLock WFLockTag p
                 | WFReliable
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
+                | FunctionNotDefined NoEqSym
 
     deriving (Typeable)
 
@@ -99,7 +101,7 @@ instance (Show p) => Show (WFerrror p) where
     show (TypingErrorArgument t types) = "Typing error: subterm "
                               ++ show t
                               ++ " should have input types "
-                              ++ List.intercalate ", " (List.map (maybe defaultSapicTypeS id) types)
+                              ++ List.intercalate ", " (List.map (Data.Maybe.fromMaybe defaultSapicTypeS) types)
                               ++ "."
 
 instance (Typeable a, Show a) => Exception (SapicException a)

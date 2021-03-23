@@ -47,7 +47,7 @@ import Control.Monad.Trans.State.Lazy
 
 data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
-    ,   funs :: ()
+    ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
 }
 
 -- typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
@@ -56,7 +56,10 @@ typeProcess :: (GoodAnnotation a, MonadThrow m) => Theory sig c r p SapicElement
 typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) initstate
     where
         -- initial state
-        initstate = TypingEnvironment{ vars = Map.empty, funs = () }
+        initstate = TypingEnvironment{ 
+                vars = Map.empty,
+                funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
+                 }
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull ann  = return (ProcessNull ann)
         fAct  ann ac       = F.traverse_ insertVar (bindingsAct ann ac)
@@ -68,27 +71,28 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
         gComb c ann rl rr = do
             c' <- traverseTermsComb typeWith typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        typeWith t = do
-            a' <- gets vars
-            (t',_) <- typeWith' a' t
-            return t'
-        typeWith' a' t
-            | Lit (Var v) <- viewTerm t
-            , lvar' <- slvar v
-            , Just stype' <- Map.lookup lvar' a'
-          =
-                        return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
-            | FApp (NoEq fs) ts   <- viewTerm t
-            , Just (_,intypes,outtype) <- lookupFunctionTypingInfo fs th
+        typeWith t = fst <$> typeWith' t -- throw type away, take term (first element)
+        typeWith' t
+            | Lit (Var v) <- viewTerm t , lvar' <- slvar v
             = do
-                ts' <- mapM (typeWith' a') ts
-                let interms  = map fst ts'
-                let intypes' = map snd ts'
-                if intypes' == intypes
-                    then
-                        return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
-                    else
-                        throwM (ProcessNotWellformed (TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
+                maybeType <- Map.lookup lvar' <$> gets vars
+                let stype' = fromMaybe Nothing maybeType
+                return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
+
+            | FApp (NoEq fs) ts   <- viewTerm t
+            = do
+                maybeFType <- Map.lookup fs <$> gets funs
+                case maybeFType of
+                    Nothing -> throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
+                    Just (intypes,outtype) -> do
+                        ts' <- mapM typeWith' ts
+                        let interms  = map fst ts'
+                        let intypes' = map snd ts'
+                        if intypes' == intypes
+                            then
+                                return (termViewToTerm $ FApp (NoEq fs) interms, outtype)
+                        else
+                            throwM (ProcessNotWellformed (TypingErrorArgument t intypes') :: SapicException AnnotatedProcess)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM typeWith ts
                 return (termViewToTerm $ FApp fs ts', defaultSapicType)

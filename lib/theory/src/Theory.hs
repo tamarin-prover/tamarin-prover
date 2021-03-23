@@ -1392,7 +1392,7 @@ lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
 lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p SapicElement -> Maybe SapicFunSym
-lookupFunctionTypingInfo tag = find (\(fs,_,_) -> (tag == fs)) . theoryFunctionTypingInfos
+lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
 lookupExportInfo :: String -> Theory sig c r p SapicElement -> Maybe ExportInfo
