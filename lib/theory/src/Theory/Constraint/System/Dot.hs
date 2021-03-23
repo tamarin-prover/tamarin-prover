@@ -18,7 +18,8 @@ module Theory.Constraint.System.Dot (
   ) where
 
 import           Data.Char                (isSpace)
-import           Data.Color
+import Data.Color
+    ( RGB(RGB), hsvToRGB, lightColorGroups, rgbToHex, HSV(HSV) )
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
 import           Data.List                (find,foldl',intersect)
@@ -136,9 +137,9 @@ dotNode v = dotOnce dsNodes v $ do
         nameAndActs = case filter isNotDiffAnnotation $ get rActs ru of
             [] -> ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru);
             xs -> ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
-                brackets (vcat $ punctuate comma $ map prettyLNFact xs);
+                brackets (vcat $ punctuate comma $ map prettyLNFactSubscript xs);
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-            
+
 
 -- | An edge from a rule node to its premises or conclusions.
 dotIntraRuleEdge :: D.NodeId -> D.NodeId -> SeDot ()
@@ -165,7 +166,7 @@ dotSingleEdge :: (NodeConc, NodePrem) -> SeDot D.NodeId
 dotSingleEdge edge@(_, to) = dotOnce dsSingles edge $ do
     se <- asks fst
     let fa    = nodePremFact to se
-        label = render $ prettyLNFact fa
+        label = render $ prettyLNFactSubscript   fa
     liftDot $ D.node $ [("label", label),("shape", "hexagon")]
                        ++ factNodeStyle fa
 
@@ -186,7 +187,7 @@ dotPrem prem@(v, i) =
             (label, moreStyle) = fromMaybe (ppPrem, []) $ do
                 ru <- M.lookup v nodes
                 fa <- lookupPrem i ru
-                return ( render $ prettyLNFact fa
+                return (render $ prettyLNFactSubscript   fa
                        , factNodeStyle fa
                        )
         liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -206,7 +207,7 @@ dotConc =
             let (label, moreStyle) = fromMaybe (show x, []) $ do
                     ru <- M.lookup (fst x) nodes
                     fa <- (`atMay` snd x) $ get ruleSel ru
-                    return ( render $ prettyLNFact fa
+                    return ( render $ prettyLNFactSubscript   fa
                            , factNodeStyle fa
                            )
             liftDot $ D.node $ [("label", label),("shape",shape)]
@@ -307,7 +308,7 @@ nodeColorMap rules =
     intruderHue = 18 % 360
 
 ------------------------------------------------------------------------------
--- Record based dotting
+-- Record based and HTML-like label dotting
 ------------------------------------------------------------------------------
 
 -- | The style for nodes of the intruder.
@@ -315,7 +316,7 @@ data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
     deriving( Eq, Ord, Show )
 
 
--- | Dot a node in record based (compact) format.
+-- | Dot a node in HTML-like label based (compact) format.
 dotNodeCompact :: BoringNodeStyle -> NodeId -> SeDot D.NodeId
 dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
@@ -323,18 +324,18 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
     case M.lookup v $ get sNodes se of
       Nothing -> case filter ((v ==) . fst) (unsolvedActionAtoms se) of
-        [] -> mkSimpleNode (show v) []
-        as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFact . snd) as)
+        [] -> mkSimpleNode (show v) [] "white"
+        as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFactSubscript   . snd) as)
                         <-> opAction <-> text (show v)
                   attrs | any (isKUFact . snd) as = [("color","gray")]
                         | otherwise               = [("color","darkblue")]
-              in mkSimpleNode (render lbl) attrs
+              in mkSimpleNode (render lbl) attrs "white"
       Just ru -> do
           let color     = M.lookup (get rInfo ru) colorMap
               nodeColor = maybe "white" rgbToHex color
-              attrs     = [("fillcolor", nodeColor),("style","filled")
+              attrs     = [("fillcolor", "white"),("style","filled")
                             , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
-          ids <- mkNode ru attrs hasOutgoingEdge
+          ids <- mkNode ru attrs nodeColor hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
@@ -346,35 +347,34 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
     colorUsesWhiteFont _                  = False
 
-    mkSimpleNode lbl attrs =
-        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0'><TR><TD>"++ D.subscript (D.escape lbl)++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
+    mkSimpleNode lbl attrs _ =
+        liftDot $ D.node $ [("label", "<<TABLE  BORDER='0' CELLSPACING='0' CELLPADDING='0' ALIGN='CENTER'><TR><TD>"++ D.escape lbl++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
 
-    mkNode  :: RuleACInst -> [(String, String)] -> Bool 
+    mkNode  :: RuleACInst -> [(String, String)] -> String -> Bool
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
          [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode ru attrs hasOutgoingEdge
+    mkNode ru attrs nodeColor hasOutgoingEdge
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
             let lbl | hasOutgoingEdge = show v ++ " : " ++ showPrettyRuleCaseName ru
                     | otherwise       = concatMap snd as
-            nid <- mkSimpleNode lbl []
+            nid <- mkSimpleNode lbl [] nodeColor
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
-      -- full record syntax
+      -- full HTML syntax
       | otherwise =
-            fmap snd $ liftDot $ (`D.createPlainHTMLNode` attrs) $
-            D.vcat $ map D.hcat $ map (map (uncurry D.portHTMLCell)) $
-            filter (not . null) [ps, as, cs]
+            fmap snd $ liftDot $ D.createPlainHTMLNode (D.vcat $ map (D.hcat . map (uncurry D.portHTMLCell)) (
+            filter (not . null) [ps, as, cs])) nodeColor attrs
       where
-        ps = renderRow [ (Just (Left i),  prettyLNFact p) | (i, p) <- enumPrems ru ]
+        ps = renderRow [ (Just (Left i),  prettyLNFactSubscript   p) | (i, p) <- enumPrems ru ]
         as = renderRow [ (Nothing,        ruleLabel ) ]
-        cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
+        cs = renderRow [ (Just (Right i), prettyLNFactSubscript   c) | (i, c) <- enumConcs ru ]
 
         ruleLabel = case filter isNotDiffAnnotation $ get rActs ru of
             [] -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru);
             xs -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru) <>
                 (brackets $ vcat $ punctuate comma $
-                map prettyLNFact $ xs)
+                map prettyLNFactSubscript   $ xs)
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
         renderRow annDocs =
@@ -404,7 +404,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
--- to draw.
+-- to draw. 
 dotSystemCompact :: BoringNodeStyle -> System -> D.Dot ()
 dotSystemCompact boringStyle se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
@@ -416,7 +416,7 @@ dotSystemCompact boringStyle se =
         F.mapM_ dotChain                           $ unsolvedChains    se
         F.mapM_ dotLess                            $ get sLessAtoms    se
   where
-    missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
+    missingNode shape label = liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLBORDER='0' CELLSPACING='0' COLUMNS='*' ALIGN='CENTER'><TR><TD>"++render label++"</TD></TR></TABLE>>"),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = dotOnce dsConcs conc $ missingNode "trapezium" $ prettyNodeConc conc
     dotEdge (Edge src tgt)  = do

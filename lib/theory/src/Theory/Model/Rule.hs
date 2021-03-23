@@ -723,7 +723,7 @@ getRuleName ru = case ruleName ru of
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> case p of
                                       FreshRule   -> "FreshRule"
-                                      StandRule n -> case n of 
+                                      StandRule n -> case n of
                                         DefdRuleName s -> s
                                         SAPiCRuleName s -> formatSAPiCRuleName s
 
@@ -741,7 +741,7 @@ getRuleNameDiff ru = case ruleName ru of
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> "Proto" ++ case p of
                                       FreshRule   -> "FreshRule"
-                                      StandRule n -> case n of 
+                                      StandRule n -> case n of
                                         DefdRuleName s -> s
                                         SAPiCRuleName s -> formatSAPiCRuleName s
 
@@ -1104,19 +1104,19 @@ reservedRuleNames = ["Fresh", "irecv", "isend", "coerce", "fresh", "pub", "iequa
 prettyProtoRuleName :: Document d => ProtoRuleName -> d
 prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> case n of 
+    StandRule n -> case n of
       DefdRuleName s -> prefixIfReserved s
       SAPiCRuleName s -> formatSAPiCRuleName s
 
 prettyDotProtoRuleName :: Document d => ProtoRuleName -> d
 prettyDotProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> case n of 
+    StandRule n -> case n of
       DefdRuleName s -> prefixIfReserved s
-      SAPiCRuleName s -> if ("new" `isPrefixOf` s) then [chr 957] ++ (drop 3 (takeWhile (/='#') s)) else takeWhile (/='#') s
+      SAPiCRuleName s -> if "new" `isPrefixOf` s then [chr 957] ++ drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
 
 formatSAPiCRuleName :: String -> String
-formatSAPiCRuleName s = filter (\x -> isAlphaNum x || (x == '_' && x /= '#')) s
+formatSAPiCRuleName = filter (\x -> isAlphaNum x || (x == '_' && x /= '#'))
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName

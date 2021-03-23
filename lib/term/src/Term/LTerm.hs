@@ -104,6 +104,8 @@ module Term.LTerm (
   , prettyNodeId
   , prettyNTerm
   , prettyLNTerm
+  , prettyNTermSubscript
+  , prettyLNTermSubscript
   , showLitName
 
   -- * Convenience exports
@@ -140,6 +142,7 @@ import           Logic.Connectives
 
 import           Term.Rewriting.Definitions
 import           Term.VTerm
+import Data.Char (isDigit)
 
 ------------------------------------------------------------------------------
 -- Sorts.
@@ -158,7 +161,7 @@ data LSort = LSortPub   -- ^ Arbitrary public names.
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
 --   Partial order: Node      Msg
---                           /   \
+--                           /   \--                           /   --                         Pub  Fresh
 --                         Pub  Fresh
 sortCompare :: LSort -> LSort -> Maybe Ordering
 sortCompare s1 s2 = case (s1, s2) of
@@ -339,19 +342,19 @@ containsNoPrivateExcept funs t = case viewTerm t of
     FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
-    
+
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.
 isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool
 neverContainsFreshPriv t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- | Replaces all Fresh variables with constants using toConst.
@@ -573,7 +576,7 @@ renameIgnoring vars x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
 
-    
+
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -802,6 +805,26 @@ prettyNTerm = prettyTerm (text . show)
 prettyLNTerm :: Document d => LNTerm -> d
 prettyLNTerm = prettyNTerm
 
+-- | Subscript the dots in variables.
+subscriptVar:: Show v => Lit Name v -> String
+subscriptVar nt = subscriptDots $ show nt
+
+-- | Add the subscript tag where it is needed.
+subscriptDots::String -> String
+subscriptDots [] = []
+subscriptDots ('.':xr) = "<sub>"++xr++"</sub>" -- variables
+subscriptDots (x:xr) = if containsDigit xr then x:subscriptDots xr else x:xr
+
+containsDigit::String -> Bool
+containsDigit = foldr ((||) . isDigit) False
+
+-- | Pretty print an @NTerm@.
+prettyNTermSubscript :: (Show v, Document d) => NTerm v -> d
+prettyNTermSubscript = prettyTerm (text . subscriptVar)
+
+-- | Pretty print an @LTerm@.
+prettyLNTermSubscript :: Document d => LNTerm -> d
+prettyLNTermSubscript = prettyNTermSubscript
 
 -- | Pretty print a literal for case generation.
 showLitName :: Lit Name LVar -> String

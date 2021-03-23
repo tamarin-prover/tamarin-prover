@@ -115,6 +115,7 @@ import           Term.Unification
 import           Term.Rewriting.Norm
 
 import           Text.PrettyPrint.Class
+import Data.Char (isDigit)
 
 
 ------------------------------------------------------------------------------
@@ -515,17 +516,20 @@ prettyFact ppTerm (Fact tag an ts)
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
--- | Pretty print a fact with a dot subscript tags.
+-- | Pretty print a fact with subscript tags.
 prettyFactSubscript :: Document d => (t -> d) -> Fact t -> d
 prettyFactSubscript ppTerm (Fact tag an ts)
   | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
   | otherwise                     = ppFact (subscript (showFactTag tag)) ts <> ppAnn an
   where
     subscript [] = []
-    subscript xs = xs --if head xs == '_' then subscript ("<sub>"++tail xs++"</sub>") else [head xs]++(subscript (tail xs))
+    subscript ['_'] = []
+    subscript ('_':xr) = if '_' `notElem` xr then subscript ("<sub>"++xr++"</sub>") else '_':xr
+    subscript (x:xr) = x:subscript xr
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
+    
 
 -- | Pretty print a 'NFact'.
 prettyNFact :: (Document d, Show v) => NFact v -> d
@@ -535,11 +539,11 @@ prettyNFact = prettyFact prettyNTerm
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact fa = prettyFact prettyNTerm fa
 
--- | Pretty print a 'NFact'.
+-- | Pretty print a 'NFact' with subscript tags.
 prettyNFactSubscript :: (Document d, Show v) => NFact v -> d
-prettyNFactSubscript = prettyFactSubscript prettyNTerm
+prettyNFactSubscript = prettyFactSubscript prettyNTermSubscript
 
--- | Pretty print a 'LFact'.
+-- | Pretty print a 'LFact' with subscript tags.
 prettyLNFactSubscript :: Document d => LNFact -> d
-prettyLNFactSubscript fa = prettyFactSubscript prettyNTerm fa
+prettyLNFactSubscript fa = prettyFactSubscript prettyNTermSubscript fa
 

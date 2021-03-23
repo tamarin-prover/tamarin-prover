@@ -48,15 +48,13 @@ module Text.Dot
         , createRoundedHTMLNode
         , createRoundedHTMLNode'
         , createRoundedHTMLNode_
-        -- Utilities for formatting HTMLl-like labels
-        , subscript
+        -- Utilities for formatting HTML-like labels
+
         , escape
-        , esc
         ) where
 
 import Data.Char           (isSpace)
-import Data.List           (intersperse, intercalate)
-import Control.Monad       (liftM, ap)
+import Control.Monad       (ap)
 -- import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
@@ -165,7 +163,8 @@ showDot (Dot dm) = case dm 0 of
                     (elems,_,_) -> "digraph G {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
 
 showGraphElement :: GraphElement -> String
-showGraphElement (GraphAttribute name val) = showAttr (name,val) ++ ";"
+showGraphElement (GraphAttribute name val) =
+   showAttr (name,val) ++ ";"
 showGraphElement (GraphNode nid attrs)            = show nid ++ showAttrs attrs ++ ";"
 showGraphElement (GraphEdge from to attrs) = show from ++ " -> " ++ show to ++  showAttrs attrs ++ ";"
 showGraphElement (Scope elems) = "{\n" ++ unlines (map showGraphElement elems) ++ "\n}"
@@ -181,13 +180,14 @@ showAttrs xs = "[" ++ showAttrs' xs ++ "]"
         showAttrs' []     = error "showAttrs: the impossible happended"
 
 showAttr :: (String, String) -> String
-showAttr (name, val) =
-      if '<' `elem` val then name ++ "=" ++ concatMap escape val
-      else name ++ "=\"" ++ concatMap escape val ++ "\""
-    where
-      escape '\n' = "\\l"
-      escape '"'  = "\\\""
-      escape c    = [c]
+showAttr (name, val)
+  | name == "label" = name ++ "=" ++ val
+  | '<' `elem` val = name ++ "=" ++ concatMap escapeAttrVal val
+  | otherwise = name ++ "=\"" ++ concatMap escapeAttrVal val ++ "\""
+  where
+      escapeAttrVal '\n' = "\\l"
+      escapeAttrVal '"' = "\""
+      escapeAttrVal c = [c]
 
 -- | Ensure that multi-line labels use non-breaking spaces at the start and
 -- are terminated with a newline.
@@ -197,7 +197,10 @@ fixMultiLineLabel lbl
   | otherwise       = lbl
   where
     useNonBreakingSpace line = case span isSpace line of
-      (spaces, rest) -> concat (replicate (length spaces) "&nbsp;") ++ rest
+      (spaces, rest) -> if length spaces > 1 then rest else concat (replicate (length spaces) "&nbsp;") ++ rest
+      where
+        emptyLine:: String -> Bool
+        emptyLine = foldr ((&&) . isSpace) False
 
 
 ------------------------------------------------------------------------------
@@ -212,9 +215,9 @@ data HTMLLabel a =
   | VCat Int [HTMLLabel a]
   deriving(Eq, Ord, Show )
 
--- | Smart constructor for HTML-like labels that DOT understands them.
+-- | Smart constructor for HTML-like labels so that DOT understands them.
 makeHTMLLabel :: Maybe a -> String -> HTMLLabel a
-makeHTMLLabel port = Cell port . fixMultiLineLabel
+makeHTMLLabel port = Cell port . fixMultiLineLabel 
 
 -- | A simple cell content.
 cell :: String -> HTMLLabel a
@@ -247,31 +250,31 @@ vcat' = vcat . map cell
 -- order to generate unique port-ids. However, they must be combined with the
 -- actual node id of the node with. Thus the returned
 -- association list is parametrized over this missing node id.
-renderHTMLNode  :: HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
+renderHTMLNode  :: String -> HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
 renderHTMLNode = render True 1.0
   where
   -- render a node, we handle the "top level" rendering in a special way 
-  render::Bool -> Float -> HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
-  render toplevel maxspan (Cell Nothing l) = return (createHTMLTable toplevel ("<TD COLSPAN='"++show maxspan++"'>"++subscript (escape l)++"</TD>"), const [])
-  render toplevel maxspan (Cell (Just p) l)=
+  render::Bool -> Float -> String -> HTMLLabel a -> Dot (String, NodeId -> [(a,NodeId)])
+  render toplevel maxspan color (Cell Nothing l) = return (createHTMLTable toplevel ("<TD "++"BGCOLOR='"++color++"' COLSPAN='"++show maxspan++"'>"++escape l++"</TD>"), const [])
+  render toplevel maxspan color (Cell (Just p) l)=
     Dot $ \uq -> let pid = "n" ++ show uq
-                     lbl = createHTMLTable toplevel ("<TD PORT='"++pid++"'"++ " COLSPAN='"++show maxspan++"'>"++subscript (escape l)++"</TD>")
+                     lbl = createHTMLTable toplevel ("<TD "++"BGCOLOR='"++color++"' PORT='"++pid++"'"++ " COLSPAN='"++show maxspan++"'>"++escape l++"</TD>")
                  in  ([], succ uq, (lbl, \nId -> [(p,NodeId (show nId++":"++pid))]))
-  render toplevel maxspan (HCat n rs) = do
-    (lbls, ids) <- unzip <$> mapM (render False (maxspan/(fromInteger (toInteger n) :: Float))) rs
+  render toplevel maxspan color (HCat n rs) = do
+    (lbls, ids) <- unzip <$> mapM (render False (maxspan/(fromInteger (toInteger n) :: Float)) color) rs
     let rawLbl = concat lbls
         lbl = createHTMLTable toplevel ("<TR>"++rawLbl++"</TR>")
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
-  render toplevel _ (VCat _ rs) = 
+  render toplevel _ color (VCat _ rs) =
     do
     let maxspan = getRowsMaxCells rs
-    (lbls, ids) <- unzip <$> mapM (render False maxspan) rs
+    (lbls, ids) <- unzip <$> mapM (render False maxspan color) rs
     let rawLbl = concat lbls
         lbl = createHTMLTable toplevel rawLbl
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
-  
+
   -- create a formatted HTML table from a string if needed
-  createHTMLTable True s = "<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' COLUMNS='*'>"++s++"</TABLE>>"
+  createHTMLTable True s = "<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' COLUMNS='*' ALIGN='CENTER'>"++s++"</TABLE>>"
   createHTMLTable False s = s
 
   -- get the number of cells in a row
@@ -282,25 +285,21 @@ renderHTMLNode = render True 1.0
   -- get the number of cells in the row/column with the most cells
   getRowsMaxCells xs = fromInteger (toInteger (maximum $ map cellsInARow xs)) :: Float
 
--- add the subscript tag where it is needed
-subscript::[Char]->[Char]
-subscript [] = []
-subscript xs = xs
-subscript ('_':xr) = "<sub>"++subscript(tail xr)++"</sub>" --state facts
-subscript ('.':xr) = "<sub>"++subscript(tail xr)++"</sub>" -- variables
-subscript (x:xr) = x : subscript xr
+
 -- escape chars that interfere with HTML tags
 escape::[Char]->[Char]
-escape = concatMap esc
-esc::Char->[Char]
-esc '<'  = "&lt;"
-esc '>'  = "&gt;"
-esc c    = [c]
+escape ('<':'s':'u':'b':'>':xs) = '<':'s':'u':'b':'>':escape xs
+escape ('<':'/':'s':'u':'b':'>':xs) = '<':'/':'s':'u':'b':'>':escape xs
+escape ('<':xs) = "&lt;"++escape xs;
+escape ('>':xs) = "&gt;"++escape xs;
+escape (x:xs) = x:escape xs;
+escape [] = [];
+
 
 -- | A generic version of a node with an HTML-like label.
-genHTMLNode :: String -> HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
-genHTMLNode  shape rec attrs = do
-  (lbl, ids) <- renderHTMLNode rec
+genHTMLNode :: String -> HTMLLabel a -> String -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+genHTMLNode  shape  nodeContent color attrs = do
+  (lbl, ids) <- renderHTMLNode color nodeContent
   i <- rawNode ([("shape",shape),("label",lbl)] ++ attrs)
   return (i, ids i)
 
@@ -308,28 +307,28 @@ genHTMLNode  shape rec attrs = do
 -- the created node together with an association list mapping the port
 -- idenfiers given in the node to their corresponding node-ids. This list is
 -- ordered according to a left-to-rigth traversal of the node description.
-createPlainHTMLNode :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+createPlainHTMLNode :: HTMLLabel a -> String -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
 createPlainHTMLNode = genHTMLNode "plaintext"
 
 -- | A variant of a node ignoring the port identifiers.
-createPlainHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-createPlainHTMLNode' lbls attrs = do (nId, ids) <- createPlainHTMLNode lbls attrs
-                                     return (nId, map snd ids)
+createPlainHTMLNode' :: HTMLLabel a -> String -> [(String,String)] -> Dot (NodeId, [NodeId])
+createPlainHTMLNode' lbls color attrs = do (nId, ids) <- createPlainHTMLNode lbls color attrs
+                                           return (nId, map snd ids)
 
 -- | A variant of node creation ignoring the port to node-id association list.
-createPlainHTMLNode_:: HTMLLabel a -> [(String,String)] -> Dot NodeId
-createPlainHTMLNode_ lbls attrs = fst <$> createPlainHTMLNode lbls attrs
+createPlainHTMLNode_:: HTMLLabel a -> String ->[(String,String)] -> Dot NodeId
+createPlainHTMLNode_ lbls color attrs = fst <$> createPlainHTMLNode lbls color attrs
 
 -- | Like "createPlainNode", but creates nodes with rounded corners; i.e. uses
 -- the "rounded" shape instead of the "plaintext" shape.
-createRoundedHTMLNode :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
+createRoundedHTMLNode ::  HTMLLabel a -> String -> [(String,String)] -> Dot (NodeId, [(a,NodeId)])
 createRoundedHTMLNode = genHTMLNode "rounded"
 
 -- | A variant of "createRoundedNode" ignoring the port identifiers.
-createRoundedHTMLNode' :: HTMLLabel a -> [(String,String)] -> Dot (NodeId, [NodeId])
-createRoundedHTMLNode' lbls attrs = do (nId, ids) <- createRoundedHTMLNode lbls attrs
-                                       return (nId, map snd ids)
+createRoundedHTMLNode' :: HTMLLabel a -> String -> [(String,String)] -> Dot (NodeId, [NodeId])
+createRoundedHTMLNode' lbls color attrs = do (nId, ids) <- createRoundedHTMLNode lbls color  attrs
+                                             return (nId, map snd ids)
 
 -- | A variant of "createRoundedNode" ignoring the port to node-id association list.
-createRoundedHTMLNode_ :: HTMLLabel a -> [(String,String)] -> Dot NodeId
-createRoundedHTMLNode_ lbls attrs = fst <$> createRoundedHTMLNode lbls attrs
+createRoundedHTMLNode_ :: HTMLLabel a -> String -> [(String,String)] -> Dot NodeId
+createRoundedHTMLNode_ lbls color attrs = fst <$> createRoundedHTMLNode lbls color attrs
