@@ -36,6 +36,7 @@ data WFerrror p = WFLock WFLockTag p
                 | WFReliable
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
+                | TypingError SapicTerm SapicType SapicType
                 | FunctionNotDefined NoEqSym
 
     deriving (Typeable)
@@ -103,5 +104,15 @@ instance (Show p) => Show (WFerrror p) where
                               ++ " should have input types "
                               ++ List.intercalate ", " (List.map (Data.Maybe.fromMaybe defaultSapicTypeS) types)
                               ++ "."
+    show (TypingError t at tt) = "Typing error in term "
+                              ++ show t
+                              ++ ":"
+                              ++ " expected "
+                              ++ show tt
+                              ++ " but actual type is "
+                              ++ show at
+                              ++ "."
+    show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
+        
 
 instance (Typeable a, Show a) => Exception (SapicException a)

@@ -72,12 +72,16 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
         gComb c ann rl rr = do
             c' <- traverseTermsComb typeWith typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        typeWith t = fst <$> typeWith' t -- throw type away, take term (first element)
-        typeWith' t
+        typeWith t = fst <$> typeWith' t Nothing -- throw type away, take term (first element)
+        typeWith' t tt -- Try to type term t with a type more specific than tt
             | Lit (Var v) <- viewTerm t , lvar' <- slvar v
             = do
                 maybeType <- Map.lookup lvar' <$> gets vars
+                -- Note: we graciously ignore unbound variables. Wellformedness
+                -- checks on MSRs detect them for us. We might change that in
+                -- the future. 
                 let stype' = fromMaybe Nothing maybeType
+                assertSmaller stype' tt t
                 return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
 
             | FApp (NoEq fs) ts   <- viewTerm t
@@ -86,15 +90,13 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
                 (intypes,outtype) <- case maybeFType of -- can we shorten this?
                     Nothing -> throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
                     Just x -> return x
-                (ts',ptypes) <- unzip <$> mapM typeWith' ts
-                let refinedTypes = zipWith matchFunTypes intypes ptypes
-                if Nothing `elem` refinedTypes 
-                then throwM (ProcessNotWellformed (TypingErrorArgument t ptypes) :: SapicException AnnotatedProcess)
-                else do insertFun fs (catMaybes refinedTypes, outtype)
-                        return (termViewToTerm $ FApp (NoEq fs) ts', outtype)
+                assertSmaller outtype tt t
+                (ts',ptypes) <- unzip <$> zipWithM typeWith' ts intypes
+                insertFun fs (ptypes, outtype)
+                return (termViewToTerm $ FApp (NoEq fs) ts', outtype)
             | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
                 ts' <- mapM typeWith ts
-                return (termViewToTerm $ FApp fs ts', defaultSapicType)
+                return (termViewToTerm $ FApp fs ts', Nothing)
             | otherwise = return (t, defaultSapicType) -- TODO no idea how to type here...
         typeWithVar  v -- variables are correctly typed, as we just inserted them
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
@@ -112,7 +114,11 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
         matchFunTypes t t' =  if t `smallerType` t' then Just t else Nothing
         smallerType _ Nothing = True
         smallerType (Just t) (Just t') = t == t'
-        smallerType Nothing (Just t) = False
+        smallerType Nothing  (Just _) = False
+        assertSmaller at tt t =
+                if at `smallerType` tt then
+                    return ()
+                else throwM (ProcessNotWellformed (TypingError t at tt) :: SapicException AnnotatedProcess)
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
