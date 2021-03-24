@@ -85,7 +85,7 @@ type SapicFunSym = (NoEqSym, [SapicType], SapicType)
 defaultSapicTypeS :: String
 defaultSapicTypeS = "bitstring"
 defaultSapicType :: SapicType
-defaultSapicType = Just defaultSapicTypeS
+defaultSapicType = Nothing
 
 defaultSapicNodeType :: SapicType
 defaultSapicNodeType = Just "node"

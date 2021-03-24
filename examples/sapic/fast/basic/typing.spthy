@@ -1,7 +1,8 @@
 theory Typing
 begin
 
-functions: f(bitstring):bitstring, g(lol):lol
+functions: f(bitstring):bitstring, g(lol):lol, 
+            h/1 // implicitely typed
 
 builtins: multiset
 
@@ -13,6 +14,10 @@ let P(a:rofl) = new x:lol; new y;
         out(f(<x,y>));  // should succeed
         /* out(g(<x,y>));  // should fail */
         in(<=x,=x>); // should fail
+        out(h(x)); // implicitely types input to x as lol
+        out(h(h(x))); // should implictely tupe h as lol->lol now 
+        // TODO note that printout of functio does not reflect this-> need to update with typing info...
+        /* out(f(h(x))); // should fail: as h goes to lol and f wants bitstring */
         0
 
 process:
