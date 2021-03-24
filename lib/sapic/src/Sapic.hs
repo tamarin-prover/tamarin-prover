@@ -74,7 +74,7 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
             return $ ProcessComb c' ann rl rr
         typeWith t = fst <$> typeWith' t Nothing -- throw type away, take term (first element)
         typeWith' t tt -- Try to type term t with a type more specific than tt
-            | Lit (Var v) <- viewTerm t , lvar' <- slvar v
+            | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v
             = do
                 maybeType <- Map.lookup lvar' <$> gets vars
                 -- Note: we graciously ignore unbound variables. Wellformedness
@@ -84,7 +84,7 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
                 assertSmaller stype' tt t
                 return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype')
 
-            | FApp (NoEq fs) ts   <- viewTerm t
+            | FAppNoEq fs ts   <- viewTerm2 t
             = do
                 maybeFType <- Map.lookup fs <$> gets funs
                 (intypes,outtype) <- case maybeFType of -- can we shorten this?
