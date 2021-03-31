@@ -197,12 +197,8 @@ fixMultiLineLabel lbl
   | '\n' `elem` lbl = intercalate "<br/>" $ map useNonBreakingSpace $ lines lbl
   | otherwise       = lbl
   where
-    useNonBreakingSpace (x:xs) | isSpace x = useNonBreakingSpace xs
-                               | otherwise = x:useNonBreakingSpace xs
-    useNonBreakingSpace [] = []
-      --case span isSpace line of
-      --(spaces, rest) -> line
-      --(spaces, rest) -> if (length line) > (length spaces + 4) then concat (replicate (length spaces) "") ++ ((line !! (length (spaces)+1)) : (line !! (length (spaces)+2)) : (line !! (length (spaces)+3)) : (line !! 0) : (line !! 1) : show(length spaces) ++ rest) else concat (replicate (length spaces) "") ++ rest
+    useNonBreakingSpace line = case span isSpace line of
+      (spaces, rest) ->  concat (replicate (length spaces) "") ++ rest
 
 ------------------------------------------------------------------------------
 -- HTML-labels
