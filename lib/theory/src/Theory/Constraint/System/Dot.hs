@@ -348,7 +348,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     colorUsesWhiteFont _                  = False
 
     mkSimpleNode lbl attrs _ =
-        liftDot $ D.node $ [("label", "<<TABLE  BORDER='0' CELLSPACING='0' CELLPADDING='0' ALIGN='CENTER'><TR><TD>"++ D.escape lbl++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
+        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0' ALIGN='CENTER'><TR><TD>"++ D.escape lbl++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
 
     mkNode  :: RuleACInst -> [(String, String)] -> String -> Bool
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
@@ -373,15 +373,14 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
         ruleLabel = case filter isNotDiffAnnotation $ get rActs ru of
             [] -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru);
             xs -> prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru) <>
-                (brackets $ vcat $ punctuate comma $
-                map prettyLNFactSubscript   $ xs)
+                brackets (vcat $ punctuate comma $ map prettyLNFactSubscript xs)
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-
+        
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
             -- magic factor 1.3 compensates for space gained due to
             -- non-propertional font
-            renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
+            renderBalanced 125 (max 30 . round . (* 1.3)) (map snd annDocs)
 
         renderBalanced :: Double           -- ^ Total available width
                        -> (Double -> Int)  -- ^ Convert available space to actual line-width.
@@ -396,7 +395,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             usedWidths     = map (fromIntegral . length . oneLineRender) docs
             ratio          = totalWidth / sum usedWidths
             scaleIndent line = case span isSpace line of
-              (spaces, rest) ->
+              (spaces, rest) -> 
                   -- spaces are not wide-enough by default => scale them up
                   let n = (1.5::Double) * fromIntegral (length spaces)
                   in  replicate (round n) ' ' ++ rest
