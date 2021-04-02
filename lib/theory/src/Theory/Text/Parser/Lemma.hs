@@ -26,6 +26,7 @@ import           Debug.Trace
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
+import Theory.Text.Parser.Signature
 
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Bool -> Parser LemmaAttribute
@@ -37,15 +38,11 @@ lemmaAttribute diff = asum
   , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> many1 (goalRanking diff))
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
-  where
-    parseGoalRanking = case diff of
-        True  -> map charToGoalRankingDiff <$> many1 letter
-        False -> map charToGoalRanking     <$> many1 letter
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier

@@ -16,6 +16,7 @@ module Theory.Text.Parser.Signature (
     , functions
     , equations
     , preddeclaration
+    , goalRanking
     , diffbuiltins
 )
 where
@@ -37,6 +38,7 @@ import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
+import Debug.Trace
 
 
 -- | Builtin signatures.
@@ -174,12 +176,21 @@ preddeclaration thy = do
                     <?> "predicates"
 
 heuristic :: Bool -> Parser [GoalRanking]
-heuristic diff = do
-      symbol "heuristic" *> colon *> parseGoalRanking
-  where
-    parseGoalRanking = case diff of
-        True  -> map charToGoalRankingDiff <$> identifier
-        False -> map charToGoalRanking     <$> identifier
+heuristic diff = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff) <* spaces
+
+goalRanking :: Bool -> Parser GoalRanking
+goalRanking diff = try oracleRanking <|> regularRanking <?> "goal ranking"
+   where
+       regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
+
+       oracleRanking = setOracleName <$> (toGoalRanking <$> oneOf "oO" <* skipMany (char ' '))
+                   <*> option "./oracle" ((char '"' *> many1 (noneOf "\"\n\r") <* char '"') <* skipMany (char ' '))
+
+       setOracleName (OracleRanking _) oracleName = OracleRanking oracleName
+       setOracleName (OracleSmartRanking _) oracleName = OracleSmartRanking oracleName
+       setOracleName r _ = r
+
+       toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking
 
 
 liftedAddPredicate :: Catch.MonadThrow m =>

@@ -125,13 +125,22 @@ goalRankingName ranking =
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
 
 prettyGoalRankings :: [GoalRanking] -> String
-prettyGoalRankings rs = map prettyGoalRanking rs
+prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
 
-prettyGoalRanking :: GoalRanking -> Char
-prettyGoalRanking ranking = case find (\(_,v) -> v == ranking) $ combinedIdentifiers of
-    Just (k,_) -> k
-    Nothing    -> error "Goal ranking does not have a defined identifier"
+prettyGoalRanking :: GoalRanking -> String
+prettyGoalRanking ranking = case ranking of
+    (OracleRanking oracle)      -> findIdentifier ranking : " \"" ++ oracle ++ "\""
+    (OracleSmartRanking oracle) -> findIdentifier ranking : " \"" ++ oracle ++ "\""
+    _                           -> [findIdentifier ranking]
   where
+    findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
+        Just (k,_) -> k
+        Nothing    -> error "Goal ranking does not have a defined identifier"
+
     -- Note because find works left first this will look at non-diff identifiers first. Thus,
     -- this assumes the diff rankings don't use a different character for the same goal ranking.
-    combinedIdentifiers = (M.toList goalRankingIdentifiers) ++ (M.toList goalRankingIdentifiersDiff)
+    combinedIdentifiers = M.toList goalRankingIdentifiers ++ M.toList goalRankingIdentifiersDiff
+
+    compareRankings (OracleRanking _) (OracleRanking _) = True
+    compareRankings (OracleSmartRanking _) (OracleSmartRanking _) = True
+    compareRankings r1 r2 = r1 == r2
