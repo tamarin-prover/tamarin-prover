@@ -1169,8 +1169,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               return (terms position rule t premise ++ facts position rule t premise)
                 where
                   terms position rule t premise = do
-                    -- we only consider facts which are not already solved in the source
-                    guard $ isInFact premise || (nodeid, pid) `elem` map fst (unsolvedPremises source)
                     -- iterate over all positions found
                     pos     <- position
                     return (rule, Left t, (pid, tidx, pos))
