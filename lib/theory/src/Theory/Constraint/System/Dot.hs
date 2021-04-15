@@ -380,7 +380,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
             -- magic factor 1.3 compensates for space gained due to
             -- non-propertional font
-            renderBalanced 150 (max 30 . round . (* 1.3)) (map snd annDocs)
+            renderBalanced 180 (max 30 . round . (* 1.3)) (map snd annDocs)
 
         renderBalanced :: Double           -- ^ Total available width
                        -> (Double -> Int)  -- ^ Convert available space to actual line-width.

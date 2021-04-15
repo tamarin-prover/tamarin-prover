@@ -55,6 +55,7 @@ module Text.Dot
         ) where
 
 import Data.Char           (isSpace)
+import Data.List           (intercalate)
 import Control.Monad       (ap)
 import Data.Set            (fromList)
 -- import Control.Applicative (Applicative(..))
@@ -195,13 +196,18 @@ showAttr (name, val)
 -- are terminated with a newline.
 fixMultiLineLabel :: String -> String
 fixMultiLineLabel lbl
-  | '\n' `elem` lbl = buildLabel $ map useNonBreakingSpace $ lines lbl
+  | '\n' `elem` lbl = buildLabel $ map removeSpaces $ lines lbl
   | otherwise       = lbl
   where
     buildLabel [] = []
     buildLabel [x] = x
-    buildLabel (x:xs) = if length (head xs) < 4 then if tail xs/=[] then x++head xs ++"<br/>"++"<br/>"++buildLabel (tail xs) else x++head xs else x++"<br/>"++"<br/>"++buildLabel xs
-    useNonBreakingSpace line = case span isSpace line of
+    buildLabel (x:xs) = case tail xs of
+      [] -> if length (head xs) < 4 then x++ head xs else x ++ "<br/>" ++ "<br/>" ++ head xs  
+      xr -> case span (\el -> length el < 4) xr of
+        (shorts, rest) -> case rest of 
+          [] -> x ++ intercalate "" shorts
+          yr -> x ++ intercalate "" shorts ++ "<br/>" ++ "<br/>" ++ buildLabel yr
+    removeSpaces line = case span isSpace line of
       (spaces, rest) ->  concat (replicate (length spaces) "") ++ rest
 
 ------------------------------------------------------------------------------
