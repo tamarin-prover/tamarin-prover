@@ -32,6 +32,7 @@ module Text.Dot
         , share
         , same
         , cluster
+        , fixMultiLineLabel
           -- * HTML-like labeled nodes specification
         , HTMLLabel       -- abstract
         , cell
@@ -55,7 +56,7 @@ module Text.Dot
 
 import Data.Char           (isSpace)
 import Control.Monad       (ap)
-import Data.List (intercalate)
+import Data.Set            (fromList)
 -- import Control.Applicative (Applicative(..))
 
 data NodeId = NodeId String
@@ -194,9 +195,12 @@ showAttr (name, val)
 -- are terminated with a newline.
 fixMultiLineLabel :: String -> String
 fixMultiLineLabel lbl
-  | '\n' `elem` lbl = intercalate "<br/>" $ map useNonBreakingSpace $ lines lbl
+  | '\n' `elem` lbl = buildLabel $ map useNonBreakingSpace $ lines lbl
   | otherwise       = lbl
   where
+    buildLabel [] = []
+    buildLabel [x] = x
+    buildLabel (x:xs) = if xs/= [] && length (head xs) < 4 then x++head xs ++"<br/>"++"<br/>"++buildLabel (tail xs) else x++"<br/>"++"<br/>"++buildLabel xs
     useNonBreakingSpace line = case span isSpace line of
       (spaces, rest) ->  concat (replicate (length spaces) "") ++ rest
 
@@ -214,7 +218,7 @@ data HTMLLabel a =
 
 -- | Smart constructor for HTML-like labels so that DOT understands them.
 makeHTMLLabel :: Maybe a -> String -> HTMLLabel a
-makeHTMLLabel port = Cell port . fixMultiLineLabel 
+makeHTMLLabel port = Cell port . fixMultiLineLabel
 
 -- | A simple cell content.
 cell :: String -> HTMLLabel a
@@ -264,14 +268,14 @@ renderHTMLNode = render True 1.0
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
   render toplevel _ color (VCat _ rs) =
     do
-    let maxspan = getRowsMaxCells rs
+    let maxspan = getMaxSpan rs
     (lbls, ids) <- unzip <$> mapM (render False maxspan color) rs
     let rawLbl = concat lbls
         lbl = createHTMLTable toplevel rawLbl
     return (lbl, \nId -> concatMap (\i -> i nId) ids)
 
   -- create a formatted HTML table from a string if needed
-  createHTMLTable True s = "<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' COLUMNS='*' ALIGN='CENTER'>"++s++"</TABLE>>"
+  createHTMLTable True s = "<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' COLUMNS='*'>"++s++"</TABLE>>"
   createHTMLTable False s = s
 
   -- get the number of cells in a row
@@ -280,8 +284,7 @@ renderHTMLNode = render True 1.0
   cellsInARow _ = error "Tried to use cellsInARow on a column/some columns!"
 
   -- get the number of cells in the row/column with the most cells
-  getRowsMaxCells xs = fromInteger (toInteger (maximum $ map cellsInARow xs)) :: Float
-
+  getMaxSpan xs = fromInteger (toInteger (product (fromList $ map cellsInARow xs))) :: Float
 
 -- escape chars that interfere with HTML tags
 escape::[Char]->[Char]

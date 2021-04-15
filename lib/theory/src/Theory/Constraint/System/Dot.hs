@@ -105,7 +105,7 @@ dotNode v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let nodes = get sNodes se
         dot info moreStyle facts = do
-            vId <- liftDot $ D.node $ [("label", show v ++ info),("shape","ellipse")]
+            vId <- liftDot $ D.node $ [("label", D.fixMultiLineLabel (show v ++ info)),("shape","ellipse")]
                                       ++ moreStyle
             _ <- facts vId
             return vId
@@ -348,7 +348,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     colorUsesWhiteFont _                  = False
 
     mkSimpleNode lbl attrs _ =
-        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0' ALIGN='CENTER'><TR><TD>"++ D.escape lbl++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
+        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0'><TR><TD>"++ D.fixMultiLineLabel (D.escape lbl)++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
 
     mkNode  :: RuleACInst -> [(String, String)] -> String -> Bool
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
@@ -380,7 +380,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
             -- magic factor 1.3 compensates for space gained due to
             -- non-propertional font
-            renderBalanced 140 (max 30 . round . (* 1.3)) (map snd annDocs)
+            renderBalanced 150 (max 30 . round . (* 1.3)) (map snd annDocs)
 
         renderBalanced :: Double           -- ^ Total available width
                        -> (Double -> Int)  -- ^ Convert available space to actual line-width.
@@ -415,7 +415,7 @@ dotSystemCompact boringStyle se =
         F.mapM_ dotChain                           $ unsolvedChains    se
         F.mapM_ dotLess                            $ get sLessAtoms    se
   where
-    missingNode shape label = liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLBORDER='0' CELLSPACING='0' COLUMNS='*' ALIGN='CENTER'><TR><TD>"++render label++"</TD></TR></TABLE>>"),("shape",shape)]
+    missingNode shape label = liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLBORDER='0' CELLSPACING='0' COLUMNS='*'><TR><TD>"++D.fixMultiLineLabel (render label)++"</TD></TR></TABLE>>"),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = dotOnce dsConcs conc $ missingNode "trapezium" $ prettyNodeConc conc
     dotEdge (Edge src tgt)  = do
