@@ -200,7 +200,7 @@ fixMultiLineLabel lbl
   where
     buildLabel [] = []
     buildLabel [x] = x
-    buildLabel (x:xs) = if xs/= [] && length (head xs) < 4 then x++head xs ++"<br/>"++"<br/>"++buildLabel (tail xs) else x++"<br/>"++"<br/>"++buildLabel xs
+    buildLabel (x:xs) = if length (head xs) < 4 then if tail xs/=[] then x++head xs ++"<br/>"++"<br/>"++buildLabel (tail xs) else x++head xs else x++"<br/>"++"<br/>"++buildLabel xs
     useNonBreakingSpace line = case span isSpace line of
       (spaces, rest) ->  concat (replicate (length spaces) "") ++ rest
 

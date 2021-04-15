@@ -105,7 +105,7 @@ dotNode v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let nodes = get sNodes se
         dot info moreStyle facts = do
-            vId <- liftDot $ D.node $ [("label", D.fixMultiLineLabel (show v ++ info)),("shape","ellipse")]
+            vId <- liftDot $ D.node $ [("label", show v ++ info),("shape", "ellipse")]
                                       ++ moreStyle
             _ <- facts vId
             return vId
@@ -348,7 +348,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     colorUsesWhiteFont _                  = False
 
     mkSimpleNode lbl attrs _ =
-        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0'><TR><TD>"++ D.fixMultiLineLabel (D.escape lbl)++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
+        liftDot $ D.node $ [("label", "<<TABLE BORDER='0' CELLSPACING='0' CELLPADDING='0'><TR><TD>"++ D.escape (D.fixMultiLineLabel lbl)++"</TD></TR></TABLE>>"),("shape","ellipse")] ++ attrs
 
     mkNode  :: RuleACInst -> [(String, String)] -> String -> Bool
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
