@@ -2539,7 +2539,6 @@ prettyRestriction rstr =
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
-    name = L.get rstrName rstr 
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
 -- | Pretty print an either restriction.

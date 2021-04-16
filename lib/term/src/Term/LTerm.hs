@@ -342,6 +342,7 @@ containsNoPrivateExcept funs t = case viewTerm t of
     FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
+
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.
@@ -574,6 +575,7 @@ renameIgnoring vars x = case boundsVarIdx x of
       return . runIdentity . mapFrees (Monotone $ incVar (freshStart - minVarIdx)) $ x
   where
     incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
+
 
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
