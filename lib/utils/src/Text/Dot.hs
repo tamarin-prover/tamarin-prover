@@ -166,9 +166,8 @@ showDot (Dot dm) = case dm 0 of
                     (elems,_,_) -> "digraph G {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
 
 showGraphElement :: GraphElement -> String
-showGraphElement (GraphAttribute name val) =
-   showAttr (name,val) ++ ";"
-showGraphElement (GraphNode nid attrs)            = show nid ++ showAttrs attrs ++ ";"
+showGraphElement (GraphAttribute name val) = showAttr (name,val) ++ ";"
+showGraphElement (GraphNode nid attrs)           = show nid ++ showAttrs attrs ++ ";"
 showGraphElement (GraphEdge from to attrs) = show from ++ " -> " ++ show to ++  showAttrs attrs ++ ";"
 showGraphElement (Scope elems) = "{\n" ++ unlines (map showGraphElement elems) ++ "\n}"
 showGraphElement (SubGraph nid elems) = "subgraph " ++ show nid ++ " {\n" ++ unlines (map showGraphElement elems) ++ "\n}"
