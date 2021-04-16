@@ -231,19 +231,19 @@ showFunSymName (C op )           = show op
 showFunSymName List              = "List"
 
 -- | Pretty print a term.
-prettyTerm :: (Document d, Show l) => (l -> d) -> Term l  -> d
+prettyTerm :: (Document d, Show l) => (l -> d) -> Term l -> d
 prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
-        Lit l                                      -> ppLit l
-        FApp (AC o)        ts                      -> ppTerms (ppACOp o) 1 "(" ")" ts
-        FApp (NoEq s)      [t1,t2] | s == expSym   -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      [t1,t2] | s == diffSym  -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq s)      _       | s == pairSym  -> ppTerms ", " 1 "<" ">" (split t)
-        FApp (NoEq (f, _)) []                      -> text (BC.unpack f)
-        FApp (NoEq (f, _)) ts                      -> ppFun f ts
-        FApp (C EMap)      ts                      -> ppFun emapSymString ts
-        FApp List          ts                      -> ppFun "LIST" ts
+        Lit l                                     -> ppLit l
+        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+        FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
+        FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
+        FApp (NoEq (f, _)) ts                     -> ppFun f ts
+        FApp (C EMap)      ts                     -> ppFun emapSymString ts
+        FApp List          ts                     -> ppFun "LIST" ts
 
     ppACOp Mult  = "*"
     ppACOp Union = "+"

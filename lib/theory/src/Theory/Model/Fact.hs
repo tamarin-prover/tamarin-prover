@@ -115,7 +115,6 @@ import           Term.Unification
 import           Term.Rewriting.Norm
 
 import           Text.PrettyPrint.Class
-import Data.Char (isDigit)
 
 
 ------------------------------------------------------------------------------

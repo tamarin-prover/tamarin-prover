@@ -2535,7 +2535,7 @@ prettyDiffLemmaName l = text ((L.get lDiffName l))
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d
 prettyRestriction rstr =
-    kwRestriction <-> text (name) <> colon $-$
+    kwRestriction <-> text (L.get rstrName rstr) <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
@@ -2545,11 +2545,10 @@ prettyRestriction rstr =
 -- | Pretty print an either restriction.
 prettyEitherRestriction :: HighlightDocument d => (Side, Restriction) -> d
 prettyEitherRestriction (s, rstr) =
-    kwRestriction <-> text (name) <-> prettySide s <> colon $-$
+    kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s <> colon $-$
     (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
-    name = L.get rstrName rstr 
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
     -- | Pretty print a lemma.

@@ -18,8 +18,7 @@ module Theory.Constraint.System.Dot (
   ) where
 
 import           Data.Char                (isSpace)
-import Data.Color
-    ( RGB(RGB), hsvToRGB, lightColorGroups, rgbToHex, HSV(HSV) )
+import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
 import           Data.List                (find,foldl',intersect)
@@ -105,7 +104,7 @@ dotNode v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let nodes = get sNodes se
         dot info moreStyle facts = do
-            vId <- liftDot $ D.node $ [("label", show v ++ info),("shape", "ellipse")]
+            vId <- liftDot $ D.node $ [("label", show v ++ info),("shape","ellipse")]
                                       ++ moreStyle
             _ <- facts vId
             return vId
@@ -395,7 +394,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
             usedWidths     = map (fromIntegral . length . oneLineRender) docs
             ratio          = totalWidth / sum usedWidths
             scaleIndent line = case span isSpace line of
-              (spaces, rest) -> 
+              (spaces, rest) ->
                   -- spaces are not wide-enough by default => scale them up
                   let n = (1.5::Double) * fromIntegral (length spaces)
                   in  replicate (round n) ' ' ++ rest
@@ -403,7 +402,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
--- to draw. 
+-- to draw.
 dotSystemCompact :: BoringNodeStyle -> System -> D.Dot ()
 dotSystemCompact boringStyle se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
