@@ -21,6 +21,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+  , plainOpenGoals
   ) where
 
 -- import           Debug.Trace
@@ -42,7 +43,7 @@ import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
 import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
 import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
-import           Extension.Data.Label
+import           Extension.Data.Label                    as L
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -91,7 +92,7 @@ openGoals sys = do
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
                     || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
                     -- handled by 'insertAction'
-                    || isPair m || isInverse m || isProduct m -- || isXor m
+                    || isPair m || isInverse m || isProduct m --- || isXor m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
@@ -190,7 +191,16 @@ openGoals sys = do
                               map (\(i, _, m) -> (m, i)) $ allKUActions sys
             -- and check whether any of them happens before the KD-conclusion
             ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start
+ 
 
+-- | The list of all open goals left together with their status.
+plainOpenGoals:: System -> [(Goal, GoalStatus)]
+plainOpenGoals sys = openGoalsLeft
+  where
+    openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
+    isOpen(_, status) = case status of
+      GoalStatus s _ _ -> not s
+       
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------

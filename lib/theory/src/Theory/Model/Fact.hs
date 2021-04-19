@@ -1,7 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE TemplateHaskell    #-}
-{-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
 -- |
@@ -86,6 +84,7 @@ module Theory.Model.Fact (
   , LNFact
   , unifyLNFactEqs
   , unifiableLNFacts
+  , newVariables
 
   -- * Pretty-Printing
 
@@ -179,7 +178,7 @@ instance Sized t => Sized (Fact t) where
 
 instance HasFrees t => HasFrees (Fact t) where
     foldFrees  f = foldMap  (foldFrees f)
-    foldFreesOcc f c fa = foldFreesOcc f ((show $ factTag fa):c) (factTerms fa)
+    foldFreesOcc f c fa = foldFreesOcc f (show (factTag fa):c) (factTerms fa)
     mapFrees   f = traverse (mapFrees f)
 
 instance Apply t => Apply (Fact t) where
@@ -240,12 +239,12 @@ isKDXorFact _                   = False
 
 -- | converts a KU-Fact into a KD-Fact with the same terms
 convertKUtoKD :: LNFact -> LNFact
-convertKUtoKD (Fact KUFact a m) = (Fact KDFact a m)
+convertKUtoKD (Fact KUFact a m) = Fact KDFact a m
 convertKUtoKD f                 = f
 
 -- | converts a KD-Fact into a KU-Fact with the same terms
 convertKDtoKU :: LNFact -> LNFact
-convertKDtoKU (Fact KDFact a m) = (Fact KUFact a m)
+convertKDtoKU (Fact KDFact a m) = Fact KUFact a m
 convertKDtoKU f                 = f
 
 -- | Mark a fact as malformed.
@@ -298,19 +297,19 @@ annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 
 -- | True iff the fact is a non-special protocol fact.
 isProtoFact :: Fact t -> Bool
-isProtoFact (Fact (ProtoFact _ _ _) _ _) = True
+isProtoFact (Fact ProtoFact {} _ _) = True
 isProtoFact _                            = False
 
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]
 protoFactView fa = case fa of
-    Fact (ProtoFact _ _ _) _ m -> Just m
+    Fact ProtoFact {} _ m -> Just m
     _                          -> Nothing
 
 -- | View a protocol or in fact.
 protoOrInFactView :: LNFact -> Maybe [LNTerm]
 protoOrInFactView fa = case fa of
-    Fact (ProtoFact _ _ _) _  m  -> Just m
+    Fact ProtoFact {} _  m  -> Just m
     Fact InFact            _ [m] -> Just [m]
     Fact InFact            _  _  -> errMalformed "protoOrInFactView" fa
     _                            -> Nothing
@@ -318,7 +317,7 @@ protoOrInFactView fa = case fa of
 -- | View a protocol or out fact.
 protoOrOutFactView :: LNFact -> Maybe [LNTerm]
 protoOrOutFactView fa = case fa of
-    Fact (ProtoFact _ _ _) _  m  -> Just m
+    Fact ProtoFact {} _  m  -> Just m
     Fact OutFact           _ [m] -> Just [m]
     Fact OutFact           _  _  -> errMalformed "protoOrOutFactView" fa
     _                            -> Nothing
@@ -374,11 +373,11 @@ getFactAnnotations (Fact _ ann _) = ann
 
 -- | Whether the fact has been marked as 'solve first' for the heuristic
 isSolveFirstFact :: Fact t -> Bool
-isSolveFirstFact (Fact tag ann _) = SolveFirst `S.member` ann || (isPrefixOf "F_" $ factTagName tag)
+isSolveFirstFact (Fact tag ann _) = SolveFirst `S.member` ann || isPrefixOf "F_" (factTagName tag)
 
 -- | Whether the fact has been marked as 'solve last' for the heuristic
 isSolveLastFact :: Fact t -> Bool
-isSolveLastFact (Fact tag ann _)  = SolveLast `S.member` ann  || (isPrefixOf "L_" $ factTagName tag)
+isSolveLastFact (Fact tag ann _)  = SolveLast `S.member` ann  || isPrefixOf "L_" (factTagName tag)
 
 -- | Whether the fact should not have its source solved
 isNoSourcesFact :: Fact t -> Bool
@@ -426,11 +425,11 @@ unifyLNFactEqs eqs
 
 -- | 'True' iff the two facts are unifiable.
 unifiableLNFacts :: LNFact -> LNFact -> WithMaude Bool
-unifiableLNFacts fa1 fa2 = (not . null) <$> unifyLNFactEqs [Equal fa1 fa2]
+unifiableLNFacts fa1 fa2 = not . null <$> unifyLNFactEqs [Equal fa1 fa2]
 
 -- | Normalize all terms in the fact
 normFact :: LNFact -> WithMaude LNFact
-normFact (Fact h an ts) = reader $ \hnd -> (Fact h an (map (\term -> runReader (norm' term) hnd) ts))
+normFact (Fact h an ts) = reader $ \hnd -> Fact h an (map (\term -> runReader (norm' term) hnd) ts)
 
 -- | @matchLFact t p@ is a complete set of AC matchers for the term fact @t@
 -- and the pattern fact @p@.
@@ -445,12 +444,12 @@ matchFact t p =
 -- | Get "left" variant of a diff fact
 getLeftFact :: LNFact -> LNFact
 getLeftFact (Fact tag an ts) =
-   (Fact tag an (map getLeftTerm ts))
+   Fact tag an (map getLeftTerm ts)
 
 -- | Get "left" variant of a diff fact
 getRightFact :: LNFact -> LNFact
 getRightFact (Fact tag an ts) =
-   (Fact tag an (map getRightTerm ts))
+   Fact tag an (map getRightTerm ts)
 
 -- | Get all variables inside a fact
 getFactVariables :: LNFact -> [LVar]
@@ -466,9 +465,16 @@ isTrivialFact (Fact _ _ ts) = case ts of
       combine :: Maybe [LVar] -> Maybe [LVar] -> Maybe [LVar]
       combine Nothing    _        = Nothing
       combine (Just _ )  Nothing  = Nothing
-      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
+      combine (Just l1) (Just l2) = if noDuplicates l1 l2 then Just (l1++l2) else Nothing
 
       noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
+
+newVariables :: [LNFact] -> [LNFact] -> [LNTerm]
+newVariables prems concs = map varTerm $ S.toList newvars
+  where
+    newvars = S.difference concvars premvars
+    premvars = S.fromList $ concatMap getFactVariables prems
+    concvars = S.fromList $ concatMap getFactVariables concs
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
@@ -536,7 +542,7 @@ prettyNFact = prettyFact prettyNTerm
 
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
-prettyLNFact fa = prettyFact prettyNTerm fa
+prettyLNFact = prettyFact prettyNTerm
 
 -- | Pretty print a 'NFact' with subscript tags.
 prettyNFactSubscript :: (Document d, Show v) => NFact v -> d
@@ -545,4 +551,3 @@ prettyNFactSubscript = prettyFactSubscript prettyNTermSubscript
 -- | Pretty print a 'LFact' with subscript tags.
 prettyLNFactSubscript :: Document d => LNFact -> d
 prettyLNFactSubscript fa = prettyFactSubscript prettyNTermSubscript fa
-

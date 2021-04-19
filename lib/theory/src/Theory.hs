@@ -461,7 +461,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
-        (all isSubtermRule {-$ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
     injFactInstances =
@@ -2477,7 +2477,7 @@ prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement _ = text ("TODO prettyPrint SapicItems")
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
-prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)
+prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
     where
         factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p

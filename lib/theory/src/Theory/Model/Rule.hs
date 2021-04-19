@@ -1180,7 +1180,7 @@ prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> ppAttributes <> colon $-$
     nest 2
     (prettyRule (facts rPrems) acts (facts rConcs))  $-$
-    nest 2 (ppInfo $ L.get rInfo ru) -- $-$
+    nest 2 (ppInfo $ L.get rInfo ru) --- $-$
     where
     acts             = filter isNotDiffAnnotation (L.get rActs ru)
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})

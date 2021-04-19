@@ -33,7 +33,7 @@ module Sapic.Facts (
 -- import Control.Monad.Catch
 -- import Sapic.Exceptions
 import Theory
-import Theory.Text.Parser
+-- import Theory.Text.Parser
 import Theory.Sapic
 import Theory.Sapic.Print
 import Sapic.Annotation
@@ -48,7 +48,7 @@ import Data.Color
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
-data TransAction = 
+data TransAction =
   -- base translation
   InitEmpty
   --    storage
@@ -69,18 +69,16 @@ data TransAction =
   --    predicate support
   | PredicateA LNFact
   | NegPredicateA LNFact
-  -- progress translation 
+  -- progress translation
   | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
   -- reliable channels
   | Send ProcessPosition SapicTerm
   | Receive ProcessPosition SapicTerm
-  -- location
-  | Report LVar LVar
   -- to implement with accountability extension
-  -- | InitId
-  -- | StopId 
-  -- | EventId
+  --- | InitId
+  --- | StopId
+  --- | EventId
 
 -- | Facts that are used as premises and conclusions.
 -- Most important one is the state, containing the variables currently
@@ -116,8 +114,8 @@ data AnnotatedRule ann = AnnotatedRule {
 mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
            -> ([TransFact], [TransAction], [TransFact],[SyntacticLNFormula]))
           -> AnnotatedRule ann -> AnnotatedRule ann
-mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule, 
-                                           concs anrule, restr anrule) 
+mapAct f anrule = let (l',a',r',res') = f (prems anrule, acts anrule,
+                                           concs anrule, restr anrule)
                   in
                   anrule { prems = l', acts = a', concs = r', restr = res' }
 
@@ -185,10 +183,10 @@ varMsgId p = LVar n s i
 -- actionToFact :: TransAction -> Fact t
 actionToFact :: TransAction -> Fact (VTerm Name LVar)
 actionToFact InitEmpty = protoFact Linear "Init" []
-  -- | Not implemented yet: progress
-  -- | StopId
-  -- | EventEmpty
-  -- | EventId
+  --- | Not implemented yet: progress
+  --- | StopId
+  --- | EventEmpty
+  --- | EventId
 actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
@@ -206,14 +204,13 @@ actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varT
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
 actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
-actionToFact (Report x loc ) = protoFact Linear ("Report") (map varTerm [x,loc])
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
 toFreeMsgVariable v = Free $ v
 
 actionToFactFormula :: TransAction -> Fact (Term (Lit Name (BVar LVar)))
-actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact 
+actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact
 
 -- | Term with variable for message id. Uniqueness ensured by process position.
 varMID :: ProcessPosition -> LVar
@@ -251,7 +248,7 @@ getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 propagateNames :: (GoodAnnotation ann) => AnProcess ann -> AnProcess ann
 propagateNames = propagate' []
     where
-      propagate' n (ProcessComb c an pl pr) = ProcessComb c 
+      propagate' n (ProcessComb c an pl pr) = ProcessComb c
                                                 (setProcessNames (n ++ getProcessNames an) an)
                                                 (propagate' (n ++ getProcessNames an) pl)
                                                 (propagate' (n ++ getProcessNames an) pr)

@@ -1,8 +1,8 @@
 theory OTP
-// Use Tamarin command line options '--heuristic=S'
 
 begin
 
+heuristic:S
 
 builtins: asymmetric-encryption, symmetric-encryption, locations-report
 
@@ -24,7 +24,7 @@ let user =
 
 let enclave =
 
-    (new shared_k; event SessionP(pk(skV),shared_k);let signed=report( aenc(shared_k, pk(skV))) in 
+    (new shared_k; event SessionP(pk(skV),shared_k);let signed=report( aenc(shared_k, pk(skV))) in
     out(shared(<aenc(shared_k, pk(skV)),signed>));     // Key exchange with the server
     in(cde(code)); event ProvE(code);                   // reception of an attested code of the user
     out(dscode(senc(code,shared_k)));
@@ -32,7 +32,7 @@ let enclave =
     !(in(cu,<pw,fr>);in(senc(challenge, shared_k)); event Ask(pw,challenge,fr,shared_k); out(<h(pw),hash(kOTP,challenge)>) // transformation of password request into OTP
     )
     )@'loc'
- 
+
 let server =
     in(shared(<aenc(shared_k, pk(skV)), signed>));
     if aenc(shared_k, pk(skV))=check_rep(signed,'loc') then
@@ -46,24 +46,24 @@ let server =
     )
     )
      else (0)
- 
+
 new skV; new pc; new cu; new pw; event Chan(cu); event Chan(pc); out(pw); event Key(skV);out(pk(skV));(!server||!user || !enclave)
 
 lemma secrecy_key[reuse]:
         "not (
                 Ex k #t1 #t2 .
-                 Key(k)@t1 
+                 Key(k)@t1
                 & KU(k)@t2
 
         )"
 
-lemma key_ex[reuse]: 
-      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1" 
+lemma key_ex[reuse]:
+      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1"
 
 lemma secrecy_ex[reuse]:
         "not (
                 Ex pka k #t1 #t2 .
-                 SessionV(pka,k)@t1 
+                 SessionV(pka,k)@t1
                 & KU(k)@t2
 
         )"
@@ -76,7 +76,7 @@ lemma unic[reuse]:
 lemma secrecy_chall[reuse]:
         "not (
                 Ex pw chal fr k #t1 #t2 .
-                 Ask(pw,chal,fr,k)@t1 
+                 Ask(pw,chal,fr,k)@t1
                 & KU(chal)@t2
 
         )"
