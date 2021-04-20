@@ -1,6 +1,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveAnyClass     #-}
+{-# LANGUAGE RecordWildCards    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -16,6 +17,13 @@
 module Theory.Constraint.Solver.Heuristics (
     GoalRanking(..)
   , Heuristic(..)
+
+  , Oracle(..)
+  , defaultOracle
+  , oraclePath
+  , maybeSetOracleWorkDir
+  , maybeSetOracleRelPath
+  , mapOracleRanking
 
   , goalRankingIdentifiers
   , goalRankingIdentifiersDiff
@@ -39,15 +47,23 @@ import           Control.DeepSeq
 import           Data.Maybe         (fromMaybe)
 import qualified Data.Map as M
 import           Data.List          (find)
+import           System.FilePath
 
 import           Theory.Text.Pretty
+import           Debug.Trace
+
+data Oracle = Oracle {
+    oracleWorkDir :: !FilePath
+  , oracleRelPath :: !FilePath
+  }
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | The different available functions to rank goals with respect to their
 -- order of solving in a constraint system.
 data GoalRanking =
     GoalNrRanking
-  | OracleRanking String
-  | OracleSmartRanking String
+  | OracleRanking Oracle
+  | OracleSmartRanking Oracle
   | SapicRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
@@ -59,12 +75,30 @@ data GoalRanking =
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- Default to "./oracle" in the current working directory.
+defaultOracle :: Oracle
+defaultOracle = Oracle "." "oracle"
+
+maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
+maybeSetOracleWorkDir p o = maybe o (\x -> o{ oracleWorkDir = x }) p
+
+maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
+maybeSetOracleRelPath p o = maybe o (\x -> o{ oracleRelPath = x }) p
+
+mapOracleRanking :: (Oracle -> Oracle) -> GoalRanking -> GoalRanking
+mapOracleRanking f (OracleRanking o) = traceShowId $ OracleRanking (f o)
+mapOracleRanking f (OracleSmartRanking o) = traceShowId $ OracleSmartRanking (f o)
+mapOracleRanking _ r = r
+
+oraclePath :: Oracle -> FilePath
+oraclePath Oracle{..} = normalise $ oracleWorkDir </> oracleRelPath
+
 goalRankingIdentifiers :: M.Map Char GoalRanking
 goalRankingIdentifiers = M.fromList
                         [ ('s', SmartRanking False)
                         , ('S', SmartRanking True)
-                        , ('o', OracleRanking "./oracle")
-                        , ('O', OracleSmartRanking "./oracle")
+                        , ('o', OracleRanking defaultOracle)
+                        , ('O', OracleSmartRanking defaultOracle)
                         , ('p', SapicRanking)
                         , ('P', SapicPKCS11Ranking)
                         , ('c', UsefulGoalNrRanking)
@@ -76,8 +110,8 @@ goalRankingIdentifiers = M.fromList
 goalRankingIdentifiersDiff :: M.Map Char GoalRanking
 goalRankingIdentifiersDiff  = M.fromList
                             [ ('s', SmartDiffRanking)
-                            , ('o', OracleRanking "./oracle")
-                            , ('O', OracleSmartRanking "./oracle")
+                            , ('o', OracleRanking defaultOracle)
+                            , ('O', OracleSmartRanking defaultOracle)
                             , ('c', UsefulGoalNrRanking)
                             , ('C', GoalNrRanking)
                             ]
@@ -113,8 +147,8 @@ goalRankingName :: GoalRanking -> String
 goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
         GoalNrRanking                 -> "their order of creation"
-        OracleRanking oracleName      -> "an oracle for ranking, located at " ++ oracleName
-        OracleSmartRanking oracleName -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oracleName
+        OracleRanking oracle          -> "an oracle for ranking, located at " ++ oraclePath oracle
+        OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oraclePath oracle
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
         SapicRanking                  -> "heuristics adapted for processes"
         SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
@@ -129,9 +163,9 @@ prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
 
 prettyGoalRanking :: GoalRanking -> String
 prettyGoalRanking ranking = case ranking of
-    (OracleRanking oracle)      -> findIdentifier ranking : " \"" ++ oracle ++ "\""
-    (OracleSmartRanking oracle) -> findIdentifier ranking : " \"" ++ oracle ++ "\""
-    _                           -> [findIdentifier ranking]
+    OracleRanking oracle      -> findIdentifier ranking : " \"" ++ oracleRelPath oracle ++ "\""
+    OracleSmartRanking oracle -> findIdentifier ranking : " \"" ++ oracleRelPath oracle ++ "\""
+    _                         -> [findIdentifier ranking]
   where
     findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
         Just (k,_) -> k

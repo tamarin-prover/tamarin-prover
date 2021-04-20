@@ -109,8 +109,8 @@ theoryLoadFlags =
   , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
       "Try to auto-generate sources lemmas."
 
-  , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
-      "Path to the oracle heuristic (default './oracle')."
+  , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
+      ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "').")
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -378,18 +378,10 @@ constructAutoProver as =
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    oracleName = case findArg "oraclename" as of
-      Nothing       -> "./oracle"
-      Just fileName -> "./" ++ fileName
-
     rankings = case findArg "heuristic" as of
-        Just (rawRankings@(_:_)) -> map setOracleName $ map charToGoalRanking rawRankings
-        Just []                  -> error "--heuristic: at least one ranking must be given"
-        _                        -> [SmartRanking False]
-
-    setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
-    setOracleName r = r
+        Just rawRankings@(_:_) -> map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings
+        Just []                -> error "--heuristic: at least one ranking must be given"
+        _                      -> [SmartRanking False]
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS
@@ -412,19 +404,10 @@ constructAutoDiffProver as =
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    oracleName = case findArg "oraclename" as of
-      Nothing       -> "./oracle"
-      Just fileName -> "./" ++ fileName
-
     rankings = case findArg "heuristic" as of
-        Just (rawRankings@(_:_)) -> map setOracleName $ map charToGoalRankingDiff rawRankings
-        Just []                  -> error "--heuristic: at least one ranking must be given"
-        _                        -> [SmartDiffRanking]
-
-
-    setOracleName (OracleRanking _) = OracleRanking oracleName
-    setOracleName (OracleSmartRanking _) = OracleSmartRanking oracleName
-    setOracleName r = r
+        Just rawRankings@(_:_) -> map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
+        Just []                -> error "--heuristic: at least one ranking must be given"
+        _                      -> [SmartDiffRanking]
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS

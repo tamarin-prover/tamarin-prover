@@ -21,7 +21,7 @@ module Theory.Text.Parser.Signature (
 )
 where
 
-import           Prelude                    hiding (id, (.))
+import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
@@ -38,7 +38,6 @@ import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
-import Debug.Trace
 
 
 -- | Builtin signatures.
@@ -175,20 +174,19 @@ preddeclaration thy = do
                     foldM liftedAddPredicate thy predicates
                     <?> "predicates"
 
-heuristic :: Bool -> Parser [GoalRanking]
-heuristic diff = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff) <* spaces
+heuristic :: Bool -> FilePath -> Parser [GoalRanking]
+heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* spaces
 
-goalRanking :: Bool -> Parser GoalRanking
-goalRanking diff = try oracleRanking <|> regularRanking <?> "goal ranking"
+goalRanking :: Bool -> FilePath -> Parser GoalRanking
+goalRanking diff workDir = try oracleRanking <|> regularRanking <?> "goal ranking"
    where
        regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
 
-       oracleRanking = setOracleName <$> (toGoalRanking <$> oneOf "oO" <* skipMany (char ' '))
-                   <*> option "./oracle" ((char '"' *> many1 (noneOf "\"\n\r") <* char '"') <* skipMany (char ' '))
+       oracleRanking = do
+           goal <- toGoalRanking <$> oneOf "oO" <* skipMany (char ' ')
+           relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
 
-       setOracleName (OracleRanking _) oracleName = OracleRanking oracleName
-       setOracleName (OracleSmartRanking _) oracleName = OracleSmartRanking oracleName
-       setOracleName r _ = r
+           return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir (Just workDir)) goal
 
        toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking
 
