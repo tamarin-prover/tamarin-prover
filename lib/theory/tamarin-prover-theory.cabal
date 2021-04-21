@@ -104,6 +104,7 @@ library
       Theory.Text.Pretty
       Theory.Text.Parser
       Theory.Text.Parser.Token
+      Theory.Text.Parser.Restriction
 
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
@@ -115,3 +116,13 @@ library
 
     other-modules:
       Theory.Syntactic.Predicate
+      Theory.Text.Parser.Exceptions
+      Theory.Text.Parser.Fact
+      Theory.Text.Parser.Formula
+      Theory.Text.Parser.Lemma
+      Theory.Text.Parser.Let
+      Theory.Text.Parser.Proof
+      Theory.Text.Parser.Rule
+      Theory.Text.Parser.Sapic
+      Theory.Text.Parser.Signature
+      Theory.Text.Parser.Term

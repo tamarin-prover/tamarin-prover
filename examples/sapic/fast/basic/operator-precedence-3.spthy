@@ -11,7 +11,8 @@ if True() then
     lookup 'x' as x in
         0
     else // else branch does not belong to conditional, but to lookup
-        event LookupElse() 
+        event LookupElse();
+        insert 'y','y' //to avoid wellformedness error
 
 lemma elseIsResolvedInnerFirst:
     exists-trace

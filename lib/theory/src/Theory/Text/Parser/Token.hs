@@ -6,6 +6,8 @@
 -- Portability : portable
 --
 -- Tokenizing infrastructure
+
+{-# LANGUAGE FlexibleInstances #-}
 module Theory.Text.Parser.Token (
   -- * Symbols
     symbol
@@ -113,8 +115,10 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
-import           Theory.Sapic.Term
-import           Theory.Sapic.Pattern
+import qualified Control.Monad.Catch as Catch
+import Data.Functor.Identity
+import Theory.Sapic.Pattern
+import Theory.Sapic
 
 
 ------------------------------------------------------------------------------
@@ -123,6 +127,10 @@ import           Theory.Sapic.Pattern
 
 -- | A parser for a stream of tokens.
 type Parser a = Parsec String MaudeSig a
+
+-- We can throw exceptions, but not catch them
+instance Catch.MonadThrow (ParsecT String MaudeSig Data.Functor.Identity.Identity) where
+    throwM e = fail (show e)
 
 -- Use Parsec's support for defining token parsers.
 spthy :: T.TokenParser MaudeSig

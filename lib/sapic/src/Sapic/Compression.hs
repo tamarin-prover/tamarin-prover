@@ -24,11 +24,7 @@ import Theory
 
 import Sapic.Facts
 
-import Data.Text.Internal
-
 -- We compress as much as possible silent actions
---
-
 isOutFact :: Fact t -> Bool
 isOutFact (Fact OutFact _ _) = True
 isOutFact _                 = False

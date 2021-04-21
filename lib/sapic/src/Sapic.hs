@@ -21,7 +21,6 @@ import Control.Monad.Catch
 import Sapic.Exceptions
 import Theory
 import Theory.Sapic
-import Theory.Sapic.Process
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Map.Strict as Map
