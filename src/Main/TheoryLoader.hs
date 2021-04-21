@@ -90,27 +90,28 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") ("(" ++ (intersperse '|' $ keys goalRankingIdentifiers) ++ ")+")
-      "Sequence of goal rankings to use (default 's')"
+  , flagOpt (prettyGoalRanking $ head $ defaultRankings False)
+      ["heuristic"] (updateArg "heuristic") ("(" ++ intersperse '|' (keys goalRankingIdentifiers) ++ ")+")
+      ("Sequence of goal rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
       "SUMMARY|VERBOSE"
       "Partially evaluate multiset rewriting system"
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
-      "Define flags for pseudo-preprocessor."
+      "Define flags for pseudo-preprocessor"
 
   , flagNone ["diff"] (addEmptyArg "diff")
-      "Turn on observational equivalence mode using diff terms."
+      "Turn on observational equivalence mode using diff terms"
 
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
-      "Strict mode that quits on any warning that is emitted."
+      "Strict mode that quits on any warning that is emitted"
 
   , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
-      "Try to auto-generate sources lemmas."
+      "Try to auto-generate sources lemmas"
 
   , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
-      ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "').")
+      ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -370,18 +371,17 @@ closeDiffThyWithMaude sig as thy0 = do
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
 constructAutoProver as =
-    -- force error early
-    (rnf rankings) `seq`
-    AutoProver (roundRobinHeuristic rankings) proofBound stopOnTrace
+    AutoProver heuristic proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    rankings = case findArg "heuristic" as of
-        Just rawRankings@(_:_) -> map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings
+    heuristic = case findArg "heuristic" as of
+        Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings
         Just []                -> error "--heuristic: at least one ranking must be given"
-        _                      -> [SmartRanking False]
+        _                      -> Nothing
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS
@@ -395,19 +395,17 @@ constructAutoProver as =
 -- --stop-on-trace).
 constructAutoDiffProver :: Arguments -> AutoProver
 constructAutoDiffProver as =
-    -- FIXME!
-    -- force error early
-    (rnf rankings) `seq`
-    AutoProver (roundRobinHeuristic rankings) proofBound stopOnTrace
+    AutoProver heuristic proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------
     proofBound      = read <$> findArg "bound" as
 
-    rankings = case findArg "heuristic" as of
-        Just rawRankings@(_:_) -> map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
+    heuristic = case findArg "heuristic" as of
+        Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
         Just []                -> error "--heuristic: at least one ranking must be given"
-        _                      -> [SmartDiffRanking]
+        _                      -> Nothing
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS

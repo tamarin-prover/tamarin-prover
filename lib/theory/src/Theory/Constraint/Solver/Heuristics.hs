@@ -17,6 +17,8 @@
 module Theory.Constraint.Solver.Heuristics (
     GoalRanking(..)
   , Heuristic(..)
+  , defaultRankings
+  , defaultHeuristic
 
   , Oracle(..)
   , defaultOracle
@@ -50,7 +52,6 @@ import           Data.List          (find)
 import           System.FilePath
 
 import           Theory.Text.Pretty
-import           Debug.Trace
 
 data Oracle = Oracle {
     oracleWorkDir :: !FilePath
@@ -75,6 +76,16 @@ data GoalRanking =
 newtype Heuristic = Heuristic [GoalRanking]
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- Default rankings for normal and diff mode.
+defaultRankings :: Bool -> [GoalRanking]
+defaultRankings False = [SmartRanking False]
+defaultRankings True = [SmartDiffRanking]
+
+-- Default heuristic for normal and diff mode.
+defaultHeuristic :: Bool -> Heuristic
+defaultHeuristic = Heuristic . defaultRankings
+
+
 -- Default to "./oracle" in the current working directory.
 defaultOracle :: Oracle
 defaultOracle = Oracle "." "oracle"
@@ -86,12 +97,12 @@ maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
 maybeSetOracleRelPath p o = maybe o (\x -> o{ oracleRelPath = x }) p
 
 mapOracleRanking :: (Oracle -> Oracle) -> GoalRanking -> GoalRanking
-mapOracleRanking f (OracleRanking o) = traceShowId $ OracleRanking (f o)
-mapOracleRanking f (OracleSmartRanking o) = traceShowId $ OracleSmartRanking (f o)
+mapOracleRanking f (OracleRanking o) = OracleRanking (f o)
+mapOracleRanking f (OracleSmartRanking o) = OracleSmartRanking (f o)
 mapOracleRanking _ r = r
 
 oraclePath :: Oracle -> FilePath
-oraclePath Oracle{..} = normalise $ oracleWorkDir </> oracleRelPath
+oraclePath Oracle{..} = oracleWorkDir </> normalise oracleRelPath
 
 goalRankingIdentifiers :: M.Map Char GoalRanking
 goalRankingIdentifiers = M.fromList
