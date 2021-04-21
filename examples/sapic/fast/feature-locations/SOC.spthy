@@ -2,6 +2,7 @@ theory SOC
 
 begin
 
+
 //heuristic:S
 
 builtins: symmetric-encryption,asymmetric-encryption, locations-report
@@ -58,6 +59,7 @@ let v =
         )
 
 
+
 process:
 new init; ( (!r) || (!v))
 
@@ -74,8 +76,10 @@ lemma secrecy[reuse]:
 
 lemma Input[use_induction,reuse]:
 	"All #t1 ip shared_key . Input(senc(ip, shared_key))@t1 ==> (Ex #t2 pk . SessionV(pk,shared_key)@t2 & t2<t1)"
+
 */
 /*
+
 lemma secrecy_computes2[reuse]:
         "not (
                 Ex ip k   #t2 #t3 .
@@ -93,6 +97,7 @@ lemma secrecy_computes3[reuse]:
                 & KU(prog(ip,old_i))@t3
 
         )"
+
 */
 lemma attested_computation:
 	"All #t1 h . Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)"

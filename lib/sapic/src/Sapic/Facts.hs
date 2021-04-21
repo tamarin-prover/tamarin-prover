@@ -74,7 +74,6 @@ data TransAction =
   -- reliable channels
   | Send ProcessPosition LNTerm
   | Receive ProcessPosition LNTerm
-
   -- to implement with accountability extension
   --- | InitId
   --- | StopId

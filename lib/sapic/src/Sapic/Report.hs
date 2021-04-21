@@ -29,6 +29,7 @@ import           Theory
 import           Theory.Sapic
 import           Term.Builtin.Signature
 
+
 reportInit ::  Monad m => LProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
 reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
   where
@@ -45,6 +46,7 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
         toBL = fmap (fmapTerm (fmap Free)) protFact
 
 -- [In(<x,loc>)] -[Pred_rep(x,loc)]->[Out(rep(x,loc))]
+
 
 opt_loc :: Maybe SapicTerm -> (ProcessAnnotation LVar) -> Maybe SapicTerm
 opt_loc loc ann =

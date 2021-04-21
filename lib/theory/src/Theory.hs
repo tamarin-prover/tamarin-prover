@@ -2509,7 +2509,7 @@ prettySapicElement (ExportInfoItem eInfo) =
 prettySapicElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
-prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<->" ++ formulastr)
+prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
     where
         factstr = render $ prettyFact prettyLVar $ L.get pFact p
         formulastr = render $ prettyLNFormula $ L.get pFormula p

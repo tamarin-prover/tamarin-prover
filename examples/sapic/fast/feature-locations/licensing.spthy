@@ -31,7 +31,6 @@ let vendor =
     new skV;
     event HonestP(pk(skV));
     out(pk(skV));
-
     in(<aenc(shared_key,pk(=skV)),signed>);
     if  aenc(shared_key,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then
        (
@@ -52,13 +51,16 @@ let vendor =
 	)
 
 
+
 process:
+
 new prog; event Auth(prog);   // initialisiation of the licensed program
  (  (!p) || (!vendor) )
 
 
 lemma attested_comput:
 	"All #t1 inp pk. Poutput(inp,pk)@t1  ==> (Ex #t2 . Token(pk)@t2 & t2 <t1 )"
+
 
 lemma unique:
 	"not (Ex #t1 #t2 pk inp inp2 .
