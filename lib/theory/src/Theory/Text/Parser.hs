@@ -35,8 +35,6 @@ import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 import           Theory
-import           Theory.Sapic
-import           Theory.Sapic.Pattern
 import           Theory.Text.Parser.Token
 
 import           Theory.Text.Parser.Lemma

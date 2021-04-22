@@ -94,6 +94,7 @@ import           GHC.Generics                     (Generic)
 import           Data.Data
 import           Data.Binary
 import           Data.Either                      (partitionEithers)
+import           Data.Maybe
 -- import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
 import qualified Data.DList as D
@@ -108,12 +109,7 @@ import           Theory.Model
 
 
 -- Control.Monad.Fail import will become redundant in GHC 8.8+
-import qualified Control.Monad.Fail as Fail
-
-import Data.Functor.Identity
-
-instance Fail.MonadFail Identity where
-  fail = Fail.fail
+-- import qualified Control.Monad.Fail as Fail
 
 ------------------------------------------------------------------------------
 -- Types
@@ -829,7 +825,7 @@ prettyGuarded fm =
     pp gf0@(GGuarded _ _ _ _) =
       -- variable names invented here can be reused otherwise
       scopeFreshness $ do
-          Just (qua, vs, atoms, gf) <- openGuarded gf0
+          (qua, vs, atoms, gf) <- fromJust <$> openGuarded gf0
           let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
               connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
                             -- operator_ (case qua of All -> "==>"; Ex -> "&")
