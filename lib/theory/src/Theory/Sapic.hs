@@ -9,53 +9,11 @@
 --
 -- Data types for SAPIC processes in theories
 module Theory.Sapic (
-    -- types
-    Process(..)
-    , ProcessCombinator(..)
-    , ProcessParsedAnnotation(..)
-    , SapicType
-    , defaultSapicTypeS
-    , defaultSapicType
-    , defaultSapicNodeType
-    , SapicAction(..)
-    , SapicLVar(..)
-    , SapicTerm
-    , SapicNTerm
-    , SapicLNFact
-    , SapicFormula
-    , SapicFunSym
-    , LSapicAction
-    , LProcessCombinator
-    , LProcess
-    , PlainProcess
-    -- converters
-    , toLVar
-    , toLNTerm
-    , toLNFact
-    , toLFormula
-    -- utitlities
-    , freesSapicTerm
-    , freesSapicFact
-    , paddAnn
-    , foldProcess
-    , foldMProcess
-    , traverseTermsAction
-    , traverseTermsComb
-    , applyProcess
-    , pfoldMap
-    , mapTerms
-    , mapTermsAction
-    , mapTermsComb
-    , ProcessPosition
-    , lhsP
-    , rhsP
-    , descendant
-    -- pretty printing
-    , prettySapic'
-    , prettySapicAction'
-    , prettySapicComb
-    , prettySapicTopLevel'
-    , prettyPosition
+    -- convenience exports
+      module Theory.Sapic.Term
+    , module Theory.Sapic.Process
+    , module Theory.Sapic.Annotation
+    , module Theory.Sapic.Position
 ) where
 import Theory.Sapic.Term
 import Theory.Sapic.Process

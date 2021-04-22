@@ -41,7 +41,7 @@ module Theory.Sapic.Process (
     -- exception type for lets
     , LetExceptions (..)
     , prettyLetExceptions
-) where
+    ,traverseProcess) where
 
 import Data.Binary
 import Data.Data
@@ -180,22 +180,42 @@ foldProcess fNull fAct fComb gAct gComb a p
             in
                 gComb a' ann rl rr c
 
+foldMProcess :: Monad m =>
+    (t1 -> t2 -> m t3)
+    -> (t1 -> t2 -> SapicAction v -> m t1)
+    -> (t1 -> t2 -> ProcessCombinator v -> m t1)
+    -> (t1 -> SapicAction v -> t2 -> t3 -> m t3)
+    -> (t1 -> ProcessCombinator v -> t2 -> t3 -> t3 -> m t3)
+    -> t1
+    -> Process t2 v
+    -> m t3
+foldMProcess fNull fAct fComb gAct gComb a p
+    | (ProcessNull ann) <- p = fNull a ann
+    | (ProcessAction ac ann p') <- p = do
+            a' <- fAct a ann ac -- 1. update accumulator
+            p''<- foldMProcess fNull fAct fComb gAct gComb a' p'  -- 2. process subtree with updated acculator
+            gAct a' ac ann p'' -- 3. reconstruct result from accumulator and subtree's result
+    | (ProcessComb c ann pl pr) <- p = do
+            a' <- fComb a ann c
+            rl <- foldMProcess fNull fAct fComb gAct gComb a' pl
+            rr <- foldMProcess fNull fAct fComb gAct gComb a' pr
+            gComb a' c ann rl rr
 
--- | fold process with side effects. Like @foldProcess@, but allows functions
---   with side-effects and does not keep accumulator (use state monad for that.)
-foldMProcess :: Monad m => (t1 -> m t2) -> (t1 -> SapicAction v -> m ()) ->
+-- | Traverses process. Simplified variant of @foldMProcces@ that avoids
+-- accumulator (use state monad for that.)
+traverseProcess :: Monad m => (t1 -> m t2) -> (t1 -> SapicAction v -> m ()) ->
     (t1 -> ProcessCombinator v -> m ()) -> (SapicAction v -> t1 -> t2 -> m t2) ->
     (ProcessCombinator v -> t1 -> t2 -> t2 -> m t2) -> Process t1 v -> m t2
-foldMProcess fNull fAct fComb gAct gComb p
+traverseProcess fNull fAct fComb gAct gComb p
     | (ProcessNull ann) <- p = fNull ann
     | (ProcessAction ac ann p') <- p = do
             fAct ann ac -- 1. act on current process, potentially updating state
-            p''<- foldMProcess fNull fAct fComb gAct gComb p'  -- 2. process subtree with updated trace 
+            p''<- traverseProcess fNull fAct fComb gAct gComb p'  -- 2. process subtree with updated trace 
             gAct ac ann p'' -- 3. reconstruct result from state and subtree's result
     | (ProcessComb c ann pl pr) <- p = do
             fComb ann c
-            rl <- foldMProcess fNull fAct fComb gAct gComb pl
-            rr <- foldMProcess fNull fAct fComb gAct gComb pr
+            rl <- traverseProcess fNull fAct fComb gAct gComb pl
+            rr <- traverseProcess fNull fAct fComb gAct gComb pr
             gComb c ann rl rr
 
 traverseTermsAction :: Applicative f =>

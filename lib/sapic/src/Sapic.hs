@@ -53,7 +53,7 @@ data TypingEnvironment = TypingEnvironment {
 -- typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
 --                         -> Process ann SapicLVar -> m (Process ann SapicLVar)
 typeProcess :: (GoodAnnotation a, MonadThrow m) => Theory sig c r p SapicElement -> Process a SapicLVar -> m (Process a SapicLVar)
-typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) initstate
+typeProcess th p = evalStateT (traverseProcess fNull fAct fComb gAct gComb p) initstate
     where
         -- initial state
         initstate = TypingEnvironment{
@@ -108,7 +108,7 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb p) inits
                 Nothing -> put $te { vars = Map.insert (slvar v) (maybeToDefault $ stype v) (vars te)}
         insertFun fs types = do
                     modify' (\s -> s {funs = Map.insert fs types (funs s) })
-        maybeToDefault Nothing   = defaultSapicType -- not quite the same as maybe, different type
+        maybeToDefault Nothing   = defaultSapicType -- not quite the same as function maybe, different type
         maybeToDefault something = something
         matchFunTypes t t' =  if t `smallerType` t' then Just t else Nothing
         smallerType _ Nothing = True
