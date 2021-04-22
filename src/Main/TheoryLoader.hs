@@ -55,7 +55,6 @@ import           Data.FileEmbed                      (embedFile)
 
 -- import           Control.Basics
 import           Control.Category
-import           Control.DeepSeq                     (rnf)
 
 import           System.Console.CmdArgs.Explicit
 

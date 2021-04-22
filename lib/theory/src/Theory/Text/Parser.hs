@@ -53,28 +53,28 @@ import Theory.Text.Parser.Sapic
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags inFile = parseFile (theory flags inFile) inFile
+parseOpenTheory flags inFile = parseFile (theory flags (Just inFile)) inFile
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenDiffTheory
-parseOpenDiffTheory flags inFile = parseFile (diffTheory flags inFile) inFile
+parseOpenDiffTheory flags inFile = parseFile (diffTheory flags (Just inFile)) inFile
 
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
-parseOpenTheoryString flags = parseString "<unknown source>" (theory flags ".")
+parseOpenTheoryString flags = parseString "<unknown source>" (theory flags Nothing)
 
 -- | Parse a security protocol theory from a string.
 parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenDiffTheory
-parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags ".")
+parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags Nothing)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
-parseLemma = parseString "<unknown source>" (lemma ".")
+parseLemma = parseString "<unknown source>" (lemma Nothing)
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
@@ -153,7 +153,7 @@ liftedAddProtoRule thy ru
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
-       -> FilePath
+       -> Maybe FilePath
        -> Parser OpenTheory
 theory flags0 inFile = do
     msig <- getState
@@ -208,7 +208,7 @@ theory flags0 inFile = do
       , do return thy
       ]
 
-    workDir = takeDirectory inFile
+    workDir = takeDirectory <$> inFile
 
     define flags thy = do
        flag <- try (symbol "#define") *> identifier
@@ -236,7 +236,7 @@ theory flags0 inFile = do
 
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
-       -> FilePath
+       -> Maybe FilePath
        -> Parser OpenDiffTheory
 diffTheory flags0 inFile = do
     msig <- getState
@@ -284,7 +284,7 @@ diffTheory flags0 inFile = do
       , do return thy
       ]
 
-    workDir = takeDirectory inFile
+    workDir = takeDirectory <$> inFile
 
     define :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     define flags thy = do

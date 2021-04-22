@@ -29,7 +29,7 @@ import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
 
 -- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Bool -> FilePath -> Parser LemmaAttribute
+lemmaAttribute :: Bool -> Maybe FilePath -> Parser LemmaAttribute
 lemmaAttribute diff workDir = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
@@ -51,7 +51,7 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
-protoLemma :: Parser f -> FilePath -> Parser (ProtoLemma f ProofSkeleton)
+protoLemma :: Parser f -> Maybe FilePath -> Parser (ProtoLemma f ProofSkeleton)
 protoLemma parseFormula workDir = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
                       <*> (option [] $ list (lemmaAttribute False workDir))
                       <*> (colon *> option AllTraces traceQuantifier)
@@ -59,15 +59,15 @@ protoLemma parseFormula workDir = skeletonLemma <$> (symbol "lemma" *> optional 
                       <*> (startProofSkeleton <|> pure (unproven ()))
 
 -- | Parse a lemma.
-lemma :: FilePath -> Parser (SyntacticLemma ProofSkeleton)
+lemma :: Maybe FilePath -> Parser (SyntacticLemma ProofSkeleton)
 lemma = protoLemma standardFormula
 
 -- | Parse a lemma w/o syntactic sugar
-plainLemma :: FilePath -> Parser (Lemma ProofSkeleton)
+plainLemma :: Maybe FilePath -> Parser (Lemma ProofSkeleton)
 plainLemma = protoLemma plainFormula
 
 -- | Parse a diff lemma.
-diffLemma :: FilePath -> Parser (DiffLemma DiffProofSkeleton)
+diffLemma :: Maybe FilePath -> Parser (DiffLemma DiffProofSkeleton)
 diffLemma workDir = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True workDir))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
