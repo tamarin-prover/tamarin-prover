@@ -104,10 +104,9 @@ instance (Show p) => Show (WFerrror p) where
                               ++ " should have input types "
                               ++ List.intercalate ", " (List.map (Data.Maybe.fromMaybe defaultSapicTypeS) types)
                               ++ "."
-    show (TypingError t at tt) = "Typing error in term "
+    show (TypingError t at tt) = "Typing error: expected term "
                               ++ show t
-                              ++ ":"
-                              ++ " expected "
+                              ++ " to have "
                               ++ show tt
                               ++ " but actual type is "
                               ++ show at
