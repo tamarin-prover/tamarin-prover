@@ -11,6 +11,7 @@
 --
 -- Translation from Theories with Processes to multiset rewrite rules
 
+{-# LANGUAGE EmptyCase #-}
 module Sapic (
     typeTheory
   , translate
@@ -121,7 +122,10 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
             = do
                 maybeFType <- Map.lookup fs <$> gets funs
                 (intypes,outtype) <- case maybeFType of -- can we shorten this?
-                    Nothing -> throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
+                    Nothing -> case fs of 
+                                (_,(n,_,_)) -> return (replicate n Nothing ,Nothing)
+                        -- throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
+                        -- TODO simplify and document or decide to lookup function symbol
                     Just x -> return x
                 assertSmaller outtype tt t
                 (ts',ptypes) <- unzip <$> zipWithM typeWith' ts intypes
