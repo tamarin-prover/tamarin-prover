@@ -118,15 +118,12 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
                 case sqcap stype' tt of 
                     Left t' -> return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
                     Right () -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
-            | FAppNoEq fs ts   <- viewTerm2 t
+            | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t
             = do
                 maybeFType <- Map.lookup fs <$> gets funs
-                (intypes,outtype) <- case maybeFType of -- can we shorten this?
-                    Nothing -> case fs of 
-                                (_,(n,_,_)) -> return (replicate n Nothing ,Nothing)
+                let defaultFunctionType =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
+                let (intypes,outtype) = fromMaybe defaultFunctionType maybeFType 
                         -- throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
-                        -- TODO simplify and document or decide to lookup function symbol
-                    Just x -> return x
                 assertSmaller outtype tt t
                 (ts',ptypes) <- unzip <$> zipWithM typeWith' ts intypes
                 insertFun fs (ptypes, outtype)
