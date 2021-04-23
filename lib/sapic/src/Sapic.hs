@@ -51,12 +51,6 @@ data TypingEnvironment = TypingEnvironment {
     ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
 }
 
--- instance Semigroup TypingEnvironment where
---     mempty = 
-
--- typeProcess :: (MonadThrow m, Monoid ann, GoodAnnotation ann) => Theory sig c r p1 SapicElement
---                         -> Process ann SapicLVar -> m (Process ann SapicLVar)
--- typeProcess :: (GoodAnnotation a, MonadThrow m) => Theory sig c r p SapicElement -> Process a SapicLVar -> m (Process a SapicLVar)
 typeProcess :: (GoodAnnotation a, MonadThrow m) =>
     Theory sig c r p SapicElement
     -> Process a SapicLVar -> m (Process a SapicLVar)
@@ -78,34 +72,6 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
         gComb te c ann rl rr = do
             c' <- traverseTermsComb (typeWith te) typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        -- typeWith te t = do -- throw type away, take term (first element)
-        --                 (t',_,_) <- typeWith' te t Nothing 
-        --                 return t'
-        -- typeWith' te t tt -- Try to type term t with a type more specific than tt under typing environment te
-        --                   -- returns typed term, type of the term, updated typing environment
-        --     | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v
-        --     , maybeType <- Map.lookup lvar' (vars te)
-        --     , stype' <- fromMaybe Nothing maybeType
-        --     = do
-        --         -- Note: we graciously ignore unbound variables. Wellformedness
-        --         -- checks on MSRs detect them for us. We might change that in
-        --         -- the future. 
-        --         assertSmaller stype' tt t
-        --         return (termViewToTerm $ Lit (Var (SapicLVar lvar' stype')), stype',te)
-        --     | FAppNoEq fs ts   <- viewTerm2 t
-        --     , maybeFType <- Map.lookup fs (funs te)
-        --     = do
-        --         (intypes,outtype) <- case maybeFType of -- can we shorten this?
-        --             Nothing -> throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
-        --             Just x -> return x
-        --         assertSmaller outtype tt t
-        --         (ts',ptypes) <- unzip <$> zipWithM (typeWith' te) ts intypes
-        --         let te' = insertFun te fs (ptypes, outtype)
-        --         return (termViewToTerm $ FApp (NoEq fs) ts', outtype, te')
-        --     | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
-        --         ts' <- mapM (typeWith te) ts
-        --         return (termViewToTerm $ FApp fs ts', Nothing,te)
-        --     | otherwise = return (t, defaultSapicType,te) -- TODO no idea how to type here...
         typeWith te t = fst <$> evalStateT (typeWith' t Nothing) te -- start with te as initial state, throw type away, take term (first element)
         typeWith' t tt -- Try to type term t with a type more specific than tt
             | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v
@@ -121,8 +87,7 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
             | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t
             = do
                 maybeFType <- Map.lookup fs <$> gets funs
-                let defaultFunctionType =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
-                let (intypes,outtype) = fromMaybe defaultFunctionType maybeFType 
+                let (intypes,outtype) = fromMaybe (defaultFunctionType n) maybeFType 
                         -- throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
                 assertSmaller outtype tt t
                 (ts',ptypes) <- unzip <$> zipWithM typeWith' ts intypes
@@ -136,6 +101,7 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
+        -- TODO maybe we should actually insert Nothing here instead of runing maybeToDefault..
         insertVar v te =
             case Map.lookup (slvar v) (vars te) of
                 Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
@@ -144,7 +110,7 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
                     modify' (\s -> s {funs = Map.insert fs types (funs s) })
         maybeToDefault Nothing   = defaultSapicType -- not quite the same as function maybe, different type
         maybeToDefault something = something
-        matchFunTypes t t' =  if t `smallerType` t' then Just t else Nothing
+        defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
         smallerType _ Nothing = True
         smallerType (Just t) (Just t') = t == t'
         smallerType Nothing  (Just _) = False
