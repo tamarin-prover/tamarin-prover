@@ -101,15 +101,12 @@ typeProcess th p = foldMProcess fNull fAct fComb gAct gComb initte p
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
-        -- TODO maybe we should actually insert Nothing here instead of runing maybeToDefault..
         insertVar v te =
             case Map.lookup (slvar v) (vars te) of
                 Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
-                Nothing -> return $ te { vars = Map.insert (slvar v) (maybeToDefault $ stype v) (vars te)}
+                Nothing -> return $ te { vars = Map.insert (slvar v) (stype v) (vars te)}
         insertFun fs types = do
                     modify' (\s -> s {funs = Map.insert fs types (funs s) })
-        maybeToDefault Nothing   = defaultSapicType -- not quite the same as function maybe, different type
-        maybeToDefault something = something
         defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
         smallerType _ Nothing = True
         smallerType (Just t) (Just t') = t == t'
