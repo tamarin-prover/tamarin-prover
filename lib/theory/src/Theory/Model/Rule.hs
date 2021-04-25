@@ -35,6 +35,11 @@ module Theory.Model.Rule (
   , enumPrems
   , enumConcs
 
+  -- ** Extended positions
+  , ExtendedPosition
+  , printPosition
+  , printFactPosition
+
   -- ** Genereal protocol and intruder rules
   , RuleInfo(..)
   , ruleInfo
@@ -173,6 +178,7 @@ import qualified Extension.Data.Label as L
 import           Logic.Connectives
 
 import           Term.LTerm
+import           Term.Positions
 import           Term.Rewriting.Norm  (nf', norm')
 import           Term.Builtin.Convenience (var)
 import           Term.Unification
@@ -283,6 +289,18 @@ instance Apply i => Apply (Rule i) where
 
 instance Sized (Rule i) where
   size (Rule _ ps cs as _) = size ps + size cs + size as
+
+-----------------------------------------------
+-- Extended Positions (of a term inside a rule)
+-----------------------------------------------
+
+type ExtendedPosition = (PremIdx, Int, Position)
+
+printPosition :: ExtendedPosition -> String
+printPosition (pidx, i, pos) = show (getPremIdx pidx) ++ "_" ++ show i ++ "_" ++ foldl (\x y -> x ++ show y  ++ "_") "" pos
+
+printFactPosition :: ExtendedPosition -> String
+printFactPosition (pidx, _, _) = show (getPremIdx pidx)
 
 ------------------------------------------------------------------------------
 -- Rule information split into intruder rule and protocol rules

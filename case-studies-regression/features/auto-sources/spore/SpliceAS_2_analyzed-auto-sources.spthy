@@ -57,9 +57,10 @@ rule (modulo E) C_to_S:
    !Ltk( $C, ~ltkC ), Fr( ~t ), Fr( ~l ), Fr( ~n2 )
    ]
   --[
-  AUTO_OUT_0_1_C_to_S( aenc(<'4', ~n2>, pkS) ),
-  AUTO_OUT_0_3_C_to_S( aenc(<'4', ~n2>, pkS) ), Secret( $C, $S, ~n2 ),
-  Running_A( $C, $S, <'C', 'S', ~n2> )
+  AUTO_OUT_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( aenc(<'4', ~n2>, pkS)
+  ),
+  AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', ~n2>, pkS) ),
+  Secret( $C, $S, ~n2 ), Running_A( $C, $S, <'C', 'S', ~n2> )
   ]->
    [
    Out( <$C, $S, ~t, ~l, aenc(<'4', ~n2>, pkS), 
@@ -78,8 +79,11 @@ rule (modulo E) S_to_AS:
    !Ltk( $S, ~ltkS ), Fr( ~n3 )
    ]
   --[
-  AUTO_IN_1_1_S_to_AS( aenc(<'4', n2>, pk(~ltkS)), n2 ),
-  AUTO_IN_1_2_S_to_AS( aenc(<'4', n2>, pk(~ltkS)), n2 )
+  AUTO_IN_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( aenc(<'4', n2>,
+                                                          pk(~ltkS)),
+                                                     n2
+  ),
+  AUTO_IN_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', n2>, pk(~ltkS)), n2 )
   ]->
    [
    Out( <'Req', $S, c, ~n3> ),
@@ -256,7 +260,7 @@ solve( Secret( A, B, m ) @ #i )
       solve( !Ltk( $C, ~ltkC ) ▶₃ #i )
         case Register_pk
         solve( !KU( ~n2 ) @ #vk )
-          case S_to_C_case_1
+          case S_to_C
           solve( !KU( sign(<'Key', 'AS', $C, ~n1, $S, pk(~ltkS)>, ~ltkAS)
                  ) @ #vk.12 )
             case AS_send_key
@@ -592,29 +596,32 @@ lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
     (∀ x m #i.
-      (AUTO_IN_1_2_S_to_AS( m, x ) @ #i) ⇒
-      (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-        (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
-       (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))) ∧
+      (AUTO_IN_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m, x ) @ #i) ⇒
+      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+       (∃ #j.
+         (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m ) @ #j) ∧ (#j < #i))))) ∧
    (∀ x m #i.
-     (AUTO_IN_1_1_S_to_AS( m, x ) @ #i) ⇒
-     (((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-       (∃ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ∧ (#j < #i))) ∨
-      (∃ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ∧ (#j < #i))))"
+     (AUTO_IN_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j.
+        (AUTO_OUT_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m ) @ #j) ∧
+        (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "((∃ x m #i.
-    (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
+    (AUTO_IN_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m, x ) @ #i)
    ∧
     (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) ∨
+    (∀ #j.
+      (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m ) @ #j) ⇒ ¬(#j < #i))) ∨
   (∃ x m #i.
-    (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
+    (AUTO_IN_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m, x ) @ #i)
    ∧
     (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-    (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))))"
+    (∀ #j.
+      (AUTO_OUT_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m ) @ #j)
+     ⇒
+      ¬(#j < #i))))"
 */
 induction
   case empty_trace
@@ -623,26 +630,25 @@ next
   case non_empty_trace
   simplify
   solve( (∃ x m #i.
-           (AUTO_IN_1_2_S_to_AS( m, x ) @ #i)
+           (AUTO_IN_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m, x ) @ #i)
           ∧
            (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
+           (∀ #j.
+             (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( m ) @ #j) ⇒ ¬(#j < #i)))  ∥
          (∃ x m #i.
-           (AUTO_IN_1_1_S_to_AS( m, x ) @ #i)
+           (AUTO_IN_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m, x ) @ #i)
           ∧
            (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_1_C_to_S( m ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #j. (AUTO_OUT_0_3_C_to_S( m ) @ #j) ⇒ ¬(#j < #i))) )
+           (∀ #j.
+             (AUTO_OUT_TERM_0_0_1_1_1_1_1_0_1_1_1_1_0_1__S_to_AS( m ) @ #j)
+            ⇒
+             ¬(#j < #i))) )
     case case_1
     solve( (last(#i))  ∥
            (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j.
-             (AUTO_OUT_0_1_C_to_S( aenc(<'4', x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_3_C_to_S( aenc(<'4', x>, pk(~ltkS)) ) @ #j)
+             (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', x>, pk(~ltkS))
+              ) @ #j)
             ∧
              (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
@@ -656,20 +662,14 @@ next
           case S_to_C
           solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.8))  ∥
                  (∃ #j.
-                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.8))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
+                   (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', n2>, pk(~ltkS.1))
+                    ) @ #j)
                   ∧
                    (¬(last(#j))) ∧ (#j < #vr.8)) )
             case case_1
             by contradiction /* cyclic */
           next
             case case_2
-            by contradiction /* impossible chain */
-          next
-            case case_3
             by contradiction /* impossible chain */
           qed
         next
@@ -681,20 +681,14 @@ next
             case S_to_C
             solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.8))  ∥
                    (∃ #j.
-                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.8))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
+                     (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', n2>, pk(~ltkS.1))
+                      ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.8)) )
               case case_1
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
-            next
-              case case_3
               by contradiction /* impossible chain */
             qed
           next
@@ -708,9 +702,6 @@ next
       by contradiction /* from formulas */
     next
       case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
       by contradiction /* from formulas */
     qed
   next
@@ -718,11 +709,8 @@ next
     solve( (last(#i))  ∥
            (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j.
-             (AUTO_OUT_0_1_C_to_S( aenc(<'4', x>, pk(~ltkS)) ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #j.
-             (AUTO_OUT_0_3_C_to_S( aenc(<'4', x>, pk(~ltkS)) ) @ #j)
+             (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', x>, pk(~ltkS))
+              ) @ #j)
             ∧
              (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
@@ -736,20 +724,14 @@ next
           case S_to_C
           solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.8))  ∥
                  (∃ #j.
-                   (AUTO_OUT_0_1_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
-                  ∧
-                   (¬(last(#j))) ∧ (#j < #vr.8))  ∥
-                 (∃ #j.
-                   (AUTO_OUT_0_3_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
+                   (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', n2>, pk(~ltkS.1))
+                    ) @ #j)
                   ∧
                    (¬(last(#j))) ∧ (#j < #vr.8)) )
             case case_1
             by contradiction /* cyclic */
           next
             case case_2
-            by contradiction /* impossible chain */
-          next
-            case case_3
             by contradiction /* impossible chain */
           qed
         next
@@ -761,20 +743,14 @@ next
             case S_to_C
             solve( (∃ #j. (!KU( n2 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.8))  ∥
                    (∃ #j.
-                     (AUTO_OUT_0_1_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧ (#j < #vr.8))  ∥
-                   (∃ #j.
-                     (AUTO_OUT_0_3_C_to_S( aenc(<'4', n2>, pk(~ltkS.1)) ) @ #j)
+                     (AUTO_OUT_TERM_0_0_1_1_1_1_0_0_1__S_to_AS( aenc(<'4', n2>, pk(~ltkS.1))
+                      ) @ #j)
                     ∧
                      (¬(last(#j))) ∧ (#j < #vr.8)) )
               case case_1
               by contradiction /* cyclic */
             next
               case case_2
-              by contradiction /* impossible chain */
-            next
-              case case_3
               by contradiction /* impossible chain */
             qed
           next
@@ -788,9 +764,6 @@ next
       by contradiction /* from formulas */
     next
       case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
       by contradiction /* from formulas */
     qed
   qed
@@ -809,14 +782,14 @@ analyzing: examples/features/auto-sources/spore/SpliceAS_2.spthy
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 10.151523219s
+  processing time: 6.819771399s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
   agreement_B (all-traces): verified (14 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)
   agreement_A (all-traces): falsified - found trace (16 steps)
-  AUTO_typing (all-traces): verified (40 steps)
+  AUTO_typing (all-traces): verified (34 steps)
 
 ------------------------------------------------------------------------------
 
@@ -826,14 +799,14 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 10.151523219s
+  processing time: 6.819771399s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
   agreement_B (all-traces): verified (14 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)
   agreement_A (all-traces): falsified - found trace (16 steps)
-  AUTO_typing (all-traces): verified (40 steps)
+  AUTO_typing (all-traces): verified (34 steps)
 
 ==============================================================================
 */

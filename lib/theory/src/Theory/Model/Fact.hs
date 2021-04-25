@@ -25,6 +25,7 @@ module Theory.Model.Fact (
   , isLinearFact
   , isPersistentFact
   , isProtoFact
+  , isInFact
 
   , factTagName
   , showFactTag
@@ -38,6 +39,7 @@ module Theory.Model.Fact (
   , getFactVariables
   , getFactTerms
   , getFactAnnotations
+  , getFactTag
   , isTrivialFact
   , isSolveFirstFact
   , isSolveLastFact
@@ -298,6 +300,11 @@ isProtoFact :: Fact t -> Bool
 isProtoFact (Fact ProtoFact {} _ _) = True
 isProtoFact _                            = False
 
+-- | True iff the fact is an input fact.
+isInFact :: Fact t -> Bool
+isInFact (Fact InFact _ _) = True
+isInFact _                 = False
+
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]
 protoFactView fa = case fa of
@@ -364,6 +371,9 @@ factMultiplicity = factTagMultiplicity . factTag
 -- | The terms of a 'Fact'.
 getFactTerms :: Fact t -> [t]
 getFactTerms (Fact _ _ ts) = ts
+
+getFactTag :: Fact t -> FactTag
+getFactTag (Fact tag _ _) = tag
 
 -- | Get the set of fact annotations
 getFactAnnotations :: Fact t -> S.Set FactAnnotation

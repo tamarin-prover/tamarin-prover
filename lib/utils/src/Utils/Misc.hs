@@ -28,6 +28,12 @@ module Utils.Misc (
 
   -- * unsafeEq
   , unsafeEq
+
+  -- * triples
+  , fst3
+  , snd3
+  , thd3
+
 ) where
 
 import Data.List
@@ -48,6 +54,18 @@ import qualified Data.ByteString.Base64             as B64  (encode)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8 (fromString)
 
 import GHC.Exts (reallyUnsafePtrEquality#, Int (I#))
+
+-- | @fst3 (x, y, z)@ returns the first element @x@ of the triple
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
+
+-- | @snd3 (x, y, z)@ returns the second element @y@ of the triple
+snd3 :: (a, b, c) -> b
+snd3 (_, x, _) = x
+
+-- | @thd3 (x, y, z)@ returns the third element @z@ of the triple
+thd3 :: (a, b, c) -> c
+thd3 (_, _, x) = x
 
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool

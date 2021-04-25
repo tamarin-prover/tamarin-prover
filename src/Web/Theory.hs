@@ -782,13 +782,15 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
       ]
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
-                               , text " / named ", doubleQuotes (text name) ]
+                               , text " / named ", doubleQuotes (text name),
+                                 if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
         name = intercalate "_" names
+        isPartial = not $ null $ unsolvedChains se
 
 
 -- | Build the Html document showing the source cases.
