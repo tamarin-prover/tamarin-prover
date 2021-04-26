@@ -46,11 +46,13 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
                     | 'multiset' | 'revealing-signing'
 
 A global heuristic sets the default heuristic that will be used when autoproving
-lemmas in the file. The specified heuristic can be any of those discussed in
+lemmas in the file. The specified goal ranking can be any of those discussed in
 Section [Heuristics](009_advanced-features.html#sec:heuristics).
 
-    global_heuristic := 'heuristic' ':' heuristic
-    heuristic        := alpha+
+    global_heuristic      := 'heuristic' ':' goal_ranking+
+    goal_ranking          := standard_goal_ranking | oracle_goal_ganking
+    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
+    oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
@@ -103,13 +105,13 @@ quantifier.
              proof_skeleton
     lemma_attrs      := '[' lemma_attr (',' lemma_attr)* ']'
     lemma_attr       := 'sources' | 'reuse' | 'use_induction' |
-                             'hide_lemma=' ident | 'heuristic=' heuristic
+                             'hide_lemma=' ident | 'heuristic=' goalRanking+
     trace_quantifier := 'all-traces' | 'exists-trace'
 
 In observational equivalence mode, lemmas can be associated to one side.
 
     lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' | 
-                             'hide_lemma=' ident | 'heuristic=' heuristic |
+                             'hide_lemma=' ident | 'heuristic=' goalRanking+ |
                              'left' | 'right') ']'
 
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
