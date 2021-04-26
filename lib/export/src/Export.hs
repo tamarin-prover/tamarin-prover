@@ -735,6 +735,15 @@ ppRestrictFormula =
                             ppOk fm_original []
                           else
                             ppFail fm_original)
+    pp2 fm_original (Conn Imp p (Conn Or fm@(Qua Ex _ _)  fm2@(Qua Ex _ _))) | isPropFormula p  = do
+                (_,_,fm') <- openFormulaPrefix fm
+                (_,_,fm2') <- openFormulaPrefix fm2
+                return $ (if isPropFormula fm' && isPropFormula fm2' then
+                            ppOk fm_original []
+                          else
+                            ppFail fm_original)
+
+
     pp2 fm_original _ = return $ ppFail fm_original
 
 ppLemma :: Lemma ProofSkeleton -> Doc
