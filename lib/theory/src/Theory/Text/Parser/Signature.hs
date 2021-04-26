@@ -125,7 +125,7 @@ function =  do
         f   <- BC.pack <$> identifier
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
-        when (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"]) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
+        when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sig <- getState
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public

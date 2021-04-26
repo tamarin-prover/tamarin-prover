@@ -26,6 +26,7 @@ module Term.Term.FunctionSymbols (
 
     -- ** concrete symbols strings
     , diffSymString
+    , munSymString
     , expSymString
     , invSymString
     , pmultSymString
@@ -115,8 +116,9 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, munSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
+munSymString = "mun"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"

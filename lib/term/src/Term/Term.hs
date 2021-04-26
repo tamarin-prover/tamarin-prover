@@ -59,6 +59,7 @@ module Term.Term (
 
     -- ** concrete symbols strings
     , diffSymString
+    , munSymString 
     , expSymString
     , invSymString
     , pmultSymString

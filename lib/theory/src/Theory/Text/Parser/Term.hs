@@ -14,6 +14,7 @@ module Theory.Text.Parser.Term (
     , llit
     , term
     , llitNoPub
+    , reservedBuiltins
 )
 where
 
@@ -28,6 +29,7 @@ import           Text.Parsec                hiding ((<|>))
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
+import           Data.ByteString.Internal        (unpackChars)
 
 
 -- | Parse a lit with logical variables parsed by @varp@
@@ -51,12 +53,25 @@ lookupArity op = do
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,priv,cnstr) -> return (k,priv,cnstr)
 
+reservedBuiltins :: [[Char]]
+reservedBuiltins =  map unpackChars [
+    munSymString
+  , oneSymString 
+  , expSymString
+  , multSymString
+  , invSymString
+  , pmultSymString 
+  , emapSymString 
+  , zeroSymString
+  , xorSymString 
+  ]
+
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 naryOpApp eqn plit = do
     op <- identifier
     --traceM $ show op ++ " " ++ show eqn
-    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+    when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     ar@(k,_,_) <- lookupArity op
     ts <- parens $ if k == 1
@@ -73,7 +88,7 @@ naryOpApp eqn plit = do
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 binaryAlgApp eqn plit = do
     op <- identifier
-    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+    when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     ar@(k,_,_) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)

@@ -116,13 +116,14 @@ replaceMinus s = BC.map f s
 replaceMinusFun :: NoEqSym -> NoEqSym
 replaceMinusFun (s, p) = (replaceMinus s, p)
 
+
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> "mult"
-                      Union -> "mun"
-                      Xor   -> "xor"
+                      Mult  -> multSymString 
+                      Union -> munSymString
+                      Xor   -> xorSymString 
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
