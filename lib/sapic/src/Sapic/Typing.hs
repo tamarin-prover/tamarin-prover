@@ -41,76 +41,74 @@ sqcap t1 t2
 defaultFunctionType :: Int -> ([Maybe a1], Maybe a2)
 defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
 
-data TypingEnvironment = TypingEnvironment {
-        vars :: Map.Map LVar SapicType
-    ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
-}
+-- | Typing environment for variables and functions. Functions are typed
+-- globally, variables may be differently typed if they are bound at different
+-- positions of the process.
+type FunctionTypingEnvironment = Map.Map NoEqSym ([SapicType],SapicType)
+type VarTypingEnvironment = Map.Map LVar SapicType
 
--- | Try to type term `t` with a type more specific than `tt`. Returns typed
--- term and its type in a Throw-Monad that contains the TypingEnvironment state.
+-- | Try to type term `t` with a type more specific than `tt` within VarTypingEnvironment.
+--  Returns typed term and its type in a ThrowMonad that contains the FunctionTypingEnvironment state.
 typeWith :: MonadThrow m =>
-    Term (Lit Name SapicLVar)
-    -> Maybe String
+    VarTypingEnvironment
+    -> SapicTerm
+    -> SapicType
     -> StateT
-        TypingEnvironment m (Term (Lit Name SapicLVar), SapicType)
-typeWith t tt 
+        FunctionTypingEnvironment m (Term (Lit Name SapicLVar), SapicType)
+typeWith vte t tt 
     | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v -- CASE: variable
     = do
-        maybeType <- Map.lookup lvar' <$> gets vars
+        let stype' = fromMaybe Nothing $ Map.lookup lvar' vte
         -- Note: we graciously ignore unbound variables. Wellformedness
         -- checks on MSRs detect them for us. We might change that in
         -- the future. 
-        let stype' = fromMaybe Nothing maybeType
         case sqcap stype' tt of 
             Left t' -> return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
             Right () -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application 
     = do
-        maybeFType <- Map.lookup fs <$> gets funs
+        maybeFType <- Map.lookup fs <$> get 
         let (intypes,outtype) = fromMaybe (defaultFunctionType n) maybeFType 
                 -- throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
         assertSmaller outtype tt t
-        (ts',ptypes) <- unzip <$> zipWithM typeWith ts intypes
+        (ts',ptypes) <- unzip <$> zipWithM (typeWith vte) ts intypes
         insertFun fs (ptypes, outtype)
         return (termViewToTerm $ FApp (NoEq fs) ts', outtype)
     | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
-        ts' <- mapM (\t' -> fst <$> typeWith t' Nothing) ts
+        ts' <- mapM (\t' -> fst <$> typeWith vte t' Nothing) ts
         return (termViewToTerm $ FApp fs ts', Nothing)
     | otherwise = return (t, Nothing) -- This case should never occur.
     where
         insertFun fs types = do
-                    modify' (\s -> s {funs = Map.insert fs types (funs s) })
+                    modify' (Map.insert fs types)
 
 typeProcess :: (GoodAnnotation a, MonadThrow m) =>
     Theory sig c r p SapicElement
     -> Process a SapicLVar -> m (Process a SapicLVar)
-typeProcess th = foldMProcess fNull fAct fComb gAct gComb initte
+typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb initVarTE p) initFunTE
     where
         -- initial typing environment with functions as far as declared
-        initte = TypingEnvironment{
-                vars = Map.empty,
-                funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
-                 }
+        initVarTE = Map.empty -- passed explicitely to account for process structure
+        initFunTE = -- initial value for state monad, because it is global
+             foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  ann  = return (ProcessNull ann)
-        fAct  te ann ac       = F.foldrM insertVar te (bindingsAct ann ac)
-        fComb te ann c        = F.foldrM insertVar te (bindingsComb ann c)
+        fAct  vte ann ac       = F.foldrM insertVar vte (bindingsAct ann ac)
+        fComb vte ann c        = F.foldrM insertVar vte (bindingsComb ann c)
         -- gAct/gComb reconstruct process tree assigning types to the terms
-        gAct te ac ann r = do -- r is typed subprocess
-            ac' <- traverseTermsAction (typeWith' te) typeWithFact typeWithVar ac
+        gAct vte ac ann r = do -- r is typed subprocess
+            ac' <- traverseTermsAction (typeWith' vte) typeWithFact typeWithVar ac
             return (ProcessAction ac' ann r)
-        gComb te c ann rl rr = do
-            c' <- traverseTermsComb (typeWith' te) typeWithFact typeWithVar c
+        gComb vte c ann rl rr = do
+            c' <- traverseTermsComb (typeWith' vte) typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        typeWith' te t = fst <$> evalStateT (typeWith t Nothing) te -- start with te as initial state, throw type away, take term (first element)
-        typeWithVar  v -- variables are correctly typed, as we just inserted them
-            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
-            | otherwise = return v
+        typeWith' vte t = fst <$> typeWith vte t Nothing
+        typeWithVar = return -- variables are correctly typed, as we just inserted them
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
-        insertVar v te =
-            case Map.lookup (slvar v) (vars te) of
+        insertVar v vte =
+            case Map.lookup (slvar v) vte of
                 Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
-                Nothing -> return $ te { vars = Map.insert (slvar v) (stype v) (vars te)}
+                Nothing -> return $ Map.insert (slvar v) (stype v) vte
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
