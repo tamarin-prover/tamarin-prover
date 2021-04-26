@@ -16,6 +16,31 @@ import Sapic.Bindings
 import Control.Monad.Fresh
 import Control.Monad.Trans.FastFresh   ()
 
+-- | Smaller-or-equal / More-or-equally-specific relation on types.
+smallerType :: Eq a => Maybe a -> Maybe a -> Bool
+smallerType _ Nothing = True
+smallerType (Just t) (Just t') = t == t'
+smallerType Nothing  (Just _) = False
+
+-- | Assert that `at` is smaller or equal to `tt`, otherwise throw an exception for term `t`
+assertSmaller :: MonadThrow m => Maybe String -> Maybe String -> SapicTerm -> m ()
+assertSmaller at tt t =
+                if at `smallerType` tt then
+                    return ()
+                else throwM (ProcessNotWellformed (TypingError t at tt) :: SapicException AnnotatedProcess)
+
+-- | Largest lower bound on types. Give the more specific of two types, unless
+-- they are contradicting.
+sqcap :: Eq a => Maybe a -> Maybe a -> Either (Maybe a) ()
+sqcap t1 t2 
+          | t1 `smallerType` t2 = Left t1
+          | t2 `smallerType` t1 = Left t2
+          | otherwise = Right ()
+
+-- | Default type for function with unspecified types or no type
+defaultFunctionType :: Int -> ([Maybe a1], Maybe a2)
+defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
+
 data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
     ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
@@ -77,18 +102,6 @@ typeProcess th = foldMProcess fNull fAct fComb gAct gComb initte
                 Nothing -> return $ te { vars = Map.insert (slvar v) (stype v) (vars te)}
         insertFun fs types = do
                     modify' (\s -> s {funs = Map.insert fs types (funs s) })
-        defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, assume Nothing^n -> Nothing 
-        smallerType _ Nothing = True
-        smallerType (Just t) (Just t') = t == t'
-        smallerType Nothing  (Just _) = False
-        sqcap t1 t2 -- give largest lower bound if possible
-          | t1 `smallerType` t2 = Left t1
-          | t2 `smallerType` t1 = Left t2
-          | otherwise = Right ()
-        assertSmaller at tt t =
-                if at `smallerType` tt then
-                    return ()
-                else throwM (ProcessNotWellformed (TypingError t at tt) :: SapicException AnnotatedProcess)
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = mapMProcesses (typeProcess th) th
