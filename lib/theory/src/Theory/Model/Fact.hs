@@ -93,6 +93,8 @@ module Theory.Model.Fact (
   , prettyFact
   , prettyNFact
   , prettyLNFact
+  , prettyLNFactSubscript
+  , prettyNFactSubscript
 
   ) where
 
@@ -529,6 +531,21 @@ prettyFact ppTerm (Fact tag an ts)
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
+-- | Pretty print a fact with subscript tags.
+prettyFactSubscript :: Document d => (t -> d) -> Fact t -> d
+prettyFactSubscript ppTerm (Fact tag an ts)
+  | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
+  | otherwise                     = ppFact (subscript (showFactTag tag)) ts <> ppAnn an
+  where
+    subscript [] = []
+    subscript ['_'] = []
+    subscript ('_':xr) = if '_' `notElem` xr then subscript ("<sub>"++xr++"</sub>") else '_':xr
+    subscript (x:xr) = x:subscript xr
+    ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
+    ppAnn ann = if S.null ann then text "" else
+        brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
+    
+
 -- | Pretty print a 'NFact'.
 prettyNFact :: (Document d, Show v) => NFact v -> d
 prettyNFact = prettyFact prettyNTerm
@@ -536,3 +553,11 @@ prettyNFact = prettyFact prettyNTerm
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact = prettyFact prettyNTerm
+
+-- | Pretty print a 'NFact' with subscript tags.
+prettyNFactSubscript :: (Document d, Show v) => NFact v -> d
+prettyNFactSubscript = prettyFactSubscript prettyNTermSubscript
+
+-- | Pretty print a 'LFact' with subscript tags.
+prettyLNFactSubscript :: Document d => LNFact -> d
+prettyLNFactSubscript fa = prettyFactSubscript prettyNTermSubscript fa
