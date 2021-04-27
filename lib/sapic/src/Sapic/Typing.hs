@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 module Sapic.Typing (
       typeTheory
     , typeProcess
@@ -83,14 +84,11 @@ typeWith vte t tt
                     modify' (Map.insert fs types)
 
 typeProcess :: (GoodAnnotation a, MonadThrow m) =>
-    Theory sig c r p SapicElement
-    -> Process a SapicLVar -> m (Process a SapicLVar)
-typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb initVarTE p) initFunTE
+    Process a SapicLVar -> StateT FunctionTypingEnvironment m (Process a SapicLVar)
+typeProcess = foldMProcess fNull fAct fComb gAct gComb initVarTE
     where
         -- initial typing environment with functions as far as declared
         initVarTE = Map.empty -- passed explicitely to account for process structure
-        initFunTE = -- initial value for state monad, because it is global
-             foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull _  ann  = return (ProcessNull ann)
         fAct  vte ann ac       = F.foldrM insertVar vte (bindingsAct ann ac)
@@ -111,4 +109,11 @@ typeProcess th p = evalStateT (foldMProcess fNull fAct fComb gAct gComb initVarT
                 Nothing -> return $ Map.insert (slvar v) (stype v) vte
 
 typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
-typeTheory th = mapMProcesses (typeProcess th) th
+-- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory th = do 
+        (th',fte) <- runStateT (mapMProcesses typeProcess th) initFunTE
+        return $ Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') fte 
+    where
+        initFunTE = -- initial value for state monad, because it is global
+             foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
+        addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)

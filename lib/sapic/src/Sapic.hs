@@ -12,7 +12,8 @@
 -- Translation from Theories with Processes to multiset rewrite rules
 
 module Sapic (
-   translate
+     translate
+   , module Sapic.Typing
 ) where
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
@@ -45,35 +46,33 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
-      []  -> if L.get transReliable ops then
-                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
-             else
-                    return (removeSapicItems th)
+                 []  -> if L.get transReliable ops then
+                              throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+                      else
+                              return (removeSapicItems th)
+                 [p] -> do -- annotate
+                          an_proc_pre <- translateLetDestr sigRules
+                            $ translateReport
+          --                  $ annotatePureStates
+                            $ annotateSecretChannels
+                            $ propagateNames
+                            $ toAnProcess p
+                          an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
+                          -- compute initial rules
+                          (initRules,initTx) <- initialRules an_proc
+                          -- generate protocol rules, starting from variables in initial tilde x
+                          protoRule <-  gen (trans an_proc) an_proc [] initTx
+                          -- add these rules
+                          eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
 
-      [p] -> do -- annotate
-                typedP <- typeProcess th p
-                an_proc_pre <- translateLetDestr sigRules
-                  $ translateReport
---                  $ annotatePureStates
-                  $ annotateSecretChannels
-                  $ propagateNames
-                  $ toAnProcess typedP
-                an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
-                -- compute initial rules
-                (initRules,initTx) <- initialRules an_proc
-                -- generate protocol rules, starting from variables in initial tilde x
-                protoRule <-  gen (trans an_proc) an_proc [] initTx
-                -- add these rules
-                eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
-
-                th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
-                -- add restrictions
-                rest<- restrictions an_proc protoRule
-                th2 <- foldM liftedAddRestriction th1 rest
-                -- add heuristic, if not already defined:
-                let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return (removeSapicItems th3)
-      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
+                          th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
+                          -- add restrictions
+                          rest<- restrictions an_proc protoRule
+                          th2 <- foldM liftedAddRestriction th1 rest
+                          -- add heuristic, if not already defined:
+                          let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                          return (removeSapicItems th3)
+                 _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = L.get thyOptions th
     translateReport anp =

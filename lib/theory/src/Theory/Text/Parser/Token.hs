@@ -31,6 +31,7 @@ module Theory.Text.Parser.Token (
   , freshName
   , pubName
 
+  , typep
   , sortedLVar
   , lvar
   , msgvar
@@ -321,6 +322,10 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 pubName :: Parser String
 pubName = singleQuoted identifier
 
+-- | Parse a Sapic Type
+typep :: Parser SapicType
+typep = ( try (symbol defaultSapicTypeS) *> return Nothing)
+            <|> Just <$> identifier
 
 -- | Parse a variable in sapic that is typed:
 --   first parse for lvar, then parse for one more type
@@ -334,7 +339,7 @@ pubName = singleQuoted identifier
 sapicvar :: Parser SapicLVar
 sapicvar = do
         v <- lvar
-        t <- option Nothing $ colon *> (Just <$> identifier)
+        t <- option Nothing $ colon *> typep
         return (SapicLVar v t)
 
 sapicpatternvar :: Parser PatternSapicLVar

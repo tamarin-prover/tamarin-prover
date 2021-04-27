@@ -136,7 +136,6 @@ loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarn
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    -- thy' <-  Sapic.translate thy
     return thy
 
 -- | Load a closed theory.
@@ -148,14 +147,15 @@ loadClosedDiffThy as inFile = do
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= Sapic.translate >>= closeThy as
+loadClosedThy as inFile = loadOpenThy as inFile >>= Sapic.typeTheory >>= Sapic.translate >>= closeThy as
 
 -- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
-    thy0 <- loadOpenThy as inFile
-    thy1 <-  Sapic.translate thy0
-    thy <- addMessageDeductionRuleVariants thy1
+    thy <- loadOpenThy as inFile 
+          >>= Sapic.typeTheory
+          >>= Sapic.translate
+          >>= addMessageDeductionRuleVariants
     sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
     -- report
     case checkWellformedness thy sig of
@@ -202,7 +202,8 @@ loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
-            thy' <- Sapic.translate thy
+            thy' <- Sapic.typeTheory thy 
+                  >>= Sapic.translate 
             Right <$> closeThy as thy' -- No "return" because closeThy gives IO (ClosedTheory)
 
 
@@ -228,7 +229,8 @@ reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy -> do
-            thy' <- Sapic.translate thy
+            thy' <- Sapic.typeTheory thy 
+                  >>= Sapic.translate 
             sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
             case checkWellformedness thy' sig of
                   []     -> return ""

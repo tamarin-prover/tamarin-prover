@@ -36,6 +36,7 @@ module Theory (
   , pBody
   , pVars
   , addFunctionTypingInfo
+  , clearFunctionTypingInfos
 
   -- * Options
   , transAllowPatternMatchinginLookup
@@ -1279,6 +1280,13 @@ addProcess l = modify thyItems (++ [SapicItem (ProcessItem l)])
 addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
 addFunctionTypingInfo l = modify thyItems (++ [SapicItem $ FunctionTypingInfo l])
 
+-- | Remove all Function Typing information in Theory
+clearFunctionTypingInfos :: Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+clearFunctionTypingInfos = modify thyItems (filter f)
+  where
+    f (SapicItem (FunctionTypingInfo _)) = False
+    f _                                  = True
+
 -- | Add a new process expression.
 addExportInfo :: ExportInfo -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
 addExportInfo eInfo thy = do
@@ -1393,6 +1401,7 @@ lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 -- | Find the function typing info for a given function symbol.
 lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p SapicElement -> Maybe SapicFunSym
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
+
 
 -- | Find the export info for the given tag.
 lookupExportInfo :: String -> Theory sig c r p SapicElement -> Maybe ExportInfo

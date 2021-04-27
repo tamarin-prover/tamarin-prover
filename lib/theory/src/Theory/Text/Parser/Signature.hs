@@ -107,9 +107,9 @@ functionType = try (do
                     return (replicate k defaultSapicType, defaultSapicType)
                    )
                 <|>(do
-                    argTypes  <- parens (commaSep (Just <$> identifier))
+                    argTypes  <- parens (commaSep typep)
                     _         <- colon
-                    outType   <- Just <$> identifier
+                    outType   <- typep
                     return (argTypes, outType)
                     )
 

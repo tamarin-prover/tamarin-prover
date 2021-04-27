@@ -83,7 +83,7 @@ type SapicFunSym = (NoEqSym, [SapicType], SapicType)
 -- $(mkLabels [''SapicFunSym])
 
 defaultSapicTypeS :: String
-defaultSapicTypeS = "bitstring"
+defaultSapicTypeS = "Any"
 defaultSapicType :: SapicType
 defaultSapicType = Nothing
 
