@@ -56,7 +56,7 @@ type VarTypingEnvironment = Map.Map LVar SapicType
 
 -- | Try to type term `t` with a type more specific than `tt` within VarTypingEnvironment.
 --  Returns typed term and its type in a ThrowMonad that contains the FunctionTypingEnvironment state.
-typeWith :: MonadThrow m =>
+typeWith :: (MonadThrow m, MonadCatch m) =>
     VarTypingEnvironment
     -> SapicTerm
     -> SapicType
@@ -74,14 +74,20 @@ typeWith vte t tt
             Left _ -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application 
     = do
+        -- First determine output type of function from target constraint and update FunctionTypingEnvironment
         (intypes1,outtype1) <- getFun n fs
-        mintype1 <- sqcap outtype1 tt -- TODO might catch an get nicer error message here
-        insertFun fs (intypes1, mintype1) -- Before typing arguments, we update the out value 
+        mintype1 <- catch (sqcap outtype1 tt) (sqHandler t)
+        insertFun fs (intypes1, mintype1) 
+        -- Then try to type arguments
         (_,ptypes) <- unzip <$> zipWithM (typeWith vte) ts intypes1
-        (intypes2,outtype2) <- getFun n fs -- function type environment might have changed, so we recompute
-        mintype2 <- sqcap outtype2 tt -- TODO might catch an get nicer error message here
+        -- From typing our arguments, we might have learned a more precise
+        -- output type, e.g., for t=h(h(x:lol)) we learn that h must have output
+        -- lol.
+        -- So we recompute the output type ...
+        (intypes2,outtype2) <- getFun n fs 
+        mintype2 <- catch (sqcap outtype2 tt) (sqHandler t)
         insertFun fs (ptypes, mintype2)
-        -- second run..
+        -- ... and now type the arguments for real.
         (ts',ptypes') <- unzip <$> zipWithM (typeWith vte) ts intypes2
         insertFun fs (ptypes', outtype2)
         return (termViewToTerm $ FApp (NoEq fs) ts', outtype2)
@@ -106,8 +112,10 @@ typeWith vte t tt
             ins <- zipWithM sqcap ins1 ins2
             out <- sqcap out1 out2 
             return (ins,out)
+        sqHandler term (CannotMerge outt tterm) = 
+                throwM (ProcessNotWellformed (TypingError term outt tterm) :: SapicException AnnotatedProcess)
 
-typeProcess :: (GoodAnnotation a, MonadThrow m) =>
+typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m) =>
     Process a SapicLVar -> StateT FunctionTypingEnvironment m (Process a SapicLVar)
 typeProcess = foldMProcess fNull fAct fComb gAct gComb initVarTE
     where
@@ -132,7 +140,7 @@ typeProcess = foldMProcess fNull fAct fComb gAct gComb initVarTE
                 Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
                 Nothing -> return $ Map.insert (slvar v) (stype v) vte
 
-typeTheory :: MonadThrow m => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = do 
         (th',fte) <- runStateT (mapMProcesses typeProcess th) initFunTE
