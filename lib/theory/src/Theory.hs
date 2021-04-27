@@ -2488,6 +2488,8 @@ prettySapicElement (ProcessDefItem p) =
     <->
     (text (L.get pName p))
     <->
+    (text ("(" ++ intercalate "," (map show $ L.get pVars p) ++ ")"))
+    <->
     (text "=")
     <->
     (nest 2 $ prettyProcess $ L.get pBody p)
@@ -2509,7 +2511,7 @@ prettySapicElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
         showPriv Private = " [private]"
         showPriv Public  = ""
 prettySapicElement (ExportInfoItem eInfo) =
-    (text "export")
+    (text "export: ")
     <->
     (text $ L.get eTag eInfo)
     <->
