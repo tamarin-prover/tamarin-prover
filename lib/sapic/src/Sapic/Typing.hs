@@ -69,9 +69,8 @@ typeWith vte t tt
         -- Note: we graciously ignore unbound variables. Wellformedness
         -- checks on MSRs detect them for us. We might change that in
         -- the future. 
-        case sqcap stype' tt of 
-            Right t' -> return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
-            Left _ -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
+        t' <- catch (sqcap stype' tt) (sqHandler t)
+        return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application 
     = do
         -- First determine output type of function from target constraint and update FunctionTypingEnvironment
