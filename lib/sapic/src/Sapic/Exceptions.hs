@@ -37,6 +37,7 @@ data WFerrror p = WFLock WFLockTag p
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
                 | TypingError SapicTerm SapicType SapicType
+                | TypingErrorFunctionMerge NoEqSym SapicFunType SapicFunType
                 | FunctionNotDefined NoEqSym
 
     deriving (Typeable)
@@ -110,6 +111,13 @@ instance (Show p) => Show (WFerrror p) where
                               ++ show tt
                               ++ " but actual type is "
                               ++ show at
+                              ++ "."
+    show (TypingErrorFunctionMerge fs t1 t2) = "Typing error: function types for function"
+                              ++ show fs
+                              ++ " are compatible. Expected type "
+                              ++ prettySapicFunType t1
+                              ++ " but actual type is "
+                              ++ prettySapicFunType t2
                               ++ "."
     show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
         

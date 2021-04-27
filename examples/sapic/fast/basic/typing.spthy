@@ -14,7 +14,6 @@ let P(a:rofl) = new x:lol; new y;
         out(f(<x,y>));  // should succeed
         out(h(x)); // implicitely types input to x as lol
         out(h(h(x))); // should implictely tupe h as lol->lol now 
-        // TODO note that printout of function does not reflect this-> need to update with typing info...
         /* out(f(h(x))); // should fail: as h goes to lol and f wants bitstring */
         (new b:lol | new b:rofl) // should be allowed
 

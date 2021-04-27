@@ -17,6 +17,7 @@ module Theory.Sapic.Term (
     , defaultSapicTypeS
     , defaultSapicType
     , defaultSapicNodeType
+    , SapicFunType
     , SapicLVar(..)
     , SapicTerm
     , SapicNTerm
@@ -38,6 +39,7 @@ module Theory.Sapic.Term (
     , prettySapicTerm
     , prettySapicFact
     , prettySyntacticSapicFormula
+    , prettySapicFunType
 ) where
 
 import Data.Binary
@@ -49,6 +51,7 @@ import Theory.Model.Atom
 import Theory.Model.Formula
 import Term.Substitution
 import Theory.Text.Pretty
+import Data.List (intercalate)
 
 -- | A process data structure
 
@@ -68,6 +71,7 @@ type SapicFormula = ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar
 -- | Function symbol (f,l,r) with argument types l and return type r
 -- define only on NoEqSyms, as we will assume the others to be polymorphic
 type SapicFunSym = (NoEqSym, [SapicType], SapicType)
+type SapicFunType = ([SapicType], SapicType)
 
 -- TODO alternative definition.
 -- 1. If we need to extend, switch to this tyoe
@@ -98,6 +102,9 @@ instance Show SapicLVar where
     show (SapicLVar v Nothing ) = show  v
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
+
+prettySapicFunType :: SapicFunType -> String
+prettySapicFunType (ins,out) = intercalate  " * " (map show ins) ++ " -> " ++ show out
 
 -- | return free variabes in SapicTerm  (frees from HasFrees only returns LVars)
 freesSapicTerm :: VTerm n v -> [v]

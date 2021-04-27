@@ -31,6 +31,7 @@ module Theory.Text.Parser.Token (
   , freshName
   , pubName
 
+
   , typep
   , sortedLVar
   , lvar

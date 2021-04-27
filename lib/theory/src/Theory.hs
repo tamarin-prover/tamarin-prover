@@ -2482,7 +2482,7 @@ emptyString :: HighlightDocument d => () -> d
 emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement (ProcessItem p) = prettyProcess p
+prettySapicElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
 prettySapicElement (ProcessDefItem p) =
     (text "let ")
     <->
@@ -2524,7 +2524,7 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulast
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => PlainProcess -> d
-prettyProcess p = text "process" <> colon $-$ (nest 2 $ text (prettySapic p))
+prettyProcess p = text (prettySapic p)
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
 prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))

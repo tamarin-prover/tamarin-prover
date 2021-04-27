@@ -30,13 +30,19 @@ assertSmaller at tt t =
                     return ()
                 else throwM (ProcessNotWellformed (TypingError t at tt) :: SapicException AnnotatedProcess)
 
+data TypingException = CannotMerge SapicType SapicType
+instance Show TypingException 
+    where
+        show (CannotMerge t1 t2) = "Cannot merge types" ++ show t1 ++ " and " ++ show t2 ++ "."
+instance Exception TypingException
+
 -- | Largest lower bound on types. Give the more specific of two types, unless
--- they are contradicting.
-sqcap :: Eq a => Maybe a -> Maybe a -> Either (Maybe a) ()
+-- they are contradicting. Can also be used as Either type.
+sqcap :: MonadThrow m => Maybe String -> Maybe String -> m (Maybe String)
 sqcap t1 t2 
-          | t1 `smallerType` t2 = Left t1
-          | t2 `smallerType` t1 = Left t2
-          | otherwise = Right ()
+          | t1 `smallerType` t2 = return t1
+          | t2 `smallerType` t1 = return t2
+          | otherwise = throwM (CannotMerge t1 t2)
 
 -- | Default type for function with unspecified types or no type
 defaultFunctionType :: Int -> ([Maybe a1], Maybe a2)
@@ -64,24 +70,42 @@ typeWith vte t tt
         -- checks on MSRs detect them for us. We might change that in
         -- the future. 
         case sqcap stype' tt of 
-            Left t' -> return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
-            Right () -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
+            Right t' -> return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
+            Left _ -> throwM (ProcessNotWellformed (TypingError t stype' tt) :: SapicException AnnotatedProcess)
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application 
     = do
-        maybeFType <- Map.lookup fs <$> get 
-        let (intypes,outtype) = fromMaybe (defaultFunctionType n) maybeFType 
-                -- throwM (ProcessNotWellformed (FunctionNotDefined fs) :: SapicException AnnotatedProcess)
-        assertSmaller outtype tt t
-        (ts',ptypes) <- unzip <$> zipWithM (typeWith vte) ts intypes
-        insertFun fs (ptypes, outtype)
-        return (termViewToTerm $ FApp (NoEq fs) ts', outtype)
+        (intypes1,outtype1) <- getFun n fs
+        mintype1 <- sqcap outtype1 tt -- TODO might catch an get nicer error message here
+        insertFun fs (intypes1, mintype1) -- Before typing arguments, we update the out value 
+        (_,ptypes) <- unzip <$> zipWithM (typeWith vte) ts intypes1
+        (intypes2,outtype2) <- getFun n fs -- function type environment might have changed, so we recompute
+        mintype2 <- sqcap outtype2 tt -- TODO might catch an get nicer error message here
+        insertFun fs (ptypes, mintype2)
+        -- second run..
+        (ts',ptypes') <- unzip <$> zipWithM (typeWith vte) ts intypes2
+        insertFun fs (ptypes', outtype2)
+        return (termViewToTerm $ FApp (NoEq fs) ts', outtype2)
     | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
         ts' <- mapM (\t' -> fst <$> typeWith vte t' Nothing) ts
         return (termViewToTerm $ FApp fs ts', Nothing)
     | otherwise = return (t, Nothing) -- This case should never occur.
     where
-        insertFun fs types = do
-                    modify' (Map.insert fs types)
+        insertFun fs newFunType = do
+                    fte <- get
+                    case Map.lookup fs fte of
+                        Nothing -> put $ Map.insert fs newFunType fte -- should never happen, but this is safe to do
+                        Just oldFunType -> do
+                            case mergeFunTypes newFunType oldFunType of
+                                Right mergedFunType -> 
+                                    put $ Map.insert fs mergedFunType fte
+                                Left _ -> throwM (ProcessNotWellformed (TypingErrorFunctionMerge fs newFunType oldFunType) :: SapicException AnnotatedProcess)
+        getFun n fs = do
+            maybeFType <- Map.lookup fs <$> get 
+            return $ fromMaybe (defaultFunctionType n) maybeFType 
+        mergeFunTypes (ins1,out1) (ins2,out2)= do
+            ins <- zipWithM sqcap ins1 ins2
+            out <- sqcap out1 out2 
+            return (ins,out)
 
 typeProcess :: (GoodAnnotation a, MonadThrow m) =>
     Process a SapicLVar -> StateT FunctionTypingEnvironment m (Process a SapicLVar)
