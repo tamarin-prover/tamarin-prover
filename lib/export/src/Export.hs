@@ -106,7 +106,6 @@ data ProverifHeader =
   | Fun String String Int String [String] -- symbol declaration, (symkind,name,arity,types,attr)
   | HEvent String
   | Eq String String String -- eqtype, quantif, equation
-  -- | Type String -- will  be used to define types
   deriving (Ord, Show, Eq)
 
 
@@ -119,39 +118,39 @@ state_headers = S.fromList [
 -- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
 builtins :: [(String, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
-  ("hashing", [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
-  ("signing", [
-      Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
-      Type "pkey",
-      Fun "fun" "pk" 1 "(skey):pkey" [],
-      Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
-      ]
-  ),
+  -- ("hashing", [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
+  -- ("signing", [
+  --     Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
+  --     Type "pkey",
+  --     Fun "fun" "pk" 1 "(skey):pkey" [],
+  --     Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
+  --     ]
+  -- ),
   ("diffie-hellman", [
       Sym "const" "g" ":bitstring" [],
       Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
       Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
       ]
-  ),
-  ("symmetric-encryption", [
-      Type "skey",
-      Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
-      Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
-  ),
-  ("asymmetric-encryption", [
-      Type "skey",
-      Type "pkey",
-      Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
-      Fun "fun" "pk" 1 "(skey):pkey" [],
-      Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
-  ),
-  ("locations-report",
-   [
-    Fun "fun"  "rep" 2 "(bitstring,bitstring):bitstring" ["private"],
-    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = x_1",
-    Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "get_rep(rep(x_1, x_2)) = x_1"
-   ]
   )
+  -- ("symmetric-encryption", [
+  --     Type "skey",
+  --     Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
+  --     Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
+  -- ),
+  -- ("asymmetric-encryption", [
+  --     Type "skey",
+  --     Type "pkey",
+  --     Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
+  --     Fun "fun" "pk" 1 "(skey):pkey" [],
+  --     Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
+  -- ),
+  -- ("locations-report",
+  --  [
+  --   Fun "fun"  "rep" 2 "(bitstring,bitstring):bitstring" ["private"],
+  --   Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = x_1",
+  --   Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "get_rep(rep(x_1, x_2)) = x_1"
+  --  ]
+  -- )
   ]
 
 pairPRules :: S.Set ProverifHeader
@@ -164,7 +163,8 @@ ppPubName (NameId "one") = text "1"
 ppPubName (NameId t) = text t
 
 builtins_rules :: S.Set CtxtStRule
-builtins_rules = foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules, locationReportRules]
+builtins_rules = S.empty
+  -- foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules, locationReportRules]
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
@@ -185,13 +185,15 @@ ppLVar (LVar n _ i) = text $ n <> "_" <> (show i)
 ppUnTypeVar :: SapicLVar -> Doc
 ppUnTypeVar (SapicLVar lvar  _) = ppLVar lvar
 
-ppTypeVar :: TranslationContext -> SapicLVar -> Doc
-ppTypeVar tc v = case trans tc of
-  Proverif -> auxppTypeVar v
-  DeepSec -> ppUnTypeVar v
-  where auxppTypeVar (SapicLVar lvar Nothing) = ppLVar lvar <> text ":bitstring"
-        auxppTypeVar (SapicLVar lvar (Just t)) = ppLVar lvar <> text ":" <> (text t)
+ppType :: Maybe String -> String
+ppType Nothing = "bitstring"
+ppType (Just s) = s
 
+
+ppTypeVar :: TranslationContext -> SapicLVar -> Doc
+ppTypeVar tc v@(SapicLVar lvar ty) = case trans tc of
+  Proverif -> ppLVar lvar <> text ":" <> text (ppType ty)
+  DeepSec -> ppUnTypeVar v
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
@@ -759,14 +761,19 @@ loadLemmas thy = map ppLemma (theoryLemmas thy)
 -- Header Generation
 ------------------------------------------------------------------------------
 
-headerOfFunSym :: SapicFunSym-> Maybe ProverifHeader
-headerOfFunSym  ((f,(k,Public,Constructor)),inTypes,Just outType) =
-  Just $ Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) []
+headersOfType :: [SapicType] -> S.Set ProverifHeader
+headersOfType types = S.fromList $ foldl (\y x -> case x of
+                                           Nothing -> y
+                                           Just s -> Type s : y) [] types
+-- TODOS do not declare type bitstring
 
-headerOfFunSym ((f,(k,Private,Constructor)),inTypes,Just outType) =
-  Just $ Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ outType) ["private"]
+headerOfFunSym :: SapicFunSym-> S.Set ProverifHeader
+headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
+  Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert`  headersOfType (outType : inTypes)
+  where priv_or_pub Public = []
+        priv_or_pub Private =  ["private"]
 
-headerOfFunSym _ = Nothing
+headerOfFunSym _ = S.empty
 
 -- Load the proverif headers from the OpenTheory
 loadHeaders :: TranslationContext -> OpenTheory -> S.Set ProverifHeader
@@ -781,9 +788,7 @@ loadHeaders tc thy =
 
         -- all user declared function symbols have typinginfos
         userDeclaredFunctions = theoryFunctionTypingInfos thy
-        typedHeaderOfFunSym = foldl (\y x-> case headerOfFunSym x of
-                                        Nothing -> y
-                                        Just hd -> hd `S.insert` y) S.empty userDeclaredFunctions
+        typedHeaderOfFunSym = foldl (\y x->  headerOfFunSym x `S.union` y) S.empty userDeclaredFunctions
 
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
@@ -797,11 +802,12 @@ headersOfRule tc r = case ctxtStRuleToRRule r of
     where (plhs,lsh) = ppLNTerm tc lhs
           (prhs,rsh) = ppLNTerm tc rhs
           hrule = Eq  prefix  ("forall " ++
-                       make_frees (map show freesr)  ++
+                       make_frees ppfreesr  ++
                        ";")
                        (render $ sep [ nest 2 $ plhs
                            , text "=" <-> prhs ])
           freesr = List.union (frees lhs) (frees rhs)
+          ppfreesr = map render $ map (ppLVar) freesr
           make_frees [] = ""
           make_frees [x] = x ++ ":bitstring"
           make_frees (x:xs) =  x ++ ":bitstring," ++ (make_frees xs)
@@ -897,9 +903,8 @@ getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
 
 make_argtypes :: [SapicType] -> String
 make_argtypes [] = ""
-make_argtypes [Just t] = t
-make_argtypes ((Just p):t) = p ++ "," ++ (make_argtypes t)
-make_argtypes _ = "Error: ill-defined type"
+make_argtypes [x] = ppType x
+make_argtypes (x:t) = ppType x ++ "," ++ (make_argtypes t)
 
 make_args :: Int -> String
 make_args 0 = ""
