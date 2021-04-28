@@ -389,8 +389,8 @@ prettySapicComb (ProcessCall s _ ts) = s ++ "("++ p ts ++ ")"
                                             fsep (punctuate comma (map prettySapicTerm pts))
 
 -- | Printer for SAPIC processes..
--- TODO use highlight document 
--- TODO put parens, but only where needed...
+-- TODO use highlight document (see commented code below)
+-- TODO put parens, but only where needed (NOTE mostly done, replication needs parents unless continuation is processcall)
 prettySapic' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> LProcess ann -> String
 prettySapic' prettyRuleRestr p
     | (ProcessNull _) <- p = "0"
@@ -403,6 +403,18 @@ prettySapic' prettyRuleRestr p
     where
         r = prettySapic' prettyRuleRestr -- recursion shortcut
         ppAct = prettySapicAction' prettyRuleRestr
+
+-- prettySapic' prettyRuleRestr p
+--     | (ProcessNull _) <- p = text "0"
+--     | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
+--     | (ProcessComb c _ pl pr) <- p =  r pl <-> prettySapicComb c <-> r pr
+--     | (ProcessAction Rep _ p') <- p = ppAct Rep <-> parens (r p')
+--     | (ProcessAction a _ (ProcessNull _)) <- p = text $ ppAct a 
+--     | (ProcessAction a _ p'@ProcessComb {}) <- p = text (ppAct a) <-> ";" <-> parens (r p')
+--     | (ProcessAction a _ p') <- p = text (ppAct a) <-> ";" <-> r p'
+--     where
+--         r = prettySapic' prettyRuleRestr -- recursion shortcut
+--         ppAct = prettySapicAction' prettyRuleRestr
 
 -- | Printer for the top-level process, used, e.g., for rule names.
 prettySapicTopLevel' :: ([SapicLNFact] -> [SapicLNFact] -> [SapicLNFact] -> [SapicFormula] -> String) -> LProcess ann -> String
