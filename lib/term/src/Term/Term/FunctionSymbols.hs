@@ -7,7 +7,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Function Symbols and Signatures.
@@ -145,9 +145,9 @@ invSym   = (invSymString,(1,Public,Constructor))
 -- | The one in the group of exponents.
 oneSym   = (oneSymString,(0,Public,Constructor))
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,Public,Constructor))
+fstSym   = ("fst",(1,Public,Destructor))
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,Public,Constructor))
+sndSym   = ("snd",(1,Public,Destructor))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,Public,Constructor))
 -- | The zero for XOR.
