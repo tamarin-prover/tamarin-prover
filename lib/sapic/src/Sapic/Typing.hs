@@ -72,6 +72,8 @@ typeWith t tt
         -- checks on MSRs detect them for us. We might change that in
         -- the future.
         t' <- catch (sqcap stype' tt) (sqHandler t)
+        te <- get
+        modify' (\s -> s { vars = Map.insert (slvar v) t' (vars te)})
         return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
@@ -151,6 +153,9 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 
 
+-- typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [SapicTerm] -> TypingEnvironment
+-- typeTermswithEnv typeEnv terms = do
+--        (terms, fte) <- runStateT (mapM typeWith Nothing) initTE
 
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
