@@ -302,19 +302,18 @@ ppFact tc (Fact tag _ ts)
       where (pts, shs) = unzip $ map (ppSapicTerm tc) ts2
             sh = foldl S.union S.empty shs
 
--- pretty print an Action, collecting the constant and events that need to be declared
-ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader)
+-- pretty print an Action, collecting the constant and events that need to be declared. It also returns a boolean, specifying if the printout can serve as the end of a process or not.
+ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader, Bool)
 ppAction ProcessAnnotation{isStateChannel = Nothing} tc (New v) =
-   (text "new " <> (ppTypeVar tc v) <> text ";", S.empty)
+   (text "new " <> (ppTypeVar tc v), S.empty, True)
 
 ppAction ProcessAnnotation{pureState=False, isStateChannel = Just t} tc (New v@(SapicLVar lvar _ )) =
      (extras $
        text "new " <> channel <> text "[assumeCell];"
        $$ text "new lock_" <> channel <> text "[assumeCell];"
      -- we also declare the corresponding lock channel, and initialize it
-       $$ text "out(lock_" <> ppLVar lvar <> text ",0);"
-
-     ,  if hasUnboundStates tc then sht else S.empty)
+       $$ text "out(lock_" <> ppLVar lvar <> text ",0)"
+     ,  if hasUnboundStates tc then sht else S.empty, True)
   where channel = ppTypeVar tc v
         (pt, sht) = ppSapicTerm tc t
         extras x = if hasUnboundStates tc then x
@@ -323,85 +322,85 @@ ppAction ProcessAnnotation{pureState=False, isStateChannel = Just t} tc (New v@(
           else x
 
 ppAction ProcessAnnotation{pureState=True, isStateChannel = Just _} tc (New v) =
-     (text "new " <> (ppTypeVar tc v) <> text "[assumeCell];"
-     , S.empty)
+     (text "new " <> (ppTypeVar tc v) <> text "[assumeCell]"
+     , S.empty, True)
 
-ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty)
-ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty)
+ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty, False)
+ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty, False)
 
-ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
-                                       , sh1 `S.union` sh2)
+ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
+                                       , sh1 `S.union` sh2, True)
   where (pt1, sh1) = getAttackerChannel tc t1
         mvars = getMatchVars an
         (pt2, sh2) = auxppSapicTerm tc mvars True t2
 
-ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ");"
-                                       , sh1 `S.union` sh2)
+ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
+                                       , sh1 `S.union` sh2, True)
   where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
 
 -- pattern matching on input for deepsec is not supported
 ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
-                                       , sh1 `S.union` sh2)
+                                       , sh1 `S.union` sh2, False)
   where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
-ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ");", sh1 `S.union` sh2)
+ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2, True)
   where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = ppSapicTerm tc t2
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh) -- event Headers are definde globally inside loadHeaders
+ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa, sh, True) -- event Headers are definde globally inside loadHeaders
   where (pa, sh) = ppFact tc (Fact tag m ts)
 
-ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
+ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "Unsupported event", S.empty, True)
 
 
 -- For pure states, we do not put locks and unlocks
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Lock _) =
-    (text "", S.empty)
+    (text "", S.empty, False)
 
 -- If there is a state channel, we simply use it
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Lock _) =
-  (text "in(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text ":nat);"
-                              , S.empty)
+  (text "in(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text ":nat)"
+                              , S.empty, True)
 
 -- If there is no state channel, we must use the table
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
     (text "get tbl_locks_handle(" <> pt <> text "," <> text ptvar <> text ") in"
-     $$ text "in(" <> text ptvar <> text" , counter" <> text ptvar <> text ":nat);", sh)
+     $$ text "in(" <> text ptvar <> text" , counter" <> text ptvar <> text ":nat)", sh, True)
   where
     freevars = S.fromList $  map (\(SapicLVar lvar _) -> lvar) $ freesSapicTerm t
     (pt, sh) = auxppSapicTerm tc freevars True t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Unlock _) =
-    (text "", S.empty)
+    (text "", S.empty, False)
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Unlock _) =
-  (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ");"
-  , S.empty)
+  (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ")"
+  , S.empty, True)
 
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Unlock t) =
-    (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1);", sh)
+    (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1)", sh, True)
   where
     (pt, sh) = ppSapicTerm tc t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} tc@TranslationContext{trans=Proverif} (Insert _ c) =
-      (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ");"
-      , shc)
+      (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ")"
+      , shc, True)
   where
     (pc, shc) = ppSapicTerm tc c
 
 -- Should never happen
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationContext{trans=Proverif} (Insert _ _) =
-  (text "TRANSLATIONERROR", S.empty)
+  (text "TRANSLATIONERROR", S.empty, True)
 
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
-       $$ text "out(" <> pt <> text ", " <> pc <> text ");"
-      , shc)
+       $$ text "out(" <> pt <> text ", " <> pc <> text ")"
+      , shc, True)
   where
     pt = ppLVar lvar
     (pc, shc) = ppSapicTerm tc c
@@ -409,14 +408,14 @@ ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc
 -- must rely on the table
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Insert t t2) =
     (text "in(" <> text ptvar <> text ", " <> pt <> text "_dump:bitstring);"
-     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ");", sh `S.union` sh2)
+     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ")", sh `S.union` sh2, True)
   where
     (pt, sh) = ppSapicTerm tc t
     (pt2, sh2) = ppSapicTerm tc t2
     ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
 
 
-ppAction _  _ _  = (text "Action not supported for translation", S.empty)
+ppAction _  _ _  = (text "Action not supported for translation", S.empty, True)
 
 ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProverifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
@@ -558,10 +557,12 @@ ppSapic tc@TranslationContext{trans=Proverif} (ProcessAction Rep _ p)  = (text "
                                    where (pp, psh) = ppSapic tc p
 ppSapic tc@TranslationContext{trans=DeepSec} (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
-ppSapic tc  (ProcessAction a an (ProcessNull _))  = (pa <> text "0", sh)
-                                     where (pa, sh) = ppAction an tc a
-ppSapic tc  (ProcessAction a an p)  = (pa $$ pp , sh `S.union` psh)
-                                     where (pa, sh) = ppAction an tc a
+ppSapic tc  (ProcessAction a an (ProcessNull _))  = if unNeedZero then (pa, sh)
+                                                    else (pa <> text "0", sh)
+                                     where (pa, sh, unNeedZero) = ppAction an tc a
+ppSapic tc  (ProcessAction a an p)  = if needSep then  (pa <> text ";" $$ pp , sh `S.union` psh)
+                                      else  (pa $$ pp , sh `S.union` psh)
+                                     where (pa, sh, needSep) = ppAction an tc a
                                            (pp, psh) = ppSapic tc p
 
 addAttackerReportProc :: TranslationContext -> OpenTheory -> Doc -> Doc
@@ -797,7 +798,7 @@ loadHeaders tc thy typeEnv = do
 
 
         -- events headers
-        eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ("event " ++ showFactTag tag ++ "("++ make_argtypes  types ++  ")") `S.insert` acc) S.empty (events typeEnv)
+        eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ("event " ++ showFactTag tag ++ "("++ make_argtypes  types ++  ").") `S.insert` acc) S.empty (events typeEnv)
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
 
@@ -897,7 +898,7 @@ mkAttackerChannel :: (-- MonadThrow m,PlainProcess
                   -- ,Foldable (AnProcess ProcessAnnotation)
                 )
                     => LProcess (ProcessAnnotation LVar) -> m LVar
-mkAttackerChannel _ = (freshLVar "attacker" LSortMsg)
+mkAttackerChannel _ = (freshLVar "att" LSortMsg)
 
 mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProverifHeader)
 mkAttackerContext tc p =
