@@ -155,7 +155,8 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheoryEnv th = do
-    runStateT (mapMProcesses typeProcess th) initTE
+    (th', fte) <- runStateT (mapMProcesses typeProcess th) initTE
+    return $ (Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte), fte)
     where
         -- initial typing environment with functions as far as declared
         initTE = TypingEnvironment{
@@ -163,11 +164,11 @@ typeTheoryEnv th = do
                 funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th),
                 events = Map.empty
                  }
+        addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
 typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = do
-        (th',fte) <- typeTheoryEnv th
-        return $ Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
+        (th', _) <- typeTheoryEnv th
+        return th'
     where
-        addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)

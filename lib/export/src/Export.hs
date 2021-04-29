@@ -38,6 +38,7 @@ import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
 import qualified Data.Label as L
+import qualified Data.Map as M
 import Data.List as List
 
 import qualified Data.ByteString.Char8 as BC
@@ -65,10 +66,10 @@ proverifTemplate headers queries process macroproc lemmas =
 
 
 prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
-prettyProVerifTheory (thy, _) =  return $ proverifTemplate hd queries proc macroproc lemmas
+prettyProVerifTheory (thy, typEnv) =  return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
-    hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
+    hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy typEnv)
                                        `S.union` prochd `S.union` macroprochd)
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
@@ -349,7 +350,7 @@ ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text "
   where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = ppSapicTerm tc t2
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh `S.union` (S.singleton (HEvent ("event " ++ (showFactTag tag) ++ "(" ++ make_args (length ts) ++ ")."))))
+ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa <> text ";", sh) -- event Headers are definde globally inside loadHeaders
   where (pa, sh) = ppFact tc (Fact tag m ts)
 
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty)
@@ -599,8 +600,8 @@ loadMacroProcs tc thy (p:q) =
           [] -> (docs, hd `S.union` heads)
           pvars ->
             let (new_text, new_heads) = ppSapic tc3 mainProc in
-            let vars  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc3) pvars ))) <> text ")"in
-             let macro_def = text "let " <> (text $ L.get pName p) <> vars <> text "=" $$
+            let vrs  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc3) pvars ))) <> text ")"in
+             let macro_def = text "let " <> (text $ L.get pName p) <> vrs <> text "=" $$
                              (nest 4 new_text) <> text "." in
                (macro_def : docs, hd `S.union` new_heads `S.union` heads)
   where
@@ -777,9 +778,9 @@ headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
 headerOfFunSym _ = S.empty
 
 -- Load the proverif headers from the OpenTheory
-loadHeaders :: TranslationContext -> OpenTheory -> S.Set ProverifHeader
-loadHeaders tc thy =
-  typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules)
+loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> S.Set ProverifHeader
+loadHeaders tc thy typeEnv =
+  typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules) `S.union` eventHeaders
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- all builtins are contained in Sapic Element
         thyBuiltins = theoryBuiltins thy
@@ -791,6 +792,9 @@ loadHeaders tc thy =
         userDeclaredFunctions = theoryFunctionTypingInfos thy
         typedHeaderOfFunSym = foldl (\y x->  headerOfFunSym x `S.union` y) S.empty userDeclaredFunctions
 
+
+        -- events headers
+        eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ("event " ++ showFactTag tag ++ "("++ make_argtypes  types ++  ")") `S.insert` acc) S.empty (events typeEnv)
         -- generating headers for equations
         sigRules = stRules sig S.\\ builtins_rules
 
@@ -907,12 +911,6 @@ make_argtypes [] = ""
 make_argtypes [x] = ppType x
 make_argtypes (x:t) = ppType x ++ "," ++ (make_argtypes t)
 
-make_args :: Int -> String
-make_args 0 = ""
-make_args 1 = "bitstring"
-make_args n = "bitstring,"++(make_args (n-1))
-
-
 stripNonAlphanumerical :: [Char] -> [Char]
 stripNonAlphanumerical = filter (\x -> isAlpha x)
 
@@ -944,7 +942,8 @@ prettyDeepSecTheory :: OpenTheory -> Doc
 prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
   where
         tc = emptyTC{trans = DeepSec}
-        hd = attribHeaders tc $ S.toList (loadHeaders tc thy
+        emptyEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
+        hd = attribHeaders tc $ S.toList (loadHeaders tc thy emptyEnv
                                        `S.union` macroprochd)
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy
