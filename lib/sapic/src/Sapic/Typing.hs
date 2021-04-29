@@ -1,7 +1,9 @@
 {-# LANGUAGE PatternGuards #-}
 module Sapic.Typing (
       typeTheory
+    , typeTheoryEnv
     , typeProcess
+    , TypingEnvironment (..)
 ) where
 
 import qualified Data.Map.Strict as Map
@@ -51,6 +53,7 @@ defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, a
 data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
     ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
+    ,   events :: Map.Map FactTag [SapicType]
 }
 
 -- | Try to type term `t` with a type more specific than `tt`. Returns typed
@@ -118,35 +121,24 @@ typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m) =>
         TypingEnvironment m (Process a SapicLVar)
 typeProcess = traverseProcess fNull fAct fComb gAct gComb
      where
-    --     -- initial typing environment with functions as far as declared
-    --     initVarTE = Map.empty -- passed explicitely to account for process structure
--- =======
---         insertFun fs types = do
---                     modify' (\s -> s {funs = Map.insert fs types (funs s) })
-
--- typeProcess :: (GoodAnnotation a, MonadThrow m) =>
---     Theory sig c r p SapicElement
---     -> Process a SapicLVar -> m (Process a SapicLVar)
--- typeProcess th = foldMProcess fNull fAct fComb gAct gComb initte
---     where
---         -- initial typing environment with functions as far as declared
---         initte = TypingEnvironment{
---                 vars = Map.empty,
---                 funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
---                  }
--- >>>>>>> parent of 8c0a19c7... Split state into global and process-dependent.
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull ann  = return (ProcessNull ann)
         fAct ann ac       = F.traverse_ insertVar (bindingsAct ann ac)
         fComb ann c        = F.traverse_ insertVar (bindingsComb ann c)
         -- gAct/gComb reconstruct process tree assigning types to the terms
+        gAct ac@(Event (Fact tag _ ts)) ann r = do -- r is typed subprocess
+            ac' <- traverseTermsAction typeWith' typeWithFact typeWithVar ac
+            argTypes <- mapM (\t -> typeWith t Nothing) ts
+            te <- get
+            _ <- modify' (\s -> s { events = Map.insert tag (map snd argTypes) (events te)})
+            return (ProcessAction ac' ann r)
         gAct ac ann r = do -- r is typed subprocess
             ac' <- traverseTermsAction typeWith' typeWithFact typeWithVar ac
             return (ProcessAction ac' ann r)
         gComb c ann rl rr = do
             c' <- traverseTermsComb typeWith' typeWithFact typeWithVar c
             return $ ProcessComb c' ann rl rr
-        typeWith' t = fst <$> typeWith t Nothing -- start with te as initial state, throw type away, take term (first element)
+        typeWith' t = fst <$> typeWith t Nothing
         typeWithVar  v -- variables are correctly typed, as we just inserted them
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
@@ -158,16 +150,24 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
                 Nothing ->
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 
-typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+
+
+typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
-typeTheory th = do
-        (th',fte) <- runStateT (mapMProcesses typeProcess th) initTE
-        return $ Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
+typeTheoryEnv th = do
+    runStateT (mapMProcesses typeProcess th) initTE
     where
         -- initial typing environment with functions as far as declared
         initTE = TypingEnvironment{
                 vars = Map.empty,
-                funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th)
+                funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th),
+                events = Map.empty
                  }
 
+typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+-- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory th = do
+        (th',fte) <- typeTheoryEnv th
+        return $ Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
+    where
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)

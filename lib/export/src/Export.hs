@@ -26,11 +26,12 @@ import         Term.SubtermRule
 import         Theory
 import         Theory.Sapic
 import         Text.PrettyPrint.Class
-import           Theory.Text.Pretty
+import         Theory.Text.Pretty
 
 import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
+import         Sapic.Typing
 
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
@@ -63,8 +64,8 @@ proverifTemplate headers queries process macroproc lemmas =
   nest 4 process
 
 
-prettyProVerifTheory :: OpenTheory -> Doc
-prettyProVerifTheory thy =  proverifTemplate hd queries proc macroproc lemmas
+prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifTheory (thy, _) =  return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
     hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy)
