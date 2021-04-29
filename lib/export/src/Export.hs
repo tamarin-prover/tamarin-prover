@@ -66,11 +66,13 @@ proverifTemplate headers queries process macroproc lemmas =
 
 
 prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
-prettyProVerifTheory (thy, typEnv) =  return $ proverifTemplate hd queries proc macroproc lemmas
+prettyProVerifTheory (thy, typEnv) = do
+  headers <- loadHeaders tc thy typEnv
+  let hd = attribHeaders tc $ S.toList (base_headers `S.union` headers
+                                          `S.union` prochd `S.union` macroprochd)
+  return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
-    hd = attribHeaders tc $ S.toList (base_headers `S.union` (loadHeaders tc thy typEnv)
-                                       `S.union` prochd `S.union` macroprochd)
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
@@ -778,9 +780,10 @@ headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
 headerOfFunSym _ = S.empty
 
 -- Load the proverif headers from the OpenTheory
-loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> S.Set ProverifHeader
-loadHeaders tc thy typeEnv =
-  typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (S.foldl (\x y -> x `S.union` (headersOfRule tc y)) S.empty sigRules) `S.union` eventHeaders
+loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> IO (S.Set ProverifHeader)
+loadHeaders tc thy typeEnv = do
+  eqHeaders <- mapM (headersOfRule tc typeEnv) (S.toList sigRules)
+  return $ typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (foldl (\acc x -> x `S.union` acc) S.empty eqHeaders) `S.union` eventHeaders
   where sig = (L.get sigpMaudeSig (L.get thySignature thy))
         -- all builtins are contained in Sapic Element
         thyBuiltins = theoryBuiltins thy
@@ -799,26 +802,36 @@ loadHeaders tc thy typeEnv =
         sigRules = stRules sig S.\\ builtins_rules
 
 
+toSapicLVar:: LVar -> SapicLVar
+toSapicLVar v = SapicLVar v Nothing
 
-headersOfRule :: TranslationContext -> CtxtStRule -> S.Set ProverifHeader
-headersOfRule tc r = case ctxtStRuleToRRule r of
-  (lhs `RRule` rhs) ->
-    (S.singleton hrule)  `S.union` lsh `S.union` rsh
-    where (plhs,lsh) = ppLNTerm tc lhs
-          (prhs,rsh) = ppLNTerm tc rhs
-          hrule = Eq  prefix  ("forall " ++
-                       make_frees ppfreesr  ++
+toSapicTerm:: LNTerm -> SapicTerm
+toSapicTerm = fmap f
+    where
+        f (Con c) = Con c
+        f (Var v) = Var $ toSapicLVar v
+
+headersOfRule :: TranslationContext -> TypingEnvironment -> CtxtStRule -> IO (S.Set ProverifHeader)
+headersOfRule tc typeEnv r |  (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
+   tye <- typeTermsWithEnv typeEnv (map toSapicTerm [lhs, rhs])
+   let (plhs,lsh) = ppLNTerm tc lhs
+       (prhs,rsh) = ppLNTerm tc rhs
+       prefix = case viewTerm lhs of
+            FApp (NoEq (_, (_,_,Destructor))) _ -> "reduc"
+            _ -> "equation"
+       freesr = List.union (frees lhs) (frees rhs)
+       freesrTyped = map (\v -> (v, M.lookup v $ vars tye)) freesr
+       hrule = Eq  prefix  ("forall " ++
+                             render (fsep (punctuate comma (map ppFreeTyped freesrTyped)))
+                       ++
                        ";")
                        (render $ sep [ nest 2 $ plhs
                            , text "=" <-> prhs ])
-          freesr = List.union (frees lhs) (frees rhs)
-          ppfreesr = map render $ map (ppLVar) freesr
-          make_frees [] = ""
-          make_frees [x] = x ++ ":bitstring"
-          make_frees (x:xs) =  x ++ ":bitstring," ++ (make_frees xs)
-          prefix = case viewTerm lhs of
-            FApp (NoEq (_, (_,_,Destructor))) _ -> "reduc"
-            _ -> "equation"
+
+   return $ (S.singleton hrule)  `S.union` lsh `S.union` rsh
+     where
+       ppFreeTyped (v, Nothing) = ppLVar v <> text ":bitstring"
+       ppFreeTyped (v, Just s) = ppLVar v <> text ":" <> text (ppType s)
 
 
 
@@ -937,14 +950,15 @@ deepsecTemplate headers macroproc requests =
   $$
   vcat requests
 
-
-prettyDeepSecTheory :: OpenTheory -> Doc
-prettyDeepSecTheory thy =  deepsecTemplate hd macroproc requests
+prettyDeepSecTheory :: OpenTheory -> IO (Doc)
+prettyDeepSecTheory thy = do
+  headers <- loadHeaders tc thy emptyEnv
+  let hd = attribHeaders tc $ S.toList (headers
+                                       `S.union` macroprochd)
+  return $ deepsecTemplate hd macroproc requests
   where
         tc = emptyTC{trans = DeepSec}
         emptyEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
-        hd = attribHeaders tc $ S.toList (loadHeaders tc thy emptyEnv
-                                       `S.union` macroprochd)
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy
 

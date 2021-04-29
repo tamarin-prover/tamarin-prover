@@ -2,6 +2,7 @@
 module Sapic.Typing (
       typeTheory
     , typeTheoryEnv
+    , typeTermsWithEnv
     , typeProcess
     , TypingEnvironment (..)
 ) where
@@ -153,9 +154,11 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 
 
--- typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [SapicTerm] -> TypingEnvironment
--- typeTermswithEnv typeEnv terms = do
---        (terms, fte) <- runStateT (mapM typeWith Nothing) initTE
+typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term (Lit Name SapicLVar)] -> m TypingEnvironment
+typeTermsWithEnv typeEnv terms = do
+       (_, fte) <- runStateT (mapM typeWith' terms) typeEnv
+       return fte
+         where typeWith' t = typeWith t Nothing
 
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)

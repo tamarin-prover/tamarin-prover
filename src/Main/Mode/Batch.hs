@@ -163,8 +163,8 @@ run thisMode as
         choosePretty (Just "spthy") = (return . prettyOpenTheory)  -- output as is, including SAPIC elements
         choosePretty (Just "spthytyped") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- additionally type
         choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate <=< Sapic.typeTheory
-        choosePretty (Just "proverif") = (prettyProVerifTheory) <=< Sapic.typeTheoryEnv
-        choosePretty (Just "deepsec") = (return . prettyDeepSecTheory) <=< Sapic.typeTheory
+        choosePretty (Just "proverif") = prettyProVerifTheory <=< Sapic.typeTheoryEnv
+        choosePretty (Just "deepsec") = prettyDeepSecTheory <=< Sapic.typeTheory
         choosePretty _ = error "output mode not supported."
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
