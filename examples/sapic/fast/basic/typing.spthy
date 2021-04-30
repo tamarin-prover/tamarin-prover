@@ -6,8 +6,10 @@ functions: f(bitstring):bitstring, g(lol):lol,
 
 builtins: multiset
 
-let P(a:rofl) = new x:lol; new y;
-        out(x); out(y);
+let P(a:rofl) =
+        new x:lol;
+        new y; // TODO should be typed with test, too... need to propagate back
+        out(x); out(y); 
         out(f(y));
         /* out(f(x)); // should fail */
        out(<x,y>); out(x + y); // should succeed
@@ -18,9 +20,14 @@ let P(a:rofl) = new x:lol; new y;
 	event Test(x,a) // should type the arguments
         // (new b:lol | new b:rofl) // should be allowed
 
+let Q(x) =
+    /* in(=x); // TODO currently gives exception, investigate */
+    in(<y,=x>) // TODO would need to capture <y,h(=a)>, currently does not do that.
+
 process:
 in(a:lol); // TODO we do not typecheck call to process correctly atm. I think the trick is to type check before inlining.
 P(a)
+| Q(h(a))
 
 
 end

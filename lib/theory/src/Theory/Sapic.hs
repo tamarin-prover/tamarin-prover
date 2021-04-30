@@ -14,8 +14,12 @@ module Theory.Sapic (
     , module Theory.Sapic.Process
     , module Theory.Sapic.Annotation
     , module Theory.Sapic.Position
+    , module Theory.Sapic.Substitution
+    , module Theory.Sapic.PlainProcess
 ) where
 import Theory.Sapic.Term
 import Theory.Sapic.Process
 import Theory.Sapic.Annotation
 import Theory.Sapic.Position
+import Theory.Sapic.Substitution
+import Theory.Sapic.PlainProcess

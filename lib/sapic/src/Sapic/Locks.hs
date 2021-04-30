@@ -51,11 +51,8 @@ annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEach
 -- annotateEachClosestUnlock.
 annotateLocks :: ( MonadThrow m,
                    MonadFresh m
-                 -- , Monoid (m (AnProcess ProcessAnnotation))
-                  -- ,Foldable (AnProcess ProcessAnnotation)
                 )
                     => LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
-                    -- => AnnotatedProcess -> m AnnotatedProcess
 annotateLocks (ProcessAction (Lock t) a p) = do
             v <- freshLVar "lock" LSortMsg
             p' <- annotateEachClosestUnlock t (AnVar v) p

@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE UndecidableInstances #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -26,7 +27,6 @@ module Theory.Sapic.Term (
     , SapicNFormula
     , SapicFormula
     , SapicFunSym
-    , SapicSubst
     -- converters
     , toLVar
     , toLNTerm
@@ -35,6 +35,7 @@ module Theory.Sapic.Term (
     -- utitlities
     , freesSapicTerm
     , freesSapicFact
+    , freshSapicVarCopy
     -- pretty printing
     , prettySapicTerm
     , prettySapicFact
@@ -52,6 +53,7 @@ import Theory.Model.Formula
 import Term.Substitution
 import Theory.Text.Pretty
 import Data.List (intercalate)
+import Control.Monad.Fresh
 
 -- | A process data structure
 
@@ -94,14 +96,12 @@ defaultSapicType = Nothing
 defaultSapicNodeType :: SapicType
 defaultSapicNodeType = Just "node"
 
--- | A substitution with names and typed logical variables.
-type SapicSubst = Subst Name SapicLVar
-
 instance Show SapicLVar where
     show (SapicLVar v (Just t)) = show  v ++ ":" ++ t
     show (SapicLVar v Nothing ) = show  v
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
+
 
 prettySapicFunType :: SapicFunType -> String
 prettySapicFunType (ins,out) = intercalate  " * " (map show ins) ++ " -> " ++ show out
@@ -131,6 +131,16 @@ toLNFact = fmap toLNTerm
 toLFormula:: (Functor syn) => ProtoFormula syn (String, LSort) c SapicLVar -> ProtoFormula syn (String, LSort) c LVar
 toLFormula = mapAtoms f
     where f _ = fmap $ fmap $ fmap $ fmap toLVar
+
+-- | Create fresh copy of a sapic variable
+freshSapicVarCopy :: MonadFresh m => SapicLVar -> m SapicLVar
+freshSapicVarCopy sv = do
+    flv <- freshLVar name sort 
+    return sv {slvar = flv}
+    where
+        lv = toLVar sv
+        name = lvarName lv
+        sort = lvarSort lv
 
 -- | Pretty print an @SapicTerm@.
 prettySapicTerm :: Document d => SapicTerm -> d

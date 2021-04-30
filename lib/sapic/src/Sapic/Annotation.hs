@@ -12,6 +12,8 @@
 --
 -- Before translation, a process is annotated. This defines these
 -- annotations.
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Sapic.Annotation (
     ProcessAnnotation(..)
     , AnnotatedProcess
@@ -24,10 +26,9 @@ module Sapic.Annotation (
     , AnVar (..)
     , AnProcess (..)
     , unAnProcess
-    , GoodAnnotation(..)
     , getProcessNames
     , setProcessNames
-    ,annElse) where
+    ,annElse,modifyProcessParsedAnnotation) where
 import           Data.Data
 -- import Data.List
 -- import Data.Foldable
@@ -65,33 +66,17 @@ data ProcessAnnotation v = ProcessAnnotation {
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
   , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
   , elseBranch         :: Bool --- do we have a non-zero else branch? Used for let translation
-  , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized
+  , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized.
+                      -- A pure state corresponds to a process of form `insert k,v` or `lock k; lookup k; .. ; insert k,v; unlock k` or similar (see States.hs)
   , stateChannel ::  Maybe (AnVar v) -- anotates state operations with the corresponding name identifier when possible.
   , isStateChannel :: Maybe SapicTerm -- annotates binding of channels that corresponds to state channels with their corresponding identifier.
   } deriving (Show, Typeable)
-
--- | Any annotation that is good enough to be converted back into a Process
---  can at least recover the names of the processes used to bind
---  subprocesses
--- annotate the multiset rewrite rules with:
---      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
-class GoodAnnotation a where
-    getProcessParsedAnnotation :: a ->  ProcessParsedAnnotation
-    setProcessParsedAnnotation :: ProcessParsedAnnotation -> a -> a
-    defaultAnnotation :: a
 
 instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessParsedAnnotation = parsingAnn
         setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = opn <> pn }
         defaultAnnotation   = mempty
-
-instance GoodAnnotation ProcessParsedAnnotation
-    where
-        getProcessParsedAnnotation = id
-        setProcessParsedAnnotation pn _ = pn
-        defaultAnnotation   = mempty
-
 
 mayMerge :: Maybe a -> Maybe a -> Maybe a
 mayMerge t@(Just _) _ = t

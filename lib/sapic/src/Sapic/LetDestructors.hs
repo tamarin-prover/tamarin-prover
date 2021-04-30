@@ -43,7 +43,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
       (case  L.foldl (findRule funsym) Nothing rules of
         -- if the desrtructor does not have any associated rule, we simply substitute in the process, to optimize. TODO -> should it be possible to declare a destructor without an equation ?
         Nothing -> do
-            res <- applyProcess (substFromList (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
+            res <- applyM (substFromList (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
 --          ProcessComb c (annElse elsebranch)  (mapProc rules pl) (mapProc rules pr)
@@ -67,7 +67,7 @@ mapProc rules (ProcessComb c@(Let t1 t2) _ pl pr) =
                 new_an = annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
           )
     ( (LIT (Var svar)) , _ , _ ) -> do
-            res <- applyProcess (substFromList  (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
+            res <- applyM (substFromList  (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
     _ -> do

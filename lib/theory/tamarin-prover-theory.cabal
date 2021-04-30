@@ -126,3 +126,5 @@ library
       Theory.Text.Parser.Sapic
       Theory.Text.Parser.Signature
       Theory.Text.Parser.Term
+      Theory.Sapic.PlainProcess
+      Theory.Sapic.Substitution

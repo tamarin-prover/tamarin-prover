@@ -10,12 +10,14 @@
 -- Portability : GHC only
 --
 -- Standard annotations for SAPIC processes after parsing
+{-# LANGUAGE FlexibleContexts #-}
 module Theory.Sapic.Annotation (
     -- types
       ProcessParsedAnnotation(..)
-    , PlainProcess
     -- utilities
-    , paddAnn
+    , modifyProcessParsedAnnotation
+    -- type classes
+    , GoodAnnotation(..)
 ) where
 
 import Data.Binary
@@ -24,7 +26,6 @@ import qualified Data.Set as S
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Theory.Sapic.Term
-import Theory.Sapic.Process
 
 -- | After parsing, the process is already annotated wth a list of process
 --   identifiers. Any identifier in this in this list was inlined to give this
@@ -60,10 +61,24 @@ instance Monoid ProcessParsedAnnotation where
 instance Semigroup ProcessParsedAnnotation where
     (<>) p1 p2 = p1 `mappend` p2
 
-type PlainProcess = LProcess ProcessParsedAnnotation
+-- | Any annotation that is good enough to be converted back into a Process
+--  can at least recover the names of the processes used to bind
+--  subprocesses
+-- annotate the multiset rewrite rules with:
+--      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
+class GoodAnnotation a where
+    getProcessParsedAnnotation :: a ->  ProcessParsedAnnotation
+    setProcessParsedAnnotation :: ProcessParsedAnnotation -> a -> a
+    defaultAnnotation :: a
 
--- | Add another element to the existing annotations, e.g., yet another identifier.
-paddAnn :: PlainProcess -> ProcessParsedAnnotation -> PlainProcess
-paddAnn (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
-paddAnn (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr
-paddAnn (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p
+instance GoodAnnotation ProcessParsedAnnotation
+    where
+        getProcessParsedAnnotation = id
+        setProcessParsedAnnotation pn _ = pn
+        defaultAnnotation   = mempty
+
+modifyProcessParsedAnnotation :: (GoodAnnotation a1, GoodAnnotation a2) =>
+    ((a2 -> ProcessParsedAnnotation) -> a1 -> ProcessParsedAnnotation)
+    -> a1 -> a1
+modifyProcessParsedAnnotation f ann =
+    setProcessParsedAnnotation (f getProcessParsedAnnotation ann) ann

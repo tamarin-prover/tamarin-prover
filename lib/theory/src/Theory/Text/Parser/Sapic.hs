@@ -291,7 +291,7 @@ actionprocess thy=
                                    )
                                   )
                                   ++ acc) [] base_subst
-                        substP <- applyProcess (substFromList extend_sup) p
+                        substP <- applyM (substFromList extend_sup) p
                         return (ProcessComb
                                 (ProcessCall (BC.unpack i) vars ts) mempty
                                 (paddAnn substP (mempty {processnames =  [BC.unpack i]}))

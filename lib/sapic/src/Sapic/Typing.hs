@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Sapic.Typing (
       typeTheory
     , typeTheoryEnv
@@ -10,6 +11,7 @@ module Sapic.Typing (
 import qualified Data.Map.Strict as Map
 import qualified Data.Foldable as F
 import Data.Maybe
+import Data.Tuple
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Catch
 import Theory
@@ -18,7 +20,9 @@ import Sapic.Exceptions
 import Sapic.Annotation
 import Sapic.Bindings
 import Control.Monad.Fresh
-import Control.Monad.Trans.FastFresh   ()
+import Control.Monad.Fresh
+import qualified Control.Monad.Trans.PreciseFresh as Precise
+import Data.Bifunctor ( Bifunctor(second) )
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
 smallerType :: Eq a => Maybe a -> Maybe a -> Bool
@@ -179,4 +183,37 @@ typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m
 typeTheory th = do
         (th', _) <- typeTheoryEnv th
         return th'
+
+-- | Rename a process so that all its names are unique. Returns renamed process
+-- p' and substitution such that: let (p',subst) = renameUnique p in apply subst
+-- p' equals p
+renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
+    Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
+renameUnique p = evalFreshT s nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
     where
+        r = renameUnique' emptySubst p
+        s  = runStateT r emptySubst
+
+-- (ApplyM (Subst c1 SapicLVar) (Process ann SapicLVar), MonadThrow m,
+--  IsConst c2, Monoid (Subst c1 SapicLVar),
+--  MonadFresh ((,) (Subst c1 SapicLVar)), GoodAnnotation ann) =>
+renameUnique' ::
+    (MonadThrow m, MonadFresh m, GoodAnnotation ann)  =>
+    SapicSubst
+    -> Process ann SapicLVar
+    -> StateT SapicSubst m (Process ann SapicLVar)
+renameUnique' initSubst p = do
+        p' <- applyM initSubst p -- apply outstanding substitution subst 
+        case p' of
+            ProcessNull _ -> return p'
+            ProcessAction ac ann _ -> do
+                (subst,inv) <- mkSubst $ bindingsAct ann ac
+                modify' (compose inv) -- collect inverse substitution
+                renameUnique' subst p'
+            _ -> return p'
+    where
+        substFromVarList = substFromList . map (second varTerm)
+        f v = do v' <- freshSapicVarCopy v; return (v, v')
+        mkSubst bvars = do -- create substitution renaming all elements of bind' into a fresh variable
+                vmap <- mapM f bvars
+                return (substFromVarList vmap, substFromVarList $ map swap vmap)

@@ -15,6 +15,7 @@
 -- Portability : GHC only
 --
 -- Data types for SAPIC processes in theories
+{-# LANGUAGE FlexibleContexts #-}
 module Theory.Sapic.Process (
     -- types
     Process(..)
@@ -32,7 +33,7 @@ module Theory.Sapic.Process (
     , mapTerms
     , mapTermsAction
     , mapTermsComb
-    , applyProcess
+    , applyM
     -- pretty printing
     , prettySapic'
     , prettySapicAction'
@@ -52,6 +53,8 @@ import Theory.Text.Pretty
 import Data.List
 import Control.Monad.Catch
 import Theory.Sapic.Term
+import Theory.Sapic.Substitution
+import Theory.Sapic.Annotation
 
 -- | Actions are parts of the process that maybe connected with ";"
 data SapicAction v =
@@ -294,11 +297,22 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
           pretty CapturedNew = "new"
 
 
+instance Apply SapicSubst (SapicAction SapicLVar) where
+    apply subst ac
+        = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
--- | Apply a substitution, but raise an error if necessary
-applyProcessCombinatorError :: MonadThrow m => Subst Name SapicLVar
-            -> ProcessCombinator SapicLVar -> m (ProcessCombinator SapicLVar)
-applyProcessCombinatorError subst c
+instance Apply SapicSubst (LProcess ann) where
+-- We are ignoring capturing here, use applyProcess below to get warnings.
+    apply _ (ProcessNull ann) = ProcessNull ann
+    apply subst (ProcessComb c ann pl pr) =
+                ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
+    apply subst (ProcessAction ac ann p') =
+                ProcessAction (apply subst ac) ann (apply subst p')
+
+
+instance ApplyM SapicSubst (ProcessCombinator SapicLVar)
+    where
+    applyM subst c
         | (Lookup t v) <- c  = if v `elem` dom subst then
                                   throwM $ CapturedEx CapturedLookup v
                                else
@@ -306,14 +320,9 @@ applyProcessCombinatorError subst c
         | otherwise = return $ apply subst c
 
 
-instance Apply SapicSubst (SapicAction SapicLVar) where
-    apply subst ac
-        = mapTermsAction (apply subst) (apply subst) (apply subst) ac
-
--- | Apply a substitution, but raise an error if necessary
-applySapicActionError :: MonadThrow m =>
-    Subst Name SapicLVar -> SapicAction SapicLVar -> m (SapicAction SapicLVar)
-applySapicActionError subst ac
+instance ApplyM SapicSubst (SapicAction SapicLVar)
+    where
+    applyM subst ac
         | (New v) <- ac =  if v `elem` dom subst then
                                   throwM $ CapturedEx CapturedNew v
                                else
@@ -327,28 +336,23 @@ applySapicActionError subst ac
                             else
                                   return $ ChIn (apply subst mt) (apply subst t)
         | otherwise = return $ apply subst ac
-    where lvarName' (SapicLVar v _ ) = lvarName v
+        where lvarName' (SapicLVar v _ ) = lvarName v
 
-instance Apply SapicSubst (LProcess ann) where
--- We are ignoring capturing here, use applyProcess below to get warnings.
-    apply _ (ProcessNull ann) = ProcessNull ann
-    apply subst (ProcessComb c ann pl pr) =
-                ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
-    apply subst (ProcessAction ac ann p') =
-                ProcessAction (apply subst ac) ann (apply subst p')
 
--- | Apply a substitution, but raise an error if necessary
-applyProcess :: MonadThrow m => SapicSubst -> LProcess ann -> m (LProcess ann)
-applyProcess _ (ProcessNull ann) = return $ ProcessNull ann
-applyProcess subst (ProcessComb c ann pl pr) = do
-                c' <- applyProcessCombinatorError subst c
-                pl' <- applyProcess subst pl
-                pr' <- applyProcess subst pr
-                return $ ProcessComb c' ann pl' pr'
-applyProcess subst (ProcessAction ac ann p) = do
-                ac' <- applySapicActionError subst ac
-                p' <- applyProcess subst p
-                return $ ProcessAction ac' ann p'
+instance (GoodAnnotation ann) => ApplyM SapicSubst (LProcess ann)
+    where
+    applyM _ (ProcessNull ann) = return $ ProcessNull ann
+    applyM subst (ProcessComb c ann pl pr) = do
+            c' <- applyM subst c
+            ann' <- applyM subst ann
+            pl' <- applyM subst pl
+            pr' <- applyM subst pr
+            return $ ProcessComb c' ann' pl' pr'
+    applyM subst (ProcessAction ac ann p) = do
+            ac' <- applyM subst ac
+            ann' <- applyM subst ann
+            p' <- applyM subst p
+            return $ ProcessAction ac' ann' p'
 
 -------------------------
 -- Pretty-printing for exceptions etc. (see Theory.Sapic.Print for nicer printing)
