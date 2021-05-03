@@ -4,10 +4,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Theory.Sapic.Substitution (
-    -- types
-    SapicSubst
+    SapicSubst -- convenience export: defined in Theory.Sapic.Term
     -- classes
-    ,   ApplyM (..)
+    , ApplyM (..)
 )
 where
 import Control.Monad.Catch
@@ -16,10 +15,6 @@ import qualified Data.Set as S
 import Term.Substitution
 import Theory.Sapic.Annotation
 import Theory.Sapic.Term
-
--- | A substitution with names and typed logical variables.
-type SapicSubst = Subst Name SapicLVar
--- deriving instance Semigroup (SapicSubst)
 
 -- | Apply a substitution, but raise an error if necessary
 -- class like Apply but with possibility to raise exceptions...
@@ -66,4 +61,10 @@ applyMProcessParsedAnnotation :: (MonadThrow m, ApplyM t' SapicTerm,
 applyMProcessParsedAnnotation subst ann = do
         loc <- mapM (applyM subst) (location ann) -- TODO Charlie, can you check whether that is the desired behaviour?
         mat <- mapM (applyM subst) (S.toList $ matchVars ann)
-        return ann {location = loc, matchVars = S.fromList mat}
+        return ann {location = loc
+                    , matchVars = S.fromList mat
+                    -- , backSubstitution = undefined 
+                    -- WARNING: we do not apply the substitution to the back
+                    -- translation, as this is not always possible. If variables
+                    -- are renamed, modify the backtranslation by hand.
+                    }

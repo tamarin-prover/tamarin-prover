@@ -34,6 +34,7 @@ module Theory.Sapic.Process (
     , mapTermsAction
     , mapTermsComb
     , applyM
+    , processAddAnnotation
     -- pretty printing
     , prettySapic'
     , prettySapicAction'
@@ -353,6 +354,13 @@ instance (GoodAnnotation ann) => ApplyM SapicSubst (LProcess ann)
             ann' <- applyM subst ann
             p' <- applyM subst p
             return $ ProcessAction ac' ann' p'
+
+-- | Add another element to the existing annotations, e.g., yet another identifier.
+processAddAnnotation :: Monoid ann => Process ann v -> ann -> Process ann v
+-- processAddAnnotation ::               PlainProcess -> ProcessParsedAnnotation -> PlainProcess
+processAddAnnotation (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
+processAddAnnotation (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr
+processAddAnnotation (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p
 
 -------------------------
 -- Pretty-printing for exceptions etc. (see Theory.Sapic.Print for nicer printing)

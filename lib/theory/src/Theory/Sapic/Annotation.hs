@@ -25,6 +25,7 @@ import Data.Data
 import qualified Data.Set as S
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
+import Term.Substitution
 import Theory.Sapic.Term
 
 -- | After parsing, the process is already annotated wth a list of process
@@ -36,20 +37,25 @@ import Theory.Sapic.Term
 --    has two Null-rules with annotation [A,B].
 --  This will be helpful to recognise protocols roles and visualise them.
 
-data ProcessParsedAnnotation = ProcessParsedAnnotation
-    { processnames      :: [String]
+data ProcessParsedAnnotation = ProcessParsedAnnotation {
     -- String used in annotation to identify processes. Always a singleton list
-    , location       :: Maybe SapicTerm
+      processnames      :: [String]
     -- additional information for Isolated Execution Environments feature
-    , matchVars :: S.Set SapicLVar
+    , location       :: Maybe SapicTerm
     -- Variables in in() or let-actions that are intended to match already bound variables
+    , matchVars :: S.Set SapicLVar
+    -- substitution to rename variables in subprocess back to how the user input them.
+    -- 1. empty until process is renamed for uniqueness
+    -- 2. only apply to variables bound at this subprocess
+    -- 3. maps variables to variable terms
+    , backSubstitution :: SapicSubst
     }
     deriving (Eq, Ord, Show, Data, Generic)
 instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation
 
 instance Monoid ProcessParsedAnnotation where
-    mempty = ProcessParsedAnnotation [] Nothing S.empty
+    mempty = ProcessParsedAnnotation [] Nothing S.empty emptySubst
     mappend p1 p2 = ProcessParsedAnnotation
         (processnames p1 `mappend` processnames  p2)
         (case (location p1, location p2) of
@@ -57,6 +63,7 @@ instance Monoid ProcessParsedAnnotation where
              (l1, Nothing) -> l1
              (_, l2) -> l2)
         (matchVars p1 `mappend` matchVars p2)
+        (backSubstitution p1 `compose` backSubstitution p2)
 
 instance Semigroup ProcessParsedAnnotation where
     (<>) p1 p2 = p1 `mappend` p2
@@ -77,8 +84,7 @@ instance GoodAnnotation ProcessParsedAnnotation
         setProcessParsedAnnotation pn _ = pn
         defaultAnnotation   = mempty
 
-modifyProcessParsedAnnotation :: (GoodAnnotation a1, GoodAnnotation a2) =>
-    ((a2 -> ProcessParsedAnnotation) -> a1 -> ProcessParsedAnnotation)
-    -> a1 -> a1
+modifyProcessParsedAnnotation :: GoodAnnotation a =>
+    (ProcessParsedAnnotation -> ProcessParsedAnnotation) -> a -> a
 modifyProcessParsedAnnotation f ann =
-    setProcessParsedAnnotation (f getProcessParsedAnnotation ann) ann
+    setProcessParsedAnnotation (f $ getProcessParsedAnnotation ann) ann

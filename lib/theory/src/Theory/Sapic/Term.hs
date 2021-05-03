@@ -12,6 +12,7 @@
 -- Portability : GHC only
 --
 -- Data types for SAPIC processes in theories
+{-# LANGUAGE StandaloneDeriving #-}
 module Theory.Sapic.Term (
     -- types
       SapicType
@@ -27,6 +28,7 @@ module Theory.Sapic.Term (
     , SapicNFormula
     , SapicFormula
     , SapicFunSym
+    , SapicSubst
     -- converters
     , toLVar
     , toLNTerm
@@ -95,6 +97,12 @@ defaultSapicType = Nothing
 
 defaultSapicNodeType :: SapicType
 defaultSapicNodeType = Just "node"
+
+-- | A substitution with names and typed logical variables.
+type SapicSubst = Subst Name SapicLVar
+
+deriving instance Data SapicSubst
+
 
 instance Show SapicLVar where
     show (SapicLVar v (Just t)) = show  v ++ ":" ++ t

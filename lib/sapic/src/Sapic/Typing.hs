@@ -187,27 +187,35 @@ typeTheory th = do
 -- | Rename a process so that all its names are unique. Returns renamed process
 -- p' and substitution such that: let (p',subst) = renameUnique p in apply subst
 -- p' equals p
-renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
-    Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
-renameUnique p = evalFreshT stateMonadCall nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
+-- renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
+--     Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
+renameUnique :: (MonadThrow m, GoodAnnotation ann, Monoid ann) =>
+    Process ann SapicLVar -> m (Process ann SapicLVar)
+renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
     where
-        stateMonadCall = runStateT actualCall emptySubst
-        actuallCall = renameUnique' emptySubst p
+        -- stateMonadCall = runStateT actualCall emptySubst
+        actualCall = renameUnique' emptySubst p
 
 renameUnique' ::
-    (MonadThrow m, MonadFresh m, GoodAnnotation ann)  =>
-    SapicSubst
-    -> Process ann SapicLVar
-    -> StateT SapicSubst m (Process ann SapicLVar)
+    (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
+    SapicSubst -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
         p' <- applyM initSubst p -- apply outstanding substitution subst 
         case p' of
             ProcessNull _ -> return p'
-            ProcessAction ac ann _ -> do
+            ProcessAction ac ann pl -> do
                 (subst,inv) <- mkSubst $ bindingsAct ann ac
-                modify' (compose inv) -- collect inverse substitution
-                renameUnique' subst p'
-            _ -> return p'
+                let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
+                ac' <- applyM subst ac
+                pl' <- renameUnique' subst pl
+                return $ ProcessAction ac' ann' pl'
+            ProcessComb comb ann pl pr -> do
+                (subst,inv) <- mkSubst $ bindingsComb ann comb
+                let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
+                comb' <- applyM subst comb
+                pl' <- renameUnique' subst pl
+                pr' <- renameUnique' subst pr
+                return $ ProcessComb comb' ann' pl' pr'
     where
         substFromVarList = substFromList . map (second varTerm)
         f v = do v' <- freshSapicVarCopy v; return (v, v')

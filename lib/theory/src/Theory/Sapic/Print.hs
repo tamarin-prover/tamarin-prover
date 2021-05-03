@@ -11,7 +11,7 @@ module Theory.Sapic.Print (
     , ProcessCombinator(..)
     , SapicAction(..)
     , SapicTerm
-    , paddAnn
+    , processAddAnnotation
     , pfoldMap
     , prettySapic
     , prettySapicAction

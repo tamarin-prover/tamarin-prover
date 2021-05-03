@@ -271,7 +271,7 @@ actionprocess thy=
                         p' <- (do
                                 _ <- try $ symbol "@"
                                 m <- sapicterm
-                                return $ paddAnn p (mempty {location = (Just m)})
+                                return $ processAddAnnotation p (mempty {location = (Just m)})
                                )
                               <|> (return p)
                         return p'
@@ -294,7 +294,7 @@ actionprocess thy=
                         substP <- applyM (substFromList extend_sup) p
                         return (ProcessComb
                                 (ProcessCall (BC.unpack i) vars ts) mempty
-                                (paddAnn substP (mempty {processnames =  [BC.unpack i]}))
+                                (processAddAnnotation substP (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )
 -- | checks if process exists, if not -> error
