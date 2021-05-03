@@ -156,8 +156,9 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheoryEnv th = do
-    (th', fte) <- runStateT (mapMProcesses typeProcess th) initTE
-    return $ (Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte), fte)
+    (th', fte) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
+    let th'' = Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
+    return (th'', fte)
     where
         -- initial typing environment with functions as far as declared
         initTE = TypingEnvironment{
@@ -165,6 +166,9 @@ typeTheoryEnv th = do
                 funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th),
                 events = Map.empty
                  }
+        typeAndRenameProcess p = do
+                pUnique <- renameUnique p
+                typeProcess pUnique
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
 typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
@@ -193,13 +197,13 @@ renameUnique' initSubst p = do
             ProcessAction ac ann pl -> do
                 (subst,inv) <- mkSubst $ bindingsAct ann ac
                 let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
-                ac' <- applyM subst ac
+                let ac' = apply subst ac -- use apply instead applyM because we want to ignore capturing, i.e., rename bound names...
                 pl' <- renameUnique' subst pl
                 return $ ProcessAction ac' ann' pl'
             ProcessComb comb ann pl pr -> do
                 (subst,inv) <- mkSubst $ bindingsComb ann comb
                 let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
-                comb' <- applyM subst comb
+                let comb' = apply subst comb
                 pl' <- renameUnique' subst pl
                 pr' <- renameUnique' subst pr
                 return $ ProcessComb comb' ann' pl' pr'

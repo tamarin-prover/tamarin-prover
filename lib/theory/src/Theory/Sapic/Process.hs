@@ -303,7 +303,7 @@ instance Apply SapicSubst (SapicAction SapicLVar) where
         = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
 instance Apply SapicSubst (LProcess ann) where
--- We are ignoring capturing here, use applyProcess below to get warnings.
+-- We are ignoring capturing here, use applyM below to get warnings.
     apply _ (ProcessNull ann) = ProcessNull ann
     apply subst (ProcessComb c ann pl pr) =
                 ProcessComb (apply subst c) ann (apply subst pl) (apply subst pr)
