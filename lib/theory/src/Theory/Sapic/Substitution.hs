@@ -59,7 +59,7 @@ applyMProcessParsedAnnotation :: (MonadThrow m, ApplyM t' SapicTerm,
     ApplyM t' SapicLVar) =>
     t' -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
 applyMProcessParsedAnnotation subst ann = do
-        loc <- mapM (applyM subst) (location ann) -- TODO Charlie, can you check whether that is the desired behaviour?
+        loc <- mapM (applyM subst) (location ann)
         mat <- mapM (applyM subst) (S.toList $ matchVars ann)
         return ann {location = loc
                     , matchVars = S.fromList mat
