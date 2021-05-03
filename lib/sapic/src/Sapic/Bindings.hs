@@ -7,7 +7,6 @@ module Sapic.Bindings(
 ) where
 
 import Theory.Sapic
-import Sapic.Annotation
 import Data.List
 import qualified Data.Set as S
 

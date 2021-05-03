@@ -20,8 +20,6 @@ import Sapic.Exceptions
 import Sapic.Annotation
 import Sapic.Bindings
 import Control.Monad.Fresh
-import Control.Monad.Fresh
-import qualified Control.Monad.Trans.PreciseFresh as Precise
 import Data.Bifunctor ( Bifunctor(second) )
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
@@ -29,13 +27,6 @@ smallerType :: Eq a => Maybe a -> Maybe a -> Bool
 smallerType _ Nothing = True
 smallerType (Just t) (Just t') = t == t'
 smallerType Nothing  (Just _) = False
-
--- | Assert that `at` is smaller or equal to `tt`, otherwise throw an exception for term `t`
-assertSmaller :: MonadThrow m => Maybe String -> Maybe String -> SapicTerm -> m ()
-assertSmaller at tt t =
-                if at `smallerType` tt then
-                    return ()
-                else throwM (ProcessNotWellformed (TypingError t at tt) :: SapicException AnnotatedProcess)
 
 data TypingException = CannotMerge SapicType SapicType
 instance Show TypingException
@@ -123,6 +114,11 @@ typeWith t tt
         sqHandler term (CannotMerge outt tterm) =
                 throwM (ProcessNotWellformed (TypingError term outt tterm) :: SapicException AnnotatedProcess)
 
+-- | Types a term with a given environment
+typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term (Lit Name SapicLVar)] -> m TypingEnvironment
+typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv
+         where typeWith' t = typeWith t Nothing
+
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m) =>
     Process a SapicLVar ->  StateT
         TypingEnvironment m (Process a SapicLVar)
@@ -135,7 +131,7 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
         -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct ac@(Event (Fact tag _ ts)) ann r = do -- r is typed subprocess
             ac' <- traverseTermsAction typeWith' typeWithFact typeWithVar ac
-            argTypes <- mapM (\t -> typeWith t Nothing) ts
+            argTypes <- mapM (`typeWith` Nothing) ts
             te <- get
             _ <- modify' (\s -> s { events = Map.insert tag (map snd argTypes) (events te)})
             return (ProcessAction ac' ann r)
@@ -157,13 +153,6 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
                 Nothing ->
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 
-
-typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term (Lit Name SapicLVar)] -> m TypingEnvironment
-typeTermsWithEnv typeEnv terms = do
-       (_, fte) <- runStateT (mapM typeWith' terms) typeEnv
-       return fte
-         where typeWith' t = typeWith t Nothing
-
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheoryEnv th = do
@@ -180,9 +169,7 @@ typeTheoryEnv th = do
 
 typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
-typeTheory th = do
-        (th', _) <- typeTheoryEnv th
-        return th'
+typeTheory th = fst <$> typeTheoryEnv th
 
 -- | Rename a process so that all its names are unique. Returns renamed process
 -- p' and substitution such that: let (p',subst) = renameUnique p in apply subst
