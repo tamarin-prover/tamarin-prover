@@ -339,21 +339,20 @@ instance Binary RuleAttribute
 
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
-data StandName =
-         DefdRuleName String
-       | SAPiCRuleName String
-       deriving( Eq, Ord, Show, Data, Typeable, Generic)
-instance NFData StandName
-instance Binary StandName
-
--- | A name of a protocol rule is either one of the special reserved rules or
--- some standard rule.
 data ProtoRuleName =
          FreshRule
        | StandRule StandName -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable, Generic)
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
+
+-- | Standard rules are split into SAPiC rules and all other rules.
+data StandName =
+         DefdRuleName String
+       | SAPiCRuleName String
+       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+instance NFData StandName
+instance Binary StandName
 
 -- | Information for protocol rules modulo E.
 data ProtoRuleEInfo = ProtoRuleEInfo
