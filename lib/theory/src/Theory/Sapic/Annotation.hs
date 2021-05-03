@@ -22,7 +22,6 @@ module Theory.Sapic.Annotation (
 
 import Data.Binary
 import Data.Data
-import qualified Data.Set as S
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
@@ -42,8 +41,6 @@ data ProcessParsedAnnotation = ProcessParsedAnnotation {
       processnames      :: [String]
     -- additional information for Isolated Execution Environments feature
     , location       :: Maybe SapicTerm
-    -- Variables in in() or let-actions that are intended to match already bound variables
-    , matchVars :: S.Set SapicLVar
     -- substitution to rename variables in subprocess back to how the user input them.
     -- 1. empty until process is renamed for uniqueness
     -- 2. only apply to variables bound at this subprocess
@@ -55,14 +52,13 @@ instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation
 
 instance Monoid ProcessParsedAnnotation where
-    mempty = ProcessParsedAnnotation [] Nothing S.empty emptySubst
+    mempty = ProcessParsedAnnotation [] Nothing emptySubst
     mappend p1 p2 = ProcessParsedAnnotation
         (processnames p1 `mappend` processnames  p2)
         (case (location p1, location p2) of
              (Nothing, l2) -> l2
              (l1, Nothing) -> l1
              (_, l2) -> l2)
-        (matchVars p1 `mappend` matchVars p2)
         (backSubstitution p1 `compose` backSubstitution p2)
 
 instance Semigroup ProcessParsedAnnotation where

@@ -67,14 +67,9 @@ applyMProcessParsedAnnotation ::
 --     -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
 applyMProcessParsedAnnotation subst ann = do
         loc <- mapM (applyM subst) (location ann)
-        let mat = concatMap (extractVars subst) (S.toList $ matchVars ann)
         return ann {location = loc
-                    , matchVars = S.fromList mat
                     -- , backSubstitution = undefined 
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables
                     -- are renamed, modify the backtranslation by hand.
                     }
-        where
-            extractVars sigma v = -- variables bound by sigma(v), or [v] if undef
-                maybe [v] varsVTerm (imageOf sigma v) 
