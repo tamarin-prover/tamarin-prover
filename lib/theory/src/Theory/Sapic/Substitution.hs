@@ -55,12 +55,19 @@ instance {-# INCOHERENT #-} (GoodAnnotation a) => ApplyM SapicSubst a
             ann' <- applyMProcessParsedAnnotation subst $ getProcessParsedAnnotation ann
             return $ setProcessParsedAnnotation ann' ann
 
-applyMProcessParsedAnnotation :: (MonadThrow m, ApplyM t' SapicTerm,
-    ApplyM t' SapicLVar) =>
-    t' -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
+-- applyMProcessParsedAnnotation :: (MonadThrow m, ApplyM t' SapicTerm,
+--     ApplyM t' SapicLVar) =>
+--     t' -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
+applyMProcessParsedAnnotation :: 
+    (MonadThrow m) =>
+    SapicSubst -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
+-- applyMProcessParsedAnnotation :: (ApplyM (Map.Map SapicLVar (VTerm c SapicLVar)) SapicTerm,
+--     MonadThrow m) =>
+--     Map.Map SapicLVar (VTerm c SapicLVar)
+--     -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
 applyMProcessParsedAnnotation subst ann = do
         loc <- mapM (applyM subst) (location ann)
-        mat <- mapM (applyM subst) (S.toList $ matchVars ann)
+        let mat = concatMap (extractVars subst) (S.toList $ matchVars ann)
         return ann {location = loc
                     , matchVars = S.fromList mat
                     -- , backSubstitution = undefined 
@@ -68,3 +75,6 @@ applyMProcessParsedAnnotation subst ann = do
                     -- translation, as this is not always possible. If variables
                     -- are renamed, modify the backtranslation by hand.
                     }
+        where
+            extractVars sigma v = -- variables bound by sigma(v), or [v] if undef
+                maybe [v] varsVTerm (imageOf sigma v) 
