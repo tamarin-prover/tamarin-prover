@@ -189,14 +189,11 @@ typeTheory th = do
 -- p' equals p
 renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
     Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
-renameUnique p = evalFreshT s nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
+renameUnique p = evalFreshT stateMonadCall nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
     where
-        r = renameUnique' emptySubst p
-        s  = runStateT r emptySubst
+        stateMonadCall = runStateT actualCall emptySubst
+        actuallCall = renameUnique' emptySubst p
 
--- (ApplyM (Subst c1 SapicLVar) (Process ann SapicLVar), MonadThrow m,
---  IsConst c2, Monoid (Subst c1 SapicLVar),
---  MonadFresh ((,) (Subst c1 SapicLVar)), GoodAnnotation ann) =>
 renameUnique' ::
     (MonadThrow m, MonadFresh m, GoodAnnotation ann)  =>
     SapicSubst
