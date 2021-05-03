@@ -1113,7 +1113,7 @@ prettyDotProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> case n of
       DefdRuleName s -> prefixIfReserved s
-      SAPiCRuleName s -> if "new" `isPrefixOf` s then [chr 957] ++ drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
+      SAPiCRuleName s -> if "new" `isPrefixOf` s then chr 957 : drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
 
 formatSAPiCRuleName :: String -> String
 formatSAPiCRuleName = filter (\x -> isAlphaNum x || (x == '_' && x /= '#'))
@@ -1151,7 +1151,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
 
 
 prettyRestr :: HighlightDocument d => F.SyntacticLNFormula -> d
-prettyRestr fact =  operator_ "_restrict(" <> F.prettySyntacticLNFormula fact <> operator_ ")"
+prettyRestr fact =  operator_ "_restrict(" <> text (filter (/= '#') $ render $ F.prettySyntacticLNFormula fact) <> operator_ ")"
 
 -- | pretty-print rules with restrictions
 prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [F.SyntacticLNFormula] -> d

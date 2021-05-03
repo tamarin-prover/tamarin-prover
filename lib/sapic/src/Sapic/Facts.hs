@@ -307,4 +307,4 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
-            stripSemicolon = filter (\x -> x /= ';')
+            stripSemicolon = filter (/= ';')
