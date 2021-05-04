@@ -47,6 +47,7 @@ module Theory.Sapic.Process (
 
 import Data.Binary
 import Data.Data
+import Data.Set hiding (map)
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
@@ -61,7 +62,7 @@ import Theory.Sapic.Annotation
 data SapicAction v =
                    Rep
                  | New v
-                 | ChIn (Maybe (SapicNTerm v)) (SapicNTerm v)
+                 | ChIn { inChan:: Maybe (SapicNTerm v), inMsg::SapicNTerm v, inMatch::Set v}
                  | ChOut (Maybe (SapicNTerm v)) (SapicNTerm v)
                  | Insert (SapicNTerm v) (SapicNTerm v)
                  | Delete (SapicNTerm v)
@@ -81,7 +82,9 @@ deriving instance (Data v, Generic v) => Data (SapicAction v)
 
 -- | When the process tree splits, it is connected with one of these connectives
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
-        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v | Let (SapicNTerm v) (SapicNTerm v) | ProcessCall String [v] [SapicNTerm v]
+        | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v 
+        | Let { letLeft :: SapicNTerm v, letRight :: SapicNTerm v, letMatch :: Set v}
+        | ProcessCall String [v] [SapicNTerm v]
             deriving (Functor,Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -132,7 +135,7 @@ mapTermsAction :: (SapicNTerm t -> SapicNTerm v)
                   -> SapicAction v
 mapTermsAction f ff fv ac
         | (New v) <- ac        = New (fv v)
-        | (ChIn  mt t) <- ac   = ChIn (fmap f mt) (f t)
+        | (ChIn  mt t mv) <- ac   = ChIn (fmap f mt) (f t) (fmap fv mv)
         | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
         | (Insert t1 t2) <- ac = Insert (f t1) (f t2)
         | (Delete t) <- ac     = Delete (f t)
@@ -300,7 +303,14 @@ prettyLetExceptions (CapturedEx tag v) = "Error: The variable "++ show v ++ " ap
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst ac
-        = mapTermsAction (apply subst) (apply subst) (apply subst) ac
+        = undefined
+            --  mapTermsAction (apply subst) (apply subst) (apply subst) ac
+        -- TODO need to be smarter for matchvars, either here or above... this is the old code
+        -- let mat = concatMap (extractVars subst) (S.toList $ matchVars ann)
+        --             , matchVars = S.fromList mat
+        -- where
+        --     extractVars sigma v = -- variables bound by sigma(v), or [v] if undef
+        --         maybe [v] varsVTerm (imageOf sigma v) 
 
 instance Apply SapicSubst (LProcess ann) where
 -- We are ignoring capturing here, use applyM below to get warnings.
