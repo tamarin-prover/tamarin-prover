@@ -8,6 +8,7 @@
 -- Parsing SAPIC processes. See the MANUAL for a high-level description of
 -- the syntax.
 
+{-# LANGUAGE TupleSections #-}
 module Theory.Text.Parser.Sapic(
     process
     , processDef
@@ -108,9 +109,8 @@ sapicAction = (do
                                 _ <- symbol ")"
                                 return (Just c, pt)
                                 )
-                        let annotation =  mempty { matchVars =  extractMatchingVariables pt}
-                        if validPattern S.empty pt -- only validate that freshly bound variable do not intersect with matches.
-                            then return (ChIn maybeChannel (unpattern pt), annotation)
+                        if validPattern S.empty pt -- only validate that freshly bound variables do not intersect with matches.
+                            then return (ChIn maybeChannel (unpattern pt) (extractMatchingVariables pt), mempty)
                             else fail $ "Invalid pattern: " ++ show pt
                    )
                <|> (do
@@ -152,11 +152,11 @@ sapicAction = (do
                    )
                <|> (do
                         (l,a,r,phi) <- try $ genericRule sapicpatternvar (PatternBind <$> sapicnodevar)
-                        let annotation =  mempty { matchVars =  foldMap (foldMap extractMatchingVariables) l}
+                        let matchVars =  foldMap (foldMap extractMatchingVariables) l
                         let f = fmap (fmap unpattern)
                         let g = fmap (fmap unpatternVar)
                         if validMSR S.empty (l,a,r) -- only validate that freshly bound variable do not intersect with matches.
-                            then return (MSR (f l,f a,f r,g phi), annotation)
+                            then return (MSR (f l) (f a) (f r) (g phi) matchVars, mempty)
                             else fail $ "Invalid pattern in lhs of embedded MSR: " ++ show l
                    )
 
@@ -251,8 +251,8 @@ actionprocess thy=
                         _  <- symbol "in"
                         p   <- process thy
                         q   <- elseprocess thy
-                        let f (t1,t2) p' =  let annot = mempty { matchVars = extractMatchingVariables t1} in
-                                    (ProcessComb (Let (unpattern t1) t2) annot p' q)
+                        let f (t1,t2) p' =
+                                    ProcessComb (Let (unpattern t1) t2 (extractMatchingVariables t1)) mempty p' q
                         return $ foldr f p ls
                         <?> "let binding"
                 )
@@ -283,13 +283,12 @@ actionprocess thy=
                         (p, vars) <- checkProcess (BC.unpack i) thy
                         let base_subst = zip vars ts
                         let extend_sup = foldl (\acc (svar,t) ->
-                                  (map (\x -> (x,t))
+                                  map (,t)
                                    (case svar of
                                       (SapicLVar sl_var (Just _)) ->
-                                        [svar, (SapicLVar sl_var Nothing)]
+                                        [svar, SapicLVar sl_var Nothing]
                                       _ -> [svar]
                                    )
-                                  )
                                   ++ acc) [] base_subst
                         substP <- applyM (substFromList extend_sup) p
                         return (ProcessComb

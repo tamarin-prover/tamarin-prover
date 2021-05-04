@@ -37,8 +37,10 @@ rulePrinter :: Show a =>
                -> [Fact (Term a)]
                -> [Fact (Term a)]
                -> [SapicFormula]
+               -> p
                -> String
-rulePrinter l a r res = render $ prettyRuleRestrGen ppFact ppRes l a r res 
+-- TODO we should convert l into a Pattern using mv and print it out correctly
+rulePrinter l a r res mv = render $ prettyRuleRestrGen ppFact ppRes l a r res 
     where
         ppFact = prettyFact $ prettyTerm $ text . show
         ppRes  = prettySyntacticLNFormula . toLFormula 

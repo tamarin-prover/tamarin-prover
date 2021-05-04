@@ -84,3 +84,21 @@ modifyProcessParsedAnnotation :: GoodAnnotation a =>
     (ProcessParsedAnnotation -> ProcessParsedAnnotation) -> a -> a
 modifyProcessParsedAnnotation f ann =
     setProcessParsedAnnotation (f $ getProcessParsedAnnotation ann) ann
+
+applyProcessParsedAnnotation :: Apply t' SapicTerm => t' -> ProcessParsedAnnotation -> ProcessParsedAnnotation
+applyProcessParsedAnnotation subst ann = 
+        ann {location = fmap (apply subst) (location ann)
+                    -- , backSubstitution = undefined 
+                    -- WARNING: we do not apply the substitution to the back
+                    -- translation, as this is not always possible. If variables
+                    -- are renamed, modify the backtranslation by hand.
+                    }
+
+instance {-# INCOHERENT #-} (GoodAnnotation a) => Apply SapicSubst a
+-- INCOHERENT ensures that this instance is selected if other candidates remain (barring knowledge about the context
+-- see https://ghc.readthedocs.io/en/8.0.1/glasgow_exts.html?highlight=incoherentinstances#instance-overlap)
+    where
+        apply subst ann = 
+            let ann' = applyProcessParsedAnnotation subst $ getProcessParsedAnnotation ann
+            in
+            setProcessParsedAnnotation ann' ann

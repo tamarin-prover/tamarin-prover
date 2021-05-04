@@ -151,7 +151,8 @@ freshSapicVarCopy sv = do
         sort = lvarSort lv
 
 -- | Pretty print an @SapicTerm@.
-prettySapicTerm :: Document d => SapicTerm -> d
+-- prettySapicTerm :: Document d => SapicTerm -> d
+prettySapicTerm :: (Document d, Show v) => SapicNTerm v -> d
 prettySapicTerm = prettyTerm (text . show)
 
 prettySapicFact :: Document d => Fact SapicTerm -> d

@@ -25,6 +25,7 @@ module Theory.Sapic.Pattern (
     , validPattern
     , validMSR
     , extractMatchingVariables
+    , unextractMatchingVariables
 ) where
 
 import Data.Binary
@@ -93,6 +94,13 @@ extractMatchingVariables pt = S.fromList $ foldMap (foldMap isPatternMatch) pt
     where
         isPatternMatch (PatternMatch v) = [v]
         isPatternMatch (PatternBind  _) = []
+    
+-- | Transform term and list of variables to pattern term with those variables bound
+unextractMatchingVariables ::  S.Set SapicLVar -> SapicTerm -> SapicNTerm PatternSapicLVar
+unextractMatchingVariables vs = fmap (fmap f) 
+    where
+        f v = if v `elem` vs then PatternMatch v else PatternBind v
+        
 
 
 -- | list of variables that occur in pattern term.

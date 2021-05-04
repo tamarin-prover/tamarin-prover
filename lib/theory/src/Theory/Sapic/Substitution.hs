@@ -11,7 +11,6 @@ module Theory.Sapic.Substitution (
 where
 import Control.Monad.Catch
 import Data.Data
-import qualified Data.Set as S
 import Term.Substitution
 import Theory.Sapic.Annotation
 import Theory.Sapic.Term
