@@ -52,8 +52,8 @@ getSecretChannels (ProcessComb _ _ pl pr ) candidates =
             where
               c1 = getSecretChannels pl candidates
               c2 = getSecretChannels pr candidates
-              
--- | For each input or output, if the variable is secret, we annotate the process              
+
+-- | For each input or output, if the variable is secret, we annotate the process
 annotateEachSecretChannels :: LProcess (ProcessAnnotation LVar) -> S.Set LVar -> LProcess (ProcessAnnotation LVar)
 annotateEachSecretChannels (ProcessNull an) _ = ProcessNull an
 annotateEachSecretChannels (ProcessComb comb an pl pr ) svars =
@@ -62,7 +62,7 @@ annotateEachSecretChannels (ProcessComb comb an pl pr ) svars =
               pl' = annotateEachSecretChannels pl svars
               pr' = annotateEachSecretChannels pr svars
 annotateEachSecretChannels (ProcessAction ac an p) svars
-  | (ChIn (Just t1) _) <- ac, Lit (Var v') <- viewTerm t1
+  | (ChIn (Just t1) _ _) <- ac, Lit (Var v') <- viewTerm t1
    , v <- toLVar v' =
       if S.member v svars then
         ProcessAction ac (an `mappend` annSecretChannel (AnVar v)) p'
@@ -73,13 +73,12 @@ annotateEachSecretChannels (ProcessAction ac an p) svars
       if S.member v svars then
         ProcessAction ac (an `mappend` annSecretChannel (AnVar v)) p'
       else
-        ProcessAction ac an p'                           
+        ProcessAction ac an p'
   | otherwise = ProcessAction ac an p'
   where p'= annotateEachSecretChannels p svars
 
 
 annotateSecretChannels :: LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
-annotateSecretChannels anp = 
+annotateSecretChannels anp =
   annotateEachSecretChannels anp svars
   where svars = getSecretChannels anp S.empty
-

@@ -72,7 +72,7 @@ isUnlock (ProcessAction (Unlock _) _ _) = True
 isUnlock _  = False
 
 isChIn :: Process ann v -> Bool
-isChIn (ProcessAction (ChIn _ _) _ _) = True
+isChIn (ProcessAction (ChIn _ _ _) _ _) = True
 isChIn _  = False
 
 isChOut :: Process ann v -> Bool

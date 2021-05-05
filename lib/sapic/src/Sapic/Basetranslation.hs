@@ -88,19 +88,19 @@ baseTransAction needsAssImmediate ac an p tildex
           ], tildex)
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
-    | (ChIn (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
+    | (ChIn (Just tc') t' _) <- ac, (Just (AnVar _)) <- secretChannel an  -- match vars are ignored in the translation, as they are bound in the def_state
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let tx' = freeset tc `union` freeset t `union` tildex in
           ([
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
-    | (ChIn (Just tc') t') <- ac, Nothing <- secretChannel an
+    | (ChIn (Just tc') t' _) <- ac, Nothing <- secretChannel an  -- match vars are ignored in the translation, as they are bound in the def_state
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let tx' = freeset tc `union` freeset t `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
           ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
-    | (ChIn Nothing t') <- ac
+    | (ChIn Nothing t' _) <- ac
       , t <- toLNTerm t' =
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
@@ -157,7 +157,7 @@ baseTransAction needsAssImmediate ac an p tildex
     | (Event f' ) <- ac
       , f <- toLNFact f' =
           ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
-    | (MSR (l',a',r',res')) <- ac
+    | (MSR l' a' r' res' _) <- ac
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
           let tx' = freeset' l `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
@@ -208,7 +208,7 @@ baseTransComb c an p tildex
                     throw (
                     ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
-    | Let t1' t2' <- c,
+    | Let t1' t2' _ <- c,  -- match vars are ignored in the translation, as they are bound in the def_state
       elsBranch <- elseBranch an
       =
         let t1or = toLNTerm t1' in

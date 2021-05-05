@@ -328,23 +328,22 @@ ppAction ProcessAnnotation{pureState=True, isStateChannel = Just _} tc (New v) =
 ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty, False)
 ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty, False)
 
-ppAction an tc@TranslationContext{trans=Proverif} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
+ppAction _ tc@TranslationContext{trans=Proverif} (ChIn t1 t2 mvars)  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
                                        , sh1 `S.union` sh2, True)
   where (pt1, sh1) = getAttackerChannel tc t1
-        mvars = getMatchVars an
-        (pt2, sh2) = auxppSapicTerm tc mvars True t2
+        (pt2, sh2) = auxppSapicTerm tc (S.map toLVar mvars) True t2
 
-ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
+ppAction _ tc@TranslationContext{trans=DeepSec} (ChIn t1 t2@(LIT (Var (SapicLVar _ _))) mvars )  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
                                        , sh1 `S.union` sh2, True)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (S.map toLVar mvars) True t2
 
 -- pattern matching on input for deepsec is not supported
-ppAction an tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 )  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
+ppAction _ tc@TranslationContext{trans=DeepSec} (ChIn t1 t2 mvars)  = (text "in(" <> pt1 <> text "," <> text pt2var <> text ");"
                                   $$ text  "let (" <> pt2 <> text ")=" <> text pt2var <> text " in"
                                        , sh1 `S.union` sh2, False)
   where (pt1, sh1) =  getAttackerChannel tc t1
-        (pt2, sh2) = auxppSapicTerm tc (getMatchVars an) True t2
+        (pt2, sh2) = auxppSapicTerm tc (S.map toLVar mvars) True t2
         pt2var = "fresh" ++ stripNonAlphanumerical (render pt2)
 
 ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text ")", sh1 `S.union` sh2, True)
@@ -425,20 +424,20 @@ ppSapic tc (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|"
 ppSapic tc (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
-ppSapic tc (ProcessComb (Let t1 t2) an pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppSapic tc (ProcessComb (Let t1 t2 mvars) _ pl (ProcessNull _))  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                ,sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic tc pl
-                                           (pt1, sh1) = auxppSapicTerm tc (getMatchVars an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (S.map toLVar mvars) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
-ppSapic tc (ProcessComb (Let t1 t2) an pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
+ppSapic tc (ProcessComb (Let t1 t2 mvars) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
                                                  $$ text "else" <> ppr
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
-                                           (pt1, sh1) = auxppSapicTerm tc (getMatchVars an) True t1
+                                           (pt1, sh1) = auxppSapicTerm tc (S.map toLVar mvars) True t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 -- if the process call does not have any argument, we just inline
@@ -937,8 +936,6 @@ makeAnnotations thy p = res
                      pr
                    else
                      translateTermsReport pr
-getMatchVars :: ProcessAnnotation v -> S.Set LVar
-getMatchVars an =  S.map (\(SapicLVar lvar _) -> lvar) (matchVars $ parsingAnn an)
 ------------------------------------------------------------------------------
 -- Core DeepSec Export
 ------------------------------------------------------------------------------

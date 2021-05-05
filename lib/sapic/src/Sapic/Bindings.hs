@@ -19,17 +19,17 @@ bindings (ProcessNull _) = []
 
 -- | bindings for actions without duplicates
 bindingsAct :: GoodAnnotation a => a -> SapicAction SapicLVar -> [SapicLVar]
-bindingsAct  ann ac
+bindingsAct  _ ac
     | (New v) <- ac = [v]
-    | (ChIn _ t) <- ac = nub (freesSapicTerm t) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
-    | (MSR (l,_,_,_)) <- ac = nub (foldMap freesSapicFact l) \\ S.toList (matchVars $ getProcessParsedAnnotation ann)
+    | (ChIn _ t vs) <- ac = nub (freesSapicTerm t) \\ S.toList vs
+    | (MSR l _ _ _ mv) <- ac = nub (foldMap freesSapicFact l) \\ S.toList mv
     | otherwise = []
 
 -- | bindings for process combinators without duplicates
 bindingsComb :: GoodAnnotation a => a -> ProcessCombinator SapicLVar -> [SapicLVar]
-bindingsComb ann c
+bindingsComb _ c
     | (Lookup _ v) <- c = [v]
-    | (Let t1 _)   <- c = nub (freesSapicTerm t1) \\  S.toList (matchVars $ getProcessParsedAnnotation ann)
+    | (Let t1 _ mv)   <- c = nub (freesSapicTerm t1) \\  S.toList mv
     | otherwise = []
 
 -- | accumulate all bound variables in a list

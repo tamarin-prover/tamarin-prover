@@ -44,7 +44,7 @@ type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
 -- | Actions that are blocking
 isBlockingAct :: LSapicAction -> Bool
 isBlockingAct Rep        = True
-isBlockingAct (ChIn _ _) = True
+isBlockingAct (ChIn _ _ _) = True
 isBlockingAct _          = False
 
 -- | determine whether process is blocking

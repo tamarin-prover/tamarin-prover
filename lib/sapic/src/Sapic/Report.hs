@@ -67,15 +67,15 @@ reportMapTermsAction :: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
   -> LSapicAction
             -> LSapicAction
 reportMapTermsAction f loc ac
-        | (New v) <- ac, v' <- termVar' (f loc (varTerm v)) = New v'
-        | (ChIn  mt t) <- ac   = ChIn (fmap (f loc) mt) (f loc t)
+        | (New v) <- ac = New v -- (f loc) is always the identity over variables
+        | (ChIn  mt t vs) <- ac   = ChIn (fmap (f loc) mt) (f loc t) vs
         | (ChOut mt t) <- ac   = ChOut (fmap (f loc) mt) (f loc t)
         | (Insert t1 t2) <- ac = Insert (f loc t1) (f loc t2)
         | (Delete t) <- ac     = Delete (f loc t)
         | (Lock t) <- ac       = Lock (f loc t)
         | (Unlock t) <- ac     = Unlock (f loc t)
         | (Event fa) <- ac      = Event (fmap (f loc) fa)
-        | (MSR (l,a,r,rest)) <- ac  = MSR $ (f2mapf l, f2mapf a, f2mapf r, fmap formulaMap rest)
+        | (MSR l a r rest vs) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (fmap formulaMap rest) vs
         |  Rep <- ac            = Rep
             where f2mapf = fmap $ fmap (f loc)
                   -- something like
@@ -88,7 +88,7 @@ reportMapTermsComb:: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
 reportMapTermsComb f loc c
         | (Cond _) <- c = Cond $ undefined -- same problem as above
         | (CondEq t1 t2) <- c = CondEq (f loc t1) (f loc t2)
-        | (Let t1 t2) <- c = Let (f loc t1) (f loc t2)
+        | (Let t1 t2 vs) <- c = Let (f loc t1) (f loc t2) vs
         | (Lookup t v) <- c = Lookup (f loc t) v
         | otherwise = c
 
