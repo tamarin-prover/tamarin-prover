@@ -17,6 +17,7 @@ module Term.Substitution.SubstVFree (
 
   -- * application of substitutions
   , applyVTerm
+  , applyVTermProj
   , applyLit
 
   -- * smart constructors for substitutions
@@ -97,16 +98,18 @@ applyLit :: IsVar v => Subst c v -> Lit c v -> VTerm c v
 applyLit subst v@(Var i)  = fromMaybe (lit v) $ M.lookup i (sMap subst)
 applyLit _     c@(Con _)  = lit c
 
-
-
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm subst t = case viewTerm t of
-    Lit l            -> applyLit subst l
-    FApp (AC o) ts   -> fAppAC   o (map (applyVTerm subst) ts)
-    FApp (C o)  ts   -> fAppC    o (map (applyVTerm subst) ts)
-    FApp (NoEq o) ts -> fAppNoEq o (map (applyVTerm subst) ts)
-    FApp List ts     -> fAppList   (map (applyVTerm subst) ts)
+applyVTerm = applyVTermProj applyLit
+
+-- | Variant of @applyVTerm@ with custom function to apply literals
+applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
+applyVTermProj f subst t = case viewTerm t of
+    Lit l            -> f subst l
+    FApp (AC o) ts   -> fAppAC   o (map (applyVTermProj f subst) ts)
+    FApp (C o)  ts   -> fAppC    o (map (applyVTermProj f subst) ts)
+    FApp (NoEq o) ts -> fAppNoEq o (map (applyVTermProj f subst) ts)
+    FApp List ts     -> fAppList   (map (applyVTermProj f subst) ts)
 
 
 -- Construction
@@ -222,7 +225,6 @@ instance Ord c => HasFrees (LSubst c) where
 class Apply t' t where
     apply :: t' -> t -> t
 
-
 instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
     apply subst x = maybe x extractVar $ imageOf subst x
       where
@@ -234,14 +236,12 @@ instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
 instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
     apply subst = applyVTerm subst
 
-instance (IsConst c, IsVar v) => Apply (Subst c v) (BVar v) where
+instance  (Ord c, Ord v, Apply s (Lit c v)) => Apply s (Term (Lit c v)) where
+    apply subst t = applyVTermProj (\s' t' -> lit $ apply s' t') subst t
+
+instance (Apply s v) => Apply s (BVar v) where
     apply _     x@(Bound _) = x
-    apply subst x@(Free  v) = maybe x extractVar $ imageOf subst v
-      where
-        extractVar (viewTerm -> Lit (Var v')) = Free v'
-        extractVar _t                     =
-          error $ "apply (BLVar): variable '" ++ show v ++
-                  "' substituted with term '" -- ++ show _t ++ "'"
+    apply subst (Free  v) = Free (apply subst v)
 
 instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c (BVar v)) where
     apply subst = (`bindTerm` applyBLLit)

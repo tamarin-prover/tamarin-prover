@@ -189,7 +189,7 @@ renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUse
 
 renameUnique' ::
     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
-    SapicSubst -> Process ann SapicLVar -> m (Process ann SapicLVar)
+    Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
         p' <- applyM initSubst p -- apply outstanding substitution subst 
         case p' of
@@ -209,7 +209,12 @@ renameUnique' initSubst p = do
                 return $ ProcessComb comb' ann' pl' pr'
     where
         substFromVarList = substFromList . map (second varTerm)
-        f v = do v' <- freshSapicVarCopy v; return (v, v')
+        -- f v = do v' <- freshSapicLVarCopy v; return (v, v') 
+        -- we rename based on LVars, not SapicLVars because variables we want to rename are not properly typed yet. 
+        f v = do 
+            let lv = toLVar v
+            v' <- freshLVar (lvarName lv) (lvarSort lv);
+            return (lv, v') 
         mkSubst bvars = do -- create substitution renaming all elements of bind' into a fresh variable
                 vmap <- mapM f bvars
                 return (substFromVarList vmap, substFromVarList $ map swap vmap)

@@ -414,7 +414,6 @@ type BLVar = BVar LVar
 -- | Terms built over names and 'LVar's combined with quantified variables.
 type BLTerm = NTerm BLVar
 
-
 -- | Fold a possibly bound variable.
 {-# INLINE foldBVar #-}
 foldBVar :: (Integer -> a) -> (v -> a) -> BVar v -> a

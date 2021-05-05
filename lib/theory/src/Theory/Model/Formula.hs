@@ -17,6 +17,8 @@
 -- Portability : GHC only
 --
 -- Types and operations for handling sorted first-order logic
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Theory.Model.Formula (
 
    -- * Formulas
@@ -308,6 +310,10 @@ instance HasFrees SyntacticLNFormula where
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance Apply LNSubst LNFormula where
+    apply subst = mapAtoms (const $ apply subst)
+
+instance (Apply s (VTerm c v), Apply s (VTerm c (BVar v))) => Apply s (Formula h c v)
+  where
     apply subst = mapAtoms (const $ apply subst)
 
 instance (IsConst c, IsVar v) => Apply (Subst c v) (ProtoFormula SyntacticSugar s c v) where

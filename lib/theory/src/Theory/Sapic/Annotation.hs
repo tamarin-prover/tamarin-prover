@@ -11,6 +11,7 @@
 --
 -- Standard annotations for SAPIC processes after parsing
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module Theory.Sapic.Annotation (
     -- types
       ProcessParsedAnnotation(..)
@@ -43,13 +44,17 @@ data ProcessParsedAnnotation = ProcessParsedAnnotation {
     , location       :: Maybe SapicTerm
     -- substitution to rename variables in subprocess back to how the user input them.
     -- 1. empty until process is renamed for uniqueness
-    -- 2. only apply to variables bound at this subprocess
+    -- 2. only applies to variables bound at this subprocess
     -- 3. maps variables to variable terms
-    , backSubstitution :: SapicSubst
+    , backSubstitution :: Subst Name LVar
     }
-    deriving (Eq, Ord, Show, Data, Generic)
+    deriving (Eq, Ord, Show, Generic)
 instance NFData ProcessParsedAnnotation
 instance Binary ProcessParsedAnnotation
+
+-- deriving instance Data SapicSubst
+deriving instance Data (Subst Name LVar)
+deriving instance Data ProcessParsedAnnotation
 
 instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing emptySubst
@@ -86,7 +91,7 @@ modifyProcessParsedAnnotation f ann =
     setProcessParsedAnnotation (f $ getProcessParsedAnnotation ann) ann
 
 applyProcessParsedAnnotation :: Apply t' SapicTerm => t' -> ProcessParsedAnnotation -> ProcessParsedAnnotation
-applyProcessParsedAnnotation subst ann = 
+applyProcessParsedAnnotation subst ann =
         ann {location = fmap (apply subst) (location ann)
                     -- , backSubstitution = undefined 
                     -- WARNING: we do not apply the substitution to the back
@@ -98,7 +103,7 @@ instance {-# INCOHERENT #-} (GoodAnnotation a) => Apply SapicSubst a
 -- INCOHERENT ensures that this instance is selected if other candidates remain (barring knowledge about the context
 -- see https://ghc.readthedocs.io/en/8.0.1/glasgow_exts.html?highlight=incoherentinstances#instance-overlap)
     where
-        apply subst ann = 
+        apply subst ann =
             let ann' = applyProcessParsedAnnotation subst $ getProcessParsedAnnotation ann
             in
             setProcessParsedAnnotation ann' ann

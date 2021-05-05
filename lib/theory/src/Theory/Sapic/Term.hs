@@ -13,6 +13,7 @@
 --
 -- Data types for SAPIC processes in theories
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Theory.Sapic.Term (
     -- types
       SapicType
@@ -37,7 +38,7 @@ module Theory.Sapic.Term (
     -- utitlities
     , freesSapicTerm
     , freesSapicFact
-    , freshSapicVarCopy
+    , freshSapicLVarCopy
     -- pretty printing
     , prettySapicTerm
     , prettySapicFact
@@ -110,6 +111,18 @@ instance Show SapicLVar where
 instance Hinted SapicLVar where
     hint (SapicLVar v _) = hint v
 
+-- | apply substitutions on LVars ignoring (and preserving) the type
+instance Apply (Subst Name LVar) SapicLVar
+    where
+        apply s (SapicLVar v t) = SapicLVar (apply s v) t
+
+-- | apply substitutions on SapicTerms ignoring (and preserving) the type
+instance Apply (Subst Name LVar) SapicTerm
+    where
+        apply = applyVTermProj applyLit'
+            where
+                 applyLit' subst (Var v) = LIT (Var (apply subst v))
+                 applyLit' _     (Con v) = LIT (Con v)
 
 prettySapicFunType :: SapicFunType -> String
 prettySapicFunType (ins,out) = intercalate  " * " (map show ins) ++ " -> " ++ show out
@@ -141,8 +154,8 @@ toLFormula = mapAtoms f
     where f _ = fmap $ fmap $ fmap $ fmap toLVar
 
 -- | Create fresh copy of a sapic variable
-freshSapicVarCopy :: MonadFresh m => SapicLVar -> m SapicLVar
-freshSapicVarCopy sv = do
+freshSapicLVarCopy :: MonadFresh m => SapicLVar -> m SapicLVar
+freshSapicLVarCopy sv = do
     flv <- freshLVar name sort 
     return sv {slvar = flv}
     where

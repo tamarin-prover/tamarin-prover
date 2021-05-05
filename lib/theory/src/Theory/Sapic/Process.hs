@@ -297,16 +297,30 @@ pfoldMap f (ProcessAction a an p)   =
 -- Applying substitutions ( no error messages )
 -------------------------
 
--- extracts the variables from all resulting terms. E.g., when we try to match
+-- | extracts the variables from all resulting terms. E.g., when we try to match
 -- x and y, and substitute x-> <v1,v2> and y->v3, we now match v1,v2 and v3.
 applyMatchVars :: IsVar a => Subst c a -> Set a -> Set a
-applyMatchVars subst = fromList . concatMap extractVars . toList
+applyMatchVars = applyMatchVars' id
+
+-- | Same as applyMatchVars, but lookups `f v` instead of v in the substitution.
+applyMatchVars' :: IsVar a => (t -> a) -> Subst c a -> Set t -> Set a
+applyMatchVars' f subst = fromList . concatMap extractVars . toList
         where
             extractVars v = -- all variables that are bound by sigma(v), or [v] if undef
-                maybe [v] varsVTerm (imageOf subst v)
+                maybe [f v] varsVTerm (imageOf subst (f v))
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst (ChIn mt t vs) = ChIn (apply subst mt) (apply subst t) (applyMatchVars subst vs)
+    apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
+
+-- TODO continue here.
+-- deriving instance Apply (Subst Name LVar) (BVar SapicLVar) 
+-- deriving instance Apply (Subst Name LVar) (NTerm (BVar SapicLVar)) 
+
+-- | Substitute for LVars, ignoring types
+instance Apply (Subst Name LVar) (SapicAction SapicLVar) where
+    apply subst (ChIn mt t vs) = ChIn (apply subst mt) (apply subst t) (Set.map f $ applyMatchVars' toLVar subst vs)
+        where f v = SapicLVar v Nothing
     apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
 instance (IsVar v) => Apply (Subst Name v) (ProcessCombinator v) where

@@ -145,8 +145,7 @@ instance (IsConst c, IsVar v)
     where
     apply subst (Pred fa) = Pred $ apply subst fa
 
-instance (IsConst c, IsVar v) 
-        => Apply (Subst c v) (SyntacticSugar (VTerm c (BVar v)))
+instance (Apply s t) => Apply s (SyntacticSugar t)
     where
     apply subst (Pred fa) = Pred $ apply subst fa
 
@@ -155,28 +154,12 @@ instance HasFrees t => HasFrees (Atom t) where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in atoms for now
     mapFrees  f = traverse (mapFrees f)
 
-instance Apply LNSubst LNAtom where
+instance (Apply s t, Apply s (syn t)) => Apply s (ProtoAtom syn t) where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
     apply subst (Syntactic fa)    = Syntactic (apply subst fa)
-
-instance Apply LNSubst BLAtom where
-    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
-    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
-    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
-    apply subst (Last i)          = Last (apply subst i)
-    apply subst (Syntactic fa)         = Syntactic (apply subst fa)
-
-instance (IsConst c, IsVar v) =>
-        Apply (Subst c v) (SyntacticAtom (VTerm c (BVar v))) 
-    where
-    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
-    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
-    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
-    apply subst (Last i)          = Last (apply subst i)
-    apply subst (Syntactic fa)         = Syntactic (apply subst fa)
 
 
 
