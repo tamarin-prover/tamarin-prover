@@ -16,6 +16,7 @@
 --
 -- Data types for SAPIC processes in theories
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Theory.Sapic.Process (
     -- types
     Process(..)
@@ -300,37 +301,55 @@ pfoldMap f (ProcessAction a an p)   =
 -- | extracts the variables from all resulting terms. E.g., when we try to match
 -- x and y, and substitute x-> <v1,v2> and y->v3, we now match v1,v2 and v3.
 applyMatchVars :: IsVar a => Subst c a -> Set a -> Set a
-applyMatchVars = applyMatchVars' id
-
--- | Same as applyMatchVars, but lookups `f v` instead of v in the substitution.
-applyMatchVars' :: IsVar a => (t -> a) -> Subst c a -> Set t -> Set a
-applyMatchVars' f subst = fromList . concatMap extractVars . toList
+-- applyMatchVars = applyMatchVars' id
+applyMatchVars subst = fromList . concatMap extractVars . toList
         where
             extractVars v = -- all variables that are bound by sigma(v), or [v] if undef
-                maybe [f v] varsVTerm (imageOf subst (f v))
+                maybe [v] varsVTerm (imageOf subst v)
+
+-- | Same as applyMatchVars, but uses f to perform the substitution, for generality
+-- f is intended to be `apply subst`, but we want to avoid having the type constraints here.
+applyMatchVars' :: Ord v => (VTerm n v -> VTerm n v) -> Set v -> Set v
+applyMatchVars' f = fromList . concatMap extractVars . toList
+        where
+            extractVars = varsVTerm . f . varTerm
+
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst (ChIn mt t vs) = ChIn (apply subst mt) (apply subst t) (applyMatchVars subst vs)
     apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
--- TODO continue here.
--- deriving instance Apply (Subst Name LVar) (BVar SapicLVar) 
--- deriving instance Apply (Subst Name LVar) (NTerm (BVar SapicLVar)) 
-
 -- | Substitute for LVars, ignoring types
-instance Apply (Subst Name LVar) (SapicAction SapicLVar) where
-    apply subst (ChIn mt t vs) = ChIn (apply subst mt) (apply subst t) (Set.map f $ applyMatchVars' toLVar subst vs)
-        where f v = SapicLVar v Nothing
+instance {-# OVERLAPPABLE #-} (Ord v, Apply s v) => Apply s (SapicAction v) where
+    apply subst (ChIn mt t vs) = ChIn (apply subst mt) (f t) (applyMatchVars' f vs)
+        where
+            f = apply subst -- to fix the type of the instance of apply that applyMatchVars' gets, use the same as for term t
     apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
-instance (IsVar v) => Apply (Subst Name v) (ProcessCombinator v) where
+instance  Apply SapicSubst (ProcessCombinator SapicLVar) where
     apply subst (Let t1 t2 vs) 
             = Let (apply subst t1) (apply subst t2) (applyMatchVars subst vs)
     apply subst c
             = mapTermsComb (apply subst) (apply subst) (apply subst) c
 
+-- | Substitute for LVars, ignoring types
+instance {-# OVERLAPPABLE #-} (Ord v, Apply s v) => Apply s (ProcessCombinator v) where
+    apply subst (Let t1 t2 vs) 
+            = Let (f t1) (f t2) (applyMatchVars' f vs)
+        where f = apply subst -- use same instance of Apply for t2 and applyMatchVars'
+    apply subst c
+            = mapTermsComb (apply subst) (apply subst) (apply subst) c
+
 instance (GoodAnnotation ann) => Apply SapicSubst (LProcess ann) where
 -- We are ignoring capturing here, use applyM below to get warnings.
+    apply _ (ProcessNull ann) = ProcessNull ann
+    apply subst (ProcessComb c ann pl pr) =
+                ProcessComb (apply subst c) (apply subst ann) (apply subst pl) (apply subst pr)
+    apply subst (ProcessAction ac ann p') =
+                ProcessAction (apply subst ac) (apply subst ann) (apply subst p')
+
+-- | Substitute for LVars, ignoring types
+instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Process ann v) where
     apply _ (ProcessNull ann) = ProcessNull ann
     apply subst (ProcessComb c ann pl pr) =
                 ProcessComb (apply subst c) (apply subst ann) (apply subst pl) (apply subst pr)

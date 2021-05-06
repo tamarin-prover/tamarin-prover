@@ -40,11 +40,19 @@ instance (Show c, Typeable c, Show v, IsVar v, Typeable v) => ApplyM (Subst c v)
         extractVar t              =
           throwM $ ExSubstituteWithTerm x t
 
+-- TODO remove!
 -- NOTE: We avoid creating proper applyM instances for Lits, Terms and so, as we would
 -- repeat much of the implementation for the typeclass Apply from SubstVFree.hs
 -- Downside: we risk triggering errors in apply instead of getting proper exceptions
-instance ApplyM SapicSubst SapicTerm where
-    applyM subst t = return $ apply subst t
+-- instance ApplyM SapicSubst SapicTerm where
+--     applyM subst t = return $ apply subst t
+
+instance (ApplyM s v) => ApplyM s (Lit n v) where
+        applyM subst = mapM (applyM subst)
+instance (Ord l,ApplyM s l) => ApplyM s (Term l) where
+        applyM subst = traverseTerm (applyM subst)
+instance (ApplyM s v )=> ApplyM s (BVar v) where
+        applyM subst = mapM (applyM subst)
 
 instance {-# INCOHERENT #-} (GoodAnnotation a) => ApplyM SapicSubst a
 -- INCOHERENT ensures that this instance is selected if other candidates remain (barring knowledge about the context
@@ -53,6 +61,8 @@ instance {-# INCOHERENT #-} (GoodAnnotation a) => ApplyM SapicSubst a
         applyM subst ann = do
             ann' <- applyMProcessParsedAnnotation subst $ getProcessParsedAnnotation ann
             return $ setProcessParsedAnnotation ann' ann
+
+
 
 -- applyMProcessParsedAnnotation :: (MonadThrow m, ApplyM t' SapicTerm,
 --     ApplyM t' SapicLVar) =>

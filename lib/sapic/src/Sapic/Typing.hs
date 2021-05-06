@@ -191,7 +191,8 @@ renameUnique' ::
     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
     Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
-        p' <- applyM initSubst p -- apply outstanding substitution subst 
+        -- p' <- applyM initSubst p -- apply outstanding substitution subst 
+        let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best
         case p' of
             ProcessNull _ -> return p'
             ProcessAction ac ann pl -> do

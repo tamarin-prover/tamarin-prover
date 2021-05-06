@@ -12,6 +12,7 @@
 -- Standard annotations for SAPIC processes after parsing
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Theory.Sapic.Annotation (
     -- types
       ProcessParsedAnnotation(..)
@@ -90,7 +91,7 @@ modifyProcessParsedAnnotation :: GoodAnnotation a =>
 modifyProcessParsedAnnotation f ann =
     setProcessParsedAnnotation (f $ getProcessParsedAnnotation ann) ann
 
-applyProcessParsedAnnotation :: Apply t' SapicTerm => t' -> ProcessParsedAnnotation -> ProcessParsedAnnotation
+applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =
         ann {location = fmap (apply subst) (location ann)
                     -- , backSubstitution = undefined 
@@ -99,11 +100,10 @@ applyProcessParsedAnnotation subst ann =
                     -- are renamed, modify the backtranslation by hand.
                     }
 
-instance {-# INCOHERENT #-} (GoodAnnotation a) => Apply SapicSubst a
+instance {-# INCOHERENT #-} (GoodAnnotation a, Apply (Subst n v) SapicTerm) => Apply (Subst n v) a
 -- INCOHERENT ensures that this instance is selected if other candidates remain (barring knowledge about the context
 -- see https://ghc.readthedocs.io/en/8.0.1/glasgow_exts.html?highlight=incoherentinstances#instance-overlap)
     where
-        apply subst ann =
-            let ann' = applyProcessParsedAnnotation subst $ getProcessParsedAnnotation ann
-            in
-            setProcessParsedAnnotation ann' ann
+        apply subst ann = setProcessParsedAnnotation ann' ann
+            where
+                ann' = applyProcessParsedAnnotation subst ( getProcessParsedAnnotation ann)

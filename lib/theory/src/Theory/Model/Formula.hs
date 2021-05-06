@@ -312,12 +312,9 @@ instance HasFrees SyntacticLNFormula where
 instance Apply LNSubst LNFormula where
     apply subst = mapAtoms (const $ apply subst)
 
-instance (Apply s (VTerm c v), Apply s (VTerm c (BVar v))) => Apply s (Formula h c v)
+instance {-# OVERLAPPABLE #-} (Apply s (VTerm c v), Apply s (VTerm c (BVar v)), Apply s (syn (Term (Lit c (BVar v))))) => Apply s (ProtoFormula syn h c v)
   where
     apply subst = mapAtoms (const $ apply subst)
-
-instance (IsConst c, IsVar v) => Apply (Subst c v) (ProtoFormula SyntacticSugar s c v) where
-    apply subst = mapAtoms (const $ apply subst )
 
 ------------------------------------------------------------------------------
 -- Formulas modulo E and modulo AC

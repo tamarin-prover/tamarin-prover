@@ -225,14 +225,6 @@ instance Ord c => HasFrees (LSubst c) where
 class Apply t' t where
     apply :: t' -> t -> t
 
-instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
-    apply subst x = maybe x extractVar $ imageOf subst x
-      where
-        extractVar (viewTerm -> Lit (Var x')) = x'
-        extractVar t              =
-          error $ "apply (LVar): variable '" ++ show x ++
-                  "' substituted with term '" ++ show t ++ "'"
-
 instance  (Apply s v) => Apply s (Lit c v) where
         apply subst (Var v)   = Var (apply subst v)
         apply _     l@(Con _) = l
@@ -241,6 +233,15 @@ instance  (Apply s v) => Apply s (Lit c v) where
 -- only one overlapping instance. We use this to get a fast implementation for
 -- substitutions that map the term, but also have the generality to define
 -- substitutions that don't match the variables used in the term.
+
+instance {-# OVERLAPPING #-} (Show c, Show v, IsVar v) => Apply (Subst c v) v where
+    apply subst x = maybe x extractVar $ imageOf subst x
+      where
+        extractVar (viewTerm -> Lit (Var x')) = x'
+        extractVar t              =
+          error $ "apply (LVar): variable '" ++ show x ++
+                  "' substituted with term '" ++ show t ++ "'"
+
 instance {-# OVERLAPPING #-}  (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
     apply subst = applyVTerm subst
 
