@@ -233,17 +233,25 @@ instance (Show c, Show v, IsVar v) => Apply (Subst c v) v where
           error $ "apply (LVar): variable '" ++ show x ++
                   "' substituted with term '" ++ show t ++ "'"
 
-instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
+instance  (Apply s v) => Apply s (Lit c v) where
+        apply subst (Var v)   = Var (apply subst v)
+        apply _     l@(Con _) = l
+
+-- the overlapping instance overwrites the overlappable instance it there is
+-- only one overlapping instance. We use this to get a fast implementation for
+-- substitutions that map the term, but also have the generality to define
+-- substitutions that don't match the variables used in the term.
+instance {-# OVERLAPPING #-}  (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c v) where
     apply subst = applyVTerm subst
 
-instance  (Ord c, Ord v, Apply s (Lit c v)) => Apply s (Term (Lit c v)) where
+instance {-# OVERLAPPABLE #-}  (Ord c, Ord v, Apply s (Lit c v)) => Apply s (Term (Lit c v)) where
     apply subst t = applyVTermProj (\s' t' -> lit $ apply s' t') subst t
 
-instance (Apply s v) => Apply s (BVar v) where
+instance {-# OVERLAPPABLE #-}  (Apply s v) => Apply s (BVar v) where
     apply _     x@(Bound _) = x
     apply subst (Free  v) = Free (apply subst v)
 
-instance (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c (BVar v)) where
+instance {-# OVERLAPPING #-} (IsConst c, IsVar v) => Apply (Subst c v) (VTerm c (BVar v)) where
     apply subst = (`bindTerm` applyBLLit)
       where
         applyBLLit l@(Var (Free v)) =
