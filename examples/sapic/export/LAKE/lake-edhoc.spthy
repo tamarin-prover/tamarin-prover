@@ -16,12 +16,12 @@ builtins: diffie-hellman, asymmetric-encryption, signing, symmetric-encryption
 functions: hash/1,hkdfextract/2, hkdfexpand(bitstring,bitstring):skey
 
 let I2(~skI:skey) =         // Initiator using signatures
-    new ~x;
-    let gX = 'g'^~x in
-    out(<'m2',gX, 'C_I','AD'>);
-    in(<'C_I',gY,rC_R,cypher_2>);
-    let TH_2 = hash(<'m2',gX,'C_I','AD','C_I',gY,rC_R>) in
-    let PRK_2e = hkdfextract('null', gY^~x) in
+    new ~a;
+    let gA = 'g'^~a in
+    out(<'m2',gA, 'C_I','AD'>);
+    in(<'C_I',gB,rC_R,cypher_2>);
+    let TH_2 = hash(<'m2',gA,'C_I','AD','C_I',gB,rC_R>) in
+    let PRK_2e = hkdfextract('null', gB^~a) in
     let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
     let PRK_3e2m = PRK_2e in
     let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
@@ -40,11 +40,11 @@ let I2(~skI:skey) =         // Initiator using signatures
         out(<rC_R,senc(< pk(~skI), Signed3, 'AD_3'>, K_3ae ),'AD_3'>)
 
 let R(~skR:skey) =
-    in(<mcorr,gX,rC_I,rAD>);
-    new ~y;
-    let gY = 'g'^~y in
-    let TH_2 = hash(<mcorr,gX,rC_I,rAD,rC_I,gY,'C_R'>) in
-    let PRK_2e = hkdfextract('null', gX^~y) in
+    in(<mcorr,gA,rC_I,rAD>);
+    new ~b;
+    let gB = 'g'^~b in
+    let TH_2 = hash(<mcorr,gA,rC_I,rAD,rC_I,gB,'C_R'>) in
+    let PRK_2e = hkdfextract('null', gA^~b) in
     let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
     if mcorr = 'm1' then   // we merge mcorr = 1 and mcorr =3, static DH auth used
        out('notimplementedyet')
@@ -56,7 +56,7 @@ let R(~skR:skey) =
        let Signed2 = sign(<pk(~skR),TH_2,'AD_2',MAC_2> ,~skR) in
        let cypher_2 = senc( <pk(~skR),Signed2,'AD_2' >  ,K_2e) in
        event DerivedR(<pk(~skR),PRK_3e2m>);
-       out(<rC_I,gY,'C_R',cypher_2>);
+       out(<rC_I,gB,'C_R',cypher_2>);
        in(<'C_R', cypher_3,rAD_3>);
        let TH_3 = hash(<TH_2,cypher_2,'C_R'>) in
        let PRK_4x3m = PRK_3e2m in
