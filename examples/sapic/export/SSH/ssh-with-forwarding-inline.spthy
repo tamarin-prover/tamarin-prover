@@ -20,8 +20,7 @@ functions: hash/1, kdfPtoS(bitstring):skey, kdfStoP(bitstring):skey, nest/1, ish
 equations: ishash(hash(x))=true, getMess(sign(m,sk))=m
 
 
-let P =
-    in(~secretchannelP,<pkS,~skP:skey,pkP>);
+let P(pkS,~skP:skey,pkP) =
     new ~a;
     let A='g'^~a in
     event Honnest(A);
@@ -59,32 +58,31 @@ let P =
 	 )
 
 
-let remoteP =
-    in(~secretchannelremoteP,<pkS,pkP,~b2,A2>);
+let remoteP(rpkS,rpkP,~b2,A2) =
     let nestlvl = nest('source') in
     new ~aR;
     let A='g'^~aR in
     event Honnest(A);
     out(A);
     in(<sig,opks,B>);
-    if pkS=opks then
+    if rpkS=opks then
         (
-	let h=hash(<pkS,A,B>) in
+	let h=hash(<rpkS,A,B>) in
 	let k=B^~aR in
-	if verify(sig,<'server_sign',h>,pkS)=true then
+	if verify(sig,<'server_sign',h>,rpkS)=true then
 	   (
-	   event AcceptP(A,B,pkS,pkP,nestlvl);
+	   event AcceptP(A,B,rpkS,rpkP,nestlvl);
 	   event KeyP(k);
 	   let kPS:skey=kdfPtoS(<k,h>) in
 	   let kSP:skey=kdfStoP(<k,h>) in
-	   out(senc(<'user_auth',pkP>,kPS));
+	   out(senc(<'user_auth',rpkP>,kPS));
 	   in(userauth_answer);
 	   if sdec(userauth_answer,kSP)='userauth_pk_ok' then
 	        (
 
 
 		let B2='g'^~b2 in
-                let h2=hash(<pkS,A2,B2>) in
+                let h2=hash(<rpkS,A2,B2>) in
                 let k2=A2^~b2 in
                 let kPS2:skey=kdfPtoS(<k2,h2>) in
                 let kSP2:skey=kdfStoP(<k2,h2>) in
@@ -94,7 +92,7 @@ let remoteP =
                 in(signans);
 		let <sig2,'sign_ans'> = sdec(signans,kPS2) in
                 let <lvlf,dump>= getMess(sig2) in
-	   	event AcceptP2(A,B,pkS,pkP,lvlf);
+	   	event AcceptP2(A,B,rpkS,rpkP,lvlf);
 
 		out(senc(<'user_answer', lvlf, sig2>,kPS));
 
@@ -113,8 +111,7 @@ let remoteP =
 	 )
 
 
-let S =
-    in(~secretchannelS,<~skS:skey,pkS,pkP>);
+let S(~skS:skey,pkS,pkP) =
     in(A);
     new ~b;
     let B='g'^~b in
@@ -144,7 +141,7 @@ let S =
 	      event AcceptS2(A,B,pkS,pkP,nestlvl);
 	      event KeyS2(k);
 
-	          out(~secretchannelremoteP,<pkS,pkP,~b,A>)
+	      remoteP(pkS,pkP,~b,A)
 	      )
 
 	  )
@@ -152,13 +149,12 @@ let S =
 
 process:
 new ~secretchannelP:channel; new ~secretchannelS:channel; new ~secretchannelremoteP:channel;
- !(remoteP) ||
-!(P) || !(S) || !(new ~skS:skey;
+    !(new ~skS:skey;
                  out(pk(~skS));
                  !(new ~skP:skey;
                   out(pk(~skP));
-                  !( out(~secretchannelP,<pk(~skS),~skP,pk(~skP)>) ||
-		     out(~secretchannelS,<~skS,pk(~skS),pk(~skP)>)
+                  !( P(pk(~skS),~skP,pk(~skP)) ||
+		     S(~skS,pk(~skS),pk(~skP))
                      ))
 		     )
 
@@ -174,15 +170,6 @@ nounif sk,x_2:skey,lvlf,dump,sign_ans,aR_8,b:bitstring; attacker(senc((sign(( *l
 nounif sk,x_2:skey,lvlf,dump,sign_ans,A2,a,b:bitstring; attacker(senc((sign(( *lvlf,*dump),*sk),sign_ans),kdfPtoS((exp(exp(g,*b),a),hash((pk( *x_2),(exp(g,a),exp(g,*b)))))))).
 nounif sk,x_2:skey,lvlf,dump,sign_ans,A2,b2:bitstring; attacker(senc((sign(( lvlf,*dump),*sk),sign_ans),kdfPtoS((exp(A2,*b2),hash((pk( *x_2),(A2,exp(g,*b2)))))))).
 nounif sk,x_2:skey,lvlf,dump,sign_ans,A2,b2:bitstring; attacker(senc((sign(( *lvlf,*dump),*sk),sign_ans),kdfPtoS((exp(A2,*b2),hash((pk( *x_2),(A2,exp(g,*b2)))))))).
-"
-*/
-/*
-
-nounif attacker(hash((pk(skP_68),(exp(g,a),exp(g,*b))))).
-nounif attacker(hash((pk(skS_67),(exp(g,a),exp(g,*b))))).
-nounif attacker(senc((sign(( lvlf,*dump),*sk),sign_ans),kdfPtoS((exp(exp(g,b),aR_8),hash((pk( *x_2),(exp(g,aR_8),exp(g,b)))))))).
-
-
 "
 */
 
@@ -207,6 +194,7 @@ lemma reach3[reuse]: //secrecy of the key
 
 lemma secretP[reuse]: //secrecy of the key
   "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
+
 */
 /*
 lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)

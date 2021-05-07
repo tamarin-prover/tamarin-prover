@@ -41,17 +41,16 @@ let P =
 	   in(userauth_answer);
 	   if sdec(userauth_answer,kSP)='userauth_pk_ok' then
 	        (
-		let payload = <'source',h> in
-		let sig2 = sign(payload,~skP) in
-	   	event AcceptP2(A,B,pkS,pkP,'source');
-		out(senc(<'user_answer', 'source', sig2 >,kPS)) ;
+		let sig2 = sign(h,~skP) in
+	   	event AcceptP2(A,B,pkS,pkP);
+		out(senc(<'user_answer', sig2 >,kPS)) ;
 
 
                 !(
 		in(signreq);
-		let <lvl,ms,'sign_req'> = sdec(signreq,kSP) in
+		let <ms,'sign_req'> = sdec(signreq,kSP) in
 //		if ishash(ms)=true then
-                   out(senc(<sign(<lvl,ms>,~skP),'sign_ans'>,kPS))
+                   out(senc(<sign(ms,~skP),'sign_ans'>,kPS))
 
 	           )
 		    )
@@ -89,19 +88,18 @@ let remoteP =
                 let kPS2:skey=kdfPtoS(<k2,h2>) in
                 let kSP2:skey=kdfStoP(<k2,h2>) in
 
-                out(senc(<nestlvl,h,'sign_req'>,kSP2));
+                out(senc(<h,'sign_req'>,kSP2));
 
                 in(signans);
 		let <sig2,'sign_ans'> = sdec(signans,kPS2) in
-                let <lvlf,dump>= getMess(sig2) in
-	   	event AcceptP2(A,B,pkS,pkP,lvlf);
+	   	event AcceptP2(A,B,pkS,pkP);
 
-		out(senc(<'user_answer', lvlf, sig2>,kPS));
+		out(senc(<'user_answer', sig2>,kPS));
 
                 !(
 		in(signreq);
-		let <lvl,ms,'sign_req'> = sdec(signreq,kSP) in
-                out(senc(<nest(lvl),ms,'sign_req'>,kSP2));
+		let <ms,'sign_req'> = sdec(signreq,kSP) in
+                out(senc(<ms,'sign_req'>,kSP2));
 		in(signans2);
 		let <sig3,'sign_ans'> = sdec(signans,kPS2) in
 		event Test(sig3);
@@ -136,12 +134,12 @@ let S =
 	  in(signans);
 
 /*			out(senc(<'user_answer',<<'source',h>,sign(<'source',h>,~skP)>>,kPS)) ; */
-	  let <'user_answer',nestlvl,sig2>=sdec(signans,kPS) in
+	  let <'user_answer',sig2>=sdec(signans,kPS) in
 	  event AcceptS2TT(A,B,pkS,pkP,sig2,h);
 
-	  if verify(sig2,<nestlvl,h>,pkP)=true then
+	  if verify(sig2,h,pkP)=true then
 	      (
-	      event AcceptS2(A,B,pkS,pkP,nestlvl);
+	      event AcceptS2(A,B,pkS,pkP);
 	      event KeyS2(k);
 
 	          out(~secretchannelremoteP,<pkS,pkP,~b,A>)
@@ -191,23 +189,14 @@ nounif attacker(senc((sign(( lvlf,*dump),*sk),sign_ans),kdfPtoS((exp(exp(g,b),aR
 
 
 lemma reach[reuse]: //secrecy of the key
-  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'source')@i & Honnest(a)@j  ))"
-
-lemma reach2[reuse]: //secrecy of the key
-  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,nest('source'))@i & Honnest(a)@j  ))"
+  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP)@i & Honnest(a)@j  ))"
 
 
-
-lemma reach3[reuse]: //secrecy of the key
-  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,nest(nest('source')))@i & Honnest(a)@j  ))"
-
-/*
 
 
 
 lemma secretP[reuse]: //secrecy of the key
   "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
-*/
 /*
 lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
  "All a b skS skP t #i. AcceptP(a,b,skS,skP,t)@i ==>
