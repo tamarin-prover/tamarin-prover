@@ -46,6 +46,8 @@ import qualified Data.Functor.Identity
 import Data.Char
 import Data.Data
 
+import Debug.Trace
+
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -68,7 +70,7 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  let hd = attribHeaders tc $ S.toList (base_headers `S.union` headers
+  let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
                                           `S.union` prochd `S.union` macroprochd)
   return $ proverifTemplate hd queries proc macroproc lemmas
   where
@@ -119,43 +121,23 @@ state_headers = S.fromList [
   HEvent "table tbl_locks_handle(bitstring,channel)." --the table for linking locks identifiers and channels
   ]
 
--- The corresponding headers for each Tamarin builtin. If the functions of the builtin are inside the signature, we add the corresponding headers to the output.
+-- We provide a dedicated DDH builtin.
 builtins :: [(String, S.Set ProverifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
-  -- ("hashing", [Fun "fun" "hash" 1 "(bitstring):bitstring" []] ),
-  -- ("signing", [
-  --     Fun "fun" "sign" 2 "(bitstring,skey):bitstring" [],
-  --     Type "pkey",
-  --     Fun "fun" "pk" 1 "(skey):pkey" [],
-  --     Eq "reduc" "forall m:bitstring,sk:skey;" "verify(sign(m,sk),m,pk(sk)) = true"
-  --     ]
-  -- ),
   ("diffie-hellman", [
       Sym "const" "g" ":bitstring" [],
       Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
       Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
       ]
   )
-  -- ("symmetric-encryption", [
-  --     Type "skey",
-  --     Fun "fun" "senc" 2 "(bitstring,skey):bitstring" [],
-  --     Eq "reduc" "forall m:bitstring,sk:skey;" "sdec(senc(m,sk),sk) = m"]
-  -- ),
-  -- ("asymmetric-encryption", [
-  --     Type "skey",
-  --     Type "pkey",
-  --     Fun "fun" "aenc" 2 "(bitstring,pkey):bitstring" [],
-  --     Fun "fun" "pk" 1 "(skey):pkey" [],
-  --     Eq "reduc" "forall m:bitstring,sk:skey;" "adec(aenc(m,pk(sk)),sk) = m"]
-  -- ),
-  -- ("locations-report",
-  --  [
-  --   Fun "fun"  "rep" 2 "(bitstring,bitstring):bitstring" ["private"],
-  --   Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "check_rep(rep(x_1, x_2), x_2) = x_1",
-  --   Eq "reduc" "forall x_1:bitstring,x_2:bitstring;"   "get_rep(rep(x_1, x_2)) = x_1"
-  --  ]
-  -- )
   ]
+
+-- We filter out some predefined headers that we don't want to redefine.
+filterHeaders :: S.Set ProverifHeader -> S.Set ProverifHeader
+filterHeaders s = trace (show s) S.filter (not . isForbidden) s
+  where isForbidden (Fun "fun" "true" _ _ _) = True
+        isForbidden (Type "bitstring") = True
+        isForbidden _ = False
 
 pairPRules :: S.Set ProverifHeader
 pairPRules = S.fromList  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
@@ -773,7 +755,7 @@ headersOfType types = S.fromList $ foldl (\y x -> case x of
 
 headerOfFunSym :: SapicFunSym-> S.Set ProverifHeader
 headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
-  Fun "fun " (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert`  headersOfType (outType : inTypes)
+  Fun "fun" (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert`  headersOfType (outType : inTypes)
   where priv_or_pub Public = []
         priv_or_pub Private =  ["private"]
 

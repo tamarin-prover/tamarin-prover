@@ -28,7 +28,7 @@ checkRepSym = ("check_rep",(2,Public,Constructor))
 
 -- | Ternary builtin function symbols.
 verifySym, revealVerifySym :: NoEqSym
-verifySym = ("verify",(3, Public, Constructor))
+verifySym = ("verify",(3, Public, Destructor))
 revealVerifySym = ("revealVerify",(3, Public,Constructor))
 
 -- | Unary builtin function symbols.
