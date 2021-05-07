@@ -14,6 +14,8 @@
 -- annotations.
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Sapic.Annotation (
     ProcessAnnotation(..)
     , AnnotatedProcess
@@ -46,6 +48,7 @@ import           Data.Binary
 -- import Control.Monad.Trans.FastFresh
 -- import Control.Monad.Trans.FastFresh
 import Term.LTerm
+import Term.Substitution
 
 -- | Variables used to annotate locks. Encapsulated in newtype because of
 -- Semigroup instance below
@@ -105,6 +108,9 @@ setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 instance Semigroup (ProcessAnnotation v) where
     (<>) =  mappend
+
+instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
+    apply = applyAnn
 
 newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
     deriving (Typeable, Monoid,Semigroup,Show)

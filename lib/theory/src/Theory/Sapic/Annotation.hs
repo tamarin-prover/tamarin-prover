@@ -2,6 +2,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE StandaloneDeriving #-}
 -- |
 -- Copyright   : (c) 2021 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -10,9 +12,6 @@
 -- Portability : GHC only
 --
 -- Standard annotations for SAPIC processes after parsing
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances #-}
 module Theory.Sapic.Annotation (
     -- types
       ProcessParsedAnnotation(..)
@@ -20,7 +19,7 @@ module Theory.Sapic.Annotation (
     , modifyProcessParsedAnnotation
     -- type classes
     , GoodAnnotation(..)
-) where
+,applyAnn) where
 
 import Data.Binary
 import Data.Data
@@ -100,10 +99,8 @@ applyProcessParsedAnnotation subst ann =
                     -- are renamed, modify the backtranslation by hand.
                     }
 
-instance {-# INCOHERENT #-} (GoodAnnotation a, Apply (Subst n v) SapicTerm) => Apply (Subst n v) a
--- INCOHERENT ensures that this instance is selected if other candidates remain (barring knowledge about the context
--- see https://ghc.readthedocs.io/en/8.0.1/glasgow_exts.html?highlight=incoherentinstances#instance-overlap)
-    where
-        apply subst ann = setProcessParsedAnnotation ann' ann
-            where
-                ann' = applyProcessParsedAnnotation subst ( getProcessParsedAnnotation ann)
+applyAnn :: (GoodAnnotation a, Apply t' SapicTerm) => t' -> a -> a
+applyAnn subst = modifyProcessParsedAnnotation (applyProcessParsedAnnotation subst)
+
+instance (Apply (Subst Name LVar) ProcessParsedAnnotation) where
+    apply = applyAnn

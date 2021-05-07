@@ -22,11 +22,13 @@ let P(a:rofl) =
 
 let Q(x) =
     /* in(=x); // TODO currently gives exception, investigate */
-    in(<y,=x>); 
-    0
+    in(<y,=x>)
 
 process:
 in(a:lol); // TODO we do not typecheck call to process correctly atm. I think the trick is to type check before inlining.
+new n:truc;
+( new n:lol; out(n)) | (new n:rofl; out(n))
+|
 P(a)
 | Q(h(a))
 

@@ -180,7 +180,9 @@ typeTheory th = fst <$> typeTheoryEnv th
 -- p' equals p
 -- renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
 --     Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
-renameUnique :: (MonadThrow m, GoodAnnotation ann, Monoid ann) =>
+-- renameUnique :: (MonadThrow m, GoodAnnotation ann, Monoid ann) =>
+--     Process ann SapicLVar -> m (Process ann SapicLVar)
+renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
     Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
     where
@@ -188,11 +190,11 @@ renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUse
         actualCall = renameUnique' emptySubst p
 
 -- renameUnique' ::
-    -- (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
-    -- Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
-renameUnique' :: (MonadFresh m, Apply (Subst c LVar) ann, GoodAnnotation ann,
-    Apply (Subst c LVar) SapicLVar) =>
-    Subst c LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
+--     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
+--     Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
+renameUnique' :: (MonadFresh m, Apply (Subst Name LVar) ann, GoodAnnotation ann
+    ) =>
+    Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
         -- p' <- applyM initSubst p -- apply outstanding substitution subst 
         let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best

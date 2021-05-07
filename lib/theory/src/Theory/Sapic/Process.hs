@@ -340,7 +340,7 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v) => Apply s (ProcessCombinator v
     apply subst c
             = mapTermsComb (apply subst) (apply subst) (apply subst) c
 
-instance (GoodAnnotation ann) => Apply SapicSubst (LProcess ann) where
+instance (Apply SapicSubst ann) => Apply SapicSubst (LProcess ann) where
 -- We are ignoring capturing here, use applyM below to get warnings.
     apply _ (ProcessNull ann) = ProcessNull ann
     apply subst (ProcessComb c ann pl pr) =
