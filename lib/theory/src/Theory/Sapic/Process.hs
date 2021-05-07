@@ -475,36 +475,52 @@ prettySapicComb (ProcessCall s _ ts) = s ++ "("++ p ts ++ ")"
 -- | Printer for SAPIC processes..
 -- TODO use highlight document (see commented code below)
 -- TODO put parens, but only where needed (NOTE mostly done, replication needs parents unless continuation is processcall)
-prettySapic' :: ([SapicNFact SapicLVar]
+-- prettySapic' :: ([SapicNFact SapicLVar]
+--     -> [SapicNFact SapicLVar]
+--     -> [SapicNFact SapicLVar]
+--     -> [SapicNFormula SapicLVar]
+--     -> Set SapicLVar
+--     -> [Char])
+--     -> Process ann SapicLVar -> [Char]
+-- prettySapic' prettyRuleRestr p
+--     | (ProcessNull _) <- p = "0"
+--     | (ProcessComb c@ProcessCall {} _ _ _) <- p = prettySapicComb c
+--     | (ProcessComb c _ pl pr) <- p = r pl ++ " "++ prettySapicComb c ++ " " ++ r pr
+--     | (ProcessAction Rep _ p') <- p = ppAct Rep ++ r p'
+--     | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
+--     | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a ++ "; (" ++ r p' ++ ")"
+--     | (ProcessAction a _ p') <- p = ppAct a ++ "; " ++ r p'
+--     where
+--         r = prettySapic' prettyRuleRestr -- recursion shortcut
+--         ppAct = prettySapicAction' prettyRuleRestr
+
+prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFact SapicLVar]
     -> [SapicNFact SapicLVar]
     -> [SapicNFormula SapicLVar]
     -> Set SapicLVar
-    -> [Char])
-    -> Process ann SapicLVar -> [Char]
-prettySapic' prettyRuleRestr p
-    | (ProcessNull _) <- p = "0"
-    | (ProcessComb c@ProcessCall {} _ _ _) <- p = prettySapicComb c
-    | (ProcessComb c _ pl pr) <- p = r pl ++ " "++ prettySapicComb c ++ " " ++ r pr
-    | (ProcessAction Rep _ p') <- p = ppAct Rep ++ r p'
-    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
-    | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a ++ "; (" ++ r p' ++ ")"
-    | (ProcessAction a _ p') <- p = ppAct a ++ "; " ++ r p'
+    -> String)
+    -> Process ann SapicLVar -> d
+prettySapic' ppRR p 
+    | (ProcessNull _) <- p = text "0"
+    | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
+    | (ProcessComb c _ pl pr) <- p =  r pl <-> text (prettySapicComb c) <-> r pr
+    | (ProcessAction Rep _ p') <- p = ppAct Rep <> parens (r p')
+    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a 
+    | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a <> semi $-$ nest 1 (parens (r p'))
+    | (ProcessAction a _ p') <- p = ppAct a <> semi $-$ r p'
     where
-        r = prettySapic' prettyRuleRestr -- recursion shortcut
-        ppAct = prettySapicAction' prettyRuleRestr
+        r = prettySapic' ppRR -- recursion shortcut
+        ppAct a = text (prettySapicAction' ppRR a)
 
--- prettySapic' prettyRuleRestr p
---     | (ProcessNull _) <- p = text "0"
---     | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
---     | (ProcessComb c _ pl pr) <- p =  r pl <-> prettySapicComb c <-> r pr
---     | (ProcessAction Rep _ p') <- p = ppAct Rep <-> parens (r p')
---     | (ProcessAction a _ (ProcessNull _)) <- p = text $ ppAct a 
---     | (ProcessAction a _ p'@ProcessComb {}) <- p = text (ppAct a) <-> ";" <-> parens (r p')
---     | (ProcessAction a _ p') <- p = text (ppAct a) <-> ";" <-> r p'
---     where
---         r = prettySapic' prettyRuleRestr -- recursion shortcut
---         ppAct = prettySapicAction' prettyRuleRestr
+--- >>> render $ prettySapic' undefined (ProcessNull ())
+-- "0"
+
+--- >>> render $ semi <> semi
+-- ";;"
+
+--- >>> render $ semi $-$ semi
+-- ";\n;"
 
 -- | Printer for the top-level process, used, e.g., for rule names.
 prettySapicTopLevel' :: ([SapicNFact SapicLVar]
@@ -518,3 +534,4 @@ prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c
 prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep
 prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
+

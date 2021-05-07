@@ -49,7 +49,7 @@ rulePrinter l a r res mv = render $ prettyRuleRestrGen ppFact ppRes l a r res
 prettySapicAction :: LSapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
 
-prettySapic :: LProcess ann -> String
+prettySapic :: (Document d) => LProcess ann -> d
 prettySapic = prettySapic' rulePrinter
 
 prettySapicTopLevel :: LProcess ann -> String

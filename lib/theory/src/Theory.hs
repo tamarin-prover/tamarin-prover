@@ -2526,10 +2526,10 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulast
         formulastr = render $ prettyLNFormula $ L.get pFormula p
 
 prettyProcess :: HighlightDocument d => PlainProcess -> d
-prettyProcess p = text (prettySapic p)
+prettyProcess = prettySapic
 
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
-prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
+prettyProcessDef pDef = text "let " <-> text (L.get pName pDef) <-> text " = " <-> prettySapic (L.get pBody pDef)
 
 -- | Pretty print a diff theory.
 prettyDiffTheory :: HighlightDocument d
