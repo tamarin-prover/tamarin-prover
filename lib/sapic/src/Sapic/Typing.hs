@@ -187,9 +187,12 @@ renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUse
         -- stateMonadCall = runStateT actualCall emptySubst
         actualCall = renameUnique' emptySubst p
 
-renameUnique' ::
-    (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
-    Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
+-- renameUnique' ::
+    -- (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
+    -- Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
+renameUnique' :: (MonadFresh m, Apply (Subst c LVar) ann, GoodAnnotation ann,
+    Apply (Subst c LVar) SapicLVar) =>
+    Subst c LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
         -- p' <- applyM initSubst p -- apply outstanding substitution subst 
         let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best
