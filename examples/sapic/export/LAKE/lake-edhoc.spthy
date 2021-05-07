@@ -1,8 +1,14 @@
 /*
- * Protocol:    Post Quantum TLS
+ * Protocol:    LAKE
    https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-02
 
-   Proverif : everything in a second.
+   A lightweight DD based key exchange.
+
+   It comes with two possible modes, either a signature is used for
+   authentication, or a long term dh key. This file present the signature only
+   version.
+
+   Proverif : everything in a few seconds.
 
    Tamarin : everything in 11 minutes on colosseus.
 */
@@ -11,7 +17,7 @@ theory edhoc
 
 begin
 
-builtins: diffie-hellman, asymmetric-encryption, signing, symmetric-encryption
+builtins: diffie-hellman, signing, symmetric-encryption
 
 functions: hash/1,hkdfextract/2, hkdfexpand(bitstring,bitstring):skey
 
@@ -27,7 +33,7 @@ let I2(~skI:skey) =         // Initiator using signatures
     let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
     // decypher using K_2e
     let plaintext_2 = sdec(cypher_2,K_2e) in
-    let <pkR:pkey,signed,rAD_2> = plaintext_2 in
+    let <pkR,signed,rAD_2> = plaintext_2 in
     let MAC_2 = senc(<TH_2,pkR,rAD_2>,K_2m) in
     if verify(signed,< pkR,TH_2,rAD_2,MAC_2>,pkR) = true then
         let TH_3 = hash(<TH_2,cypher_2,rC_R>) in
@@ -62,7 +68,7 @@ let R(~skR:skey) =
        let PRK_4x3m = PRK_3e2m in
        let K_3ae:skey = hkdfexpand(PRK_3e2m, <TH_3,'TagK_3ae'>) in
        let plaintext_3 = sdec(cypher_3,K_3ae) in
-       let <pkI:pkey,Signed3,=rAD_3> = plaintext_3 in
+       let <pkI,Signed3,=rAD_3> = plaintext_3 in
 
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
@@ -76,39 +82,39 @@ process:
        !(I2(~skI) | R(~skR) )
 )
 
-lemma secretR[reuse]: //secrecy of the key
+lemma true_secretR[reuse]: //secrecy of the key
    "(not (Ex pkI pkR k4 #i #j #l. (AcceptR(<pkI,pkR,k4>)@i & KU(k4)@j & Honnest(<pkI, 'Init'>)@l ) ))"
 
-lemma secretI[reuse]: //secrecy of the key
+lemma true_secretI[reuse]: //secrecy of the key
    "(not (Ex pkI pkR k3 k4 #i #j #l. (AcceptI(<pkI,pkR,k3,k4>)@i & KU(k4)@j & Honnest(<pkR, 'Resp'>)@l ) ))"
 
 
-lemma executableR: // sanity check
+lemma false_executableR: // sanity check
   "not(Ex pkI pkR k3 #i. AcceptR(<pkI,pkR,k3>)@i)"
 
 
-lemma executableI: // sanity check
+lemma false_executableI: // sanity check
   "not(Ex pkI pkR k3 k4 #i. AcceptI(<pkI,pkR,k3,k4>)@i)"
 
-lemma executableIhonnest: // sanity check
+lemma false_executableIhonnest: // sanity check
   "not(Ex pkI pkR k3 k4 #i #l. (AcceptI(<pkI,pkR,k3,k4>)@i & Honnest(<pkR, 'Resp'>)@l) )"
 
-lemma executableRhonnest: //secrecy of the key
+lemma false_executableRhonnest:
    "(not (Ex pkI pkR k4 #i #l. (AcceptR(<pkI,pkR,k4>)@i & Honnest(<pkI, 'Init'>)@l ) ))"
 
-lemma dishonnestnoauthRI:  // should be false as the attacker can play initiator
+lemma false_dishonnestnoauthRI:  // should be false as the attacker can play initiator
  "All pkI pkR k4 #i. AcceptR(<pkI,pkR,k4>)@i ==>
     (Ex #j k3. j<i & (AcceptI(<pkI,pkR,k3,k4>)@j))"
 
-lemma dishonnestnoauthIR:  // should be false, as attacker can play responder
+lemma false_dishonnestnoauthIR:  // should be false, as attacker can play responder
  "All pkI pkR k3 k4 #i. AcceptI(<pkI,pkR,k3,k4>)@i ==>
     (Ex #j. j<i & (DerivedR(<pkR,k3>)@j))"
 
-lemma honnestauthRI:  // should be true
+lemma true_honnestauthRI:  // should be true
  "All pkI pkR k4 #i #l. AcceptR(<pkI,pkR,k4>)@i & Honnest(<pkI, 'Init'>)@l ==>
     (Ex #j k3. j<i & (AcceptI(<pkI,pkR,k3,k4>)@j))"
 
-lemma honnestauthIR:  // should be true
+lemma true_honnestauthIR:  // should be true
  "All pkI pkR k3 k4 #i #l. AcceptI(<pkI,pkR,k3,k4>)@i & Honnest(<pkR, 'Resp'>)@l ==>
     (Ex #j. j<i & (DerivedR(<pkR,k3>)@j))"
 
@@ -121,18 +127,5 @@ lemma honnestauthIR:  // should be true
 //  "All a b skS skP #i #j. AcceptP(a,b,skS,skP)@i & AcceptP(a,b,skS,skP)@j ==> #i =#j"
 
 // lemma unique_AcceptS2[reuse]: //unicity of event
-//  "All a b skS skP #i #j. AcceptS2(a,b,skS,skP)@i & AcceptS2(a,b,skS,skP)@j ==> #i =#j"
-
-// lemma unique_AcceptP2[reuse]: //unicity of event
-//  "All a b skS skP #i #j. AcceptP2(a,b,skS,skP)@i & AcceptP2(a,b,skS,skP)@j ==> #i =#j"
-
-// lemma injSP[reuse,use_induction]: // injectivity of final acceptance
-//  "All a b skS skP #i. AcceptS2(a,b,skS,skP)@i ==>
-//     (Ex #j. j<i & (AcceptP2(a,b,skS,skP)@j))
-// "
-// lemma secretS[reuse]: //secrecy of the key
-//   "(not (Ex k #i #j. (KeyS2(k)@i & KU(k)@j)))"
-
-
 
 end
