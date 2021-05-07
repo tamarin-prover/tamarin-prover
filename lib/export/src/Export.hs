@@ -46,8 +46,6 @@ import qualified Data.Functor.Identity
 import Data.Char
 import Data.Data
 
-import Debug.Trace
-
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -134,7 +132,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
 
 -- We filter out some predefined headers that we don't want to redefine.
 filterHeaders :: S.Set ProverifHeader -> S.Set ProverifHeader
-filterHeaders s = trace (show s) S.filter (not . isForbidden) s
+filterHeaders s = S.filter (not . isForbidden) s
   where isForbidden (Fun "fun" "true" _ _ _) = True
         isForbidden (Type "bitstring") = True
         isForbidden _ = False
