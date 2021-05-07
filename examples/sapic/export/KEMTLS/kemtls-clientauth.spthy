@@ -8,18 +8,21 @@ theory KEMTLS
    Client authentication version -> the client only authenticates with a server that he knows.
 
    Proverif : few seconds
-
    Tamarin : 20 minutes on 64 core server
 
-   Deepsec : 2 sessions - a second
-            3 sessions - 4 min on colossus
+
+   Unlinkability proved:
+   * Deepsec : 2 sessions - a second
+             3 sessions - 4 min on 64 core server
 */
 
 begin
 
-functions: kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], msenc/2,msdec/2[destructor],hmac/2
+builtins: symmetric-encryption
 
-equations: kemdec( kemenc(m,kempk(sk)) ,sk) = m, msdec(msenc(m,sk),sk)=m, getcert(cert(m))=m
+functions: kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], hmac/2
+
+equations: kemdec( kemenc(m,kempk(sk)) ,sk) = m,  getcert(cert(m))=m
 
 
 let P(~skP,desiredpkS) =
@@ -42,12 +45,12 @@ let P(~skP,desiredpkS) =
 
     // Begining of Phase 2
     in(servercert);
-    let decservercert = msdec(servercert,SHTS) in
+    let decservercert = sdec(servercert,SHTS) in
     let <'ServerCert',certpk> = decservercert in
     let pks = getcert(certpk) in
     new sss;
     let cts = kemenc(sss,pks) in
-    out(msenc(<'ClientKem',cts>,CHTS));
+    out(senc(<'ClientKem',cts>,CHTS));
 
     let AHS = hkdfext(dES,sss) in
     let CHCKC = htrans(<pke,rc,cte,rs,pks,cts>) in
@@ -59,11 +62,11 @@ let P(~skP,desiredpkS) =
     if pks = desiredpkS then
     (
 
-    out(msenc(<'ClientCert',cert(pkP)>,CAHTS));
+    out(senc(<'ClientCert',cert(pkP)>,CAHTS));
 
 
     in(serverkem);
-    let decserverkem = msdec(serverkem,SAHTS) in
+    let decserverkem = sdec(serverkem,SAHTS) in
     let <'ServerKem',ctc> = decserverkem in
     let ssc = kemdec(ctc,~skP) in
 
@@ -82,10 +85,10 @@ let P(~skP,desiredpkS) =
     let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
 
     event DerivedP(<pks,pkP,CATS>);
-    out(msenc(<'ClientFinished',CF>,CAHTS));
+    out(senc(<'ClientFinished',CF>,CAHTS));
 
     in(serverfin);
-    let decserverfin = msdec(serverfin, SAHTS) in
+    let decserverfin = sdec(serverfin, SAHTS) in
     let <'ServerFinished',SF> = decserverfin in
     event TestP(<pks,pkP>);
     if SF  = hmac(fks,CHCF) then
@@ -113,9 +116,9 @@ let S(~skS) =
     let dHS = hkdfexp(HS, 'derived', 'null') in
 
     // Begining of Phase 2
-    out(msenc(<'ServerCert',cert(pkS)>,SHTS));
+    out(senc(<'ServerCert',cert(pkS)>,SHTS));
     in(clientkem);
-    let decclientkem = msdec(clientkem,CHTS) in
+    let decclientkem = sdec(clientkem,CHTS) in
     let <'ClientKem',cts> = decclientkem in
 
     let sss = kemdec(cts,~skS) in
@@ -126,12 +129,12 @@ let S(~skS) =
     let dAHS = hkdfexp(AHS,'derived',CHCKC) in
 
     in(clientcert);
-    let decclientcert = msdec(clientcert,CAHTS) in
+    let decclientcert = sdec(clientcert,CAHTS) in
     let <'ClientCert',certpk> = decclientcert in
     let pkp = getcert(certpk) in
     new ssc;
     let ctc = kemenc(ssc,pkp) in
-    out(msenc(<'ServerKem',ctc>,SAHTS));
+    out(senc(<'ServerKem',ctc>,SAHTS));
 
       event TestE(<pkS,pkp>);
 
@@ -142,7 +145,7 @@ let S(~skS) =
     let CHSKC = htrans(<pke,rc,cte,rs,pkS,cts,pkp,ctc>) in
 
     in(clientfin);
-    let decclientfin = msdec(clientfin, CAHTS) in
+    let decclientfin = sdec(clientfin, CAHTS) in
 
     let <'ClientFinished',CF> = decclientfin in
 
@@ -154,7 +157,7 @@ let S(~skS) =
       let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
       let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
       event AcceptS(<pkS,pkp,CATS>);
-      out(msenc(<'ServerFinished',SF>,SAHTS))
+      out(senc(<'ServerFinished',SF>,SAHTS))
       )
 
     )
@@ -173,34 +176,34 @@ process:
 
 
 
-lemma exec: // should be false
+lemma false_exec: // should be false
 "not(Ex #t #t2 pkP pkS k. AcceptP(<pkS,pkP,k>)@t  & Honnest(<pkS,'Serv'>)@t2 )"
 
 
 
-lemma execbis: // should be false
+lemma false_execbis: // should be false
 "not(Ex #t #t2 pkP pkS k. AcceptS(<pkS,pkP,k>)@t & Honnest(<pkP,'Client'>)@t2)"
 
 
 
-lemma execbistestR: // should be false
+lemma false_execbistestR: // should be false
 "not(Ex #t #t2 pkP pkS. TestE(<pkS,pkP>)@t & Honnest(<pkP,'Client'>)@t2)"
 
 
-
-
-lemma execbistestRP: // should be false
+lemma false_execbistestRP: // should be false
 "not(Ex #t #t2 pkP pkS. TestP(<pkS,pkP>)@t & Honnest(<pkS,'Serv'>)@t2)"
 
 
-lemma auth: // should be true
+lemma true_auth: // should be true
  "All #t #t2 pkS pkP key. (AcceptP(<pkS,pkP,key>)@t & Honnest(<pkS,'Serv'>)@t2)
      ==> Ex #s. (AcceptS(<pkS,pkP,key>)@s & s<t)"
 
-lemma authS: // should be true
+lemma true_authS: // should be true
  "All #t #t2 pkS pkP key. (AcceptS(<pkS,pkP,key>)@t & Honnest(<pkP,'Client'>)@t2)
      ==> Ex #s. (DerivedP(<pkS,pkP,key>)@s & s<t)"
 
+
+// The queries for Deepsec are as follows.
 export requests:
 "
 let sys1 = new sk; (!^3 (new skP; P(sk,skP)) | !^3 S(sk)).

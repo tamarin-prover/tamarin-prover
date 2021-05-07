@@ -5,9 +5,14 @@ theory KEMTLS
    proposed in CCS20, Post-quantum TLS without handshake signatures
    Peter Schwabe, Douglas Stebila, Thom Wiggers.
 
+   A proposal of a new TLS based on Key Encapsulation Mechanisms.
+   We assume that KEMs manipulate uniformly sampled keys.
+
    Proverif : everything in a second.
 
    Tamarin : everything in 17 minutes on 64 core server
+      (The DDH model is then more precise)
+
 */
 
 
@@ -141,19 +146,19 @@ process:
 
 
 
-lemma exec: // should be false
+lemma false_exec: // should be false
 "not(Ex #t. AcceptP()@t)"
 
-lemma execbis: // should be false
+lemma false_execbis: // should be false
 "not(Ex #t. AcceptS()@t)"
 
-lemma auth: // should be true
+lemma true_auth: // should be true
  "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t) | (Ex #s2. Compromise()@s2)"
 
-lemma secserv: // should be false (non mutual authentication)
+lemma false_secserv: // should be false (non mutual authentication)
 "not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
 
-lemma secclient : // should be true
+lemma true_secclient : // should be true
 "All #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2 ==> Ex #t3. Compromise()@t3 & t3<t1"
 
 
