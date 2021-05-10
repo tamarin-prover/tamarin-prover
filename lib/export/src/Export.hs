@@ -292,8 +292,8 @@ ppAction ProcessAnnotation{pureState=False, isStateChannel = Just t} tc (New v@(
        text "new " <> channel <> text "[assumeCell];"
        $$ text "new lock_" <> channel <> text "[assumeCell];"
      -- we also declare the corresponding lock channel, and initialize it
-       $$ text "out(lock_" <> ppLVar lvar <> text ",0)"
-     ,  if hasUnboundStates tc then sht else S.empty, True)
+       $$ text "out(lock_" <> ppLVar lvar <> text ",0) |"
+     ,  if hasUnboundStates tc then sht else S.empty, False)
   where channel = ppTypeVar tc v
         (pt, sht) = ppSapicTerm tc t
         extras x = if hasUnboundStates tc then x
@@ -357,18 +357,18 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@Translati
 ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Unlock _) =
     (text "", S.empty, False)
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Unlock _) =
-  (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ")"
-  , S.empty, True)
+  (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ") | "
+  , S.empty, False)
 
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Unlock t) =
-    (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1)", sh, True)
+    (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1) | ", sh, False)
   where
     (pt, sh) = ppSapicTerm tc t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} tc@TranslationContext{trans=Proverif} (Insert _ c) =
-      (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ")"
-      , shc, True)
+      (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ") |"
+      , shc, False)
   where
     (pc, shc) = ppSapicTerm tc c
 
@@ -378,8 +378,8 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationCo
 
 ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
-       $$ text "out(" <> pt <> text ", " <> pc <> text ")"
-      , shc, True)
+       $$ text "out(" <> pt <> text ", " <> pc <> text ") |"
+      , shc, False)
   where
     pt = ppLVar lvar
     (pc, shc) = ppSapicTerm tc c
@@ -387,7 +387,7 @@ ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc
 -- must rely on the table
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Insert t t2) =
     (text "in(" <> text ptvar <> text ", " <> pt <> text "_dump:bitstring);"
-     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ")", sh `S.union` sh2, True)
+     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ") | ", sh `S.union` sh2, False)
   where
     (pt, sh) = ppSapicTerm tc t
     (pt2, sh2) = ppSapicTerm tc t2
@@ -443,7 +443,7 @@ ppSapic tc (ProcessComb (Cond a)  _ pl pr)  =
         (pa, sh) = ppFact' a
         ppFact' (Ato (Syntactic (Pred (Fact (ProtoFact _ "Smaller" _) _ [v1, v2 ]))))
           | Lit (Var (Free vn1)) <- viewTerm v1,
-            Lit (Var (Free vn2)) <- viewTerm v2 = (text $ show vn1 <> "<" <> show vn2, S.empty )
+            Lit (Var (Free vn2)) <- viewTerm v2 = ( ppUnTypeVar vn1 <> text "<" <> ppUnTypeVar vn2, S.empty )
         ppFact' p =
           case expandFormula (predicates tc) (toLFormula p) of
             Left _ -> (text "undefined predicate in condition ", S.empty )
@@ -480,7 +480,7 @@ ppSapic _ (ProcessComb (Lookup _ _ ) ProcessAnnotation{stateChannel = Nothing, p
 
 ppSapic tc (ProcessComb (Lookup _ c ) ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} pl (ProcessNull _)) =
   (text "in(" <> pt <> text ", " <> pc  <> text ");"
-   $$ text "out(" <> pt <> text ", " <> pc2  <> text ");"
+   $$ text "out(" <> pt <> text ", " <> pc2  <> text ") |"
    $$ ppl
        , pshl)
   where
@@ -492,7 +492,7 @@ ppSapic tc (ProcessComb (Lookup _ c ) ProcessAnnotation{stateChannel = Just (AnV
 ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{stateChannel = Nothing, pureState=False} pl (ProcessNull _)) =
       (text "get tbl_states_handle(" <> pt <> text "," <> text ptvar <> text ") in"
      $$ text "in(" <> text ptvar <> text" , " <> pc <> text ");"
-     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ");"
+     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ") |"
      $$ ppl
     , sh `S.union` pshl)
   where
@@ -508,13 +508,13 @@ ppSapic tc (ProcessComb (Lookup t c ) ProcessAnnotation{stateChannel = Nothing, 
     (text "get tbl_states_handle(" <> pt <> text "," <> text ptvar <> text ") in"
      $$ (nest 4 (parens (
       text "in(" <> text ptvar <> text" , " <> pc <> text ");"
-     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ");"
+     $$ text "out(" <> text ptvar <> text" , " <> pc2 <> text ") | "
      $$ ppl)))
      $$ text "else"
      $$ (nest 4 (parens (
                     text "new " <> text ptvar <> text ":channel [assumeCell];" --the cell did not exists, we create it !
                     $$ text "insert tbl_states_handle(" <> pt' <> text", " <> text ptvar <> text ");"
-                    $$ text "out(" <> text ptvar <> text ",0);"
+                    $$ text "out(" <> text ptvar <> text ",0) |"
                     $$ ppr
                     )))
     , sh `S.union` pshl `S.union` pshr)
