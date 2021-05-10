@@ -366,7 +366,7 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@Translati
     (pt, sh) = ppSapicTerm tc t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
-ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=_} tc@TranslationContext{trans=Proverif} (Insert _ c) =
       (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ") |"
       , shc, False)
   where
@@ -376,13 +376,13 @@ ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=True} tc@
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationContext{trans=Proverif} (Insert _ _) =
   (text "TRANSLATIONERROR", S.empty, True)
 
-ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
-      (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
-       $$ text "out(" <> pt <> text ", " <> pc <> text ") |"
-      , shc, False)
-  where
-    pt = ppLVar lvar
-    (pc, shc) = ppSapicTerm tc c
+-- ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+--       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
+--        $$ text "out(" <> pt <> text ", " <> pc <> text ") |"
+--       , shc, False)
+--   where
+--     pt = ppLVar lvar
+--     (pc, shc) = ppSapicTerm tc c
 
 -- must rely on the table
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Insert t t2) =
@@ -599,15 +599,14 @@ loadMacroProcs tc thy (p:q) =
 -- Printer for Lemmas
 ------------------------------------------------------------------------------
 
-
 showFactAnnotation :: FactAnnotation -> [Char]
 showFactAnnotation an = case an of
     SolveFirst     -> "+"
     SolveLast      -> "-"
     NoSources      -> "no_precomp"
 
-ppProtoAtom :: (HighlightDocument d, Show a) =>  (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
-ppProtoAtom _ ppT  (Action v (Fact tag an ts))
+ppProtoAtom :: (HighlightDocument d, Show a) => Bool -> (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
+ppProtoAtom _ _ ppT  (Action v (Fact tag an ts))
   | factTagArity tag /= length ts = ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an
   | tag == KUFact = ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v
   | otherwise                     =
@@ -618,38 +617,42 @@ ppProtoAtom _ ppT  (Action v (Fact tag an ts))
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 
-ppProtoAtom ppS _ (Syntactic s) = ppS s
-ppProtoAtom _ ppT (EqE l r) =
+ppProtoAtom _ ppS _ (Syntactic s) = ppS s
+ppProtoAtom False _ ppT (EqE l r) =
     sep [ppT l <-> opEqual, ppT r]
 
+ppProtoAtom True _ ppT (EqE l r) =
+    sep [ppT l <-> text "<>", ppT r]
+
     -- sep [ppNTerm l <-> text "≈", ppNTerm r]
-ppProtoAtom _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
-ppProtoAtom _ _ (Last i)   = operator_ "last" <> parens (text (show i))
+ppProtoAtom _ _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
+ppProtoAtom _ _ _ (Last i)   = operator_ "last" <> parens (text (show i))
 
 
-ppAtom :: (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
-ppAtom = ppProtoAtom (const emptyDoc)
+ppAtom :: Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
+ppAtom b = ppProtoAtom b (const emptyDoc)
 
 -- only used for Proverif queries display
 -- the Bool is set to False when we must negate the atom
-ppNAtom :: ProtoAtom s LNTerm -> Doc
-ppNAtom = ppAtom (fst . (ppLNTerm emptyTC))
+ppNAtom :: Bool -> ProtoAtom s LNTerm -> Doc
+ppNAtom b = ppAtom b (fst . (ppLNTerm emptyTC))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
     Lit l     -> lit . f $ l
     FApp o as -> fApp o (map (mapLits f) as)
 
-ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
+ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (Bool -> ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
 ppLFormula ppAt =
     pp
   where
     extractFree (Free v)  = v
     extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
-    pp (Ato a)    = return ([],  ppAt (fmap (mapLits (fmap extractFree)) a))
+    pp (Ato a)    = return ([],  ppAt False (fmap (mapLits (fmap extractFree)) a))
     pp (TF True)  = return ([], operator_ "true")    -- "T"
     pp (TF False) = return ([], operator_ "false")    -- "F"
+    pp (Not (Ato a@(EqE _ _)))    = return ([],  ppAt True (fmap (mapLits (fmap extractFree)) a))
 
     pp (Not p)    = do
       (vs,p') <- pp p
@@ -676,8 +679,11 @@ isPropFormula :: LNFormula -> Bool
 isPropFormula (Qua _ _ _ ) = False
 isPropFormula (Ato _) = True
 isPropFormula (TF _) = True
-isPropFormula (Not _) = False
+isPropFormula (Not (Ato (EqE _ _))) = True
+isPropFormula (Not _) = True
 isPropFormula (Conn _ p q) = isPropFormula p && isPropFormula q
+
+
 
 ppQueryFormula :: (MonadFresh m, Functor s) => ProtoFormula s (String, LSort) Name LVar -> [LVar] -> m Doc
 ppQueryFormula fm extravs = do
