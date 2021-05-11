@@ -12,6 +12,8 @@ section{* CANauth protocol *}
 */
 builtins: multiset
 
+options: enableStateOpt
+
 functions: hmac(bitstring,bitstring):bitstring
 
 /* Desired properties : ---------------------------------------------------------------------------
@@ -25,13 +27,20 @@ lemma false_Received:
   "not(Ex sk msg i #u. Received(sk,msg,i) @u)"
 
 
-lemma loopB[reuse]:
-  "All cell k #i. Read(cell,k)@i ==>  (k='zero' | Ex #j. (InitC(cell)@j) )"
+// lemma loopB[reuse]:
+//   "All cell k #i. Read(cell,k)@i ==>  (k='zero' | Ex #j. (InitC(cell)@j) )"
+
+// lemma monoSent[reuse,use_induction]:
+//   "All sk m m2 i j #u #v. Sent(sk,m,i)@u & Sent(sk,m2,j)@v & u < v ==> i (<) j"
 
 lemma true_Received_only_if_Send[reuse,use_induction]:
   "All sk msg i #u.
          Received(sk,msg,i) @u
    ==> ( Ex #v. Sent(sk,msg,i) @v)"
+
+// lemma multset_base[reuse]:
+//   "All z. 'zero' + z = 'zero' ==> F"
+
 
 lemma true_wellformed_Received[use_induction]:
   "All sk msg1 i1 msg2 i2 #u #v.

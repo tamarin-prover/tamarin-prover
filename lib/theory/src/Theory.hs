@@ -43,6 +43,7 @@ module Theory (
   , transProgress
   , transReliable
   , transReport
+  , stateChannelOpt
   , thyOptions
   , setOption
   , Option
@@ -560,6 +561,7 @@ data Option = Option
         , _transProgress            :: Bool
         , _transReliable            :: Bool
         , _transReport            :: Bool
+        , _stateChannelOpt            :: Bool
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1450,7 +1452,7 @@ itemToRule _            = Nothing
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False
+defaultOption = Option False False False False False
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory

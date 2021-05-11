@@ -170,6 +170,7 @@ options thy0 =do
     builtinTheory = asum
       [  try (symbol "translation-progress") Data.Functor.$> Just transProgress
         , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
+        , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
       ]
 
 predicate :: Parser Predicate

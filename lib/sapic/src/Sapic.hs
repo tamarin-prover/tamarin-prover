@@ -35,7 +35,7 @@ import Sapic.Locks
 import Sapic.ProcessUtils
 import Sapic.LetDestructors
 import Sapic.Typing
--- import Sapic.States (state optimisation disabled currently)
+import Sapic.States
 import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
@@ -53,7 +53,7 @@ translate th = case theoryProcesses th of
                  [p] -> do -- annotate
                           an_proc_pre <- translateLetDestr sigRules
                             $ translateReport
-          --                  $ annotatePureStates
+                            $ optimizeStateChannel
                             $ annotateSecretChannels
                             $ propagateNames
                             $ toAnProcess p
@@ -78,6 +78,11 @@ translate th = case theoryProcesses th of
     translateReport anp =
       if L.get transReport ops then
         translateTermsReport anp
+      else
+        anp
+    optimizeStateChannel anp =
+      if L.get stateChannelOpt ops then
+        annotatePureStates anp
       else
         anp
     sigRules =  stRules (L.get sigpMaudeSig (L.get thySignature th))
