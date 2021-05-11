@@ -76,7 +76,7 @@ prettyProVerifTheory (thy, typEnv) = do
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
-    lemmas = loadLemmas thy
+    lemmas = loadLemmas typEnv thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
@@ -92,7 +92,7 @@ data TranslationContext = TranslationContext
     attackerChannel :: Maybe LVar,
     hasBoundStates :: Bool,
     hasUnboundStates :: Bool,
-    predicates :: [Predicate] }
+    predicates :: [Predicate]}
     deriving (Eq, Ord)
 
 
@@ -447,7 +447,7 @@ ppSapic tc (ProcessComb (Cond a)  _ pl pr)  =
         ppFact' p =
           case expandFormula (predicates tc) (toLFormula p) of
             Left _ -> (text "undefined predicate in condition ", S.empty )
-            Right form -> (snd $ Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form) , S.empty)
+            Right form -> (fst . snd $ Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form) , S.empty)
         addElseBranch (d, s) = case pr of
           ProcessNull _ -> (d, s)
           _ -> let (ppr, pshr) = ppSapic tc pr in
@@ -550,9 +550,9 @@ addAttackerReportProc tc thy p =
   where att = fst $ getAttackerChannel tc Nothing
         reportPreds = List.find (\(Predicate (Fact tag _ _) _) -> showFactTag tag == "Report")
           $ theoryPredicates thy
-        (_,formula) = case reportPreds of
-                     Nothing -> ([], text "Translation Error, no Report predicate provided")
-                     Just (Predicate _ form) -> Precise.evalFresh (ppLFormula ppNAtom form) (avoidPrecise form)
+        (_,(formula,_)) = case reportPreds of
+                     Nothing -> ([], (text "Translation Error, no Report predicate provided", M.empty))
+                     Just (Predicate _ form) -> Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form)
 
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, Bool)
 loadProc tc thy = case theoryProcesses thy of
@@ -599,70 +599,98 @@ loadMacroProcs tc thy (p:q) =
 -- Printer for Lemmas
 ------------------------------------------------------------------------------
 
+
+-- | Smaller-or-equal / More-or-equally-specific relation on types.
+mergeType :: Eq a => Maybe a -> Maybe a -> Maybe a
+mergeType t Nothing =  t
+mergeType Nothing t =  t
+mergeType _ t =  t
+
+mergeEnv :: M.Map LVar SapicType -> M.Map LVar SapicType -> M.Map LVar SapicType
+mergeEnv vs1 vs2 = M.mergeWithKey (\_ t1 t2 -> Just $ mergeType t1 t2) id id vs1 vs2
+
+
+typeVarsEvent :: Ord k => TypingEnvironment -> FactTag -> [Term (Lit c k)] -> M.Map k SapicType
+typeVarsEvent TypingEnvironment{events=ev} tag ts =
+  case M.lookup tag ev of
+    Just t -> foldl (\mp (term,ty) ->
+                       case viewTerm term of
+                         Lit  (Var (lvar))  -> M.insert lvar ty mp
+                         _ -> mp
+                       )  M.empty (zip ts t)
+    Nothing -> M.empty
+
 showFactAnnotation :: FactAnnotation -> [Char]
 showFactAnnotation an = case an of
     SolveFirst     -> "+"
     SolveLast      -> "-"
     NoSources      -> "no_precomp"
 
-ppProtoAtom :: (HighlightDocument d, Show a) => Bool -> (s a -> d) -> (a -> d) -> ProtoAtom s a -> d
-ppProtoAtom _ _ ppT  (Action v (Fact tag an ts))
-  | factTagArity tag /= length ts = ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an
-  | tag == KUFact = ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v
+ppProtoAtom :: (HighlightDocument d, Ord k, Show k, Show c) =>  TypingEnvironment -> Bool -> (s (Term (Lit c k)) -> d) -> (Term (Lit c k) -> d) -> ProtoAtom s (Term (Lit c k)) -> (d, M.Map k SapicType)
+ppProtoAtom te _ _ ppT  (Action v (Fact tag an ts))
+  | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an, M.empty)
+  | tag == KUFact = (ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v, M.empty)
   | otherwise                     =
-        text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> ppAnn an  <> opAction <> ppT v
+        (text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> ppAnn an  <> opAction <> ppT v,
+         typeVarsEvent te tag ts)
   where
     ppFactL n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppT t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 
-ppProtoAtom _ ppS _ (Syntactic s) = ppS s
-ppProtoAtom False _ ppT (EqE l r) =
-    sep [ppT l <-> opEqual, ppT r]
+ppProtoAtom _ _ ppS _ (Syntactic s) = (ppS s, M.empty)
+ppProtoAtom _ False _ ppT (EqE l r) =
+    (sep [ppT l <-> opEqual, ppT r], M.empty)
 
-ppProtoAtom True _ ppT (EqE l r) =
-    sep [ppT l <-> text "<>", ppT r]
+ppProtoAtom _ True _ ppT (EqE l r) =
+    (sep [ppT l <-> text "<>", ppT r], M.empty)
 
     -- sep [ppNTerm l <-> text "≈", ppNTerm r]
-ppProtoAtom _ _ ppT (Less u v) = ppT u <-> opLess <-> ppT v
-ppProtoAtom _ _ _ (Last i)   = operator_ "last" <> parens (text (show i))
+ppProtoAtom _ _ _ ppT (Less u v) = (ppT u <-> opLess <-> ppT v, M.empty)
+ppProtoAtom _ _ _ _ (Last i)   = (operator_ "last" <> parens (text (show i)), M.empty)
 
 
-ppAtom :: Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> Doc
-ppAtom b = ppProtoAtom b (const emptyDoc)
+ppAtom :: TypingEnvironment -> Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> (Doc,  M.Map LVar SapicType)
+ppAtom te b = ppProtoAtom te b (const emptyDoc)
 
 -- only used for Proverif queries display
 -- the Bool is set to False when we must negate the atom
-ppNAtom :: Bool -> ProtoAtom s LNTerm -> Doc
-ppNAtom b = ppAtom b (fst . (ppLNTerm emptyTC))
+ppNAtom :: TypingEnvironment -> Bool -> ProtoAtom s LNTerm -> (Doc, M.Map LVar SapicType)
+ppNAtom te b = ppAtom te b (fst . (ppLNTerm emptyTC))
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
     Lit l     -> lit . f $ l
     FApp o as -> fApp o (map (mapLits f) as)
 
-ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => (Bool -> ProtoAtom syn (Term (Lit c LVar)) -> b) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], b)
-ppLFormula ppAt =
+extractFree :: BVar p -> p
+extractFree (Free v)  = v
+extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
+
+toLAt :: (Ord (f1 b), Ord (f1 (BVar b)), Functor f2, Functor f1) => f2 (Term (f1 (BVar b))) -> f2 (Term (f1 b))
+toLAt a= fmap (mapLits (fmap extractFree)) a
+
+ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => TypingEnvironment -> (TypingEnvironment -> Bool -> ProtoAtom syn (Term (Lit c LVar)) -> (b,  M.Map LVar SapicType)) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], (b,  M.Map LVar SapicType))
+ppLFormula te ppAt =
     pp
   where
-    extractFree (Free v)  = v
-    extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
-    pp (Ato a)    = return ([],  ppAt False (fmap (mapLits (fmap extractFree)) a))
-    pp (TF True)  = return ([], operator_ "true")    -- "T"
-    pp (TF False) = return ([], operator_ "false")    -- "F"
-    pp (Not (Ato a@(EqE _ _)))    = return ([],  ppAt True (fmap (mapLits (fmap extractFree)) a))
+
+    pp (Ato a)    = return ([],  ppAt te False (toLAt a))
+    pp (TF True)  = return ([], (operator_ "true",M.empty))    -- "T"
+    pp (TF False) = return ([], (operator_ "false",M.empty))    -- "F"
+    pp (Not (Ato a@(EqE _ _)))    = return ([],  ppAt te True (toLAt a))
 
     pp (Not p)    = do
-      (vs,p') <- pp p
-      return (vs, operator_ "not" <> opParens p') -- text "¬" <> parens (pp a)
+      (vs,(p',envp)) <- pp p
+      return (vs, (operator_ "not" <> opParens p',envp)) -- text "¬" <> parens (pp a)
       -- return $ operator_ "not" <> opParens p' -- text "¬" <> parens (pp a)
 
     pp (Conn op p q) = do
-        (vsp,p') <- pp p
-        (vsq,q') <- pp q
-        return (vsp ++ vsq, sep [opParens p' <-> ppOp op, opParens q'])
+        (vsp,(p',envp)) <- pp p
+        (vsq,(q',envq)) <- pp q
+        return (vsp ++ vsq, (sep [opParens p' <-> ppOp op, opParens q'], mergeEnv envp envq ))
       where
         ppOp And = text "&&"
         ppOp Or  = text "||"
@@ -685,24 +713,27 @@ isPropFormula (Conn _ p q) = isPropFormula p && isPropFormula q
 
 
 
-ppQueryFormula :: (MonadFresh m, Functor s) => ProtoFormula s (String, LSort) Name LVar -> [LVar] -> m Doc
-ppQueryFormula fm extravs = do
-  (vs,p) <- ppLFormula ppNAtom fm
-  return $
-    sep [text "query " <>  fsep (punctuate comma (map ppTimeTypeVar (extravs++vs))) <> text ";",
+ppQueryFormula :: (MonadFresh m, Functor s) => TypingEnvironment -> ProtoFormula s (String, LSort) Name LVar -> [LVar] -> m Doc
+ppQueryFormula te fm extravs = do
+  (vs,(p,typeVars)) <- ppLFormula te ppNAtom fm
+  return $ sep [text "query " <>  fsep (punctuate comma (map (ppTimeTypeVar typeVars) (extravs++vs))) <> text ";",
          nest 1 p,
          text "."]
 
-ppTimeTypeVar :: LVar -> Doc
-ppTimeTypeVar lvar@(LVar _ LSortNode _ ) = ppLVar lvar <> text ":time"
-ppTimeTypeVar lvar = ppLVar lvar <> text ":bitstring"
+ppTimeTypeVar :: M.Map LVar SapicType  -> LVar -> Doc
+ppTimeTypeVar _ lvar@(LVar _ LSortNode _ ) = ppLVar lvar <> text ":time"
+ppTimeTypeVar te lvar  =
+   case M.lookup lvar te of
+      Nothing -> ppLVar lvar <> text ":bitstring"
+      Just t ->  ppLVar lvar <> text ":" <> text (ppType t)
 
 
-ppQueryFormulaEx :: LNFormula -> [LVar] -> Doc
-ppQueryFormulaEx fm vs =
-    Precise.evalFresh (ppQueryFormula fm vs) (avoidPrecise fm)
-ppRestrictFormula :: ProtoFormula Unit2 (String, LSort) Name LVar -> Precise.FreshT Data.Functor.Identity.Identity Doc
-ppRestrictFormula =
+ppQueryFormulaEx :: TypingEnvironment -> LNFormula -> [LVar] -> Doc
+ppQueryFormulaEx te fm vs =
+    Precise.evalFresh (ppQueryFormula te fm vs) (avoidPrecise fm)
+
+ppRestrictFormula :: TypingEnvironment -> ProtoFormula Unit2 (String, LSort) Name LVar -> Precise.FreshT Data.Functor.Identity.Identity Doc
+ppRestrictFormula te =
   pp
   where
     pp (Not fm@(Qua Ex _ _)) = do
@@ -716,7 +747,7 @@ ppRestrictFormula =
                 pp2 fm fm'
 
     pp fm  =  return $ ppFail fm
-    ppOk = ppQueryFormulaEx
+    ppOk = ppQueryFormulaEx te
     ppFail fm =  text "(*" <> prettyLNFormula fm <> text "*)"
 
     pp2 fm_original fm | isPropFormula fm = return $ ppOk fm_original []
@@ -738,13 +769,13 @@ ppRestrictFormula =
 
     pp2 fm_original _ = return $ ppFail fm_original
 
-ppLemma :: Lemma ProofSkeleton -> Doc
-ppLemma p = text "(*" <> text (L.get lName p) <> text "*)"
-            $$ Precise.evalFresh (ppRestrictFormula fm) (avoidPrecise fm)
+ppLemma :: TypingEnvironment -> Lemma ProofSkeleton -> Doc
+ppLemma te p = text "(*" <> text (L.get lName p) <> text "*)"
+            $$ Precise.evalFresh (ppRestrictFormula te fm) (avoidPrecise fm)
   where fm = L.get lFormula p
 
-loadLemmas :: OpenTheory -> [Doc]
-loadLemmas thy = map ppLemma (theoryLemmas thy)
+loadLemmas :: TypingEnvironment -> OpenTheory -> [Doc]
+loadLemmas te thy = map (ppLemma te) (theoryLemmas thy)
 
 
 ------------------------------------------------------------------------------
@@ -934,15 +965,18 @@ deepsecTemplate headers macroproc requests =
   $$
   vcat requests
 
+emptyTypeEnv :: TypingEnvironment
+emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
+
+
 prettyDeepSecTheory :: OpenTheory -> IO (Doc)
 prettyDeepSecTheory thy = do
-  headers <- loadHeaders tc thy emptyEnv
+  headers <- loadHeaders tc thy emptyTypeEnv
   let hd = attribHeaders tc $ S.toList (headers
                                        `S.union` macroprochd)
   return $ deepsecTemplate hd macroproc requests
   where
         tc = emptyTC{trans = DeepSec}
-        emptyEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy
 
