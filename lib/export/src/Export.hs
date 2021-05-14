@@ -759,22 +759,43 @@ ppRestrictFormula te =
 
     pp2 fm_original fm | isPropFormula fm = return $ ppOk fm_original []
 
-    pp2 fm_original (Conn Imp p fm@(Qua Ex _ _)) | isPropFormula p  = do
-                (_,_,fm') <- openFormulaPrefix fm
-                return $ (if isPropFormula fm' then
+
+    pp2 fm_original (Conn Imp p fm) | isPropFormula p  = do
+                isExDisj <- disjunct_ex fm
+                return $ (if isExDisj then
                             ppOk fm_original []
                           else
                             ppFail fm_original)
-    pp2 fm_original (Conn Imp p (Conn Or fm@(Qua Ex _ _)  fm2@(Qua Ex _ _))) | isPropFormula p  = do
-                (_,_,fm') <- openFormulaPrefix fm
-                (_,_,fm2') <- openFormulaPrefix fm2
-                return $ (if isPropFormula fm' && isPropFormula fm2' then
-                            ppOk fm_original []
-                          else
-                            ppFail fm_original)
+
+    -- pp2 fm_original (Conn Imp p fm@(Qua Ex _ _)) | isPropFormula p  = do
+    --             (_,_,fm') <- openFormulaPrefix fm
+    --             return $ (if isPropFormula fm' then
+    --                         ppOk fm_original []
+    --                       else
+    --                         ppFail fm_original)
+    -- pp2 fm_original (Conn Imp p (Conn Or fm@(Qua Ex _ _)  fm2@(Qua Ex _ _))) | isPropFormula p  = do
+    --             (_,_,fm') <- openFormulaPrefix fm
+    --             (_,_,fm2') <- openFormulaPrefix fm2
+    --             return $ (if isPropFormula fm' && isPropFormula fm2' then
+    --                         ppOk fm_original []
+    --                       else
+    --                         ppFail fm_original)
 
 
     pp2 fm_original _ = return $ ppFail fm_original
+
+    disjunct_ex fm@(Qua Ex _ _) = do
+        (_,_,fm') <- openFormulaPrefix fm
+        return $ isPropFormula fm'
+    disjunct_ex (Conn Or fm@(Qua Ex _ _)  fm2) =  do
+        (_,_,fm') <- openFormulaPrefix fm
+        b <- disjunct_ex fm2
+        return $ b && isPropFormula fm'
+    disjunct_ex (Conn Or fm2 fm@(Qua Ex _ _)) = do
+        (_,_,fm') <- openFormulaPrefix fm
+        b <- disjunct_ex fm2
+        return $ b && isPropFormula fm'
+    disjunct_ex _ = return False
 
 ppLemma :: TypingEnvironment -> Lemma ProofSkeleton -> Doc
 ppLemma te p = text "(*" <> text (L.get lName p) <> text "*)"
