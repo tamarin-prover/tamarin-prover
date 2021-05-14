@@ -742,6 +742,13 @@ ppRestrictFormula te =
                         ppOk fm' vs
                       else
                         ppFail fm)
+    pp (fm@(Qua Ex _ _)) = do
+           (vs,_,fm') <- openFormulaPrefix fm
+           return $ (if isPropFormula fm' then
+                        ppOk fm' vs
+                      else
+                        ppFail fm)
+
     pp fm@(Qua All _ _) = do
                 (_,_,fm') <- openFormulaPrefix fm
                 pp2 fm fm'
