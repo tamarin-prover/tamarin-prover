@@ -127,6 +127,10 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
       Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
       Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
       ]
+  ),
+    ("locations-report", [
+      Fun "fun" "rep" 2 "(bitstring,bitstring):bitstring" ["private"]
+      ]
   )
   ]
 

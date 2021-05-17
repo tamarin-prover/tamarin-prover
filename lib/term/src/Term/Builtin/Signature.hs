@@ -24,7 +24,7 @@ aencSym = ("aenc",(2, Public, Constructor))
 signSym = ("sign",(2, Public, Constructor))
 revealSignSym = ("revealSign",(2, Public, Constructor))
 repSym = ("rep",(2,Private,Constructor))
-checkRepSym = ("check_rep",(2,Public,Constructor))
+checkRepSym = ("check_rep",(2,Public,Destructor))
 
 -- | Ternary builtin function symbols.
 verifySym, revealVerifySym :: NoEqSym
@@ -37,7 +37,7 @@ pkSym, hashSym, extractMessageSym, getRepSym, reportSym :: NoEqSym
 pkSym =  ("pk",(1, Public, Constructor))
 hashSym = ("h",(1, Public, Constructor))
 extractMessageSym = ("getMessage",(1, Public, Constructor))
-getRepSym = ("get_rep",(1, Public,Constructor))
+getRepSym = ("get_rep",(1, Public,Destructor))
 reportSym = ("report",(1, Public,Constructor))
 
 -- | Nullary builtin function symbols.
