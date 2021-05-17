@@ -1,5 +1,7 @@
 theory AC_counter
 
+// Both Proverif and Tamarin finds the attack in a few seconds
+
 begin
 
 builtins: locations-report
@@ -7,6 +9,8 @@ builtins: locations-report
 functions: prog/3,null/0,succ/1,list/2
 
 heuristic:S
+
+options: enableStateOpt
 
 predicates:
 Report(x,y) <=> not  (y= 'l')

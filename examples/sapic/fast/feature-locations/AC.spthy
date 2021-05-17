@@ -1,5 +1,11 @@
 theory AttestedComputation
 
+/*
+
+ This example works with both Proverif (GSVerif) and Tamarin.
+
+*/
+
 begin
 
 builtins: locations-report
@@ -7,6 +13,7 @@ builtins: locations-report
 functions: prog/3,list/2
 heuristic: s
 
+options: enableStateOpt
 
 predicates:
 Report(x,y) <=> not  (y= 'loc')
@@ -39,11 +46,10 @@ process:
 new init;
  ( !(new state;  insert state,init; !r) || !(new state2;  insert state2,init; !v)  )
 
-/*
+
 lemma can_run_v: //for sanity
  	exists-trace
 	"Ex #i m . Local(m,'loc')@i"
-*/
 
 // Attested computation theorem
 lemma attested_comput:

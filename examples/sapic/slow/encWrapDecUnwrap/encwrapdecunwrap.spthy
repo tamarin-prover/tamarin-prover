@@ -27,11 +27,11 @@ begin
 
 builtins: symmetric-encryption
 
-functions: key/1,att/1,sencSucc/2, true/0
+functions: key/1,attC/1,sencSucc/2, true/0
 
 equations:
      key (<k,a>) = k
-   , att (<k,a>) = a
+   , attC (<k,a>) = a
    , sencSucc(senc(m,k),k)=true()
 
 process:
@@ -49,7 +49,7 @@ process:
 	( in(<'set_wrap',L_h>);
           lock L_h;
                 lookup L_h as v in
-		if att(v)='init' then
+		if attC(v)='init' then
 			event WrapKey(L_h,key(v));
 			insert L_h, <key(v),'wrap'>;
 			event WrapHandle(L_h);
@@ -59,7 +59,7 @@ process:
 	( in(<'set_dec',L_h>);
           lock L_h;
                 lookup L_h as v in
-		if att(v)='init' then
+		if attC(v)='init' then
 			event DecKey(L_h,key(v));
 			insert L_h, <key(v),'dec'>;
                         unlock L_h
@@ -68,7 +68,7 @@ process:
 	( in(<L_h,c>);
           lock L_h;
         lookup L_h as v in
-	if att(v)='dec' then
+	if attC(v)='dec' then
             if sencSucc(c,key(v)) = true() then
                 let m = sdec(c,key(v)) in
 		event DecUsing(key(v),m);
@@ -79,7 +79,7 @@ process:
 	( in(<L_h,m>);
           lock L_h;
         lookup L_h as v in
-            if att(v)='dec' then
+            if attC(v)='dec' then
                 event EncUsing(key(v),m);
                 out(senc(m,key(v))) ;
                 unlock L_h
@@ -88,9 +88,9 @@ process:
 	( in(<L_h1,L_h2>);
           lock L_h1;
         lookup L_h1 as v1 in
-            if att(v1)='wrap' then
+            if attC(v1)='wrap' then
                 lookup L_h2 as v2 in
-                    if att(v2)='wrap' then
+                    if attC(v2)='wrap' then
                         event Wrap(key(v1),key(v2));
                         out(senc(key(v2),key(v1)));
                         unlock L_h1
@@ -99,7 +99,7 @@ process:
 	( in(<L_h,senc(m,k)>);
           lock L_h;
           lookup L_h as v in
-            if att(v)='wrap' then
+            if attC(v)='wrap' then
                 if key(v)=k then
                     new L_h2;
                     event Unwrapped(L_h2,m);
@@ -185,8 +185,8 @@ lemma no_key_is_wrap_and_dec_ind2[use_induction,reuse]:
 lemma cannot_obtain_key_ind[reuse,use_induction]:
 	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
 
-lemma cannot_obtain_key:
-	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+// lemma cannot_obtain_key:
+// 	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
 
 end
 

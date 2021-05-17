@@ -1,11 +1,10 @@
 theory AKE
 
-// Use Tamarin command line options '--heuristic=p' for all-trace properties
-// (default heuristic for exists-trace properties)
+// Works with both Tamarin and Proverif
 
 begin
 
-builtins: symmetric-encryption,asymmetric-encryption,locations-report
+builtins: asymmetric-encryption,locations-report
 
 functions: first/1
 
@@ -15,12 +14,12 @@ predicates: Report(x,y) <=> not(first(y) = 'loc')
 
 
 let r=                            // IEE sides
-        in(pkV:pkey);
-        !(                        // For everay pk received, an instance is launched at the corresponding trusted location
+        in(pkV);
+        !(                        // For every pk received, an instance is launched at the corresponding trusted location
         new k;
-		event SessionP(<pkV,k>);
+	event SessionP(pkV,k);
         let signed = report(aenc(k,pkV)) in
-        event Poutput(<aenc(k,pkV),signed>);
+        event Poutput(aenc(k,pkV),signed);
 	    out(<aenc(k,pkV),signed>)
         )@<'loc',pkV>
 
@@ -28,27 +27,33 @@ let r=                            // IEE sides
 
 let v =                                   // Initiator of the Key Exchange
     new skV:skey;
-    event HonestP(<pk(skV), 'pubkey'>);
-    out(pk(skV));                         // publishs its publilic keys
+    event HonestP(pk(skV), 'pubkey');
+    out(pk(skV));                         // publish its public keys
     in(<cypher,signed>);  // receives the shared key and checks the report
     let k = adec(cypher,skV) in
-    if  aenc(k,pk(skV)) = get_rep(signed,<'loc',pk(skV)>) then
-       (event Voutput(<aenc(k,pk(skV)),signed>);
-	   event SessionV(<pk(skV),k>)
+       event Test();
+    if  cypher = check_rep(signed,<'loc',pk(skV)>) then
+       (event Voutput(aenc(k,pk(skV)),signed);
+	   event SessionV(pk(skV),k)
 
         )
 
 
 
 process:
-new init; ( (!r) || (!v))
+( (!r) || (!v))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */
 
-/*
+
+lemma can_run_p: //for sanity
+ 	exists-trace
+	"Ex #t h1 h2 .Poutput(h1,h2)@t"
+
+
 lemma can_run_v: //for sanity
  	exists-trace
-	"Ex #t h .Voutput(h)@t"
+	"Ex #t h1 h2 .Voutput(h1,h2)@t"
 
  lemma sanity1: //make sure that a valid protocol run exists
  exists-trace
@@ -57,17 +62,15 @@ lemma can_run_v: //for sanity
  lemma sanity2:
  exists-trace
       "Ex pka  k #t1 . SessionV(pka,k)@t1"
-*/
+
 
  lemma sanity3[reuse]:
-      "All pka k #t1 . SessionV(<pka,k>)@t1 ==> Ex #t2. SessionP(<pka,k>)@t2 & t2<t1"
-
-
+      "All pka k #t1 . SessionV(pka,k)@t1 ==> Ex #t2. SessionP(pka,k)@t2 & t2<t1"
 
 lemma secrecy[reuse]:
         "not (
                 Ex pka k #t1 #t2 .
-                 SessionV(<pka,k>)@t1
+                 SessionV(pka,k)@t1
                 & KU(k)@t2
 
         )"
