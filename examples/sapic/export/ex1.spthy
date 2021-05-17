@@ -26,6 +26,7 @@ let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
 let Q = in( m:bitstring); let md = sdec(m,sk) in
             if snd(md)='test' then event Received(fst(md))
 
+process:
 new sk:skey; (P || Q)
 
 lemma secret :

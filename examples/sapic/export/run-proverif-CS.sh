@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SAPIC_CASE_STUDIES_SLOW=*.sapic
+SAPIC_CASE_STUDIES_SLOW=*.spthy
+
 
 
 runners=("progsverif-tamarin")
@@ -19,14 +20,15 @@ exec_runner(){
 }
 
 
-outfilename="res.csv"
+outfilename="res-pro.csv"
 echo -n "filename"  >> "$outfilename"
 for runner in "${runners[@]}"; do
     echo -n ", $runner result , $runner time"   >> "$outfilename"
 done
 echo ""  >> "$outfilename" # jump line
-for file in $SAPIC_CASE_STUDIES_SLOW; do
-    filename="$file"
+# for file in $files; do
+find . -name "*.spthy"  | while read line; do
+    filename="$line"
     echo 'Extracting examples from '"$filename"
     echo -n "$filename,"  >> "$outfilename"
     for runner in "${runners[@]}"; do
