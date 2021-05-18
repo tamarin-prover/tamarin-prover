@@ -16,21 +16,21 @@ exec_runner(){
     END=$(date +%s.%N)
     DIFF=$(echo "$END - $START" | bc)
     echo -n $res | grep "RESULT" | tr '\n' ' '  >> "$outfilename"
-    echo -n ",$DIFF," >> "$outfilename"
+    echo -n ";$DIFF;" >> "$outfilename"
 }
 
 
 outfilename="res-pro.csv"
 echo -n "filename"  >> "$outfilename"
 for runner in "${runners[@]}"; do
-    echo -n ", $runner result , $runner time"   >> "$outfilename"
+    echo -n "; $runner result ; $runner time"   >> "$outfilename"
 done
 echo ""  >> "$outfilename" # jump line
 # for file in $files; do
 find . -name "*.spthy"  | while read line; do
     filename="$line"
     echo 'Extracting examples from '"$filename"
-    echo -n "$filename,"  >> "$outfilename"
+    echo -n "$filename;"  >> "$outfilename"
     for runner in "${runners[@]}"; do
 		exec_runner
     done
