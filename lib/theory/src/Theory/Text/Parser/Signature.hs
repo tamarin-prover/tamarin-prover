@@ -16,11 +16,12 @@ module Theory.Text.Parser.Signature (
     , functions
     , equations
     , preddeclaration
+    , goalRanking
     , diffbuiltins
 )
 where
 
-import           Prelude                    hiding (id, (.))
+import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
@@ -173,13 +174,21 @@ preddeclaration thy = do
                     foldM liftedAddPredicate thy predicates
                     <?> "predicates"
 
-heuristic :: Bool -> Parser [GoalRanking]
-heuristic diff = do
-      symbol "heuristic" *> colon *> parseGoalRanking
-  where
-    parseGoalRanking = case diff of
-        True  -> map charToGoalRankingDiff <$> identifier
-        False -> map charToGoalRanking     <$> identifier
+heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
+heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* spaces
+
+goalRanking :: Bool -> Maybe FilePath -> Parser GoalRanking
+goalRanking diff workDir = try oracleRanking <|> regularRanking <?> "goal ranking"
+   where
+       regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
+
+       oracleRanking = do
+           goal <- toGoalRanking <$> oneOf "oO" <* skipMany (char ' ')
+           relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
+
+           return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
+
+       toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking
 
 
 liftedAddPredicate :: Catch.MonadThrow m =>

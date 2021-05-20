@@ -66,7 +66,7 @@ import           Theory                       (
     openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory
   )
-import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apDefaultHeuristic)
+import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
@@ -594,11 +594,9 @@ getTheoryPathMR idx path = do
     -- Handle method paths by trying to solve the given goal/method
     --
     go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-        (\thy -> return $ applyMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> return $ applyMethodAtPath thy lemma proofPath (tiAutoProver ti) i)
         (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (tiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
@@ -622,17 +620,13 @@ getTheoryPathDiffMR idx path = do
     -- Handle method paths by trying to solve the given goal/method
     --
     goDiff _ (DiffTheoryMethod s lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath heuristic i)
+        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath (dtiAutoProver ti) i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof s lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (dtiAutoProver ti)
     goDiff _ (DiffTheoryDiffMethod lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath (dtiAutoProver ti) i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (dtiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
