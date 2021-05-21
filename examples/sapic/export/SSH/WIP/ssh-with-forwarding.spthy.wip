@@ -103,7 +103,7 @@ let remoteP =
 		let <lvl,ms,'sign_req'> = sdec(signreq,kSP) in
                 out(senc(<nest(lvl),ms,'sign_req'>,kSP2));
 		in(signans2);
-		let <sig3,'sign_ans'> = sdec(signans,kPS2) in
+		let <sig3,'sign_ans'> = sdec(signans2,kPS2) in
 		event Test(sig3);
 		out(senc( <sig3,'sign_ans'>,kPS))
 
@@ -208,7 +208,7 @@ lemma reach3[reuse]: //secrecy of the key
 lemma secretP[reuse]: //secrecy of the key
   "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
 */
-/*
+
 lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
  "All a b skS skP t #i. AcceptP(a,b,skS,skP,t)@i ==>
     (Ex skP2 #j. #j<#i & AcceptS(a,b,skS,skP2)@j)"
@@ -228,5 +228,5 @@ lemma injSP[reuse,use_induction]: // injectivity of final acceptance
 "
 lemma secretS[reuse]: //secrecy of the key
   "(not (Ex k #i #j. (KeyS2(k)@i & KU(k)@j)))"
-*/
+
 end
