@@ -8,7 +8,7 @@ theory KEMTLS
    Client authentication version -> the client only authenticates with a server that he knows.
 
    Proverif : few seconds
-   Tamarin : 20 minutes on 64 core server
+   Tamarin : 300 minutes on 64 core server
 
 
    Unlinkability proved:
@@ -176,29 +176,31 @@ process:
 
 
 
-lemma false_exec: // should be false
-"not(Ex #t #t2 pkP pkS k. AcceptP(<pkS,pkP,k>)@t  & Honnest(<pkS,'Serv'>)@t2 )"
+lemma execP: // sanity check
+  exists-trace
+  "Ex #t #t2 pkP pkS k. AcceptP(<pkS,pkP,k>)@t  & Honnest(<pkS,'Serv'>)@t2"
 
 
 
-lemma false_execbis: // should be false
-"not(Ex #t #t2 pkP pkS k. AcceptS(<pkS,pkP,k>)@t & Honnest(<pkP,'Client'>)@t2)"
+lemma execQ: // sanity check
+ exists-trace
+ "Ex #t #t2 pkP pkS k. AcceptS(<pkS,pkP,k>)@t & Honnest(<pkP,'Client'>)@t2"
 
 
-
+/*
 lemma false_execbistestR: // should be false
 "not(Ex #t #t2 pkP pkS. TestE(<pkS,pkP>)@t & Honnest(<pkP,'Client'>)@t2)"
 
 
 lemma false_execbistestRP: // should be false
 "not(Ex #t #t2 pkP pkS. TestP(<pkS,pkP>)@t & Honnest(<pkS,'Serv'>)@t2)"
+*/
 
-
-lemma true_auth: // should be true
+lemma authPS: // should be true
  "All #t #t2 pkS pkP key. (AcceptP(<pkS,pkP,key>)@t & Honnest(<pkS,'Serv'>)@t2)
      ==> Ex #s. (AcceptS(<pkS,pkP,key>)@s & s<t)"
 
-lemma true_authS: // should be true
+lemma authSP: // should be true
  "All #t #t2 pkS pkP key. (AcceptS(<pkS,pkP,key>)@t & Honnest(<pkP,'Client'>)@t2)
      ==> Ex #s. (DerivedP(<pkS,pkP,key>)@s & s<t)"
 
