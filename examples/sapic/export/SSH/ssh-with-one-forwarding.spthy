@@ -147,12 +147,13 @@ new ~secretchannelP:channel; new ~secretchannelS:channel; new ~secretchannelremo
 
 
 
-lemma false_reach[reuse]: // sanity check
-  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'source')@i & Honnest(a)@j  ))"
+lemma reach: // sanity check
+  exists-trace
+  "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'source')@i & Honnest(a)@j "
 
-lemma false_reach_nested[reuse]: // sanity check
-  "(not (Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'nested')@i & Honnest(a)@j  ))"
-
+lemma reach_nested: // sanity check
+  exists-trace
+  "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'nested')@i & Honnest(a)@j"
 
 lemma true_secretP[reuse]: //secrecy of the key
   "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
