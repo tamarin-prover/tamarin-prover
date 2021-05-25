@@ -357,21 +357,20 @@ instance Binary RuleAttribute
 
 -- | A name of a protocol rule is either one of the special reserved rules or
 -- some standard rule.
-data StandName =
-         DefdRuleName String
-       | SAPiCRuleName String
-       deriving( Eq, Ord, Show, Data, Typeable, Generic)
-instance NFData StandName
-instance Binary StandName
-
--- | A name of a protocol rule is either one of the special reserved rules or
--- some standard rule.
 data ProtoRuleName =
          FreshRule
        | StandRule StandName -- ^ Some standard protocol rule
        deriving( Eq, Ord, Show, Data, Typeable, Generic)
 instance NFData ProtoRuleName
 instance Binary ProtoRuleName
+
+-- | Standard rules are split into SAPiC rules and all other rules.
+data StandName =
+         DefdRuleName String
+       | SAPiCRuleName String
+       deriving( Eq, Ord, Show, Data, Typeable, Generic)
+instance NFData StandName
+instance Binary StandName
 
 -- | Information for protocol rules modulo E.
 data ProtoRuleEInfo = ProtoRuleEInfo
@@ -1131,7 +1130,7 @@ prettyDotProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> case n of
       DefdRuleName s -> prefixIfReserved s
-      SAPiCRuleName s -> if "new" `isPrefixOf` s then [chr 957] ++ drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
+      SAPiCRuleName s -> if "new" `isPrefixOf` s then chr 957 : drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
 
 formatSAPiCRuleName :: String -> String
 formatSAPiCRuleName = filter (\x -> isAlphaNum x || (x == '_' && x /= '#'))
@@ -1169,7 +1168,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
 
 
 prettyRestr :: HighlightDocument d => F.SyntacticLNFormula -> d
-prettyRestr fact =  operator_ "_restrict(" <> F.prettySyntacticLNFormula fact <> operator_ ")"
+prettyRestr fact =  operator_ "_restrict(" <> text (filter (/= '#') $ render $ F.prettySyntacticLNFormula fact) <> operator_ ")"
 
 -- | pretty-print rules with restrictions
 prettyRuleRestr :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> [F.SyntacticLNFormula] -> d

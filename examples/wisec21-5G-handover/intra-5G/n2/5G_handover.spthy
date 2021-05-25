@@ -1,0 +1,1815 @@
+theory 5G_n2_handover
+
+/*
+  Protocol:   N2-based inter-RAN handover
+
+  Comments:   All time estimates include the time needed for precomputation
+              (~35s)
+
+  References: [TS 23.502] Procedures for the 5G System (5GS)
+                          3GPP TS 23.502 V16.5.0 (2020-07)
+
+              [TS 38.300] NR and NG-RAN Overall Description
+                          3GPP TS 38.300 V16.2.0 (2020-07)
+
+              [TS 33.501] Security Architecture and Procedures for 5G System
+                          3GPP TS 33.501 V16.3.0 (2020-07)
+
+  Notations:  HO     - Handover
+              UE     - User Equipment
+              CN     - Core Network
+              AMF    - Access and Mobility Management Function
+              UPF    - User Plane Function
+              SMF    - Session Management Function
+              RAN    - Radio Access Network
+              NG-RAN - Next Generation RAN
+              HN     - Home Network
+              HSS    - Home Subscription Server
+              SUCI   - Subscription Concealed Identifier
+
+  Terms:
+    SUCI   = <aenc(<SUPI, ~R>, pk_HN), HN_ID>
+
+  Key derivation [TS 33.501]:
+    K_AMF  = KDF(K_SEAF, SUPI)     [A.7]       (initial key derivation)
+           = KDF(K_AMF, 0x01)      [A.13]      (horizontal key derivation)
+    K_gNB  = KDF(K_AMF, 2^32-1)    [A.9]
+    NH     = KDF(K_AMF, K_gNB)     [A.10]      (initial key derivation)
+           = KDF(K_AMF, NH)        [A.10]      (subsequent key derivation)
+    K_gNB* = KDF(K_gNB, TRAN_ID)   [A.11/A.12] (horizontal key derivation)
+           = KDF(NH, TRAN_ID)      [A.11/A.12] (vertical key derivation)
+
+  Protocol:
+    Preparation Phase [TS 23.502, Sec. 4.9.1.3.2]:
+      1.  S-RAN -> CN    : TRAN_ID, S2TTC, PDU_SESSION_ID
+      2.  CN    -> T-RAN : NH, NCC, NASC, S2TTC, PDU_SESSION_ID
+      3.  T-RAN -> CN    : NCC, NASC, T2STC, PDU_SESSION_ID
+
+    Execution Phase (1/2) [TS 23.502, Sec. 4.9.1.3.3]:
+      1.  CN    -> S-RAN : NCC, NASC, T2STC, PDU_SESSION_ID
+      2.  S-RAN -> UE    : NCC, NASC, UEC
+      3.  S-RAN -> CN    : Uplink_RAN_Status_Transfer
+      4.  CN    -> T-RAN : Downlink_RAN_Status_Transfer
+      5.  UE    -> T-RAN : Handover Confirm
+      6.  T-RAN -> CN    : Handover Notify
+
+    Mobility Registration Update (MRU) [TS 23.502, Sec. 4.2.2.2.2]:
+      1.  UE    -> T-RAN : 'MRU', 5G-GUTI
+      2.  T-RAN -> CN    : 'MRU', 5G-GUTI
+      2a. CN    -> UE    : Identity Request
+      2b. UE    -> CN    : Identity Response: SUCI
+      2c. CN    -> UE    : Identity Request
+      2d. UE    -> CN    : Identity Response: PEI
+      7.  CN    -> UE    : Registration Accept
+      8.  UE    -> CN    : Registration Complete
+      9.  CN    -> T-RAN : RRC_Inactive_Assistance_Information
+
+    Execution Phase (2/2) [TS 23.502, Sec. 4.9.1.3.3]:
+      7.  CN    -> S-RAN : UE_Context_Release_Command
+      8.  S-RAN -> CN    : UE_Context_Release_Complete
+*/
+
+begin
+
+builtins:
+  asymmetric-encryption, symmetric-encryption, multiset
+
+functions:
+  // 3GPP KDFs [TS 33.501]
+  KDF/2 // KDF --> K_AMF, K_gNB, NH, K_gNB*
+
+/***********************************/
+/*         Secure Channels         */
+/***********************************/
+// This is a standard, secure channel abstraction, as previously used in work
+// by Basin, Radomirovic and Schmid: Modeling Human Errors in Security Protocols
+// (CSF 2016)
+// This version provides replay protection, order-preserving (binding channel).
+rule send_secure:
+  // ~cid denotes a channel identifier: should always be a fresh name
+  // (possibly created by the attacker)
+  [ SndS(~cid,A,B,m) ]
+-->
+  [ Sec(~cid,A,B,m) ]
+
+rule receive_secure:
+  [ Sec(~cid,A,B,m) ]
+-->
+  [ RcvS(~cid,A,B,m) ]
+
+rule secureChannel_compromised_in:
+  // An attacker can learn cid with secureChannel_compromised_out
+  [ In(<~cid,A,B,x>) ]
+--[ Rev(A,'secureChannel')
+  , Rev(B,'secureChannel')
+  , Injected(x)
+  ]->
+  [ Sec(~cid,A,B,x) ]
+
+rule secureChannel_compromised_out:
+  [ Sec(~cid,A,B,m) ]
+--[ Rev(B,'secureChannel')
+  , Rev(A,'secureChannel')
+  ]->
+  [ Out(<~cid,m>) ]
+
+/************************************/
+/*       Initialization Rules       */
+/************************************/
+
+// Initialize the Core Network (CN): AMF + SMF + UPF
+rule init_CN:
+  [ Fr(~CN_ID) ]
+--[ CoreNetwork(~CN_ID) ]->
+  [ !CN(~CN_ID)
+  , Out(~CN_ID) ]
+
+// Initialize a home network
+rule init_HN:
+  [ Fr(~sk_HN)
+  , Fr(~HN_ID) ]
+--[ HomeNetwork(~HN_ID)
+  , SKHN(~sk_HN)
+  ]->
+  [ !HSS(~HN_ID, ~sk_HN)
+  , !Pk(~HN_ID, pk(~sk_HN))
+  , Out(<~HN_ID, pk(~sk_HN)>) ]
+
+// Initialize a Radio Access Network (RAN)
+rule init_RAN:
+  [ Fr(~RAN_ID) ]
+--[ RadioAccessNetwork(~RAN_ID) ]->
+  [ !NG_RAN(~RAN_ID)
+  , Out(~RAN_ID) ]
+
+// Create a User Equipment (UE)
+rule create_UE:
+  [ Fr(~SUPI)
+  , Fr(~PEI)
+  , !CN(~CN_ID) ]
+--[ UserEquipment(~SUPI) ]->
+  [ !UE(~SUPI, ~PEI, ~CN_ID) ]
+
+// Initialize a UE in a serving network
+rule init_UE:
+  let
+    K_AMF = KDF(~K_SEAF, ~SUPI)
+    K_gNB = KDF(K_AMF, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_AMF, K_gNB)
+    NCC = '0'
+  in
+  [ !UE(~SUPI, ~PEI, ~CN_ID)
+  , !CN(~CN_ID)
+  , !HSS(~HN_ID, ~sk_HN)
+  , !NG_RAN(~SRAN_ID)
+  , !NG_RAN(~TRAN_ID)
+  , Fr(~K_SEAF)
+  , Fr(~5G_GUTI)
+  , Fr(~PDU_SESSION_ID) ]
+--[ Subscribe(~SUPI, ~SRAN_ID)
+  , HomeNet(~SUPI, ~HN_ID)
+  , CreateValues(<~SUPI, ~K_SEAF, K_AMF>)
+  , CreatePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  , KeyDerived(<'K_AMF', K_AMF>, ~K_SEAF, K_AMF, ~SUPI)
+  , KeyDerived(<'K_gNB', K_gNB>, ~K_SEAF, K_AMF, ~SUPI)
+  , Init('K_SEAF', ~K_SEAF)
+  , Init('K_AMF', K_AMF)
+  , Init('SUPI', ~SUPI)
+  , GUTI(~5G_GUTI)
+  , HN(~HN_ID)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  , PDU(~PDU_SESSION_ID)
+  ]->
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>)
+  , Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>)
+  , Session_key(~SUPI, ~SRAN_ID, <'K_gNB', K_gNB>)
+  , Intermediate_key(~SUPI, ~SRAN_ID, ~CN_ID, <'NH', NH>)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , St_1_SRAN(~SRAN_ID, K_gNB, ~PDU_SESSION_ID, ~TRAN_ID)
+  , St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF, ~K_SEAF, K_AMF, K_gNB, K_gNB, NCC, ~SRAN_ID, ~CN_ID, ~HN_ID)
+  , St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID, NH, NCC, ~HN_ID) ]
+
+// Initialize an N2 interface between a RAN and the CN
+// N2: RAN - AMF
+rule connect_networks_N2:
+  [ !NG_RAN(~RAN_ID)
+  , !CN(~CN_ID)
+  , Fr(~cid_N2) ]
+--[ OnlyOnce(~RAN_ID, ~CN_ID)
+  , CID(~cid_N2)
+  ]->
+  [ !N2(~cid_N2, ~RAN_ID, ~CN_ID) ]
+
+/***********************************/
+/*           Key Leakage           */
+/***********************************/
+
+// NOTE: Rules for compromising secure channels are defined above.
+
+// sk_HN is compromised
+rule reveal_sk_HN:
+	[ !HSS(~HN_ID, ~sk_HN) ]
+--[ Rev(~HN_ID, <'SK_HN', ~sk_HN>) ]->
+	[ Out(~sk_HN) ]
+
+// SUPI is compromised
+rule reveal_supi:
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>) ]
+--[ Rev(~SUPI, <'SUPI', ~SUPI>)
+  , Rev(~CN_ID, <'SUPI', ~SUPI>)
+  ]->
+  [ Out(~SUPI) ]
+
+// K_SEAF is compromised
+rule reveal_ltk_k_seaf:
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>) ]
+--[ Rev(~SUPI, <'K_SEAF', ~K_SEAF>)
+  , Rev(~CN_ID, <'K_SEAF', ~K_SEAF>)
+  ]->
+  [ Out(~K_SEAF) ]
+
+// K_AMF is compromised
+rule reveal_session_key_k_amf:
+  [ Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>) ]
+--[ Rev(~SUPI, <'K_AMF', K_AMF>)
+  , Rev(~CN_ID, <'K_AMF', K_AMF>)
+  ]->
+  [ Out(K_AMF) ]
+
+// K_gNB is compromised
+rule reveal_session_key_k_gnb:
+  [ Session_key(~SUPI, ~RAN_ID, <'K_gNB', K_gNB>) ]
+--[ Rev(~SUPI, <'K_gNB', K_gNB>)
+  , Rev(~RAN_ID, <'K_gNB', K_gNB>)
+  ]->
+  [ Out(K_gNB) ]
+
+// NH is compromised
+rule reveal_intermediate_key_nh:
+  [ Intermediate_key(~SUPI, ~RAN_ID, ~CN_ID, <'NH', NH>) ]
+--[ Rev(~SUPI, <'NH', NH>)
+  , Rev(~RAN_ID, <'NH', NH>)
+  , Rev(~CN_ID, <'NH', NH>)
+  ]->
+  [ Out(NH) ]
+
+/************************************/
+/*          Protocol Rules          */
+/************************************/
+
+/** PREPARATION PHASE **/
+
+rule sran_snd_ho_req:
+  let
+    S2TTC = <'SRAN', ~SRAN_ID>
+    msgOut = <'ho_req', ~TRAN_ID, S2TTC, ~PDU_SESSION_ID>
+  in
+  [ St_1_SRAN(~SRAN_ID, K_gNB, ~PDU_SESSION_ID, ~TRAN_ID)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID) ]
+-->
+  [ St_2_SRAN(~SRAN_ID, K_gNB, ~TRAN_ID, ~PDU_SESSION_ID)
+  , SndS(~cid_N2, ~SRAN_ID, ~CN_ID, msgOut) ]
+
+// Keep old K_AMF
+rule cn_fwd_ho_req_hkd_old_kamf:
+  let
+    NH_fresh = KDF(K_AMF, NH)
+    K_gNB_star = KDF(NH_fresh, ~TRAN_ID)
+    K_AMF_change_flag = '0'
+    NASC = <'NASC', K_AMF_change_flag>
+    S2TTC = <'SRAN', ~SRAN_ID>
+    msgIn = <'ho_req', ~TRAN_ID, S2TTC, ~PDU_SESSION_ID_SRAN>
+    msgOut = <'ho_req', NH_fresh, NCC+'1', NASC, S2TTC, ~PDU_SESSION_ID_SRAN>
+  in
+  [ St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID)
+  , !N2(~cid_N2_TRAN, ~TRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , Fr(~PDU_SESSION_ID_TRAN)
+  , RcvS(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID, msgIn)
+  , In(NCC) ]
+--[ // Executability
+    SessionHandover(<~SRAN_ID, ~TRAN_ID>, K_AMF, K_AMF, K_gNB_star)
+  , NoRekeyingCN(K_AMF, K_gNB_star)
+    // Key agreement
+  , Running(~CN_ID, ~SUPI, <'UE','CN',<'K_AMF',K_AMF>>)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID_SRAN, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  , CreatePDUSession(~PDU_SESSION_ID_TRAN, <~CN_ID, ~SUPI, ~TRAN_ID>)
+  , PDU(~PDU_SESSION_ID_TRAN)
+  ]->
+  [ St_2_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, NASC, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH_fresh, NCC+'1', ~HN_ID)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', NH_fresh>)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB_star>)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , PDU_Session(~PDU_SESSION_ID_TRAN, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , SndS(~cid_N2_TRAN, ~CN_ID, ~TRAN_ID, msgOut) ]
+
+// Derive new K_AMF
+rule cn_fwd_ho_req_hkd_new_kamf:
+  let
+    K_AMF_new = KDF(K_AMF, '0x01')
+    K_gNB_new = KDF(K_AMF_new, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH_fresh = KDF(K_AMF_new, K_gNB_new)
+    K_gNB_star = KDF(K_gNB_new, ~TRAN_ID)
+    K_AMF_change_flag = '1'
+    NASC = <'NASC', K_AMF_change_flag>
+    S2TTC = <'SRAN', ~SRAN_ID>
+    msgIn = <'ho_req', ~TRAN_ID, S2TTC, ~PDU_SESSION_ID_SRAN>
+    msgOut = <'ho_req', K_gNB_new, '0', NASC, S2TTC, ~PDU_SESSION_ID_SRAN>
+  in
+  [ St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, NH, NCC, ~HN_ID)
+  , !UE(~SUPI, ~PEI, ~CN_ID)
+  , !N2(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID)
+  , !N2(~cid_N2_TRAN, ~TRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , Fr(~PDU_SESSION_ID_TRAN)
+  , RcvS(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID, msgIn)
+  , In(NCC) ]
+--[ // Executability
+    SessionHandover(<~SRAN_ID, ~TRAN_ID>, K_AMF, K_AMF_new, K_gNB_star)
+  , RekeyingCN(K_AMF_new, K_gNB_star)
+    // Kery derivation
+  , KeyDerived(<'K_AMF', K_AMF_new>, ~K_SEAF, K_AMF, ~SUPI)
+    // Key agreement
+  , Running(~CN_ID, ~SUPI, <'UE','CN',<'K_AMF',K_AMF_new>>)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID_SRAN, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  , CreatePDUSession(~PDU_SESSION_ID_TRAN, <~CN_ID, ~SUPI, ~TRAN_ID>)
+  , CreateValues(<~SUPI, ~K_SEAF, K_AMF_new>)
+  ]->
+  [ St_2_CN(~CN_ID, ~K_SEAF, K_AMF_new, K_gNB_star, ~SRAN_ID, ~TRAN_ID, NASC, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH_fresh, '0', ~HN_ID)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', NH_fresh>)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', K_gNB_new>) // [TS 33.501, Sec. 6.9.2.3.3]
+  , Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF_new>)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB_star>)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , PDU_Session(~PDU_SESSION_ID_TRAN, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , SndS(~cid_N2_TRAN, ~CN_ID, ~TRAN_ID, msgOut) ]
+
+rule tran_rcv_ho_req_snd_ack:
+  let
+    K_gNB_star = KDF(NH, ~TRAN_ID)
+    NASC = <'NASC', K_AMF_change_flag>
+    T2STC = <'TRAN', ~TRAN_ID>
+    msgIn = <'ho_req', NH, NCC, NASC, S2TTC, ~PDU_SESSION_ID>
+    msgOut = <'ho_req_ack', NCC, NASC, T2STC, ~PDU_SESSION_ID>
+  in
+  [ PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~CN_ID, ~TRAN_ID, msgIn)
+  , In(K_AMF_change_flag)
+  , In(NCC) ]
+--[ // Key agreement
+    Running(~TRAN_ID, ~SUPI, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_1_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID, ~PDU_SESSION_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , SndS(~cid_N2, ~TRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_ho_req_ack:
+  let
+    msgIn = <'ho_req_ack', NCC, NASC, T2STC, ~PDU_SESSION_ID_SRAN>
+  in
+  [ St_2_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, NASC, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Executability
+    HandoverPreparationDone(K_AMF, K_gNB_star)
+  ]->
+  [ St_3_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, T2STC, NASC, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID) ]
+
+/** EXECUTION PHASE (1/2) **/
+
+rule cn_snd_ho_cmd:
+  let
+    NASC = <'NASC', K_AMF_change_flag>
+    T2STC = <'TRAN', ~TRAN_ID>
+    msgOut = <'ho_cmd', NCC, NASC, T2STC, ~PDU_SESSION_ID_SRAN>
+  in
+  [ St_3_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, T2STC, NASC, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID)
+  , In(K_AMF_change_flag)
+  , In(NCC) ]
+--[ // Helper
+    UsePDUSession(~PDU_SESSION_ID_SRAN, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_4_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , SndS(~cid_N2, ~CN_ID, ~SRAN_ID, msgOut) ]
+
+rule sran_fwd_ho_cmd_snd_uplink_ran_status_transfer:
+  let
+    NASC = <'NASC', K_AMF_change_flag>
+    UEC = <'TRAN', ~TRAN_ID>
+    msgIn = <'ho_cmd', NCC, NASC, T2STC, ~PDU_SESSION_ID>
+    msgOutUE = <'ho_cmd', NCC, NASC, UEC>
+    msgOutCN = <'uplink_ran_status_transfer'>
+  in
+  [ St_2_SRAN(~SRAN_ID, K_gNB, ~TRAN_ID, ~PDU_SESSION_ID)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~CN_ID, ~SRAN_ID, msgIn)
+  , In(K_AMF_change_flag)
+  , In(NCC) ]
+-->
+  [ St_3_SRAN(~SRAN_ID, K_gNB)
+  , Out(senc(msgOutUE, K_gNB))
+  , SndS(~cid_N2, ~SRAN_ID, ~CN_ID, msgOutCN) ]
+
+// Keep old K_AMF
+rule ue_rcv_ho_cmd_old_kamf:
+  let
+    NH_fresh = KDF(K_AMF, KDF(K_AMF, NH))
+    K_gNB_star = KDF(NH_fresh, ~TRAN_ID)
+    K_AMF_change_flag = '0'
+    NASC = <'NASC', K_AMF_change_flag>
+    UEC = <'TRAN', ~TRAN_ID>
+    NCC_in = NCC+'1'
+    msgIn = <'ho_cmd', NCC_in, NASC, UEC>
+  in
+  [ St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, NH, NCC, ~SRAN_ID, ~CN_ID, ~HN_ID)
+  , !UE(~SUPI, ~PEI, ~CN_ID)
+  , In(senc(msgIn, K_gNB)) ]
+--[ // Executability
+    NoRekeyingUE(K_AMF, K_gNB_star)
+    // Key derivation
+  , KeyDerived(<'K_gNB_star', K_gNB_star>, ~K_SEAF, K_AMF, ~SUPI)
+  , Bind(<'K_gNB_star', K_gNB_star>, NH_fresh)
+    // Key agreement
+  , Running(~SUPI, ~CN_ID, <'CN','UE',<'K_AMF',K_AMF>>)
+  , Commit(~SUPI, ~CN_ID, <'UE','CN',<'K_AMF',K_AMF>>)
+  , Running(~SUPI, ~TRAN_ID, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Commit(~SUPI, ~TRAN_ID, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Secrecy
+  , Secret(<'K_gNB', K_gNB>)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , HN(~HN_ID)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+    // Helper
+  , UseValues(<~SUPI, ~K_SEAF, K_AMF>)
+  ]->
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH_fresh, NCC_in, ~TRAN_ID, ~CN_ID, ~HN_ID) ]
+
+// Derive new K_AMF
+rule ue_rcv_ho_cmd_new_kamf:
+  let
+    K_AMF_new = KDF(K_AMF, '0x01')
+    K_gNB_new = KDF(K_AMF_new, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH_fresh = KDF(K_AMF_new, K_gNB_new)
+    K_gNB_star = KDF(K_gNB_new, ~TRAN_ID)
+    K_AMF_change_flag = '1'
+    NASC = <'NASC', K_AMF_change_flag>
+    UEC = <'TRAN', ~TRAN_ID>
+    NCC_in = '0'
+    msgIn = <'ho_cmd', NCC_in, NASC, UEC>
+  in
+  [ St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, NH, NCC, ~SRAN_ID, ~CN_ID, ~HN_ID)
+  , !UE(~SUPI, ~PEI, ~CN_ID)
+  , In(senc(msgIn, K_gNB)) ]
+--[ // Executability
+    RekeyingUE(K_AMF_new, K_gNB_star)
+    // Key derivation
+  , KeyDerived(<'K_AMF', K_AMF_new>, ~K_SEAF, K_AMF, ~SUPI)
+  , KeyDerived(<'K_gNB_star', K_gNB_star>, ~K_SEAF, K_AMF_new, ~SUPI)
+  , Bind(<'K_gNB_star', K_gNB_star>, K_gNB_new)
+    // Key agreement
+  , Running(~SUPI, ~CN_ID, <'CN','UE',<'K_AMF',K_AMF_new>>)
+  , Commit(~SUPI, ~CN_ID, <'UE','CN',<'K_AMF',K_AMF_new>>)
+  , Running(~SUPI, ~TRAN_ID, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Commit(~SUPI, ~TRAN_ID, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Secrecy
+  , Secret(<'K_gNB', K_gNB>)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , HN(~HN_ID)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+    // Helper
+  , UseValues(<~SUPI, ~K_SEAF, K_AMF>)
+  ]->
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF_new, K_gNB_star, NH_fresh, NCC_in, ~TRAN_ID, ~CN_ID, ~HN_ID) ]
+
+rule cn_rcv_upnlink_ran_status_transfer_snd_downlink_ran_status_transfer:
+  let
+    msgIn = <'uplink_ran_status_transfer'>
+    msgOut = <'downlink_ran_status_transfer'>
+  in
+  [ St_4_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID)
+  , !N2(~cid_N2_TRAN, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2_SRAN, ~SRAN_ID, ~CN_ID, msgIn) ]
+-->
+  [ St_5_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , SndS(~cid_N2_TRAN, ~CN_ID, ~TRAN_ID, msgOut) ]
+
+rule ue_snd_ho_confirm:
+  let
+    msgOut = <'handover_confirm'>
+  in
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID) ]
+-->
+  [ St_3_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_gNB_star)) ]
+
+rule tran_rcv_ran_status_transfer_and_ho_confirm_snd_ho_notify:
+  let
+    msgInCN = <'downlink_ran_status_transfer'>
+    msgInUE = <'handover_confirm'>
+    msgOut = <'handover_notify'>
+  in
+  [ St_1_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID, ~PDU_SESSION_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , RcvS(~cid_N2, ~CN_ID, ~TRAN_ID, msgInCN)
+  , In(senc(msgInUE, K_gNB_star)) ]
+--[ // Key agreement
+    Commit(~TRAN_ID, ~SUPI, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_2_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , SndS(~cid_N2, ~TRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_ho_notify:
+  let
+    msgIn = <'handover_notify'>
+  in
+  [ St_5_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Executability
+    HandoverExecutionDone('1', K_AMF, K_gNB_star)
+  ]->
+  [ St_6_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID) ]
+
+/** MOBILITY REGISTRATION UPDATE **/
+
+rule ue_snd_registration_req:
+  let
+    msgOut = <'MRU', ~5G_GUTI>
+  in
+  [ St_3_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID) ]
+--[ // Sources
+    GUTI_SND(~5G_GUTI)
+  ]->
+  [ St_4_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_gNB_star)) ]
+
+rule tran_fwd_registration_req:
+  let
+    msgIn = <'MRU', 5G_GUTI>
+    msgOut = <'MRU', 5G_GUTI>
+  in
+  [ St_2_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , In(senc(msgIn, K_gNB_star)) ]
+--[ // Sources
+    GUTI_RCV(5G_GUTI)
+  ]->
+  [ St_3_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID)
+  , SndS(~cid_N2, ~TRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_registration_req_snd_registration_accept:
+  let
+    msgIn = <'MRU', 5G_GUTI>
+    msgOut = <'registration_accept'>
+  in
+  [ St_6_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Sources
+    GUTI_RCV(5G_GUTI)
+  ]->
+  [ St_7_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule cn_snd_identity_req_suci:
+  let
+    msgIn = <'MRU', 5G_GUTI>
+    msgOut = <'identity_request', 'suci'>
+  in
+  [ St_6_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Executability
+    IdentityRequestSUCI(K_AMF, K_gNB_star)
+    // Sources
+  , GUTI_RCV(5G_GUTI)
+  ]->
+  [ St_6a_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule ue_rcv_identity_req_suci_snd_rsp:
+  let
+    SUCI = <aenc(<~SUPI, ~R>, pk_HN), ~HN_ID>
+    msgIn = <'identity_request', 'suci'>
+    msgOut = <'identity_response', SUCI>
+  in
+  [ St_4_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , !HSS(~HN_ID, ~sk_HN)
+  , !Pk(~HN_ID, pk_HN)
+  , Fr(~R)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Key derivation
+    SendSUCI(~SUPI, ~sk_HN)
+  ]->
+  [ St_4a_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule cn_rcv_identity_rsp_suci_snd_identity_req_pei:
+  let
+    SUCI = <conc_supi, ~HN_ID>
+    msgIn = <'identity_response', SUCI>
+    msgOut = <'identity_request', 'pei'>
+  in
+  [ St_6a_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    IdentityResponseSUCI(K_AMF, K_gNB_star)
+  , IdentityRequestPEI(K_AMF, K_gNB_star)
+  ]->
+  [ St_6b_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule ue_rcv_identity_req_pei_snd_rsp:
+  let
+    msgIn = <'identity_request', 'pei'>
+    msgOut = <'identity_response', ~PEI>
+  in
+  [ St_4a_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , !UE(~SUPI, ~PEI, ~CN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+-->
+  [ St_4b_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule cn_rcv_identity_rsp_pei_snd_registration_accept:
+  let
+    msgIn = <'identity_response', PEI>
+    msgOut = <'registration_accept'>
+  in
+  [ St_6b_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    IdentityResponsePEI(K_AMF, K_gNB_star)
+  ]->
+  [ St_7_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule ue_rcv_registration_accept_snd_registration_complete_1:
+  let
+    msgIn = <'registration_accept'>
+    msgOut = <'registration_complete'>
+  in
+  [ St_4b_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    IdentityRequestsDone(K_AMF, K_gNB_star)
+  ]->
+  [ St_5_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule ue_rcv_registration_accept_snd_registration_complete_2:
+  let
+    msgIn = <'registration_accept'>
+    msgOut = <'registration_complete'>
+  in
+  [ St_4_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    NoIdentityRequests(K_AMF, K_gNB_star)
+  ]->
+  [ St_5_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule cn_rcv_registration_complete_snd_rrc_iai:
+  let
+    msgIn = <'registration_complete'>
+    msgOut = <'rrc_inactive_assistance_information'>
+  in
+  [ St_7_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    MobilityRegistrationUpdateDone(K_AMF, K_gNB_star)
+    // Key agreement
+  , Commit(~CN_ID, ~SUPI, <'CN','UE',<'K_AMF',K_AMF>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID_SRAN, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_8_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , SndS(~cid_N2, ~CN_ID, ~TRAN_ID, msgOut) ]
+
+rule tran_rcv_rrc_iai:
+  let
+    msgIn = <'rrc_inactive_assistance_information'>
+  in
+  [ St_3_TRAN(~TRAN_ID, K_gNB_star, ~SRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~CN_ID, ~TRAN_ID, msgIn) ]
+-->
+  [ St_4_TRAN(~TRAN_ID, ~SRAN_ID) ]
+
+/** EXECUTION PHASE (2/2) **/
+
+rule cn_snd_ue_context_release_cmd:
+  let
+    msgOut = <'ue_context_release_command'>
+  in
+  [ St_8_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID) ]
+-->
+  [ St_9_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , SndS(~cid_N2, ~CN_ID, ~SRAN_ID, msgOut) ]
+
+rule sran_rcv_ue_context_release_cmd_snd_complete:
+  let
+    msgIn = <'ue_context_release_command'>
+    msgOut = <'ue_context_release_complete'>
+  in
+  [ St_3_SRAN(~SRAN_ID, K_gNB)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~CN_ID, ~SRAN_ID, msgIn) ]
+-->
+  [ SndS(~cid_N2, ~SRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_ue_context_release_complete:
+  let
+    msgIn = <'ue_context_release_complete'>
+  in
+  [ St_9_CN(~CN_ID, ~K_SEAF, K_AMF, K_gNB_star, 5G_GUTI, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_SRAN, ~PDU_SESSION_ID_TRAN, NH, NCC, ~HN_ID)
+  , !N2(~cid_N2, ~SRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , RcvS(~cid_N2, ~SRAN_ID, ~CN_ID, msgIn) ]
+--[ // Executability
+    HandoverExecutionDone('2', K_AMF, K_gNB_star)
+    // Helper
+  , UseValues(<~SUPI, ~K_SEAF, K_AMF>)
+    // Secrecy
+  , Secret(<'K_SEAF', ~K_SEAF>)
+  , Secret(<'K_AMF', K_AMF>)
+  , Secret(<'K_gNB_star', K_gNB_star>)
+  , Secret(<'SUPI', ~SUPI>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+  , Honest(~HN_ID)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID_SRAN, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_10_CN(~CN_ID, K_AMF, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID_TRAN, ~HN_ID)
+  , PDU_Session(~PDU_SESSION_ID_SRAN, ~CN_ID, ~SUPI, ~SRAN_ID) ]
+
+// Abstraction: fresh keys are initialized and derived for the next handover
+rule init_next_handover:
+  let
+    K_AMF = KDF(~K_SEAF, ~SUPI)
+    K_gNB = KDF(K_AMF, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_AMF, K_gNB)
+    NCC = '0'
+  in
+  [ St_4_TRAN(~TRAN_ID, ~SRAN_ID)
+  , St_5_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , St_10_CN(~CN_ID, K_AMF_OLD, ~SRAN_ID, ~TRAN_ID, ~PDU_SESSION_ID, ~HN_ID)
+  , !NG_RAN(~RAN_ID) // TRAN_ID for the next handover
+  , !UE(~SUPI, ~PEI, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , Fr(~K_SEAF) ]
+--[// Executability
+    HandoverInit(<~SRAN_ID, ~TRAN_ID>, K_AMF_OLD, K_AMF)
+    // Helper
+  , ResetValues(<~SUPI, ~K_SEAF, K_AMF>)
+  , Reset(~K_SEAF_initial, ~SUPI)
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~TRAN_ID>)
+    // Key Derivation
+  , KeyDerived(<'K_AMF', K_AMF>, ~K_SEAF, K_AMF, ~SUPI)
+  , KeyDerived(<'K_gNB', K_gNB>, ~K_SEAF, K_AMF, ~SUPI)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>)
+  , Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB>)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', NH>)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , St_1_SRAN(~TRAN_ID, K_gNB, ~PDU_SESSION_ID, ~RAN_ID)
+  , St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, K_gNB, NCC, ~TRAN_ID, ~CN_ID, ~HN_ID)
+  , St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~TRAN_ID, ~RAN_ID, ~PDU_SESSION_ID, NH, NCC, ~HN_ID) ]
+
+/************************************/
+/*          Sources Lemmas          */
+/************************************/
+
+// Proof: Automatic (~36 s (24 steps), +RTS -N10 -M20G -RTS)
+lemma GUTI_SRC [sources]:
+  " All g #i. GUTI_RCV(g)@i
+      ==> (Ex #j. GUTI_SND(g)@j & j < i)
+           | (Ex #k. KU(g)@k & k < i)
+  "
+
+/************************************/
+/*           Restrictions           */
+/************************************/
+
+restriction OnlyOnce:
+  " All p q #i #j. OnlyOnce(p, q)@i & OnlyOnce(p, q)@j ==> #i = #j "
+
+/* The following restrictions ensure that each UE is initialized with the
+ * correct values. Without them, a UE might send out its K_SEAF or SUPI instead
+ * of a 5G_GUTI. If the UE is initialized with the wrong values, then it is
+ * already controlled by the attacker and lemmas are useless.
+ */
+
+restriction GUTInotSEAF:
+  " All p #i #j. GUTI(p)@i & SEAF(p)@j ==> F "
+
+restriction GUTInotSUPI:
+  " All p #i #j. GUTI(p)@i & SUPI(p)@j ==> F "
+
+restriction GUTInotSKHN:
+  " All p #i #j. GUTI(p)@i & SKHN(p)@j ==> F "
+
+restriction SEAFnotSUPI:
+ " All p #i #j. SEAF(p)@i & SUPI(p)@j ==> F "
+
+restriction SEAFnotHN:
+  " All p #i #j. SEAF(p)@i & HN(p)@j ==> F "
+
+restriction CIDnotSUPI:
+  " All p #i #j. CID(p)@i & SUPI(p)@j ==> F "
+
+restriction PDUnotSUPI:
+  " All p #i #j. PDU(p)@i & SUPI(p)@j ==> F "
+
+restriction SKHNnotSUPI:
+  " All p #i #j. SKHN(p)@i & SUPI(p)@j ==> F "
+
+/***********************************/
+/*          Helper Lemmas          */
+/***********************************/
+
+// Proof: Automatic (~40 s (278 steps), +RTS -N10 -M20G -RTS)
+lemma PDUorigin [use_induction, reuse]:
+  " All p q #i. UsePDUSession(p,q)@i
+      ==> (Ex #j. CreatePDUSession(p,q)@j)
+  "
+
+// Proof: Automatic (~38 s (10 steps), +RTS -N10 -M20G -RTS)
+lemma PDUargsconstant [use_induction, reuse]:
+  " All p q r #i #j. UsePDUSession(p,q)@i & UsePDUSession(p,r)@j
+      ==> (q = r)
+  "
+
+// Proof: Automatic (~41 s (10 steps), +RTS -N10 -M20G -RTS)
+lemma PDUidunique [use_induction, reuse]:
+   " All p q r #i #j. CreatePDUSession(p,q)@i & CreatePDUSession(p,r)@j
+       ==> (q = r)
+   "
+
+// Proof: Automatic (~46 s (82 steps), +RTS -N10 -M20G -RTS)
+lemma ValueOrigin [use_induction, reuse]:
+  " All p #i. UseValues(p)@i
+      ==> (Ex #j. CreateValues(p)@j) | (Ex #j. ResetValues(p)@j)
+  "
+
+// Proof: Automatic (~46 s (78 steps), +RTS -N10 -M20G -RTS)
+lemma ValueReset [use_induction, reuse]:
+  " All p s #i. Reset(p, s)@i
+      ==> (Ex #j. Init('K_SEAF',p)@j & Init('SUPI',s)@j)
+  "
+
+/************************************/
+/*       Executability Lemmas       */
+/************************************/
+
+/* Normal executability for one handover
+ *  - No re-keying of K_AMF
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~3.5 min (87 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_old_kamf_no_id_req:
+  exists-trace
+  " Ex x y
+       s t
+       #i1 #i2
+       #i3 #i4
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+    .
+       // Initialize initial K_AMF
+       Init('K_AMF',x)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x, x, y)@i4
+
+       // Execute the protocol without updating the K_AMF
+     & NoRekeyingCN(x,y)@j1
+     & HandoverPreparationDone(x,y)@j2
+     & NoRekeyingUE(x,y)@j3
+     & HandoverExecutionDone('1',x,y)@j4
+     & NoIdentityRequests(x,y)@j5
+     & MobilityRegistrationUpdateDone(x,y)@j6
+     & HandoverExecutionDone('2',x,y)@j7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. RekeyingCN(a,b)@k)
+     & not (Ex a b #k. RekeyingUE(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a b c d #k. SessionHandover(a,b,c,d)@k ==> #k = #i4)
+
+     & (All a b #k. NoRekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2)
+     & (All a b #k. NoRekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. HomeNetwork(a)@k1
+                       & HomeNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for one handover
+ *  - No re-keying of K_AMF
+ *  - Both identity requests sent in the MRU
+ *
+ * Proof: Automatic (~4 min (105 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_old_kamf_id_req:
+  exists-trace
+  " Ex x y
+       s t
+       #i1 #i2 #i3 #i4
+       #j1 #j2 #j3 #j4 #j5
+       #j6 #j7 #j8 #j9 #j10 #j11
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x, x, y)@i4
+
+       // Execute the protocol without updating the K_AMF
+     & NoRekeyingCN(x,y)@j1
+     & HandoverPreparationDone(x,y)@j2
+     & NoRekeyingUE(x,y)@j3
+     & HandoverExecutionDone('1',x,y)@j4
+     & IdentityRequestSUCI(x,y)@j5
+     & IdentityResponseSUCI(x,y)@j6
+     & IdentityRequestPEI(x,y)@j7
+     & IdentityResponsePEI(x,y)@j8
+     & IdentityRequestsDone(x,y)@j9
+     & MobilityRegistrationUpdateDone(x,y)@j10
+     & HandoverExecutionDone('2',x,y)@j11
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (Ex a b #k. RekeyingCN(a,b)@k)
+     & not (Ex a b #k. RekeyingUE(a,b)@k)
+     & not (Ex a b #k. NoIdentityRequests(a,b)@k)
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a1 a2 a3 a4 #k. SessionHandover(a1, a2, a3, a4)@k ==> #k = #i4)
+
+     & (All a b #k. NoRekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2)
+     & (All a b #k. NoRekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4)
+     & (All a b #k. IdentityRequestSUCI(a,b)@k ==> #k = #j5)
+     & (All a b #k. IdentityResponseSUCI(a,b)@k ==> #k = #j6)
+     & (All a b #k. IdentityRequestPEI(a,b)@k ==> #k = #j7)
+     & (All a b #k. IdentityResponsePEI(a,b)@k ==> #k = #j8)
+     & (All a b #k. IdentityRequestsDone(a,b)@k ==> #k = #j9)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j10)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j11)
+
+     & (All a1 a2 #k1 #k2. CoreNetwork(a1)@k1
+                         & CoreNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. HomeNetwork(a1)@k1
+                         & HomeNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. UserEquipment(a1)@k1
+                         & UserEquipment(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 a3 a4 #k1 #k2. Subscribe(a1,a2)@k1
+                               & Subscribe(a3,a4)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for one handover
+ *  - K_AMF re-keying
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~3 min (89 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_new_kamf_no_id_req:
+  exists-trace
+  " Ex x0 x1
+       y1
+       s t
+       #i1 #i2
+       #i3 #i4
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x0)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1, y1)@i4
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x1,y1)@j1
+     & HandoverPreparationDone(x1,y1)@j2
+     & RekeyingUE(x1,y1)@j3
+     & HandoverExecutionDone('1',x1,y1)@j4
+     & NoIdentityRequests(x1,y1)@j5
+     & MobilityRegistrationUpdateDone(x1,y1)@j6
+     & HandoverExecutionDone('2',x1,y1)@j7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. NoRekeyingCN(a,b)@k)
+     & not (Ex a b #k. NoRekeyingUE(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & not (x0 = x1)
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a1 a2 a3 a4 #k. SessionHandover(a1, a2, a3, a4)@k ==> #k = #i4)
+
+     & (All a b #k. RekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2)
+     & (All a b #k. RekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7)
+
+     & (All a1 a2 #k1 #k2. CoreNetwork(a1)@k1
+                         & CoreNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. HomeNetwork(a1)@k1
+                         & HomeNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. UserEquipment(a1)@k1
+                         & UserEquipment(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 a3 a4 #k1 #k2. Subscribe(a1,a2)@k1
+                               & Subscribe(a3,a4)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for one handover
+ *  - K_AMF re-keying
+ *  - Both identity requests in the MRU
+ *
+ * Proof: Automatic (~4 min (107 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_new_kamf_id_req:
+  exists-trace
+  " Ex x0 x1
+       y1
+       s t
+       #i1 #i2 #i3 #i4
+       #j1 #j2 #j3 #j4 #j5
+       #j6 #j7 #j8 #j9 #j10 #j11
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x0)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1, y1)@i4
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x1,y1)@j1
+     & HandoverPreparationDone(x1,y1)@j2
+     & RekeyingUE(x1,y1)@j3
+     & HandoverExecutionDone('1',x1,y1)@j4
+     & IdentityRequestSUCI(x1,y1)@j5
+     & IdentityResponseSUCI(x1,y1)@j6
+     & IdentityRequestPEI(x1,y1)@j7
+     & IdentityResponsePEI(x1,y1)@j8
+     & IdentityRequestsDone(x1,y1)@j9
+     & MobilityRegistrationUpdateDone(x1,y1)@j10
+     & HandoverExecutionDone('2',x1,y1)@j11
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (Ex a b #k. NoRekeyingCN(a,b)@k)
+     & not (Ex a b #k. NoRekeyingUE(a,b)@k)
+     & not (Ex a b #k. NoIdentityRequests(a,b)@k)
+
+     & not (x0 = x1)
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a1 a2 a3 a4 #k. SessionHandover(a1, a2, a3, a4)@k ==> #k = #i4)
+
+     & (All a b #k. RekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2)
+     & (All a b #k. RekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4)
+     & (All a b #k. IdentityRequestSUCI(a,b)@k ==> #k = #j5)
+     & (All a b #k. IdentityResponseSUCI(a,b)@k ==> #k = #j6)
+     & (All a b #k. IdentityRequestPEI(a,b)@k ==> #k = #j7)
+     & (All a b #k. IdentityResponsePEI(a,b)@k ==> #k = #j8)
+     & (All a b #k. IdentityRequestsDone(a,b)@k ==> #k = #j9)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j10)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j11)
+
+     & (All a1 a2 #k1 #k2. CoreNetwork(a1)@k1
+                         & CoreNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. HomeNetwork(a1)@k1
+                         & HomeNetwork(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 #k1 #k2. UserEquipment(a1)@k1
+                         & UserEquipment(a2)@k2 ==> #k1 = #k2)
+     & (All a1 a2 a3 a4 #k1 #k2. Subscribe(a1,a2)@k1
+                               & Subscribe(a3,a4)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for two consecutive handovers
+ *  - Re-keying of K_AMF
+ *      1. Handover: No
+ *      2. Handover: No
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~110 min (501 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_old_kamf_old_kamf_no_id_req:
+  exists-trace
+  " Ex x1 x2
+       y1 y2
+       s t
+       #i1 #i2 #i3
+       #i4 #i5 #i6
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+       #l1 #l2 #l3
+       #l4 #l5 #l6 #l7
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x1)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x1, x1, y1)@i4
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i5
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x2, y2)@i6
+
+       // Execute the protocol without updating the K_AMF
+     & NoRekeyingCN(x1,y1)@j1
+     & HandoverPreparationDone(x1,y1)@j2
+     & NoRekeyingUE(x1,y1)@j3
+     & HandoverExecutionDone('1',x1,y1)@j4
+     & NoIdentityRequests(x1,y1)@j5
+     & MobilityRegistrationUpdateDone(x1,y1)@j6
+     & HandoverExecutionDone('2',x1,y1)@j7
+
+       // Execute the protocol without updating the K_AMF
+     & NoRekeyingCN(x2,y2)@l1
+     & HandoverPreparationDone(x2,y2)@l2
+     & NoRekeyingUE(x2,y2)@l3
+     & HandoverExecutionDone('1',x2,y2)@l4
+     & NoIdentityRequests(x2,y2)@l5
+     & MobilityRegistrationUpdateDone(x2,y2)@l6
+     & HandoverExecutionDone('2',x2,y2)@l7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (y1 = y2)
+
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. RekeyingCN(a,b)@k)
+     & not (Ex a b #k. RekeyingUE(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & #i4 < #i5
+     & #i5 < #i6
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+     & #j7 < #l7
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i5)
+     & (All a b c d #k. SessionHandover(a,b,c,d)@k ==> #k = #i4 | #k = #i6)
+
+     & (All a b #k. NoRekeyingCN(a,b)@k ==> #k = #j1 | #k = #l1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2 | #k = #l2)
+     & (All a b #k. NoRekeyingUE(a,b)@k ==> #k = #j3 | #k = #l3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4 | #k = #l4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5 | #k = #l5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6 | #k = #l6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7 | #k = #l7)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. HomeNetwork(a)@k1
+                       & HomeNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for two consecutive handovers
+ *  - Re-keying of K_AMF
+ *      1. Handover: No
+ *      2. Handover: Yes
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~70 min (275 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_old_kamf_new_kamf_no_id_req:
+  exists-trace
+  " Ex x1 x2 x3
+       y1 y2
+       s t
+       #i1 #i2 #i3
+       #i4 #i5 #i6
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+       #l1 #l2  #l3
+       #l4 #l5 #l6 #l7
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x1)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x1, x1, y1)@i4
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i5
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3, y2)@i6
+
+       // Execute the protocol, update the K_AMF
+     & NoRekeyingCN(x1,y1)@j1
+     & HandoverPreparationDone(x1,y1)@j2
+     & NoRekeyingUE(x1,y1)@j3
+     & HandoverExecutionDone('1',x1,y1)@j4
+     & NoIdentityRequests(x1,y1)@j5
+     & MobilityRegistrationUpdateDone(x1,y1)@j6
+     & HandoverExecutionDone('2',x1,y1)@j7
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x3,y2)@l1
+     & HandoverPreparationDone(x3,y2)@l2
+     & RekeyingUE(x3,y2)@l3
+     & HandoverExecutionDone('1',x3,y2)@l4
+     & NoIdentityRequests(x3,y2)@l5
+     & MobilityRegistrationUpdateDone(x3,y2)@l6
+     & HandoverExecutionDone('2',x3,y2)@l7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (y1 = y2)
+
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & #i4 < #i5
+     & #i5 < #i6
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+     & #j7 < #l7
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i5)
+     & (All a b c d #k. SessionHandover(a,b,c,d)@k ==> #k = #i4 | #k = #i6)
+
+     & (All a b #k. NoRekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. RekeyingCN(a,b)@k ==> #k = #l1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2 | #k = #l2)
+     & (All a b #k. NoRekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. RekeyingUE(a,b)@k ==> #k = #l3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4 | #k = #l4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5 | #k = #l5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6 | #k = #l6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7 | #k = #l7)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. HomeNetwork(a)@k1
+                       & HomeNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for two consecutive handovers
+ *  - Re-keying of K_AMF
+ *      1. Handover: Yes
+ *      2. Handover: Yes
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~110 min (518 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_new_kamf_new_kamf_no_id_req:
+  exists-trace
+  " Ex x1 x2 x3 x4
+       y1 y2
+       s t
+       #i1 #i2 #i3
+       #i4 #i5 #i6
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+       #l1 #l2 #l3
+       #l4 #l5 #l6 #l7
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x1)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x1, x2, y1)@i4
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x2, x3)@i5
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x3, x4, y2)@i6
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x2,y1)@j1
+     & HandoverPreparationDone(x2,y1)@j2
+     & RekeyingUE(x2,y1)@j3
+     & HandoverExecutionDone('1',x2,y1)@j4
+     & NoIdentityRequests(x2,y1)@j5
+     & MobilityRegistrationUpdateDone(x2,y1)@j6
+     & HandoverExecutionDone('2',x2,y1)@j7
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x4,y2)@l1
+     & HandoverPreparationDone(x4,y2)@l2
+     & RekeyingUE(x4,y2)@l3
+     & HandoverExecutionDone('1',x4,y2)@l4
+     & NoIdentityRequests(x4,y2)@l5
+     & MobilityRegistrationUpdateDone(x4,y2)@l6
+     & HandoverExecutionDone('2',x4,y2)@l7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (y1 = y2)
+
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & #i4 < #i5
+     & #i5 < #i6
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+     & #j7 < #l7
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i5)
+     & (All a b c d #k. SessionHandover(a,b,c,d)@k ==> #k = #i4 | #k = #i6)
+
+     & (All a b #k. RekeyingCN(a,b)@k ==> #k = #j1 | #k = l1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2 | #k = l2)
+     & (All a b #k. RekeyingUE(a,b)@k ==> #k = #j3 | #k = l3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4 | #k = l4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5 | #k = l5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6 | #k = l6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7 | #k = l7)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. HomeNetwork(a)@k1
+                       & HomeNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/* Normal executability for two consecutive handovers
+ *  - Re-keying of K_AMF
+ *      1. Handover: Yes
+ *      2. Handover: No
+ *  - No identity requests in the MRU
+ *
+ * Proof: Automatic (~67 min (278 steps), +RTS -N10 -M20G -RTS)
+ */
+lemma executability_new_kamf_old_kamf_no_id_req:
+  exists-trace
+  " Ex x1 x2 x3
+       y1 y2
+       s t
+       #i1 #i2 #i3
+       #i4 #i5 #i6
+       #j1 #j2 #j3
+       #j4 #j5 #j6 #j7
+       #l1 #l2 #l3
+       #l4 #l5 #l6 #l7
+    .
+       // Initialize initial K_gNB
+       Init('K_AMF',x1)@i1
+
+       // Initialize networks
+     & RadioAccessNetwork(s)@i2
+     & RadioAccessNetwork(t)@i3
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x1, x2, y1)@i4
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x2, x3)@i5
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x3, x3, y2)@i6
+
+       // Execute the protocol, update the K_AMF
+     & RekeyingCN(x2,y1)@j1
+     & HandoverPreparationDone(x2,y1)@j2
+     & RekeyingUE(x2,y1)@j3
+     & HandoverExecutionDone('1',x2,y1)@j4
+     & NoIdentityRequests(x2,y1)@j5
+     & MobilityRegistrationUpdateDone(x2,y1)@j6
+     & HandoverExecutionDone('2',x2,y1)@j7
+
+       // Execute the protocol, update the K_AMF
+     & NoRekeyingCN(x3,y2)@l1
+     & HandoverPreparationDone(x3,y2)@l2
+     & NoRekeyingUE(x3,y2)@l3
+     & HandoverExecutionDone('1',x3,y2)@l4
+     & NoIdentityRequests(x3,y2)@l5
+     & MobilityRegistrationUpdateDone(x3,y2)@l6
+     & HandoverExecutionDone('2',x3,y2)@l7
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (y1 = y2)
+
+     & not (Ex a b #k. IdentityRequestSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityResponseSUCI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestPEI(a,b)@k)
+     & not (Ex a b #k. IdentityResponsePEI(a,b)@k)
+     & not (Ex a b #k. IdentityRequestsDone(a,b)@k)
+
+     & #i4 < #i5
+     & #i5 < #i6
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+     & #j7 < #l7
+
+     & (All a #k. Init('K_AMF',a)@k ==> #k = #i1)
+     & (All a #k. RadioAccessNetwork(a)@k ==> #k = #i2 | #k = #i3)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i5)
+     & (All a b c d #k. SessionHandover(a,b,c,d)@k ==> #k = #i4 | #k = #i6)
+
+     & (All a b #k. NoRekeyingCN(a,b)@k ==> #k = #l1)
+     & (All a b #k. RekeyingCN(a,b)@k ==> #k = #j1)
+     & (All a b #k. HandoverPreparationDone(a,b)@k ==> #k = #j2 | #k = #l2)
+     & (All a b #k. RekeyingUE(a,b)@k ==> #k = #j3)
+     & (All a b #k. NoRekeyingUE(a,b)@k ==> #k = #l3)
+     & (All a b #k. HandoverExecutionDone('1',a,b)@k ==> #k = #j4 | #k = #l4)
+     & (All a b #k. NoIdentityRequests(a,b)@k ==> #k = #j5 | #k = #l5)
+     & (All a b #k. MobilityRegistrationUpdateDone(a,b)@k ==> #k = #j6 | #k = #l6)
+     & (All a b #k. HandoverExecutionDone('2',a,b)@k ==> #k = #j7 | #k = #l7)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. HomeNetwork(a)@k1
+                       & HomeNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/************************************/
+/*         Agreement Lemmas         */
+/************************************/
+
+/* Injective agreement of K_AMF: UE -> CN
+ *
+ * If a UE commits to a key K_AMF, then at least one of the following are
+ * true:
+ *  - There exists exactly one CN that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~12.5 min (1007 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = SUPI
+ *  b = CN_ID
+ *  r = K_AMF
+ */
+lemma injectiveagreement_ue_cn_k_amf:
+  " All a b q #i. Commit(a,b,<'UE','CN',<'K_AMF',q>>)@i
+    ==> (Ex #j. Running(b,a,<'UE','CN',<'K_AMF',q>>)@j
+         & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','CN',<'K_AMF',q>>)@i2
+           & not (#i2 = #i))
+         ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/* Injective agreement of K_AMF: CN -> UE
+ *
+ * If a CN commits to a key K_AMF, then at least one of the following are
+ * true:
+ *  - There exists exactly one UE that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~24 min (2753 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = CN_ID
+ *  b = SUPI
+ *  r = K_AMF
+ */
+lemma injectiveagreement_cn_ue_k_amf:
+  " All a b q #i. Commit(a,b,<'CN','UE',<'K_AMF',q>>)@i
+    ==> (Ex #j. Running(b,a,<'CN','UE',<'K_AMF',q>>)@j
+         & not (Ex a2 b2 #i2. Commit(a2,b2,<'CN','UE',<'K_AMF',q>>)@i2
+           & not (#i2 = #i))
+         ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/* Injective agreement of K_gNB_star: UE -> TRAN
+ *
+ * If a UE commits to a key K_gNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one RAN that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~15 min (1492 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = SUPI
+ *  b = TRAN_ID
+ *  r = K_gNB_star
+ */
+lemma injectiveagreement_ue_tran_k_gnb_star:
+  " All a b r #i. Commit(a,b,<'UE','TRAN',<'K_gNB_star',r>>)@i
+   ==> (Ex #j. Running(b,a,<'UE','TRAN',<'K_gNB_star',r>>)@j
+        & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','TRAN',<'K_gNB_star',r>>)@i2
+          & not (#i2 = #i))
+        ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/* Injective agreement of K_gNB_star: TRAN -> UE
+ *
+ * If a RAN commits to a key K_gNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one UE that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~10 min (1520 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = TRAN_ID
+ *  b = SUPI
+ *  r = K_gNB_star
+ */
+lemma injectiveagreement_tran_ue_k_gnb_star:
+  " All a b r #i. Commit(a,b,<'TRAN','UE',<'K_gNB_star',r>>)@i
+    ==> (Ex #j. Running(b,a,<'TRAN','UE',<'K_gNB_star',r>>)@j
+         & not (Ex a2 b2 #i2. Commit(a2,b2,<'TRAN','UE',<'K_gNB_star',r>>)@i2
+           & not (#i2 = #i))
+         ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/************************************/
+/*          Secrecy Lemmas          */
+/************************************/
+
+/* Secrecy of SUPI
+ *
+ * If an attacker knows a SUPI, then at least one of the following are
+ * true:
+ *  - The identifier itself was revealed to the attacker
+ *  - The secret key of the home network of the UE was revealed to the attacker
+ *
+ * Proof: Automatic (~17 min (3543 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   s = SUPI
+ *   p = sk_HN
+ */
+lemma secret_supi:
+  " All s #i. Secret(<'SUPI',s>)@i
+    ==> (not (Ex #j. K(s)@j))
+         | (Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
+         | (Ex p #j. SendSUCI(s,p)@j
+            & (Ex X #k. Rev(X,<'SK_HN',p>)@k))
+  "
+
+/* Secrecy of K_SEAF
+ *
+ * If an attacker knows a key K_SEAF, then the following is true:
+ *  - The key itself was revealed to the attacker
+ *
+ * Proof: Automatic (~6 min (959 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p = K_SEAF
+ */
+lemma secret_k_seaf:
+  " All p #i. Secret(<'K_SEAF',p>)@i
+    ==> (not (Ex #j. K(p)@j))
+         | (Ex X #j. Rev(X,<'K_SEAF',p>)@j & Honest(X)@i)
+  "
+
+/* Secrecy of K_AMF
+ *
+ * If an attacker knows a key K_AMF, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it was derived from was revealed to the attacker
+ *  - The K_SEAF and SUPI that it originates from were revealed to the attacker
+ *
+ * Proof: Automatic (~65 min (7581 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p   = K_SEAF
+ *  q r = K_AMF
+ *  s   = SUPI
+ *  t   = sk_HN
+ */
+lemma secret_k_amf:
+  " All p q r s #i #j.
+        Secret(<'K_AMF',q>)@i
+      & KeyDerived(<'K_AMF',q>,p,r,s)@j
+      ==> (not (Ex #k. K(q)@k))
+           | (Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'K_AMF',r>)@k & Honest(X)@i)
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & ((Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
+                   | (Ex t #j. SendSUCI(s,t)@j
+                      & (Ex X #k. Rev(X,<'SK_HN',t>)@k))))
+  "
+
+/* Secrecy of K_gNB
+ *
+ * If an attacker knows a key K_gNB, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it originates from was revealed to the attacker
+ *  - The K_SEAF and SUPI that it originates from were revealed to the attacker
+ *
+ * Proof: Automatic (~19 min (2898 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p a = K_SEAF
+ *  q b = K_AMF
+ *  r   = K_gNB
+ *  s c = SUPI
+ *  d   = sk_HN
+ */
+lemma secret_k_gnb:
+  " All p q r s #i #j.
+        Secret(<'K_gNB',r>)@i
+      & KeyDerived(<'K_gNB',r>,p,q,s)@j
+      ==> (not (Ex #k. K(r)@k))
+           | (Ex X #k. Rev(X,<'K_gNB',r>)@k & Honest(X)@i)
+           | (Ex a b c #k. KeyDerived(<'K_AMF',q>,a,b,c)@k
+              & ((Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+                  | (Ex X #k. Rev(X,<'K_AMF',b>)@k & Honest(X)@i)))
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & ((Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
+                   | (Ex d #j. SendSUCI(s,d)@j
+                      & (Ex X #k. Rev(X,<'SK_HN',d>)@k))))
+  "
+
+/* Secrecy of K_gNB_star
+ *
+ * If an attacker knows a key K_gNB_star, then at least one of the following
+ * are true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it originates from was revealed to the attacker
+ *  - The K_SEAF and SUPI that it originates from were revealed to the attacker
+ *  - The key that is was derived from was revealed to the attacker
+ *  - The secure channel that its parent key was sent over was compromised by
+ *    the attacker
+ *
+ * Proof: Automatic (~78 min (9201 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p a = K_SEAF
+ *  q b = K_AMF
+ *  r   = K_gNB_star
+ *  s c = SUPI
+ *  t   = NH
+ *  d   = sk_HN
+ */
+lemma secret_k_gnb_star:
+  " All p q r s t #i #j.
+        Secret(<'K_gNB_star',r>)@i
+      & KeyDerived(<'K_gNB_star',r>,p,q,s)@j
+      & Bind(<'K_gNB_star',r>,t)@j
+      ==> (not (Ex #k. K(r)@k))
+           | (Ex X #k. Rev(X,<'K_gNB',r>)@k & Honest(X)@i)
+           | (Ex a b c #k. KeyDerived(<'K_AMF',q>,a,b,c)@k
+              & ((Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+                  | (Ex X #k. Rev(X,<'K_AMF',b>)@k & Honest(X)@i)))
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & ((Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
+                   | (Ex d #j. SendSUCI(s,d)@j
+                      & (Ex X #k. Rev(X,<'SK_HN',d>)@k))))
+           | (Ex X #k. Rev(X,<'NH',t>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,'secureChannel')@k & Honest(X)@i)
+  "
+
+end

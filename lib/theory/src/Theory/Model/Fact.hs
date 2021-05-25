@@ -525,8 +525,9 @@ showFactAnnotation an = case an of
 prettyFact :: Document d => (t -> d) -> Fact t -> d
 prettyFact ppTerm (Fact tag an ts)
   | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
-  | otherwise                     = ppFact (showFactTag tag) ts <> ppAnn an
+  | otherwise                     = ppFact (formatIfRestriction . showFactTag $ tag) ts <> ppAnn an
   where
+    formatIfRestriction xs = if "restr_" `isPrefixOf` xs then filter (/='#') xs else xs
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
@@ -535,8 +536,9 @@ prettyFact ppTerm (Fact tag an ts)
 prettyFactSubscript :: Document d => (t -> d) -> Fact t -> d
 prettyFactSubscript ppTerm (Fact tag an ts)
   | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
-  | otherwise                     = ppFact (subscript (showFactTag tag)) ts <> ppAnn an
+  | otherwise                     = ppFact (formatFactTag . showFactTag $ tag) ts <> ppAnn an
   where
+    formatFactTag xs = if "restr_" `isPrefixOf` xs then takeWhile (/='#') xs else subscript xs
     subscript [] = []
     subscript ['_'] = []
     subscript ('_':xr) = if '_' `notElem` xr then subscript ("<sub>"++xr++"</sub>") else '_':xr
@@ -544,7 +546,7 @@ prettyFactSubscript ppTerm (Fact tag an ts)
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
-    
+
 
 -- | Pretty print a 'NFact'.
 prettyNFact :: (Document d, Show v) => NFact v -> d
@@ -560,4 +562,4 @@ prettyNFactSubscript = prettyFactSubscript prettyNTermSubscript
 
 -- | Pretty print a 'LFact' with subscript tags.
 prettyLNFactSubscript :: Document d => LNFact -> d
-prettyLNFactSubscript fa = prettyFactSubscript prettyNTermSubscript fa
+prettyLNFactSubscript = prettyFactSubscript prettyNTermSubscript
