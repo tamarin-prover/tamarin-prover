@@ -1,8 +1,8 @@
 filename, tamarin-prover result , tamarin-prover time
-./KEMTLS/kemtls-clientauth.spthy,,6004.937831074
+./KEMTLS/kemtls-clientauth.spthy,All ok in 500 minutes,6004.937831074
 ./KEMTLS/kemtls-noaead.spthy,  false_exec (all-traces): falsified - found trace (11 steps)   false_execbis (all-traces): falsified - found trace (10 steps)   true_auth (all-traces): verified (165 steps)   false_secserv (all-traces): falsified - found trace (18 steps)   true_secclient (all-traces): verified (872 steps) ,2439.728135841
 ./KEMTLS/kemtls.spthy,  false_exec (all-traces): falsified - found trace (11 steps)   false_execbis (all-traces): falsified - found trace (10 steps)   true_auth (all-traces): verified (63 steps)   false_secserv (all-traces): falsified - found trace (19 steps)   true_secclient (all-traces): verified (173 steps) ,564.809684907
-./LAKE/lake-edhoc-DHmode-FS.spthy,,477.911013805
+./LAKE/lake-edhoc-DHmode-FS.spthy,All ok in 8 minutes,477.911013805
 ./LAKE/lake-edhoc-DHmode-KCI.spthy,  true_secretIDH (all-traces): verified (120 steps)   false_secretRDH (all-traces): falsified - found trace (25 steps)   false_honnestauthRIDH (all-traces): falsified - found trace (25 steps)   true_honnestauthIRDH (all-traces): verified (21 steps) ,1885.062434114
 ./LAKE/lake-edhoc.spthy,  true_secretR (all-traces): verified (20 steps)   true_secretI (all-traces): verified (19 steps)   false_executableR (all-traces): falsified - found trace (7 steps)   false_executableI (all-traces): falsified - found trace (6 steps)   false_executableIhonnest (all-traces): falsified - found trace (8 steps)   false_executableRhonnest (all-traces): falsified - found trace (9 steps)   false_dishonnestnoauthRI (all-traces): falsified - found trace (15 steps)   false_dishonnestnoauthIR (all-traces): falsified - found trace (13 steps)   true_honnestauthRI (all-traces): verified (8 steps)   true_honnestauthIR (all-traces): verified (8 steps) ,237.738694681
 ./SSH/ssh-with-one-forwarding.spthy,,6017.925119754
