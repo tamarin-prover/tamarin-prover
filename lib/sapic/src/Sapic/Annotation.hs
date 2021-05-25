@@ -30,7 +30,7 @@ module Sapic.Annotation (
     , unAnProcess
     , getProcessNames
     , setProcessNames
-    ,annElse,modifyProcessParsedAnnotation) where
+    ,annElse) where
 import           Data.Data
 -- import Data.List
 -- import Data.Foldable
@@ -78,7 +78,7 @@ data ProcessAnnotation v = ProcessAnnotation {
 instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessParsedAnnotation = parsingAnn
-        setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = opn <> pn }
+        setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = pn }
         defaultAnnotation   = mempty
 
 mayMerge :: Maybe a -> Maybe a -> Maybe a

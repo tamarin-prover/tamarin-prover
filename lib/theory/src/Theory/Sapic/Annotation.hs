@@ -16,7 +16,8 @@ module Theory.Sapic.Annotation (
     -- types
       ProcessParsedAnnotation(..)
     -- utilities
-    , modifyProcessParsedAnnotation
+    , mapProcessParsedAnnotation
+    , mappendProcessParsedAnnotation
     -- type classes
     , GoodAnnotation(..)
 ,applyAnn) where
@@ -59,7 +60,7 @@ deriving instance Data ProcessParsedAnnotation
 instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing emptySubst
     mappend p1 p2 = ProcessParsedAnnotation
-        (processnames p1)-- `mappend` processnames  p2)
+        (processnames p1 `mappend` processnames p2) 
         (case (location p1, location p2) of
              (Nothing, l2) -> l2
              (l1, Nothing) -> l1
@@ -76,7 +77,7 @@ instance Semigroup ProcessParsedAnnotation where
 --      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
 class GoodAnnotation a where
     getProcessParsedAnnotation :: a ->  ProcessParsedAnnotation
-    setProcessParsedAnnotation :: ProcessParsedAnnotation -> a -> a
+    setProcessParsedAnnotation :: ProcessParsedAnnotation -> a -> a -- overwrites process annotation
     defaultAnnotation :: a
 
 instance GoodAnnotation ProcessParsedAnnotation
@@ -85,10 +86,15 @@ instance GoodAnnotation ProcessParsedAnnotation
         setProcessParsedAnnotation pn _ = pn
         defaultAnnotation   = mempty
 
-modifyProcessParsedAnnotation :: GoodAnnotation a =>
+-- | apply @f to ProcessParsedAnnotation within @ann@
+mapProcessParsedAnnotation :: GoodAnnotation a =>
     (ProcessParsedAnnotation -> ProcessParsedAnnotation) -> a -> a
-modifyProcessParsedAnnotation f ann =
+mapProcessParsedAnnotation f ann =
     setProcessParsedAnnotation (f $ getProcessParsedAnnotation ann) ann
+
+-- | mappend (i.e., overwrite or add as needed) to processParsedAnnotation
+mappendProcessParsedAnnotation :: GoodAnnotation a => ProcessParsedAnnotation -> a -> a
+mappendProcessParsedAnnotation pn = mapProcessParsedAnnotation (`mappend` pn)
 
 applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =
@@ -100,7 +106,7 @@ applyProcessParsedAnnotation subst ann =
                     }
 
 applyAnn :: (GoodAnnotation a, Apply t' SapicTerm) => t' -> a -> a
-applyAnn subst = modifyProcessParsedAnnotation (applyProcessParsedAnnotation subst)
+applyAnn subst = mapProcessParsedAnnotation (applyProcessParsedAnnotation subst)
 
 instance (Apply (Subst Name LVar) ProcessParsedAnnotation) where
     apply = applyAnn

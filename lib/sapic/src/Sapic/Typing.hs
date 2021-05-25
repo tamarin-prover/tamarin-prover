@@ -202,13 +202,13 @@ renameUnique' initSubst p = do
             ProcessNull _ -> return p'
             ProcessAction ac ann pl -> do
                 (subst,inv) <- mkSubst $ bindingsAct ann ac
-                let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
+                let ann' = mappendProcessParsedAnnotation (mempty {backSubstitution = inv}) ann
                 let ac' = apply subst ac -- use apply instead applyM because we want to ignore capturing, i.e., rename bound names...
                 pl' <- renameUnique' subst pl
                 return $ ProcessAction ac' ann' pl'
             ProcessComb comb ann pl pr -> do
                 (subst,inv) <- mkSubst $ bindingsComb ann comb
-                let ann' = modifyProcessParsedAnnotation (`mappend` (mempty {backSubstitution = inv})) ann
+                let ann' = mappendProcessParsedAnnotation (mempty {backSubstitution = inv}) ann
                 let comb' = apply subst comb
                 pl' <- renameUnique' subst pl
                 pr' <- renameUnique' subst pr
