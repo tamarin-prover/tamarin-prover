@@ -76,6 +76,7 @@ parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory fla
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString "<unknown source>" (lemma Nothing)
 
+
 ------------------------------------------------------------------------------
 -- Parsing Theories
 ------------------------------------------------------------------------------
@@ -133,7 +134,12 @@ liftedAddLemma thy lem = do
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+    | (StandRule (DefdRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
+        return thy''
+    | (StandRule (SAPiCRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
         rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
