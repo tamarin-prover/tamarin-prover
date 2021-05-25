@@ -59,7 +59,7 @@ deriving instance Data ProcessParsedAnnotation
 instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing emptySubst
     mappend p1 p2 = ProcessParsedAnnotation
-        (processnames p1 `mappend` processnames  p2)
+        (processnames p1)-- `mappend` processnames  p2)
         (case (location p1, location p2) of
              (Nothing, l2) -> l2
              (l1, Nothing) -> l1
@@ -93,7 +93,7 @@ modifyProcessParsedAnnotation f ann =
 applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =
         ann {location = fmap (apply subst) (location ann)
-                    -- , backSubstitution = undefined 
+                    -- , backSubstitution = undefined
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables
                     -- are renamed, modify the backtranslation by hand.
