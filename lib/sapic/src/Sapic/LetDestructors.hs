@@ -42,7 +42,7 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
       (case  L.foldl (findRule funsym) Nothing rules of
         -- if the desrtructor does not have any associated rule, we simply substitute in the process, to optimize. TODO -> should it be possible to declare a destructor without an equation ?
-        Nothing  | svar `S.member` mv -> do
+        Nothing  | not(svar `S.member` mv) -> do
             res <- applyM (substFromList (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
@@ -70,7 +70,7 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
                 subst = substFromList [(outvar, t1')]
                 new_an = annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
           )
-    ( (LIT (Var svar)) , _ , _ )  | svar `S.member` mv -> do
+    ( (LIT (Var svar)) , _ , _ )  | not(svar `S.member` mv) -> do
             res <- applyM (substFromList  (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
             npl <- mapProc rules res
             return npl
