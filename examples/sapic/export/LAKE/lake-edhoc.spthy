@@ -2,7 +2,7 @@
  * Protocol:    LAKE
    https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-02
 
-   A lightweight DD based key exchange.
+   A lightweight DH based key exchange.
 
    It comes with two possible modes, either a signature is used for
    authentication, or a long term dh key. This file present the signature only
@@ -38,7 +38,7 @@ let I2(~skI:skey) =         // Initiator using signatures
     if verify(signed,< pkR,TH_2,rAD_2,MAC_2>,pkR) = true then
         let TH_3 = hash(<TH_2,cypher_2,rC_R>) in
 	let PRK_4x3m = PRK_3e2m in
-        event AcceptI(<pk(~skI),pkR,PRK_3e2m,PRK_4x3m>);
+        event AcceptI(pk(~skI),pkR,PRK_3e2m,PRK_4x3m);
         let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
         let MAC_3 = senc(<TH_3,pk(~skI),'AD_3'>,K_3m) in
         let Signed3 = sign(<pk(~skI),TH_3,'AD_3',MAC_3> ,~skI) in
@@ -61,7 +61,7 @@ let R(~skR:skey) =
        let MAC_2 = senc(<TH_2,pk(~skR),'AD_2'>,K_2m) in
        let Signed2 = sign(<pk(~skR),TH_2,'AD_2',MAC_2> ,~skR) in
        let cypher_2 = senc( <pk(~skR),Signed2,'AD_2' >  ,K_2e) in
-       event DerivedR(<pk(~skR),PRK_3e2m>);
+       event DerivedR(pk(~skR),PRK_3e2m);
        out(<rC_I,gB,'C_R',cypher_2>);
        in(<'C_R', cypher_3,rAD_3>);
        let TH_3 = hash(<TH_2,cypher_2,'C_R'>) in
@@ -73,50 +73,54 @@ let R(~skR:skey) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
        if verify(Signed3, <pkI,TH_3,rAD_3,MAC_3 > , pkI) = true then
-          event AcceptR(<pkI,pk(~skR),PRK_4x3m>)
+          event AcceptR(pkI,pk(~skR),PRK_4x3m)
 
 process:
 !(new ~skR:skey; new ~skI:skey; out(<pk(~skR),pk(~skI)>);
-  event Honnest(<pk(~skR), 'Resp'>);
-  event Honnest(<pk(~skI), 'Init'>);
+  event Honnest(pk(~skR), 'Resp');
+  event Honnest(pk(~skI), 'Init');
        !(I2(~skI) | R(~skR) )
 )
 
-lemma true_secretR[reuse]: //secrecy of the key
-   "(not (Ex pkI pkR k4 #i #j #l. (AcceptR(<pkI,pkR,k4>)@i & KU(k4)@j & Honnest(<pkI, 'Init'>)@l ) ))"
+lemma secretR[reuse]: //secrecy of the key
+   "(not (Ex pkI pkR k4 #i #j #l. (AcceptR(pkI,pkR,k4)@i & KU(k4)@j & Honnest(pkI, 'Init')@l ) ))"
 
-lemma true_secretI[reuse]: //secrecy of the key
-   "(not (Ex pkI pkR k3 k4 #i #j #l. (AcceptI(<pkI,pkR,k3,k4>)@i & KU(k4)@j & Honnest(<pkR, 'Resp'>)@l ) ))"
-
-
-lemma false_executableR: // sanity check
-  "not(Ex pkI pkR k3 #i. AcceptR(<pkI,pkR,k3>)@i)"
+lemma secretI[reuse]: //secrecy of the key
+   "(not (Ex pkI pkR k3 k4 #i #j #l. (AcceptI(pkI,pkR,k3,k4)@i & KU(k4)@j & Honnest(pkR, 'Resp')@l ) ))"
 
 
-lemma false_executableI: // sanity check
-  "not(Ex pkI pkR k3 k4 #i. AcceptI(<pkI,pkR,k3,k4>)@i)"
+lemma executableR: // sanity check
+  exists-trace
+ "Ex pkI pkR k3 #i. AcceptR(pkI,pkR,k3)@i"
 
-lemma false_executableIhonnest: // sanity check
-  "not(Ex pkI pkR k3 k4 #i #l. (AcceptI(<pkI,pkR,k3,k4>)@i & Honnest(<pkR, 'Resp'>)@l) )"
 
-lemma false_executableRhonnest:
-   "(not (Ex pkI pkR k4 #i #l. (AcceptR(<pkI,pkR,k4>)@i & Honnest(<pkI, 'Init'>)@l ) ))"
+lemma executableI: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i"
+
+lemma executableIhonnest: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 k4 #i #l. (AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l) "
+
+lemma executableRhonnest:
+  exists-trace
+   "Ex pkI pkR k4 #i #l. (AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ) "
 
 lemma false_dishonnestnoauthRI:  // should be false as the attacker can play initiator
- "All pkI pkR k4 #i. AcceptR(<pkI,pkR,k4>)@i ==>
-    (Ex #j k3. j<i & (AcceptI(<pkI,pkR,k3,k4>)@j))"
+ "All pkI pkR k4 #i. AcceptR(pkI,pkR,k4)@i ==>
+    (Ex #j k3. j<i & (AcceptI(pkI,pkR,k3,k4)@j))"
 
 lemma false_dishonnestnoauthIR:  // should be false, as attacker can play responder
- "All pkI pkR k3 k4 #i. AcceptI(<pkI,pkR,k3,k4>)@i ==>
-    (Ex #j. j<i & (DerivedR(<pkR,k3>)@j))"
+ "All pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i ==>
+    (Ex #j. j<i & (DerivedR(pkR,k3)@j))"
 
-lemma true_honnestauthRI:  // should be true
- "All pkI pkR k4 #i #l. AcceptR(<pkI,pkR,k4>)@i & Honnest(<pkI, 'Init'>)@l ==>
-    (Ex #j k3. j<i & (AcceptI(<pkI,pkR,k3,k4>)@j))"
+lemma honnestauthRI:  // should be true
+ "All pkI pkR k4 #i #l. AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ==>
+    (Ex #j k3. j<i & (AcceptI(pkI,pkR,k3,k4)@j))"
 
-lemma true_honnestauthIR:  // should be true
- "All pkI pkR k3 k4 #i #l. AcceptI(<pkI,pkR,k3,k4>)@i & Honnest(<pkR, 'Resp'>)@l ==>
-    (Ex #j. j<i & (DerivedR(<pkR,k3>)@j))"
+lemma honnestauthIR:  // should be true
+ "All pkI pkR k3 k4 #i #l. AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l ==>
+    (Ex #j. j<i & (DerivedR(pkR,k3)@j))"
 
 
 // lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)

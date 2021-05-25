@@ -42,7 +42,7 @@ let I2(~skI:skey) =         // Initiator using signatures
     if verify(signed,< pkR,TH_2,rAD_2,MAC_2>,pkR) = true then
         let TH_3 = hash(<TH_2,cypher_2,rC_R>) in
 	let PRK_4x3m = PRK_3e2m in
-        event AcceptI(<pk(~skI),pkR,PRK_3e2m,PRK_4x3m>);
+        event AcceptI(pk(~skI),pkR,PRK_3e2m,PRK_4x3m);
         let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
         let MAC_3 = senc(<TH_3,pk(~skI),'AD_3'>,K_3m) in
         let Signed3 = sign(<pk(~skI),TH_3,'AD_3',MAC_3> ,~skI) in
@@ -69,7 +69,7 @@ let I1(~kI) =         // Initiator using DH long term key
     if MAC2 = mac then
         let TH_3 = hash(<TH_2,cypher_2,rC_R>) in
 	let PRK_4x3m =  hkdfextract(PRK_3e2m, gY^~kI) in
-        event AcceptI(<gI,gR,PRK_3e2m,PRK_4x3m>);
+        event AcceptI(gI,gR,PRK_3e2m,PRK_4x3m);
 
         let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
         let MAC_3 = senc(<TH_3,gI,'AD_3'>,K_3m) in
@@ -95,7 +95,7 @@ let R(~skR:skey,~kR) =
        let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
        let MAC_2 = senc(<TH_2,gR,'AD_2'>,K_2m) in
        let cypher_2 = senc( <gR,MAC_2,'AD_2' >  ,K_2e) in
-       event DerivedR(<gR,PRK_3e2m>);
+       event DerivedR(gR,PRK_3e2m);
        out(<rC_I,gY,'C_R',cypher_2>);
        in(<'C_R', cypher_3,rAD_3>);
        let TH_3 = hash(<TH_2,cypher_2,'C_R'>) in
@@ -110,7 +110,7 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,gI,rAD_3>,K_3m) in
        if MAC_3 = mac3 then
-          event AcceptR(<gI,gR,PRK_4x3m>)
+          event AcceptR(gI,gR,PRK_4x3m)
        )
     else
        // signature auth used
@@ -119,7 +119,7 @@ let R(~skR:skey,~kR) =
        let MAC_2 = senc(<TH_2,pk(~skR),'AD_2'>,K_2m) in
        let Signed2 = sign(<pk(~skR),TH_2,'AD_2',MAC_2> ,~skR) in
        let cypher_2 = senc( <pk(~skR),Signed2,'AD_2' >  ,K_2e) in
-       event DerivedR(<pk(~skR),PRK_3e2m>);
+       event DerivedR(pk(~skR),PRK_3e2m);
        out(<rC_I,gY,'C_R',cypher_2>);
        in(<'C_R', cypher_3,rAD_3>);
        let TH_3 = hash(<TH_2,cypher_2,'C_R'>) in
@@ -131,59 +131,61 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
        if verify(Signed3, <pkI,TH_3,rAD_3,MAC_3 > , pkI) = true then
-          event AcceptR(<pkI,pk(~skR),PRK_4x3m>)
+          event AcceptR(pkI,pk(~skR),PRK_4x3m)
 
 
 let compromise(sk:skey) =
-    in('Comp'); event Compromise(<pk(sk), 'Comp'>); out(sk)
+    in('Comp'); event Compromise(pk(sk), 'Comp'); out(sk)
 
 
 let compromiseDH(k) =
-    in('Comp'); event Compromise(<'g'^k, 'Comp'>); event Leak(k); out(k)
+    in('Comp'); event Compromise('g'^k, 'Comp'); event Leak(k); out(k)
 
 process:
 !(new ~skR:skey; new ~skI:skey; new ~kI; new ~kR; out(<pk(~skR),pk(~skI),'g'^~kI,'g'^~kR>);
     event Share(~kI);
         event Share(~kR);
-  event Honnest(<pk(~skR), 'Resp'>);
-  event Honnest(<pk(~skI), 'Init'>);
-  event HonnestDH(<'g'^~kR, 'Resp'>);
-  event HonnestDH(<'g'^~kI, 'Init'>);
+  event Honnest(pk(~skR), 'Resp');
+  event Honnest(pk(~skI), 'Init');
+  event HonnestDH('g'^~kR, 'Resp');
+  event HonnestDH('g'^~kI, 'Init');
        !(I2(~skI) | I1(~kI) | R(~skR,~kR) | compromise(~skR) | compromiseDH(~kR) | compromise(~skI) | compromiseDH(~kI))
 )
 
 
-lemma false_executableR: // sanity check
-  "not(Ex pkI pkR k3 #i. AcceptR(<pkI,pkR,k3>)@i)"
+lemma executableR: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 #i. AcceptR(pkI,pkR,k3)@i"
 
 
 lemma false_executableI: // sanity check
-  "not(Ex pkI pkR k3 k4 #i. AcceptI(<pkI,pkR,k3,k4>)@i)"
+  exists-trace
+  "Ex pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i"
 
 /*
 lemma DHsafe[reuse]:
   "All a b #i #j #l. KU(('g'^a)^b)@j & Share(a)@i & Share(b)@l ==> (Ex #m. Leak(a)@m) | (Ex #m. Leak(b)@m) "
 */
 
-lemma true_secretR[reuse]: //secrecy of the key
-   "All pkI pkR k4 #i #j #l. (AcceptR(<pkI,pkR,k4>)@i & KU(k4)@j & Honnest(<pkI, 'Init'>)@l )
-       ==> Ex #t. Compromise(<pkI, 'Comp'>)@t"
+lemma secretR[reuse]: //secrecy of the key
+   "All pkI pkR k4 #i #j #l. (AcceptR(pkI,pkR,k4)@i & KU(k4)@j & Honnest(pkI, 'Init')@l )
+       ==> Ex #t. Compromise(pkI, 'Comp')@t"
 
 
-lemma true_secretI[reuse]: //secrecy of the key
-   "All pkI pkR k3 k4 #i #j #l. (AcceptI(<pkI,pkR,k3,k4>)@i & KU(k4)@j & Honnest(<pkR, 'Resp'>)@l )
-    ==> Ex #t. Compromise(<pkR, 'Comp'>)@t
+lemma secretI[reuse]: //secrecy of the key
+   "All pkI pkR k3 k4 #i #j #l. (AcceptI(pkI,pkR,k3,k4)@i & KU(k4)@j & Honnest(pkR, 'Resp')@l )
+    ==> Ex #t. Compromise(pkR, 'Comp')@t
 "
 
 lemma true_honnestauthRI:  // should be true
- "All pkI pkR k4 #i #l. AcceptR(<pkI,pkR,k4>)@i & Honnest(<pkI, 'Init'>)@l ==>
-    (Ex #j k3 #t. (j<i & AcceptI(<pkI,pkR,k3,k4>)@j)
- |   Compromise(<pkI, 'Comp'>)@t)"
+ "All pkI pkR k4 #i #l. AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ==>
+    (Ex #j k3. (j<i & AcceptI(pkI,pkR,k3,k4)@j))
+ |  (Ex #t.  Compromise(pkI, 'Comp')@t)"
 
 lemma true_honnestauthIR:  // should be true
- "All pkI pkR k3 k4 #i #l. AcceptI(<pkI,pkR,k3,k4>)@i & Honnest(<pkR, 'Resp'>)@l ==>
-    (Ex #j #t.( j<i & DerivedR(<pkR,k3>)@j)
-     |   Compromise(<pkR, 'Comp'>)@t)"
+ "All pkI pkR k3 k4 #i #l. AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l ==>
+    (Ex #j.( j<i & DerivedR(pkR,k3)@j))
+     |  (Ex #t. Compromise(pkR, 'Comp')@t)"
 
 
 end
