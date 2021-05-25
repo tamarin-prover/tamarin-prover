@@ -84,16 +84,15 @@ let P(~skP,desiredpkS) =
     let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
     let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
 
-    event DerivedP(<pks,pkP,CATS>);
+    event DerivedP(pks,pkP,CATS);
     out(senc(<'ClientFinished',CF>,CAHTS));
 
     in(serverfin);
     let decserverfin = sdec(serverfin, SAHTS) in
     let <'ServerFinished',SF> = decserverfin in
-    event TestP(<pks,pkP>);
     if SF  = hmac(fks,CHCF) then
       (
-      event AcceptP(<pks,pkP,CATS>)
+      event AcceptP(pks,pkP,CATS)
       )
      )
 
@@ -136,8 +135,6 @@ let S(~skS) =
     let ctc = kemenc(ssc,pkp) in
     out(senc(<'ServerKem',ctc>,SAHTS));
 
-      event TestE(<pkS,pkp>);
-
     let MS = hkdfext(dAHS,ssc) in
     let fkc = hkdfexp(MS,'cfinished','null') in
     let fks = hkdfexp(MS,'sfinished','null') in
@@ -156,17 +153,17 @@ let S(~skS) =
       let SF = hmac(fks,CHCF) in
       let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
       let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
-      event AcceptS(<pkS,pkp,CATS>);
+      event AcceptS(pkS,pkp,CATS);
       out(senc(<'ServerFinished',SF>,SAHTS))
       )
 
     )
 
 process:
-! ( new ~skS; out(kempk(~skS));  event Honnest(<kempk(~skS),'Serv'>);
+! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
     new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
 	  (S(~skS) ||
-	  ( !(new ~skP; event Honnest(<kempk(~skP),'Client'>);
+	  ( !(new ~skP; event Honnest(kempk(~skP),'Client');
 	     ! P(~skP, kempk(~skS))
 	     )
 	  )
@@ -178,13 +175,13 @@ process:
 
 lemma execP: // sanity check
   exists-trace
-  "Ex #t #t2 pkP pkS k. AcceptP(<pkS,pkP,k>)@t  & Honnest(<pkS,'Serv'>)@t2"
+  "Ex #t #t2 pkP pkS k. AcceptP(pkS,pkP,k)@t  & Honnest(pkS,'Serv')@t2"
 
 
 
 lemma execQ: // sanity check
  exists-trace
- "Ex #t #t2 pkP pkS k. AcceptS(<pkS,pkP,k>)@t & Honnest(<pkP,'Client'>)@t2"
+ "Ex #t #t2 pkP pkS k. AcceptS(pkS,pkP,k)@t & Honnest(pkP,'Client')@t2"
 
 
 /*
@@ -197,12 +194,12 @@ lemma false_execbistestRP: // should be false
 */
 
 lemma authPS: // should be true
- "All #t #t2 pkS pkP key. (AcceptP(<pkS,pkP,key>)@t & Honnest(<pkS,'Serv'>)@t2)
-     ==> Ex #s. (AcceptS(<pkS,pkP,key>)@s & s<t)"
+ "All #t #t2 pkS pkP key. (AcceptP(pkS,pkP,key)@t & Honnest(pkS,'Serv')@t2)
+     ==> Ex #s. (AcceptS(pkS,pkP,key)@s & s<t)"
 
 lemma authSP: // should be true
- "All #t #t2 pkS pkP key. (AcceptS(<pkS,pkP,key>)@t & Honnest(<pkP,'Client'>)@t2)
-     ==> Ex #s. (DerivedP(<pkS,pkP,key>)@s & s<t)"
+ "All #t #t2 pkS pkP key. (AcceptS(pkS,pkP,key)@t & Honnest(pkP,'Client')@t2)
+     ==> Ex #s. (DerivedP(pkS,pkP,key)@s & s<t)"
 
 
 // The queries for Deepsec are as follows.

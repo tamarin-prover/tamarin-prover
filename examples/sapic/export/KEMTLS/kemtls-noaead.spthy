@@ -35,7 +35,6 @@ let P(var) =
     let dES = hkdfexp(ES,'derived','null') in  // useless initial shared secret, derived to mimick old TLS
     out(<'CLIENTHello',pke,rc>);
     in(<'SERVERHello',cte,rs>);
-      event Test();
     let CHSH = htrans(<pke,rc,cte,rs>) in
     let sse = kemdec(cte,ske) in
     let HS = hkdfext(dES,sse) in
@@ -145,23 +144,23 @@ process:
 
 
 
-lemma false_exec: // should be false
-"not(Ex #t. AcceptP()@t)"
+lemma exec: // should be false
+  exists-trace
+  "Ex #t. AcceptP()@t"
 
-lemma false_execbis: // should be false
-"not(Ex #t. AcceptS()@t)"
+lemma execbis: // should be false
+  exists-trace
+  "Ex #t. AcceptS()@t"
 
-lemma true_auth: // should be true
- "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t)"
-// this lemma is not yet translated, but should easily be.
-
+lemma auth: // should be true
+   "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t)"
 
 
 lemma false_secserv: // should be false (non mutual authentication)
-"not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
+  "not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
 
 lemma true_secclient : // should be true
-"not(Ex #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2)"
+  "not(Ex #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2)"
 
 
 end
