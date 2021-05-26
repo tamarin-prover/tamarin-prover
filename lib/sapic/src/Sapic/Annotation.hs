@@ -103,7 +103,7 @@ getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
+setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
 
 
 instance Semigroup (ProcessAnnotation v) where
