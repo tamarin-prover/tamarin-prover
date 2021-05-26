@@ -11,7 +11,7 @@ begin
 builtins: locations-report
 
 functions: prog/3,list/2
-heuristic: s
+heuristic: S
 
 options: enableStateOpt
 
@@ -20,6 +20,7 @@ Report(x,y) <=> not  (y= 'loc')
 
 let r =                                        // The remote server who runs the code
 	(lock state; lookup state as lio in
+	event Read(lio);
 	in(i); new r;
 
 	       // A
@@ -36,6 +37,7 @@ let r =                                        // The remote server who runs the
 let v =                                        // The verifier
         in(<i,o,r>);
 	lock state2; lookup state2 as lio in
+	event Read(lio);
 	if <o,i,lio>= check_rep(r,'loc') then // verification of the validity of the report
 		(event Local(<o,i,lio>,'loc');
 		insert state2,list(o,list(i,lio));
@@ -43,13 +45,16 @@ let v =                                        // The verifier
 	else (insert state2,lio; unlock state2)
 
 process:
-new init;
- ( !(new state;  insert state,init; !r) || !(new state2;  insert state2,init; !v)  )
+ ( !(new state;  insert state,'init'; !r) || !(new state2;  insert state2,'init'; !v)  )
 
 
 lemma can_run_v: //for sanity
  	exists-trace
 	"Ex #i m . Local(m,'loc')@i"
+
+lemma simp[reuse]:
+	"All #i m . KU(rep(m,'loc'))@i ==> (Ex #j . Remote(m,'loc')@j)"
+
 
 // Attested computation theorem
 lemma attested_comput:
