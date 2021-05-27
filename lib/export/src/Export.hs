@@ -337,7 +337,7 @@ ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text "
 ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa, sh, True) -- event Headers are definde globally inside loadHeaders
   where (pa, sh) = ppFact tc (Fact tag m ts)
 
-ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "Unsupported event", S.empty, True)
+ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty, False)
 
 
 -- For pure states, we do not put locks and unlocks
@@ -417,7 +417,7 @@ ppSapic tc (ProcessComb (Let t1 t2 mvars) _ pl (ProcessNull _))  =   ( text "let
 
 ppSapic tc (ProcessComb (Let t1 t2 mvars) _ pl pr)  =   ( text "let "  <> pt1 <> text "=" <> pt2 <> text " in"
                                                  $$ ppl
-                                                 $$ text "else" <> ppr
+                                                 $$ text "else " <> ppr
                                                ,sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
