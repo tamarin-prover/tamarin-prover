@@ -8,7 +8,7 @@ theory KEMTLS
    Client authentication version -> the client only authenticates with a server that he knows.
 
    Proverif : few seconds
-   Tamarin : 300 minutes on 64 core server
+   Tamarin : 20 minutes on 64 core server
 
 
    Unlinkability proved:

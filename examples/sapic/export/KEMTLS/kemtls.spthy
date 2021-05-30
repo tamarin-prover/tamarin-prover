@@ -10,7 +10,7 @@ theory KEMTLS
 
    Proverif : everything in a second.
 
-   Tamarin : everything in 17 minutes on 64 core server
+   Tamarin : everything in 1 minutes on 64 core server
       (The DDH model is then more precise)
 
 */
@@ -154,13 +154,14 @@ lemma execbis:
   exists-trace
   "Ex #t. AcceptS()@t"
 
-lemma auth: // should be true
-   "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t) | (Ex #s2. Compromise()@s2)"
-
 lemma false_secserv: // should be false (non mutual authentication)
   "not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
 
-lemma true_secclient : // should be true
+lemma auth: // should be true
+   "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t) | (Ex #s2. Compromise()@s2)"
+
+
+lemma PFS_client : // should be true
   "All #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2 ==> Ex #t3. Compromise()@t3 & t3<t1"
 
 

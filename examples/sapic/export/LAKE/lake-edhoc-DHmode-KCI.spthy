@@ -12,9 +12,9 @@
    We check for Key compromission attacks. We thus explicitely leak skI to the
    attacker.
 
-   Proverif : 1 minute everything
+   Proverif : 7 seconds
 
-   Tamarin : 59 minutes
+   Tamarin : 5 minutes
 */
 
 theory edhoc

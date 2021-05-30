@@ -11,9 +11,9 @@
    We also  provide a model of dynamic compromission.
 
 
-   Proverif : 1 minute everything
+   Proverif : 16 seconds
 
-   Tamarin : 9 minutes on 64 core server
+   Tamarin : 4 minutes on 64 core server
 */
 
 theory edhoc
