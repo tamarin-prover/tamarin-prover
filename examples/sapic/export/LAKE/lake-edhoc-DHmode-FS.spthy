@@ -162,10 +162,6 @@ lemma false_executableI: // sanity check
   exists-trace
   "Ex pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i"
 
-/*
-lemma DHsafe[reuse]:
-  "All a b #i #j #l. KU(('g'^a)^b)@j & Share(a)@i & Share(b)@l ==> (Ex #m. Leak(a)@m) | (Ex #m. Leak(b)@m) "
-*/
 
 lemma secretR[reuse]: //secrecy of the key
    "All pkI pkR k4 #i #j #l. (AcceptR(pkI,pkR,k4)@i & KU(k4)@j & Honnest(pkI, 'Init')@l )

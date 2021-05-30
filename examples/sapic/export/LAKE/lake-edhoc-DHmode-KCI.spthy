@@ -134,7 +134,7 @@ let R(~skR:skey,~kR) =
 process:
 !(new ~skR:skey; new ~skI:skey; new ~kI; new ~kR;
   out(<pk(~skR),pk(~skI),~kI,'g'^~kR>); // leaking the key to the attacker.
-  event Honnest(pk(~skR), 'Resp');
+   event Honnest(pk(~skR), 'Resp');
   event Honnest(pk(~skI), 'Init');
   event HonnestDH('g'^~kR, 'Resp');
   event HonnestDH('g'^~kI, 'Init');

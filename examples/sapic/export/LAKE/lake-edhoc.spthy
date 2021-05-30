@@ -122,14 +122,4 @@ lemma honnestauthIR:  // should be true
  "All pkI pkR k3 k4 #i #l. AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l ==>
     (Ex #j. j<i & (DerivedR(pkR,k3)@j))"
 
-
-// lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
-//  "All a b skS skP #i. AcceptP(a,b,skS,skP)@i ==>
-//     (Ex skP2 #j. #j<#i & AcceptS(a,b,skS,skP2)@j)"
-
-// lemma unique_AcceptP[reuse]: // unicity of event
-//  "All a b skS skP #i #j. AcceptP(a,b,skS,skP)@i & AcceptP(a,b,skS,skP)@j ==> #i =#j"
-
-// lemma unique_AcceptS2[reuse]: //unicity of event
-
 end
