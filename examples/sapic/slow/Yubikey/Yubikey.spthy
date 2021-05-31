@@ -11,9 +11,6 @@ section{* The Yubikey-Protocol *}
 
 builtins: symmetric-encryption, multiset
 
-predicates:
-Smaller(a,b) <=> Ex z. a+z=b
-
 let Yubikey=
  new k; new L_pid; new secretid;
  insert <'Server',L_pid>, <secretid,k,'zero'>;
@@ -48,7 +45,7 @@ let Server=
         if fst(snd(tuple))=k then
             in(otc);
             if snd(snd(tuple))=otc then
-                if Smaller(otc,tc) then
+                if otc (<) tc then
 					event InitStuff(L_pid,secretid,k,tuple,otc,tc);
 					event Login(L_pid,k,tc);
 	 	insert <'Server',L_pid>, <secretid,k,tc>;
