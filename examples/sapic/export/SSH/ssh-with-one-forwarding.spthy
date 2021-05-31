@@ -1,9 +1,9 @@
 /*
  * Protocol: SSH, with a single agent forwarding
 
-   Proverif : everything in a few seconds.
+   Proverif : everything in a 2 seconds.
 
-   Tamarin : everything in 80 seconds
+   Tamarin : everything in 5 minutes.
 
    <!> We add a conditional test not in the program inside the remote P execution, that allows to close the sources of Tamarin. It should not change the security of the protocol, as if the check fails here, it would fail on the server side.
       This check is not required for Proverif to prove the protocol.
@@ -147,25 +147,6 @@ new ~remote:channel;
 
 
 
-
-
-
-// lemma secretS[sources]: //secrecy of the key
-//   "All m k #i.  ==> (Ex #j. KU(k)@j & #j<#i) | (Ex #j. Key(k)@j) "
-
-
-// lemma secretS[sources]: //secrecy of the key
-//   "All m k #i #j. KU(sign(m,k))@j & Key(k)@i ==> Ex #l. Sig(sign(m,k))@l & l<j"
-
-
-// lemma types[sources]:
-//   "All sig2 pkP h #j.  IsSig(sig2,pkP,<'nested',h>)@j ==> Ex sk. (pkP=pk(sk) & sig2=sign(<'nested',h>,sk))"
-
-lemma secretShare[reuse]: //secrecy of the key
-  "(not (Ex k #i #j. ( Share(k)@i & KU(k)@j ) ))"
-
-
-
 lemma reach: // sanity check
   exists-trace
   "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'source')@i & Honnest(a)@j "
@@ -174,31 +155,19 @@ lemma reach_nested: // sanity check
   exists-trace
   "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'nested')@i & Honnest(a)@j"
 
-
-
 lemma secretP[reuse]: //secrecy of the key
   "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
 
 
-
-lemma true_injPS: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
+lemma injPS: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
  "All a b skS skP t #i. AcceptP(a,b,skS,skP,t)@i ==>
     (Ex skP2 #j. #j<#i & AcceptS(a,b,skS,skP2)@j)"
 
-lemma true_unique_AcceptP[reuse]: // unicity of event
- "All t a b skS skP #i #j. AcceptP(a,b,skS,skP,t)@i & AcceptP(a,b,skS,skP,t)@j ==> #i =#j"
-
-lemma true_unique_AcceptS2[reuse]: //unicity of event
- "All a b skS skP t #i #j. AcceptS2(a,b,skS,skP,t)@i & AcceptS2(a,b,skS,skP,t)@j ==> #i =#j"
-
-lemma true_unique_AcceptP2[reuse]: //unicity of event
- "All a b skS skP t #i #j. AcceptP2(a,b,skS,skP,t)@i & AcceptP2(a,b,skS,skP,t)@j ==> #i =#j"
-
-lemma true_injSP[reuse,use_induction]: // injectivity of final acceptance
+lemma injSP[reuse,use_induction]: // injectivity of final acceptance
  "All a b skS skP t #i. AcceptS2(a,b,skS,skP,t)@i ==>
     (Ex #j. j<i & (AcceptP2(a,b,skS,skP,t)@j))
 "
-lemma true_secretS[reuse]: //secrecy of the key
+lemma secretS[reuse]: //secrecy of the key
   "(not (Ex k #i #j. (KeyS2(k)@i & KU(k)@j)))"
 
 end
