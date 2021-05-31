@@ -4,11 +4,16 @@ begin
 section{* Scytl Voting System *}
 
 /*
- * Protocol:    Scytl Voting System
- * Modeler:     Mathieu Turuani
- * Date:	Oct 2017
- *
- * Status:  modeling in progress
+
+ Built from the Sapic model inside the GSVerif benchmark.
+ The original file actually contained a modeeling error.
+
+ Proverif: 1 second
+  "cannot be proved" on single_vote
+
+ Tamarin: 1 minute
+
+
  */
 
 functions: w/2, sk/1 [private], h/1, f/2, phi/1, v/1, cc/1 [private],
@@ -105,13 +110,23 @@ new locktb;
 
 
 lemma exists_vote:
-  "not(Ex Id B1 #i. InsertBB(Id,B1) @ i )"
+   exists-trace
+  "Ex Id B1 #i. InsertBB(Id,B1) @ i "
+
+lemma exists_hu:
+  exists-trace
+  "Ex Id2 K2 T_J #i. HappyUser(Id2,K2,T_J) @ i"
+
+lemma exists_honest_hv:
+  exists-trace
+  "Ex Pke K1 Sks Id1 B3 FC1 CRFid1 #i.
+   HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i"
 
 
-lemma single_vote:
+lemma single_vote[reuse]:
   "All Id B1 B2 #i #j. InsertBB(Id,B1) @ i & InsertBB(Id,B2) @ j ==> (B1=B2)"
 
-lemma cast_as_intended:
+lemma cast_as_intended[reuse]:
   "All Pke K1 Sks Id1 B3 FC1 CRFid1 #i.
    HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i
    ==> ( Ex Z_J C W1 EC0 P1 R #j.

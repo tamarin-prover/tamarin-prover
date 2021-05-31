@@ -13,7 +13,7 @@
     tamarin-prover privacypass.spthy -D=REACH --prove
 
 
-We rely on a an abstract VOPRF, has descrived in
+We rely on a an abstract VOPRF, has described in
 https://tools.ietf.org/html/draft-irtf-cfrg-voprf-03#section-4.2.2
 To follow the notations of privacy pass, we rename k as sk and Y has pkV(sk),
 
