@@ -1,0 +1,190 @@
+type skey.
+const g:bitstring.
+free att:channel.
+free server_sign:bitstring.
+free sign_ans:bitstring.
+free sign_req:bitstring.
+free source:bitstring.
+free user_answer:bitstring.
+free user_auth:bitstring.
+free userauth_pk_ok:bitstring.
+fun exp(bitstring,bitstring):bitstring.
+fun hash(bitstring):bitstring.
+fun kdfPtoS(bitstring):skey.
+fun kdfStoP(bitstring):skey.
+fun nest(bitstring):bitstring.
+fun pk(skey):bitstring.
+fun senc(bitstring,skey):bitstring.
+fun sign(bitstring,skey):bitstring.
+event AcceptP(bitstring,bitstring,bitstring,bitstring,bitstring).
+event AcceptP2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event AcceptS(bitstring,bitstring,bitstring,bitstring).
+event AcceptS2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event AcceptS2TT(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Honnest(bitstring).
+event KeyP(bitstring).
+event KeyS2(bitstring).
+event Test(bitstring).
+equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a).
+reduc forall m:bitstring, sk:skey;   getMess(sign(m, sk)) = m.
+reduc forall x:bitstring;   ishash(hash(x)) = true.
+reduc forall x_1:bitstring, x_2:bitstring;   fst((x_1, x_2)) = x_1.
+reduc forall x_1:bitstring, x_2:bitstring;   snd((x_1, x_2)) = x_2.
+reduc forall x_1:bitstring, x_2:skey;   sdec(senc(x_1, x_2), x_2) = x_1.
+reduc forall x_1:bitstring, x_2:skey;   verify(sign(x_1, x_2), x_1, pk(x_2)) = true.
+
+(*reach*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring, i:time,
+      j:time;
+ (event(AcceptS2( a, b, skS, skP, source ))@i) && (event(Honnest( a ))@j)
+.
+(*reach2*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring, i:time,
+      j:time;
+ (event(AcceptS2( a, b, skS, skP, nest(source) ))@i) &&
+ (event(Honnest( a ))@j)
+.
+(*reach3*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring, i:time,
+      j:time;
+ (event(AcceptS2( a, b, skS, skP, nest(nest(source)) ))@i) &&
+ (event(Honnest( a ))@j)
+.
+(*injPS*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring,
+      t:bitstring, i:time, skP2:bitstring, j:time;
+ (event(AcceptP( a, b, skS, skP, t ))@i) ==>
+ ((j < i) && (event(AcceptS( a, b, skS, skP2 ))@j))
+.
+(*unique_AcceptP*)
+query t:bitstring, a:bitstring, b:bitstring, skS:bitstring,
+      skP:bitstring, i:time, j:time;
+ ((event(AcceptP( a, b, skS, skP, t ))@i) &&
+  (event(AcceptP( a, b, skS, skP, t ))@j)) ==>
+ (i = j)
+.
+(*unique_AcceptS2*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring,
+      t:bitstring, i:time, j:time;
+ ((event(AcceptS2( a, b, skS, skP, t ))@i) &&
+  (event(AcceptS2( a, b, skS, skP, t ))@j)) ==>
+ (i = j)
+.
+(*unique_AcceptP2*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring,
+      t:bitstring, i:time, j:time;
+ ((event(AcceptP2( a, b, skS, skP, t ))@i) &&
+  (event(AcceptP2( a, b, skS, skP, t ))@j)) ==>
+ (i = j)
+.
+(*injSP*)
+query a:bitstring, b:bitstring, skS:bitstring, skP:bitstring,
+      t:bitstring, i:time, j:time;
+ (event(AcceptS2( a, b, skS, skP, t ))@i) ==>
+ ((j < i) && (event(AcceptP2( a, b, skS, skP, t ))@j))
+.
+(*secretS*)
+query k:bitstring, i:time, j:time;
+ (event(KeyS2( k ))@i) && (attacker( k )@j)
+.
+let P(pkS:bitstring, skP:skey, pkP:bitstring)=
+    new a:bitstring;
+    let A:bitstring=exp(g, a) in
+    event Honnest( A );
+    out(att,A);
+    in(att,(sig:bitstring, (opks:bitstring, B:bitstring)));
+    if pkS=opks then 
+        (let h:bitstring=hash((pkS, (A, B))) in
+         let k:bitstring=exp(B, a) in
+         if verify(sig, (server_sign, h), pkS)=true then 
+             (event AcceptP( A, B, pkS, pkP, source );
+              event KeyP( k );
+              let kPS:skey=kdfPtoS((k, h)) in
+              let kSP:skey=kdfStoP((k, h)) in
+              out(att,senc((user_auth, pkP), kPS));
+              in(att,userauth_answer:bitstring);
+              if sdec(userauth_answer, kSP)=userauth_pk_ok then 
+                  (let payload:bitstring=(source, h) in
+                   let sig2:bitstring=sign(payload, skP) in
+                   event AcceptP2( A, B, pkS, pkP, source );
+                   out(att,senc((user_answer, (source, sig2)), kPS));
+                   !
+                   (in(att,signreq:bitstring);
+                    let (lvl:bitstring, (ms:bitstring, =sign_req))=sdec(signreq, kSP) in
+                    out(att,senc((sign((lvl, ms), skP), sign_ans), kPS)))))).
+let remoteP(rpkS:bitstring, rpkP:bitstring, b2:bitstring, A2:bitstring)=
+    let nestlvl:bitstring=nest(source) in
+    new aR:bitstring;
+    let A:bitstring=exp(g, aR) in
+    event Honnest( A );
+    out(att,A);
+    in(att,(sig:bitstring, (opks:bitstring, B:bitstring)));
+    if rpkS=opks then 
+        (let h:bitstring=hash((rpkS, (A, B))) in
+         let k:bitstring=exp(B, aR) in
+         if verify(sig, (server_sign, h), rpkS)=true then 
+             (event AcceptP( A, B, rpkS, rpkP, nestlvl );
+              event KeyP( k );
+              let kPS:skey=kdfPtoS((k, h)) in
+              let kSP:skey=kdfStoP((k, h)) in
+              out(att,senc((user_auth, rpkP), kPS));
+              in(att,userauth_answer:bitstring);
+              if sdec(userauth_answer, kSP)=userauth_pk_ok then 
+                  (let B2:bitstring=exp(g, b2) in
+                   let h2:bitstring=hash((rpkS, (A2, B2))) in
+                   let k2:bitstring=exp(A2, b2) in
+                   let kPS2:skey=kdfPtoS((k2, h2)) in
+                   let kSP2:skey=kdfStoP((k2, h2)) in
+                   out(att,senc((nestlvl, (h, sign_req)), kSP2));
+                   in(att,signans:bitstring);
+                   let (sig2:bitstring, =sign_ans)=sdec(signans, kPS2) in
+                   let (lvlf:bitstring, dump:bitstring)=getMess(sig2) in
+                   event AcceptP2( A, B, rpkS, rpkP, lvlf );
+                   out(att,senc((user_answer, (lvlf, sig2)), kPS));
+                   !
+                   (in(att,signreq:bitstring);
+                    let (lvl:bitstring, (ms:bitstring, =sign_req))=sdec(signreq, kSP) in
+                    out(att,senc((nest(lvl), (ms, sign_req)), kSP2));
+                    in(att,signans2:bitstring);
+                    let (sig3:bitstring, =sign_ans)=sdec(signans, kPS2) in
+                    event Test( sig3 );
+                    out(att,senc((sig3, sign_ans), kPS)))))).
+let S(skS:skey, pkS:bitstring, pkP:bitstring)=
+    in(att,A:bitstring);
+    new b:bitstring;
+    let B:bitstring=exp(g, b) in
+    let h:bitstring=hash((pkS, (A, B))) in
+    let k:bitstring=exp(A, b) in
+    event AcceptS( A, B, pkS, pkP );
+    let sig:bitstring=sign((server_sign, h), skS) in
+    out(att,(sig, (pkS, B)));
+    let kPS:skey=kdfPtoS((k, h)) in
+    let kSP:skey=kdfStoP((k, h)) in
+    in(att,userauth:bitstring);
+    let (messa:bitstring, messpk:bitstring)=sdec(userauth, kPS) in
+    if messa=user_auth then 
+        (if messpk=pkP then 
+             (out(att,senc(userauth_pk_ok, kSP));
+              in(att,signans:bitstring);
+              let (=user_answer, (nestlvl:bitstring, sig2:bitstring))=sdec(signans,
+                                                                           kPS) in
+              event AcceptS2TT( A, B, pkS, pkP, sig2, h );
+              if verify(sig2, (nestlvl, h), pkP)=true then 
+                  (event AcceptS2( A, B, pkS, pkP, nestlvl );
+                   event KeyS2( k );
+                   remoteP(pkS, pkP, b, A)))).
+
+process
+    new secretchannelP:channel;
+    new secretchannelS_1:channel;
+    new secretchannelremoteP_2:channel;
+    !
+    (new skS_3:skey;
+     out(att,pk(skS_3));
+     !
+     (new skP_4:skey;
+      out(att,pk(skP_4));
+      !
+      ((P(pk(skS_3), skP_4, pk(skP_4)))
+     | (S(skS_3, pk(skS_3), pk(skP_4))))))
+
