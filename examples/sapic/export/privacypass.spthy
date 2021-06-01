@@ -6,8 +6,8 @@
    We verify both reachability and equivalence properties.
 
    Proverif: everything in a second
-    tamarin-prover privacypass.spthy -D=REACH -m=proverif
-    tamarin-prover privacypass.spthy -D=EQUIV -m=proverif --diff
+    tamarin-prover privacypass.spthy -D=REACH -m=proverif > pp-reach.pv; proverif pp-reach.pv
+    tamarin-prover privacypass.spthy -D=EQUIV -m=proverif --diff > pp-ind.pv; proverif pp-ind.pv
 
    Tamarin : everything in a few seconds
     tamarin-prover privacypass.spthy -D=REACH --prove

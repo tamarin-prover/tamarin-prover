@@ -2,6 +2,7 @@ theory SOC
 
 begin
 
+// Works wihtout the reuse in a minute
 
 //heuristic:S
 
