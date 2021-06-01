@@ -17,8 +17,6 @@ functions: pk/1, sign/2, getmess/1, checksign/2, succ/1
 
 equations:  getmess( sign(m, k )) = m,  checksign( sign(m, k ) ,pk(k)) = m
 
-options: enableStateOpt
-
 let S =
    in(~tls, <=log,=pass>);
    new chall:bitstring;
