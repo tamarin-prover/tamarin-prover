@@ -123,10 +123,10 @@ lemma exists_honest_hv:
    HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i"
 
 
-lemma single_vote[reuse]:
+lemma single_vote:
   "All Id B1 B2 #i #j. InsertBB(Id,B1) @ i & InsertBB(Id,B2) @ j ==> (B1=B2)"
 
-lemma cast_as_intended[reuse]:
+lemma cast_as_intended:
   "All Pke K1 Sks Id1 B3 FC1 CRFid1 #i.
    HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i
    ==> ( Ex Z_J C W1 EC0 P1 R #j.
