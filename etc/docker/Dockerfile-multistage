@@ -95,15 +95,20 @@ COPY --from=build-tamarin /opt/build/bin .
 
 # Install new maude maude version 
 ENV PRELUDE_MAUDE="${RES}/prelude.maude"
-COPY ${MAUDE} /usr/local/bin/
-COPY ${PRELUDE_MAUDE} /usr/local/bin/
+ENV MAUDE="${RES}/maude"
+COPY ${MAUDE} /opt/build/bin/
+COPY ${PRELUDE_MAUDE} /opt/build/bin/
 
-COPY ${RES}/proverif-tamarin /usr/local/bin/
-COPY ${RES}/progsverif-tamarin /usr/local/bin/
-COPY ${RES}/deepsec-tamarin /usr/local/bin/
+COPY ${RES}/proverif-tamarin .
+COPY ${RES}/progsverif-tamarin .
+COPY ${RES}/deepsec-tamarin .
 
-COPY ${CONFIG}/.bashrc /root/.bashrc
+ENV PATH=${PATH}:/opt/build/bin:/opt/protocolplatform
+# TODO Do we need this???
+# ENV DEEPSEC_DIR=$DEEPSEC_DIR_IMAGE/deepsec
+
+# I don't think we need this anymore....
+# COPY ${CONFIG}/.bashrc /root/.bashrc
 
 EXPOSE 3001
-ENV PATH="/usr/local/bin:${PATH}"
 CMD ["/bin/bash"]
