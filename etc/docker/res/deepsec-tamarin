@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tamarin-prover $1 -m=deepsec > /tmp/$1.dps; deepsec /tmp/$1.dps

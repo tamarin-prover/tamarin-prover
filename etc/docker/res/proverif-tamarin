@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tamarin-prover $1 -m=proverif > /tmp/$1.pv; proverif /tmp/$1.pv

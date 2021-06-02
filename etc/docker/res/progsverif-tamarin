@@ -1,0 +1,6 @@
+#!/bin/bash
+
+OUTFILE=$(echo "$1" | tr -d "/")
+
+tamarin-prover $1 -m=proverif -D=REACH > /tmp/$OUTFILE.gs; echo "/tmp/$OUTFILE.gs"; rm -f /tmp/$OUTFILE.pv; gsverif -o /tmp/$OUTFILE.pv /tmp/$OUTFILE.gs; proverif /tmp/$OUTFILE.pv
+#requires gsverif 2.0, i.e. the new version made by Vincent with assumeCell tag

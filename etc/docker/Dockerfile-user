@@ -1,0 +1,38 @@
+# ===========================================================================================
+# Dockerfile for building AOSP [Android Open Source Project]
+#
+# References:
+#       http://source.android.com/source/index.html
+# ===========================================================================================
+FROM protocolplatform:latest
+
+MAINTAINER Robert Künnemann <robert.kuennemann@cispa.saarland>
+
+# ENV USER=handson
+# ENV HOME=/home/${USER}
+ENV WORKDIR=/workspace
+
+# # get local uid and gid from build arguments
+# ARG LOCAL_USER_ID
+# ARG LOCAL_GROUP_ID
+# ENV USER_ID ${LOCAL_USER_ID}
+# ENV GROUP_ID ${LOCAL_GROUP_ID}
+
+# RUN usermod ${USER} -u ${USER_ID}
+# RUN groupmod ${USER} -g ${GROUP_ID} || echo "Couldn't set group id, but whateves."
+# RUN chown -R ${USER_ID}:${GROUP_ID} ${HOME}
+# RUN chown ${USER_ID}:${GROUP_ID} ${WORKDIR}
+# ls ${WORKDIR} | xargs chown ${USER_ID}:${GROUP_ID}
+
+
+# EXPOSE ###############################################################################################################
+VOLUME [ \
+    "${WORKDIR}"\
+    ]
+WORKDIR ${WORKDIR}
+
+COPY config/entrypoint-user.sh /usr/local/bin/entrypoint.sh
+RUN chown ${USER}:${GROUP_ID} /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
