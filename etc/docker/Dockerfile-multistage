@@ -31,12 +31,12 @@ FROM fpco/stack-build:lts-16.12 as deps-tamarin
 RUN mkdir /opt/build
 WORKDIR /opt/build
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    #general stuff
-    curl \
-    # gnupg \
-    m4 \
-    && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get install -y --no-install-recommends \
+#    #general stuff
+#    curl \
+#    # gnupg \
+#    m4 \
+#    && rm -rf /var/lib/apt/lists/*
 
 COPY stack.yaml stack.yaml.lock tamarin-prover.cabal /opt/build/
 RUN mkdir lib lib/export lib/theory lib/sapic lib/tools lib/term 
@@ -64,7 +64,7 @@ WORKDIR /opt/protocolplatform
 RUN apt-get update && apt-get install -y --no-install-recommends \
     #general stuff
     graphviz \
-    maude \
+    libncurses5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install third party tools
@@ -83,6 +83,8 @@ COPY ${PRELUDE_MAUDE} /usr/local/bin/
 COPY res/proverif-tamarin /usr/local/bin/
 COPY res/progsverif-tamarin /usr/local/bin/
 COPY res/deepsec-tamarin /usr/local/bin/
+
+COPY config/.bashrc /root/.bashrc
 
 EXPOSE 3001
 ENV PATH="/usr/local/bin:${PATH}"
