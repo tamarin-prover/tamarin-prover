@@ -50,7 +50,15 @@ RUN stack build --system-ghc --dependencies-only --ghc-options="+RTS -M600M" -j1
 FROM fpco/stack-build:lts-16.12 as build-tamarin
 # Copy compiled dependencies from previous stage
 COPY --from=deps-tamarin /root/.stack /root/.stack
-COPY . /opt/build/
+# copy all files except `etc`, because we don't want this stage to be rebuilt
+# anytime the dockerfiles change
+# docker is braindead: it copies the content of a directory, even if it is in a list
+# so we need to list them one by one 
+COPY stack.yaml stack.yaml.lock tamarin-prover.cabal /opt/build/
+COPY src  /opt/build/src
+COPY lib /opt/build/lib
+COPY data /opt/build/data
+COPY images /opt/build/images
 WORKDIR /opt/build
 RUN stack build --system-ghc
 RUN mv "$(stack path --local-install-root --system-ghc)/bin" /opt/build/bin
@@ -67,13 +75,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libncurses5 \
     && rm -rf /var/lib/apt/lists/*
 
+# TODO turn variables above into ARGS ..
+# https://stackoverflow.com/questions/52904847/how-do-i-copy-variables-between-stages-of-multi-stage-docker-build
+ENV PROVERIF_DIR_NAME="proverif2.02pl1"
+ENV GSVERIF_DIR_NAME="gsverif"
+ENV DEEPSEC_DIR_NAME="deepsec"
+
 # Install third party tools
-COPY --from=build-ocaml /opt/${PROVERIF_DIR_NAME} /opt/
-COPY --from=build-ocaml /opt/${GSVERIF_DIR_NAME} /opt/
-COPY --from=build-ocaml /opt/${DEEPSEC_DIR_NAME} /opt/
+COPY --from=build-ocaml /opt/${PROVERIF_DIR_NAME}/proverif /opt/build/bin/
+COPY --from=build-ocaml /opt/${GSVERIF_DIR_NAME}/gsverif /opt/build/bin/
+COPY --from=build-ocaml /opt/${DEEPSEC_DIR_NAME}/deepsec /opt/build/bin/
+COPY --from=build-ocaml /opt/${DEEPSEC_DIR_NAME}/deepsec_worker /opt/build/bin/
 
 # Install built app 
-COPY --from=build /opt/build/bin .
+COPY --from=build-tamarin /opt/build/bin .
 
 # Install new maude maude version 
 ENV PRELUDE_MAUDE="res/prelude.maude"
