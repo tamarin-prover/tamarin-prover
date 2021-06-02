@@ -5,6 +5,7 @@ RUN opam install -y ocamlfind ocamlbuild
 
 WORKDIR /opt/build
 ENV RES="etc/docker/res"
+ENV CONFIG="etc/docker/config"
 ENV PROVERIF_URL="https://prosecco.gforge.inria.fr/personal/bblanche/proverif/proverif2.02pl1.tar.gz"
 ENV PROVERIF_DIR_NAME="proverif2.02pl1"
 ENV GSVERIF_TGZ="gsverif2.0.zip"
@@ -54,7 +55,7 @@ COPY --from=deps-tamarin /root/.stack /root/.stack
 # anytime the dockerfiles change
 # docker is braindead: it copies the content of a directory, even if it is in a list
 # so we need to list them one by one 
-COPY stack.yaml stack.yaml.lock tamarin-prover.cabal /opt/build/
+COPY stack.yaml stack.yaml.lock tamarin-prover.cabal LICENSE /opt/build/
 COPY src  /opt/build/src
 COPY lib /opt/build/lib
 COPY data /opt/build/data
@@ -80,29 +81,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PROVERIF_DIR_NAME="proverif2.02pl1"
 ENV GSVERIF_DIR_NAME="gsverif"
 ENV DEEPSEC_DIR_NAME="deepsec"
+ENV RES="etc/docker/res"
+ENV CONFIG="etc/docker/config"
 
 # Install third party tools
-COPY --from=build-ocaml /opt/${PROVERIF_DIR_NAME}/proverif /opt/build/bin/
-COPY --from=build-ocaml /opt/${GSVERIF_DIR_NAME}/gsverif /opt/build/bin/
-COPY --from=build-ocaml /opt/${DEEPSEC_DIR_NAME}/deepsec /opt/build/bin/
-COPY --from=build-ocaml /opt/${DEEPSEC_DIR_NAME}/deepsec_worker /opt/build/bin/
+COPY --from=build-ocaml /opt/build/${PROVERIF_DIR_NAME}/proverif /opt/build/bin/
+COPY --from=build-ocaml /opt/build/${GSVERIF_DIR_NAME}/gsverif /opt/build/bin/
+COPY --from=build-ocaml /opt/build/${DEEPSEC_DIR_NAME}/deepsec /opt/build/bin/
+COPY --from=build-ocaml /opt/build/${DEEPSEC_DIR_NAME}/deepsec_worker /opt/build/bin/
 
 # Install built app 
 COPY --from=build-tamarin /opt/build/bin .
 
 # Install new maude maude version 
-ENV PRELUDE_MAUDE="res/prelude.maude"
+ENV PRELUDE_MAUDE="${RES}/prelude.maude"
 COPY ${MAUDE} /usr/local/bin/
 COPY ${PRELUDE_MAUDE} /usr/local/bin/
 
-COPY res/proverif-tamarin /usr/local/bin/
-COPY res/progsverif-tamarin /usr/local/bin/
-COPY res/deepsec-tamarin /usr/local/bin/
+COPY ${RES}/proverif-tamarin /usr/local/bin/
+COPY ${RES}/progsverif-tamarin /usr/local/bin/
+COPY ${RES}/deepsec-tamarin /usr/local/bin/
 
-COPY config/.bashrc /root/.bashrc
+COPY ${CONFIG}/.bashrc /root/.bashrc
 
 EXPOSE 3001
 ENV PATH="/usr/local/bin:${PATH}"
 CMD ["/bin/bash"]
-
-#TODOS (above to keep cache) ... 
