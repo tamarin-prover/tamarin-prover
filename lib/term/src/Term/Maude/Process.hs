@@ -126,7 +126,7 @@ startMaudeProcess maudePath maudeSig = do
     setupCmds = [ "set show command off .\n"
                 , "set show timing off .\n"
                 , "set show stats off .\n" ]
-    dEBUGMAUDE = True  -- envIsSet "DEBUG_MAUDE"
+    dEBUGMAUDE = envIsSet "DEBUG_MAUDE"
 
 
 

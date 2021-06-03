@@ -129,9 +129,9 @@ ppMaude t = case viewTerm t of
   where
     ppArgs as     = "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
     ppInt         = BC.pack . show
-    ppList []     = funSymPrefix <> "nil"
+    ppList [x,x2] = funSymPrefix <> "cons(" <> ppMaude x <> "," <> ppMaude x2 <> ")"
     ppList (x:xs) = funSymPrefix <> "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
-
+    ppList []     = funSymPrefix <> "nil"
 ------------------------------------------------------------------------------
 -- Pretty printing a 'MaudeSig' as a Maude functional module.
 ------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ ppTheory msig = BC.unlines $
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op list : TOP -> TOP ."
     , theoryOp "nil  : -> Msg "
-    , theoryOp "cons : Msg Msg -> Msg [assoc]"
+    , theoryOp "cons : Msg Msg -> Msg [assoc id : tamXnil]"
  ]
     ++
     (if enableMSet msig
