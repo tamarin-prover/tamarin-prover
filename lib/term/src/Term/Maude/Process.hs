@@ -98,7 +98,7 @@ startMaude maudePath maudeSig = do
     mv <- newMVar =<< startMaudeProcess maudePath maudeSig
     -- Add a finalizer to the MVar that stops maude.
     _  <- mkWeakMVar mv $ withMVar mv $ \mp -> do
-        terminateProcess (mProc mp) <* waitForProcess (mProc mp)      
+        terminateProcess (mProc mp) <* waitForProcess (mProc mp)
     -- return the maude handle
     return (MaudeHandle maudePath maudeSig mv)
 
@@ -126,7 +126,7 @@ startMaudeProcess maudePath maudeSig = do
     setupCmds = [ "set show command off .\n"
                 , "set show timing off .\n"
                 , "set show stats off .\n" ]
-    dEBUGMAUDE = envIsSet "DEBUG_MAUDE"
+    dEBUGMAUDE = True  -- envIsSet "DEBUG_MAUDE"
 
 
 

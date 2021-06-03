@@ -7,7 +7,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Function Symbols and Signatures.
@@ -42,6 +42,8 @@ module Term.Term.FunctionSymbols (
     , oneSym
     , invSym
     , pairSym
+    , consSym
+    , nilSym
     , fstSym
     , sndSym
     , zeroSym
@@ -125,7 +127,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, consSym, nilSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -144,6 +146,11 @@ sndSym   = ("snd",(1,Public))
 pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public))
+
+consSym = ("cons",(2,Public))
+
+nilSym  = ("nil",(0,Public))
+
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -167,7 +174,7 @@ msetFunSig = S.fromList [AC Union]
 
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
-pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
+pairFunSig = S.fromList [ pairSym, fstSym, sndSym, consSym, nilSym ]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig

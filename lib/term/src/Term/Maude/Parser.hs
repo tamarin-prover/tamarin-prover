@@ -3,7 +3,7 @@
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Pretty printing and parsing of Maude terms and replies.
@@ -23,6 +23,7 @@ import Term.LTerm
 import Term.Maude.Types
 import Term.Maude.Signature
 import Term.Rewriting.Definitions
+import Term.Term.FunctionSymbols
 
 import Control.Monad.Bind
 
@@ -124,12 +125,12 @@ ppMaude t = case viewTerm t of
     FApp (NoEq fsym) as      -> ppMaudeNoEqSym fsym <> ppArgs as
     FApp (C fsym) as         -> ppMaudeCSym fsym    <> ppArgs as
     FApp (AC op) as          -> ppMaudeACSym op     <> ppArgs as
-    FApp List as             -> "list(" <> ppList as <> ")"
+    FApp List as             -> ppList as
   where
     ppArgs as     = "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
     ppInt         = BC.pack . show
-    ppList []     = "nil"
-    ppList (x:xs) = "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
+    ppList []     = funSymPrefix <> "nil"
+    ppList (x:xs) = funSymPrefix <> "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
 
 ------------------------------------------------------------------------------
 -- Pretty printing a 'MaudeSig' as a Maude functional module.
@@ -153,8 +154,9 @@ ppTheory msig = BC.unlines $
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op list : TOP -> TOP ."
-    , "  op cons : TOP TOP -> TOP ."
-    , "  op nil  : -> TOP ." ]
+    , theoryOp "nil  : -> Msg "
+    , theoryOp "cons : Msg Msg -> Msg [assoc]"
+ ]
     ++
     (if enableMSet msig
        then
@@ -181,7 +183,7 @@ ppTheory msig = BC.unlines $
        , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
-    map theoryFunSym (S.toList $ stFunSyms msig)
+    map theoryFunSym (S.toList $ (stFunSyms msig) `S.difference` (S.fromList [consSym,nilSym]))
     ++
     map theoryRule (S.toList $ rrulesForMaudeSig msig)
     ++
@@ -238,7 +240,7 @@ parseSubstitution msig = do
     endOfLine *> string "Solution " *> takeWhile1 isDigit *> endOfLine
     choice [ string "empty substitution" *> endOfLine *> pure []
            , many1 parseEntry]
-  where 
+  where
     parseEntry = (,) <$> (flip (,) <$> (string "x" *> decimal <* string ":") <*> parseSort)
                      <*> (string " --> " *> parseTerm msig <* endOfLine)
 
@@ -271,8 +273,8 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons",(2,Public))
-    nilSym  = ("nil",(0,Public))
+    -- consSym = (funSymPrefix <> "cons",(2,Public))
+    -- nilSym  = (funSymPrefix <> "nil",(0,Public))
 
     parseFunSym ident args
       | op `elem` allowedfunSyms = replaceMinusFun op
@@ -282,7 +284,7 @@ parseTerm msig = choice
                   ++ show allowedfunSyms
       where prefixLen      = BC.length funSymPrefix
             special        = ident `elem` ["list", "cons", "nil" ]
-            priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
+            priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident
                                then Private else Public
             op             = (if special then ident else BC.drop prefixLen ident
                              , ( length args, priv))
@@ -298,11 +300,14 @@ parseTerm msig = choice
                        | ident == ppMaudeACSym Union      = fAppAC Union args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
-        appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
+        appIdent args  | ident == funSymPrefix <> "cons"  = mkCons args
         appIdent args                                     = fAppNoEq op args
           where op = parseFunSym ident args
 
-        flattenCons (viewTerm -> FApp (NoEq s) [x,xs]) | s == consSym = x:flattenCons xs
+        mkCons [x,xs] = fAppNoEq consSym [x,xs]
+        mkCons (x:xs) = fAppNoEq consSym [x,mkCons xs]
+        mkCons [] = fAppNoEq nilSym []
+
         flattenCons (viewTerm -> FApp (NoEq s)  [])    | s == nilSym  = []
         flattenCons t                                                 = [t]
 
