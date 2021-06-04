@@ -78,7 +78,7 @@ data ProcessAnnotation v = ProcessAnnotation {
 instance GoodAnnotation (ProcessAnnotation v)
     where
         getProcessParsedAnnotation = parsingAnn
-        setProcessParsedAnnotation pn an@ProcessAnnotation{ parsingAnn = opn} = an { parsingAnn = pn }
+        setProcessParsedAnnotation pn an = an { parsingAnn = pn }
         defaultAnnotation   = mempty
 
 mayMerge :: Maybe a -> Maybe a -> Maybe a

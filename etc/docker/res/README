@@ -4,6 +4,8 @@ Hi! This is the protocolplatform Docker image. You can run it two ways:
 
 docker run -it protocolplatform/protocolplatform:latest bash
 
+You should obtain a shell that reads like that `root@976d3bce69f8:/opt/protocolplatform#`.
+
 - execute tamarin-prover, proverif, gsverif, deepse etc. as usual
 - execute the scripts below
 - Try the examples in /opt/protocolplatform/examples

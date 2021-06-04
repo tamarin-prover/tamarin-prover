@@ -304,23 +304,12 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
               Nothing -> SAPiCRuleName
             name = case processName of
                 Just s -> s
-<<<<<<< HEAD
-                Nothing -> (prefixName process)
-                         ++ "_" ++ show index ++ "_"
-=======
                 Nothing -> stripSemicolon(prettySapicTopLevel process)
                          ++ "#_" ++ show index ++ "_"
->>>>>>> develop
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
-<<<<<<< HEAD
-            prefixName p = let pname = stripNonAlphanumerical (prettySapicTopLevel p) in
-              if pname == "" then "Init" else pname
-            stripNonAlphanumerical = filter (\x -> isAlpha x)
-=======
             stripSemicolon = filter (/= ';')
->>>>>>> develop

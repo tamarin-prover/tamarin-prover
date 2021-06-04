@@ -76,9 +76,13 @@ getProducedFacts rules =
 -- TODO : how to merge the info about a rule
 mergeInfo :: ProtoRuleEInfo -> ProtoRuleEInfo -> ProtoRuleEInfo
 mergeInfo info info2 =
-  ProtoRuleEInfo (StandRule (name++";"++name2)) (attr++attr2) (res ++ res2)
+  ProtoRuleEInfo (StandRule (mergeStand name name2)) (attr++attr2) (res ++ res2)
  where ProtoRuleEInfo (StandRule name) attr res= info
        ProtoRuleEInfo (StandRule name2) attr2 res2= info2
+       mergeStand (SAPiCRuleName s) (SAPiCRuleName s') = SAPiCRuleName (s++";"++s')
+       mergeStand (DefdRuleName s) (DefdRuleName s') = DefdRuleName (s++";"++s')
+       mergeStand (SAPiCRuleName s) (DefdRuleName s') = DefdRuleName (s++";"++s')
+       mergeStand (DefdRuleName s) (SAPiCRuleName s') = DefdRuleName (s++";"++s')
 
 canMerge  :: Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> Bool
 canMerge r1 r2
