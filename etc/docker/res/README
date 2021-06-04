@@ -1,0 +1,34 @@
+Hi! This is the protocolplatform Docker image. You can run it two ways:
+
+1. Browse the image interactively:
+
+docker run -it protocolplatform/protocolplatform:latest bash
+
+- execute tamarin-prover, proverif, gsverif, deepse etc. as usual
+- execute the scripts below
+- Try the examples in /opt/protocolplatform/examples
+- Read more detailed instructions in /opt/protocolplatform/README-long
+
+2. Use it on your host:
+
+- set up the following alias to give the image access to your current working
+  dir at the time of calling:
+
+alias pp='docker run -v "$PWD:$PWD" -w "$PWD" protocolplatform/protocolplatform'
+
+- run, e.g., "pp tamarin-prover" to run tamarin-prover from the docker
+- the protocol-platform is integrated into tamarin-prover, see README-long for details.
+
+The protocol platform consists of:
+
+1. A modified version of tamarin-prover that parses .spthy and, with the -m flag, outputs:
+
+  -m --output-module[=spthy|spthytyped|msr|proverif|deepsec]  What to output:- spthy (including
+                                                              processes),- spthy with explicit types,- pure
+                                                              msrs (processes translated to msrs) or- DeepSec
+                                                              or- ProVerif.
+
+2. Script for convenience:
+    proverif-tamarin  .. Translates input file with the modified tamarin-prover and runs proverif on output.
+    progsverif-tamarin  .. same for gsverif
+    deepsec-tamarin .. same for deepsec
