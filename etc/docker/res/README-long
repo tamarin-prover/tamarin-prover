@@ -1,1 +1,13 @@
-TODO
+The protocol platform consists of:
+
+1. A modified version of tamarin-prover that parses .spthy and, with the -m flag, outputs:
+
+  -m --output-module[=spthy|spthytyped|msr|proverif|deepsec]  What to output:- spthy (including
+                                                              processes),- spthy with explicit types,- pure
+                                                              msrs (processes translated to msrs) or- DeepSec
+                                                              or- ProVerif.
+
+2. Script for convenience:
+    proverif-tamarin  .. Translates input file with the modified tamarin-prover and runs proverif on output.
+    progsverif-tamarin  .. same for gsverif
+    deepsec-tamarin .. same for deepsec

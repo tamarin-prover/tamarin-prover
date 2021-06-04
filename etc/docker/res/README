@@ -11,12 +11,17 @@ docker run -it protocolplatform/protocolplatform:latest bash
 
 2. Use it on your host:
 
-- set up the following alias to give the image access to your current working
-  dir at the time of calling:
+- set up the following alias to give the image access to your host's current working
+  dir (at the time of calling) and forward port 3001:
 
-alias pp='docker run -v "$PWD:$PWD" -w "$PWD" protocolplatform/protocolplatform'
+alias pp='docker run -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" protocolplatform/protocolplatform'
 
 - run, e.g., "pp tamarin-prover" to run tamarin-prover from the docker
+- remember to use the "-i" flag in tamarin's interactive mode to accept clients
+  on all interfaces, as the docker host is not localhost to the guest:
+
+  pp tamarin-prover interactive . -i='*4'
+
 - the protocol-platform is integrated into tamarin-prover, see README-long for details.
 
 The protocol platform consists of:
