@@ -1,5 +1,7 @@
 theory KEMTLS
 
+
+
 /*
  * Protocol:    KEM TLS
    proposed in CCS20, Post-quantum TLS without handshake signatures
@@ -8,6 +10,9 @@ theory KEMTLS
    Client authentication version -> the client only authenticates with a server that he knows.
 
    Proverif : few seconds
+    tamarin-prover kemtls-clientauth.spthy -D=REACH -m=proverif > kem-reach.pv; proverif kem-reach.pv
+    tamarin-prover kemtls-clientauth.spthy -D=EQUIV -m=proverif --diff > kem-ind.pv; proverif kem-ind.pv
+
    Tamarin : 20 minutes on 64 core server
 
 
@@ -158,18 +163,18 @@ let S(~skS) =
       )
 
     )
+#ifdef REACH
 
 process:
 ! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
     new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
 	  (S(~skS) ||
-	  ( !(new ~skP; event Honnest(kempk(~skP),'Client');
+	  ( !(new ~skP;  out(kempk(~skP)); event Honnest(kempk(~skP),'Client');
 	     ! P(~skP, kempk(~skS))
 	     )
 	  )
          )
   )
-
 
 
 
@@ -201,6 +206,25 @@ lemma authSP: // should be true
  "All #t #t2 pkS pkP key. (AcceptS(pkS,pkP,key)@t & Honnest(pkP,'Client')@t2)
      ==> Ex #s. (DerivedP(pkS,pkP,key)@s & s<t)"
 
+
+#endif
+
+#ifdef EQUIV
+
+process:
+! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
+    new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
+    new ~skPDiff;  out(kempk(~skPDiff));
+	  (S(~skS) ||
+	  ( !(new ~skP;  out(kempk(~skP)); event Honnest(kempk(diff(~skP,~skPDiff)),'Client');
+	     ! P(diff(~skP,~skPDiff), kempk(~skS))
+	     )
+	  )
+         )
+  )
+
+
+#endif
 
 // The queries for Deepsec are as follows.
 export requests:
