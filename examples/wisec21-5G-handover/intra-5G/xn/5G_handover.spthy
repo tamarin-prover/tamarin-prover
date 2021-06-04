@@ -1,0 +1,1503 @@
+theory 5G_xn_handover
+
+/*
+  Protocol:   Xn-based inter NG-RAN handover
+
+  Comments:   - Models both horizontal and vertical key derivation of K_gNB
+              - All time estimates include the time needed for precomputation
+                (~20s)
+
+  References: [TS 23.502] Procedures for the 5G System (5GS)
+                          3GPP TS 23.502 V16.5.0 (2020-07)
+
+              [TS 38.300] NR and NG-RAN Overall Description
+                          3GPP TS 38.300 V16.2.0 (2020-07)
+
+              [TS 33.501] Security Architecture and Procedures for 5G System
+                          3GPP TS 33.501 V16.3.0 (2020-07)
+
+  Notations:  HO     - Handover
+              UE     - User Equipment
+              CN     - Core Network
+              AMF    - Access and Mobility Management Function
+              UPF    - User Plane Function
+              SMF    - Session Management Function
+              RAN    - Radio Access Network
+              NG-RAN - Next Generation RAN
+
+  Key derivation [TS 33.501]:
+    K_AMF  = KDF(K_SEAF, SUPI)     [A.7]       (initial key derivation)
+           = KDF(K_AMF, 0x01)      [A.13]      (horizontal key derivation)
+    K_gNB  = KDF(K_AMF, 2^32-1)    [A.9]
+    NH     = KDF(K_AMF, K_gNB)     [A.10]      (initial key derivation)
+           = KDF(K_AMF, NH)        [A.10]      (subsequent key derivation)
+    K_gNB* = KDF(K_gNB, TRAN_ID)   [A.11/A.12] (horizontal key derivation)
+           = KDF(NH, TRAN_ID)      [A.11/A.12] (vertical key derivation)
+
+  Protocol:
+    Handover Preparation [TS 38.300, Sec. 9.2.3.2.1]:
+      1. S-RAN -> T-RAN : TRAN_ID, K_gNB*, NCC, (current) C_RNTI, PDU_SESSION_ID
+      2. T-RAN -> S-RAN : NCC, (current) C_RNTI, (new) C_RNTI
+
+    Handover Execution [TS 38.300, Sec. 9.2.3.2.1]:
+      1. S-RAN -> UE    : TRAN_ID, NCC, (new) C_RNTI
+      2. S-RAN -> T-RAN : SN_STATUS_TRANSFER
+      3. UE    -> T-RAN : RRCReconfigurationComplete
+
+    Handover Completion [TS 23.502, Sec. 4.9.1.2]:
+      1. T-RAN -> CN    : PDU_SESSION_ID
+      2. CN    -> S-RAN : N3_End_marker
+      3. S-RAN -> T-RAN : N3_End_marker
+      4. CN    -> T-RAN : NH, NCC
+      5. T-RAN -> S-RAN : Release Resources
+
+    Mobility Registration Update (MRU) [TS 23.502, Sec. 4.2.2.2.2]:
+      1. UE    -> T-RAN : 'MRU', 5G-GUTI
+      2. T-RAN -> CN    : 'MRU', 5G-GUTI
+      3. CN    -> UE    : Registration Accept
+*/
+
+begin
+
+builtins:
+  symmetric-encryption, multiset
+
+functions:
+  // 3GPP KDFs [TS 33.501]
+  KDF/2 // KDF --> K_AMF, K_gNB, NH, K_gNB*
+
+/***********************************/
+/*         Secure Channels         */
+/***********************************/
+// This is a standard, secure channel abstraction, as previously used in work
+// by Basin, Radomirovic and Schmid: Modeling Human Errors in Security Protocols
+// (CSF 2016)
+// This version provides replay protection, order-preserving (binding channel).
+rule send_secure:
+  // ~cid denotes a channel identifier: should always be a fresh name
+  // (possibly CreateValues by the attacker)
+  [ SndS(~cid,A,B,m) ]
+-->
+  [ Sec(~cid,A,B,m) ]
+
+rule receive_secure:
+  [ Sec(~cid,A,B,m) ]
+-->
+  [ RcvS(~cid,A,B,m) ]
+
+rule secureChannel_compromised_in:
+  // An attacker can learn cid with secureChannel_compromised_out
+  [ In(<~cid,A,B,x>) ]
+--[ Rev(A,'secureChannel')
+  , Injected(x)
+  ]->
+  [ Sec(~cid,A,B,x) ]
+
+rule secureChannel_compromised_out:
+  [ Sec(~cid,A,B,m) ]
+--[ Rev(B,'secureChannel') ]->
+  [ Out(<~cid,m>) ]
+
+/************************************/
+/*       Initialization Rules       */
+/************************************/
+
+// Initialize the Core Network (CN): AMF + SMF + UPF
+rule init_CN:
+  [ Fr(~CN_ID) ]
+--[ CoreNetwork(~CN_ID) ]->
+  [ !CN(~CN_ID)
+  , Out(~CN_ID) ]
+
+// Initialize a Radio Access Network (RAN)
+rule init_RAN:
+  [ Fr(~RAN_ID) ]
+--[ RadioAccessNetwork(~RAN_ID) ]->
+  [ !NG_RAN(~RAN_ID)
+  , Out(~RAN_ID) ]
+
+// Create a User Equipment (UE)
+rule create_UE:
+  [ Fr(~SUPI)
+  , !CN(~CN_ID) ]
+--[ UserEquipment(~SUPI) ]->
+  [ !UE(~SUPI, ~CN_ID) ]
+
+// Initialize a UE in a serving network
+rule init_UE:
+  let
+    K_AMF = KDF(~K_SEAF, ~SUPI)
+    K_gNB = KDF(K_AMF, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_AMF, K_gNB)
+    NCC = '0'
+  in
+  [ !UE(~SUPI, ~CN_ID)
+  , !CN(~CN_ID)
+  , !NG_RAN(~SRAN_ID)
+  , Fr(~K_SEAF)
+  , Fr(~C_RNTI)
+  , Fr(~5G_GUTI)
+  , Fr(~PDU_SESSION_ID) ]
+--[ Subscribe(~SUPI, ~SRAN_ID)
+  , CreateValues(<~SUPI, ~5G_GUTI, ~K_SEAF, K_AMF>)
+  , CreatePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  , KeyDerived(<'K_AMF', K_AMF>, ~K_SEAF, K_AMF, ~SUPI)
+  , KeyDerived(<'K_gNB', K_gNB>, ~K_SEAF, K_AMF, ~SUPI)
+  , Init('K_gNB', K_gNB)
+  , Init('K_SEAF', ~K_SEAF)
+  , GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>)
+  , Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>)
+  , Session_key(~SUPI, ~SRAN_ID, <'K_gNB', K_gNB>)
+  , Intermediate_key(~SUPI, ~SRAN_ID, ~CN_ID, <'NH', NH>)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , St_1_SRAN(~SRAN_ID, K_gNB, ~C_RNTI, '0', NCC, ~PDU_SESSION_ID)
+  , St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF, ~K_SEAF, K_AMF, K_gNB, K_gNB, NCC, ~SRAN_ID)
+  , St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~SRAN_ID) ]
+
+// Initialize an Xn interface between a serving network and a target network
+rule connect_networks_Xn:
+  [ !NG_RAN(~SRAN_ID)
+  , !NG_RAN(~TRAN_ID) ]
+--[ InEq(~SRAN_ID, ~TRAN_ID)
+  , Connect(~SRAN_ID, ~TRAN_ID)
+  , Connect(~TRAN_ID, ~SRAN_ID)
+  , OnlyOnce(~SRAN_ID, ~TRAN_ID)
+  , OnlyOnce(~TRAN_ID, ~SRAN_ID)
+  ]->
+  [ !Xn(~SRAN_ID, ~TRAN_ID)
+  , !Xn(~TRAN_ID, ~SRAN_ID) ]
+
+// Initialize an N2/N3 interface between a RAN and the CN
+// N2: RAN - AMF
+// N3: RAN - UPF
+rule connect_networks_N2_N3:
+  [ !NG_RAN(~RAN_ID)
+  , !CN(~CN_ID)
+  , Fr(~cid_N2)
+  , Fr(~cid_N3) ]
+--[ OnlyOnce(~RAN_ID, ~CN_ID) ]->
+  [ !N2(~cid_N2, ~RAN_ID, ~CN_ID)
+  , !N3(~cid_N3, ~RAN_ID, ~CN_ID) ]
+
+/***********************************/
+/*           Key Leakage           */
+/***********************************/
+
+// NOTE: Rules for compromising secure channels are defined above.
+
+// SUPI is compromised
+rule reveal_supi:
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>) ]
+--[ Rev(~SUPI, <'SUPI', ~SUPI>)
+  , Rev(~CN_ID, <'SUPI', ~SUPI>)
+  ]->
+  [ Out(~SUPI) ]
+
+// K_SEAF is compromised
+rule reveal_ltk_k_seaf:
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>) ]
+--[ Rev(~SUPI, <'K_SEAF', ~K_SEAF>)
+  , Rev(~CN_ID, <'K_SEAF', ~K_SEAF>)
+  ]->
+  [ Out(~K_SEAF) ]
+
+// K_AMF is compromised
+rule reveal_session_key_k_amf:
+  [ Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>) ]
+--[ Rev(~SUPI, <'K_AMF', K_AMF>)
+  , Rev(~CN_ID, <'K_AMF', K_AMF>)
+  ]->
+  [ Out(K_AMF) ]
+
+// K_gNB is compromised
+rule reveal_session_key_k_gnb:
+  [ Session_key(~SUPI, ~RAN_ID, <'K_gNB', K_gNB>) ]
+--[ Rev(~SUPI, <'K_gNB', K_gNB>)
+  , Rev(~RAN_ID, <'K_gNB', K_gNB>)
+  ]->
+  [ Out(K_gNB) ]
+
+// NH is compromised
+rule reveal_intermediate_key_nh:
+  [ Intermediate_key(~SUPI, ~RAN_ID, ~CN_ID, <'NH', NH>) ]
+--[ Rev(~SUPI, <'NH', NH>)
+  , Rev(~RAN_ID, <'NH', NH>)
+  , Rev(~CN_ID, <'NH', NH>)
+  ]->
+  [ Out(NH) ]
+
+/************************************/
+/*          Protocol Rules          */
+/************************************/
+
+/** HANDOVER PREPARATION **/
+
+// Horizontal key derivation
+rule sran_snd_ho_req_hkd:
+  let
+    K_gNB_star = KDF(K_gNB, ~TRAN_ID)
+    msgOut = <'ho_req', ~TRAN_ID, K_gNB_star, NCC, ~C_RNTI, ~PDU_SESSION_ID>
+  in
+  [ St_1_SRAN(~SRAN_ID, K_gNB, ~C_RNTI, NH, NCC, ~PDU_SESSION_ID)
+  , !Xn(~SRAN_ID, ~TRAN_ID)
+  , Fr(~cid_Xn)
+  , In(NCC) // NCC is a small number, all of which the adversary knows, thus can
+  ]         // provide here -- removes partial deconstruction issue.
+--[ // Executability
+    HorizontalSRAN(K_gNB_star)
+  , SessionHandover(<~SRAN_ID, ~TRAN_ID>, K_gNB, K_gNB_star)
+  ]->
+  [ St_2_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~C_RNTI, NCC, ~cid_Xn)
+  , SndS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgOut) ]
+
+// Vertical key derivation
+rule sran_snd_ho_req_vkd:
+  let
+    K_gNB_star = KDF(NH, ~TRAN_ID)
+    msgOut = <'ho_req', ~TRAN_ID, K_gNB_star, NCC+'1', ~C_RNTI, ~PDU_SESSION_ID>
+  in
+  [ St_1_SRAN(~SRAN_ID, K_gNB, ~C_RNTI, NH, NCC, ~PDU_SESSION_ID)
+  , !Xn(~SRAN_ID, ~TRAN_ID)
+  , Fr(~cid_Xn)
+  , In(NCC) // NCC is a small number, all of which the adversary knows, thus can
+  ]         // provide here -- removes partial deconstruction issue.
+--[ // Executability
+    VerticalSRAN(K_gNB_star)
+  , SessionHandover(<~SRAN_ID, ~TRAN_ID>, K_gNB, K_gNB_star)
+    // Helper
+  , InEq(NH, '0')
+  ]->
+  [ St_2_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~C_RNTI, NCC+'1', ~cid_Xn)
+  , SndS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgOut) ]
+
+rule tran_rcv_ho_req_snd_ack:
+  let
+    msgIn = <'ho_req', ~TRAN_ID, K_gNB_star, NCC, ~C_RNTI_current, ~PDU_SESSION_ID>
+    msgOut = <'ho_req_ack', NCC, ~C_RNTI_current, ~C_RNTI_new>
+  in
+  [ PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , !Xn(~SRAN_ID, ~TRAN_ID)
+  , Fr(~C_RNTI_new)
+  , RcvS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgIn)
+  , In(NCC) // NCC is a small number, all of which the adversary knows, thus can
+  ]         // provide here -- removes partial deconstruction issue.
+--[ // Key agreement
+    Running(~TRAN_ID, ~SUPI, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_1_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI_new, ~PDU_SESSION_ID, NCC, ~cid_Xn)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , SndS(~cid_Xn, ~TRAN_ID, ~SRAN_ID, msgOut) ]
+
+rule sran_rcv_ho_req_ack:
+  let
+    msgIn = <'ho_req_ack', NCC, ~C_RNTI, ~C_RNTI_new>
+  in
+  [ St_2_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~C_RNTI, NCC, ~cid_Xn)
+  , RcvS(~cid_Xn, ~TRAN_ID, ~SRAN_ID, msgIn) ]
+--[ // Executability
+    HandoverPreparationDone(K_gNB_star)
+  ]->
+  [ St_3_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~C_RNTI_new, NCC, ~cid_Xn) ]
+
+/** HANDOVER EXECUTION **/
+
+rule sran_snd_ran_init_and_sn_status_transfer:
+  let
+    msgOutUE = <'ho_init', ~TRAN_ID, NCC, ~C_RNTI_new>
+    msgOutTRAN = <'sn_status_transfer'>
+  in
+  [ St_3_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~C_RNTI_new, NCC, ~cid_Xn) ]
+-->
+  [ St_4_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~cid_Xn)
+  , Out(senc(msgOutUE, K_gNB))
+  , SndS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgOutTRAN) ]
+
+// Horizontal key derivation
+rule ue_rcv_ran_init_hkd:
+  let
+    K_gNB_star = KDF(K_gNB, ~TRAN_ID)
+    msgIn = <'ho_init', ~TRAN_ID, NCC, C_RNTI_new> // ~TRAN_ID is a public identifier
+  in
+  [ St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, NH, NCC, ~SRAN_ID)
+  , !UE(~SUPI, ~CN_ID)
+  , In(senc(msgIn, K_gNB)) ]
+--[ // Executability
+    HorizontalUE(K_gNB_star)
+    // Key derivation
+  , KeyDerived(<'K_gNB_star', K_gNB_star>, ~K_SEAF, K_AMF, ~SUPI)
+  , Bind(<'K_gNB_star', K_gNB_star>, K_gNB)
+    // Key agreement
+  , Running(~SUPI, ~TRAN_ID, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Commit(~SUPI, ~TRAN_ID, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Secrecy
+  , Secret(<'K_gNB', K_gNB>)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB_star>) ]
+
+// Vertical key derivation
+rule ue_rcv_ran_init_vkd:
+  let
+    NH_fresh = KDF(K_AMF, NH)
+    K_gNB_star = KDF(NH_fresh, ~TRAN_ID)
+    NCC_in = NCC+'1'
+    msgIn = <'ho_init', ~TRAN_ID, NCC_in, C_RNTI_new> // ~TRAN_ID is a public identifier
+  in
+  [ St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, NH, NCC, ~SRAN_ID)
+  , !UE(~SUPI, ~CN_ID)
+  , In(senc(msgIn, K_gNB)) ]
+--[ // Executability
+    VerticalUE(K_gNB_star)
+    // Key derivation
+  , KeyDerived(<'K_gNB_star', K_gNB_star>, ~K_SEAF, K_AMF, ~SUPI)
+  , Bind(<'K_gNB_star', K_gNB_star>, NH_fresh)
+    // Key agreement
+  , Running(~SUPI, ~TRAN_ID, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Commit(~SUPI, ~TRAN_ID, <'UE','TRAN',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Secrecy
+  , Secret(<'K_gNB', K_gNB>)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH_fresh, NCC_in, ~SRAN_ID, ~TRAN_ID)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB_star>) ]
+
+rule ue_snd_ran_completion:
+  let
+    msgOut = <'RRCReconfigurationComplete'>
+  in
+  [ St_2_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID) ]
+--[ // Restrictions
+    GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ St_3_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID)
+  , Out(senc(msgOut, K_gNB_star)) ]
+
+rule tran_rcv_sn_status_transfer_and_ran_completion:
+  let
+    msgInSRAN = <'sn_status_transfer'>
+    msgInUE = <'RRCReconfigurationComplete'>
+  in
+  [ St_1_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, ~PDU_SESSION_ID, NCC, ~cid_Xn)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , RcvS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgInSRAN)
+  , In(senc(msgInUE, K_gNB_star)) ]
+--[ // Executability
+    HandoverExecutionDone(K_gNB_star)
+    // Key agreement
+  , Commit(~TRAN_ID, ~SUPI, <'TRAN','UE',<'K_gNB_star',K_gNB_star>>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+    // Helper
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_2_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, ~PDU_SESSION_ID, NCC, ~cid_Xn)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID) ]
+
+/** HANDOVER COMPLETION **/
+
+rule tran_snd_n2_path_switch_req:
+  let
+    msgOut = <'n2_path_switch_req', ~PDU_SESSION_ID>
+  in
+  [ St_2_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, ~PDU_SESSION_ID, NCC, ~cid_Xn)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID) ]
+-->
+  [ St_3_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, NCC, ~cid_Xn)
+  , SndS(~cid_N2, ~TRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_n2_path_switch_req_snd_n3_end_marker:
+  let
+    msgIn = <'n2_path_switch_req', ~PDU_SESSION_ID>
+    msgOut = <'n3_end_marker'>
+  in
+  [ St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~SRAN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , !N3(~cid_N3, ~SRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Helper
+    UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_2_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~SRAN_ID)
+  , SndS(~cid_N3, ~CN_ID, ~SRAN_ID, msgOut)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID) ]
+
+rule sran_fwd_n3_end_marker:
+  let
+    msgIn = <'n3_end_marker'>
+    msgOut = <'n3_end_marker'>
+  in
+  [ St_4_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~cid_Xn)
+  , !N3(~cid_N3, ~SRAN_ID, ~CN_ID)
+  , RcvS(~cid_N3, ~CN_ID, ~SRAN_ID, msgIn) ]
+-->
+  [ St_5_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~cid_Xn)
+  , SndS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgOut) ]
+
+rule cn_snd_n2_path_switch_req_ack:
+  let
+    NH_fresh = KDF(K_AMF, NH)
+    NCC_inc = NCC+'1'
+    msgOut = <'n2_path_switch_req_ack', NH_fresh, NCC_inc>
+  in
+  [ St_2_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~SRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~SRAN_ID)
+  , Intermediate_key(~SUPI, ~SRAN_ID, ~CN_ID, <'NH', NH>)
+  , In(NCC) // NCC is a small number, all of which the adversary knows, thus can
+            // provide here -- removes partial deconstruction issue.
+  , Fr(~PDU_SESSION_ID_new) ]
+--[ // Helper
+    CreatePDUSession(~PDU_SESSION_ID_new, <~CN_ID, ~SUPI, ~TRAN_ID>)
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~SRAN_ID>)
+  ]->
+  [ St_3_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID_new, NH_fresh, NCC_inc, ~TRAN_ID)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', NH_fresh>)
+  , PDU_Session(~PDU_SESSION_ID_new, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , SndS(~cid_N2, ~CN_ID, ~TRAN_ID, msgOut) ]
+
+rule tran_rcv_n3_end_marker_and_n2_path_switch_ack_snd_relsease_resources:
+  let
+    msgInSRAN = <'n3_end_marker'>
+    msgInCN = <'n2_path_switch_req_ack', NH_fresh, NCC_inc>
+    msgOut = <'release_resources'>
+  in
+  [ St_3_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, NCC, ~cid_Xn)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_Xn, ~SRAN_ID, ~TRAN_ID, msgInSRAN)
+  , RcvS(~cid_N2, ~CN_ID, ~TRAN_ID, msgInCN) ]
+-->
+  [ St_4_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, NH_fresh, NCC_inc, ~cid_Xn)
+  , SndS(~cid_Xn, ~TRAN_ID, ~SRAN_ID, msgOut) ]
+
+rule sran_receve_release_resources:
+  let
+    msgIn = <'release_resources'>
+  in
+  [ St_5_SRAN(~SRAN_ID, K_gNB, K_gNB_star, ~TRAN_ID, ~cid_Xn)
+  , RcvS(~cid_Xn, ~TRAN_ID, ~SRAN_ID, msgIn) ]
+--[ // Executability
+    HandoverCompletionDone(K_gNB_star)
+  ]-> [ ]
+
+/** MOBILITY REGISTRATION UPDATE **/
+
+rule ue_snd_registration_req:
+  let
+    msgOut = <'MRU', ~5G_GUTI>
+  in
+  [ St_3_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID) ]
+--[ // Restrictions
+    GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+    // Sources
+  , GUTI_SND(~5G_GUTI)
+  ]->
+  [ St_4_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID)
+  , Out(senc(msgOut, K_gNB_star)) ]
+
+rule tran_fwd_registration_req:
+  let
+    msgIn = <'MRU', 5G_GUTI>
+    msgOut = <'MRU', 5G_GUTI>
+  in
+  [ St_4_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI, NH, NCC, ~cid_Xn)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , In(senc(msgIn, K_gNB_star)) ]
+--[ // Sources
+    GUTI_RCV(5G_GUTI)
+  ]->
+  [ St_5_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI)
+  , SndS(~cid_N2, ~TRAN_ID, ~CN_ID, msgOut) ]
+
+rule cn_rcv_registration_req_registration_accept:
+  let
+    msgIn = <'MRU', 5G_GUTI>
+    msgOut = <'registration_accept'>
+  in
+  [ St_3_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~TRAN_ID)
+  , !N2(~cid_N2, ~TRAN_ID, ~CN_ID)
+  , RcvS(~cid_N2, ~TRAN_ID, ~CN_ID, msgIn) ]
+--[ // Sources
+    GUTI_RCV(5G_GUTI)
+  ]->
+  [ St_4_CN(~CN_ID, ~PDU_SESSION_ID, ~TRAN_ID)
+  , Out(senc(msgOut, K_AMF)) ]
+
+rule ue_rcv_registration_accept:
+  let
+    msgIn = <'registration_accept'>
+  in
+  [ St_4_UE(~SUPI, 5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB_star, NH, NCC, ~SRAN_ID, ~TRAN_ID)
+  , !UE(~SUPI, ~CN_ID)
+  , In(senc(msgIn, K_AMF)) ]
+--[ // Executability
+    MobilityRegistrationUpdateDone(K_gNB_star)
+    // Helper
+  , UseValues(<~SUPI, 5G_GUTI, ~K_SEAF, K_AMF>)
+    // Secrecy
+  , Secret(<'K_SEAF', ~K_SEAF>)
+  , Secret(<'K_AMF', K_AMF>)
+  , Secret(<'K_gNB_star', K_gNB_star>)
+  , Secret(<'SUPI', ~SUPI>)
+  , Honest(~TRAN_ID)
+  , Honest(~SRAN_ID)
+  , Honest(~SUPI)
+  , Honest(~CN_ID)
+  // Restrictions
+  , GUTI(5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ St_5_UE(~SUPI, 5G_GUTI, ~K_SEAF_initial, ~TRAN_ID, ~CN_ID) ]
+
+// Abstraction: fresh keys are initialized and derived for the next handover
+rule init_next_handover:
+  let
+    K_AMF = KDF(~K_SEAF, ~SUPI)
+    K_gNB = KDF(K_AMF, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_AMF, K_gNB)
+    NCC = '0'
+  in
+  [ St_5_TRAN(~TRAN_ID, ~SRAN_ID, K_gNB_star, ~C_RNTI)
+  , St_5_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~TRAN_ID, ~CN_ID)
+  , St_4_CN(~CN_ID, ~PDU_SESSION_ID, ~TRAN_ID)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , Fr(~K_SEAF) ]
+--[ // Executability
+    HandoverInit(<~SRAN_ID, ~TRAN_ID>, K_gNB_star, K_gNB)
+    // Helper
+  , ResetValues(<~SUPI, ~5G_GUTI, ~K_SEAF, K_AMF>)
+  , Reset('K_SEAF', ~K_SEAF_initial)
+  , UsePDUSession(~PDU_SESSION_ID, <~CN_ID, ~SUPI, ~TRAN_ID>)
+    // Key Derivation
+  , KeyDerived(<'K_AMF', K_AMF>, ~K_SEAF, K_AMF, ~SUPI)
+  , KeyDerived(<'K_gNB', K_gNB>, ~K_SEAF, K_AMF, ~SUPI)
+    // Restrictions
+  , GUTI(~5G_GUTI)
+  , SEAF(~K_SEAF)
+  , SUPI(~SUPI)
+  ]->
+  [ !Ltk_sym(~SUPI, ~CN_ID, <'K_SEAF', ~K_SEAF>)
+  , Session_key(~SUPI, ~CN_ID, <'K_AMF', K_AMF>)
+  , Session_key(~SUPI, ~TRAN_ID, <'K_gNB', K_gNB>)
+  , Intermediate_key(~SUPI, ~TRAN_ID, ~CN_ID, <'NH', NH>)
+  , PDU_Session(~PDU_SESSION_ID, ~CN_ID, ~SUPI, ~TRAN_ID)
+  , St_1_SRAN(~TRAN_ID, K_gNB, ~C_RNTI, NH, NCC, ~PDU_SESSION_ID)
+  , St_1_UE(~SUPI, ~5G_GUTI, ~K_SEAF_initial, ~K_SEAF, K_AMF, K_gNB, K_gNB, NCC, ~TRAN_ID)
+  , St_1_CN(~CN_ID, ~K_SEAF, K_AMF, ~PDU_SESSION_ID, NH, NCC, ~TRAN_ID) ]
+
+/************************************/
+/*          Sources lemmas          */
+/************************************/
+
+// Proof: Automatic (~25 s (25 steps), +RTS -N10 -M20G -RTS)
+lemma GUTI_SRC [sources]:
+  " All g #i. GUTI_RCV(g)@i
+      ==> (Ex #j. GUTI_SND(g)@j & j < i)
+           | (Ex #k. KU(g)@k & k < i)
+  "
+
+/************************************/
+/*           Restrictions           */
+/************************************/
+
+restriction Inequality:
+  " All p q #i. InEq(p,q)@i ==> not (p = q) "
+
+restriction OnlyOnce:
+  " All p q #i #j. OnlyOnce(p, q)@i & OnlyOnce(p, q)@j ==> #i = #j "
+
+/* The following restrictions ensure that each UE is initialized with the
+ * correct values. Without them, a UE might send out its K_SEAF or SUPI instead
+ * of a 5G_GUTI. If the UE is initialized with the wrong values, then it is
+ * already controlled by the attacker and lemmas are useless.
+ */
+
+restriction GUTInotSEAF:
+  " All p #i #j. GUTI(p)@i & SEAF(p)@j ==> F "
+
+restriction GUTInotSUPI:
+  " All p #i #j. GUTI(p)@i & SUPI(p)@j ==> F "
+
+/***********************************/
+/*          Helper Lemmas          */
+/***********************************/
+
+// Proof: Automatic (~25 s (66 steps), +RTS -N10 -M20G -RTS)
+lemma PDUorigin [use_induction, reuse]:
+  " All p q #i. UsePDUSession(p,q)@i
+      ==> (Ex #j. CreatePDUSession(p,q)@j)
+  "
+
+// Proof: Automatic (~25 s (8 steps), +RTS -N10 -M20G -RTS)
+lemma PDUargsconstant [use_induction, reuse]:
+  " All p q r #i #j. UsePDUSession(p,q)@i & UsePDUSession(p,r)@j
+      ==> (q = r)
+  "
+
+// Proof: Automatic (~25 s (8 steps), +RTS -N10 -M20G -RTS)
+lemma PDUidunique [use_induction, reuse]:
+   " All p q r #i #j. CreatePDUSession(p,q)@i & CreatePDUSession(p,r)@j
+       ==> (q = r)
+   "
+
+// Proof: Automatic (~25 s (19 steps), +RTS -N10 -M20G -RTS)
+lemma ValueOrigin [use_induction, reuse]:
+  " All p #i. UseValues(p)@i
+      ==> (Ex #j. CreateValues(p)@j) | (Ex #j. ResetValues(p)@j)
+  "
+
+// Proof: Automatic (~25 s (18 steps), +RTS -N10 -M20G -RTS)
+lemma ValueReset [use_induction, reuse]:
+  " All p #i. Reset('K_SEAF', p)@i
+      ==> (Ex #j. Init('K_SEAF', p)@j)
+  "
+
+/************************************/
+/*       Executability Lemmas       */
+/************************************/
+
+// Normal executability for one Handover (hkd)
+// Proof: Automatic (~2 min (55 steps), +RTS -N10 -M20G -RTS)
+lemma executability_hkd:
+  exists-trace
+  " Ex x0 x1
+       s t
+       #i1 #i2 #i3
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (Ex a #k. VerticalSRAN(a)@k)
+     & not (Ex a #k. VerticalUE(a)@k)
+     & not (Ex a b c #k. HandoverInit(a,b,c)@k)
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+// Normal executability for two consecutive Handovers (hkd-vkd)
+// Proof: Automatic (~12 min (253 steps), +RTS -N10 -M20G -RTS)
+lemma executability_hkd_vkd:
+  exists-trace
+  " Ex x0 x1 x2 x3
+       s t
+       #i1 #i2
+       #i3 #i4 #i5
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+       // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & VerticalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & VerticalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (x1 = x3)
+
+     & #i3 < #i4
+     & #i4 < #i5
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1)
+     & (All a #k. VerticalSRAN(a)@k ==> #k = #l1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3)
+     & (All a #k. VerticalUE(a)@k ==> #k = #l3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+// Normal executability for two consecutive Handovers (hkd-hkd)
+// Proof: Automatic (~12 min (257 steps), +RTS -N10 -M20G -RTS)
+lemma executability_hkd_hkd:
+  exists-trace
+  " Ex x0 x1 x2 x3
+       s t
+       #i1 #i2
+       #i3 #i4 #i5
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & HorizontalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (Ex a #k. VerticalSRAN(a)@k)
+     & not (Ex a #k. VerticalUE(a)@k)
+     & not (x1 = x2)
+     & not (x2 = x3)
+
+     & #i3 < #i4
+     & #i4 < #i5
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1 | #k = #l1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3 | #k = #l3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+// Normal executability for three consecutive Handovers (hkd-hkd-hkd)
+// Long execution time, enable with -D=exec_hkd_hkd_hkd
+// Proof: Automatic (~60 min (564 steps), +RTS -N10 -M20G -RTS)
+#ifdef exec_hkd_hkd_hkd
+lemma executability_hkd_hkd_hkd:
+  exists-trace
+  " Ex x0 x1 x2 x3 x4 x5
+       s t
+       #i1 #i2
+       #i3 #i4
+       #i5 #i6 #i7
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+       #m1 #m2 #m3
+       #m4 #m5 #m6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+     // Initialize new keys for the next handover
+     & HandoverInit(<t, s>, x3, x4)@i6
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<s, t>, x4, x5)@i7
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & HorizontalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x5)@m1
+     & HandoverPreparationDone(x5)@m2
+     & HorizontalUE(x5)@m3
+     & HandoverExecutionDone(x5)@m4
+     & HandoverCompletionDone(x5)@m5
+     & MobilityRegistrationUpdateDone(x5)@m6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+     & not (Ex a #k. VerticalSRAN(a)@k)
+     & not (Ex a #k. VerticalUE(a)@k)
+     & not (x1 = x3)
+     & not (x1 = x5)
+     & not (x3 = x5)
+
+     & #i3 < #i4
+     & #i4 < #i5
+     & #i5 < #i6
+     & #i5 < #i7
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & #l1 < #m1
+     & #l2 < #m2
+     & #l3 < #m3
+     & #l4 < #m4
+     & #l5 < #m5
+     & #l6 < #m6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4 | #k = #i6)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5 | #k = #i7)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1 | #k = #l1 | #k = #m1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2 | #k = #m2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3 | #k = #l3 | #k = #m3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4 | #k = #m4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5 | #k = #m5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6 | #k = #m6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+#endif
+
+// Normal executability for three consecutive Handovers (hkd-hkd-vkd)
+// Long execution time, enable with -D=exec_hkd_hkd_vkd
+// Proof: Automatic (~40 min (560 steps), +RTS -N10 -M20G -RTS)
+#ifdef exec_hkd_hkd_vkd
+lemma executability_hkd_hkd_vkd:
+  exists-trace
+  " Ex x0 x1 x2 x3 x4 x5
+       s t
+       #i1 #i2
+       #i3 #i4
+       #i5 #i6 #i7
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+       #m1 #m2 #m3
+       #m4 #m5 #m6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+     // Initialize new keys for the next handover
+     & HandoverInit(<t, s>, x3, x4)@i6
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<s, t>, x4, x5)@i7
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & HorizontalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Execute the protocol with horizontal key derivation
+     & VerticalSRAN(x5)@m1
+     & HandoverPreparationDone(x5)@m2
+     & VerticalUE(x5)@m3
+     & HandoverExecutionDone(x5)@m4
+     & HandoverCompletionDone(x5)@m5
+     & MobilityRegistrationUpdateDone(x5)@m6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (x1 = x3)
+     & not (x1 = x5)
+     & not (x3 = x5)
+
+     & #i3 < #i4
+     & #i4 < #i5
+     & #i5 < #i6
+     & #i5 < #i7
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & #l1 < #m1
+     & #l2 < #m2
+     & #l3 < #m3
+     & #l4 < #m4
+     & #l5 < #m5
+     & #l6 < #m6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4 | #k = #i6)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5 | #k = #i7)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1 | #k = #l1)
+     & (All a #k. VerticalSRAN(a)@k ==> #k = #m1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2 | #k = #m2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3 | #k = #l3)
+     & (All a #k. VerticalUE(a)@k ==> #k = #m3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4 | #k = #m4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5 | #k = #m5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6 | #k = #m6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+#endif
+
+// Normal executability for three consecutive Handovers (hkd-vkd-hkd)
+// Long execution time, enable with -D=exec_hkd_vkd_hkd
+// Proof: Automatic (~45 min (557 steps), +RTS -N10 -M20G -RTS)
+#ifdef exec_hkd_vkd_hkd
+lemma executability_hkd_vkd_hkd:
+  exists-trace
+  " Ex x0 x1 x2 x3 x4 x5
+       s t
+       #i1 #i2
+       #i3 #i4
+       #i5 #i6 #i7
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+       #m1 #m2 #m3
+       #m4 #m5 #m6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+     // Initialize new keys for the next handover
+     & HandoverInit(<t, s>, x3, x4)@i6
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<s, t>, x4, x5)@i7
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & VerticalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & VerticalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x5)@m1
+     & HandoverPreparationDone(x5)@m2
+     & HorizontalUE(x5)@m3
+     & HandoverExecutionDone(x5)@m4
+     & HandoverCompletionDone(x5)@m5
+     & MobilityRegistrationUpdateDone(x5)@m6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (x1 = x3)
+     & not (x1 = x5)
+     & not (x3 = x5)
+
+     & #i3 < #i4
+     & #i4 < #i5
+     & #i5 < #i6
+     & #i5 < #i7
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & #l1 < #m1
+     & #l2 < #m2
+     & #l3 < #m3
+     & #l4 < #m4
+     & #l5 < #m5
+     & #l6 < #m6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4 | #k = #i6)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5 | #k = #i7)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1 | #k = #m1)
+     & (All a #k. VerticalSRAN(a)@k ==> #k = #l1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2 | #k = #m2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3 | #k = #m3)
+     & (All a #k. VerticalUE(a)@k ==> #k = #l3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4 | #k = #m4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5 | #k = #m5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6 | #k = #m6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+#endif
+
+// Normal executability for three consecutive Handovers (hkd-vkd-vkd)
+// Long execution time, enable with -D=exec_hkd_vkd_vkd
+// Proof: Automatic (~50 min (561 steps), +RTS -N10 -M20G -RTS)
+#ifdef exec_hkd_vkd_vkd
+lemma executability_hkd_vkd_vkd:
+  exists-trace
+  " Ex x0 x1 x2 x3 x4 x5
+       s t
+       #i1 #i2
+       #i3 #i4
+       #i5 #i6 #i7
+       #j1 #j2 #j3
+       #j4 #j5 #j6
+       #l1 #l2 #l3
+       #l4 #l5 #l6
+       #m1 #m2 #m3
+       #m4 #m5 #m6
+    .
+       // Initialize initial K_gNB
+       Init('K_gNB',x0)@i1
+
+       // Connect S-RAN and T-RAN
+     & Connect(s,t)@i2
+     & Connect(t,s)@i2
+
+       // Session handover from S-RAN to T-RAN
+     & SessionHandover(<s, t>, x0, x1)@i3
+     // Initialize new keys for the next handover
+     & HandoverInit(<s, t>, x1, x2)@i4
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<t, s>, x2, x3)@i5
+     // Initialize new keys for the next handover
+     & HandoverInit(<t, s>, x3, x4)@i6
+       // Session handover from T-RAN to S-RAN
+     & SessionHandover(<s, t>, x4, x5)@i7
+
+       // Execute the protocol with horizontal key derivation
+     & HorizontalSRAN(x1)@j1
+     & HandoverPreparationDone(x1)@j2
+     & HorizontalUE(x1)@j3
+     & HandoverExecutionDone(x1)@j4
+     & HandoverCompletionDone(x1)@j5
+     & MobilityRegistrationUpdateDone(x1)@j6
+
+       // Execute the protocol with horizontal key derivation
+     & VerticalSRAN(x3)@l1
+     & HandoverPreparationDone(x3)@l2
+     & VerticalUE(x3)@l3
+     & HandoverExecutionDone(x3)@l4
+     & HandoverCompletionDone(x3)@l5
+     & MobilityRegistrationUpdateDone(x3)@l6
+
+       // Execute the protocol with horizontal key derivation
+     & VerticalSRAN(x5)@m1
+     & HandoverPreparationDone(x5)@m2
+     & VerticalUE(x5)@m3
+     & HandoverExecutionDone(x5)@m4
+     & HandoverCompletionDone(x5)@m5
+     & MobilityRegistrationUpdateDone(x5)@m6
+
+       // Restrictions
+     & not (Ex X data #r. Rev(X,data)@r)
+
+     & not (x1 = x3)
+     & not (x1 = x5)
+     & not (x3 = x5)
+
+     & #i3 < #i4
+     & #i4 < #i5
+     & #i5 < #i6
+     & #i5 < #i7
+
+     & #j1 < #l1
+     & #j2 < #l2
+     & #j3 < #l3
+     & #j4 < #l4
+     & #j5 < #l5
+     & #j6 < #l6
+
+     & #l1 < #m1
+     & #l2 < #m2
+     & #l3 < #m3
+     & #l4 < #m4
+     & #l5 < #m5
+     & #l6 < #m6
+
+     & (All a #k. Init('K_gNB',a)@k ==> #k = #i1)
+     & (All a b #k. Connect(a,b)@k ==> #k = #i2)
+     & (All a b c #k. HandoverInit(a,b,c)@k ==> #k = #i4 | #k = #i6)
+     & (All a b c #k. SessionHandover(a,b,c)@k ==> #k = #i3 | #k = #i5 | #k = #i7)
+
+     & (All a #k. HorizontalSRAN(a)@k ==> #k = #j1)
+     & (All a #k. VerticalSRAN(a)@k ==> #k = #l1  | #k = #m1)
+     & (All a #k. HandoverPreparationDone(a)@k ==> #k = #j2 | #k = #l2 | #k = #m2)
+     & (All a #k. HorizontalUE(a)@k ==> #k = #j3)
+     & (All a #k. VerticalUE(a)@k ==> #k = #l3 | #k = #m3)
+     & (All a #k. HandoverExecutionDone(a)@k ==> #k = #j4 | #k = #l4 | #k = #m4)
+     & (All a #k. HandoverCompletionDone(a)@k ==> #k = #j5 | #k = #l5 | #k = #m5)
+     & (All a #k. MobilityRegistrationUpdateDone(a)@k ==> #k = #j6 | #k = #l6 | #k = #m6)
+
+     & (All a b #k1 #k2. CoreNetwork(a)@k1
+                       & CoreNetwork(b)@k2 ==> #k1 = #k2)
+     & (All a b #k1 #k2. UserEquipment(a)@k1
+                       & UserEquipment(b)@k2 ==> #k1 = #k2)
+     & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                           & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+#endif
+
+/************************************/
+/*         Agreement Lemmas         */
+/************************************/
+
+/* Injective agreement of K_gNB_star: UE -> TRAN
+ *
+ * If a UE commits to a key K_gNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one RAN that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~3 min (884 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = SUPI
+ *  b = TRAN_ID
+ *  r = K_gNB_star
+ */
+lemma injectiveagreement_ue_tran_k_gnb:
+  " All a b r #i. Commit(a,b,<'UE','TRAN',<'K_gNB_star',r>>)@i
+      ==> (Ex #j. Running(b,a,<'UE','TRAN',<'K_gNB_star',r>>)@j
+           & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','TRAN',<'K_gNB_star',r>>)@i2
+             & not (#i2 = #i))
+           ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/* Injective agreement of K_gNB_star: TRAN -> UE
+ *
+ * If a RAN commits to a key K_gNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one UE that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~14 min (4309 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = TRAN_ID
+ *  b = SUPI
+ *  r = K_gNB_star
+ */
+lemma injectiveagreement_tran_ue_k_gnb:
+  " All a b r #i. Commit(a,b,<'TRAN','UE',<'K_gNB_star',r>>)@i
+      ==> (Ex #j. Running(b,a,<'TRAN','UE',<'K_gNB_star',r>>)@j
+           & not (Ex a2 b2 #i2. Commit(a2,b2,<'TRAN','UE',<'K_gNB_star',r>>)@i2
+             & not (#i2 = #i))
+           ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/************************************/
+/*          Secrecy Lemmas          */
+/************************************/
+
+/* Secrecy of SUPI
+ *
+ * If an attacker knows a SUPI, then the following is true:
+ *  - The identifier itself was revealed to the attacker
+ *
+ * Proof: Automatic (~45 s (132 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   s = SUPI
+ */
+lemma secret_supi:
+  " All s #i. Secret(<'SUPI',s>)@i
+    ==> (not (Ex #j. K(s)@j))
+         | (Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
+  "
+
+/* Secrecy of K_SEAF
+ *
+ * If an attacker knows a key K_SEAF, then the following is true:
+ *  - The key itself was revealed to the attacker
+ *
+ * Proof: Automatic (~1.5 min (606 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p = K_SEAF
+ */
+lemma secret_k_seaf:
+  " All p #i. Secret(<'K_SEAF',p>)@i
+    ==> (not (Ex #j. K(p)@j))
+         | (Ex X #j. Rev(X,<'K_SEAF',p>)@j & Honest(X)@i)
+  "
+
+/* Secrecy of K_AMF
+ *
+ * If an attacker knows a key K_AMF, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_SEAF and SUPI that it originates from were revealed to the attacker
+ *
+ * Proof: Automatic (~2.5 min (1161 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p   = K_SEAF
+ *  q r = K_AMF
+ *  s   = SUPI
+ */
+lemma secret_k_amf:
+  " All p q s #i #j.
+        Secret(<'K_AMF',q>)@i
+      & KeyDerived(<'K_AMF',q>,p,q,s)@j
+      ==> (not (Ex #k. K(q)@k))
+           | (Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & (Ex X #k. Rev(X,<'SUPI',s>)@k & Honest(X)@i))
+  "
+
+/* Secrecy of K_gNB
+ *
+ * If an attacker knows a key K_gNB, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it originates from was revealed to the attacker
+ *  - The K_SEAF and the SUPI that it originates from were revealed to the
+ *    attacker
+ *
+ * Proof: Automatic (~12 min (3864 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p = K_SEAF
+ *  q = K_AMF
+ *  r = K_gNB
+ *  s = SUPI
+ */
+lemma secret_k_gnb:
+  " All p q r s #i #j.
+        Secret(<'K_gNB',r>)@i
+      & KeyDerived(<'K_gNB',r>,p,q,s)@j
+      ==> (not (Ex #k. K(r)@k))
+           | (Ex X #k. Rev(X,<'K_gNB',r>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & (Ex X #k. Rev(X,<'SUPI',s>)@k & Honest(X)@i))
+  "
+
+/* Secrecy of K_gNB_star
+ *
+ * If an attacker knows a key K_gNB_star, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it originates from was revealed to the attacker
+ *  - The K_SEAF and SUPI that it originates from were revealed to the attacker
+ *  - The key that is was derived from was revealed to the attacker
+ *  - The secure channel that it was sent over was compromised by the attacker
+ *
+ * Proof: Automatic (~10 min (3287 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  p = K_SEAF
+ *  q = K_AMF
+ *  r = K_gNB_star
+ *  s = SUPI
+ *  t = NH or K_gNB
+ */
+lemma secret_k_gnb_star:
+  " All p q r s t #i #j.
+        Secret(<'K_gNB_star',r>)@i
+      & KeyDerived(<'K_gNB_star',r>,p,q,s)@j
+      & Bind(<'K_gNB_star',r>,t)@j
+      ==> (not (Ex #k. K(r)@k))
+           | (Ex X #k. Rev(X,<'K_gNB',r>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'K_AMF',q>)@k & Honest(X)@i)
+           | ((Ex X #k. Rev(X,<'K_SEAF',p>)@k & Honest(X)@i)
+               & (Ex X #k. Rev(X,<'SUPI',s>)@k & Honest(X)@i))
+           | (Ex X n #k. Rev(X,<n,t>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,'secureChannel')@k & Honest(X)@i)
+  "
+
+end

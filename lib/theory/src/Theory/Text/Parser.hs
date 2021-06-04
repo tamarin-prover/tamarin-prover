@@ -29,6 +29,7 @@ import           Data.Foldable              (asum)
 import           Data.Label
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import           System.FilePath
 import           Control.Category
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
@@ -52,28 +53,29 @@ import Theory.Text.Parser.Sapic
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags = parseFile (theory flags)
+parseOpenTheory flags inFile = parseFile (theory flags (Just inFile)) inFile
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenDiffTheory
-parseOpenDiffTheory flags = parseFile (diffTheory flags)
+parseOpenDiffTheory flags inFile = parseFile (diffTheory flags (Just inFile)) inFile
 
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
-parseOpenTheoryString flags = parseString "<unknown source>" (theory flags)
+parseOpenTheoryString flags = parseString "<unknown source>" (theory flags Nothing)
 
 -- | Parse a security protocol theory from a string.
 parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenDiffTheory
-parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags)
+parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags Nothing)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
-parseLemma = parseString "<unknown source>" lemma
+parseLemma = parseString "<unknown source>" (lemma Nothing)
+
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
@@ -131,7 +133,12 @@ liftedAddLemma thy lem = do
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
+    | (StandRule (DefdRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
+        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
+        return thy''
+    | (StandRule (SAPiCRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
         rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
@@ -151,8 +158,9 @@ liftedAddProtoRule thy ru
 
 -- | Parse a theory.
 theory :: [String]   -- ^ Defined flags.
+       -> Maybe FilePath
        -> Parser OpenTheory
-theory flags0 = do
+theory flags0 inFile = do
     msig <- getState
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
@@ -163,7 +171,7 @@ theory flags0 = do
   where
     addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
     addItems flags thy = asum
-      [ do thy' <- liftedAddHeuristic thy =<< (heuristic False)
+      [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems flags thy'
       , do thy' <- builtins thy
            msig <- getState
@@ -185,7 +193,7 @@ theory flags0 = do
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma thy =<< lemma
+      , do thy' <- liftedAddLemma thy =<< lemma workDir
            addItems flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
@@ -209,6 +217,7 @@ theory flags0 = do
       , do return thy
       ]
 
+    workDir = takeDirectory <$> inFile
 
     define flags thy = do
        flag <- try (symbol "#define") *> identifier
@@ -236,8 +245,9 @@ theory flags0 = do
 
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
+       -> Maybe FilePath
        -> Parser OpenDiffTheory
-diffTheory flags0 = do
+diffTheory flags0 inFile = do
     msig <- getState
     putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
@@ -248,7 +258,7 @@ diffTheory flags0 = do
   where
     addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems flags thy = asum
-      [ do thy' <- liftedAddHeuristic thy =<< (heuristic True)
+      [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems flags thy'
       , do
            diffbuiltins
@@ -268,9 +278,9 @@ diffTheory flags0 = do
       , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
            addItems flags thy'
            -- add legacy deprecation warning output
-      , do thy' <- liftedAddLemma' thy =<< plainLemma
+      , do thy' <- liftedAddLemma' thy =<< plainLemma workDir
            addItems flags thy'
-      , do thy' <- liftedAddDiffLemma thy =<< diffLemma
+      , do thy' <- liftedAddDiffLemma thy =<< diffLemma workDir
            addItems flags thy'
       , do ru <- diffRule
            thy' <- liftedAddDiffRule thy ru
@@ -283,6 +293,8 @@ diffTheory flags0 = do
       , do define flags thy
       , do return thy
       ]
+
+    workDir = takeDirectory <$> inFile
 
     define :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     define flags thy = do

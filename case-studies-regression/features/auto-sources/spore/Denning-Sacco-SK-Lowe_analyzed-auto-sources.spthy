@@ -38,8 +38,9 @@ rule (modulo E) S_1:
    Fr( ~t )
    ]
   --[
-  AUTO_OUT_0_1_S_1( senc(<'1', y, ~kab, ~t, senc(<'2', ~kab, x, ~t>, kbs)>,
-                         kas)
+  AUTO_OUT_TERM_2_0_0_1_1_1_1__A_2( senc(<'1', y, ~kab, ~t, 
+                                          senc(<'2', ~kab, x, ~t>, kbs)>,
+                                         kas)
   )
   ]->
    [
@@ -54,7 +55,10 @@ rule (modulo E) A_2:
    StateA1( A, B ), !LongtermKey( xkas, A ),
    In( senc(<'1', B, xkab, xt, xmb>, xkas) )
    ]
-  --[ AUTO_IN_1_1_A_2( senc(<'1', B, xkab, xt, xmb>, xkas), xmb ) ]->
+  --[
+  AUTO_IN_TERM_2_0_0_1_1_1_1__A_2( senc(<'1', B, xkab, xt, xmb>, xkas), xmb
+  )
+  ]->
    [ StateA2( A, B, xkab ), Out( xmb ) ]
 
   /* has exactly the trivial AC variant */
@@ -609,16 +613,16 @@ lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
    (∀ x m #i.
-     (AUTO_IN_1_1_A_2( m, x ) @ #i) ⇒
+     (AUTO_IN_TERM_2_0_0_1_1_1_1__A_2( m, x ) @ #i) ⇒
      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_0_1_S_1( m ) @ #j) ∧ (#j < #i))))"
+      (∃ #j. (AUTO_OUT_TERM_2_0_0_1_1_1_1__A_2( m ) @ #j) ∧ (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "∃ x m #i.
-  (AUTO_IN_1_1_A_2( m, x ) @ #i)
+  (AUTO_IN_TERM_2_0_0_1_1_1_1__A_2( m, x ) @ #i)
  ∧
   (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_0_1_S_1( m ) @ #j) ⇒ ¬(#j < #i))"
+  (∀ #j. (AUTO_OUT_TERM_2_0_0_1_1_1_1__A_2( m ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case empty_trace
@@ -629,7 +633,8 @@ next
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
-           (AUTO_OUT_0_1_S_1( senc(<'1', B, xkab, xt, x>, xkas) ) @ #j)
+           (AUTO_OUT_TERM_2_0_0_1_1_1_1__A_2( senc(<'1', B, xkab, xt, x>, xkas)
+            ) @ #j)
           ∧
            (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
@@ -641,7 +646,9 @@ next
           case A_2
           solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
                  (∃ #j.
-                   (AUTO_OUT_0_1_S_1( senc(<'1', $B.1, xkab.1, xt.1, t>, ~kxs.1) ) @ #j)
+                   (AUTO_OUT_TERM_2_0_0_1_1_1_1__A_2( senc(<'1', $B.1, xkab.1, xt.1, t>,
+                                                           ~kxs.1)
+                    ) @ #j)
                   ∧
                    (¬(last(#j))) ∧ (#j < #vr.2)) )
             case case_1
@@ -702,7 +709,7 @@ analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 2.958218781s
+  processing time: 2.571112057s
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)
   noninjectiveagreement_B (all-traces): verified (28 steps)
@@ -719,7 +726,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 2.958218781s
+  processing time: 2.571112057s
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)
   noninjectiveagreement_B (all-traces): verified (28 steps)

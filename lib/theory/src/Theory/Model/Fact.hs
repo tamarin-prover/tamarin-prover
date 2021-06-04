@@ -32,6 +32,7 @@ module Theory.Model.Fact (
   , isLinearFact
   , isPersistentFact
   , isProtoFact
+  , isInFact
 
   , factTagName
   , showFactTag
@@ -45,6 +46,7 @@ module Theory.Model.Fact (
   , getFactVariables
   , getFactTerms
   , getFactAnnotations
+  , getFactTag
   , isTrivialFact
   , isSolveFirstFact
   , isSolveLastFact
@@ -98,6 +100,8 @@ module Theory.Model.Fact (
   , prettyFact
   , prettyNFact
   , prettyLNFact
+  , prettyLNFactSubscript
+  , prettyNFactSubscript
 
   ) where
 
@@ -305,6 +309,11 @@ isProtoFact :: Fact t -> Bool
 isProtoFact (Fact ProtoFact {} _ _) = True
 isProtoFact _                            = False
 
+-- | True iff the fact is an input fact.
+isInFact :: Fact t -> Bool
+isInFact (Fact InFact _ _) = True
+isInFact _                 = False
+
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]
 protoFactView fa = case fa of
@@ -371,6 +380,9 @@ factMultiplicity = factTagMultiplicity . factTag
 -- | The terms of a 'Fact'.
 getFactTerms :: Fact t -> [t]
 getFactTerms (Fact _ _ ts) = ts
+
+getFactTag :: Fact t -> FactTag
+getFactTag (Fact tag _ _) = tag
 
 -- | Get the set of fact annotations
 getFactAnnotations :: Fact t -> S.Set FactAnnotation
@@ -520,11 +532,28 @@ showFactAnnotation an = case an of
 prettyFact :: Document d => (t -> d) -> Fact t -> d
 prettyFact ppTerm (Fact tag an ts)
   | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
-  | otherwise                     = ppFact (showFactTag tag) ts <> ppAnn an
+  | otherwise                     = ppFact (formatIfRestriction . showFactTag $ tag) ts <> ppAnn an
   where
+    formatIfRestriction xs = if "restr_" `isPrefixOf` xs then filter (/='#') xs else xs
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
     ppAnn ann = if S.null ann then text "" else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
+
+-- | Pretty print a fact with subscript tags.
+prettyFactSubscript :: Document d => (t -> d) -> Fact t -> d
+prettyFactSubscript ppTerm (Fact tag an ts)
+  | factTagArity tag /= length ts = ppFact ("MALFORMED-" ++ show tag) ts <> ppAnn an
+  | otherwise                     = ppFact (formatFactTag . showFactTag $ tag) ts <> ppAnn an
+  where
+    formatFactTag xs = if "restr_" `isPrefixOf` xs then takeWhile (/='#') xs else subscript xs
+    subscript [] = []
+    subscript ['_'] = []
+    subscript ('_':xr) = if '_' `notElem` xr then subscript ("<sub>"++xr++"</sub>") else '_':xr
+    subscript (x:xr) = x:subscript xr
+    ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
+    ppAnn ann = if S.null ann then text "" else
+        brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
+
 
 -- | Pretty print a 'NFact'.
 prettyNFact :: (Document d, Show v) => NFact v -> d
@@ -533,3 +562,11 @@ prettyNFact = prettyFact prettyNTerm
 -- | Pretty print a 'LFact'.
 prettyLNFact :: Document d => LNFact -> d
 prettyLNFact = prettyFact prettyNTerm
+
+-- | Pretty print a 'NFact' with subscript tags.
+prettyNFactSubscript :: (Document d, Show v) => NFact v -> d
+prettyNFactSubscript = prettyFactSubscript prettyNTermSubscript
+
+-- | Pretty print a 'LFact' with subscript tags.
+prettyLNFactSubscript :: Document d => LNFact -> d
+prettyLNFactSubscript = prettyFactSubscript prettyNTermSubscript

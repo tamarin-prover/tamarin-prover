@@ -26,10 +26,11 @@ import           Debug.Trace
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
+import Theory.Text.Parser.Signature
 
 -- | Parse a 'LemmaAttribute'.
-lemmaAttribute :: Bool -> Parser LemmaAttribute
-lemmaAttribute diff = asum
+lemmaAttribute :: Bool -> Maybe FilePath -> Parser LemmaAttribute
+lemmaAttribute diff workDir = asum
   [ symbol "typing"        *> trace ("Deprecation Warning: using 'typing' is retired notation, replace all uses of 'typing' by 'sources'.\n") pure SourceLemma -- legacy support, emits deprecation warning
 --  , symbol "typing"        *> fail "Using 'typing' is retired notation, replace all uses of 'typing' by 'sources'."
   , symbol "sources"       *> pure SourceLemma
@@ -37,15 +38,11 @@ lemmaAttribute diff = asum
   , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> parseGoalRanking)
+  , symbol "heuristic="    *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
-  where
-    parseGoalRanking = case diff of
-        True  -> map charToGoalRankingDiff <$> many1 letter
-        False -> map charToGoalRanking     <$> many1 letter
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier
@@ -54,24 +51,24 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
-protoLemma :: Parser f -> Parser (ProtoLemma f ProofSkeleton)
-protoLemma parseFormula = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list (lemmaAttribute False))
+protoLemma :: Parser f -> Maybe FilePath -> Parser (ProtoLemma f ProofSkeleton)
+protoLemma parseFormula workDir = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
+                      <*> (option [] $ list (lemmaAttribute False workDir))
                       <*> (colon *> option AllTraces traceQuantifier)
                       <*> doubleQuoted parseFormula
                       <*> (startProofSkeleton <|> pure (unproven ()))
 
 
 -- | Parse a lemma.
-lemma :: Parser (SyntacticLemma ProofSkeleton)
+lemma :: Maybe FilePath -> Parser (SyntacticLemma ProofSkeleton)
 lemma = protoLemma $ standardFormula msgvar nodevar
 
 -- | Parse a lemma w/o syntactic sugar
-plainLemma :: Parser (Lemma ProofSkeleton)
+plainLemma :: Maybe FilePath -> Parser (Lemma ProofSkeleton)
 plainLemma = protoLemma plainFormula
 
 -- | Parse a diff lemma.
-diffLemma :: Parser (DiffLemma DiffProofSkeleton)
-diffLemma = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> (option [] $ list (lemmaAttribute True))
+diffLemma :: Maybe FilePath -> Parser (DiffLemma DiffProofSkeleton)
+diffLemma workDir = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
+                              <*> option [] (list (lemmaAttribute True workDir))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))

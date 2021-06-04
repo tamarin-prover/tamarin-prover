@@ -1,0 +1,126 @@
+#!/usr/bin/python
+
+import sys
+import re
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+
+maxPriority = 101  # Maximum priority is 100
+
+# List of ranks
+rank = []
+for i in range(0, maxPriority):
+  rank.append([])
+
+## SOURCES LEMMAS
+if re.match('^NH', lemma):
+  pass # No need for an oracle here
+
+## EXECUTABILITY LEMMAS
+elif re.match('^executability', lemma):
+  for line in lines:
+    num = line.split(':')[0]
+
+    if re.match('.*!S1\( .*', line): rank[100].append(num)
+    elif re.match('.*St\_.*', line): rank[95].append(num)
+    elif re.match('.*RcvS.*', line): rank[90].append(num)
+    elif re.match('.*!KU.*\_ID.*', line): rank[20].append(num)
+    elif re.match('.*!KU.*\~cid.*', line): rank[20].append(num)
+    elif re.match('.*!KU.*', line): rank[85].append(num)
+    else: rank[20].append(num)
+
+## AGREEMENT LEMMAS
+elif re.match('^injectiveagreement\_', lemma):
+
+  # Injective agreement of K_eNB* (UE -> eNB)
+  if (lemma == 'injectiveagreement_ue_enb_k_enb'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit\( .*', line): rank[100].append(num)
+      elif re.match('.*!KU\( \~K\_AMF.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_AMF,.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( KDF\(KDF\(\~K\_AMF,.*', line): rank[95].append(num)
+      elif re.match('.*RcvS.*', line): rank[80].append(num)
+      elif re.match('.*!KU\( senc.*\~K\_AMF.*', line): rank[75].append(num)
+      else: rank[20].append(num)
+
+  # Injective agreement of K_eNB* (eNB -> UE)
+  elif (lemma == 'injectiveagreement_enb_ue_k_enb'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit\( .*', line): rank[100].append(num)
+      elif re.match('.*St\_1\_eNB.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( KDF\(NH,.*', line): rank[90].append(num)
+      elif re.match('.*!KU\( senc.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( \~K\_AMF.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_AMF,.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( KDF\(KDF\(\~K\_AMF,.*', line): rank[95].append(num)
+      elif re.match('.*RcvS.*', line): rank[80].append(num)
+      else: rank[20].append(num)
+
+## SECRECY LEMMAS
+elif re.match('^secret\_', lemma):
+
+  # Secrecy of K_AMF
+  if (lemma == 'secret_k_amf'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret\( .*', line): rank[100].append(num)
+      elif re.match('.*!KU\( \~K\_AMF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*AMF.*', line): rank[90].append(num)
+      else: rank[20].append(num)
+
+  # Secrecy of K_ASME
+  elif (lemma == 'secret_k_asme'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret\( .*', line): rank[100].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[95].append(num)
+      elif re.match('.*RcvS\( .*, ~K\_AMF.*', line): rank[95].append(num)
+      elif re.match('.*St\_3\_AMF\( .*', line): rank[85].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_AMF.*', line): rank[80].append(num)
+      elif re.match('.*!KU\( ~K\_AMF.*', line): rank[80].append(num)
+      else: rank[20].append(num)
+
+  # Secrecy of K_gNB
+  elif (lemma == 'secret_k_gnb'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret\( .*', line): rank[100].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[95].append(num)
+      elif re.match('.*RcvS\( .*, \~K\_AMF.*', line): rank[90].append(num)
+      elif re.match('.*St\_3\_gNB\( .*', line): rank[90].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_AMF.*', line): rank[85].append(num)
+      elif re.match('.*!KU\( ~K\_AMF.*', line): rank[80].append(num)
+      else: rank[20].append(num)
+
+  # Secrecy of K_eNB*
+  elif (lemma == 'secret_k_enb_star'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret\( .*', line): rank[100].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[95].append(num)
+      elif re.match('.*RcvS\( .*, \~K\_AMF.*', line): rank[90].append(num)
+      elif re.match('.*St\_3\_.*\( .*', line): rank[85].append(num)
+      elif re.match('.*St\_2\_.*\( .*', line): rank[80].append(num)
+      elif re.match('.*!KU\( \~K\_AMF.*', line): rank[80].append(num)
+      elif re.match('.*!KU\( .*KDF\(\~K\_AMF,.*', line): rank[80].append(num)
+      elif re.match('.*RcvS\( .*', line): rank[75].append(num)
+      else: rank[20].append(num)
+
+## UNEXPECTED LEMMAS
+else:
+  print "Unexpected lemma: {}".format(lemma)
+  exit(0)
+
+for goalList in reversed(rank):
+  for goal in goalList:
+    sys.stderr.write(goal)
+    print goal
