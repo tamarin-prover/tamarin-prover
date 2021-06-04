@@ -1,6 +1,6 @@
-# Build and Run
+# Pull and Run (and Build)
 
-Thse instructions define how to build a Docker from this repository.
+These instructions define how to run the docker image.
 
 ## Install docker:
 
@@ -15,10 +15,6 @@ Thse instructions define how to build a Docker from this repository.
 docker pull protocolplatform/protocolplatform:latest
 ```
 
-## Build instructions
-
-2. run `./build.sh`
-
 ## Run instructions
 
 1. Execute
@@ -27,3 +23,10 @@ docker run protocolplatform/protocolplatform:latest
 ```
 
 2. Follow instructions.
+
+## Build instructions
+
+This is only needed for regenerating the image when we update the software.
+
+1. run `./build.sh`
+
