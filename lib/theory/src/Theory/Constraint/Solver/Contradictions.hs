@@ -98,6 +98,7 @@ contradictions ctxt sys = F.asum
     , guard (hasImpossibleChain ctxt sys)           *> pure ImpossibleChain
     -- CR-rule *N7*
     , guard (enableDH msig && hasForbiddenExp sys)  *> pure ForbiddenExp
+    , guard (enableDHNI msig && hasForbiddenExp sys)  *> pure ForbiddenExp
     -- FIXME: add CR-rule
     , guard (enableBP msig && hasForbiddenBP sys)   *> pure ForbiddenBP
     -- New CR-Rule *N6'*
@@ -286,9 +287,9 @@ hasForbiddenChain sys =
         -- and whether we do not have an equality rule instance at the end
         is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys
         -- and check whether any of them happens before the KD-conclusion
-        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing

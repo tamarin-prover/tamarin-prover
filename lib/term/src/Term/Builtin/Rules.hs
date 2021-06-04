@@ -9,6 +9,7 @@ module Term.Builtin.Rules (
   -- * Rewriting rules
     RRule(..)
   , dhRules
+  , dhNiRules
   , bpRules
   , msetRules
   , pairRules
@@ -55,6 +56,19 @@ dhRules = S.fromList
     expo = fAppExp
     inv  = fAppInv
     one  = fAppOne
+
+-- | The rewriting rules for Diffie-Hellman wihtout inverse
+dhNiRules :: Set (RRule LNTerm)
+dhNiRules = S.fromList
+    [ expo(x1,one) `RRule` x1
+    , expo(expo(x1,x2),x3) `RRule` expo(x1,(x2 *: x3))
+
+    , x1 *: one `RRule` x1
+    ]
+  where
+    expo = fAppExp
+    one  = fAppOne
+
 
 -- | The rewriting rules for bilinear pairing. These rules extend the
 --   the rules for Diffie-Hellman.

@@ -169,6 +169,12 @@ ppTheory msig = BC.unlines $
        , theoryOp "exp : Msg Msg -> Msg"
        , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
        , theoryOp "inv : Msg -> Msg" ]
+       else [])    ++
+    (if enableDHNI msig
+       then
+       [ theoryOp "one : -> Msg"
+       , theoryOp "exp : Msg Msg -> Msg"
+       , theoryOp "mult : Msg Msg -> Msg [comm assoc]"]
        else [])
     ++
     (if enableBP msig

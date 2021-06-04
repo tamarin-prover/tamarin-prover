@@ -227,8 +227,9 @@ expterm plit = chainl1 (term plit False) ((\a b -> fAppExp (a,b)) <$ opExp)
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Parser (Term l) -> Parser (Term l)
 multterm plit = do
-    dh <- enableDH <$> getState
-    if dh -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+    dh <- (enableDH <$> getState)
+    dhNi <- (enableDHNI <$> getState)
+    if dh || dhNi -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit False
 
@@ -786,7 +787,9 @@ builtins thy0 =do
         modifyState (`mappend` msig)
         return Nothing
     builtinTheory = asum
-      [ try (symbol "diffie-hellman")
+      [ try (symbol "diffie-hellman-no-inverse")
+          *> extendSig dhNiMaudeSig
+      , try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
@@ -818,7 +821,9 @@ diffbuiltins =
   where
     extendSig msig = modifyState (`mappend` msig)
     builtinTheory = asum
-      [ try (symbol "diffie-hellman")
+      [ try (symbol "diffie-hellman-no-inverse")
+          *> extendSig dhNiMaudeSig
+      ,  try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
