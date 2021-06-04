@@ -457,13 +457,13 @@ ppSapic tc (ProcessComb (Cond a)  _ pl pr)  =
           _ -> let (ppr, pshr) = ppSapic tc pr in
             (d $$ text "else"  $$ (nest 4 (parens ppr)) , s `S.union` pshr)
 
-ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
+ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl (ProcessNull _))  = ( text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ (nest 4 (parens ppl)) , sh1 `S.union` sh2 `S.union` pshl)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (pt1, sh1) = ppSapicTerm tc t1
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 
-ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "if " <> pt1 <> text "=" <> pt2 <> text " then " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
+ppSapic tc (ProcessComb (CondEq t1 t2)  _ pl pr)  = ( text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
                                            (pt1, sh1) = ppSapicTerm tc t1
