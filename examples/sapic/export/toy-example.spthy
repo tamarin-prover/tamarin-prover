@@ -1,0 +1,79 @@
+// toy example from the paper
+
+/*
+
+Reachability query verified with
+ $ tamarin-prover -D=REACH toy-example.spthy --prove
+ $ tamarin-prover -D=REACH toy-example.spthy -m=proverif > te-reach.pv; proverif te-reach.pv
+
+Unlinkability query "cannot be proved" with
+ $ tamarin-prover -D=EQUIV toy-example.spthy --diff -m=proverif > te-un.pv; proverif te-un.pv
+
+Unlinkability disproved with:
+ $ tamarin-prover -D=REACH toy-example.spthy -m=deepsec > te-un.ds; deepsec te-un.ds
+
+Strong secrecy query verified with:
+ $ tamarin-prover -D=SEC --diff toy-example.spthy -m=proverif > te-sec.pv; proverif te-sec.pv
+
+*/
+
+theory Toy
+
+begin
+
+functions: dec/2 [destructor], enc/2
+
+equations: dec(enc(m, k), k) = m
+
+let P(sk,key) =
+
+    event Honest(key);
+    out(enc( <key,'hs'>,sk ))
+
+let Q(sk) =
+   in(cypher);
+   let <key,'hs'>=dec(cypher,sk) in
+     event Accept(key)
+   else
+     out('abort')
+
+#ifdef REACH
+
+process:
+!new sk; event SharedKey(sk); (! new key; P(sk,key) || !Q(sk))
+
+lemma Auth:
+ "All k #i. Accept(k)@i ==> Ex #j. Honest(k)@j & j < i"
+
+#endif
+
+#ifdef EQUIV
+
+process:
+new sk1; !new sk2; (! new key; P(diff(sk1,sk2),key) || !Q(diff(sk1,sk2)))
+
+#endif
+
+#ifdef SEC
+
+process:
+  in(k1); in(k2); ! new sk; ( ( ! P(sk,diff(k1,k2)) ) | (! Q(sk) ) )
+
+// export queries:
+// "
+// equivalence
+// in(att, k1:bitstring); in(att, k2:bitstring); ! new sk:bitstring; ( ( ! P(sk,k1) ) | (! Q(sk) ) )
+// in(att, k1:bitstring); in(att, k2:bitstring); ! new sk:bitstring; ( ( ! P(sk,k2) ) | (! Q(sk) ) )
+// "
+#endif
+
+export requests:
+"
+let scen1 = new sk; (!^3 (new key; P(sk,key) | Q(sk)) ).
+let scen2 = (!^3 (new sk;  (new key; P(sk,key) | Q(sk) ))).
+
+query trace_equiv(scen1,scen2).
+"
+
+
+end
