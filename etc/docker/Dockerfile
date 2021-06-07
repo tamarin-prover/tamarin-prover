@@ -40,7 +40,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #    && rm -rf /var/lib/apt/lists/*
 
 COPY stack.yaml stack.yaml.lock tamarin-prover.cabal /opt/build/
-RUN mkdir lib lib/export lib/theory lib/sapic lib/tools lib/term 
+RUN mkdir lib lib/export lib/theory lib/sapic lib/tools lib/term
 COPY lib/sapic/tamarin-prover-sapic.cabal lib/sapic/
 COPY lib/term/tamarin-prover-term.cabal lib/term/
 COPY lib/theory/tamarin-prover-theory.cabal lib/theory/
@@ -54,7 +54,7 @@ COPY --from=deps-tamarin /root/.stack /root/.stack
 # copy all files except `etc`, because we don't want this stage to be rebuilt
 # anytime the dockerfiles change
 # docker is braindead: it copies the content of a directory, even if it is in a list
-# so we need to list them one by one 
+# so we need to list them one by one
 COPY stack.yaml stack.yaml.lock tamarin-prover.cabal LICENSE /opt/build/
 COPY src  /opt/build/src
 COPY lib /opt/build/lib
@@ -74,6 +74,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     #general stuff
     graphviz \
     libncurses5 \
+    bc \
     && rm -rf /var/lib/apt/lists/*
 
 # TODO turn variables above into ARGS ..
@@ -90,10 +91,10 @@ COPY --from=build-ocaml /opt/build/${GSVERIF_DIR_NAME}/gsverif /opt/build/bin/
 COPY --from=build-ocaml /opt/build/${DEEPSEC_DIR_NAME}/deepsec /opt/build/bin/
 COPY --from=build-ocaml /opt/build/${DEEPSEC_DIR_NAME}/deepsec_worker /opt/build/bin/
 
-# Install built app 
+# Install built app
 COPY --from=build-tamarin /opt/build/bin .
 
-# Install new maude maude version 
+# Install new maude maude version
 ENV PRELUDE_MAUDE="${RES}/prelude.maude"
 ENV MAUDE="${RES}/maude"
 COPY ${MAUDE} /opt/build/bin/
