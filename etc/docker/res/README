@@ -10,6 +10,7 @@ You should obtain a shell that reads like that `root@976d3bce69f8:/opt/protocolp
 - execute the scripts below
 - Try the examples in /opt/protocolplatform/examples
 - Read more detailed instructions in /opt/protocolplatform/README-long
+- The examples make heavy use of tamarin's macro function, see also README-long. 
 
 2. Use it on your host:
 
@@ -39,3 +40,4 @@ The protocol platform consists of:
     proverif-tamarin  .. Translates input file with the modified tamarin-prover and runs proverif on output.
     progsverif-tamarin  .. same for gsverif
     deepsec-tamarin .. same for deepsec
+

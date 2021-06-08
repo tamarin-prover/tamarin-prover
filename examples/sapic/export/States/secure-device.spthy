@@ -97,11 +97,11 @@ lemma initdev3[reuse,use_induction]:
 
 
 lemma secrecyleft[reuse,use_induction]:
-  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(x) @ k1 ==> Ex #k2. InitDevice(s, 'left')[+]@k2 & k2 < k1
+  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(x) @ k1 ==> Ex #k2. InitDevice(s, 'left')@k2 & k2 < k1
   "
 
 lemma secrecyright[reuse,use_induction]:
-  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(y) @ k1 ==> Ex #k2. InitDevice(s, 'right')[+]@k2 & k2 < k1
+  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(y) @ k1 ==> Ex #k2. InitDevice(s, 'right')@k2 & k2 < k1
   "
 
 // Check that exclusivity is maintained
