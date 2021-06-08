@@ -49,7 +49,7 @@ let Device=(
          )
 )
 
-let User=new lm; new rm; event Exclusive(~s,lm,rm); out(aenc{<lm,rm>}pk(~sk))
+let User=new lm; new rm; event L_Exclusive(~s,lm,rm); out(aenc{<lm,rm>}pk(~sk))
 
 process:
 !( new ~sk:skey;  new ~s; insert ~s,'init';  ( Device || ! User ))
@@ -67,8 +67,8 @@ lemma source [sources]:
   "All s m #i. Access(s,m) @ i ==>
       (Ex #j. KU(m) @ j & j < i)  // Make use of the KU-facts logged
       //                             // by the construction rules.
-    | (Ex x #j. Exclusive(s,x,m) @ j)
-    | (Ex y #j. Exclusive(s,m,y) @ j)
+    | (Ex x #j. L_Exclusive(s,x,m) @ j)
+    | (Ex y #j. L_Exclusive(s,m,y) @ j)
   "
 
 // Check that there is some trace where the intruder knows the left message of
@@ -76,11 +76,11 @@ lemma source [sources]:
 // standard 'K'-fact, which is logged by the built-in 'ISend' rule.
 lemma reachability_left:
   exists-trace
-  "Ex s x y #i #j. Exclusive(s,x,y) @i & KU(x) @j "
+  "Ex s x y #i #j. L_Exclusive(s,x,y) @i & KU(x) @j "
 
 lemma reachability_right:
   exists-trace
-  "Ex s x y #i #k. Exclusive(s,x,y) @i & KU(y) @ k"
+  "Ex s x y #i #k. L_Exclusive(s,x,y) @i & KU(y) @ k"
 
 lemma initnott[reuse,use_induction]:
    "All s st #t1 #t2 . Read(s,'init')@t1 & InitDevice(s,st)@t2 ==> t1 < t2"
@@ -97,17 +97,17 @@ lemma initdev3[reuse,use_induction]:
 
 
 lemma secrecyleft[reuse,use_induction]:
-  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(x) @ k1 ==> Ex #k2. InitDevice(s, 'left')@k2 & k2 < k1
+  "All s x y #i #k1 .  L_Exclusive(s,x,y) @i & KU(x) @ k1 ==> Ex #k2. InitDevice(s, 'left')@k2 & k2 < k1
   "
 
 lemma secrecyright[reuse,use_induction]:
-  "All s x y #i #k1 .  Exclusive(s,x,y) @i & KU(y) @ k1 ==> Ex #k2. InitDevice(s, 'right')@k2 & k2 < k1
+  "All s x y #i #k1 .  L_Exclusive(s,x,y) @i & KU(y) @ k1 ==> Ex #k2. InitDevice(s, 'right')@k2 & k2 < k1
   "
 
 // Check that exclusivity is maintained
 lemma secrecy[use_induction]:
   "not(Ex s x y #i #k1 #k2.
-         Exclusive(s,x,y)[-] @i & KU(x) @ k1 & KU(y) @ k2
+         L_Exclusive(s,x,y) @i & KU(x) @ k1 & KU(y) @ k2
       )
   "
 

@@ -16,6 +16,7 @@ The protocol platform consists of:
      --diff                                                   Turn on observational equivalence mode using
                                                               diff terms
 ```
+    For more details on the command line arguments offered by tamarin-prover, including it's interactive mode, we refer to the official documentation at http://tamarin-prover.github.io/manual/
 
 2. Script for convenience. 
 
@@ -23,4 +24,22 @@ The protocol platform consists of:
     progsverif-tamarin  .. same for gsverif
     deepsec-tamarin .. same for deepsec
 
-    Their usage is `[proverif|progsverif|deepsec]-tamarin file
+    Their usage is `[proverif|progsverif|deepsec]-tamarin file`. They are kept
+    simple on purpose - if you need to adjust flags, modify these scripts or
+    execute the sequence of commands they describe.
+
+3. Use of macros
+
+    Some of the examples are used by multiple tools. We distinguish which
+    lemmas are exported to which tool by using tamarin's builtin macro
+    facilities. (Arguably, it would be nicer if the `export` statement would do
+    that.) The scripts above and thus our example files use:
+
+    REACH .. for output to proverif / gsverif / tamarin-prover
+    PROVERIFEQUIV .. for output only to ProVerif
+    DEEPSECEQUIV  .. for output only to  DeepSec
+
+    If tamarin is used directly, the `-D` flag needs to be used to set the
+    macros accordingly, see above.
+
+
