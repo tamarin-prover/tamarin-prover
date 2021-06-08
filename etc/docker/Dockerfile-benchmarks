@@ -1,0 +1,7 @@
+FROM protocolplatform/protocolplatform
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+WORKDIR /opt/protocolplatform/examples/export
+RUN ./run-tamarin-CS.sh
+
+CMD ["cat", "/opt/protocolplatform/README"]
