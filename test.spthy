@@ -17,7 +17,8 @@ begin
 /* to test in(c,pat), secret case */
 process: 
     new c;
-    in(c,<z,y>); event A(z,y)
+    new k;
+    in(c,<=k,y>); event A(z,y)
 
 
 

@@ -102,13 +102,16 @@ baseTransAction
           ], tildex)
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
-        -- TODO simplify code below, maybe merge cases
-    | (ChIn (Just tc') t' _) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
+        -- TODO simplify code below, maybe merge those two cases or at least he lets
+    | (ChIn (Just tc') t' matchVar) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
       , tc <- toLNTerm tc' =
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xt = varTerm x in
           let xst = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xst empty) (an {elseBranch = False }) p tildex
+          let (rules,tx',_) =  baseTransComb (Let t' xst matchVar) (an {elseBranch = False }) p tildex
+          -- tx' does not include fresh x because it is on the right hand side
+          -- that's ok because follow up process does not use x anyway, since
+          -- the process was ground before introducing x freshly
           in
           let ts = fAppPair (tc,varTerm x) in
              (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
@@ -116,15 +119,13 @@ baseTransAction
                   then mergeWithStateRule ([In ts], channelIn ts, []) rules 
                   else []
                 ), tx')
-    | (ChIn Nothing t' _) <- ac , t <- toLNTerm t' =
+    | (ChIn Nothing t' matchVar) <- ac , t <- toLNTerm t' =
       if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex
+          let (rules,tx',_) =  baseTransComb (Let t' xTerm matchVar) (an {elseBranch = False }) p tildex
           -- TODO instead of empty, put matchvars from in
-          -- tx' does not need to include x because process contination cannot use this fresh variable
           in
-              -- (map (addInput needsAssImmediate x) rules, insert x tx')
               (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
       else
           let tx' = freeset t `union` tildex in
