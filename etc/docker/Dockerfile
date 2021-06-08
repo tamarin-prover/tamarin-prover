@@ -113,7 +113,7 @@ COPY ${RES}/proverif-tamarin .
 COPY ${RES}/progsverif-tamarin .
 COPY ${RES}/deepsec-tamarin .
 COPY ${RES}/proverif-tamarin-diff .
-COPY examples/sapic examples
+COPY examples/sapic/export examples
 COPY ${RES}/README ${RES}/README-long ${RES}/.bashrc ./
 
 ENV PATH=${PATH}:/opt/build/bin:/opt/protocolplatform
