@@ -1,3 +1,5 @@
 #!/bin/bash
 
-tamarin-prover $1 -m=deepsec -D=DEEPSECEQUIV > /tmp/$1.dps; deepsec /tmp/$1.dps
+set -x # print what we do
+temp=$(mktemp -d)/$(basename "$1")
+tamarin-prover "$1" -m=deepsec -D=DEEPSECEQUIV > "$temp.dps"; deepsec "$temp.dps"

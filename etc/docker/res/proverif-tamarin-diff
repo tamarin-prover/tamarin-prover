@@ -1,3 +1,5 @@
 #!/bin/bash
 
-tamarin-prover $1 --diff -m=proverif -D=PROVERIFEQUIV > /tmp/$1.pv; proverif /tmp/$1.pv
+set -x # print what we do
+temp=$(mktemp -d)/$(basename "$1")
+tamarin-prover "$1" --diff -m=proverif -D=PROVERIFEQUIV > "$temp.pv"; proverif "$temp.pv"
