@@ -2,7 +2,6 @@ theory StatVerif_Security_Device begin
 
 /*
    Protocol:    Simple security device (Example 1 from [1])
-   Modeler:     Robert Künnemann
 
 
    Proverif: in a few seconds
