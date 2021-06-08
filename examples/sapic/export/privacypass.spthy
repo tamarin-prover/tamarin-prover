@@ -109,7 +109,7 @@ lemma false_exec:  // should be false
 #endif
 
 
-#ifdef EQUIV
+#ifdef PROVERIFEQUIV
 
 
 let ClientNoRed(pkS,x) =

@@ -13,7 +13,7 @@ Unlinkability disproved with:
  $ tamarin-prover -D=REACH toy-example.spthy -m=deepsec > te-un.ds; deepsec te-un.ds
 
 Strong secrecy query verified with:
- $ tamarin-prover -D=SEC --diff toy-example.spthy -m=proverif > te-sec.pv; proverif te-sec.pv
+ $ tamarin-prover -D=PROVERIFEQUIV --diff toy-example.spthy -m=proverif > te-sec.pv; proverif te-sec.pv
 
 */
 
@@ -54,7 +54,7 @@ new sk1; !new sk2; (! new key; P(diff(sk1,sk2),key) || !Q(diff(sk1,sk2)))
 
 #endif
 
-#ifdef SEC
+#ifdef PROVERIFEQUIV
 
 process:
   in(k1); in(k2); ! new sk; ( ( ! P(sk,diff(k1,k2)) ) | (! Q(sk) ) )

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tamarin-prover $1 --diff -m=proverif -D=PROVERIFEQUIV > /tmp/$1.pv; proverif /tmp/$1.pv

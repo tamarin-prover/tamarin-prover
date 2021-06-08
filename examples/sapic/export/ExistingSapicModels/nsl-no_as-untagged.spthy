@@ -12,7 +12,7 @@ theory NeedhamSchroeder
  * Proverif status : < 1 sec
     tamarin-prover nsl-no_as-untagged.spthy -D=REACH -m=proverif > nsl-reach.pv; proverif nsl-reach.pv
   Proverif cannot be proved on:
-    tamarin-prover nsl-no_as-untagged.spthy -D=EQUIV -m=proverif --diff > nsl-ind.pv; proverif nsl-ind.pv
+    tamarin-prover nsl-no_as-untagged.spthy -D=PROVERIFEQUIV -m=proverif --diff > nsl-ind.pv; proverif nsl-ind.pv
 
 
   DeepSec security for
@@ -114,7 +114,7 @@ lemma secrecy:
 
 #endif
 
-#ifdef EQUIV
+#ifdef PROVERIFEQUIV
 
 process:
  ( new skA; (P(skA)

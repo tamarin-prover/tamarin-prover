@@ -23,11 +23,9 @@ theory KEMTLS
 
 begin
 
-builtins: symmetric-encryption
+functions: senc/2, sdec/2[destructor], kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], hmac/2
 
-functions: kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], hmac/2
-
-equations: kemdec( kemenc(m,kempk(sk)) ,sk) = m,  getcert(cert(m))=m
+equations: sdec(senc(m,sk),sk)=m, kemdec( kemenc(m,kempk(sk)) ,sk) = m,  getcert(cert(m))=m
 
 
 let P(~skP,desiredpkS) =
@@ -209,7 +207,7 @@ lemma authSP: // should be true
 
 #endif
 
-#ifdef EQUIV
+#ifdef PROVERIFEQUIV
 
 process:
 ! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');

@@ -1,7 +1,38 @@
-WIP:
+This repository contains the case-studies performed using the export feature of tamarin.
 
- * States/canauth, tpm-bitlocker does not go through with Tamarin
- * privacypass Diff mode does not work on Proverif with a ! at the beginning
- * SSH/WIP, ssh with forwarding does not work in any tool.
- * examples/sapic/fast/feature-locations/SOC.spthy is THE example where Proverif is lost and not Tamarin -> what we are doing is worth it !!!
- * On AC_sid_with_attack, Tamarin find a concrete trace ( in a long time, while Proverif says cannot be proved)
+# A first example
+
+To see all the features on a single file, one can checkout `toy-example.spthy`.
+
+It's heaeder shows the full process that allows to export to the multiple tools. If you are inside the docker, or have installed on your path the scripts from `tamarin-prover/etc/docker/res`, you can run it using:
+ * proverif-tamarin
+ * proverif-tamarin-diff
+ * deepsec-tamarin
+
+ Or classically run it using tamarin.
+
+# Case-Studies from the paper
+
+ The case-studies mentionned in the paper are:
+  * KEMTLS -> ./KEMTLs/kemtls.spthy
+  * KEMTLS-CA -> ./KEMTLS/kemtls-clientauth.spthy
+  * KEMTLS-NOAEAD -> ./KEMTLS/kemtls-noaead.spthy
+  * LAKE -> ./LAKE/lake-edhoc.spthy
+  * LAKE-DH-KCI -> ./LAKE/lake-edhoc-DHmode-KCI.spthy
+  * LAKE-DH-FS ->./LAKE/lake-edhoc-DHmode-FS.spthy
+  * SSH -> ./SSH/ssh-without-forwarding.spthy
+  * SSH-NEST -> ./SSH/ssh-with-one-forwarding.spthy
+  * SSH-NEST-X -> ./SSH/ssh-with-forwarding-bounded.spthy
+  * Privacy-Pass -> ./privacypass.spthy
+  * AC -> ./ExistingSapicModels/AC.spthy
+  * AC-F-SID -> ./ExistingSapicModels/AC_sid_with_attack.spthy
+  * AKE -> ./ExistingSapicModels/AKE.spthy
+  * SOC -> tamarin-prover/examples/sapic/fast/feature-locations/SOC.spthy
+  * OTP -> ./ExistingSapicModels/OTP.spthy
+  * NSL -> ./ExistingSapicModels/nsl-no_as-untagged.spthy
+  * Scytl -> ./States/scytl-voting-system.spthy
+  * SD -> ./States/secure-device.spthy
+
+# Running everything
+
+From the docker image, one can execute either `run-tamarin-CS.sh` or `run-proverif-CS.sh` to run all the case-studies.
