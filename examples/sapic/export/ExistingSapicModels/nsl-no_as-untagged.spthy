@@ -11,8 +11,11 @@ theory NeedhamSchroeder
  *                  secrecy, 1 min on cluster
  * Proverif status : < 1 sec
     tamarin-prover nsl-no_as-untagged.spthy -D=REACH -m=proverif > nsl-reach.pv; proverif nsl-reach.pv
+  Proverif cannot be proved on:
     tamarin-prover nsl-no_as-untagged.spthy -D=EQUIV -m=proverif --diff > nsl-ind.pv; proverif nsl-ind.pv
 
+
+  DeepSec security for
 
  */
 
@@ -51,10 +54,10 @@ let Q(skB) =
            event SessionB(pkA,pk(skB),xk)
 
 
-let Qleak(skB,Nb,token) =
+let Qleak(skB,Nb,token,pkA) =
          in(cypher1);
 	   let mess1 = adec(cypher1,skB) in
-           let <xNa,pkA> = mess1 in
+           let <xNa,=pkA> = mess1 in
 	   new rb;
            out(aenc(<xNa,Nb,pk(skB)>,rb,pkA));
 	   in(cypher2);
@@ -114,11 +117,11 @@ lemma secrecy:
 #ifdef EQUIV
 
 process:
-! ( new skA; P(skA)
-)
+ ( new skA; (P(skA)
+
 ||
-! ( new skB;       event HonestB(pk(skB));
-        out(pk(skB)); !  new Nb; new test; Qleak(skB,Nb,diff(test,Nb))
+ ( new skB;       event HonestB(pk(skB));
+        out(pk(skB));   new Nb; new test; Qleak(skB,Nb,diff(test,Nb),pk(skA)) ))
 )
 #endif
 
@@ -126,19 +129,18 @@ process:
 
 export requests:
 "
-let sys1 = !^1 ( new skA; P(skA)
-)
+let sys1 = ( new skA; ( !^1( P(skA))
 |
-!^1 ( new skB;
-        out(att,pk(skB)); !^1 (  new Nb; new test; Qleak(skB,Nb,test))
-).
+ ( new skB;
+        out(att,pk(skB)); !^1 (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
+)).
 
-let sys2 = !^1 ( new skA; P(skA)
-)
+let sys2 =  ( new skA; ( !^1( P(skA))
+
 |
-!^1 ( new skB;
-        out(att,pk(skB)); !^1 ( new Nb; new test; Qleak(skB,Nb,Nb))
-).
+ ( new skB;
+        out(att,pk(skB)); !^1 ( new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))))
+)).
 
 query trace_equiv(sys1,sys2).
 "

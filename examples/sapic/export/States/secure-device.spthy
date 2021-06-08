@@ -91,10 +91,10 @@ lemma uniqInit[reuse,use_induction]:
 
 
 lemma initdev2[reuse,use_induction]:
-    "All s #t . Read(s,'left')@t ==> Ex #t2. InitDevice(s, 'left')[+]@t2 & t2 < t"
+    "All s #t . Read(s,'left')@t ==> Ex #t2. InitDevice(s, 'left')@t2 & t2 < t"
 
 lemma initdev3[reuse,use_induction]:
-    "All s #t . Read(s,'right')@t ==> Ex #t2. InitDevice(s, 'right')[+]@t2 & t2 < t"
+    "All s #t . Read(s,'right')@t ==> Ex #t2. InitDevice(s, 'right')@t2 & t2 < t"
 
 
 lemma secrecyleft[reuse,use_induction]:
