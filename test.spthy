@@ -1,0 +1,21 @@
+theory Testbed
+begin
+
+/* to test in(pat) case with inEv */
+process: 
+    new lol;
+    in(<z,y>); event A(x,y)
+lemma assim:
+    "All #i x. (K(x)@i)"
+
+/* to test in(c,pat) */
+/* process: */ 
+/*     new c; */
+/*     out (c); */
+/*     in(c,<z,y>); event A(z,y) */
+
+
+
+end
+
+/* vim: set filetype=apip */

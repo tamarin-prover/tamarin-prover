@@ -101,6 +101,15 @@ addInput needsAssImmediate x (l,a,r,f)
   | otherwise 
   = (l,a,r,f)
 
+mergeWithStateRule' :: ([TransFact], [a1], [a2]) -> ([TransFact], [a1], [a2], d) -> ([TransFact], [a1], [a2], d)
+mergeWithStateRule' (l',a',r') (l,a,r,f)
+  | (Just _) <- List.find isState l 
+  = (l ++ l', a ++ a', r++r', f)
+  | otherwise 
+  = (l,a,r,f)
+
+mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)] -> [([TransFact], [a1], [a2], d)]
+mergeWithStateRule r' = map (mergeWithStateRule' r')
 
 baseTransAction :: Bool -> TransFAct TranslationResultAct
 baseTransAction 
@@ -120,18 +129,25 @@ baseTransAction
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
     | (ChIn (Just tc') t' _) <- ac, Nothing <- secretChannel an  -- match vars are ignored in the translation, as they are bound in the def_state
       , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let tx' = freeset tc `union` freeset t `union` tildex in
-          let ts  = fAppPair (tc,t) in
-          ([
-          ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
-          ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
+          let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
+          let xt = varTerm x in
+          let xst = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
+          let (rules,tx',_) =  baseTransComb (Let t' xst empty) (an {elseBranch = False }) p tildex 
+          in
+          let ts = fAppPair (tc,varTerm x) in
+            (
+              mergeWithStateRule ([In ts], channelIn ts, []) rules
+              ++
+              mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
+            , tx')
     | (ChIn Nothing t' _) <- ac , t <- toLNTerm t' =
       if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
           let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex 
           in 
-              (map (addInput needsAssImmediate x) rules, insert x tx')
+              -- (map (addInput needsAssImmediate x) rules, insert x tx')
+              (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
       else 
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
@@ -145,7 +161,7 @@ baseTransAction
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state, In tc], if needsAssImmediate then [ ChannelIn tc] else [], [Out t, def_state' tildex], []),
+          ([def_state, In tc], channelIn tc, [Out t, def_state' tildex], []),
           ([def_state], [], [Message tc t,semistate], []),
           ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
     | (ChOut Nothing t') <- ac
@@ -196,6 +212,7 @@ baseTransAction
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
+        channelIn ts = if needsAssImmediate then [ ChannelIn ts] else []
         freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
 
