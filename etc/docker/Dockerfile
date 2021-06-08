@@ -75,7 +75,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz \
     libncurses5 \
     bc \
+    locales \
     && rm -rf /var/lib/apt/lists/*
+
+# set locales so haskell can do it's thing
+# https://stackoverflow.com/questions/28405902/how-to-set-the-locale-inside-a-debian-ubuntu-docker-container
+# The following does NOT work -> locale-gen --no-purge en_US.UTF-8
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 # TODO turn variables above into ARGS ..
 # https://stackoverflow.com/questions/52904847/how-do-i-copy-variables-between-stages-of-multi-stage-docker-build
