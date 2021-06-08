@@ -33,7 +33,7 @@ module Sapic.Basetranslation (
 import           Control.Exception
 import           Control.Monad.Catch
 import           Data.Set             hiding (map, (\\))
-import           Data.List (nub, (\\))
+import qualified Data.List as List 
 import qualified Extension.Data.Label as L
 import           Sapic.Annotation
 import           Sapic.Exceptions
@@ -80,8 +80,33 @@ baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
 baseTransNull :: TransFNull TranslationResultNull
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [], [])]
 
+-- TODO move to Fact.hs
+addToState :: LVar -> TransFact -> TransFact
+addToState v (State k p vs) = State k p (insert v vs)
+addToState _ f              = f
+
+addChannelIn needsAssImmedeate a ts =
+    if needsAssImmedeate then 
+          a ++ [ ChannelIn ts] 
+    else a
+
+-- Given rule l-[a]-r, if l contains state fact, then
+-- 1. add  In(x) to l
+-- 2. add ChannelIn to a (if needsAssImmediate)
+-- 3. add x to all state facts on rhs
+-- otherwise:  return rule
+addInput needsAssImmediate x (l,a,r,f) 
+  | (Just _) <- List.find isState l 
+  = (l ++ [In (varTerm x)], addChannelIn needsAssImmediate a (varTerm x), map (addToState x) r, f)
+  | otherwise 
+  = (l,a,r,f)
+
+
 baseTransAction :: Bool -> TransFAct TranslationResultAct
-baseTransAction needsAssImmediate ac an p tildex
+baseTransAction 
+  needsAssImmediate -- produce actions that axiom AssImmediate requires
+  -- delayPatternMatching -- treat in(*,pat);Q like in(*,x); let x = pat n in Q
+  ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -100,8 +125,14 @@ baseTransAction needsAssImmediate ac an p tildex
           ([
           ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
-    | (ChIn Nothing t' _) <- ac
-      , t <- toLNTerm t' =
+    | (ChIn Nothing t' _) <- ac , t <- toLNTerm t' =
+      if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
+          let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
+          let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
+          let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex 
+          in 
+              (map (addInput needsAssImmediate x) rules, insert x tx')
+      else 
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
     | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
@@ -417,8 +448,8 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
     in
     do
         hardcoded <- mapM toEx hardcoded_l
-        lockingWithUnlock <- mapM (resLocking True) (nub $ getUnlockPositions anP)
-        lockingOnlyLock   <- mapM (resLocking False) ((getLockPositions anP) \\ (getUnlockPositions anP))
+        lockingWithUnlock <- mapM (resLocking True) (List.nub $ getUnlockPositions anP)
+        lockingOnlyLock   <- mapM (resLocking False) ((getLockPositions anP) List.\\ (getUnlockPositions anP))
         singleLocking <- toEx resLockingNoUnlock
         return $ prevRestr
               ++ hardcoded
