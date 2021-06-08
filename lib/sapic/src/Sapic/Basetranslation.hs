@@ -102,6 +102,7 @@ baseTransAction
           ], tildex)
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
+        -- TODO simplify code below, maybe merge cases
     | (ChIn (Just tc') t' _) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
       , tc <- toLNTerm tc' =
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
@@ -120,6 +121,8 @@ baseTransAction
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
           let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex
+          -- TODO instead of empty, put matchvars from in
+          -- tx' does not need to include x because process contination cannot use this fresh variable
           in
               -- (map (addInput needsAssImmediate x) rules, insert x tx')
               (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
