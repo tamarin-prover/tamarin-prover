@@ -33,7 +33,8 @@ let P(sk,key) =
 let Q(sk) =
    in(cypher);
    let <key,'hs'>=dec(cypher,sk) in
-     event Accept(key)
+     event Accept(key);
+     out('accept')
    else
      out('abort')
 
