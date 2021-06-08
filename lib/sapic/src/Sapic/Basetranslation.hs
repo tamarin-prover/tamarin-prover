@@ -81,27 +81,6 @@ baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
 baseTransNull :: TransFNull TranslationResultNull
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [], [])]
 
--- TODO move to Fact.hs
-addToState :: LVar -> TransFact -> TransFact
-addToState v (State k p vs) = State k p (insert v vs)
-addToState _ f              = f
-
-addChannelIn needsAssImmedeate a ts =
-    if needsAssImmedeate then
-          a ++ [ ChannelIn ts]
-    else a
-
--- Given rule l-[a]-r, if l contains state fact, then
--- 1. add  In(x) to l
--- 2. add ChannelIn to a (if needsAssImmediate)
--- 3. add x to all state facts on rhs
--- otherwise:  return rule
-addInput needsAssImmediate x (l,a,r,f)
-  | (Just _) <- List.find isState l
-  = (l ++ [In (varTerm x)], addChannelIn needsAssImmediate a (varTerm x), map (addToState x) r, f)
-  | otherwise
-  = (l,a,r,f)
-
 mergeWithStateRule' :: ([TransFact], [a1], [a2]) -> ([TransFact], [a1], [a2], d) -> ([TransFact], [a1], [a2], d)
 mergeWithStateRule' (l',a',r') (l,a,r,f)
   | (Just _) <- List.find isState l
@@ -124,7 +103,7 @@ baseTransAction
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
     | (ChIn (Just tc') t' _) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
-      , tc <- toLNTerm tc', t <- toLNTerm t' =
+      , tc <- toLNTerm tc' =
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xt = varTerm x in
           let xst = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
