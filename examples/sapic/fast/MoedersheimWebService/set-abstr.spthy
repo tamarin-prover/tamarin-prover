@@ -15,7 +15,9 @@ section{* The PKI-example *}
 
 builtins: asymmetric-encryption, signing
 
-heuristic: si // use heuristics for SAPIC and injective facts in a round-robin fashion
+// use heuristics for SAPIC and injective facts in a round-robin fashion
+
+heuristic: si 
 
 let Client=
 	(
