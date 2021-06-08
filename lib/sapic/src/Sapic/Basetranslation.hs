@@ -33,7 +33,8 @@ module Sapic.Basetranslation (
 import           Control.Exception
 import           Control.Monad.Catch
 import           Data.Set             hiding (map, (\\))
-import qualified Data.List as List 
+import           Data.Maybe
+import qualified Data.List as List
 import qualified Extension.Data.Label as L
 import           Sapic.Annotation
 import           Sapic.Exceptions
@@ -86,8 +87,8 @@ addToState v (State k p vs) = State k p (insert v vs)
 addToState _ f              = f
 
 addChannelIn needsAssImmedeate a ts =
-    if needsAssImmedeate then 
-          a ++ [ ChannelIn ts] 
+    if needsAssImmedeate then
+          a ++ [ ChannelIn ts]
     else a
 
 -- Given rule l-[a]-r, if l contains state fact, then
@@ -95,24 +96,24 @@ addChannelIn needsAssImmedeate a ts =
 -- 2. add ChannelIn to a (if needsAssImmediate)
 -- 3. add x to all state facts on rhs
 -- otherwise:  return rule
-addInput needsAssImmediate x (l,a,r,f) 
-  | (Just _) <- List.find isState l 
+addInput needsAssImmediate x (l,a,r,f)
+  | (Just _) <- List.find isState l
   = (l ++ [In (varTerm x)], addChannelIn needsAssImmediate a (varTerm x), map (addToState x) r, f)
-  | otherwise 
+  | otherwise
   = (l,a,r,f)
 
 mergeWithStateRule' :: ([TransFact], [a1], [a2]) -> ([TransFact], [a1], [a2], d) -> ([TransFact], [a1], [a2], d)
 mergeWithStateRule' (l',a',r') (l,a,r,f)
-  | (Just _) <- List.find isState l 
+  | (Just _) <- List.find isState l
   = (l ++ l', a ++ a', r++r', f)
-  | otherwise 
+  | otherwise
   = (l,a,r,f)
 
 mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)] -> [([TransFact], [a1], [a2], d)]
 mergeWithStateRule r' = map (mergeWithStateRule' r')
 
 baseTransAction :: Bool -> TransFAct TranslationResultAct
-baseTransAction 
+baseTransAction
   needsAssImmediate -- produce actions that axiom AssImmediate requires
   -- delayPatternMatching -- treat in(*,pat);Q like in(*,x); let x = pat n in Q
   ac an p tildex
@@ -122,33 +123,28 @@ baseTransAction
           ], tildex)
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
-    | (ChIn (Just tc') t' _) <- ac, (Just (AnVar _)) <- secretChannel an  -- match vars are ignored in the translation, as they are bound in the def_state
-      , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let tx' = freeset tc `union` freeset t `union` tildex in
-          ([
-          ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
-    | (ChIn (Just tc') t' _) <- ac, Nothing <- secretChannel an  -- match vars are ignored in the translation, as they are bound in the def_state
+    | (ChIn (Just tc') t' _) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xt = varTerm x in
           let xst = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xst empty) (an {elseBranch = False }) p tildex 
+          let (rules,tx',_) =  baseTransComb (Let t' xst empty) (an {elseBranch = False }) p tildex
           in
           let ts = fAppPair (tc,varTerm x) in
-            (
-              mergeWithStateRule ([In ts], channelIn ts, []) rules
-              ++
-              mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
-            , tx')
+             (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
+              ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
+                  then mergeWithStateRule ([In ts], channelIn ts, []) rules 
+                  else []
+                ), tx')
     | (ChIn Nothing t' _) <- ac , t <- toLNTerm t' =
       if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex 
-          in 
+          let (rules,tx',_) =  baseTransComb (Let t' xTerm empty) (an {elseBranch = False }) p tildex
+          in
               -- (map (addInput needsAssImmediate x) rules, insert x tx')
               (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
-      else 
+      else
           let tx' = freeset t `union` tildex in
           ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
     | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
