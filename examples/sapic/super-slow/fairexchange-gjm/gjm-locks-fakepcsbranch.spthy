@@ -8,7 +8,8 @@ section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
  * Modeler:     Robert Kunnemann
  * Date:        Jul 2016
  *
- * Status:      open
+ * Status:      open // TODO need to adapt to new syntax
+ * 
  *
  * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free
  * optimistic contract signing. In Advances in Cryptology—Crypto’99, volume
@@ -236,6 +237,7 @@ let Judge =
              (in('c',<m3,m4>); event ContractJudge($A,$B,text))
          ||  (in('c',pat_a2); event AbortJudge($A,$B,text))
 
+process:
 let TTPID=<'TTP',$TTP> in
 let text=<$A,$B,$TEXT,TTPID> in
 !(
