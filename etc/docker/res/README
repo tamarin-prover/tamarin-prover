@@ -40,14 +40,14 @@ On most examples inside the `examples/export` repository, `tamarin-prover name.s
 
 From this docker image, try e.g.,
 ```
-$ cd /opt/protocolplatform/examples/export
+$ cd /opt/protocolplatform/examples/
 $ cat ex1.spthy
 $ tamarin-prover ex1.spthy --prove
 $ tamarin-prover ex1.spthy -m=proverif > ex1.pv
 $ proverif ex1.pv
 ```
 
-We refer to `examples/export/README.md` for details about the case studies and some usage example.
+We refer to `examples/README.md` for details about the case studies and some usage example.
 
 3. Use it on your host:
 
