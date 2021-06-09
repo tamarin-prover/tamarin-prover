@@ -4,7 +4,7 @@ Hi! This is the protocolplatform Docker image. You can now:
 
 docker run -it protocolplatform/protocolplatform:latest bash
 
-You should obtain a shell that reads like that `root@976d3bce69f8:/opt/protocolplatform#`.
+You should obtain a shell that reads like that: `root@976d3bce69f8:/opt/protocolplatform#`.
 
 - execute tamarin-prover, proverif, gsverif, deepse etc. as usual
 - execute the scripts below for the export:
@@ -36,7 +36,7 @@ The protocol platform consists a modified version of tamarin-prover that parses 
 ```
     For more details on the command line arguments offered by tamarin-prover, including it's interactive mode, we refer to the official documentation at http://tamarin-prover.github.io/manual/
 
-On most examples inside the `examples/export` repository, `tamarin-prover name.spthy --prove` will verify the file, and `tamarin-prover -m=proverif name.spthy` gives an output that can be written to afile and executed using proverif or gsverif.
+On most examples inside the `examples/export` repository, `tamarin-prover name.spthy --prove` will verify the file, and `tamarin-prover -m=proverif name.spthy` gives an output that can be written to a file and executed using proverif or gsverif.
 
 From this docker image, try e.g.,
 ```
