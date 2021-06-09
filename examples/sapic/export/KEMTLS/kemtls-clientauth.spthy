@@ -1,7 +1,5 @@
 theory KEMTLS
 
-
-
 /*
  * Protocol:    KEM TLS
    proposed in CCS20, Post-quantum TLS without handshake signatures
@@ -11,14 +9,19 @@ theory KEMTLS
 
    Proverif : few seconds
     tamarin-prover kemtls-clientauth.spthy -D=REACH -m=proverif > kem-reach.pv; proverif kem-reach.pv
-    tamarin-prover kemtls-clientauth.spthy -D=EQUIV -m=proverif --diff > kem-ind.pv; proverif kem-ind.pv
+    tamarin-prover kemtls-clientauth.spthy -D=PROVERIFEQUIV -m=proverif --diff > kem-ind.pv; proverif kem-ind.pv
 
    Tamarin : 20 minutes on 64 core server
+    tamarin-prover kemtls-clientauth.spthy -D=REACH --prove
 
 
    Unlinkability proved:
    * Deepsec : 2 sessions - a second
              3 sessions - 4 min on 64 core server
+
+    tamarin-prover kemtls-clientauth.spthy -m=deepsec > kem-ind.ds; deepsec kem-ind.ds
+
+
 */
 
 begin
