@@ -23,8 +23,7 @@ export queries :
  "
 
 let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
-let Q = in( m:bitstring); let md = sdec(m,sk) in
-            if snd(md)='test' then event Received(fst(md))
+let Q = in( m:bitstring); let <md,'test'> = sdec(m,sk) in  event Received(md)
 
 process:
 new sk:skey; (P || Q)
