@@ -113,9 +113,12 @@ COPY ${RES}/proverif-tamarin .
 COPY ${RES}/progsverif-tamarin .
 COPY ${RES}/deepsec-tamarin .
 COPY ${RES}/proverif-tamarin-diff .
-COPY examples/sapic/export examples/export
-COPY examples/sapic/fast examples/fast
-COPY examples/sapic/slow examples/slow
+COPY examples/sapic/export examples
+# ENV EXPORT=examples/sapic/export/ExistingSapicModels
+# COPY ${EXPORT}/AC.spthy ${EXPORT}/AC_counter_with_attack.spthy ${EXPORT}/AC_sid_with_attack.spthy ${EXPORT}/AKE.spthy ${EXPORT}/OTP.spthy ${EXPORT}/nsl-no_as-untagged.spthy examples/ExistingSapicModels/
+# COPY examples/sapic/fast examples/fast
+# COPY examples/sapic/slow examples/slow
+# COPY ${RES}/README ${RES}/README-long ${RES}/.bashrc ./
 COPY ${RES}/README ${RES}/.bashrc ./
 
 ENV PATH=${PATH}:/opt/build/bin:/opt/protocolplatform
