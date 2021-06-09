@@ -60,12 +60,6 @@ new sk1; !new sk2; (! new key; P(diff(sk1,sk2),key) || !Q(diff(sk1,sk2)))
 process:
   in(k1); in(k2); ! new sk; ( ( ! P(sk,diff(k1,k2)) ) | (! Q(sk) ) )
 
-// export queries:
-// "
-// equivalence
-// in(att, k1:bitstring); in(att, k2:bitstring); ! new sk:bitstring; ( ( ! P(sk,k1) ) | (! Q(sk) ) )
-// in(att, k1:bitstring); in(att, k2:bitstring); ! new sk:bitstring; ( ( ! P(sk,k2) ) | (! Q(sk) ) )
-// "
 #endif
 
 export requests:

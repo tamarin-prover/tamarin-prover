@@ -116,7 +116,7 @@ COPY ${RES}/proverif-tamarin-diff .
 COPY examples/sapic/export examples/export
 COPY examples/sapic/fast examples/fast
 COPY examples/sapic/slow examples/slow
-COPY ${RES}/README ${RES}/README-long ${RES}/.bashrc ./
+COPY ${RES}/README ${RES}/.bashrc ./
 
 ENV PATH=${PATH}:/opt/build/bin:/opt/protocolplatform
 # TODO Do we need this???
