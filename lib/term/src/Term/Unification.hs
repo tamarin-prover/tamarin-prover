@@ -42,7 +42,6 @@ module Term.Unification (
   -- * Maude signatures
   , MaudeSig
   , enableDH
-  , enableDHNI
   , enableBP
   , enableMSet
   , enableXor
@@ -50,7 +49,6 @@ module Term.Unification (
   , minimalMaudeSig
   , enableDiffMaudeSig
   , dhMaudeSig
-  , dhNiMaudeSig
   , bpMaudeSig
   , xorMaudeSig
   , msetMaudeSig

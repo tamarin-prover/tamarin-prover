@@ -50,7 +50,6 @@ module Term.Term.FunctionSymbols (
 
     -- ** concrete signatures
     , dhFunSig
-    , dhNiFunSig
     , xorFunSig
     , bpFunSig
     , msetFunSig
@@ -160,11 +159,6 @@ nilSym  = ("nil",(0,Public))
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
 dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
-
--- | The signature for Diffie-Hellman without inverse
-dhNiFunSig :: FunSig
-dhNiFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym ]
-
 
 -- | The signature for Xor function symbols.
 xorFunSig :: FunSig

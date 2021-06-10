@@ -62,7 +62,7 @@ module Term.Term (
     , multSymString
     , zeroSymString
     , xorSymString
-
+    
     -- ** Function symbols
     , diffSym
     , expSym
@@ -72,7 +72,6 @@ module Term.Term (
 
     -- ** concrete signatures
     , dhFunSig
-    , dhNiFunSig
     , bpFunSig
     , msetFunSig
     , xorFunSig
