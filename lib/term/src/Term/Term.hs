@@ -224,7 +224,7 @@ prettyTerm ppLit = ppTerm
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
-        FApp (NoEq s)      _       | s == consSym -> ppTerms "; " 1 "[|" "|]" (splitCons t)
+--        FApp (NoEq s)      _       | s == consSym -> ppTerms "; " 1 "[|" "|]" (splitCons t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
