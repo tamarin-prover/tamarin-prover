@@ -22,7 +22,7 @@ module Theory.Constraint.Solver.Reduction (
   , whenChanged
   , applyChangeList
   , whileChanging
-  
+
   -- ** Accessing the 'ProofContext'
   , getProofContext
   , getMaudeHandle
@@ -306,11 +306,14 @@ insertAction i fa@(Fact _ ann _) = do
                        else do
                           insertGoal goal False
                           requiresKU m1 *> requiresKU m2 *> return Changed
+                Just (UpK, viewTerm2 -> FCons m1 m2) -> do
+                          insertGoal goal False
+                          requiresKU m1 *> requiresKU m2 *> return Changed
 
                 Just (UpK, viewTerm2 -> FInv m) -> do
                 -- In the diff case, add inv rule instead of goal
                     if isdiff
-                       then do                          
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -329,7 +332,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FMult ms) -> do
                 -- In the diff case, add mult rule instead of goal
                     if isdiff
-                       then do           
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -341,7 +344,7 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
@@ -349,7 +352,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
-                       then do                        
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -361,7 +364,7 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
@@ -742,4 +745,3 @@ solveRuleConstraints (Just eqConstr) = do
     setM sEqStore =<< simp hnd (const (const False)) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
-

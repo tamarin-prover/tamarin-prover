@@ -29,6 +29,7 @@ module Term.Term (
 
     -- ** Destructors and classifiers
     , isPair
+    , isCons
     , isDiff
     , isInverse
     , isProduct
@@ -62,7 +63,7 @@ module Term.Term (
     , multSymString
     , zeroSymString
     , xorSymString
-    
+
     -- ** Function symbols
     , diffSym
     , expSym
@@ -136,6 +137,12 @@ lits = foldMap return
 isPair :: Show a => Term a -> Bool
 isPair (viewTerm2 -> FPair _ _) = True
 isPair _                        = False
+
+
+-- | 'True' iff the term is a well-formed concatenation.
+isCons :: Show a => Term a -> Bool
+isCons (viewTerm2 -> FCons _ _) = True
+isCons _                        = False
 
 -- | 'True' iff the term is a well-formed diff term.
 isDiff :: Show a => Term a -> Bool
@@ -217,6 +224,7 @@ prettyTerm ppLit = ppTerm
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
+        FApp (NoEq s)      _       | s == consSym -> ppTerms "; " 1 "[|" "|]" (splitCons t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
@@ -232,6 +240,9 @@ prettyTerm ppLit = ppTerm
 
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
     split t                          = [t]
+
+    splitCons (viewTerm2 -> FCons t1 t2) = splitCons t1 ++ splitCons t2
+    splitCons t                          = [t]
 
     ppFun f ts =
         text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
