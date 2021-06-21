@@ -421,7 +421,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
-    OracleRanking oracleName -> oracleRanking oracleName ctxt
+    OracleRanking oracle -> oracleRanking oracle ctxt
     OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
@@ -535,11 +535,11 @@ goalNrRanking = sortOn (fst . snd)
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately.
-oracleRanking :: String
+oracleRanking :: Oracle
               -> ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleRanking oracleName ctxt _sys ags0
+oracleRanking oracle ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -547,7 +547,7 @@ oracleRanking oracleName ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
       
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
@@ -568,11 +568,11 @@ oracleRanking oracleName ctxt _sys ags0
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
 --   as the baseline.
-oracleSmartRanking :: String
+oracleSmartRanking :: Oracle
                    -> ProofContext
                    -> System
                    -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleSmartRanking oracleName ctxt _sys ags0
+oracleSmartRanking oracle ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -580,7 +580,7 @@ oracleSmartRanking oracleName ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
