@@ -1,3 +1,11 @@
+/*
+ * Protocol: Centralized Monitor
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Nov 2019
+ * Source:   "Automated Verification of Accountability in Security Protocols", Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19
+ * Status:   working
+ */
+
 theory CentralizedMonitor
 begin
 
@@ -37,7 +45,7 @@ let C =
   out(pk(sk($y)));
   let m_2 = <'Permit', a>
     m_3 = <m_2, sig_m_2>
-  in  
+  in
     in($x);
     in(<m_2, sig_m_2>);
     lookup <'roles', $x, 'D'> as is_d in
@@ -96,8 +104,8 @@ lemma acc:
 
 
 restriction one_role:
-  "All x r_1 r_2 #i #j. Insert(<'roles', x, r_1>, true)@i & 
-                        Insert(<'roles', x, r_2>, true)@j 
+  "All x r_1 r_2 #i #j. Insert(<'roles', x, r_1>, true)@i &
+                        Insert(<'roles', x, r_2>, true)@j
                           ==> #i = #j & r_1 = r_2"
 
 

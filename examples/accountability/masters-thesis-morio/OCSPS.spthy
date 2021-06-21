@@ -1,3 +1,13 @@
+/*
+ * Protocol:                OCSPS
+ * Modeler:                 Kevin Morio and Robert Künnemann
+ * Date:                    Nov 2019
+ * Source (protocol):       Based on RFC6066
+ * Source (original model): "Automated Verification of Accountability in Security Protocols",
+                            Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19
+ * Status:                  working
+ */
+
 theory OCSPS
 begin
 
