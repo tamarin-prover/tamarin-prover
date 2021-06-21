@@ -43,7 +43,7 @@ rule (modulo E) Init[color=#ffffff process=|]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=|]:
+rule (modulo E) _0_[color=#ffffff process=|]:
    [ state_( ) ] --> [ state_1( ), state_2( ) ]
 
   /* has exactly the trivial AC variant */
@@ -70,7 +70,7 @@ rule (modulo E) outca_2_11[color=#6c8040 process=out('c',a);]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#6c8040 process=0]:
+rule (modulo E) 0_0_111[color=#6c8040 process=0]:
    [ state_111( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -92,7 +92,7 @@ rule (modulo E) eventReceivedx_0_21[color=#807140 process=event Received( x );]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_211[color=#807140 process=0]:
+rule (modulo E) 0_0_211[color=#807140 process=0]:
    [ state_211( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -101,7 +101,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction ass_immediate:
+restriction in_event:
   "∀ x #t3.
     (ChannelIn( x ) @ #t3) ⇒
     (∃ #t2.
@@ -125,7 +125,7 @@ analyzing: examples/sapic/fast/basic/channels3.spthy
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.117261s
+  processing time: 0.123093s
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (4 steps)
 
@@ -137,7 +137,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.117261s
+  processing time: 0.123093s
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (4 steps)
 
