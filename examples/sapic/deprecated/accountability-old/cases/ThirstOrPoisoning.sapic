@@ -1,0 +1,65 @@
+/*
+ * Protocol:    Causality - Dessert traveller protocol
+ * Modeler:     Robert Künnemann, Ilkan Esiyok
+ * Date:        Feb 2018
+ * Source:
+ * */
+
+theory ThirstOrPoisoning
+begin
+
+builtins: signing
+
+functions: 
+  extract/1, 
+  sk/1[private]
+
+//Poisoned
+let A = 0
+
+//Shot
+let B = 0
+
+//Victim
+let C = 
+  let sig_p = sign(sk('A'), ~p)
+      sig_s = sign(sk('B'), ~s)
+  in
+    (   in(sig_p); event DrinkAll();  
+        event Poisoned(); event Verdict())
+    +
+    (   in(sig_p); event DrinkAll(); in(sig_s); 
+        event CanteenShoot(); event Verdict())
+    +
+    (   in(sig_s); event CanteenShoot(); event Verdict())
+    +
+    (   event DrinkAll(); event Healthy(); event Verdict()) 
+        
+    
+new ~p; new ~s;
+(A || B || C ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     !(
+       (if $x='A' then out(sign(sk('A'), ~p)))
+     ||
+       (if $x='B' then out(sign(sk('B'), ~s)))
+     )
+   )
+)
+
+lemma sanity[reuse]:
+	"All #i. Verdict()@i 
+      ==> ((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j) | (Ex #j. Healthy()@j)) "
+
+
+verdictfunction v1:
+    "Ex #i. Poisoned()@i " -> <'A'>,
+    "Ex #i. CanteenShoot()@i " -> <'B'>,
+    otherwise -> empty
+
+lemma acc:
+    v1 accounts [cases]
+    for "not((Ex #j. Poisoned()@j) | (Ex #j. CanteenShoot()@j))"
+    for parties <'A','B'>
+
+end

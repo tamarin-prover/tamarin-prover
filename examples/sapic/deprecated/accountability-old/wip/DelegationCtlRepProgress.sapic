@@ -1,0 +1,147 @@
+theory DelegationCtlRepAggregateProgress
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    true/0,
+    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1,
+    S/1
+
+equations: 
+    /* adec(aenc(m,pk(i)),sk(i))=m, */
+    // only accept signatures from corresponding public keys
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    isAct(NormalAct) = true,
+    isAct(SpecialAct) = true,
+    isAct(UnusualAct) = true
+
+predicates:
+isSpecial(a) <=> a=SpecialAct(),
+isNormal(a) <=> a=NormalAct()
+
+/* options: progress */
+
+let A = 
+     let m1 = <'Do',a>
+         m2 = <'Permit',a>
+     in
+  (  in('c',a);
+     if isNormal(a)
+       then out('c',<m1,sign(m1,sk('A'))>)
+       else if isSpecial(a)
+              then out('c',<m2,sign(m2,sk('A'))>)) 
+
+let B = 
+    let m2x = <'Permit',a>
+        m3 = <m2x,m2xsign>
+    in
+  ( in('c',<m2x,m2xsign>);
+     if verify( m2xsign, m2x, pk(sk('A'))) = true() then
+        if isSpecial(a) then
+          out('c',<m3,sign(m3,sk('B'))>)
+  )
+
+let C = 
+    let m1 = <'Do',a>
+        m2 = <'Permit',a>
+        m3 = <m2,m2sign>
+    in lock 'lock';
+  ( in('c',<m1,m1sign>); 
+     if verify(m1sign, m1, pk(sk('A'))) = true() then
+          new sid;
+          event Control('0',<'1',a>); event LogA(sid,a); event Execute(sid,a); unlock 'lock')
+ +
+  ( in('c',<m3,m3sign>); 
+    if verify(m3sign, m3, pk(sk('B'))) = true() then
+        if verify(m2sign, m2, pk(sk('A'))) = true() then
+              new sid;
+              event Control('0',<'2',a>); event LogAB(sid,a); event Execute(sid,a); unlock 'lock')//; event Control('2'))
+
+
+// The trusted party can only run once during each run of the protocol
+let Proto = out('c',<pk(sk('A')), pk(sk('B'))>); ! (A || B || C) 
+
+// general form for accountabilty processes
+Proto
+|| !( in('c',<'corrupt',$x>); 
+      event Corrupted($x);
+      out('c',sk($x))
+      /* (  !(in('r',<$x,sid,m>);0) ) */
+    )
+
+/* restriction ctl_same: */
+/*     "All sid eid eid2 p #i #j . Control(sid,p)@i & Event(eid)@i & Init(eid2)@j & not(eid=eid2) */
+/*       ==> */
+/*       (Ex #j . */
+/*         Event(eid2)@j & */
+/*         Control(sid,p)@j ) */ 
+/*         " */
+
+/* restriction ctl_order: */
+/*     "All sid1 sid2 sid3 sid2p #i1 #i2 #i3 #j1 #j2 #j3. */
+/*         Control(sid1,p1)@i1 & */
+/*         Control(sid2,p2)@i2 & */
+/*         Control(sid3,p3)@i3 & */
+/*         Control(sid1,p1p)@j1 & */
+/*         Control(sid2p,p2p)@j2 & */
+/*         Control(sid3,p3p)@j3 & */
+/*         #i1 < #i2 & */
+/*         #i2 < #i3 & */
+/*         #j1 < #j2 & */
+/*         #j2 < #j3 & */
+/*         (All sidp pp #i. Control(sidp,pp)@i ==> (#i <  #i1 | #i3 < #i ) & (#i <  #j1 | #ij < #i )) */
+/*         ==> */ 
+
+/* restriction ctl_order: */
+/*     "All sid1 sid2 p1 p2 p1p eid1 eid2 #i1 #i2 #j1. */
+/*     Control(sid1,p1)@i1 & Event(eid1)@i1 & */ 
+/*     Control(sid2,p2)@i2 & Event(eid1)@i2 & */ 
+/*     Control(sid1,p1p)@j1 & Event(eid2)@j1  & */
+/*     #i1 < #i2 */ 
+/*     ==> Ex p2p #j2. Control(sid2,p2p)@j2 & Event(eid2)@j2 & #j1 < #j2" */
+
+lemma sanity_logA_not_misbehaving:
+    exists-trace
+    "Ex sid a #i #j. (a = NormalAct()) & LogA(sid,a)@i & Execute(sid,a)@j"   
+
+lemma sanity_logAB_not_misbehaving:
+    exists-trace
+    "Ex sid a #i #j. (a = SpecialAct()) & LogAB(sid,a)@i & Execute(sid,a)@j"
+
+lemma sanity_logA:
+    exists-trace
+    "Ex sid a #i #j. LogA(sid,a)@i & Execute(sid,a)@j" 
+
+lemma sanity_logAB:
+    exists-trace
+    "Ex sid a #i #j. LogAB(sid,a)@i & Execute(sid,a)@j" 
+
+verdictfunction v1:
+    "Ex sid a #i #j. 
+        Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()) & 
+        (All sidp ap #ip #jp.  Execute(sidp,ap)@ip &  LogAB(sidp,ap)@jp  ==> (ap=SpecialAct()) | (ap=NormalAct())) 
+        "
+    -> let verdict0 = <'A'>,
+
+    "Ex sid a #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() |a=SpecialAct()) & 
+        (All sidp ap #ip #jp.  Execute(sidp,ap)@ip &  LogA(sidp,ap)@jp  ==> (ap=SpecialAct()) | (ap=NormalAct()))
+        "
+    -> let verdict1 = <'A','B'>,
+
+    " (Ex sid a #i #j. Execute(sid,a)@i & LogAB(sid,a)@j & not(a=NormalAct() | a=SpecialAct())) &
+      (Ex sid a #i #j. Execute(sid,a)@i & LogA(sid,a)@j &  not(a=NormalAct() | a=SpecialAct()))"
+    -> <verdict0> | <verdict1>,
+    /* -> <verdict2> | <verdict0> | <verdict1> | <verdict3>, */
+
+    otherwise -> empty 
+
+
+lemma acc:
+    v1 accounts [control] 
+    for "All a sid #i.  Execute(sid,a)@i ==> (a=SpecialAct()) | (a=NormalAct())"
+    for parties <'A','B'>
+
+end

@@ -1,0 +1,218 @@
+/*
+ * Protocol: Basic DMN
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Sep 2020
+ * Source:   "SoK: Techniques for Verifiable Mix Nets", Thomas Haines and Johannes Müller, CSF20
+ * Status:   working
+ * Notes:    Run with: tamarin-prover +RTS -N4 -RTS --prove --heuristic=o --oraclename=oracle-dmn-basic dmn-basic.spthy
+ */
+
+theory DMNBasic
+
+begin
+
+functions:
+    pk/1
+  , sk/1[private]
+  , aenc/3
+  , adec/2
+  , S/1
+  , adec_suc/2
+  , true/0
+
+equations:
+    adec(sk(x), aenc(pk(x), r, m)) = m
+  , adec_suc(sk(x), aenc(pk(x), r, m)) = true
+
+
+
+/*********************************************
+Specification
+*********************************************/
+
+rule Init:
+    [ Fr(~sid) ]
+  --[ Init(~sid)
+    , _restrict(not($s1 = $s2))
+    , _restrict(not($m1 = $m2))
+    , _restrict(not($m1 = $m3))
+    , _restrict(not($m2 = $m3)) ]->
+    [ !Sender(<~sid, $s1>)
+    , !Sender(<~sid, $s2>)
+    , !Mixer(S(S(S('0'))), <~sid, $m1>)
+    , !Mixer(S(S('0')), <~sid, $m2>)
+    , !Mixer(S('0'), <~sid, $m3>)
+    , Out(pk(<~sid, $m1>))
+    , Out(pk(<~sid, $m2>))
+    , Out(pk(<~sid, $m3>)) ]
+
+rule HonestSender:
+    let
+        c = aenc(pk(<~sid, $m1>), ~r1, aenc(pk(<~sid, $m2>), ~r2, aenc(pk(<~sid, $m3>), ~r3, ~m)))
+    in
+    [ !Sender(<~sid, $s>)
+    , !Mixer(S(S(S('0'))), <~sid, $m1>)
+    , !Mixer(S(S('0')), <~sid, $m2>)
+    , !Mixer(S('0'), <~sid, $m3>)
+    , Fr(~m)
+    , Fr(~r1), Fr(~r2), Fr(~r3) ]
+  --[ HonestSender(<~sid, $s>)
+    , AtMostOnce(<'sender', ~sid, $s>)
+    , Send(~sid, ~m)
+    , Post(<~sid, $s>, S(S(S('0'))), c) ]->
+    [ !BB(~sid, S(S(S('0'))), c)
+    , BBPost(~sid, S(S(S('0'))), c) ]
+
+rule CorruptedSender:
+    [ !Sender(<~sid, $s>)
+    , !BB(~sid, S(S(S('0'))), c) ]
+  --[ CorruptedSender(<~sid, $s>)
+    , AtMostOnce(<'sender', ~sid, $s>)
+    , Corrupted(<~sid, $s>)
+    , Post(<~sid, $s>, S(S(S('0'))), c) ]->
+    [ !BB(~sid, S(S(S('0'))), c)
+    , BBPost(~sid, S(S(S('0'))), c) ]
+
+rule HonestMixer:
+    let
+        e = adec(sk(<~sid, $m>), c)
+    in
+    [ !Mixer(S(n), <~sid, $m>)
+    , BBPost(~sid, S(n), c) ]
+  --[ HonestMixer(<~sid, $m>)
+    , AtMostTwice(<'mixer', ~sid, $m>)
+    , IsTrue( adec_suc(sk(<~sid, $m>), c) )
+    , Post(<~sid, $m>, n, e) ]->
+    [ !BB(~sid, n, e)
+    , BBPost(~sid, n, e) ]
+
+rule CorruptedMixer:
+    let
+        e = adec(sk(<~sid, $m>), c)
+    in
+    [ !Mixer(S(n), <~sid, $m>)
+    , !BB(~sid, S(n), c) ]
+  --[ CorruptedMixer(<~sid, $m>)
+    , AtMostTwice(<'mixer', ~sid, $m>)
+    , IsTrue( adec_suc(sk(<~sid, $m>), c) )
+    , Corrupted(<~sid, $m>)
+    , Post(<~sid, $m>, n, e) ]->
+    [ !BB(~sid, n, e)
+    , BBPost(~sid, n, e) ]
+
+
+
+/*********************************************
+Sanity lemmas
+*********************************************/
+
+lemma sanity_submit:
+    exists-trace
+    "Ex sid s c #i. Post(<sid, s>, S(S(S('0'))), c)@i"
+
+lemma sanity_mix:
+    exists-trace
+    "Ex sid m n c #i. Post(<sid, m>, n, c)@i & not(n = S(S(S('0'))))"
+
+lemma sanity_receive:
+    exists-trace
+    "Ex sid c m #i. Post(<sid, m>, '0', c)@i"
+
+lemma correctness:
+    "All sid s m #i. Post(<sid, s>, '0', m)@i ==> Ex #j. Send(sid, m)@j"
+
+
+
+/*********************************************
+Restrictions
+*********************************************/
+
+restriction mixer_stays_corrupted:
+    "All sid m #i. CorruptedMixer(<sid, m>)@i ==> not Ex #j. HonestMixer(<sid, m>)@j & #i < #j"
+
+restriction at_most_once:
+    "All x #i #j. AtMostOnce(x)@i & AtMostOnce(x)@j ==> #i = #j"
+
+restriction at_most_twice:
+    "All x #i #j #k. AtMostTwice(x)@i
+                   & AtMostTwice(x)@j
+                   & AtMostTwice(x)@k
+                   ==> #i = #j | #i = #k | #j = #k"
+
+restriction is_true:
+    "All m #i. IsTrue(m)@i ==> m = true()"
+
+restriction stop_after_sender_duplicate:
+    "All sid s1 s2 c #i #j. Post(<sid, s1>, S(S(S('0'))), c)@i
+                          & Post(<sid, s2>, S(S(S('0'))), c)@j
+                          & #i < #j & not(s1 = s2)
+                          ==> not Ex p n m #k. Post(<sid, p>, n, m)@k & #j < #k"
+
+restriction stop_after_mixer_duplicate:
+    "All sid m n c #i #j. Post(<sid, m>, n, c)@i
+                        & Post(<sid, m>, n, c)@j
+                        & not(n = S(S(S('0')))) & not(#i = #j)
+                        ==> not Ex p n m #k. Post(<sid, p>, n, m)@k & #i < #k & #j < #k"
+
+
+
+/*********************************************
+Accountability lemmas
+*********************************************/
+
+// Hold sender submitting duplicate ciphertext accountable.
+test sender_duplicate:
+    "Ex sid s1 s2 c #i #j. sa2 = <sid, s2>
+                         & Post(<sid, s1>, S(S(S('0'))), c)@i
+                         & Post(<sid, s2>, S(S(S('0'))), c)@j
+                         & #i < #j & not(s1 = s2)"
+
+// Hold mixer mixing duplicate ciphertext accountable.
+test mixer_duplicate:
+    "Ex sid m n c #i #j. ma = <sid, m>
+                       & Post(<sid, m>, n, c)@i
+                       & Post(<sid, m>, n, c)@j
+                       & not(n = S(S(S('0')))) & not(#i = #j)"
+
+lemma duplicates:
+    sender_duplicate,
+    mixer_duplicate
+    accounts for
+    "All sid p1 p2 n m #i #j. Post(<sid, p1>, n, m)@i & Post(<sid, p2>, n, m)@j ==> #i = #j"
+
+
+
+/*********************************************
+Results
+*********************************************/
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: dmn-basic.spthy
+
+  sanity_submit (exists-trace): verified (6 steps)
+  sanity_mix (exists-trace): verified (5 steps)
+  sanity_receive (exists-trace): verified (7 steps)
+  correctness (all-traces): verified (130 steps)
+  duplicates_sender_duplicate_suff (exists-trace): verified (11 steps)
+  duplicates_mixer_duplicate_suff (exists-trace): verified (8 steps)
+  duplicates_verif_empty (all-traces): verified (108 steps)
+  duplicates_sender_duplicate_verif_nonempty (all-traces): verified (2 steps)
+  duplicates_mixer_duplicate_verif_nonempty (all-traces): verified (2 steps)
+  duplicates_sender_duplicate_min (all-traces): verified (4 steps)
+  duplicates_mixer_duplicate_min (all-traces): verified (4 steps)
+  duplicates_sender_duplicate_uniq (all-traces): verified (42 steps)
+  duplicates_mixer_duplicate_uniq (all-traces): verified (736 steps)
+  duplicates_sender_duplicate_inj (all-traces): verified (1 steps)
+  duplicates_mixer_duplicate_inj (all-traces): verified (1 steps)
+  duplicates_sender_duplicate_single (exists-trace): verified (11 steps)
+  duplicates_mixer_duplicate_single (exists-trace): verified (8 steps)
+
+==============================================================================
+*/
+
+
+
+end

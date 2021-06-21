@@ -1,0 +1,480 @@
+theory CertificateTransparency
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+functions: pk/1, skca/1[private], sign/2, verify/3, read/1, true/0
+
+equations: verify(sign(sk, m), m, pk(sk))=true,read(sign(sk, m))=m
+
+heuristic: p /* heuristic for SAPIC */
+
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule Par_: // [process=top-level] Par 
+ [State_()] --[]-> [State_1(), State_2()]
+
+rule Par_1 [color=#569DC0]: // [process=Proto] Par 
+ [State_1()] --[]-> [State_11(), State_12()]
+
+rule Par_11 [color=#569DC0]: // [process=Proto] Par 
+ [State_11()] --[]-> [State_111(), State_112()]
+
+rule Par_111 [color=#569DC0]: // [process=Proto] Par 
+ [State_111()] --[]-> [State_1111(), State_1112()]
+
+rule Par_1111 [color=#569DC0]: // [process=Proto] Par 
+ [State_1111()] --[]-> [State_11111(), State_11112()]
+
+rule out_pkskca_CA__11111 [color=#2CD719]: // [process=CA] out pk(skca('CA')) 
+ [State_11111()] --[]-> [State_111111(), Out(pk(skca('CA')))]
+
+rule Rep_0_111111 [color=#2CD719]: // [process=CA] Rep, 0 
+ [State_111111()] --[]-> [!Semistate_1111111()]
+
+rule Rep_1_111111 [color=#2CD719]: // [process=CA] Rep, 1 
+ [!Semistate_1111111()] --[]-> [State_1111111()]
+
+rule in_S_CA__1111111 [color=#2CD719]: // [process=CA] in <S, 'CA'> 
+ [State_1111111(), In(<S, 'CA'>)] --[]-> [State_11111111(S)]
+
+rule new_sk_S_11111111 [color=#2CD719]: // [process=CA] new sk_S 
+ [State_11111111(S), Fr(sk_S)] --[]-> [State_111111111(S, sk_S)]
+
+rule event_HonestRegisterS_CA_pksk_S_111111111 [color=#2CD719]: // [process=CA] event HonestRegister(S, 'CA', pk(sk_S)) 
+ [State_111111111(S, sk_S)] --[HonestRegister(S, 'CA', pk(sk_S))]-> [State_1111111111(S, sk_S)]
+
+rule insert_proofOfID_S_pksk_S_yes__1111111111 [color=#2CD719]: // [process=CA] insert <'proofOfID', S, pk(sk_S)>,'yes' 
+ [State_1111111111(S, sk_S)] --[Insert(<'proofOfID', S, pk(sk_S)>, 'yes')]-> [State_11111111111(S, sk_S)]
+
+rule out_pksk_S_11111111111 [color=#2CD719]: // [process=CA] out pk(sk_S) 
+ [State_11111111111(S, sk_S)] --[]-> [State_111111111111(S, sk_S), Out(pk(sk_S))]
+
+rule out_signskca_CA__pksk_S_S__111111111111 [color=#2CD719]: // [process=CA] out sign(skca('CA'), <pk(sk_S), S>) 
+ [State_111111111111(S, sk_S)] --[]-> [State_1111111111111(S, sk_S), Out(sign(skca('CA'), <pk(sk_S), S>))]
+
+rule Zero_1111111111111 [color=#2CD719]: // [process=CA] Zero 
+ [State_1111111111111(S, sk_S)] --[]-> []
+
+rule in_signskca_CA__pk_S__11112 [color=#11EC28]: // [process=LogCert] in sign(skca('CA'), <pk, S>) 
+ [State_11112(), In(sign(skca('CA'), <pk, S>))] --[]-> [State_111121(S, pk)]
+
+rule Par_111121 [color=#11EC28]: // [process=LogCert] Par 
+ [State_111121(S, pk)] --[]-> [State_1111211(S, pk), State_1111212(S, pk)]
+
+rule Rep_0_1111211 [color=#11EC28]: // [process=LogCert] Rep, 0 
+ [State_1111211(S, pk)] --[]-> [!Semistate_11112111(S, pk)]
+
+rule Rep_1_1111211 [color=#11EC28]: // [process=LogCert] Rep, 1 
+ [!Semistate_11112111(S, pk)] --[]-> [State_11112111(S, pk)]
+
+rule lock_log__11112111 [color=#11EC28]: // [process=LogCert] lock 'log' 
+ [State_11112111(S, pk), Fr(~lock7)] --[Lock($7, ~lock7, 'log'), Lock_7($7, ~lock7, 'log')]-> [State_111121111(~lock7, S, pk)]
+
+rule event_HonestLogpk_111121111 [color=#11EC28]: // [process=LogCert] event HonestLog(pk) 
+ [State_111121111(~lock7, S, pk)] --[HonestLog(pk)]-> [State_1111211111(~lock7, S, pk)]
+
+rule insert_log_LA_S_pk_c1_yes__1111211111 [color=#11EC28]: // [process=LogCert] insert <'log', 'LA', S, pk, 'c1'>,'yes' 
+ [State_1111211111(~lock7, S, pk)] --[Insert(<'log', 'LA', S, pk, 'c1'>, 'yes')]-> [State_11112111111(~lock7, S, pk)]
+
+rule insert_log_LA_S_pk_s1_yes__11112111111 [color=#11EC28]: // [process=LogCert] insert <'log', 'LA', S, pk, 's1'>,'yes' 
+ [State_11112111111(~lock7, S, pk)] --[Insert(<'log', 'LA', S, pk, 's1'>, 'yes')]-> [State_111121111111(~lock7, S, pk)]
+
+rule insert_log_LA_S_pk_i_yes__111121111111 [color=#11EC28]: // [process=LogCert] insert <'log', 'LA', S, pk, 'i'>,'yes' 
+ [State_111121111111(~lock7, S, pk)] --[Insert(<'log', 'LA', S, pk, 'i'>, 'yes')]-> [State_1111211111111(~lock7, S, pk)]
+
+rule unlock_log__1111211111111 [color=#11EC28]: // [process=LogCert] unlock 'log' 
+ [State_1111211111111(~lock7, S, pk)] --[Unlock($7, ~lock7, 'log'), Unlock_7($7, ~lock7, 'log')]-> [State_11112111111111(~lock7, S, pk)]
+
+rule Zero_11112111111111 [color=#11EC28]: // [process=LogCert] Zero 
+ [State_11112111111111(~lock7, S, pk)] --[]-> []
+
+rule Rep_0_1111212 [color=#11EC28]: // [process=LogCert] Rep, 0 
+ [State_1111212(S, pk)] --[]-> [!Semistate_11112121(S, pk)]
+
+rule Rep_1_1111212 [color=#11EC28]: // [process=LogCert] Rep, 1 
+ [!Semistate_11112121(S, pk)] --[]-> [State_11112121(S, pk)]
+
+rule lock_log__11112121 [color=#11EC28]: // [process=LogCert] lock 'log' 
+ [State_11112121(S, pk), Fr(~lock6)] --[Lock($6, ~lock6, 'log'), Lock_6($6, ~lock6, 'log')]-> [State_111121211(~lock6, S, pk)]
+
+rule event_Corrupted_LA__111121211 [color=#11EC28]: // [process=LogCert] event Corrupted('LA') 
+ [State_111121211(~lock6, S, pk)] --[Corrupted('LA')]-> [State_1111212111(~lock6, S, pk)]
+
+rule insert_log_LA_S_pk_s1_yes__1111212111 [color=#11EC28]: // [process=LogCert] insert <'log', 'LA', S, pk, 's1'>,'yes' 
+ [State_1111212111(~lock6, S, pk)] --[Insert(<'log', 'LA', S, pk, 's1'>, 'yes')]-> [State_11112121111(~lock6, S, pk)]
+
+rule insert_log_LA_S_pk_i_yes__11112121111 [color=#11EC28]: // [process=LogCert] insert <'log', 'LA', S, pk, 'i'>,'yes' 
+ [State_11112121111(~lock6, S, pk)] --[Insert(<'log', 'LA', S, pk, 'i'>, 'yes')]-> [State_111121211111(~lock6, S, pk)]
+
+rule unlock_log__111121211111 [color=#11EC28]: // [process=LogCert] unlock 'log' 
+ [State_111121211111(~lock6, S, pk)] --[Unlock($6, ~lock6, 'log'), Unlock_6($6, ~lock6, 'log')]-> [State_1111212111111(~lock6, S, pk)]
+
+rule Zero_1111212111111 [color=#11EC28]: // [process=LogCert] Zero 
+ [State_1111212111111(~lock6, S, pk)] --[]-> []
+
+rule lock_testCA__1112 [color=#45D1E2]: // [process=TestCA] lock 'testCA' 
+ [State_1112(), Fr(~lock7)] --[Lock($7, ~lock7, 'testCA'), Lock_7($7, ~lock7, 'testCA')]-> [State_11121(~lock7)]
+
+rule in_signskca_CA__pk_S__11121 [color=#45D1E2]: // [process=TestCA] in sign(skca('CA'), <pk, S>) 
+ [State_11121(~lock7), In(sign(skca('CA'), <pk, S>))] --[]-> [State_111211(~lock7, S, pk)]
+
+rule lookup_proofOfID_S_pk_as_ignored_0_111211 [color=#45D1E2]: // [process=TestCA] lookup <'proofOfID', S, pk> as ignored, 0 
+ [State_111211(~lock7, S, pk)] --[IsIn(<'proofOfID', S, pk>, ignored)]-> [State_1112111(~lock7, S, ignored, pk)]
+
+rule lookup_proofOfID_S_pk_as_ignored_1_111211 [color=#45D1E2]: // [process=TestCA] lookup <'proofOfID', S, pk> as ignored, 1 
+ [State_111211(~lock7, S, pk)] --[IsNotSet(<'proofOfID', S, pk>)]-> [State_1112112(~lock7, S, pk)]
+
+rule event_HonestCA_1112111 [color=#45D1E2]: // [process=TestCA] event HonestCA() 
+ [State_1112111(~lock7, S, ignored, pk)] --[HonestCA()]-> [State_11121111(~lock7, S, ignored, pk)]
+
+rule event_TestCAS_pk_11121111 [color=#45D1E2]: // [process=TestCA] event TestCA(S, pk) 
+ [State_11121111(~lock7, S, ignored, pk)] --[TestCA(S, pk)]-> [State_111211111(~lock7, S, ignored, pk)]
+
+rule unlock_testCA__111211111 [color=#45D1E2]: // [process=TestCA] unlock 'testCA' 
+ [State_111211111(~lock7, S, ignored, pk)] --[Unlock($7, ~lock7, 'testCA'), Unlock_7($7, ~lock7, 'testCA')]-> [State_1112111111(~lock7, S, ignored, pk)]
+
+rule Zero_1112111111 [color=#45D1E2]: // [process=TestCA] Zero 
+ [State_1112111111(~lock7, S, ignored, pk)] --[]-> []
+
+rule event_DishonestCA_1112112 [color=#45D1E2]: // [process=TestCA] event DishonestCA() 
+ [State_1112112(~lock7, S, pk)] --[DishonestCA()]-> [State_11121121(~lock7, S, pk)]
+
+rule event_TestCAS_pk_11121121 [color=#45D1E2]: // [process=TestCA] event TestCA(S, pk) 
+ [State_11121121(~lock7, S, pk)] --[TestCA(S, pk)]-> [State_111211211(~lock7, S, pk)]
+
+rule unlock_testCA__111211211 [color=#45D1E2]: // [process=TestCA] unlock 'testCA' 
+ [State_111211211(~lock7, S, pk)] --[Unlock($7, ~lock7, 'testCA'), Unlock_7($7, ~lock7, 'testCA')]-> [State_1112112111(~lock7, S, pk)]
+
+rule Zero_1112112111 [color=#45D1E2]: // [process=TestCA] Zero 
+ [State_1112112111(~lock7, S, pk)] --[]-> []
+
+rule lock_log__112 [color=#9F76CD]: // [process=TestLA] lock 'log' 
+ [State_112(), Fr(~lock8)] --[Lock($8, ~lock8, 'log'), Lock_8($8, ~lock8, 'log')]-> [State_1121(~lock8)]
+
+rule in_c1_s1_S_pk__1121 [color=#9F76CD]: // [process=TestLA] in <'c1', 's1', S, pk> 
+ [State_1121(~lock8), In(<'c1', 's1', S, pk>)] --[]-> [State_11211(~lock8, S, pk)]
+
+rule lookup_log_LA_S_pk_c1_as_x1_0_11211 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 'c1'> as x1, 0 
+ [State_11211(~lock8, S, pk)] --[IsIn(<'log', 'LA', S, pk, 'c1'>, x1)]-> [State_112111(~lock8, S, pk, x1)]
+
+rule lookup_log_LA_S_pk_c1_as_x1_1_11211 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 'c1'> as x1, 1 
+ [State_11211(~lock8, S, pk)] --[IsNotSet(<'log', 'LA', S, pk, 'c1'>)]-> [State_112112(~lock8, S, pk)]
+
+rule lookup_log_LA_S_pk_s1_as_x2_0_112111 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 's1'> as x2, 0 
+ [State_112111(~lock8, S, pk, x1)] --[IsIn(<'log', 'LA', S, pk, 's1'>, x2)]-> [State_1121111(~lock8, S, pk, x1, x2)]
+
+rule lookup_log_LA_S_pk_s1_as_x2_1_112111 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 's1'> as x2, 1 
+ [State_112111(~lock8, S, pk, x1)] --[IsNotSet(<'log', 'LA', S, pk, 's1'>)]-> [State_1121112(~lock8, S, pk, x1)]
+
+rule event_HonestLA_1121111 [color=#9F76CD]: // [process=TestLA] event HonestLA() 
+ [State_1121111(~lock8, S, pk, x1, x2)] --[HonestLA()]-> [State_11211111(~lock8, S, pk, x1, x2)]
+
+rule event_TestLApk_11211111 [color=#9F76CD]: // [process=TestLA] event TestLA(pk) 
+ [State_11211111(~lock8, S, pk, x1, x2)] --[TestLA(pk)]-> [State_112111111(~lock8, S, pk, x1, x2)]
+
+rule unlock_log__112111111 [color=#9F76CD]: // [process=TestLA] unlock 'log' 
+ [State_112111111(~lock8, S, pk, x1, x2)] --[Unlock($8, ~lock8, 'log'), Unlock_8($8, ~lock8, 'log')]-> [State_1121111111(~lock8, S, pk, x1, x2)]
+
+rule Zero_1121111111 [color=#9F76CD]: // [process=TestLA] Zero 
+ [State_1121111111(~lock8, S, pk, x1, x2)] --[]-> []
+
+rule event_DishonestLA_1121112 [color=#9F76CD]: // [process=TestLA] event DishonestLA() 
+ [State_1121112(~lock8, S, pk, x1)] --[DishonestLA()]-> [State_11211121(~lock8, S, pk, x1)]
+
+rule event_TestLApk_11211121 [color=#9F76CD]: // [process=TestLA] event TestLA(pk) 
+ [State_11211121(~lock8, S, pk, x1)] --[TestLA(pk)]-> [State_112111211(~lock8, S, pk, x1)]
+
+rule unlock_log__112111211 [color=#9F76CD]: // [process=TestLA] unlock 'log' 
+ [State_112111211(~lock8, S, pk, x1)] --[Unlock($8, ~lock8, 'log'), Unlock_8($8, ~lock8, 'log')]-> [State_1121112111(~lock8, S, pk, x1)]
+
+rule Zero_1121112111 [color=#9F76CD]: // [process=TestLA] Zero 
+ [State_1121112111(~lock8, S, pk, x1)] --[]-> []
+
+rule lookup_log_LA_S_pk_s1_as_x2_0_112112 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 's1'> as x2, 0 
+ [State_112112(~lock8, S, pk)] --[IsIn(<'log', 'LA', S, pk, 's1'>, x2)]-> [State_1121121(~lock8, S, pk, x2)]
+
+rule lookup_log_LA_S_pk_s1_as_x2_1_112112 [color=#9F76CD]: // [process=TestLA] lookup <'log', 'LA', S, pk, 's1'> as x2, 1 
+ [State_112112(~lock8, S, pk)] --[IsNotSet(<'log', 'LA', S, pk, 's1'>)]-> [State_1121122(~lock8, S, pk)]
+
+rule event_DishonestLA_1121121 [color=#9F76CD]: // [process=TestLA] event DishonestLA() 
+ [State_1121121(~lock8, S, pk, x2)] --[DishonestLA()]-> [State_11211211(~lock8, S, pk, x2)]
+
+rule event_TestLApk_11211211 [color=#9F76CD]: // [process=TestLA] event TestLA(pk) 
+ [State_11211211(~lock8, S, pk, x2)] --[TestLA(pk)]-> [State_112112111(~lock8, S, pk, x2)]
+
+rule unlock_log__112112111 [color=#9F76CD]: // [process=TestLA] unlock 'log' 
+ [State_112112111(~lock8, S, pk, x2)] --[Unlock($8, ~lock8, 'log'), Unlock_8($8, ~lock8, 'log')]-> [State_1121121111(~lock8, S, pk, x2)]
+
+rule Zero_1121121111 [color=#9F76CD]: // [process=TestLA] Zero 
+ [State_1121121111(~lock8, S, pk, x2)] --[]-> []
+
+rule Zero_1121122 [color=#9F76CD]: // [process=TestLA] Zero 
+ [State_1121122(~lock8, S, pk)] --[]-> []
+
+rule lock_testCA__12 [color=#EE415C]: // [process=Terminate] lock 'testCA' 
+ [State_12(), Fr(~lock4)] --[Lock($4, ~lock4, 'testCA'), Lock_4($4, ~lock4, 'testCA')]-> [State_121(~lock4)]
+
+rule lock_log__121 [color=#EE415C]: // [process=Terminate] lock 'log' 
+ [State_121(~lock4), Fr(~lock3)] --[Lock($3, ~lock3, 'log'), Lock_3($3, ~lock3, 'log')]-> [State_1211(~lock3, ~lock4)]
+
+rule event_Terminate_1211 [color=#EE415C]: // [process=Terminate] event Terminate() 
+ [State_1211(~lock3, ~lock4)] --[Terminate()]-> [State_12111(~lock3, ~lock4)]
+
+rule Zero_12111 [color=#EE415C]: // [process=Terminate] Zero 
+ [State_12111(~lock3, ~lock4)] --[]-> []
+
+rule Rep_0_2: // [process=top-level] Rep, 0 
+ [State_2()] --[]-> [!Semistate_21()]
+
+rule Rep_1_2: // [process=top-level] Rep, 1 
+ [!Semistate_21()] --[]-> [State_21()]
+
+rule in_c_CAcorrupt_id_0_21: // [process=top-level] in 'c',<'CAcorrupt', $id>, 0 
+ [State_21(), In(<'c', <'CAcorrupt', $id>>)] --[ChannelInEvent(<'c', <'CAcorrupt', $id>>)]-> [State_211($id)]
+
+rule in_c_CAcorrupt_id_1_21: // [process=top-level] in 'c',<'CAcorrupt', $id>, 1 
+ [State_21(), Message('c',<'CAcorrupt', $id>)] --[]-> [Ack('c',<'CAcorrupt', $id>), State_211($id)]
+
+rule event_Corrupted_id_211: // [process=top-level] event Corrupted($id) 
+ [State_211($id)] --[Corrupted($id)]-> [State_2111($id)]
+
+rule out_c_skca_id_0_2111: // [process=top-level] out 'c',skca($id), 0 
+ [State_2111($id), In('c')] --[ChannelInEvent('c')]-> [Out(skca($id)), State_21111($id)]
+
+rule out_c_skca_id_1_2111: // [process=top-level] out 'c',skca($id), 1 
+ [State_2111($id)] --[]-> [Semistate_2111($id), Message('c',skca($id))]
+
+rule out_c_skca_id_2_2111: // [process=top-level] out 'c',skca($id), 2 
+ [Semistate_2111($id), Ack('c',skca($id))] --[]-> [State_21111($id)]
+
+rule Zero_21111: // [process=top-level] Zero 
+ [State_21111($id)] --[]-> []
+
+restriction set_in:
+ "(All #t3 x y . ((IsIn(x, y)@#t3 ==> (Ex #t2 . ((Insert(x, y)@#t2 & (#t2 < #t3 & (All #t1 yp . ((Insert(x, yp)@#t1 ==> (#t1 < #t2 | (#t1 = #t2 | #t3 < #t1))))))))))))"
+
+restriction set_notin:
+ "(All #t3 x . ((IsNotSet(x)@#t3 ==> (All #t1 y . ((Insert(x, y)@#t1 ==> #t3 < #t1))))))"
+
+restriction locking_7:
+ "(All #t1 #t3 l lp p pp x . (((Lock_7(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_7(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_6:
+ "(All #t1 #t3 l lp p pp x . (((Lock_6(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_6(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_8:
+ "(All #t1 #t3 l lp p pp x . (((Lock_8(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_8(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_4:
+ "(All #t1 #t3 l lp p pp x . (((Lock_4(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_4(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_3:
+ "(All #t1 #t3 l lp p pp x . (((Lock_3(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_3(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction single_session:
+ "(All #i #j . (((Init()@#i & Init()@#j) ==> #i = #j)))"
+restriction terminate:
+ "(Ex #t . (Terminate()@#t))"
+
+lemma acc_ca_excl_0_1 :
+ all-traces
+"not(((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestCA()@#i)))))"
+
+lemma acc_ca_exh :
+ all-traces
+"((Ex #i . (DishonestCA()@#i)) | not((Ex #i . (DishonestCA()@#i))))"
+
+lemma acc_ca_suf_0_0 :
+ exists-trace
+"(((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((Ex #c0 . (Corrupted('CA')@#c0)) & T)) & not((All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))))"
+
+lemma acc_ca_ver_empty_1 :
+ all-traces
+"(not((Ex #i . (DishonestCA()@#i))) ==> (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j))))))"
+
+lemma acc_ca_ver_nonempty_0 :
+ all-traces
+"((Ex #i . (DishonestCA()@#i)) ==> not((All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))))"
+
+lemma acc_ca_min_0_0_0 :
+ all-traces
+"not((not((All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))) & ((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T))))"
+
+lemma acc_ca_uniq_0 :
+ all-traces
+"((Ex #i . (DishonestCA()@#i)) ==> (Ex #c0 . ((Corrupted('CA')@#c0 & T))))"
+
+lemma acc_la_excl_0_1 :
+ all-traces
+"not(((Ex #i . (DishonestLA()@#i)) & not((Ex #i . (DishonestLA()@#i)))))"
+
+lemma acc_la_exh :
+ all-traces
+"((Ex #i . (DishonestLA()@#i)) | not((Ex #i . (DishonestLA()@#i))))"
+
+lemma acc_la_suf_0_0 :
+ exists-trace
+"(((Ex #c1 . (Corrupted('LA')@#c1)) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T)) & not((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i))))))))"
+
+lemma acc_la_ver_empty_1 :
+ all-traces
+"(not((Ex #i . (DishonestLA()@#i))) ==> (All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))))"
+
+lemma acc_la_ver_nonempty_0 :
+ all-traces
+"((Ex #i . (DishonestLA()@#i)) ==> not((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i))))))))"
+
+lemma acc_la_min_0_0_0 :
+ all-traces
+"not((not((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i))))))) & ((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T))))"
+
+lemma acc_la_uniq_0 :
+ all-traces
+"((Ex #i . (DishonestLA()@#i)) ==> (Ex #c0 . ((Corrupted('LA')@#c0 & T))))"
+
+lemma acc_excl_0_1 :
+ all-traces
+"not((((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) & (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i)))))"
+
+lemma acc_excl_0_2 :
+ all-traces
+"not((((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) & ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i)))))"
+
+lemma acc_excl_0_3 :
+ all-traces
+"not((((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) & not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))))))))"
+
+lemma acc_excl_1_2 :
+ all-traces
+"not(((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) & ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i)))))"
+
+lemma acc_excl_1_3 :
+ all-traces
+"not(((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) & not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))))))))"
+
+lemma acc_excl_2_3 :
+ all-traces
+"not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) & not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))))))))"
+
+lemma acc_exh :
+ all-traces
+"(((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | (((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i))))))))))"
+
+lemma acc_suf_0 :
+ exists-trace
+"(((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) & (((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((Ex #c0 . (Corrupted('CA')@#c0)) & T)) & not(((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))))))"
+
+lemma acc_suf_1 :
+ exists-trace
+"((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) & (((Ex #c1 . (Corrupted('LA')@#c1)) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T)) & not(((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))))))"
+
+lemma acc_ver_empty_3 :
+ all-traces
+"(not((((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) | ((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) | ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i))))))) ==> ((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j)))))))"
+
+lemma acc_ver_nonempty_0 :
+ all-traces
+"(((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) ==> not(((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j))))))))"
+
+lemma acc_ver_nonempty_1 :
+ all-traces
+"((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) ==> not(((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j))))))))"
+
+lemma acc_ver_nonempty_2 :
+ all-traces
+"(((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) ==> not(((All #i pk . ((TestLA(pk)@#i ==> (Ex #j . ((HonestLog(pk)@#j & #j < #i)))))) & (All #i S pk . ((TestCA(S, pk)@#i ==> (Ex #j . (HonestRegister(S, 'CA', pk)@#j))))))))"
+
+lemma acc_min_0_0 :
+ all-traces
+"not((((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) & ((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T))))"
+
+lemma acc_min_1_0 :
+ all-traces
+"not(((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) & ((All #c1 . ((Corrupted('LA')@#c1 ==> F))) & ((All #c0 . ((Corrupted('CA')@#c0 ==> F))) & T))))"
+
+/* lemma: acc_comp_min_2. The following needs to be shown manually:
+Minimaliy of case 2 in acc with |verdict| >= 2. verdict need not to be subsets of each other, but 'CA' and 'LA' are.Exclude the smaller when reading the verdict. */ 
+
+lemma acc_uniq_sing_0 :
+ all-traces
+"(((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) ==> (Ex #c0 . ((Corrupted('CA')@#c0 & T))))"
+
+lemma acc_uniq_sing_1 :
+ all-traces
+"((not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) ==> (Ex #c0 . ((Corrupted('LA')@#c0 & T))))"
+
+/* lemma: acc_rel_2_0. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i))))
+it holds that r(u,u'). */ 
+
+/* lemma: acc_rel_2_1. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i)))
+it holds that r(u,u'). */ 
+
+/* lemma: acc_rel_0_0. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i))))
+it holds that r(u,u'). */ 
+
+/* lemma: acc_rel_1_1. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i)))
+it holds that r(u,u'). */ 
+
+/* lemma: acc_rel_2_2. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i)))
+it holds that r(u,u'). */ 
+
+/* lemma: acc_rel_0_1. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) 
+and u' such that traces(P,u') in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i)))
+it holds that NOT r(u,u'). */ 
+
+/* lemma: acc_rel_0_2. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i)))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i)))
+it holds that NOT r(u,u'). */ 
+
+/* lemma: acc_rel_1_0. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & not((Ex #i . (DishonestLA()@#i))))
+it holds that NOT r(u,u'). */ 
+
+/* lemma: acc_rel_1_2. The following needs to be shown manually:
+
+For all contexts u such that traces(P,u) in 
+    (not((Ex #i . (DishonestCA()@#i))) & (Ex #i . (DishonestLA()@#i))) 
+and u' such that traces(P,u') in 
+    ((Ex #i . (DishonestCA()@#i)) & (Ex #i . (DishonestLA()@#i)))
+it holds that NOT r(u,u'). */ 
+end

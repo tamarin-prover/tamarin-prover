@@ -1,0 +1,175 @@
+/*
+ * Protocol: DMN + message tracing
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Sep 2020
+ * Source:   "SoK: Techniques for Verifiable Mix Nets", Thomas Haines and Johannes Müller, CSF20
+ * Status:   working
+ * Notes:    Run with: tamarin-prover +RTS -N4 -RTS --stop-on-trace=seqdfs --prove --heuristic=o \
+ *                     --oraclename=oracle-dmn-message-tracing dmn-message-tracing-first-2.spthy
+ *
+ * In this version, the audit stops after detecting the first unexpected message on the bulletin board.
+ */
+
+theory DMNMessageTracingFirst2
+begin
+
+functions:
+    pk/1
+  , sk/1[private]
+  , aenc/3
+  , adec/2
+  , S/1
+  , adec_suc/2
+  , true/0
+
+equations:
+    adec(sk(x), aenc(pk(x), r, m)) = m
+  , adec_suc(sk(x), aenc(pk(x), r, m)) = true
+
+
+rule DistinctParty:
+    [ ]
+  --[ Once($p) ]->
+    [ Party($p) ]
+
+rule AInit:
+    [ Fr(~sid)
+    , Party($s1)
+    , Party($s2)
+    , Party($m1)
+    , Party($m2) ]
+  --[ Init(~sid)
+    , IsMixer(<~sid, $m2>, '0')
+    , IsMixer(<~sid, $m1>, S('0')) ]->
+    [ Sender(<~sid, $s1>)
+    , Sender(<~sid, $s2>), !IMixer(<~sid, $m2>, '0')
+    , !IMixer(<~sid, $m1>, S('0'))
+    , Out(~sid) ]
+
+rule BSender:
+    let
+        c1 = aenc(pk(<~sid, $m2>), ~r2, ~m)
+        c0 = aenc(pk(<~sid, $m1>), ~r1, c1)
+    in
+    [ Sender(<~sid, $s>)
+    , !IMixer(<~sid, $m2>, '0')
+    , !IMixer(<~sid, $m1>, S('0'))
+    , Fr(~r1)
+    , Fr(~r2)
+    , Fr(~r3)
+    , Fr(~m) ]
+  --[ Sender(<~sid, $s>)
+    , Send(<~sid, $s>, ~m)
+    , Post(<~sid, $s>, S(S('0')), c0) ]->
+    [ IntCipher(<~sid, $s>, '0', ~r3, ~m, $m2)
+    , IntCipher(<~sid, $s>, S('0'), ~r2, c1, $m1)
+    , Mixer(<~sid, $m2>, '0')
+    , Mixer(<~sid, $m1>, S('0'))
+    , Verify(<~sid, $s>, S(S('0')))
+    , BBPost(~sid, S(S('0')), c0) ]
+
+rule AMixStep:
+    [ BBPost(~sid, S(n), aenc(pk(<~sid, $m>), r, e))
+    , Mixer(<~sid, $m>, n) ]
+  --[ Post(<~sid, $m>, n, e) ]->
+    [ BBPost(~sid, n, e) ]
+
+rule BMixStepCorrupted:
+    [ BBPost(~sid, S(n), c)
+    , Mixer(<~sid, $m>, n)
+    , In(a) ]
+  --[ Post(<~sid, $m>, n, a)
+    , Corrupted(<~sid, $m>)
+    , _restrict( All mp np #i. IsMixer(<~sid, mp>, np)@i & n = S(np)
+                     ==> Ex r e. a = aenc(pk(<~sid, mp>), r, e) ) ]->
+    [ BBPost(~sid, n, a) ]
+
+rule BAVerify:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Valid(<~sid, $s>, n, c)
+    , Verified(<~sid, $s>, n)
+    , _restrict( Ex #i. Post(<~sid, $m>, n, c)@i ) ]->
+    [ Verify(<~sid, $s>, n) ]
+
+rule AAVerifyBlame:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Blame(<~sid, $m>)
+    , Verified(<~sid, $s>, '0')
+    , _restrict( Ex ca cb #i #j. Post(<~sid, $m>, n, ca)@i
+                                & Post(<~sid, $m>, n, cb)@j
+                                & not(#i = #j) & not(ca = c) & not(cb = c) ) ]->
+    [ Verify(<~sid, $s>, '0') ]
+
+
+
+/*********************************************
+Sanity lemmas
+*********************************************/
+
+lemma finished:
+   exists-trace
+   "Ex sid m e #i. Post(<sid, m>, '0', e)@i"
+
+lemma valid:
+   exists-trace
+   "Ex #i s m. Valid(s, '0', m)@i"
+
+lemma blame:
+   exists-trace
+   "Ex #i m. Blame(m)@i"
+
+
+
+/*********************************************
+Restrictions
+*********************************************/
+
+restriction verify_sender:
+   "All s #i. Sender(s)@i ==> Ex #j. Verified(s, '0')@j
+                            & not Ex #k. Verified(s, '0')@k
+                            & not(#j = #k)"
+
+restriction once:
+   "All x #i #j. Once(x)@i & Once(x)@j ==> #i = #j"
+
+
+
+/*********************************************
+Accountability lemmas
+*********************************************/
+
+test mixer_evidence:
+    "Ex #i. Blame(m)@i"
+
+lemma missing:
+    mixer_evidence accounts for
+    "All sid s ms #i. Send(<sid, s>, ms)@i ==> Ex m #j. Post(<sid, m>, '0', ms)@j"
+
+
+
+/*********************************************
+Results
+*********************************************/
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: dmn-message-tracing-blame-first-2.spthy
+
+  missing_mixer_evidence_suff (exists-trace): verified (25 steps)
+  missing_verif_empty (all-traces): verified (18 steps)
+  missing_mixer_evidence_verif_nonempty (all-traces): verified (2106 steps)
+  missing_mixer_evidence_min (all-traces): verified (2 steps)
+  missing_mixer_evidence_uniq (all-traces): verified (1428 steps)
+  missing_mixer_evidence_inj (all-traces): verified (1 steps)
+  missing_mixer_evidence_single (exists-trace): verified (25 steps)
+
+==============================================================================
+*/
+
+
+
+end
