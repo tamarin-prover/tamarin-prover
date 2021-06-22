@@ -54,6 +54,7 @@ import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 
 -- import           Control.Basics
+import           Control.Monad
 import           Control.Category
 
 import           System.Console.CmdArgs.Explicit
@@ -65,7 +66,10 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import           Sapic
-import           Main.Console
+import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
+
+import           Sapic.Accountability                (thyReportRP)
+
 import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
@@ -137,6 +141,9 @@ loadOpenThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
 loadOpenThy as inFile =  do
     thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
     thy' <-  Sapic.translate thy
+
+    -- Create a RP report if the theory contains accountability lemmas.
+    unless (null $ theoryAccLemmas thy) $ thyReportRP thy
     return thy'
 
 -- | Load a closed theory.

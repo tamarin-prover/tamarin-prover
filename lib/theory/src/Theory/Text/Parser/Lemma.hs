@@ -1,6 +1,6 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
---               contributing in 2019: Robert Künnemann, Johannes Wocker
+--               contributing in 2019: Robert Künnemann, Johannes Wocker, Kevin Morio
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
@@ -10,6 +10,7 @@
 
 module Theory.Text.Parser.Lemma(
       lemma
+      , lemmaAcc
       , plainLemma
       , diffLemma
 )
@@ -17,6 +18,7 @@ where
 
 import           Prelude                    hiding (id, (.))
 import           Data.Foldable              (asum)
+import           Data.Either                (lefts)
 -- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)
 import           Text.Parsec                hiding ((<|>))
@@ -71,3 +73,15 @@ diffLemma :: Maybe FilePath -> Parser (DiffLemma DiffProofSkeleton)
 diffLemma workDir = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
                               <*> (option [] $ list (lemmaAttribute True workDir))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
+
+-- | Parse an accountability lemma.
+lemmaAcc :: Maybe FilePath -> Parser AccLemma
+lemmaAcc workDir = try $ do
+               _ <-  symbol "lemma"
+               name <- identifier
+               attributes <- option [] $ list (try (Left <$> lemmaAttribute False workDir))
+               _ <-  colon
+               identifiers <- commaSep1 $ identifier
+               _ <-  try (symbol "accounts for") <|> symbol "account for"
+               formula <-  doubleQuoted standardFormula
+               return $ AccLemma name (lefts attributes) identifiers [] formula

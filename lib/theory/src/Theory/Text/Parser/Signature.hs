@@ -15,6 +15,7 @@ module Theory.Text.Parser.Signature (
     , options
     , functions
     , equations
+    , liftedAddPredicate
     , preddeclaration
     , goalRanking
     , diffbuiltins
