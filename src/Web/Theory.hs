@@ -528,11 +528,26 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
+          , autoProverLinks 's' "all-"     allProve      0
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
-
+          allProve  = text $ " for all lemmas "
+    autoProverLinks key "all-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverAllR tidx CutDFS bound (TheoryProof lemma proofPath))
+            ["autoprove-all"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverAllR tidx CutNothing bound (TheoryProof lemma proofPath))
+              ["characterization-all"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl

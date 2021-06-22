@@ -559,6 +559,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/trace/#Int/debug/*TheoryPath             TheoryPathDR            GET
 /thy/trace/#Int/graph/*TheoryPath             TheoryGraphR            GET
 /thy/trace/#Int/autoprove/#SolutionExtractor/#Int/*TheoryPath AutoProverR             GET
+/thy/trace/#Int/autoproveAll/#SolutionExtractor/#Int/*TheoryPath AutoProverAllR             GET
 /thy/trace/#Int/next/#String/*TheoryPath      NextTheoryPathR         GET
 /thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET
 -- /thy/trace/#Int/save                             SaveTheoryR             GET

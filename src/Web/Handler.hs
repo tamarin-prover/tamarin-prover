@@ -33,6 +33,7 @@ module Web.Handler
   , getAutoProverR
   , getAutoDiffProverR
   , getAutoProverDiffR
+  , getAutoProverAllR
   , getDeleteStepR
   , getDeleteStepDiffR
   , getKillThreadR
@@ -721,6 +722,13 @@ getAutoProverR idx extractor bound =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
+-- | Run an autoprover on a given proof path.
+getAutoProverAllR :: TheoryIdx
+               -> SolutionExtractor
+               -> Int                             -- autoprover bound to use
+               -> TheoryPath -> Handler RepJson
+getAutoProverAllR = getAutoProverR
 
 -- | Run an autoprover on a given proof path.
 getAutoProverDiffR :: TheoryIdx
