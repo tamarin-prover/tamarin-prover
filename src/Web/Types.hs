@@ -576,6 +576,7 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/equiv/#Int/graph/*DiffTheoryPath         TheoryGraphDiffR            GET
 /thy/equiv/#Int/mirror/*DiffTheoryPath        TheoryMirrorDiffR            GET
 /thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/#Side/*DiffTheoryPath AutoProverDiffR             GET
+/thy/equiv/#Int/autoproveAll/#SolutionExtractor/#Int/#Side/*DiffTheoryPath AutoProverAllDiffR             GET
 /thy/equiv/#Int/autoproveDiff/#SolutionExtractor/#Int/*DiffTheoryPath AutoDiffProverR             GET
 /thy/equiv/#Int/next/#String/*DiffTheoryPath  NextTheoryPathDiffR         GET
 /thy/equiv/#Int/prev/#String/*DiffTheoryPath  PrevTheoryPathDiffR         GET

@@ -34,6 +34,8 @@ module Web.Handler
   , getAutoDiffProverR
   , getAutoProverDiffR
   , getAutoProverAllR
+  , getProverDiffAllR
+  , getAutoProverAllDiffR
   , getDeleteStepR
   , getDeleteStepDiffR
   , getKillThreadR
@@ -65,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
@@ -714,6 +716,21 @@ getDiffProverR (name, mkProver) idx path = do
     goDiff _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
+-- | Run the some prover on a given proof path.
+getProverDiffAllR :: (T.Text, AutoProver -> Prover)
+           -> TheoryIdx -> Side -> Handler RepJson
+getProverDiffAllR (name, mkProver) idx s  = do
+    jsonValue <- withDiffTheory idx goDiff
+    return $ RepJson $ toContent jsonValue
+  where
+    goDiff ti = modifyDiffTheory ti
+        proveAllDiff
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ names thy) []))
+        (JsonAlert $ "Sorry, but " <> name <> " failed!")
+      where
+        names thy = map (get lDiffName) $ getDiffLemmas thy
+        autoProver = mkProver (dtiAutoProver ti)
+        proveAllDiff thy = return $ foldM (\tha lemma -> applyProverAtPathDiff tha s lemma [] autoProver) thy $ names thy
 
 -- | Run an autoprover on a given proof path.
 getAutoProverR :: TheoryIdx
@@ -787,6 +804,30 @@ getAutoProverDiffR idx extractor bound s =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+-- | Run an autoprover on a given proof path.
+getAutoProverAllDiffR :: TheoryIdx
+               -> SolutionExtractor
+               -> Int                             -- autoprover bound to use
+               -> Side -> DiffTheoryPath -> Handler RepJson
+getAutoProverAllDiffR idx extractor bound s _ =
+    getProverDiffAllR (fullName, runAutoProver . adapt) idx s
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing         -> ("characterization", ["dfs"]   )
+        CutDFS             -> ("the autoprover",   []        )
+        CutBFS             -> ("the autoprover",   ["bfs"]   )
+        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
 
 -- | Run an autoprover on a given proof path.
 getAutoDiffProverR :: TheoryIdx

@@ -619,11 +619,27 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
+          , autoProverLinks 's' "all-"     allProve      0
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+          allProve  = text $ " for all lemmas "
 
+    autoProverLinks key "all-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverAllDiffR tidx CutDFS bound s (DiffTheoryProof s lemma proofPath))
+            ["autoprove-all"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverAllDiffR tidx CutNothing bound s (DiffTheoryProof s lemma proofPath))
+              ["characterization-all"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
