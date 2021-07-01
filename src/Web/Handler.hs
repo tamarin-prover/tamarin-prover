@@ -67,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
@@ -717,20 +717,23 @@ getDiffProverR (name, mkProver) idx path = do
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
-getProverDiffAllR :: (T.Text, AutoProver -> Prover)
-           -> TheoryIdx -> Side -> Handler RepJson
-getProverDiffAllR (name, mkProver) idx s  = do
+getProverDiffAllR :: (T.Text, AutoProver -> Prover ,AutoProver -> DiffProver)
+           -> TheoryIdx -> Handler RepJson
+getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
     jsonValue <- withDiffTheory idx goDiff
     return $ RepJson $ toContent jsonValue
   where
     goDiff ti = modifyDiffTheory ti
         proveAllDiff
-        (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ names thy) []))
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ namesDiff thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        names thy = map (get lDiffName) $ getDiffLemmas thy
+        namesDiff thy = map (get lDiffName) $ getDiffLemmas thy
+        autoDiffProver = mkDiffProver (dtiAutoProver ti)
+        names thy = map (\(x, y) -> (x, get lName y)) $ getEitherLemmas thy
         autoProver = mkProver (dtiAutoProver ti)
-        proveAllDiff thy = return $ foldM (\tha lemma -> applyProverAtPathDiff tha s lemma [] autoProver) thy $ names thy
+        proveDiff thy = foldM (\tha lemma -> applyDiffProverAtPath tha lemma [] autoDiffProver) thy $ namesDiff thy
+        proveAllDiff thy = return $ (proveDiff thy) >>= (\thb -> foldM (\tha (s, lemma) -> applyProverAtPathDiff tha s lemma [] autoProver) thb $ names thb)
 
 -- | Run an autoprover on a given proof path.
 getAutoProverR :: TheoryIdx
@@ -804,13 +807,15 @@ getAutoProverDiffR idx extractor bound s =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
+        
 -- | Run an autoprover on a given proof path.
 getAutoProverAllDiffR :: TheoryIdx
                -> SolutionExtractor
                -> Int                             -- autoprover bound to use
-               -> Side -> DiffTheoryPath -> Handler RepJson
-getAutoProverAllDiffR idx extractor bound s _ =
-    getProverDiffAllR (fullName, runAutoProver . adapt) idx s
+               -> Handler RepJson
+getAutoProverAllDiffR idx extractor bound =
+    getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
