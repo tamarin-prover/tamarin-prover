@@ -57,12 +57,11 @@ RUN apt-get update && \
         maude \
         graphviz
 COPY --from=tamarin-build /usr/local/bin /usr/local/bin
+COPY etc/docker/res/entrypoint.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/entrypoint.sh
 RUN useradd -ms /bin/bash tamarin
 USER tamarin
 WORKDIR /home/tamarin
 EXPOSE 3001
 COPY etc/docker/res/README .
-CMD ["cat", "README"]
-# alternatively, launch right into tamarin
-#ENTRYPOINT ["tamarin-prover"]
-#CMD ["interactive", "--port=3001", "--interface=*4", "."]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
