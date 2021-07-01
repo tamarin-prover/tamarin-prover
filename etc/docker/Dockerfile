@@ -40,7 +40,7 @@ COPY src ./src
 COPY data ./data
 COPY images ./images
 # build the entire thing
-RUN stack build --system-ghc --local-bin-path /usr/local/bin
+RUN stack build --system-ghc
 RUN stack install --system-ghc --local-bin-path /usr/local/bin
 
 # Assemble final image
