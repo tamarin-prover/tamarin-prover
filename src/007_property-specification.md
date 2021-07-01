@@ -561,7 +561,7 @@ This means a number of things:
 
 Source lemmas are necessary whenever the analysis reports `partial
 deconstructions left` in the `Raw sources`. See section on [Open
-chains](007_precomputation.html#sec:openchains) for details on this.
+chains](008_precomputation.html#sec:openchains) for details on this.
 
 All `sources` lemmas are used only for the case distinctions and do not
 benefit from other lemmas being marked as `reuse`.
