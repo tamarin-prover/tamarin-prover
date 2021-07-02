@@ -25,6 +25,8 @@ outTestsTime = "testsResults_time.txt"
 finalTime = "testsTimeResults.txt"
 
 
+CASE_REG_DIR = "case-studies-regression/"
+CASE_DIR = "case-studies/"
 
 LIMIT_ERROR_LINE = 1            # Resemblance between 2 lines to know if there's an error
 OPT_WRITE_FILENAME = True       # Write filename in Err File
@@ -34,11 +36,15 @@ OPT_TIME = True                 # Display of time
 EXCEPT_DIR = None
 DISPLAY_TIMES = False
 DISPLAY_ERRORS = False
-GRADUATION_TIME = [0.2, 0.7]
+GRADUATION_TIME = None
 NO_DUPLICATE = False
+OPT_DFF = False
+OPT_YES = False
 
 SUCCESS = 0
 FAIL = -1
+
+## Pretty print and write ##
 
 def colorPrint(color, text) :
     print(color + text + bcolors.ENDC)
@@ -47,6 +53,7 @@ def colorWrite(color, text, file) :
     file.write(color + text + bcolors.ENDC)
 
 
+## Used to create subfiles when splitting the diff result ##
 def files():
     n = 0
     while True:
@@ -54,6 +61,7 @@ def files():
         yield open(dirtests + '/%d.part' % n, 'w')
 
 
+## Split a file, remove "diff" display from the main diff command ##
 def splitFile(filename) :
     pat = "diff -r '--color=never'"
     if EXCEPT_DIR != None :
@@ -73,10 +81,11 @@ def splitFile(filename) :
                     outfile = next(fs)
                     outfile.write("/* file : " + item.strip().split(" ")[0] + " */\n")
 
+## Return similarity between two strings (from 0 to 1, float) ##
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-
+## Compare two lines. Separate those with processing times from those with errors ##
 def compareLines(line1, line2, filename) :
     fileErr = open(outTestsErrors, "a+")
     fileTime = open(outTestsTime, "a+")
@@ -91,16 +100,7 @@ def compareLines(line1, line2, filename) :
     fileTime.close()
     
 
-
-def processListResult(listResult, filename) :
-
-    for i in range(1,len(listResult)) :
-        if listResult[i][0] == "<" and listResult[i+1][0] == ">" :
-            compareLines(listResult[i], listResult[i+1], filename)
-
-    
-
-
+## Parse the file to finally compare lines ##
 def processFile(path) :
     file = open(path, "r")
     filename = file.readline()
@@ -109,11 +109,14 @@ def processFile(path) :
         if line[0] == "<" or line[0] == ">" :
             listResult.append(line)
 
-    processListResult(listResult, filename)
+    for i in range(1,len(listResult)) :
+        if listResult[i][0] == "<" and listResult[i+1][0] == ">" :
+            compareLines(listResult[i], listResult[i+1], filename)
+
     file.close()
 
 
-
+## Extract the first float from a line. This is used to find processing times ##
 def extractFloat(line) :
     l = []
     for t in line.split():
@@ -123,9 +126,12 @@ def extractFloat(line) :
             pass
     return(l)
 
+
+## Parse the file of processing times and write in another file a pretty version for display ##
 def processTimeResults() :
     fileTime = open(outTestsTime, "r")
     finalTimeFile = open(finalTime, "w")
+
     cpt = 1
     time1 = 0
     time2 = 0
@@ -146,13 +152,15 @@ def processTimeResults() :
             time2 = extractFloat(line)[0]
         if cpt == 5 :
             if OPT_TIME :
-                if OPT_WRITE_FILENAME :
-                    finalTimeFile.write(filename)
                 if time1 == 0 or time2 == 0 :
                     print("ERROR : file : " + filename + " contains a null time")
                 elif OPT_WRITE_ALL_TIMES :
+                    if OPT_WRITE_FILENAME :
+                        finalTimeFile.write(filename)
                     colorWrite(bcolors.OKBLUE, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile )
                 elif GRADUATION_TIME :
+                    if OPT_WRITE_FILENAME :
+                        finalTimeFile.write(filename)
                     if abs((time1 - time2)/time1) <= GRADUATION_TIME[0] :
                         colorWrite(bcolors.OKGREEN, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile)
                     elif GRADUATION_TIME[0] < abs((time1 - time2)/time1) <= GRADUATION_TIME[1] :
@@ -160,11 +168,14 @@ def processTimeResults() :
                     elif GRADUATION_TIME[1] < abs((time1 - time2)/time1) :
                         colorWrite(bcolors.FAIL, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile)
                 elif abs((time1 - time2)/time1) >= OPT_TIME_GAP :
+                    if OPT_WRITE_FILENAME :
+                        finalTimeFile.write(filename)
                     colorWrite(bcolors.FAIL, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile )
             cpt = 0
         cpt += 1
         
 
+## Take a file and create another file avoiding repetition of lines ##
 def uniqLines(infilename, outfilename) :
     lines_seen = set()
     outfile = open(outfilename, "w")
@@ -174,7 +185,7 @@ def uniqLines(infilename, outfilename) :
             lines_seen.add(line)
     outfile.close()
 
-
+## Ask the user a Y/N question ##
 def queryYesNo(question, default="yes"):
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
     if default is None:
@@ -204,19 +215,22 @@ def main() :
     ## Parse command line arguments ##
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-lel","--limit-error-line", help="acceptable resemblance between two lines (from 0 to 1). ", type=float)
-    parser.add_argument("-nofn","--without-filename", help="output time file won't contain filenames",
+    parser.add_argument("-lel","--limit-error-line", help="Acceptable resemblance between two lines (from 0 to 1). ", type=float)
+    parser.add_argument("-nofn","--without-filename", help="Output time file won't contain filenames",
                     action="store_true")
-    parser.add_argument("-showt","--show-all-times", help="output files will contain all processing times without condition",
+    parser.add_argument("-showt","--show-all-times", help="Output files will contain all processing times without condition",
                     action="store_true")
-    parser.add_argument("-t","--time-gap", help="time difference allowed (from 0 to 1)", type=float)
-    parser.add_argument("-notime","--without-times", help="increase output verbosity",
+    parser.add_argument("-t","--time-gap", help="Time difference (percentage) allowed (from 0 to 1)", type=float)
+    parser.add_argument("-notime","--without-times", help="Don't compute processing times",
                     action="store_true")
-    parser.add_argument("-ed","--except-dir", help = "run script ignoring a file/directory (csv format for two or more files/directories", type=str)
-    parser.add_argument("-dt","--display-times", help = "display a comparison of processing times", action="store_true")
-    parser.add_argument("-de", "--display-errors", help = "display all errors", action="store_true")
+    parser.add_argument("-ed","--except-dir", help = "Run script ignoring a file/directory (csv format for two or more files/directories", type=str)
+    parser.add_argument("-dt","--display-times", help = "Display a comparison of processing times", action="store_true")
+    parser.add_argument("-de", "--display-errors", help = "Display all errors", action="store_true")
     parser.add_argument("-grad","--time-graduation", help = "2 csv thresholds to color processing times (from 0 to 1)")
-    parser.add_argument("-nodup", "--no-duplicate", help = "remove duplicates from output display", action="store_true")
+    parser.add_argument("-nodup", "--no-duplicate", help = "Remove duplicates from output display", action="store_true")
+    parser.add_argument("-f", "--fast", help = "Run fast tests", action="store_true")
+    parser.add_argument("-dff", "--delete-final-files", help = "Delete final files to keep a proper working directory", action="store_true")
+    parser.add_argument("-yes", "--accept-recommanded-deletions", help = "Delete existing files at the beginning of the script to overwrite them. Not deleting them can compromise the results.", action="store_true")
 
     args = parser.parse_args()
     
@@ -242,6 +256,13 @@ def main() :
         listOfGlobals["GRADUATION_TIME"] = [float(list[0]),float(list[1])]
     if args.no_duplicate :
         listOfGlobals["NO_DUPLICATE"] = True
+    if args.fast :
+        listOfGlobals["CASE_DIR"] = "case-studies/fast-tests/"
+        listOfGlobals["CASE_REG_DIR"] = "case-studies-regression/fast-tests/"
+    if args.delete_final_files :
+        listOfGlobals["OPT_DFF"] = True
+    if args.accept_recommanded_deletions :
+        listOfGlobals["OPT_YES"] = True
 
     ## Init ##
 
@@ -257,7 +278,9 @@ def main() :
     filesList = [outTestsTime, outTestsErrors, pathTmp, filename, finalTime]
     for fn in filesList :
         if os.path.exists(fn) :
-            if queryYesNo("File " + fn + " already exists. It may compromise your results. Do you want to delete it ?") :
+            if OPT_YES :
+                os.system("rm " + fn)
+            elif queryYesNo("File " + fn + " already exists. It may compromise your results. Do you want to delete it ?") :
                 os.system("rm " + fn)
 
 
@@ -269,12 +292,12 @@ def main() :
         excluded = ""
         for dir in EXCEPT_DIR :
             excluded += " '--exclude=" + dir + "' "
-        os.system("diff case-studies-regression/ case-studies -r --color=never " + excluded + " > " + filename) 
+        os.system("diff " + CASE_REG_DIR + " " + CASE_DIR + " -r --color=never " + excluded + " > " + filename) 
     else :
-        os.system("diff case-studies-regression/ case-studies -r --color=never > " + filename)
+        os.system("diff " + CASE_REG_DIR + " " + CASE_DIR + " -r --color=never > " + filename)
 
     splitFile(filename)
-
+    
 
     ## Recover split files and create a file for errors and a file for processing times ##
 
@@ -309,21 +332,28 @@ def main() :
         os.system("cat " + outTestsErrors)
 
     ## Remove useless files ##
-
+    
     os.system("rm -rf " + dirtests)
     os.system("rm " + outTestsTime)
     os.system("rm " + pathTmp)
     os.system("rm " + filename)
+    
 
     nbrLines = sum(1 for line in open(outTestsErrors))
     if nbrLines == 0 :                                  # if no errors
         print("All tests passed !")
         os.system("rm " + outTestsErrors)
+        if OPT_DFF :
+            os.system("rm " + finalTime)
         return SUCCESS
     else :
         print("Tests failed with " + str(nbrLines) + " lines")
+        if OPT_DFF :
+            os.system("rm " + outTestsErrors)
+            os.system("rm " + finalTime)
         return FAIL
 
+    
 
 
 
