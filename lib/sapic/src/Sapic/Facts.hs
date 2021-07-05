@@ -56,17 +56,17 @@ data TransAction =
   | IsNotSet SapicTerm
   | InsertA SapicTerm SapicTerm
   | DeleteA SapicTerm
-  --    locks
+  -- locks
   | LockUnnamed SapicTerm LVar
   | LockNamed SapicTerm LVar
   | UnlockUnnamed SapicTerm LVar
   | UnlockNamed SapicTerm LVar
-  --     ass_immedeate
+  -- in_event restriction
   | ChannelIn SapicTerm
   | EventEmpty
-  --    support for msrs
+  -- support for msrs
   | TamarinAct LNFact
-  --    predicate support
+  -- predicate support
   | PredicateA LNFact
   | NegPredicateA LNFact
   -- progress translation
