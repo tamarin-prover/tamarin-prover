@@ -50,6 +50,7 @@ library
       , deepseq
       , dlist
       , fclabels
+      , filepath
       , mtl
       , parallel
       , parsec
