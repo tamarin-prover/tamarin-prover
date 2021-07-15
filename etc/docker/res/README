@@ -1,0 +1,10 @@
+Use the following alias to give the image access to your host's current working
+dir (at the time of calling) and forward port 3001:
+
+alias docker-tamarin-prover='docker run --rm -it -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" tamarin-prover/tamarin:latest tamarin-prover'
+
+Then run "docker-tamarin-prover". Remember to use the "-i" flag in tamarin's
+interactive mode to accept clients on all interfaces, as the docker host is not
+localhost to the guest:
+
+docker-tamarin-prover interactive . -i='*4'
