@@ -82,7 +82,6 @@ import           Web.Types
 import           Yesod.Core
 
 import           Control.Monad.Trans.Resource (runResourceT)
-import           Control.Monad.Trans.Unlift
 
 import           Data.Label
 import           Data.Maybe
@@ -106,8 +105,7 @@ import           Control.Applicative
 import           Control.Concurrent
 import qualified Control.Concurrent.Thread    as Thread ( forkIO )
 import           Control.DeepSeq
-import           Control.Exception.Base
-import qualified Control.Exception.Lifted     as E
+import           Control.Exception.Base       as E
 import           Control.Monad
 import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
@@ -303,11 +301,11 @@ getThreads = do
 ------------------------------------------------------------------------------
 
 -- | Print exceptions, if they happen.
-traceExceptions :: MonadBaseControl IO m => String -> m a -> m a
+traceExceptions :: String -> IO a -> IO a
 traceExceptions info =
     E.handle handler
   where
-    handler :: MonadBaseControl IO m => E.SomeException -> m a
+    handler :: E.SomeException -> IO a
     handler e =
       trace (info ++ ": exception `" ++ show e ++ "'") $ E.throwIO e
 
@@ -332,7 +330,7 @@ responseToJson = go
 -- | Fully evaluate a value in a thread that can be canceled.
 evalInThread :: NFData a
              => IO a
-             -> Handler (Either SomeException a)
+             -> Handler (Either E.SomeException a)
 evalInThread io = do
     renderF <- getUrlRender
     maybeRoute <- getCurrentRoute

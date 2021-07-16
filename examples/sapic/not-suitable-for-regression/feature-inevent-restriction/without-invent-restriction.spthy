@@ -1,0 +1,30 @@
+theory WithoutInEventRestriction
+begin
+
+0
+
+// The following lemmas are not well formed and cannot be proven. They should
+// only ensure that in_event is NOT added.
+
+// L+ & L-
+lemma lplus_lminus_all:
+  all-traces
+  "Ex #i. A()@i"
+
+// L+ & L-
+lemma lplus_lminus_ex:
+  exists-trace
+  "Ex #i. A()@i"
+
+// L+ & not L-
+lemma lplus_notlminus_ex:
+  exists-trace
+  "Ex x #i. K(x)@i"
+
+// not L+ & L-
+lemma notlplus_lminus_all:
+  all-traces
+  "Ex x #i. not K(x)@i"
+  
+
+end
