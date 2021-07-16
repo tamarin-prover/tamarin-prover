@@ -415,16 +415,6 @@ eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPC
 -- Instances
 ------------
 
-instance HasFrees Source where
-    foldFrees f th =
-        foldFrees f (L.get cdGoal th)   `mappend`
-        foldFrees f (L.get cdCases th)
-
-    foldFreesOcc  _ _ = const mempty
-
-    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
-                                    <*> mapFrees f (L.get cdCases th)
-
 data DiffProofType = RuleEquivalence | None
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1483,6 +1473,15 @@ instance HasFrees System where
                <*> mapFrees fun k
                <*> mapFrees fun l
 
+instance HasFrees Source where
+    foldFrees f th =
+        foldFrees f (L.get cdGoal th)   `mappend`
+        foldFrees f (L.get cdCases th)
+
+    foldFreesOcc  _ _ = const mempty
+
+    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
+                                    <*> mapFrees f (L.get cdCases th)
 
 -- Special comparison functions to ignore new var instantiations
 ----------------------------------------------------------------
