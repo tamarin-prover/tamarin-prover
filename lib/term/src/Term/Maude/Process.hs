@@ -59,9 +59,6 @@ import System.IO
 import Utils.Misc
 -- import Extension.Data.Monoid
 
--- import Debug.Trace
-
-
 -- Unification using a persistent Maude process
 -----------------------------------------------------------------------
 
@@ -165,11 +162,13 @@ callMaude hnd updateStatistics cmd = do
     (`onException` restartMaude hnd) $ modifyMVar (mhProc hnd) $ \mp -> do
         let inp = mIn  mp
             out = mOut mp
+            err = _mErr mp
         B.hPut inp cmd
         hFlush  inp
         mp' <- evaluate (updateStatistics mp)
         res <- getToDelim out
-        return (mp', res)
+        errRes <- B.hGetNonBlocking err 8096
+        if BC.null errRes then return (mp', res) else error $ "Maude returned warning:" ++ show errRes
 
 -- | Compute a result via Maude.
 computeViaMaude ::

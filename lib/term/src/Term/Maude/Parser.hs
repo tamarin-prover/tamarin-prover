@@ -155,7 +155,7 @@ ppTheory msig = BC.unlines $
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op list : TOP -> TOP ."
     , theoryOp "nil  : -> Msg "
-    , theoryOp "cons : Msg Msg -> Msg [assoc id : tamXnil]"
+    , theoryOp "cons : Msg Msg -> Msg [assoc]"
  ]
     ++
     (if enableMSet msig
