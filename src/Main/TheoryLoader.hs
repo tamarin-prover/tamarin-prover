@@ -128,6 +128,34 @@ diff as = if (argExists "diff" as) then ["diff"] else []
 quitOnWarning :: Arguments -> [String]
 quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
 
+-- | Select lemmas for proving
+lemmaSelector :: Arguments -> Lemma p -> Bool
+lemmaSelector as lem
+  | lemmaNames == [""] = True
+  | otherwise = any lemmaMatches lemmaNames
+  where
+      lemmaNames :: [String]
+      lemmaNames = findArg "prove" as
+
+      lemmaMatches :: String -> Bool
+      lemmaMatches pattern
+        | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lName lem
+        | otherwise = get lName lem == pattern
+
+-- | Select diffLemmas for proving
+diffLemmaSelector :: Arguments -> DiffLemma p -> Bool
+diffLemmaSelector as lem
+  | lemmaNames == [""] = True
+  | otherwise = any lemmaMatches lemmaNames
+  where
+      lemmaNames :: [String]
+      lemmaNames = findArg "prove" as
+
+      lemmaMatches :: String -> Bool
+      lemmaMatches pattern
+        | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lDiffName lem
+        | otherwise = get lDiffName lem == pattern
+
 -- | Load an open theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
@@ -266,7 +294,7 @@ closeThyWithMaude sig as thy0 = do
   let thy1 = wfCheck thy0
   -- close and prove
   let cthy = closeTheoryWithMaude sig thy1 (argExists "auto-sources" as)
-  return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
+  return $ proveTheory (lemmaSelector as) prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
@@ -281,18 +309,6 @@ closeThyWithMaude sig as thy0 = do
       wfCheck thy =
         noteWellformedness
           (checkWellformedness thy sig) thy (elem "quit-on-warning" (quitOnWarning as))
-
-      lemmaSelector :: Lemma p -> Bool
-      lemmaSelector lem =
-          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else
-              if (lemmaNames == [""])
-                then any (`isPrefixOf` get lName lem) lemmaNames
-                else any ( == get lName lem) lemmaNames
-        where
-          lemmaNames :: [String]
-          lemmaNames = findArg "prove" as
 
       -- replace all annotated sorrys with the configured autoprover.
       prover :: Prover
@@ -314,7 +330,7 @@ closeDiffThyWithMaude sig as thy0 = do
   let thy2 = wfCheckDiff thy0
   -- close and prove
   let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
-  return $ proveDiffTheory lemmaSelector diffLemmaSelector prover diffprover $ partialEvaluation cthy
+  return $ proveDiffTheory (lemmaSelector as) (diffLemmaSelector as) prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
@@ -328,31 +344,7 @@ closeDiffThyWithMaude sig as thy0 = do
       wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
       wfCheckDiff thy =
         noteWellformednessDiff
-          (checkWellformednessDiff thy sig) thy (elem "quit-on-warning" (quitOnWarning as))
-
-      lemmaSelector :: Lemma p -> Bool
-      lemmaSelector lem =
-          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lName lem) [init $ head lemmaNames]
-            else
-              if (lemmaNames == [""])
-                then any (`isPrefixOf` get lName lem) lemmaNames
-                else any ( == get lName lem) lemmaNames
-        where
-          lemmaNames :: [String]
-          lemmaNames = findArg "prove" as
-
-      diffLemmaSelector :: DiffLemma p -> Bool
-      diffLemmaSelector lem =
-          if ((lastMay $ headDef "" lemmaNames) == Just('*'))
-            then any (`isPrefixOf` get lDiffName lem) [init $ head lemmaNames]
-            else
-              if (lemmaNames == [""])
-                then any (`isPrefixOf` get lDiffName lem) lemmaNames
-                else any ( == get lDiffName lem) lemmaNames
-        where
-          lemmaNames :: [String]
-          lemmaNames = findArg "prove" as
+          (checkWellformednessDiff thy sig) thy ("quit-on-warning" `elem` quitOnWarning as)
 
       -- diff prover: replace all annotated sorrys with the configured autoprover.
       diffprover :: DiffProver
