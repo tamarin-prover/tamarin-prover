@@ -13,7 +13,7 @@ heuristic: p
 
 section{* The Yubikey-Protocol *}
 
-predicate: Smaller( a, b )<->∃ z. (a+z) = b
+predicate: Smaller( a, b )<=>∃ z. (a+z) = b
 
 lemma init_server [sources]:
   all-traces
@@ -5072,7 +5072,7 @@ analyzing: examples/sapic/slow/Yubikey/Yubikey.spthy
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 33.403106s
+  processing time: 29.151528168s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)
@@ -5089,7 +5089,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 33.403106s
+  processing time: 29.151528168s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)

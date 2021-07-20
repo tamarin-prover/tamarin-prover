@@ -48,7 +48,7 @@ rule (modulo E) eventB_0_11[color=#ffffff process=event B( );]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) 0_0_111[color=#ffffff process=0]:
+rule (modulo E) __0_111[color=#ffffff process=0]:
    [ state_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -81,7 +81,7 @@ analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-p
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.067859s
+  processing time: 0.050690107s
   test (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.067859s
+  processing time: 0.050690107s
   test (all-traces): verified (4 steps)
 
 ==============================================================================

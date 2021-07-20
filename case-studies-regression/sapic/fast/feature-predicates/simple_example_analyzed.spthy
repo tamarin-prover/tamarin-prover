@@ -7,7 +7,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-predicate: Equal( h1, h2 )<->h1 = h2
+predicate: Equal( h1, h2 )<=>h1 = h2
 
 lemma bogus_exists:
   exists-trace "∃ #i. Bogus( ) @ #i"
@@ -83,7 +83,7 @@ analyzing: examples/sapic/fast/feature-predicates/simple_example.spthy
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.064958s
+  processing time: 0.044735924s
   bogus_exists (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.064958s
+  processing time: 0.044735924s
   bogus_exists (exists-trace): verified (3 steps)
 
 ==============================================================================

@@ -10,7 +10,7 @@ equations:
 
 heuristic: p
 
-predicate: SencSucc( c, k )<->∃ m. senc(m, k) = c
+predicate: SencSucc( c, k )<=>∃ m. senc(m, k) = c
 
 lemma can_create_key:
   exists-trace "∃ #t h k. NewKey( h, k ) @ #t"
@@ -719,7 +719,7 @@ analyzing: examples/sapic/fast/basic/running-example.spthy
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 1.968881s
+  processing time: 1.624589587s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)
@@ -734,7 +734,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 1.968881s
+  processing time: 1.624589587s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)

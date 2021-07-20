@@ -14,7 +14,7 @@ equations:
 
 heuristic: p
 
-predicate: Report( x, y )<->¬(∃ z. y = <'loc', z>)
+predicate: Report( x, y )<=>¬(∃ z. y = <'loc', z>)
 
 lemma sanity3 [reuse]:
   all-traces
@@ -282,7 +282,7 @@ analyzing: examples/sapic/fast/feature-locations/AKE.spthy
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.344346014s
+  processing time: 0.46415795s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -294,7 +294,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.344346014s
+  processing time: 0.46415795s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
