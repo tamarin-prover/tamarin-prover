@@ -10,7 +10,7 @@ equations:
 
 heuristic: p
 
-predicate: EncSucc( c, k )<->∃ m. senc(m, k) = c
+predicate: EncSucc( c, k )<=>∃ m. senc(m, k) = c
 
 lemma can_create_key:
   exists-trace "∃ #t h k. NewKey( h, k ) @ #t"
@@ -719,7 +719,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks.spthy.tmp
-  processing time: 1.901482s
+  processing time: 1.5775871s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)
@@ -734,7 +734,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks.spthy.tmp
-  processing time: 1.901482s
+  processing time: 1.5775871s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)

@@ -11,7 +11,7 @@ equations:
 
 heuristic: p
 
-predicate: IsTrue( x )<->x = true
+predicate: IsTrue( x )<=>x = true
 
 lemma can_create_key:
   exists-trace "∃ #t h k. NewKey( h, k ) @ #t"
@@ -983,7 +983,7 @@ analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy.tmp
-  processing time: 2.232322s
+  processing time: 1.944749079s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)
@@ -998,7 +998,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy.tmp
-  processing time: 2.232322s
+  processing time: 1.944749079s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)

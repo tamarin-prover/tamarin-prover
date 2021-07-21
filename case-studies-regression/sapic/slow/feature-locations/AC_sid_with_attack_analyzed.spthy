@@ -12,7 +12,7 @@ equations:
 
 heuristic: p
 
-predicate: Report( x, y )<->¬(y = 'l')
+predicate: Report( x, y )<=>¬(y = 'l')
 
 lemma attested_comput:
   all-traces
@@ -788,7 +788,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 43.322526478s
+  processing time: 41.006182587s
   attested_comput (all-traces): falsified - found trace (31 steps)
 
 ------------------------------------------------------------------------------
@@ -799,7 +799,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 43.322526478s
+  processing time: 41.006182587s
   attested_comput (all-traces): falsified - found trace (31 steps)
 
 ==============================================================================

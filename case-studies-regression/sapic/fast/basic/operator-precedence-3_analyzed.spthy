@@ -9,7 +9,7 @@ heuristic: p
 
 section{* A few test cases for operator precedence *}
 
-predicate: True( )<->⊤
+predicate: True( )<=>⊤
 
 lemma elseIsResolvedInnerFirst:
   exists-trace
@@ -75,8 +75,13 @@ rule (modulo E) eventLookupElse_0_112[color=#ffffff process=event LookupElse( );
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1121[color=#ffffff process=0]:
-   [ state_1121( ) ] --> [ ]
+rule (modulo E) insertyy_0_1121[color=#ffffff process=insert 'y','y';]:
+   [ state_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ state_11211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) __0_11211[color=#ffffff process=0]:
+   [ state_11211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -102,22 +107,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Restriction actions:
-  restriction `set_in' references action 
-    (ProtoFact Linear "Insert" 2,2,Linear)
-  but no rule has such an action.
-  
-  restriction `set_in' references action 
-    (ProtoFact Linear "Insert" 2,2,Linear)
-  but no rule has such an action.
-  
-  restriction `set_notin' references action 
-    (ProtoFact Linear "Insert" 2,2,Linear)
-  but no rule has such an action.
-*/
+/* All well-formedness checks were successful. */
 
 end
 /* Output
@@ -132,10 +122,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-3.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.12706s
-  WARNING: 3 wellformedness check failed!
-           The analysis results might be wrong!
-  
+  processing time: 0.056159126s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -146,10 +133,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.12706s
-  WARNING: 3 wellformedness check failed!
-           The analysis results might be wrong!
-  
+  processing time: 0.056159126s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ==============================================================================

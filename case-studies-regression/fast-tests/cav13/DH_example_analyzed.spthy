@@ -132,7 +132,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.084436639s
+  processing time: 0.093435249s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -144,7 +144,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.084436639s
+  processing time: 0.093435249s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
