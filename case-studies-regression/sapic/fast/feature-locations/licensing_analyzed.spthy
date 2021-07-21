@@ -15,7 +15,7 @@ equations:
 
 heuristic: s
 
-predicate: Report( x, y )<->¬(∃ z. y = <'loc', z>)
+predicate: Report( x, y )<=>¬(∃ z. y = <'loc', z>)
 
 lemma attested_comput:
   all-traces
@@ -915,7 +915,7 @@ analyzing: examples/sapic/fast/feature-locations/licensing.spthy
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 3.531357602s
+  processing time: 4.587330835s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)
@@ -928,7 +928,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 3.531357602s
+  processing time: 4.587330835s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)
