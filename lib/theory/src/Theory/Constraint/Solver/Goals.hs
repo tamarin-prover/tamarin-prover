@@ -191,7 +191,7 @@ openGoals sys = do
                               map (\(i, _, m) -> (m, i)) $ allKUActions sys
             -- and check whether any of them happens before the KD-conclusion
             ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start
- 
+
 
 -- | The list of all open goals left together with their status.
 plainOpenGoals:: System -> [(Goal, GoalStatus)]
@@ -200,7 +200,7 @@ plainOpenGoals sys = openGoalsLeft
     openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
     isOpen(_, status) = case status of
       GoalStatus s _ _ -> not s
-       
+
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
 ------------------------------------------------------------------------------
@@ -316,7 +316,6 @@ solveChain rules (c, p) = do
                       _              -> error $ "solveChain: impossible"
             caseName (viewTerm -> FApp o _)    = showFunSymName o
             caseName (viewTerm -> Lit l)       = showLitName l
-            caseName t                         = show t
         contradictoryIf (illegalCoerce pRule mPrem)
         return (caseName mPrem)
      `disjunction`

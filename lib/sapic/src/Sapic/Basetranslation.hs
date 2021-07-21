@@ -38,7 +38,7 @@ import           Theory
 import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Parser
-import           Debug.Trace
+-- import           Debug.Trace
 
 type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])])
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
@@ -213,31 +213,31 @@ toEx s
     | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
 resSetIn :: String
-resSetIn = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+resSetIn = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotIn :: String
 resSetNotIn = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
-  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3  
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 |]
 
 resSetInNoDelete :: String
-resSetInNoDelete = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+resSetInNoDelete = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotInNoDelete :: String
 resSetNotInNoDelete = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
 |]
 
@@ -250,12 +250,12 @@ resSingleSession = [QQ.r|restrictionsingle_session: // for a single session
 -- should be modified below.
 resLockingL :: String
 resLockingL  = [QQ.r|restriction locking:
-"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
-        ==> 
-        ( #t1<#t3 
-                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3 
-                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
-                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3
+        ==>
+        ( #t1<#t3
+                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3
+                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2)
+                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0)
                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
                 ))
         | #t3<#t1 | #t1=#t3"
@@ -264,18 +264,18 @@ resLockingL  = [QQ.r|restriction locking:
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingLNoUnlockPOS :: String
 resLockingLNoUnlockPOS  = [QQ.r|restriction locking:
-"All p l x #t1 . LockPOS(p,l,x)@t1 
+"All p l x #t1 . LockPOS(p,l,x)@t1
                    ==> (All pp lp #t2. LockPOS(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingNoUnlock :: String
 resLockingNoUnlock  = [QQ.r|restriction locking:
-"All p l x #t1 . Lock(p,l,x)@t1 
+"All p l x #t1 . Lock(p,l,x)@t1
                    ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
--- | Produce locking lemma for variable v by instantiating resLockingL 
+-- | Produce locking lemma for variable v by instantiating resLockingL
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
 resLocking :: MonadThrow m => Bool -> LVar -> m SyntacticRestriction

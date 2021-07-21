@@ -1166,9 +1166,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               premise  <- lookupPrem pid $ L.get cprRuleAC rule
               t'       <- protoOrInFactView premise
               t        <- atMay t' tidx
-              return (terms position rule t premise ++ facts position rule t premise)
+              return (terms position rule t ++ facts position rule t premise)
                 where
-                  terms position rule t premise = do
+                  terms position rule t = do
                     -- iterate over all positions found
                     pos     <- position
                     return (rule, Left t, (pid, tidx, pos))
