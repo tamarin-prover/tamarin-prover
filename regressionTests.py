@@ -173,7 +173,7 @@ def processTimeResults() :
                 if OPT_WRITE_FILENAME :
                     finalTimeFile.write(filename)
                 colorWrite(bcolors.FAIL, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile )
-            elif GRADUATION_TIME :
+            elif GRADUATION_TIME and not OPT_TIME_GAP :
                 if OPT_WRITE_FILENAME :
                     finalTimeFile.write(filename)
                 if abs((time1 - time2)/time1) <= GRADUATION_TIME[0] :
@@ -182,7 +182,6 @@ def processTimeResults() :
                     colorWrite(bcolors.WARNING, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile)
                 elif GRADUATION_TIME[1] < abs((time1 - time2)/time1) :
                     colorWrite(bcolors.FAIL, "old :  " + str(time1) + "s   -->   new :  " + str(time2) + "s\n", finalTimeFile)
-
             cpt = 0
         cpt += 1
 
