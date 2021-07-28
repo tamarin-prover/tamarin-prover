@@ -19,7 +19,8 @@ import Theory.Sapic
 import Sapic.Exceptions
 import Sapic.Annotation
 import Sapic.Bindings
-import Control.Monad.Fresh
+import Control.Monad.Fresh 
+import qualified Control.Monad.Trans.PreciseFresh as Precise
 import Data.Bifunctor ( Bifunctor(second) )
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
@@ -184,10 +185,13 @@ typeTheory th = fst <$> typeTheoryEnv th
 --     Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
     Process ann SapicLVar -> m (Process ann SapicLVar)
-renameUnique p = evalFreshT actualCall nothingUsed -- TODO instead of nothingUsed, should collect existing bindings in process...
+renameUnique p = evalFreshT actualCall initState -- TODO instead of nothingUsed, should collect existing bindings in process...
     where
         -- stateMonadCall = runStateT actualCall emptySubst
         actualCall = renameUnique' emptySubst p
+        -- initState = Precise.nothingUsed 
+        initState = nothingUsed 
+        -- initState = Map.fromList [ (lvarName v,1) | v <- frees p  ]
 
 -- renameUnique' ::
 --     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
