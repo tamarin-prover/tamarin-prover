@@ -46,7 +46,7 @@ import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Parser
 
-type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])])
+type TranslationResultNull  = [([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])]
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
 type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar, Set LVar)
 
@@ -116,7 +116,7 @@ baseTransAction
           let ts = fAppPair (tc,varTerm x) in
              (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
               ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
-                  then mergeWithStateRule ([In ts], channelIn ts, []) rules 
+                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
                   else []
                 ), tx')
     | (ChIn Nothing t' matchVar) <- ac , t <- toLNTerm t' =
@@ -182,16 +182,16 @@ baseTransAction
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f' ) <- ac
       , f <- toLNFact f' =
-          ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
+          ([([def_state], TamarinAct f : [EventEmpty | needsAssImmediate], [def_state' tildex], [])], tildex)
     | (MSR l' a' r' res' _) <- ac
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
           let tx' = freeset' l `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsAssImmediate], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
-        channelIn ts = if needsAssImmediate then [ ChannelIn ts] else []
+        channelIn ts = [ChannelIn ts | needsAssImmediate]
         freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
 
@@ -282,7 +282,7 @@ baseTransComb c an p tildex
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', tildex )
 -- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
-    | ProcessCall _ _ _ <- c =
+    | ProcessCall {} <- c =
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)
 
@@ -445,13 +445,13 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
     do
         hardcoded <- mapM toEx hardcoded_l
         lockingWithUnlock <- mapM (resLocking True) (List.nub $ getUnlockPositions anP)
-        lockingOnlyLock   <- mapM (resLocking False) ((getLockPositions anP) List.\\ (getUnlockPositions anP))
+        lockingOnlyLock   <- mapM (resLocking False) (getLockPositions anP List.\\ getUnlockPositions anP)
         singleLocking <- toEx resLockingNoUnlock
         return $ prevRestr
               ++ hardcoded
               ++ lockingWithUnlock
               ++ lockingOnlyLock
-              ++ addIf ((not $ contains isUnlock) && (contains isLock)) [singleLocking]
+              ++ addIf (not (contains isUnlock) && contains isLock) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP
