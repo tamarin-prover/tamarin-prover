@@ -1,7 +1,8 @@
 theory WithoutInEventRestriction
 begin
 
-0
+process:
+  0
 
 // The following lemmas are not well formed and cannot be proven. They should
 // only ensure that in_event is NOT added.
@@ -25,6 +26,6 @@ lemma lplus_notlminus_ex:
 lemma notlplus_lminus_all:
   all-traces
   "Ex x #i. not K(x)@i"
-  
+
 
 end
