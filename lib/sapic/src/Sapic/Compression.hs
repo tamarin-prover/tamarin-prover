@@ -67,13 +67,16 @@ getProducedFacts rules =
                               List.foldl (flip S.insert) acc (List.filter isStateProcessFact rconc)
                            ) S.empty rules
 
--- TODO : how to merge the info about a rule
 mergeInfo :: ProtoRuleEInfo -> ProtoRuleEInfo -> ProtoRuleEInfo
 mergeInfo info info2 =
-  ProtoRuleEInfo (StandRule (mergeStand name name2)) (attr++attr2) (res ++ res2)
- where ProtoRuleEInfo (StandRule name) attr res= info
-       ProtoRuleEInfo (StandRule name2) attr2 res2= info2
+  ProtoRuleEInfo (StandRule (mergeStand name name2)) (mergeAttr attr attr2) (res ++ res2)
+ where ProtoRuleEInfo (StandRule name ) attr  res  = info
+       ProtoRuleEInfo (StandRule name2) attr2 res2 = info2
        mergeStand n n' = n ++ ";" ++ n' -- NOTE: if we reintroduce Yavor's Dot output, recall 9e7e99fe070776172bd09cb977e8d3a83da3ed51
+       mergeAttr a a' =  let completeList = a ++ a' in  
+                            take 1 [i |  i@(RuleColor _) <- completeList]
+                         ++ take 1 [i |  i@(Process   _) <- completeList]
+
 
 canMerge  :: Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> Bool
 canMerge r1 r2
