@@ -11,24 +11,19 @@
 module Sapic.LetDestructors (
   translateLetDestr
 ) where
--- import           Control.Exception
--- import           Control.Monad.Catch
--- import           Control.Monad.Fresh
+
 import           Data.Set as S
 import           Data.List as L
+
 import           Sapic.Annotation
 
--- import           Sapic.Exceptions
 import           Theory
 import           Theory.Sapic
 
-import Term.SubtermRule
-import Control.Monad.Catch
+import           Term.SubtermRule
 
--- import Control.Monad.Catch (MonadCatch(catch))
+import           Control.Monad.Catch
 
- -- case ctxtStRuleToRRule r of
- --  (lhs `RRule` rhs) ->
 mapProc :: ( MonadThrow m)
                     =>  Set CtxtStRule -> LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
 mapProc _  (ProcessNull ann)  = return $ ProcessNull ann
@@ -85,10 +80,6 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
           make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
             [svar, (SapicLVar sl_var Nothing)]
           make_untyped_variant svar = [svar]
-
-
-
-
 
 mapProc rules (ProcessComb c ann pl pr) = do
   npl <- mapProc rules pl

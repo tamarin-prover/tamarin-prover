@@ -9,27 +9,26 @@
 -- Compute annotations for always-secret channels
 --
 -- A channel is defined always-secret iff it correspond to a fresh variable
--- only use as a channel identifier. For these channels, we can use a more
+-- only used as a channel identifier. For these channels, we can use a more
 -- efficient translation, as the adversary can never deduce then, and thus only
 -- a silent transition is possible.
 
 module Sapic.SecretChannels (
     annotateSecretChannels
 ) where
--- import           Control.Exception
--- import           Control.Monad.Catch
--- import           Control.Monad.Fresh
+
 import           Data.Set as S
 import           Data.List as L
+
 import           Sapic.Annotation
 import           Sapic.Basetranslation
--- import           Sapic.Exceptions
+
 import           Theory
 import           Theory.Sapic
 
 
 -- | Get all variables inside a term
-getTermVariables :: SapicTerm -> S.Set LVar -- TODO This is only an approximation, we should actually get SapicLVars out
+getTermVariables :: SapicTerm -> S.Set LVar
 getTermVariables ts =
   S.fromList $ L.map fst $ varOccurences $ toLNTerm ts
 
