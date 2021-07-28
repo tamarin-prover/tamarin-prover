@@ -99,34 +99,28 @@ baseTransAction needsInEvRes ac an p tildex
           ], tildex)
     | (New v) <- ac = let tx' = toLVar v `insert` tildex in
         ([ ([def_state, Fr $ toLVar v], [], [def_state' tx'], []) ], tx')
-        -- TODO simplify code below, maybe merge those two cases or at least he lets
-    | (ChIn (Just tc') t' matchVar) <- ac  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P 
-      , tc <- toLNTerm tc' =
+    | (ChIn channel t' matchVar) <- ac, t <- toLNTerm t' =  -- handle channel input in(c,pat);P like in(c,x); let pat = x in P
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xt = varTerm x in
-          let xst = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xst matchVar) (an {elseBranch = False }) p tildex
+          let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
+          let (rules,tx',_) =  baseTransComb (Let t' xTerm matchVar) (an {elseBranch = False }) p tildex
           -- tx' does not include fresh x because it is on the right hand side
           -- that's ok because follow up process does not use x anyway, since
           -- the process was ground before introducing x freshly
           in
-          let ts = fAppPair (tc,varTerm x) in
-             (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
-              ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
-                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
-                  else []
-                ), tx')
-    | (ChIn Nothing t' matchVar) <- ac , t <- toLNTerm t' =
-      if needsInEvRes then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
-          let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
-          let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
-          let (rules,tx',_) =  baseTransComb (Let t' xTerm matchVar) (an {elseBranch = False }) p tildex
-          -- TODO instead of empty, put matchvars from in
-          in
-              (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
-      else
-          let tx' = freeset t `union` tildex in
-          ([ ([def_state, In t], [ ], [def_state' tx'], []) ], tx')
+          case channel of
+            Nothing -> if needsInEvRes then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
+                         (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
+                       else
+                         let tx2' = freeset t `union` tildex in
+                           ([ ([def_state, In t], [ ], [def_state' tx2'], []) ], tx2')
+            Just tc' -> let tc = toLNTerm tc' in
+                        let ts = fAppPair (tc,varTerm x) in
+                          (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
+                            ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
+                                 then mergeWithStateRule ([In ts], channelIn ts, []) rules
+                                 else []
+                               ), tx')
     | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           let semistate = State LSemiState (p++[1]) tildex in
