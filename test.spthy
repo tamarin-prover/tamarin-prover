@@ -59,13 +59,13 @@ solve( State_121111111( init, k, signed, skV ) ▶₀ #t1 )
   qed
 qed
 
-restriction restr_ReportRule_1:
-  "∀ x #NOW. (restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
   // safety formula
 
 rule (modulo E) ReportRule[color=#ffffff process=new init;]:
    [ In( <x, loc> ) ]
-  --[ restr_ReportRule_1( loc ) ]->
+  --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
@@ -270,13 +270,3 @@ restriction single_session:
 /* All well-formedness checks were successful. */
 
 end
-
-==============================================================================
-summary of summaries:
-
-analyzed: examples/sapic/fast/feature-locations/AKE.spthy
-
-  sanity3 (all-traces): verified (3 steps)
-  secrecy (all-traces): verified (7 steps)
-
-==============================================================================
