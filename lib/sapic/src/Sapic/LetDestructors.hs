@@ -41,9 +41,8 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
     ( (LIT (Var _)) ,(Lit (Var _)), FApp funsym@(NoEq (_, (_,_,Destructor))) rightterms) ->
       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
       (case  L.foldl (findRule funsym) Nothing rules of
-        -- if the desrtructor does not have any associated rule, it never succeed, and we thus always go in the else branch we simply substitute in the process, to optimize. TODO -> should it be possible to declare a destructor without an equation ?
+        -- if the desrtructor does not have any associated rule, it never succeed, and we thus always go in the else branch we simply substitute in the process, to optimize
         Nothing -> mapProc rules pr
---          ProcessComb c (annElse elsebranch)  (mapProc rules pl) (mapProc rules pr)
         Just  (leftterms, outvar) -> do
           -- TODO we should handle fresh vars here
           -- We extract the equation of the dest, in the case where it is of the
@@ -82,10 +81,13 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
           elsebranch = case pr of
             ProcessNull _ -> False
             _ -> True
-            -- TODO can we avoid the following function ? essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
+            -- essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
           make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
             [svar, (SapicLVar sl_var Nothing)]
           make_untyped_variant svar = [svar]
+
+
+
 
 
 mapProc rules (ProcessComb c ann pl pr) = do
