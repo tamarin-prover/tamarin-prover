@@ -73,10 +73,7 @@ mergeInfo info info2 =
   ProtoRuleEInfo (StandRule (mergeStand name name2)) (attr++attr2) (res ++ res2)
  where ProtoRuleEInfo (StandRule name) attr res= info
        ProtoRuleEInfo (StandRule name2) attr2 res2= info2
-       mergeStand (SAPiCRuleName s) (SAPiCRuleName s') = SAPiCRuleName (s++";"++s')
-       mergeStand (DefdRuleName s) (DefdRuleName s') = DefdRuleName (s++";"++s')
-       mergeStand (SAPiCRuleName s) (DefdRuleName s') = DefdRuleName (s++";"++s')
-       mergeStand (DefdRuleName s) (SAPiCRuleName s') = DefdRuleName (s++";"++s')
+       mergeStand n n' = n ++ ";" ++ n' -- NOTE: if we reintroduce Yavor's Dot output, recall 9e7e99fe070776172bd09cb977e8d3a83da3ed51
 
 canMerge  :: Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> Bool
 canMerge r1 r2

@@ -51,21 +51,22 @@ import Data.Color
 data TransAction =
   -- base translation
   InitEmpty
-  --    storage
+  -- storage
   | IsIn LNTerm LVar
   | IsNotSet LNTerm
   | InsertA LNTerm LNTerm
   | DeleteA LNTerm
-  --    locks
+  -- locks
   | LockUnnamed LNTerm LVar
   | LockNamed LNTerm LVar
   | UnlockUnnamed LNTerm LVar
   | UnlockNamed LNTerm LVar
-  --     ass_immedeate
+  -- in_event restriction
   | ChannelIn LNTerm
   | EventEmpty
+  -- support for msrs
   | TamarinAct LNFact
-  --    predicate support
+  -- predicate support
   | PredicateA LNFact
   | NegPredicateA LNFact
   -- progress translation
@@ -297,19 +298,16 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule (nameType name)) attr restr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name) attr restr) l r a (newVariables l r)
           where
-            nameType = case processName of
-              Just _ -> DefdRuleName
-              Nothing -> SAPiCRuleName
             name = case processName of
                 Just s -> s
-                Nothing -> stripSemicolon(prettySapicTopLevel process)
-                         ++ "#_" ++ show index ++ "_"
+                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
+                         ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
-            stripSemicolon = filter (/= ';')
+            stripNonAlphanumerical = filter isAlpha

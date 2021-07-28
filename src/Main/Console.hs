@@ -85,7 +85,6 @@ versionStr = unlines
     , $(gitHash)
     , case $(gitDirty) of
           True  -> " (with uncommited changes)"
-          False -> ""
     , ", branch: "
     , $(gitBranch)
     ]

@@ -7,9 +7,9 @@ equations: eq(x, x) = true, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-predicate: True( x )<->x = true
+predicate: True( x )<=>x = true
 
-predicate: And2( x, y )<->(x = true) ∧ (y = true)
+predicate: And2( x, y )<=>(x = true) ∧ (y = true)
 
 restriction restr_testA_1:
   "∀ #NOW. (restr_testA_1( ) @ #NOW) ⇒ ('true' = true)"
@@ -297,7 +297,7 @@ analyzing: examples/sapic/fast/feature-predicates/pub.spthy
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.074594s
+  processing time: 0.052393122s
 
 
 ------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.074594s
+  processing time: 0.052393122s
 
 
 ==============================================================================

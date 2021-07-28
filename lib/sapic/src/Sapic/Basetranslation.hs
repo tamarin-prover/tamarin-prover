@@ -72,8 +72,8 @@ baseTrans :: MonadThrow m => Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction needsAssImmediate ac an p tx,
+baseTrans needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction needsInEvRes ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -92,10 +92,7 @@ mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)
 mergeWithStateRule r' = map (mergeWithStateRule' r')
 
 baseTransAction :: Bool -> TransFAct TranslationResultAct
-baseTransAction
-  needsAssImmediate -- produce actions that axiom AssImmediate requires
-  -- delayPatternMatching -- treat in(*,pat);Q like in(*,x); let x = pat n in Q
-  ac an p tildex
+baseTransAction needsInEvRes ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -120,7 +117,7 @@ baseTransAction
                   else []
                 ), tx')
     | (ChIn Nothing t' matchVar) <- ac , t <- toLNTerm t' =
-      if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
+      if needsInEvRes then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
           let x = evalFreshAvoiding (freshLVar "x" LSortMsg) tildex in
           let xTerm = varTerm (SapicLVar { slvar = x, stype = Nothing}) in
           let (rules,tx',_) =  baseTransComb (Let t' xTerm matchVar) (an {elseBranch = False }) p tildex
@@ -182,16 +179,16 @@ baseTransAction
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f' ) <- ac
       , f <- toLNFact f' =
-          ([([def_state], TamarinAct f : [EventEmpty | needsAssImmediate], [def_state' tildex], [])], tildex)
+          ([([def_state], TamarinAct f : [EventEmpty | needsInEvRes], [def_state' tildex], [])], tildex)
     | (MSR l' a' r' res' _) <- ac
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
           let tx' = freeset' l `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsAssImmediate], def_state' tx':map TamarinFact r, res)], tx')
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsInEvRes ], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
-        channelIn ts = [ChannelIn ts | needsAssImmediate]
+        channelIn ts = [ChannelIn ts | needsInEvRes]
         freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
 
@@ -417,7 +414,7 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 
 
 resInEv :: String
-resInEv = [QQ.r|restriction ass_immediate:
+resInEv = [QQ.r|restriction in_event:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
                                 & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
@@ -426,8 +423,8 @@ resInEv = [QQ.r|restriction ass_immediate:
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => LProcess (ProcessAnnotation LVar) -> Bool -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithControl prevRestr =
+baseRestr :: MonadThrow m => Process (ProcessAnnotation LVar) v -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -440,7 +437,7 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++
-        addIf (needsAssImmediate && containChannelIn) [resInEv]
+        addIf needsInEvRes [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l

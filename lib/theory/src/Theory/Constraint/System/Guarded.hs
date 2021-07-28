@@ -107,6 +107,7 @@ import           Text.PrettyPrint.Highlight
 
 import           Theory.Model
 
+import           Data.Functor.Identity
 
 -- Control.Monad.Fail import will become redundant in GHC 8.8+
 -- import qualified Control.Monad.Fail as Fail

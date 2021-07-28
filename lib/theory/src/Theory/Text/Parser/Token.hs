@@ -9,8 +9,9 @@
 
 {-# LANGUAGE FlexibleInstances #-}
 module Theory.Text.Parser.Token (
+    lexeme
   -- * Symbols
-    symbol
+  , symbol
   , symbol_
   , dot
   , comma
@@ -173,6 +174,9 @@ parseString srcDesc parser =
 
 -- Token parsers
 ----------------
+
+lexeme :: ParsecT String MaudeSig Identity a -> ParsecT String MaudeSig Identity a
+lexeme = T.lexeme spthy
 
 -- | Parse a symbol.
 symbol :: String -> Parser String

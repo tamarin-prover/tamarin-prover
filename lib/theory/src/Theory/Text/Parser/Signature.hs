@@ -217,7 +217,7 @@ export thy = do
 --     parseGoalRanking = if diff then map charToGoalRankingDiff <$> identifier else map charToGoalRanking     <$> identifier
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
-heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* spaces
+heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
 
 goalRanking :: Bool -> Maybe FilePath -> Parser GoalRanking
 goalRanking diff workDir = try oracleRanking <|> regularRanking <?> "goal ranking"

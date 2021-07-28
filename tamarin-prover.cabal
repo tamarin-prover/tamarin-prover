@@ -141,8 +141,6 @@ executable tamarin-prover
       , filepath
       , gitrev
       , http-types
-      , lifted-base
-      , monad-unlift
       , mtl
       , parsec
       , process

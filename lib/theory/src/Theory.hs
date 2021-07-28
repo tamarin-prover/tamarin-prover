@@ -427,9 +427,7 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
           loopBreakers = L.get pracLoopBreakers ruACInfoOld
           rName i oldName = case oldName of
             FreshRule -> FreshRule
-            StandRule n -> case n of
-              DefdRuleName s -> StandRule $ DefdRuleName $ s ++ "___VARIANT_" ++ show i
-              SAPiCRuleName s -> StandRule $ SAPiCRuleName $ s ++ "___VARIANT_" ++ show i
+            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
 
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
@@ -1178,9 +1176,9 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               premise  <- lookupPrem pid $ L.get cprRuleAC rule
               t'       <- protoOrInFactView premise
               t        <- atMay t' tidx
-              return (terms position rule t premise ++ facts position rule t premise)
+              return (terms position rule t ++ facts position rule t premise)
                 where
-                  terms position rule t premise = do
+                  terms position rule t = do
                     -- iterate over all positions found
                     pos     <- position
                     return (rule, Left t, (pid, tidx, pos))

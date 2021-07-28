@@ -46,33 +46,34 @@ translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
              -> m OpenTranslatedTheory
 translate th = case theoryProcesses th of
-                 []  -> if L.get transReliable ops then
-                              throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
-                      else
-                              return (removeSapicItems th)
-                 [p] -> do -- annotate
-                          an_proc_pre <- translateLetDestr sigRules
-                            $ translateReport
-                            $ optimizeStateChannel
-                            $ annotateSecretChannels
-                            $ propagateNames
-                            $ toAnProcess p
-                          an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
-                          -- compute initial rules
-                          (initRules,initTx) <- initialRules an_proc
-                          -- generate protocol rules, starting from variables in initial tilde x
-                          protoRule <-  gen (trans an_proc) an_proc [] initTx
-                          -- add these rules
-                          eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
-
-                          th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
-                          -- add restrictions
-                          rest<- restrictions an_proc protoRule
-                          th2 <- foldM liftedAddRestriction th1 rest
-                          -- add heuristic, if not already defined:
-                          let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                          return (removeSapicItems th3)
-                 _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
+      []  -> if L.get transReliable ops then
+                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+             else
+                    return (removeSapicItems th)
+      [p] -> do
+                -- annotate
+                an_proc_pre <- translateLetDestr sigRules
+                  $ translateReport
+                  $ optimizeStateChannel
+                  $ annotateSecretChannels
+                  $ propagateNames
+                  $ toAnProcess p
+                an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
+                -- compute initial rules
+                (initRules,initTx) <- initialRules an_proc
+                -- generate protocol rules, starting from variables in initial tilde x
+                protoRule <-  gen (trans an_proc) an_proc [] initTx
+                -- apply path compression
+                eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
+                -- add these rules
+                th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
+                -- add restrictions
+                rest<- restrictions an_proc protoRule
+                th2 <- foldM liftedAddRestriction th1 rest
+                -- add heuristic, if not already defined:
+                let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                return (removeSapicItems th3)
+      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = L.get thyOptions th
     translateReport anp =
@@ -95,7 +96,7 @@ translate th = case theoryProcesses th of
                         , checkOps transReliable (RCT.reliableChannelInit anP)
                         , checkOps transReport (reportInit anP)
                       ]
-    trans anP = foldr ($) (BT.baseTrans needsAssImmediate)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+    trans anP = foldr ($) (BT.baseTrans needsInEvRes)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
@@ -113,14 +114,13 @@ translate th = case theoryProcesses th of
                                                                  -- else
                                                                  --   restrs
                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True :
+                        $ [BT.baseRestr anP needsInEvRes True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
-    needsAssImmediate = not (all checkAssImmediate (theoryLemmas th))
-    containChannelIn rules = not $ null [a | anR <- rules, a@ChannelIn {} <- acts anR]
+    needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
   -- NOTE: Kevin Morio is working on accountability
@@ -218,3 +218,12 @@ isPosNegFormula fm = case fm of
 
       and2 (x, y) (p, q) = (x && p, y && q)
       swap (x, y) = (y, x)
+
+-- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
+lemmaNeedsInEvRes :: Lemma p -> Bool
+lemmaNeedsInEvRes lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
+  (AllTraces,   (_, True))     -> False -- L- for all-traces
+  (ExistsTrace, (True, _))     -> False -- L+ for exists-trace
+  (ExistsTrace, (False, True)) -> True  -- L- for exists-trace
+  (AllTraces,   (True, False)) -> True  -- L+ for all-traces
+  _                            -> True  -- not in L- and L+

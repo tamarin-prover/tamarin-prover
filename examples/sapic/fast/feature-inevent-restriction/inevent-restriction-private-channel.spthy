@@ -1,0 +1,13 @@
+theory InEventRestrictionPrivateChannel
+begin
+
+event A(); in('c', 'a'); event B()
+
+// in_event guarantees that K(x) is between A() and B()
+
+// should trigger addition of in_event and verify
+lemma test:
+  all-traces
+  "All #a #b. A()@a & B()@b ==> Ex #k x. K(x)@k & #a < #k & #k < #b"
+
+end
