@@ -231,7 +231,7 @@ factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMI
 factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTerm$ varMID p ]
 factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
-        name k = if isSemiState k then "semistate" else "state"
+        name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
