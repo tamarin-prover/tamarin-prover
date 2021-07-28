@@ -68,7 +68,7 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
                 -- add restrictions
-                rest<- restrictions an_proc protoRule
+                rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
@@ -101,8 +101,8 @@ translate th = case theoryProcesses th of
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ]
-    restrictions:: (MonadThrow m1, MonadCatch m1) => LProcess (ProcessAnnotation LVar) -> [AnnotatedRule (ProcessAnnotation LVar)] -> m1 [SyntacticRestriction]
-    restrictions anP pRules = foldM (flip ($)) []  --- fold from left to right
+    restrictions:: (MonadThrow m1, MonadCatch m1) => LProcess (ProcessAnnotation LVar)  -> m1 [SyntacticRestriction]
+    restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
@@ -191,15 +191,6 @@ gen (trans_null, trans_action, trans_comb) anP p tildex  =
         handler anp (ProcessNotWellformed (WFUnboundProto vs)) = throw $ ProcessNotWellformed $ WFUnbound vs anp
         handler _ e = throw e
 
-
--- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is not needed.
-checkAssImmediate :: Lemma p -> Bool
-checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
-  (AllTraces,   (_, True))     -> True  -- L- for all-traces
-  (ExistsTrace, (True, _))     -> True  -- L+ for exists-trace
-  (ExistsTrace, (False, True)) -> False -- L- for exists-trace
-  (AllTraces,   (True, False)) -> False -- L+ for all-traces
-  _                            -> False -- not in L- and L+ should not be possible
 
 isPosNegFormula :: LNFormula -> (Bool, Bool)
 isPosNegFormula fm = case fm of
