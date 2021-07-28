@@ -41,6 +41,7 @@ import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
 import Data.Label.Total
+import Data.Label.Mono (Lens)
 import Theory.Sapic
 import qualified Data.Functor
 
@@ -62,6 +63,7 @@ builtinsDiffNames = [
 
 -- | Describes the mapping between a builtin name, its potential Maude Signatures
 -- and its potential option
+builtinsNames :: [([Char], Maybe MaudeSig, Maybe (Lens Total Option Bool))]
 builtinsNames =
   [
   ("locations-report",  Just locationReportMaudeSig, Just transReport),

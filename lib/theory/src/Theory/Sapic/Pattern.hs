@@ -102,7 +102,6 @@ unextractMatchingVariables vs = fmap (fmap f)
         f v = if v `elem` vs then PatternMatch v else PatternBind v
         
 
-
 -- | list of variables that occur in pattern term.
 -- guarantees to capture them from right to left, including duplicates.
 freesPatternSapicLVar :: VTerm n PatternSapicLVar -> ([SapicLVar], [SapicLVar])
