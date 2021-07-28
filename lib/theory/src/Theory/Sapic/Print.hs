@@ -27,23 +27,23 @@ import           Theory.Model.Formula
 import           Theory.Sapic
 import           Term.LTerm
 import           Theory.Text.Pretty
+import           Theory.Sapic.Pattern 
+import qualified Data.Set as S
+import Theory.Model.Atom ( SyntacticSugar )
 
 -- | pretty-print rules using a generic fact pretty-printer (based on show)
--- rulePrinter :: Show a =>
---              [Fact (Term a)]
---              -> [Fact (Term a)] -> [Fact (Term a)] -> [b] -> String
-rulePrinter :: Show a =>
-               [Fact (Term a)]
-               -> [Fact (Term a)]
-               -> [Fact (Term a)]
-               -> [SapicFormula]
-               -> p
-               -> String
--- TODO we should convert l into a Pattern using mv and print it out correctly
-rulePrinter l a r res mv = render $ prettyRuleRestrGen ppFact ppRes l a r res 
+rulePrinter :: [Fact SapicTerm]
+    -> [Fact SapicTerm]
+    -> [Fact SapicTerm]
+    -> [ProtoFormula SyntacticSugar (String, LSort) Name SapicLVar]
+    -> S.Set SapicLVar
+    -> String
+rulePrinter l a r res mv = render $ prettyRuleRestrGen ppFact ppRes l' (toPat a) (toPat r) res 
     where
         ppFact = prettyFact $ prettyTerm $ text . show
         ppRes  = prettySyntacticLNFormula . toLFormula 
+        l'     = fmap (fmap (unextractMatchingVariables mv)) l 
+        toPat  = fmap (fmap (unextractMatchingVariables mempty))
 
 -- | Instantiate printers with rulePrinter from Theory.Text.Pretty
 prettySapicAction :: LSapicAction -> String
