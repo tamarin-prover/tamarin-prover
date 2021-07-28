@@ -141,18 +141,10 @@ filterHeaders s = S.filter (not . isForbidden) s
         isForbidden (Type "bitstring") = True
         isForbidden _ = False
 
-pairPRules :: S.Set ProverifHeader
-pairPRules = S.fromList  [Eq "reduc" "forall a:bitstring,b:bitstring;" "fst((a,b))=a",
-   Eq  "reduc" "forall a:bitstring,b:bitstring;" "snd((a,b))=b"]
-
 ppPubName :: NameId -> Doc
 ppPubName (NameId "zero") = text "0"
 ppPubName (NameId "one") = text "1"
 ppPubName (NameId t) = text t
-
-builtins_rules :: S.Set CtxtStRule
-builtins_rules = S.empty
-  -- foldl S.union S.empty [pairRules, symEncRules, asymEncRules, signatureRules, locationReportRules]
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
@@ -227,8 +219,6 @@ auxppSapicTerm tc mVars isPattern t = (ppTerm t, getHdTerm t)
           else
             S.singleton   (Sym "free" (show n) ":bitstring" [])
         Lit  (_)                                  -> S.empty
-        FApp (NoEq f) [t1] | f == fstSym -> (getHdTerm t1) `S.union` pairPRules
-        FApp (NoEq f) [t1] | f == sndSym -> (getHdTerm t1) `S.union` pairPRules
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
 ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProverifHeader)
@@ -848,7 +838,7 @@ loadHeaders tc thy typeEnv = do
         -- events headers
         eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ("event " ++ showFactTag tag ++ "("++ make_argtypes  types ++  ").") `S.insert` acc) S.empty (events typeEnv)
         -- generating headers for equations
-        sigRules = stRules sig S.\\ builtins_rules
+        sigRules = stRules sig
 
 
 toSapicLVar:: LVar -> SapicLVar
