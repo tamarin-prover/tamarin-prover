@@ -614,24 +614,15 @@ typeVarsEvent TypingEnvironment{events=ev} tag ts =
                        )  M.empty (zip ts t)
     Nothing -> M.empty
 
-showFactAnnotation :: FactAnnotation -> [Char]
-showFactAnnotation an = case an of
-    SolveFirst     -> "+"
-    SolveLast      -> "-"
-    NoSources      -> "no_precomp"
-
 ppProtoAtom :: (HighlightDocument d, Ord k, Show k, Show c) =>  TypingEnvironment -> Bool -> (s (Term (Lit c k)) -> d) -> (Term (Lit c k) -> d) -> ProtoAtom s (Term (Lit c k)) -> (d, M.Map k SapicType)
-ppProtoAtom te _ _ ppT  (Action v (Fact tag an ts))
-  | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts <> ppAnn an, M.empty)
-  | tag == KUFact = (ppFactL ("attacker") ts <> ppAnn an  <> opAction <> ppT v, M.empty)
+ppProtoAtom te _ _ ppT  (Action v (Fact tag _ ts))
+  | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts, M.empty)
+  | tag == KUFact = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
   | otherwise                     =
-        (text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> ppAnn an  <> opAction <> ppT v,
+        (text "event(" <> ppFactL (showFactTag tag) ts <> text ")"  <> opAction <> ppT v,
          typeVarsEvent te tag ts)
   where
     ppFactL n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppT t
-    ppAnn ann = if S.null ann then text "" else
-        brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
-
 
 ppProtoAtom _ _ ppS _ (Syntactic s) = (ppS s, M.empty)
 ppProtoAtom _ False _ ppT (EqE l r) =
