@@ -179,22 +179,11 @@ ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
 ppTypeLit _ (Con c) = text $ show c
 
--- pretty print an LNTerm, collecting the constant that need to be declared
--- a boolean b allows to add types to variables (for input bindings)
--- matchVars is the set of vars that correspond to pattern matching
--- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
-auxppSapicTerm :: TranslationContext ->  S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
-auxppSapicTerm tc mVars isPattern t = (ppTerm t, getHdTerm t)
+auxppTerm :: Show v => (Lit Name v -> Doc) -> VTerm Name v -> (Doc, S.Set ProverifHeader)
+auxppTerm ppLit t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
-        Lit  (Con (Name FreshName n))             ->  (text $ show n) <> text "test"
-        Lit  (Con (Name PubName n)) | isPattern   -> text "=" <> (text $ show n)
-        Lit  (Con (Name PubName n))               ->  ppPubName n
-        Lit  (Var (SapicLVar (lvar) _ ))
-          | S.member lvar mVars                  -> text "=" <> ppLVar lvar
-        Lit  v                    |    isPattern          -> ppTypeLit tc v
-        Lit  (Var (SapicLVar (lvar)  _ ))  -> ppLVar lvar
-        Lit  v                                    -> (text $ show v)
+        Lit  v                                    -> ppLit v
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
@@ -221,46 +210,36 @@ auxppSapicTerm tc mVars isPattern t = (ppTerm t, getHdTerm t)
         Lit  (_)                                  -> S.empty
         FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
+-- pretty print a SapicTerm, collecting the constant that need to be declared
+-- matchVars is the set of vars that correspond to pattern matching
+-- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
+auxppSapicTerm :: TranslationContext ->  S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
+  where
+    ppLit v = case v of
+        Con (Name FreshName n)             ->  (text $ show n)
+        Con (Name PubName n) | isPattern   -> text "=" <> (text $ show n)
+        Con (Name PubName n)               ->  ppPubName n
+        Var (SapicLVar (lvar) _ )
+          | S.member lvar mVars                  -> text "=" <> ppLVar lvar
+        l                    |    isPattern          -> ppTypeLit tc l
+        Var (SapicLVar (lvar)  _ )  -> ppLVar lvar
+        l                                   -> (text $ show l)
+
 ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProverifHeader)
 ppSapicTerm tc = auxppSapicTerm tc S.empty False
 
--- TODO: we should generalise functionality so pppSapicTerm and pppLNTerm share
--- the code they have in common
+-- pretty print an LNTerm, collecting the constant that need to be declared
+-- the boolean b enables types printout
 pppLNTerm :: TranslationContext -> Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
-pppLNTerm _ b t = (ppTerm t, getHdTerm t)
+pppLNTerm _ b t = auxppTerm ppLit t
   where
-    ppTerm tm = case viewTerm tm of
-        Lit  (Con (Name FreshName n))             -> text $ show n
-        Lit  (Con (Name PubName n))               -> ppPubName n
-        Lit  (tm2)              | b               -> text $ show tm2 <> ":bitstring"
-        Lit  (Var (lvar))                         -> ppLVar lvar
-        Lit  (tm2)                                -> text $ show tm2
-        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
-        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
---        FApp (NoEq _)      _       | isPair tm -> ppTerms ", " 1 "(" ")" (split tm)
-        FApp (NoEq _)      [t1,t2] | isPair tm    -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
-        FApp (NoEq (f, _)) ts                     -> ppFun f ts
-        FApp (C EMap)      ts                     -> ppFun emapSymString ts
-        FApp List          ts                     -> ppFun (BC.pack"LIST") ts
-
-    ppACOp Mult  = "*"
-    ppACOp Union = "+"
-    ppACOp Xor   = "⊕"
-    ppTerms sepa n lead finish ts =
-        fcat . (text lead :) . (++[text finish]) .
-            map (nest n) . punctuate (text sepa) . map ppTerm $ ts
-    ppFun f ts =
-      text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
-    getHdTerm tm =  case viewTerm tm of
-        Lit  (Con (Name PubName n))               ->
-          if show n=="g" then
-            S.empty
-          else
-            S.singleton   (Sym "free" (show n) ":bitstring" [])
-        Lit  (_)                                  -> S.empty
-        FApp _ ts                     -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
+    ppLit v = case v of
+        Con (Name FreshName n)             -> text $ show n
+        Con (Name PubName n)               -> ppPubName n
+        tm2              | b               -> text $ show tm2 <> ":bitstring"
+        Var (lvar)                         -> ppLVar lvar
+        tm2                                -> text $ show tm2
 
 ppLNTerm :: TranslationContext -> LNTerm -> (Doc, S.Set ProverifHeader)
 ppLNTerm tc = pppLNTerm tc False
@@ -799,7 +778,6 @@ headersOfType :: [SapicType] -> S.Set ProverifHeader
 headersOfType types = S.fromList $ foldl (\y x -> case x of
                                            Nothing -> y
                                            Just s -> Type s : y) [] types
--- TODOS do not declare type bitstring
 
 headerOfFunSym :: SapicFunSym-> S.Set ProverifHeader
 headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
