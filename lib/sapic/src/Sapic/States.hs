@@ -25,25 +25,25 @@ import           Control.Monad.Fresh
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
 
 isBound :: S.Set LVar -> SapicTerm -> Bool
-isBound boundNames t = (S.fromList $ frees $ toLNTerm t) `S.isSubsetOf` boundNames
+isBound boundNames t = S.fromList (frees $ toLNTerm t) `S.isSubsetOf` boundNames
 
 hasBoundUnboundStates ::  LProcess (ProcessAnnotation LVar) -> (Bool, Bool)
-hasBoundUnboundStates p = (not(bounds == S.empty), not(unbounds == S.empty))
+hasBoundUnboundStates p = (bounds /= S.empty, unbounds /= S.empty)
   where (bounds, unbounds) = getAllStates p S.empty
 
-getAllStates ::  LProcess (ProcessAnnotation LVar) ->  (S.Set LVar)-> (S.Set SapicTerm, S.Set SapicTerm)
+getAllStates ::  LProcess (ProcessAnnotation LVar) ->  S.Set LVar-> (S.Set SapicTerm, S.Set SapicTerm)
 getAllStates (ProcessAction (Insert t _) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 getAllStates (ProcessAction (Insert t _) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 getAllStates (ProcessAction (Lock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 getAllStates (ProcessAction (Lock t) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 getAllStates (ProcessAction (Unlock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 getAllStates (ProcessAction (Unlock t ) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = (getAllStates p boundNames)
+  where (boundStates,freeStates) = getAllStates p boundNames
 
 
 getAllStates (ProcessAction (New (SapicLVar v _)) _ p) boundNames = getAllStates p (v `S.insert` boundNames)
@@ -52,18 +52,18 @@ getAllStates (ProcessNull _) _ = (S.empty, S.empty)
 
 getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames | isBound boundNames t  =
   (t `S.insert` boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
-        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
+        (boundStatesR,freeStatesR) = getAllStates pr boundNames
 getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames  =
   (boundStatesL `S.union` boundStatesR, t `S.insert`  freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
-        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
+        (boundStatesR,freeStatesR) = getAllStates pr boundNames
 
 
 getAllStates (ProcessComb _ _ pl pr) boundNames =
     (boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = (getAllStates pl boundNames)
-        (boundStatesR,freeStatesR) = (getAllStates pr boundNames)
+  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
+        (boundStatesR,freeStatesR) = getAllStates pr boundNames
 
 
 
@@ -80,10 +80,10 @@ addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates)
 
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
-declareStateChannel ::  MonadFresh m => LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> (S.Set SapicLVar) -> StateMap -> m (LProcess (ProcessAnnotation LVar))
+declareStateChannel ::  MonadFresh m => LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> S.Set SapicLVar -> StateMap -> m (LProcess (ProcessAnnotation LVar))
 declareStateChannel p toDeclare boundNames stateMap =
-  let (declarables, undeclarables) =  L.partition (\v -> (S.fromList $ freesSapicTerm v) `S.isSubsetOf` boundNames) toDeclare in
-  if declarables == [] then  do
+  let (declarables, undeclarables) =  L.partition (\v -> S.fromList (freesSapicTerm v) `S.isSubsetOf` boundNames) toDeclare in
+  if null declarables then  do
     case p of
       ProcessNull _ -> return p
       ProcessComb a an pl pr -> do
@@ -187,12 +187,10 @@ isPureState p target loneInsert =
 -- getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
 --    where (pureStates, unPureStates)
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
-annotatePureStates p = if existsAttackerUnpure p S.empty then
-                              addStatesChannels p
-                       else if (fst $ getAllStates p S.empty)  == S.empty then
-                              p
-                        else
-                         annotateEachPureStates (addStatesChannels p) S.empty
+annotatePureStates p
+  | existsAttackerUnpure p S.empty           = addStatesChannels p
+  | fst (getAllStates p S.empty)  == S.empty = p
+  | otherwise                                = annotateEachPureStates (addStatesChannels p) S.empty
 --  where pureStates = getPureStates p (getAllBoundStates p)
 
 
@@ -214,7 +212,7 @@ annotateEachPureStates (ProcessAction ac an p) pureStates
       if fst $ isPureState p cid False then
         ProcessAction ac an{pureState=True, isStateChannel = Just cid} (annotateEachPureStates p (cid `S.insert` pureStates))
       else
-        (ProcessAction ac an p)
+        ProcessAction ac an p
   | Unlock t <- ac =
       if t `S.member` pureStates then
         ProcessAction ac an{pureState=True} p'
