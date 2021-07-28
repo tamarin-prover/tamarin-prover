@@ -296,7 +296,8 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
           where
             name = case processName of
                 Just s -> s
-                Nothing -> stripNonAlphanumerical (prettySapicTopLevel process)
+                Nothing -> 
+                         unNull (stripNonAlphanumerical (prettySapicTopLevel process))
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
@@ -304,4 +305,6 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
-            stripNonAlphanumerical = filter (\x -> isAlpha x)
+            stripNonAlphanumerical = filter isAlpha
+            unNull s = if null s then "p" else s
+
