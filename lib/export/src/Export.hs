@@ -25,6 +25,7 @@ import         Term.SubtermRule
 
 import         Theory
 import         Theory.Sapic
+import         Theory.Module
 import         Text.PrettyPrint.Class
 import         Theory.Text.Pretty
 
@@ -76,16 +77,20 @@ prettyProVerifTheory (thy, typEnv) = do
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
-    lemmas = loadLemmas typEnv thy
+    lemmas = loadLemmas tc typEnv thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
 
 data Translation =
-   Proverif
+   ProVerif
    | DeepSec
   deriving( Ord, Eq, Typeable, Data )
 
+
+exportModule :: Translation -> ModuleType
+exportModule ProVerif = ModuleProVerif
+exportModule DeepSec = ModuleDeepSec
 
 data TranslationContext = TranslationContext
   { trans :: Translation,
@@ -97,14 +102,14 @@ data TranslationContext = TranslationContext
 
 
 emptyTC :: TranslationContext
-emptyTC = TranslationContext{trans = Proverif,
+emptyTC = TranslationContext{trans = ProVerif,
                               attackerChannel = Nothing,
                               hasBoundStates = False,
                               hasUnboundStates = False,
                               predicates = []}
 
--- Proverif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
-data ProverifHeader =
+-- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
+data ProVerifHeader =
    Type String  -- type declaration
   | Sym String String String [String] -- symbol declaration, (symkind,name,type,attr)
   | Fun String String Int String [String] -- symbol declaration, (symkind,name,arity,types,attr)
@@ -113,14 +118,14 @@ data ProverifHeader =
   deriving (Ord, Show, Eq)
 
 
-state_headers :: S.Set ProverifHeader
+state_headers :: S.Set ProVerifHeader
 state_headers = S.fromList [
   HEvent "table tbl_states_handle(bitstring,channel).", --the table for linking states identifiers and channels
   HEvent "table tbl_locks_handle(bitstring,channel)." --the table for linking locks identifiers and channels
   ]
 
 -- We provide a dedicated DDH builtin.
-builtins :: [(String, S.Set ProverifHeader)]
+builtins :: [(String, S.Set ProVerifHeader)]
 builtins = map (\(x,y) -> (x, S.fromList y)) [
   ("diffie-hellman", [
       Sym "const" "g" ":bitstring" [],
@@ -135,7 +140,7 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
   ]
 
 -- We filter out some predefined headers that we don't want to redefine.
-filterHeaders :: S.Set ProverifHeader -> S.Set ProverifHeader
+filterHeaders :: S.Set ProVerifHeader -> S.Set ProVerifHeader
 filterHeaders s = S.filter (not . isForbidden) s
   where isForbidden (Fun "fun" "true" _ _ _) = True
         isForbidden (Type "bitstring") = True
@@ -172,14 +177,14 @@ ppType (Just s) = s
 
 ppTypeVar :: TranslationContext -> SapicLVar -> Doc
 ppTypeVar tc v@(SapicLVar lvar ty) = case trans tc of
-  Proverif -> ppLVar lvar <> text ":" <> text (ppType ty)
+  ProVerif -> ppLVar lvar <> text ":" <> text (ppType ty)
   DeepSec -> ppUnTypeVar v
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
 ppTypeLit _ (Con c) = text $ show c
 
-auxppTerm :: Show v => (Lit Name v -> Doc) -> VTerm Name v -> (Doc, S.Set ProverifHeader)
+auxppTerm :: Show v => (Lit Name v -> Doc) -> VTerm Name v -> (Doc, S.Set ProVerifHeader)
 auxppTerm ppLit t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
@@ -213,7 +218,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
 -- pretty print a SapicTerm, collecting the constant that need to be declared
 -- matchVars is the set of vars that correspond to pattern matching
 -- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
-auxppSapicTerm :: TranslationContext ->  S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProverifHeader)
+auxppSapicTerm :: TranslationContext ->  S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProVerifHeader)
 auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
   where
     ppLit v = case v of
@@ -226,12 +231,12 @@ auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
         Var (SapicLVar (lvar)  _ )  -> ppLVar lvar
         l                                   -> (text $ show l)
 
-ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProverifHeader)
+ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppSapicTerm tc = auxppSapicTerm tc S.empty False
 
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- the boolean b enables types printout
-pppLNTerm :: TranslationContext -> Bool -> LNTerm -> (Doc, S.Set ProverifHeader)
+pppLNTerm :: TranslationContext -> Bool -> LNTerm -> (Doc, S.Set ProVerifHeader)
 pppLNTerm _ b t = auxppTerm ppLit t
   where
     ppLit v = case v of
@@ -241,11 +246,11 @@ pppLNTerm _ b t = auxppTerm ppLit t
         Var (lvar)                         -> ppLVar lvar
         tm2                                -> text $ show tm2
 
-ppLNTerm :: TranslationContext -> LNTerm -> (Doc, S.Set ProverifHeader)
+ppLNTerm :: TranslationContext -> LNTerm -> (Doc, S.Set ProVerifHeader)
 ppLNTerm tc = pppLNTerm tc False
 
 -- pretty print a Fact, collecting the constant that need to be declared
-ppFact :: TranslationContext -> Fact SapicTerm -> (Doc, S.Set ProverifHeader)
+ppFact :: TranslationContext -> Fact SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppFact tc (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
   | otherwise                     = sppFact (showFactTag tag) ts
@@ -256,7 +261,7 @@ ppFact tc (Fact tag _ ts)
             sh = foldl S.union S.empty shs
 
 -- pretty print an Action, collecting the constant and events that need to be declared. It also returns a boolean, specifying if the printout can serve as the end of a process or not.
-ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProverifHeader, Bool)
+ppAction ::  ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProVerifHeader, Bool)
 ppAction ProcessAnnotation{isStateChannel = Nothing} tc (New v) =
    (text "new " <> (ppTypeVar tc v), S.empty, True)
 
@@ -278,10 +283,10 @@ ppAction ProcessAnnotation{pureState=True, isStateChannel = Just _} tc (New v) =
      (text "new " <> (ppTypeVar tc v) <> text "[assumeCell]"
      , S.empty, True)
 
-ppAction _ TranslationContext{trans=Proverif} Rep  = (text "!", S.empty, False)
+ppAction _ TranslationContext{trans=ProVerif} Rep  = (text "!", S.empty, False)
 ppAction _ TranslationContext{trans=DeepSec} Rep  = (text "", S.empty, False)
 
-ppAction _ tc@TranslationContext{trans=Proverif} (ChIn t1 t2 mvars)  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
+ppAction _ tc@TranslationContext{trans=ProVerif} (ChIn t1 t2 mvars)  = (text "in(" <> pt1 <> text "," <> pt2 <> text ")"
                                        , sh1 `S.union` sh2, True)
   where (pt1, sh1) = getAttackerChannel tc t1
         (pt2, sh2) = auxppSapicTerm tc (S.map toLVar mvars) True t2
@@ -303,23 +308,23 @@ ppAction _ tc (ChOut t1 t2 )  = (text "out(" <> pt1 <> text "," <> pt2 <> text "
   where (pt1, sh1) =  getAttackerChannel tc t1
         (pt2, sh2) = ppSapicTerm tc t2
 
-ppAction _ tc@TranslationContext{trans=Proverif} (Event (Fact tag m ts) )  = (text "event " <> pa, sh, True) -- event Headers are definde globally inside loadHeaders
+ppAction _ tc@TranslationContext{trans=ProVerif} (Event (Fact tag m ts) )  = (text "event " <> pa, sh, True) -- event Headers are definde globally inside loadHeaders
   where (pa, sh) = ppFact tc (Fact tag m ts)
 
 ppAction _ TranslationContext{trans=DeepSec} (Event _ )  = (text "", S.empty, False)
 
 
 -- For pure states, we do not put locks and unlocks
-ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Lock _) =
+ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=ProVerif} (Lock _) =
     (text "", S.empty, False)
 
 -- If there is a state channel, we simply use it
-ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Lock _) =
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=ProVerif} (Lock _) =
   (text "in(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text ":nat)"
                               , S.empty, True)
 
 -- If there is no state channel, we must use the table
-ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Lock t) =
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=ProVerif} (Lock t) =
     (text "get tbl_locks_handle(" <> pt <> text "," <> text ptvar <> text ") in"
      $$ text "in(" <> text ptvar <> text" , counter" <> text ptvar <> text ":nat)", sh, True)
   where
@@ -327,29 +332,29 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@Translati
     (pt, sh) = auxppSapicTerm tc freevars True t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
-ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=Proverif} (Unlock _) =
+ppAction ProcessAnnotation{pureState=True} TranslationContext{trans=ProVerif} (Unlock _) =
     (text "", S.empty, False)
-ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=Proverif} (Unlock _) =
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} TranslationContext{trans=ProVerif} (Unlock _) =
   (text "out(lock_" <> ppLVar lvar <> text "," <>  text "counterlock" <> ppLVar lvar <> text "+1" <> text ") | "
   , S.empty, False)
 
-ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Unlock t) =
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=ProVerif} (Unlock t) =
     (text "out(" <> text ptvar <> text" , counter" <> text ptvar <> text "+1) | ", sh, False)
   where
     (pt, sh) = ppSapicTerm tc t
     ptvar = "lock_" ++ stripNonAlphanumerical (render pt)
 
-ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=_} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=_} tc@TranslationContext{trans=ProVerif} (Insert _ c) =
       (text "out(" <> ppLVar lvar <> text ", " <> pc <> text ") |"
       , shc, False)
   where
     (pc, shc) = ppSapicTerm tc c
 
 -- Should never happen
-ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationContext{trans=Proverif} (Insert _ _) =
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationContext{trans=ProVerif} (Insert _ _) =
   (text "TRANSLATIONERROR", S.empty, True)
 
--- ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=Proverif} (Insert _ c) =
+-- ppAction ProcessAnnotation{stateChannel = Just (AnVar lvar), pureState=False} tc@TranslationContext{trans=ProVerif} (Insert _ c) =
 --       (text "in(" <> pt <> text ", " <> pt <> text "_dump:bitstring);"
 --        $$ text "out(" <> pt <> text ", " <> pc <> text ") |"
 --       , shc, False)
@@ -358,7 +363,7 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationCo
 --     (pc, shc) = ppSapicTerm tc c
 
 -- must rely on the table
-ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=Proverif} (Insert t t2) =
+ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=ProVerif} (Insert t t2) =
     (text "in(" <> text ptvar <> text ", " <> pt <> text "_dump:bitstring);"
      $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ") | ", sh `S.union` sh2, False)
   where
@@ -369,7 +374,7 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@Translati
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty, True)
 
-ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProverifHeader)
+ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProVerifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
 ppSapic tc (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
@@ -505,7 +510,7 @@ ppSapic _ (ProcessComb (Lookup _ _ ) _ _ _) =
   (text "TRANSLATION ERROR, lookup with else branch unsupported", S.empty)
 
 
-ppSapic tc@TranslationContext{trans=Proverif} (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
+ppSapic tc@TranslationContext{trans=ProVerif} (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
 ppSapic tc@TranslationContext{trans=DeepSec} (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
@@ -527,7 +532,7 @@ addAttackerReportProc tc thy p =
                      Nothing -> ([], (text "Translation Error, no Report predicate provided", M.empty))
                      Just (Predicate _ form) -> Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form)
 
-loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProverifHeader, Bool)
+loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProVerifHeader, Bool)
 loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty, False)
   [pr] -> let (d,headers) = ppSapic tc2 p in
@@ -544,10 +549,10 @@ loadProc tc thy = case theoryProcesses thy of
   _  -> (text "Multiple sapic processes detected, error", S.empty, False)
 
 
-loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProverifHeader)
+loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader)
 loadMacroProc tc thy = loadMacroProcs tc thy (theoryProcessDefs thy)
 
-loadMacroProcs :: TranslationContext -> OpenTheory -> [ProcessDef] ->  ([Doc], S.Set ProverifHeader)
+loadMacroProcs :: TranslationContext -> OpenTheory -> [ProcessDef] ->  ([Doc], S.Set ProVerifHeader)
 loadMacroProcs _ _ [] = ([text ""], S.empty)
 loadMacroProcs tc thy (p:q) =
       let (docs,  heads) = loadMacroProcs tc3 thy q in
@@ -618,7 +623,7 @@ ppProtoAtom _ _ _ _ (Last i)   = (operator_ "last" <> parens (text (show i)), M.
 ppAtom :: TypingEnvironment -> Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> (Doc,  M.Map LVar SapicType)
 ppAtom te b = ppProtoAtom te b (const emptyDoc)
 
--- only used for Proverif queries display
+-- only used for ProVerif queries display
 -- the Bool is set to False when we must negate the atom
 ppNAtom :: TypingEnvironment -> Bool -> ProtoAtom s LNTerm -> (Doc, M.Map LVar SapicType)
 ppNAtom te b = ppAtom te b (fst . (ppLNTerm emptyTC))
@@ -766,20 +771,25 @@ ppLemma te p = text "(*" <> text (L.get lName p) <> text "*)"
             $$ Precise.evalFresh (ppRestrictFormula te fm) (avoidPrecise fm)
   where fm = L.get lFormula p
 
-loadLemmas :: TypingEnvironment -> OpenTheory -> [Doc]
-loadLemmas te thy = map (ppLemma te) (theoryLemmas thy)
+loadLemmas :: TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
+loadLemmas tc te thy = map (ppLemma te) proverifLemmas
+  where thyLemmas = (theoryLemmas thy)
+        proverifLemmas = filter (\lem -> case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
+                                     [] -> True
+                                     ls -> (exportModule $ trans tc) `elem` ls
+                                       )  thyLemmas
 
 
 ------------------------------------------------------------------------------
 -- Header Generation
 ------------------------------------------------------------------------------
 
-headersOfType :: [SapicType] -> S.Set ProverifHeader
+headersOfType :: [SapicType] -> S.Set ProVerifHeader
 headersOfType types = S.fromList $ foldl (\y x -> case x of
                                            Nothing -> y
                                            Just s -> Type s : y) [] types
 
-headerOfFunSym :: SapicFunSym-> S.Set ProverifHeader
+headerOfFunSym :: SapicFunSym-> S.Set ProVerifHeader
 headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
   Fun "fun" (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert`  headersOfType (outType : inTypes)
   where priv_or_pub Public = []
@@ -788,7 +798,7 @@ headerOfFunSym  ((f,(k,pub,Constructor)),inTypes, outType) =
 headerOfFunSym _ = S.empty
 
 -- Load the proverif headers from the OpenTheory
-loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> IO (S.Set ProverifHeader)
+loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> IO (S.Set ProVerifHeader)
 loadHeaders tc thy typeEnv = do
   eqHeaders <- mapM (headersOfRule tc typeEnv) (S.toList sigRules)
   return $ typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (foldl (\acc x -> x `S.union` acc) S.empty eqHeaders) `S.union` eventHeaders
@@ -819,7 +829,7 @@ toSapicTerm = fmap f
         f (Con c) = Con c
         f (Var v) = Var $ toSapicLVar v
 
-headersOfRule :: TranslationContext -> TypingEnvironment -> CtxtStRule -> IO (S.Set ProverifHeader)
+headersOfRule :: TranslationContext -> TypingEnvironment -> CtxtStRule -> IO (S.Set ProVerifHeader)
 headersOfRule tc typeEnv r |  (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
    tye <- typeTermsWithEnv typeEnv (map toSapicTerm [lhs, rhs])
    let (plhs,lsh) = ppLNTerm tc lhs
@@ -844,19 +854,19 @@ headersOfRule tc typeEnv r |  (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
 
 
 
-prettyProverifHeader :: ProverifHeader -> Doc
-prettyProverifHeader (Type s) = text "type " <> text s <> text "."
-prettyProverifHeader (HEvent s) = text s
-prettyProverifHeader (Eq eqtype quant eq) = text eqtype <> text " " <> text quant <>  text " " <> text eq <>  text "."
-prettyProverifHeader (Sym symkind name symtype []) = text symkind <> text " " <> text name <> text symtype  <> text "."
-prettyProverifHeader (Sym symkind name symtype attr) = text symkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
+prettyProVerifHeader :: ProVerifHeader -> Doc
+prettyProVerifHeader (Type s) = text "type " <> text s <> text "."
+prettyProVerifHeader (HEvent s) = text s
+prettyProVerifHeader (Eq eqtype quant eq) = text eqtype <> text " " <> text quant <>  text " " <> text eq <>  text "."
+prettyProVerifHeader (Sym symkind name symtype []) = text symkind <> text " " <> text name <> text symtype  <> text "."
+prettyProVerifHeader (Sym symkind name symtype attr) = text symkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
 
-prettyProverifHeader  (Fun "" _ _ _ _ ) = text ""
-prettyProverifHeader (Fun fkind name _ symtype [] ) =  text fkind <> text " " <> text name <> text symtype  <> text "."
-prettyProverifHeader (Fun fkind name _ symtype attr ) =
+prettyProVerifHeader  (Fun "" _ _ _ _ ) = text ""
+prettyProVerifHeader (Fun fkind name _ symtype [] ) =  text fkind <> text " " <> text name <> text symtype  <> text "."
+prettyProVerifHeader (Fun fkind name _ symtype attr ) =
    text fkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
 
-prettyDeepSecHeader :: ProverifHeader -> Doc
+prettyDeepSecHeader :: ProVerifHeader -> Doc
 prettyDeepSecHeader (Type _) = text "" -- no types in deepsec
 prettyDeepSecHeader (Eq eqtype _ eq) = text eqtype <> text " " <> text eq <>  text "."
 prettyDeepSecHeader (HEvent _) = text ""
@@ -882,12 +892,12 @@ prettyDeepSecHeader  (Fun fkind name arity _ attr ) =
 
 
 
-attribHeaders :: TranslationContext -> [ProverifHeader] -> [Doc]
+attribHeaders :: TranslationContext -> [ProVerifHeader] -> [Doc]
 attribHeaders tc hd =
   sym ++ fun ++ eq
   where (eq,fun,sym) = splitHeaders hd
         pph = case trans tc of
-          Proverif -> prettyProverifHeader
+          ProVerif -> prettyProVerifHeader
           DeepSec -> prettyDeepSecHeader
         splitHeaders [] = ([],[],[])
         splitHeaders (x:xs)
@@ -907,7 +917,7 @@ mkAttackerChannel :: (-- MonadThrow m,PlainProcess
                     => LProcess (ProcessAnnotation LVar) -> m LVar
 mkAttackerChannel _ = (freshLVar "att" LSortMsg)
 
-mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProverifHeader)
+mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProVerifHeader)
 mkAttackerContext tc p =
   (tc{attackerChannel = Just attackerVar}, S.singleton hd)
   where
@@ -917,7 +927,7 @@ mkAttackerContext tc p =
 
 -- given an optional channel name and a translation context, returns the corresponding printer
 getAttackerChannel :: TranslationContext
-                   -> Maybe SapicTerm -> (Doc, S.Set ProverifHeader)
+                   -> Maybe SapicTerm -> (Doc, S.Set ProVerifHeader)
 getAttackerChannel tc t1 =  case (t1, attackerChannel tc) of
           (Just tt1, _) -> ppSapicTerm tc tt1
           (Nothing, Just (LVar n _ _ )) ->  (text n,S.empty)

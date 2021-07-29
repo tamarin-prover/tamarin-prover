@@ -78,7 +78,7 @@ process:
 
 
 
-lemma source [sources, reuse]:
+lemma source [sources, reuse, output=[msr]]:
   " (All ni m1 #i.
        IN_R_1_ni( ni, m1) @ i
        ==>
@@ -95,7 +95,7 @@ lemma source [sources, reuse]:
        )
     )
 "
-lemma secrecy[reuse]:
+lemma secrecy[reuse, output=[proverif,msr]]:
         "not (
                 Ex pka pkb k #t1 #t2 #i1 #i2.
                  SessionA(pka,pkb,k)@t1
