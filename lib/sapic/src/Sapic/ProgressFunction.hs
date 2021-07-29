@@ -57,8 +57,8 @@ blocking _                         =  False
 
 -- | next position to jump to
 next :: (Num a, Ord a) => AnProcess ann -> S.Set [a]
-next (ProcessNull _) = S.empty
-next (ProcessAction _ _ _ ) = S.singleton [1]
+next ProcessNull {} = S.empty
+next ProcessAction {} = S.singleton [1]
 next (ProcessComb NDC _ pl pr) = nextOrChild pl [1] `S.union` nextOrChild pr [2]
     where nextOrChild p' pos = if blocking p' then
                                 pos <.> next p'
