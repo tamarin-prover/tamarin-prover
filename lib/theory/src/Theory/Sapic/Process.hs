@@ -36,6 +36,7 @@ module Theory.Sapic.Process (
     , mapTermsComb
     , applyM
     , processAddAnnotation
+    , varsProc
     -- pretty printing
     , prettySapic'
     , prettySapicAction'
@@ -48,8 +49,8 @@ module Theory.Sapic.Process (
 
 import Data.Binary
 import Data.Data
-import Data.Set hiding (map)
-import qualified Data.Set as Set (map)
+import Data.Set hiding (map, union)
+import qualified Data.Set as Set (map, foldl)
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
@@ -109,7 +110,7 @@ data Process ann v =
         ProcessNull ann
     |   ProcessComb (ProcessCombinator v) ann (Process ann v) (Process ann v)
     |   ProcessAction (SapicAction v) ann (Process ann v)
-     deriving(Generic, Data )
+     deriving(Generic, Data)
 
 type LSapicAction = SapicAction SapicLVar
 type LProcessCombinator = ProcessCombinator SapicLVar
@@ -167,7 +168,6 @@ mapTermsComb f ff fv c
         | NDC    <- c   = NDC
         | ProcessCall s vs ts <- c = ProcessCall s (map fv vs) (map f ts)
 
-
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
 -- to subprocess. @gAct@ and @gComb@ reconstruct result, e.g., process from
@@ -224,7 +224,7 @@ traverseProcess fNull fAct fComb gAct gComb p
     | (ProcessNull ann) <- p = fNull ann
     | (ProcessAction ac ann p') <- p = do
             fAct ann ac -- 1. act on current process, potentially updating state
-            p''<- traverseProcess fNull fAct fComb gAct gComb p'  -- 2. process subtree with updated trace 
+            p''<- traverseProcess fNull fAct fComb gAct gComb p'  -- 2. process subtree with updated trace
             gAct ac ann p'' -- 3. reconstruct result from state and subtree's result
     | (ProcessComb c ann pl pr) <- p = do
             fComb ann c
@@ -232,7 +232,7 @@ traverseProcess fNull fAct fComb gAct gComb p
             rr <- traverseProcess fNull fAct fComb gAct gComb pr
             gComb c ann rl rr
 
--- | Traverse a set. We need this because the typeclass Traverse does not apply to sets, 
+-- | Traverse a set. We need this because the typeclass Traverse does not apply to sets,
 -- because that would require Functor to apply, which is in contradiction to
 -- Data.Set requiring it's elements to have Ord.
 traverseSet :: (Eq a1, Applicative f) => (a2 -> f a1) -> Set a2 -> f (Set a1)
@@ -327,14 +327,14 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v) => Apply s (SapicAction v) wher
     apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
 instance  Apply SapicSubst (ProcessCombinator SapicLVar) where
-    apply subst (Let t1 t2 vs) 
+    apply subst (Let t1 t2 vs)
             = Let (apply subst t1) (apply subst t2) (applyMatchVars subst vs)
     apply subst c
             = mapTermsComb (apply subst) (apply subst) (apply subst) c
 
 -- | Substitute for LVars, ignoring types
 instance {-# OVERLAPPABLE #-} (Ord v, Apply s v) => Apply s (ProcessCombinator v) where
-    apply subst (Let t1 t2 vs) 
+    apply subst (Let t1 t2 vs)
             = Let (f t1) (f t2) (applyMatchVars' f vs)
         where f = apply subst -- use same instance of Apply for t2 and applyMatchVars'
     apply subst c
@@ -355,6 +355,17 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Proces
                 ProcessComb (apply subst c) (apply subst ann) (apply subst pl) (apply subst pr)
     apply subst (ProcessAction ac ann p') =
                 ProcessAction (apply subst ac) (apply subst ann) (apply subst p')
+
+-- | Get all variables for a process
+varsProc :: Ord v => Process ann v -> Set v
+varsProc p = foldProcess fNull fAct fComb gAct gComb empty p
+  where
+        fNull a ann  = a
+        fAct a ann ac =  a <> foldMap singleton ac
+--        fAct a ann ac =  a
+        fComb a ann c = a <> foldMap singleton c
+        gAct a' ann r ac = a'
+        gComb a' ann rl rr c = a'
 
 -------------------------
 -- Applying substitutions ( with error messages )
@@ -501,12 +512,12 @@ prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> Set SapicLVar
     -> String)
     -> Process ann SapicLVar -> d
-prettySapic' ppRR p 
+prettySapic' ppRR p
     | (ProcessNull _) <- p = text "0"
     | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
     | (ProcessComb c _ pl pr) <- p =  r pl <-> text (prettySapicComb c) <-> r pr
     | (ProcessAction Rep _ p') <- p = ppAct Rep <> parens (r p')
-    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a 
+    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
     | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a <> semi $-$ nest 1 (parens (r p'))
     | (ProcessAction a _ p') <- p = ppAct a <> semi $-$ r p'
     where
@@ -534,4 +545,3 @@ prettySapicTopLevel' _ (ProcessNull _) = "0"
 prettySapicTopLevel' _ (ProcessComb c _ _ _)  = prettySapicComb c
 prettySapicTopLevel' prettyRuleRestr (ProcessAction Rep _ _)  = prettySapicAction' prettyRuleRestr Rep
 prettySapicTopLevel' prettyRuleRestr (ProcessAction a _ _)  = prettySapicAction' prettyRuleRestr a ++ ";"
-
