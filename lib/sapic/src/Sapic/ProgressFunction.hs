@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TupleSections #-}
--- Copyright   : (c) 2019-2021 Robert Künnemann 
+-- Copyright   : (c) 2019-2021 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -70,6 +70,7 @@ next ProcessComb{} = S.fromList $ [[1],[2]]
 next0 :: (Num a, Ord a) => LProcess ann -> S.Set [a]
 next0 ProcessNull {} = S.singleton []
 next0 ProcessAction {} = S.singleton [1]
+next0 (ProcessComb ProcessCall{} _ _ _) = S.singleton [1]
 next0 (ProcessComb NDC _ pl pr) = next0OrChild pl [1] `S.union` next0OrChild pr [2]
     where next0OrChild p' pos = if blocking p' then
                                 pos <.> next0 p'
