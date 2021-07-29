@@ -50,7 +50,7 @@ module Theory.Sapic.Process (
 import Data.Binary
 import Data.Data
 import Data.Set hiding (map, union)
-import qualified Data.Set as Set (map, foldl)
+import qualified Data.Set as Set (map)
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
@@ -357,15 +357,8 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Proces
                 ProcessAction (apply subst ac) (apply subst ann) (apply subst p')
 
 -- | Get all variables for a process
-varsProc :: Ord v => Process ann v -> Set v
-varsProc p = foldProcess fNull fAct fComb gAct gComb empty p
-  where
-        fNull a ann  = a
-        fAct a ann ac =  a <> foldMap singleton ac
---        fAct a ann ac =  a
-        fComb a ann c = a <> foldMap singleton c
-        gAct a' ann r ac = a'
-        gComb a' ann rl rr c = a'
+varsProc :: (Ord v, Show v) => Process ann v -> Set v
+varsProc p = foldMap singleton p -- foldProcess fNull fAct fComb gAct gComb empty p
 
 -------------------------
 -- Applying substitutions ( with error messages )
