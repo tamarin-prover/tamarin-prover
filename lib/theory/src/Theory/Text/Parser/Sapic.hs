@@ -13,6 +13,8 @@ module Theory.Text.Parser.Sapic(
     process
     , processDef
     , toplevelprocess
+    , equivLemma
+    , diffEquivLemma
 )
 where
 
@@ -198,6 +200,25 @@ process thy=
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   )
+
+equivLemma :: OpenTheory -> Parser SapicElement
+equivLemma thy = do
+               _ <- try $ symbol "equivLemma"
+               _ <- colon
+               p1 <- process thy
+               p2 <- process thy
+               return $ EquivLemma p1 p2
+
+diffEquivLemma :: OpenTheory -> Parser SapicElement
+diffEquivLemma thy = do
+               _ <- try $ symbol "diffEquivLemma"
+               _ <- colon
+               msig <- getState
+               putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+               p1 <- process thy
+               p2 <- process thy
+               return $ EquivLemma p1 p2
+
 
 elseprocess :: OpenTheory
     -> ParsecT

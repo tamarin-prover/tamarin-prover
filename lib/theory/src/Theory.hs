@@ -735,7 +735,6 @@ addRightLemma lem =
 -- | A formal comment is a header together with the body of the comment.
 type FormalComment = (String, String)
 
-
 -- | SapicItems can be processes and accountability lemmas
 data SapicElement=
       ProcessItem PlainProcess
@@ -743,6 +742,8 @@ data SapicElement=
       | SignatureBuiltin String
       | FunctionTypingInfo SapicFunSym
       | ExportInfoItem ExportInfo
+      | DiffEquivLemma PlainProcess
+      | EquivLemma PlainProcess PlainProcess
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -914,17 +915,6 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
     EitherRestrictionItem (side, rstr)  -> fRestriction (side, rstr)
     DiffTextItem txt  -> fText txt
 
--- fold a sapic item.
-foldSapicItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (SapicFunSym -> a) -> (ExportInfo -> a) -> (String -> a)
-    -> SapicElement -> a
-foldSapicItem fProcess fProcessDef fFunSym fExportInfo fSignatureBuiltin i = case i of
-    ProcessItem     proc  -> fProcess proc
-    ProcessDefItem     pDef  -> fProcessDef pDef
-    FunctionTypingInfo t -> fFunSym t
-    ExportInfoItem ei -> fExportInfo ei
-    SignatureBuiltin s -> fSignatureBuiltin s
-
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
 mapTheoryItem f g =
@@ -986,14 +976,15 @@ sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (cons
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
-theoryProcesses = foldSapicItem return (const []) (const [])  (const []) (const [])  <=< sapicElements
+theoryProcesses t = [ i | ProcessItem i <- sapicElements t]
 
 -- | All process definitions of a theory.
 theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs = foldSapicItem (const []) return (const [])  (const []) (const []) <=< sapicElements
+theoryProcessDefs t = [ i | ProcessDefItem i <- sapicElements t]
+--theoryProcessDefs = foldSapicItem (const []) return (const [])  (const []) (const [])  (\_ _ -> []) <=< sapicElements
 
 theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
-theoryFunctionTypingInfos = foldSapicItem (const []) (const []) return (const []) (const []) <=< sapicElements
+theoryFunctionTypingInfos t = [ i | FunctionTypingInfo i <- sapicElements t]
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
@@ -1001,11 +992,11 @@ theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) r
 
 -- | All export info definitions of a theory.
 theoryExportInfos :: Theory sig c b p SapicElement -> [ExportInfo]
-theoryExportInfos =  foldSapicItem (const []) (const []) (const []) return (const [])  <=< sapicElements
+theoryExportInfos t = [ i | ExportInfoItem i <- sapicElements t]
 
 -- | All Builtins of a theory
 theoryBuiltins :: Theory sig c r p SapicElement -> [String]
-theoryBuiltins = foldSapicItem (const []) (const [])  (const []) (const []) return <=< sapicElements
+theoryBuiltins t = [ i | SignatureBuiltin i <- sapicElements t]
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -2572,6 +2563,8 @@ emptyString _ = text ("")
 
 prettySapicElement :: HighlightDocument d => SapicElement -> d
 prettySapicElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
+prettySapicElement (DiffEquivLemma p) = text "diffEquivLemma" <> colon $-$ (nest 2 $ prettyProcess p)
+prettySapicElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ prettyProcess p1) $$ (nest 2 $ prettyProcess p2)
 prettySapicElement (ProcessDefItem p) =
     (text "let ")
     <->

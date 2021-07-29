@@ -202,6 +202,12 @@ theory flags0 inFile = do
            addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems flags thy'
+      , do
+           lem <- equivLemma thy
+           addItems flags (modify thyItems (++ [SapicItem lem]) thy)
+      , do
+           lem <- diffEquivLemma thy
+           addItems flags (modify thyItems (++ [SapicItem lem]) thy)
       , do thy' <- preddeclaration thy
            addItems flags (thy')
       , do thy'  <- export thy
