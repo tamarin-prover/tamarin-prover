@@ -128,23 +128,23 @@ process:
 
 
 
-export requests:
-"
-let sys1 = ( new skA; ( !^1( P(skA))
+equivLemma:
+
+( new skA; ( !( P(skA))
 |
  ( new skB;
-        out(att,pk(skB)); !^1 (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
-)).
+        out(att,pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
+))
 
-let sys2 =  ( new skA; ( !^1( P(skA))
+( new skA; ( !( P(skA))
 
 |
  ( new skB;
-        out(att,pk(skB)); !^1 ( new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))))
-)).
+        out(att,pk(skB)); ! ( new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))))
+))
 
-query trace_equiv(sys1,sys2).
-"
+
+
 
 
 /*

@@ -27,17 +27,19 @@ import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
+import Theory.Text.Parser.Sapic
+
 import Data.Functor (($>))
 
 -- | Parse an arbitrary type consisting of simple constructors
 constructorp :: (Show a, Enum a, Bounded a) => Parser a
 constructorp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
-  where 
-    constructorList = enumFrom minBound 
+  where
+    constructorList = enumFrom minBound
 
 -- modulep :: Parser Section
 -- modulep = asum $ map (\x -> symbol_ (show x) $> x) modules
---   where 
+--   where
 --     modules = enumFrom minBound :: [Section]
 
 -- | Parse a 'LemmaAttribute'.
