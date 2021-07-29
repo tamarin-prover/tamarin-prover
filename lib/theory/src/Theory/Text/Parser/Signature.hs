@@ -209,13 +209,6 @@ export thy = do
                     '"'  -> mzero
                     _    -> return c
 
--- TODO remove if compiles
--- heuristic :: Bool -> Parser [GoalRanking]
--- heuristic diff =
---       symbol "heuristic" *> colon *> parseGoalRanking
---   where
---     parseGoalRanking = if diff then map charToGoalRankingDiff <$> identifier else map charToGoalRanking     <$> identifier
-
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
 

@@ -37,6 +37,16 @@ import           Main.Utils
 
 -- import           Debug.Trace
 
+data ModuleType = ModuleSpthy | ModuleSpthyTyped | ModuleMsr | ModuleProverif | ModuleDeepSec 
+instance Show ModuleType where
+    show(ModuleSpthy) = "spthy"
+    show(ModuleSpthyTyped) ="spthytyped"
+    show(ModuleMsr) ="msr"
+    show(ModuleProverif) ="proverif"
+    show(ModuleDeepSec) ="deepsec"
+
+descriptions(ModuleSpthy) = "bbla"
+
 -- | Batch processing mode.
 batchMode :: TamarinMode
 batchMode = tamarinMode
