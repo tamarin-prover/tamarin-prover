@@ -43,7 +43,6 @@ let B = (
            event Recv(a, b, m);
            unlock id
      )
-
 )
 
 /* Main process */
