@@ -64,7 +64,7 @@ translate th = case theoryProcesses th of
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- apply path compression
-                eProtoRule <- pathCompression $ map toRule (initRules ++ protoRule)
+                eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
                 -- add restrictions
@@ -81,6 +81,11 @@ translate th = case theoryProcesses th of
         translateTermsReport anp
       else
         anp
+    pathComp p =
+      if L.get transProgress ops then
+        return p
+      else
+        pathCompression p
     optimizeStateChannel anp =
       if L.get stateChannelOpt ops then
         annotatePureStates anp
