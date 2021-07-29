@@ -156,8 +156,7 @@ progressRestr anP restrictions  = do
     where 
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anP pos
-            restrL <- mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
-            return restrL
+            mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
             where
                 name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ toList tos)
                 formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion tos
