@@ -291,7 +291,7 @@ import           Theory.Tools.RuleVariants
 import           Term.Positions
 
 import           Utils.Misc
-
+import           Theory.Module
 ------------------------------------------------------------------------------
 -- Specific proof types
 ------------------------------------------------------------------------------
@@ -584,6 +584,7 @@ data LemmaAttribute =
        | LHSLemma
        | RHSLemma
        | LemmaHeuristic [GoalRanking]
+       | LemmaModule ModuleType
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 

@@ -27,6 +27,21 @@ import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
+import Data.Functor (($>))
+import Theory.Module
+
+data Section = SecPre | SecProcess | SecLemma 
+
+-- | Parse an arbitrary type consisting of simple constructors
+consp :: Parser a
+consp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
+  where 
+    constructorList = enumFrom minBound :: [a]
+
+-- modulep :: Parser Section
+-- modulep = asum $ map (\x -> symbol_ (show x) $> x) modules
+--   where 
+--     modules = enumFrom minBound :: [Section]
 
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Bool -> Maybe FilePath -> Parser LemmaAttribute
@@ -37,8 +52,9 @@ lemmaAttribute diff workDir = asum
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
-  , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "hide_lemma" *> opEqual *> (HideLemma <$> identifier)
+  , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "output"  *> opEqual *> LemmaModule $ list constp
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
