@@ -35,17 +35,8 @@ import           Main.Environment
 import           Main.TheoryLoader
 import           Main.Utils
 
+import           Theory.Module
 -- import           Debug.Trace
-
-data ModuleType = ModuleSpthy | ModuleSpthyTyped | ModuleMsr | ModuleProverif | ModuleDeepSec 
-instance Show ModuleType where
-    show(ModuleSpthy) = "spthy"
-    show(ModuleSpthyTyped) ="spthytyped"
-    show(ModuleMsr) ="msr"
-    show(ModuleProverif) ="proverif"
-    show(ModuleDeepSec) ="deepsec"
-
-descriptions(ModuleSpthy) = "bbla"
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -79,15 +70,12 @@ batchMode = tamarinMode
     outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
-      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") "spthy|spthytyped|msr|proverif|deepsec"
-        "What to output:\
-\- spthy (including processes),\
-\- spthy with explicit types,\
-\- pure msrs (processes translated to msrs) or\
-\- DeepSec or\
-\- ProVerif."
+      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") moduleList
+        moduleDescriptions
       ]
-
+    moduleConstructors = enumFrom minBound :: [ModuleType]
+    moduleList = intercalate "|" $ map show moduleConstructors
+    moduleDescriptions = "What to output:" ++ intercalate " " (map (\x -> "\n -"++description x) moduleConstructors) ++ "."
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
