@@ -86,6 +86,7 @@ data TransAction =
 -- actions. Semistates are used in rules where a SAPIC step might take more
 -- than one MSR step, i.e., messages over private channels.
 data StateKind  = LState | PState | LSemiState | PSemiState
+  deriving Eq
 data TransFact =  Fr LVar | In SapicTerm
             | Out SapicTerm
             | Message SapicTerm SapicTerm

@@ -85,15 +85,22 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
 -- inverse. We thus add ProgressTo to each such rule that has the *old* state in
 -- the premise (we don't want to move into Semistates too early). ProgressTo is
 -- annotated with the inverse of the child's position, for verification speedup.
-addProgressTo :: Foldable t =>
-                 ([Int] -> Maybe ProcessPosition)
-                 -> [Int]
-                 -> (t TransFact, [TransAction], c, d)
-                 -> (t TransFact, [TransAction], c,d )
+-- addProgressTo :: Foldable t =>
+--                  ([Int] -> Maybe ProcessPosition)
+--                  -> [Int]
+--                  -> ([] TransFact, [TransAction], c, d)
+--                  -> (t TransFact, [TransAction], c,d )
+addProgressTo :: Foldable t => ([Int] -> Maybe ProcessPosition) -> [Int] -> (a, [TransAction], t TransFact, d) -> (a, [TransAction], t TransFact, d)
 addProgressTo invPF child (l,a,r,res) 
-  | any isState l
+--   | any isState l
+--   , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
+  | any isTargetState r
   , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
   | otherwise                     = (l,a,r,res)
+  where
+      isTargetState (State kind nextPos _) = nextPos == child && (kind == PState || kind == LState)
+      isTargetState _ = False
+
 
 
 -- | Null Processes are translated without any modification

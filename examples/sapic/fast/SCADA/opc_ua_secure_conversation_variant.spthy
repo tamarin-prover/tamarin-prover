@@ -1,12 +1,14 @@
-theory OPC_UA_Secure_Communication
+theory OPC_UA_Secure_Communication_Variant
 begin
 
 section{* The OPC UA Secure Conversation protocol *}
 
 /*
  * Protocol:    OPC UA Secure Conversation protocol
- * Date:        July 2016
+ * Date:        July 2021
  * Status:      Working
+ *
+ * See NOTE below.
  */
 
 builtins: symmetric-encryption, hashing, multiset, reliable-channel
@@ -37,7 +39,10 @@ let A = (
 let B = (
     let id = <b,a> in
     !( lock id;
-       in('r', <MH, SH, senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, kSign)>, kEnc)>);
+       // NOTE: Variant where we check the mac after pattern matching
+       /* in('r', <MH, SH, senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, kSign)>, kEnc)>); */
+       in('r', <MH, SH, senc(<seq, m, pad, xmac>, kEnc)>);
+       if xmac = mac(<MH, SH, seq, m, pad>, kSign) then
            event Seq_Recv(a, b, seq);
            event Recv(a, b, m);
            unlock id
