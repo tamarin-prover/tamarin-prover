@@ -30,13 +30,11 @@ import Theory.Text.Parser.Signature
 import Data.Functor (($>))
 import Theory.Module
 
-data Section = SecPre | SecProcess | SecLemma 
-
 -- | Parse an arbitrary type consisting of simple constructors
-consp :: Parser a
-consp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
+constructorp :: (Show a, Enum a, Bounded a) => Parser a
+constructorp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
   where 
-    constructorList = enumFrom minBound :: [a]
+    constructorList = enumFrom minBound 
 
 -- modulep :: Parser Section
 -- modulep = asum $ map (\x -> symbol_ (show x) $> x) modules
@@ -54,7 +52,7 @@ lemmaAttribute diff workDir = asum
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma" *> opEqual *> (HideLemma <$> identifier)
   , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
-  , symbol "output"  *> opEqual *> LemmaModule $ list constp
+  , symbol "output"  *> opEqual *> (LemmaModule <$> list constructorp)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
