@@ -10,8 +10,10 @@ module Sapic.Typing (
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Foldable as F
+import qualified Data.Set as S
 import Data.Maybe
 import Data.Tuple
+
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Catch
 import Theory
@@ -19,7 +21,7 @@ import Theory.Sapic
 import Sapic.Exceptions
 import Sapic.Annotation
 import Sapic.Bindings
-import Control.Monad.Fresh 
+import Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 import Data.Bifunctor ( Bifunctor(second) )
 
@@ -185,13 +187,10 @@ typeTheory th = fst <$> typeTheoryEnv th
 --     Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
     Process ann SapicLVar -> m (Process ann SapicLVar)
-renameUnique p = evalFreshT actualCall initState -- TODO instead of nothingUsed, should collect existing bindings in process...
+renameUnique p = Precise.evalFreshT actualCall initState
     where
-        -- stateMonadCall = runStateT actualCall emptySubst
         actualCall = renameUnique' emptySubst p
-        -- initState = Precise.nothingUsed 
-        initState = nothingUsed 
-        -- initState = Map.fromList [ (lvarName v,1) | v <- frees p  ]
+        initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
 
 -- renameUnique' ::
 --     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
@@ -200,7 +199,7 @@ renameUnique' :: (MonadFresh m, Apply (Subst Name LVar) ann, GoodAnnotation ann
     ) =>
     Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
-        -- p' <- applyM initSubst p -- apply outstanding substitution subst 
+        -- p' <- applyM initSubst p -- apply outstanding substitution subst
         let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best
         case p' of
             ProcessNull _ -> return p'
@@ -219,12 +218,12 @@ renameUnique' initSubst p = do
                 return $ ProcessComb comb' ann' pl' pr'
     where
         substFromVarList = substFromList . map (second varTerm)
-        -- f v = do v' <- freshSapicLVarCopy v; return (v, v') 
-        -- we rename based on LVars, not SapicLVars because variables we want to rename are not properly typed yet. 
-        f v = do 
+        -- f v = do v' <- freshSapicLVarCopy v; return (v, v')
+        -- we rename based on LVars, not SapicLVars because variables we want to rename are not properly typed yet.
+        f v = do
             let lv = toLVar v
             v' <- freshLVar (lvarName lv) (lvarSort lv);
-            return (lv, v') 
+            return (lv, v')
         mkSubst bvars = do -- create substitution renaming all elements of bind' into a fresh variable
                 vmap <- mapM f bvars
                 return (substFromVarList vmap, substFromVarList $ map swap vmap)

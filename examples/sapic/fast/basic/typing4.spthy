@@ -1,0 +1,18 @@
+theory Typing
+begin
+
+functions: f(bitstring):bitstring, g(lol):lol,
+            h/1 // implicitely typed
+
+builtins: multiset
+
+process:
+        new x:lol;
+        out(x) |         new x:lol; new x.1:lol; event Run(x,x.1);
+        out(<x,x.1>)
+
+lemma sanity:
+ exists-trace
+ "Ex x y #i. Run(x,y)@i & not(x=y)"
+
+end
