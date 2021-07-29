@@ -80,12 +80,11 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
                                   . addProgressTo invPF (rhsP pos)
 
 -- | Add ProgressTo events:
--- corresponds to step2 (child[12] p) in Firsttranslation.ml if one of the
--- direct childen of anrule is in the range of the pf it has an inverse. We
--- thus add ProgressTo to each such rule that has the *old* state in the
--- premise (we don't want to move into Semistates too early). ProgressTo is
--- annotated with the inverse of the child's position, for verification
--- speedup.
+--   (corresponds to step2 (child[12] p) in Firsttranslation.ml)
+-- If one of the direct childen of anrule is in the range of the pf it has an
+-- inverse. We thus add ProgressTo to each such rule that has the *old* state in
+-- the premise (we don't want to move into Semistates too early). ProgressTo is
+-- annotated with the inverse of the child's position, for verification speedup.
 addProgressTo :: Foldable t =>
                  ([Int] -> Maybe ProcessPosition)
                  -> [Int]
