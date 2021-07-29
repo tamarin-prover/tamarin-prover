@@ -28,7 +28,6 @@ import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
 import Data.Functor (($>))
-import Theory.Module
 
 -- | Parse an arbitrary type consisting of simple constructors
 constructorp :: (Show a, Enum a, Bounded a) => Parser a

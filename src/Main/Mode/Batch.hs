@@ -76,6 +76,7 @@ batchMode = tamarinMode
     moduleConstructors = enumFrom minBound :: [ModuleType]
     moduleList = intercalate "|" $ map show moduleConstructors
     moduleDescriptions = "What to output:" ++ intercalate " " (map (\x -> "\n -"++description x) moduleConstructors) ++ "."
+
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
@@ -132,7 +133,7 @@ run thisMode as
           out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
       | (argExists "parseOnly" as) || (argExists "outModule" as) =
           -- out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
-          out (const Pretty.emptyDoc) (choosePretty $ findArg "outModule" as) (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) choosePretty (loadOpenThy       as inFile)
       | argExists "diff" as =
           out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy as inFile)
       | otherwise        =
@@ -157,14 +158,12 @@ run thisMode as
                           , "         The analysis results might be wrong!" ]
             Pretty.$--$ prettyClosedDiffSummary thy
 
-        choosePretty Nothing = return . prettyOpenTheory -- output as is, including SAPIC elements
-        choosePretty (Just x) 
-          | x == show ModuleSpthy      = return . prettyOpenTheory  -- output as is, including SAPIC elements
-          | x == show ModuleSpthyTyped = return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
-          | x == show ModuleMsr        = return . prettyOpenTranslatedTheory <=< Sapic.translate <=< Sapic.typeTheory
-          | x == show ModuleProVerif   = prettyProVerifTheory <=< Sapic.typeTheoryEnv
-          | x == show ModuleDeepSec    = prettyDeepSecTheory <=< Sapic.typeTheory
-        choosePretty _ = error "output mode not supported."
+        choosePretty = case getOutputModule as of
+          ModuleSpthy      -> return . prettyOpenTheory  -- output as is, including SAPIC elements
+          ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
+          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< Sapic.translate <=< Sapic.typeTheory
+          ModuleProVerif   -> prettyProVerifTheory <=< Sapic.typeTheoryEnv
+          ModuleDeepSec    -> prettyDeepSecTheory <=< Sapic.typeTheory
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load

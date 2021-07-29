@@ -128,6 +128,14 @@ diff as = if (argExists "diff" as) then ["diff"] else []
 quitOnWarning :: Arguments -> [String]
 quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
 
+
+lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
+lemmaSelectorByModule as lem = case lemmaModules of
+    [] -> True -- default to true if no modules (or only empty ones) are set
+    _  -> getOutputModule as `elem` lemmaModules
+    where 
+        lemmaModules = concat [ m | LemmaModule m <- get lAttributes lem] 
+
 -- | Select lemmas for proving
 lemmaSelector :: Arguments -> Lemma p -> Bool
 lemmaSelector as lem
@@ -297,7 +305,7 @@ closeThyWithMaude sig as thy0 = do
   let thy1 = wfCheck thy0
   -- close and prove
   let cthy = closeTheoryWithMaude sig thy1 (argExists "auto-sources" as)
-  return $ proveTheory (lemmaSelector as) prover $ partialEvaluation cthy
+  return $ proveTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
@@ -325,6 +333,9 @@ closeDiffThy as thy0 = do
   sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy0
   closeDiffThyWithMaude sig as thy0
 
+(&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
+(&&&) f g x = f x && g x
+
 -- | Close a diff theory according to arguments.
 closeDiffThyWithMaude :: SignatureWithMaude -> Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThyWithMaude sig as thy0 = do
@@ -333,7 +344,7 @@ closeDiffThyWithMaude sig as thy0 = do
   let thy2 = wfCheckDiff thy0
   -- close and prove
   let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
-  return $ proveDiffTheory (lemmaSelector as) (diffLemmaSelector as) prover diffprover $ partialEvaluation cthy
+  return $ proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) (diffLemmaSelector as) prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------

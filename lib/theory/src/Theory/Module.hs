@@ -12,11 +12,18 @@ import Control.DeepSeq ( NFData )
 import Data.Binary ( Binary )
 import Data.Data ( Data )
 
-data ModuleType = ModuleSpthy | ModuleSpthyTyped | ModuleMsr | ModuleProVerif | ModuleDeepSec
+data ModuleType =
+   -- Too generate a parser from the show() values, these need to be ordered
+   -- such that no preceding show value is a prefix of another one that comes
+  ModuleSpthyTyped  
+  | ModuleSpthy 
+  | ModuleMsr 
+  | ModuleProVerif 
+  | ModuleDeepSec
   deriving (Eq, Ord, Enum, Bounded, Generic, Data, NFData, Binary)
 instance Show ModuleType where
-    show ModuleSpthy = "spthy"
     show ModuleSpthyTyped ="spthytyped"
+    show ModuleSpthy = "spthy"
     show ModuleMsr ="msr"
     show ModuleProVerif ="proverif"
     show ModuleDeepSec ="deepsec"
