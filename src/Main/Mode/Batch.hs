@@ -126,7 +126,7 @@ run thisMode as
 
     processThy :: FilePath -> IO (Pretty.Doc)
     processThy inFile
-      -- | argExists "html" as =
+      -- bla | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
       | (argExists "parseOnly" as) && (argExists "diff" as) =
           out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
@@ -158,11 +158,12 @@ run thisMode as
             Pretty.$--$ prettyClosedDiffSummary thy
 
         choosePretty Nothing = return . prettyOpenTheory -- output as is, including SAPIC elements
-        choosePretty (Just "spthy") = (return . prettyOpenTheory)  -- output as is, including SAPIC elements
-        choosePretty (Just "spthytyped") = (return . prettyOpenTheory) <=< Sapic.typeTheory -- additionally type
-        choosePretty (Just "msr") = (return . prettyOpenTranslatedTheory) <=< Sapic.translate <=< Sapic.typeTheory
-        choosePretty (Just "proverif") = prettyProVerifTheory <=< Sapic.typeTheoryEnv
-        choosePretty (Just "deepsec") = prettyDeepSecTheory <=< Sapic.typeTheory
+        choosePretty (Just x) 
+          | x == show ModuleSpthy      = return . prettyOpenTheory  -- output as is, including SAPIC elements
+          | x == show ModuleSpthyTyped = return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
+          | x == show ModuleMsr        = return . prettyOpenTranslatedTheory <=< Sapic.translate <=< Sapic.typeTheory
+          | x == show ModuleProVerif   = prettyProVerifTheory <=< Sapic.typeTheoryEnv
+          | x == show ModuleDeepSec    = prettyDeepSecTheory <=< Sapic.typeTheory
         choosePretty _ = error "output mode not supported."
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
