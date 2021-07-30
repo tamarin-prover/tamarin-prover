@@ -201,7 +201,7 @@ x ⊕ x       = zero
 : This theory introduces the associative-commutative operator `+` which is usually
   used to model multisets.
 
-``reliable-channel`:
+`reliable-channel`:
 
 : This theory introduces support for reliable channel in the [process
 calculus](006_protocol-specification-processes.md).
