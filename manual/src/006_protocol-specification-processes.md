@@ -3,8 +3,8 @@ Model Specification using Processes {#sec:model-specification-proc}
 ===================
 
 In this section, we provide an informal description of the process calculus now
-integrated in tamarin. It is called SAPIC, which stands for "Stateful APlied
-PI-calculus".
+integrated in tamarin. It is called SAPIC, which stands for "Stateful Applied
+PI-Calculus".
 The full details of this model can be found
 in [@KK-jcs16] and [@BaDrKr-2016-liveness].
 
