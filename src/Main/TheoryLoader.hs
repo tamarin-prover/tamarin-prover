@@ -14,12 +14,16 @@ module Main.TheoryLoader (
 
   -- ** Loading open theories
   , loadOpenThy
+  , loadOpenTranslatedThy
+  , loadOpenAndTranslatedThy
 
   -- ** Loading and closing theories
+  , closeThy
   , loadClosedThy
   , loadClosedThyWfReport
   , loadClosedThyString
   , reportOnClosedThyStringWellformedness
+
 
   -- ** Loading open diff theories
   , loadOpenDiffThy
@@ -54,7 +58,7 @@ import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 
 -- import           Control.Basics
-import           Control.Monad
+
 import           Control.Category
 
 import           System.Console.CmdArgs.Explicit
@@ -66,9 +70,8 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import           Sapic
+import           Sapic.Accountability
 import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
-
-import           Sapic.Accountability                (thyReportRP)
 
 import           Main.Environment
 
@@ -133,38 +136,49 @@ quitOnWarning :: Arguments -> [String]
 quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
 
 -- | Load an open theory from a file.
+loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
+loadOpenThy as inFile = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
+
+-- | Load an open theory from a file. Returns the open translated theory.
+loadOpenTranslatedThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
+loadOpenTranslatedThy as inFile =  do
+    thy <- loadOpenThy as inFile
+    thy' <- Sapic.translate thy
+    return thy'
+
+-- | Load an open theory from a file. Returns the open and the translated theory.
+loadOpenAndTranslatedThy :: Arguments -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
+loadOpenAndTranslatedThy as inFile =  do
+    thy <- loadOpenThy as inFile
+    thy' <- Sapic.translate thy
+    return (thy, thy')
+
+-- | Load a closed theory from a file.
+loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
+loadClosedThy as inFile = do
+  (openThy, transThy) <- loadOpenAndTranslatedThy as inFile
+  closeThy as openThy transThy
+
+-- | Load an open diff theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
 loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
 
--- | Load an open theory from a file.
-loadOpenThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
-loadOpenThy as inFile =  do
-    thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    thy' <-  Sapic.translate thy
-
-    -- Create a RP report if the theory contains accountability lemmas.
-    unless (null $ theoryAccLemmas thy) $ thyReportRP thy
-    return thy'
-
--- | Load a closed theory.
+-- | Load a closed diff theory from a file.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThy as inFile = do
   thy0 <- loadOpenDiffThy as inFile
   thy1 <- addMessageDeductionRuleVariantsDiff thy0
   closeDiffThy as thy1
 
--- | Load a closed theory.
-loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
-
 -- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
-    thy0 <- loadOpenThy as inFile
-    thy <- addMessageDeductionRuleVariants thy0
-    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
+    (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
+    transThy <- addMessageDeductionRuleVariants transThy0
+    transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
-    case checkWellformedness thy sig of
+    case checkWellformedness transThy transSig
+      ++ checkPreTransWellformedness openThy of
       []     -> return ()
       report -> do
           putStrLn ""
@@ -176,9 +190,9 @@ loadClosedThyWfReport as inFile = do
           putStrLn ""
           putStrLn $ renderDoc $ prettyWfErrorReport report
           putStrLn $ replicate 78 '-'
-          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+          if "quit-on-warning" `elem` quitOnWarning as then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
     -- return closed theory
-    closeThyWithMaude sig as thy
+    closeThyWithMaude transSig as openThy transThy
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -209,7 +223,7 @@ loadClosedThyString as input =
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
             thy' <- Sapic.translate thy
-            Right <$> closeThy as thy' -- No "return" because closeThy gives IO (ClosedTheory)
+            Right <$> closeThy as thy thy' -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
@@ -236,7 +250,8 @@ reportOnClosedThyStringWellformedness as input =
       Right thy -> do
             thy' <- Sapic.translate thy
             sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
-            case checkWellformedness thy' sig of
+            case checkWellformedness thy' sig
+              ++ checkPreTransWellformedness thy of
                   []     -> return ""
                   report -> do
                     if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -259,21 +274,21 @@ reportOnClosedDiffThyStringWellformedness as input = do
 
 
 -- | Close a theory according to arguments.
-closeThy :: Arguments -> OpenTranslatedTheory -> IO ClosedTheory
-closeThy as thy0 = do
-  thy1 <- addMessageDeductionRuleVariants thy0
-  sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy1
-  closeThyWithMaude sig as thy1
+closeThy :: Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
+closeThy as openThy transThy = do
+  transThy' <- addMessageDeductionRuleVariants transThy
+  sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy'
+  closeThyWithMaude sig as openThy transThy'
 
 -- | Close a theory according to arguments.
-closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTranslatedTheory -> IO ClosedTheory
-closeThyWithMaude sig as thy0 = do
+closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
+closeThyWithMaude sig as openThy transThy = do
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
-  let thy1 = wfCheck thy0
+  let transThy' = wfCheck openThy transThy
   -- close and prove
-  let cthy = closeTheoryWithMaude sig thy1 (argExists "auto-sources" as)
-  return $ proveTheory lemmaSelector prover $ partialEvaluation cthy
+  let closedThy = closeTheoryWithMaude sig transThy' (argExists "auto-sources" as)
+  return $ proveTheory lemmaSelector prover $ partialEvaluation closedThy
     where
       -- apply partial application
       ----------------------------
@@ -284,10 +299,10 @@ closeThyWithMaude sig as thy0 = do
 
       -- wellformedness check
       -----------------------
-      wfCheck :: OpenTranslatedTheory -> OpenTranslatedTheory
-      wfCheck thy =
+      wfCheck :: OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
+      wfCheck othy tthy =
         noteWellformedness
-          (checkWellformedness thy sig) thy (elem "quit-on-warning" (quitOnWarning as))
+          (checkWellformedness tthy sig ++ checkPreTransWellformedness othy) transThy (elem "quit-on-warning" (quitOnWarning as))
 
       lemmaSelector :: Lemma p -> Bool
       lemmaSelector lem =

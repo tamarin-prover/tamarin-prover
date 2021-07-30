@@ -79,6 +79,7 @@ import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           Theory.Tools.Wellformedness
+import           Sapic.Accountability (checkPreTransWellformedness)
 
 import           Web.Settings
 import           Web.Types
@@ -1008,6 +1009,7 @@ htmlThyPath renderUrl info path =
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
              report = checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy)
+                   ++ checkPreTransWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.

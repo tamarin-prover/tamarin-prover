@@ -16,6 +16,7 @@ import           Control.DeepSeq                 (force)
 import           Control.Exception               (evaluate)
 import           Data.List
 import           Data.Maybe
+import           Sapic.Accountability            (checkPreTransWellformedness)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing                   (timed)
@@ -116,25 +117,28 @@ run thisMode as
     processThy inFile
       -- | argExists "html" as =
       --     generateHtml inFile =<< loadClosedThy as inFile
-      | (argExists "parseOnly" as) && (argExists "diff" as) =
-          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
+      | argExists "parseOnly" as && argExists "diff" as =
+          out (const Pretty.emptyDoc)  prettyOpenDiffTheory       (loadOpenDiffThy   as inFile)
       | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc)  prettyOpenTranslatedTheory (loadOpenTranslatedThy as inFile)
       | argExists "diff" as =
-          out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
-      | otherwise        =
-          out ppWfAndSummary          prettyClosedTheory     (loadClosedThy     as inFile)
+          out ppWfAndSummaryDiff       prettyClosedDiffTheory     (loadClosedDiffThy as inFile)
+      | otherwise = do
+          (openThy, transThy) <- loadOpenAndTranslatedThy as inFile
+          closedThy <- closeThy as openThy transThy
+          out (ppWfAndSummary openThy transThy) prettyClosedTheory (return closedThy)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 
-        ppWfAndSummary thy =
-            case checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy) of
+        ppWfAndSummary openThy transThy closedThy =
+            case checkWellformedness transThy (get thySignature closedThy)
+              ++ checkPreTransWellformedness openThy of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)
                                         ++ " wellformedness check failed!"
                           , "         The analysis results might be wrong!" ]
-            Pretty.$--$ prettyClosedSummary thy
+            Pretty.$--$ prettyClosedSummary closedThy
 
         ppWfAndSummaryDiff thy =
             case checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy) of

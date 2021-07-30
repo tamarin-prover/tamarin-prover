@@ -8,30 +8,30 @@
 -- Compute translation-specific restrictions
 module Sapic.Accountability (
         generateAccountabilityLemmas
-      , thyReportRP
+      , checkPreTransWellformedness
 ) where
 
-import           Control.Monad.Catch
-import           Control.Monad.Fresh
-import           Data.Maybe
-import qualified Extension.Data.Label   as L
+import           Text.PrettyPrint.Class ( Document(text, ($-$)), ($--$), vcat, Doc )
+import           Control.Monad.Catch ( MonadThrow )
+import           Control.Monad.Fresh ( MonadFresh, evalFreshT )
+import qualified Extension.Data.Label            as L
 import           Theory
-import           Theory.Tools.Wellformedness (formulaTerms)
-import           Debug.Trace
+import           Theory.Tools.Wellformedness ( WfErrorReport )
+
+
 
 ------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
 
--- | Create a lemma from a formula with quantifier. Copies accLemma's name
--- (plus suffix) and attributes.
+-- | Create a lemma from a formula with quantifier. Copies accLemma's name (plus suffix) and attributes.
 toLemma :: AccLemma -> TraceQuantifier -> String -> SyntacticLNFormula -> ProtoLemma SyntacticLNFormula ProofSkeleton
 toLemma accLemma quantifier suffix formula =
         skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
 
 -- | Quantify the given variables
 quantifyVars :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFormula) -> [LVar] -> SyntacticLNFormula -> SyntacticLNFormula
-quantifyVars quan vars fm = foldr (\s -> hinted quan s) fm vars
+quantifyVars quan vars fm = foldr (hinted quan) fm vars
 
 -- | Quantify all free variables
 quantifyFrees :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFormula) -> SyntacticLNFormula -> SyntacticLNFormula
@@ -99,6 +99,54 @@ caseTestFormulasExcept accLemma caseTest = map (L.get cFormula) (filter (\c -> L
 foldConn :: (SyntacticLNFormula -> SyntacticLNFormula -> SyntacticLNFormula) -> [SyntacticLNFormula] -> SyntacticLNFormula
 foldConn _ [fm] = fm
 foldConn op fms = foldl1 op fms
+
+-- | Get the actions in a formula and then extract their facts.
+formulaActionFacts :: ProtoFormula syn s c v -> [Fact (VTerm c (BVar v))]
+formulaActionFacts = foldFormula fAto (const []) id (\_ p q -> p ++ q) (\_ _ p -> p)
+    where
+        fAto a = case a of
+            Action _ f1 -> [f1]
+            _ -> []
+
+-- | Get the facts in the case tests of a theory.
+caseTestsFacts :: OpenTheory -> [Fact (VTerm Name (BVar LVar))]
+caseTestsFacts thy = concatMap (formulaActionFacts . L.get cFormula) (theoryCaseTests thy)
+
+-- | Get the LNTerms (in the premises, actions and conclusions) in the rules of a theory.
+rulesLNTerms :: OpenTheory -> [LNTerm]
+rulesLNTerms thy = concatMap factTerms $ rulesLNFacts thy
+
+-- | Get the LNFacts (in the premises, actions and conclusions) in the rules of a theory.
+rulesLNFacts :: OpenTheory -> [LNFact]
+rulesLNFacts thy = concat $ (rulesEPrems ++ rulesEActs ++ rulesEConcs ++ rulesACPrems ++ rulesACActs ++ rulesACConcs)
+    where
+        rulesE       = [ L.get oprRuleE ru | RuleItem ru <- L.get thyItems thy ]
+        rulesEPrems  = map (L.get rPrems) rulesE
+        rulesEActs   = map (L.get rActs) rulesE
+        rulesEConcs  = map (L.get rConcs) rulesE
+        rulesAC      = concat [ L.get oprRuleAC ru | RuleItem ru <- L.get thyItems thy ]
+        rulesACPrems = map (L.get rPrems) rulesAC
+        rulesACActs  = map (L.get rActs) rulesAC
+        rulesACConcs = map (L.get rConcs) rulesAC
+
+-- | Get the actions in the rules of a theory.
+rulesActions :: OpenTheory -> [LNFact]
+rulesActions thy = concat ([ L.get rActs $ L.get oprRuleE ru | RuleItem ru <- L.get thyItems thy ]
+                        ++ [ L.get rActs $ r | RuleItem ru <- L.get thyItems thy, r <- L.get oprRuleAC ru ])
+
+-- | Check if a LNTerm contains public constants.
+termContainsPubConst :: LNTerm -> Bool
+termContainsPubConst = go
+    where
+        go c@(LIT _)   = isPubConst c
+        go (FAPP  _ a) = any go a
+
+-- | Check if a term is a free variable.
+termIsFreeVar :: VTerm c (BVar v) -> Bool
+termIsFreeVar t = maybe False isFree (termVar t)
+    where
+        isFree (Free _) = True
+        isFree (Bound _) = False
 
 
 
@@ -187,9 +235,9 @@ casesLemmas accLemma = do
         s <- mapM (sufficiency accLemma) caseTests
         ve <- verifiabilityEmpty accLemma
         vne <- mapM (verifiabilityNonEmpty accLemma) caseTests
-        m <- mapM (minimality  accLemma) caseTests
-        u <- mapM (uniqueness  accLemma) caseTests
-        i <- mapM (injective   accLemma) caseTests
+        m <- mapM (minimality    accLemma) caseTests
+        u <- mapM (uniqueness    accLemma) caseTests
+        i <- mapM (injective     accLemma) caseTests
         t <- mapM (singlematched accLemma) caseTests
 
         return $ s ++ [ve] ++ vne ++ m ++ u ++ i ++ t
@@ -249,70 +297,40 @@ mergeQuantifiers = mergeQuantifiers1 [All, Ex]
 -- Syntactic criterion for RP (BR)
 ------------------------------------------------------------------------------
 
--- | Check that the party identities are not public variables.
-checkPartyIDPubVar :: OpenTheory -> Bool
-checkPartyIDPubVar thy = any (not . isPubConst) $ filter (\x -> x `elem` caseTestsActionWithFrees (theoryCaseTests thy)) (rulesLNTerms thy)
+-- | Check if the free variables in the first argument are instantiated by public variables in the second.
+freeVarsInstantiatedByPubVars :: [VTerm c (BVar v)] -> [LNTerm] -> Bool
+freeVarsInstantiatedByPubVars freeFactTerms pubFactTerms = all (isPubVar . snd)
+                                                         $ filter (termIsFreeVar . fst)
+                                                         $ zip freeFactTerms pubFactTerms
+
+-- | Check if the free variables of actions in the case tests are instantiated by public variables in the rules.
+caseTestsInstantiatedByPubVars :: OpenTheory -> Bool
+caseTestsInstantiatedByPubVars thy = and [ freeVarsInstantiatedByPubVars cTerms rTerms | (Fact cTag _ cTerms) <- caseTestsFacts thy
+                                                                                       , (Fact rTag _ rTerms) <- rulesActions thy
+                                                                                       , cTag == rTag ]
+
+-- | Check if the rules of a theory contain public names.
+rulesContainPubConst ::  OpenTheory -> Bool
+rulesContainPubConst thy = any termContainsPubConst $ rulesLNTerms thy
+
+-- | Create a report on the status of the conditions needed for RP (BR).
+accRPReport :: OpenTheory -> WfErrorReport
+accRPReport thy
+   | not $ null $ warnings = [("Accountability (RP check)", vcat warnings $--$ detailedExplanation)]
+   | otherwise = []
     where
-        caseTestsActionWithFrees caseTests = concatMap factTerms (concatMap getActionsInFormula (caseTestsLNFormulasWithFrees caseTests))
-        caseTestsLNFormulasWithFrees caseTests = mapMaybe toLNFormula (filter hasFrees $ map (L.get cFormula) caseTests)
-        hasFrees fm = not $ null $ frees fm
+        warnings :: [Doc]
+        warnings = fmap text (["The specification contains at least one restriction." | not $ null $ theoryRestrictions thy]
+                ++ ["The specification contains public names." | rulesContainPubConst thy]
+                ++ ["At least one case test can be instantiated with non-public names." | not $ caseTestsInstantiatedByPubVars thy])
 
+        detailedExplanation :: Doc
+        detailedExplanation = text "Please verify manually that your protocol fulfills the following condition:"
+                         $--$ text "For each case test τ, traces t, t’, and instantiations ρ, ρ’:"
+                          $-$ text "If τ holds on t with ρ, and τ single-matches with ρ’ on t’, then"
+                          $-$ text "there exists a trace t’’ such that τ single-matches with ρ on t’’"
+                          $-$ text "and the parties corrupted in t’’ are the same as the parties"
+                          $-$ text "corrupted in t’ renamed from rng(ρ’) to rng(ρ)."
 
--- | Filter a formula and get all the action atoms from it. Then extract the Fact part from them.
-getActionsInFormula :: Formula (String, LSort) Name LVar-> [LNFact]
-getActionsInFormula fm = case fm of
-    Ato pa -> (case pa of
-        Action _ _ -> (case bvarToLVar pa of
-            Action _ f1 -> [f1]
-            _           -> [])
-        _ -> [])
-    TF _           -> []
-    Not f          -> getActionsInFormula f
-    Conn _ pf1 pf2 -> getActionsInFormula pf1 ++ getActionsInFormula pf2
-    Qua _ _ pf     -> getActionsInFormula pf
-
--- | Get the list of LNTerms (in the premises, actions and conclusions) in the rules of a theory.
-rulesLNTerms :: Theory sig c OpenProtoRule p s -> [LNTerm]
-rulesLNTerms thy = concatMap factTerms (concat $ (rulesEPrems ++ rulesEActs ++ rulesEConcs ++ rulesACPrems ++ rulesACActs ++ rulesACConcs))
-    where
-        rulesE       = [ L.get oprRuleE ru | RuleItem ru <- L.get thyItems thy ]
-        rulesEPrems  = map (L.get rPrems) rulesE
-        rulesEActs   = map (L.get rActs) rulesE
-        rulesEConcs  = map (L.get rConcs) rulesE
-        rulesAC      = concat [ L.get oprRuleAC ru | RuleItem ru <- L.get thyItems thy ]
-        rulesACPrems = map (L.get rPrems) rulesAC
-        rulesACActs  = map (L.get rActs) rulesAC
-        rulesACConcs = map (L.get rConcs) rulesAC
-
-termContainsPubConst :: LNTerm -> Bool
-termContainsPubConst = go
-    where
-        go c@(LIT _)   = isPubConst c
-        go (FAPP  _ a) = any go a
-
--- | Check restriction formulas for public names.
--- checkRestrFormulasForPubConst :: Formula (String, LSort) Theory.Name LVar -> Bool
--- checkRestrFormulasForPubConst fm = any ((LSortPub ==) . sortOfName) (concatMap constsVTerm (formulaTerms fm))
-
--- | Get the formulas of the restrictions of a theory.
--- thyRestrFormulas :: Theory sig0 c0 r0 p0 s0 -> [LNFormula]
--- thyRestrFormulas thy = [ L.get rstrFormula restr | RestrictionItem restr <- L.get thyItems thy ]
-
--- | Check the restrictions of a theory for public names.
--- checkRestrsForPubConst :: Theory sig0 c0 r0 p0 s0 -> Bool
--- checkRestrsForPubConst thy = any checkRestrFormulasForPubConst (thyRestrFormulas thy)
-
--- | Check the rules of a theory for public names.
-checkRulesForPubConst ::  Theory sig0 c0 OpenProtoRule p0 s0 -> Bool
-checkRulesForPubConst thy = any termContainsPubConst $ rulesLNTerms thy
-
-thyReportRP :: OpenTheory -> IO ()
-thyReportRP thy =  do
-    unless (null (theoryRestrictions thy)) $
-        putStrLn "Warning: The model contains at least one restriction. RP needs to be checked manually.\n"
-
-    when (checkRulesForPubConst thy) $
-        putStrLn "Warning: The model contains public names. RP needs to be checked manually.\n"
-
-    when (checkPartyIDPubVar thy) $
-        putStrLn "Warning: At least one case test can be instantiated with non-public names. RP needs to be checked manually.\n"
+checkPreTransWellformedness :: OpenTheory -> WfErrorReport
+checkPreTransWellformedness thy = if null $ theoryAccLemmas thy then [] else accRPReport thy
