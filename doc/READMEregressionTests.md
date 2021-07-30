@@ -52,6 +52,26 @@ To run this script on Travis, the best is to use the following command :
 
 
 
+## Temporary files
+
+This script uses some temporary files to compute the regression tests. Please be careful not to create files or directories with the same name or they will be deleted. Here is the list of all temporary filenames used in the script and created at the root of the `tamarin-prover/` directory :
+
+- testoutput.tmp
+- testsResults_errors.tmp
+- testsResults_times.tmp
+- testsTimesResults.tmp
+- path.tmp
+- times.tmp
+- directories.tmp
+
+A directory `tmptests` is also created and contains numerous files named `X.part` with X a number starting from 1.
+
+
+
+These files are automatically created and deleted during the process.
+
+
+
 ## Arguments
 
 Here is a list of the arguments and how to use them properly.
@@ -86,7 +106,7 @@ It is useful for Travis on which processing times don't matter.
 
 #### -nofn or --without-filename
 
-This argument runs the script without adding filenames into files and output. 
+This argument runs the script without showing filenames in the output. 
 
 It is useful for Travis to buy time on the build.
 
@@ -110,7 +130,7 @@ By default the script runs a make command, if you don't need it because you've a
 
 #### -showt or --show-all-times
 
-This argument will run script showing you all processing times without colors nor condition.
+This argument will run script showing you all processing times without color nor condition.
 
 
 
@@ -150,21 +170,21 @@ The syntax is the following : `-lel 0.8`
 
 #### -nodur or --no-display-duration
 
-This argument will show you the duration of the script at the end of it.
+This argument will not show you the duration of the script at the end of it.
 
 
 
 ####  -dup or --allow-duplicate
 
-The `make` command creates files `*.spthy` with processing times in them and a summary of it. These times are often the same as the summaries, so duplicated lines are by default deleted. You can however allow them with this argument.
+The `make` command creates files `*.spthy` with processing times in them and a summary of it. These times are often the same as the summaries, so duplicated lines of processing times are not shown by default . You can however allow them with this argument.
 
 
 
 #### -ask or --ask-for-deletions
 
-This argument runs the script so that you will be asked whether you want to delete some files that can be a problem for the script.
+This argument runs the script so that you will be asked whether you want to delete already existing temporary files that can be a problem for the script.
 
-By default these kind of files are deleted without asking.
+By default these temporary files are deleted without asking.
 
 
 
@@ -172,7 +192,7 @@ By default these kind of files are deleted without asking.
 
 This argument recreates empty directories in `case-studies` with `.gitkeep` in them.
 
-This is not a useful command. It is only useful if you want to remove the `mkdir` command from `.travis.yml` and if you want to push all directories on git. (Not recommended)
+It is useful if you want to remove the `mkdir` command from `.travis.yml` and if you want to push all directories on git. (Not recommended)
 
 
 

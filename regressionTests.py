@@ -19,12 +19,12 @@ class bcolors:          # Colors for colorPrint and colorWrite functions
     UNDERLINE = '\033[4m'
 
 # Filenames or directory names
-filename = "testoutput.txt"
-dirtests = "tests"
+filename = "testoutput.tmp"
+dirtests = "tmptests"
 pathTmp = "path.tmp"
-outTestsErrors = "testsResults_errors.txt"
-outTestsTime = "testsResults_time.txt"
-finalTime = "testsTimeResults.txt"
+outTestsErrors = "testsResults_errors.tmp"
+outTestsTime = "testsResults_time.tmp"
+finalTime = "testsTimeResults.tmp"
 
 CASE_REG_DIR = "case-studies-regression/"
 CASE_DIR = "case-studies/"
@@ -366,7 +366,7 @@ def main() :
     for line in paths :
         path = line.strip('\n')
         if path != "" :
-            processFile("tests/" + path)
+            processFile("tmptests/" + path)
 
     paths.close()
     
