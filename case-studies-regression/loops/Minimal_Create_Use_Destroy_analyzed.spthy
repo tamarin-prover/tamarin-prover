@@ -178,8 +178,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/Minimal_Create_Use_Destroy.spthy
@@ -188,7 +186,7 @@ analyzing: examples/loops/Minimal_Create_Use_Destroy.spthy
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
-  processing time: 0.128189s
+  processing time: 0.10802815s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 
@@ -200,7 +198,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
-  processing time: 0.128189s
+  processing time: 0.10802815s
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)
 

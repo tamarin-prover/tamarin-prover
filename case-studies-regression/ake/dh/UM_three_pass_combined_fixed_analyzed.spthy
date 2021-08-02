@@ -5134,7 +5134,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 30.23384589s
+  processing time: 52.965656579s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5147,7 +5147,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 30.23384589s
+  processing time: 52.965656579s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

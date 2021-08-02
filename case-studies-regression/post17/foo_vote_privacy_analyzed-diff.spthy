@@ -21891,8 +21891,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/foo_vote_privacy.spthy
@@ -21901,7 +21899,7 @@ analyzing: examples/post17/foo_vote_privacy.spthy
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 281.329481s
+  processing time: 265.272867614s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)
@@ -21914,7 +21912,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 281.329481s
+  processing time: 265.272867614s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

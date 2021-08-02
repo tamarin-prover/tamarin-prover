@@ -734,8 +734,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/classic/TLS_Handshake.spthy
@@ -744,7 +742,7 @@ analyzing: examples/classic/TLS_Handshake.spthy
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 3.553591s
+  processing time: 3.627886549s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)
@@ -757,7 +755,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 3.553591s
+  processing time: 3.627886549s
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

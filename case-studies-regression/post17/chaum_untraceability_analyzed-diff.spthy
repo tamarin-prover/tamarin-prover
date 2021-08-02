@@ -8696,8 +8696,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/chaum_untraceability.spthy
@@ -8706,7 +8704,7 @@ analyzing: examples/post17/chaum_untraceability.spthy
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 78.712498s
+  processing time: 67.433379938s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)
@@ -8719,7 +8717,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 78.712498s
+  processing time: 67.433379938s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)

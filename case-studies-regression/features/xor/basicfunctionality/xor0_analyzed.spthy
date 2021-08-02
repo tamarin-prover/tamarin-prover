@@ -64,8 +64,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/xor/basicfunctionality/xor0.spthy
@@ -74,7 +72,7 @@ analyzing: examples/features/xor/basicfunctionality/xor0.spthy
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.070338s
+  processing time: 0.076952738s
   crworks (exists-trace): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -85,7 +83,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.070338s
+  processing time: 0.076952738s
   crworks (exists-trace): verified (6 steps)
 
 ==============================================================================

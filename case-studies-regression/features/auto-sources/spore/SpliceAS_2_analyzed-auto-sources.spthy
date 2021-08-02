@@ -782,7 +782,7 @@ analyzing: examples/features/auto-sources/spore/SpliceAS_2.spthy
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 6.819771399s
+  processing time: 6.070703259s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
@@ -799,7 +799,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 6.819771399s
+  processing time: 6.070703259s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)

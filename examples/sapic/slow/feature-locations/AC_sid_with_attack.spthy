@@ -52,6 +52,7 @@ lemma can_run_v: //for sanity
 
 // Attested computation theorem
 lemma attested_comput:  
-	"All #t1 h .  Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)" 
+    exists-trace
+	"not(All #t1 h .  Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1))" 
 
 end

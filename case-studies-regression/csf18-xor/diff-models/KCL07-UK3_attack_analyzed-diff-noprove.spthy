@@ -420,8 +420,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
@@ -430,7 +428,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.561116s
+  processing time: 0.724302238s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)
@@ -445,7 +443,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.561116s
+  processing time: 0.724302238s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)

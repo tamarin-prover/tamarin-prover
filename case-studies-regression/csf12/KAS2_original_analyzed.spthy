@@ -1037,8 +1037,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KAS2_original.spthy
@@ -1047,7 +1045,7 @@ analyzing: examples/csf12/KAS2_original.spthy
 analyzed: examples/csf12/KAS2_original.spthy
 
   output:          examples/csf12/KAS2_original.spthy.tmp
-  processing time: 6.169587s
+  processing time: 5.953860316s
   KAS_key_secrecy (all-traces): verified (254 steps)
 
 ------------------------------------------------------------------------------
@@ -1058,7 +1056,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_original.spthy
 
   output:          examples/csf12/KAS2_original.spthy.tmp
-  processing time: 6.169587s
+  processing time: 5.953860316s
   KAS_key_secrecy (all-traces): verified (254 steps)
 
 ==============================================================================

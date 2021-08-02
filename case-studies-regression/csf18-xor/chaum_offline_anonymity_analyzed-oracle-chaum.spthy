@@ -1487,8 +1487,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
@@ -1497,7 +1495,7 @@ analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 21.733668s
+  processing time: 8.145556205s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)
@@ -1511,7 +1509,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 21.733668s
+  processing time: 8.145556205s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)

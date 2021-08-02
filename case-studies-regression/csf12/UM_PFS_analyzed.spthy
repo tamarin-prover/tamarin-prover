@@ -210,8 +210,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/UM_PFS.spthy
@@ -220,7 +218,7 @@ analyzing: examples/csf12/UM_PFS.spthy
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 1.453453s
+  processing time: 0.69532697s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -232,7 +230,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 1.453453s
+  processing time: 0.69532697s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
