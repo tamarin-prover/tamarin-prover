@@ -643,7 +643,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.088207s
+  processing time: 2.052772468s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -654,7 +654,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.088207s
+  processing time: 2.052772468s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ==============================================================================

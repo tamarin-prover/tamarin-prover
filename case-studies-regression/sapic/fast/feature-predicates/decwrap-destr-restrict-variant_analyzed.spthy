@@ -971,7 +971,7 @@ analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy.tmp
-  processing time: 2.119672239s
+  processing time: 3.603569752s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (60 steps)
@@ -986,7 +986,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy.tmp
-  processing time: 2.119672239s
+  processing time: 3.603569752s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (60 steps)

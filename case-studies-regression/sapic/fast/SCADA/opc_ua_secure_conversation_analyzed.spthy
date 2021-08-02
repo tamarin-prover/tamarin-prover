@@ -3636,7 +3636,7 @@ analyzing: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 24.586577s
+  processing time: 37.514114512s
   Executable (exists-trace): verified (47 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (138 steps)
@@ -3652,7 +3652,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 24.586577s
+  processing time: 37.514114512s
   Executable (exists-trace): verified (47 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (138 steps)

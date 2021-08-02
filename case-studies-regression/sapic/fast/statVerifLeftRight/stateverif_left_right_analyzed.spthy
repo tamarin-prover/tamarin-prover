@@ -2135,7 +2135,7 @@ analyzing: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 10.645349s
+  processing time: 18.904736744s
   source (all-traces): verified (158 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
@@ -2149,7 +2149,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 10.645349s
+  processing time: 18.904736744s
   source (all-traces): verified (158 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)

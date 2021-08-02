@@ -915,7 +915,7 @@ analyzing: examples/sapic/fast/feature-locations/licensing.spthy
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.587330835s
+  processing time: 8.473264433s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)
@@ -928,7 +928,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.587330835s
+  processing time: 8.473264433s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)

@@ -32,14 +32,11 @@ solve( state_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ▶₀ #t )
           solve( (∃ #t. (ProgressTo_111( ~prog_11 ) @ #t))  ∥
                  (∃ #t. (ProgressTo_1121( ~prog_11 ) @ #t)) )
             case case_1
-            solve( ProgressTo_111( ~prog_11 ) @ #t.3 )
-              case ifaa_0_11
-              solve( state_11( ~prog_.1, ~prog_11, a ) ▶₀ #t.3 )
-                case __1_1
-                solve( state_( ~prog_ ) ▶₀ #t.3 )
-                  case Init
-                  SOLVED // trace found
-                qed
+            solve( state_11( ~prog_.1, ~prog_11, a ) ▶₀ #t.3 )
+              case __1_1
+              solve( state_( ~prog_ ) ▶₀ #t.3 )
+                case Init
+                SOLVED // trace found
               qed
             qed
           qed
@@ -98,7 +95,7 @@ rule (modulo E) ifaa_0_11[color=#ffffff process=if a=a]:
 
 rule (modulo E) ifaa_1_11[color=#ffffff process=if a=a]:
    [ state_11( ~prog_, ~prog_11, a ) ]
-  --[ ProgressTo_111( ~prog_11 ), Pred_Not_Eq( a, a ) ]->
+  --[ Pred_Not_Eq( a, a ) ]->
    [ state_112( ~prog_, ~prog_11, a ) ]
 
   /* has exactly the trivial AC variant */
@@ -182,8 +179,8 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini6.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini6.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.22571s
-  A_possible (exists-trace): verified (11 steps)
+  processing time: 0.317487084s
+  A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -194,8 +191,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini6.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.22571s
-  A_possible (exists-trace): verified (11 steps)
+  processing time: 0.317487084s
+  A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 
 ==============================================================================

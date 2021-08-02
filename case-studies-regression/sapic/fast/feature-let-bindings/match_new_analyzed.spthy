@@ -104,7 +104,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/match_new.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.08257s
+  processing time: 0.153654348s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 
@@ -116,7 +116,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.08257s
+  processing time: 0.153654348s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 

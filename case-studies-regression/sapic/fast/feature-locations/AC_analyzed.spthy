@@ -1023,7 +1023,7 @@ analyzing: examples/sapic/fast/feature-locations/AC.spthy
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 4.632894437s
+  processing time: 9.217629972s
   attested_comput (all-traces): verified (184 steps)
 
 ------------------------------------------------------------------------------
@@ -1034,7 +1034,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 4.632894437s
+  processing time: 9.217629972s
   attested_comput (all-traces): verified (184 steps)
 
 ==============================================================================

@@ -2339,7 +2339,7 @@ analyzing: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 18.322075s
+  processing time: 35.130966715s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (636 steps)
 
@@ -2351,7 +2351,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 18.322075s
+  processing time: 35.130966715s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (636 steps)
 

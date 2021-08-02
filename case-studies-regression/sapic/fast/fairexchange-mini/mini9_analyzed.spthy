@@ -231,7 +231,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini9.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini9.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini9.spthy.tmp
-  processing time: 0.200385s
+  processing time: 0.34858059s
   A_possible (exists-trace): verified (15 steps)
   B_possible (exists-trace): verified (7 steps)
   A_or_B (all-traces): verified (7 steps)
@@ -244,7 +244,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini9.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini9.spthy.tmp
-  processing time: 0.200385s
+  processing time: 0.34858059s
   A_possible (exists-trace): verified (15 steps)
   B_possible (exists-trace): verified (7 steps)
   A_or_B (all-traces): verified (7 steps)

@@ -932,7 +932,7 @@ analyzing: examples/sapic/fast/feature-xor/KCL07.spthy
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 3.558778s
+  processing time: 8.369951677s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 
@@ -944,7 +944,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 3.558778s
+  processing time: 8.369951677s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 

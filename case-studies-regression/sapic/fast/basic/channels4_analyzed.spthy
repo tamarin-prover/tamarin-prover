@@ -105,7 +105,7 @@ analyzing: examples/sapic/fast/basic/channels4.spthy
 analyzed: examples/sapic/fast/basic/channels4.spthy
 
   output:          examples/sapic/fast/basic/channels4.spthy.tmp
-  processing time: 0.106155s
+  processing time: 0.17554409s
   secret (all-traces): verified (3 steps)
   received (exists-trace): verified (3 steps)
 
@@ -117,7 +117,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels4.spthy
 
   output:          examples/sapic/fast/basic/channels4.spthy.tmp
-  processing time: 0.106155s
+  processing time: 0.17554409s
   secret (all-traces): verified (3 steps)
   received (exists-trace): verified (3 steps)
 
