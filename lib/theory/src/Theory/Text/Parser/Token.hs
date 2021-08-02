@@ -235,11 +235,11 @@ naturalSubscript = T.lexeme spthy $ do
 
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
-commaSep = T.commaSep spthy
+commaSep = flip sepEndBy comma
 
 -- | A comma separated non-empty list of elements.
 commaSep1 :: Parser a -> Parser [a]
-commaSep1 = T.commaSep1 spthy
+commaSep1 = flip sepEndBy1 comma
 
 -- | Parse a list of items '[' item ',' ... ',' item ']'
 list :: Parser a -> Parser [a]
