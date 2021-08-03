@@ -126,7 +126,7 @@ analyzing: examples/regression/diff/issue331.spthy
 analyzed: examples/regression/diff/issue331.spthy
 
   output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.066421016s
+  processing time: 0.092524539s
   DiffLemma:  Observational_equivalence : verified (37 steps)
 
 ------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue331.spthy
 
   output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.066421016s
+  processing time: 0.092524539s
   DiffLemma:  Observational_equivalence : verified (37 steps)
 
 ==============================================================================

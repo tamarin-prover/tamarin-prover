@@ -3368,7 +3368,7 @@ analyzing: examples/features/auto-sources/spore/Otway-Rees.spthy
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 11.739459918s
+  processing time: 11.570983365s
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
   agreement_B (all-traces): verified (16 steps)
@@ -3387,7 +3387,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 11.739459918s
+  processing time: 11.570983365s
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
   agreement_B (all-traces): verified (16 steps)

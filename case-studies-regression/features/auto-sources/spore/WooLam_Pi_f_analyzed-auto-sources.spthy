@@ -562,7 +562,7 @@ analyzing: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.874277837s
+  processing time: 0.749533758s
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)
@@ -577,7 +577,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.874277837s
+  processing time: 0.749533758s
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)

@@ -775,8 +775,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/TESLA_Scheme1.spthy
@@ -785,7 +783,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 3.158362s
+  processing time: 4.927294449s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -797,7 +795,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 3.158362s
+  processing time: 4.927294449s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

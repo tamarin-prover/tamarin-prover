@@ -27,7 +27,7 @@ guarded formula characterizing all counter-examples:
   (Poutput( inp, pk ) @ #t1) ∧ ∀ #t2. (Token( pk ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-solve( state_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
+solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
        ) ▶₀ #t1 )
   case insencokxtkntokensharedkey_0_11111111111111
   solve( !KU( senc(ok(~n.2, tkn(pk)), ~n.1) ) @ #vk )
@@ -92,10 +92,10 @@ guarded formula characterizing all counter-examples:
   (Poutput( inp, pk ) @ #t1) ∧ (Poutput( inp2, pk ) @ #t2) ∧ ¬(inp = inp2)"
 */
 simplify
-solve( state_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
+solve( State_111111111111111( inp, prog, prog2, shared_key, skV, pk, x
        ) ▶₀ #t1 )
   case insencokxtkntokensharedkey_0_11111111111111
-  solve( state_111111111111111( inp2, prog, prog2.1, shared_key, skV.1, pk,
+  solve( State_111111111111111( inp2, prog, prog2.1, shared_key, skV.1, pk,
                                 x
          ) ▶₀ #t2 )
     case insencokxtkntokensharedkey_0_11111111111111
@@ -364,7 +364,7 @@ guarded formula characterizing all counter-examples:
     (∃ #t5 inp2. (Poutput( inp2, pk ) @ #t5) ∧ ¬(inp = inp2)))"
 */
 simplify
-solve( state_1( prog ) ▶₀ #t2 )
+solve( State_1( prog ) ▶₀ #t2 )
   case newprog_0_
   solve( !KU( run(~n, inp) ) @ #vk )
     case c_run
@@ -384,7 +384,7 @@ solve( state_1( prog ) ▶₀ #t2 )
               by solve( !KU( ~n.1 ) @ #vk.11 )
             next
               case outsencokxtkntokensharedkey_0_11211111111111111
-              solve( state_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
+              solve( State_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
                                             x
                      ) ▶₀ #t5 )
                 case insencokxtkntokensharedkey_0_11111111111111
@@ -403,7 +403,7 @@ solve( state_1( prog ) ▶₀ #t2 )
           qed
         next
           case outsenctkntokensharedkey_0_11211111111111
-          solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+          solve( State_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
                  ) ▶₀ #t5 )
             case insencokxtkntokensharedkey_0_11111111111111
             by solve( !KU( ~n.6 ) @ #vk.10 )
@@ -420,7 +420,7 @@ solve( state_1( prog ) ▶₀ #t2 )
               by solve( !KU( ~n.1 ) @ #vk.11 )
             next
               case outsencokxtkntokensharedkey_0_11211111111111111
-              solve( state_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
+              solve( State_111111111111111( inp2, prog, prog2, shared_key, skV.1, ~n.2,
                                             x
                      ) ▶₀ #t5 )
                 case insencokxtkntokensharedkey_0_11111111111111
@@ -439,7 +439,7 @@ solve( state_1( prog ) ▶₀ #t2 )
           qed
         next
           case outsenctkntokensharedkey_0_11211111111111
-          solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+          solve( State_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
                  ) ▶₀ #t5 )
             case insencokxtkntokensharedkey_0_11111111111111
             by solve( !KU( ~n.6 ) @ #vk.10 )
@@ -448,7 +448,7 @@ solve( state_1( prog ) ▶₀ #t2 )
       qed
     next
       case outsencokxtkntokensharedkey_0_11211111111111111
-      solve( state_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
+      solve( State_111111111111111( inp2, prog, prog2, shared_key, skV, ~n.2, x
              ) ▶₀ #t5 )
         case insencokxtkntokensharedkey_0_11111111111111
         solve( !KU( senc(ok(~n.3, tkn(~n.2)), ~n.1) ) @ #vk.10 )
@@ -499,72 +499,76 @@ solve( state_1( prog ) ▶₀ #t2 )
   qed
 qed
 
-restriction restr_Report-rule_1:
-  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
   // safety formula
 
-rule (modulo E) Report-rule[color=#ffffff process=new prog;]:
+rule (modulo E) ReportRule[color=#ffffff, process="new prog;"]:
    [ In( <x, loc> ) ]
-  --[ restr_Report-rule_1( loc ) ]->
+  --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff process=new prog;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new prog;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newprog_0_[color=#ffffff process=new prog;]:
-   [ state_( ), Fr( prog ) ] --> [ state_1( prog ) ]
+rule (modulo E) newprog_0_[color=#ffffff, process="new prog;"]:
+   [ State_( ), Fr( prog ) ] --> [ State_1( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAuthprog_0_1[color=#ffffff process=event Auth( prog );]:
-   [ state_1( prog ) ] --[ Auth( prog ) ]-> [ state_11( prog ) ]
+rule (modulo E) eventAuthprog_0_1[color=#ffffff,
+                                  process="event Auth( prog );"]:
+   [ State_1( prog ) ] --[ Auth( prog ) ]-> [ State_11( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=|]:
-   [ state_11( prog ) ] --> [ state_111( prog ), state_112( prog ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="|"]:
+   [ State_11( prog ) ] --> [ State_111( prog ), State_112( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=!]:
-   [ state_111( prog ) ] --> [ !semistate_1111( prog ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="!"]:
+   [ State_111( prog ) ] --> [ !Semistate_1111( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111[color=#ffffff process=!]:
-   [ !semistate_1111( prog ) ] --> [ state_1111( prog ) ]
+rule (modulo E) p_1_111[color=#ffffff, process="!"]:
+   [ !Semistate_1111( prog ) ] --> [ State_1111( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inpkskV_0_1111[color=#804046 process=in(pk(skV));]:
-   [ state_1111( prog ), In( pk(skV) ) ] --> [ state_11111( prog, skV ) ]
+rule (modulo E) inpkskV_0_1111[color=#804046, process="in(pk(skV));"]:
+   [ State_1111( prog ), In( pk(skV) ) ] --> [ State_11111( prog, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsharedkey_0_11111[color=#804046 process=new shared_key;]:
-   [ state_11111( prog, skV ), Fr( shared_key ) ]
+rule (modulo E) newsharedkey_0_11111[color=#804046,
+                                     process="new shared_key;"]:
+   [ State_11111( prog, skV ), Fr( shared_key ) ]
   -->
-   [ state_111111( prog, shared_key, skV ) ]
+   [ State_111111( prog, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSessionPpkskVsharedkey_0_111111[color=#804046 process=event SessionP( pk(skV), shared_key );]:
-   [ state_111111( prog, shared_key, skV ) ]
+rule (modulo E) eventSessionPpkskVsharedkey_0_111111[color=#804046,
+                                                     process="event SessionP( pk(skV), shared_key );"]:
+   [ State_111111( prog, shared_key, skV ) ]
   --[ SessionP( pk(skV), shared_key ) ]->
-   [ state_1111111( prog, shared_key, skV ) ]
+   [ State_1111111( prog, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111[color=#804046 process=out(<aenc(shared_key, pk(skV)), 
- rep(aenc(shared_key, pk(skV)), <'loc', pk(skV)>)>);]:
-   [ state_1111111( prog, shared_key, skV ) ]
+rule (modulo E) outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111[color=#804046,
+                                                                             process="out(<aenc(shared_key, pk(skV)), 
+ rep(aenc(shared_key, pk(skV)), <'loc', pk(skV)>)>);"]:
+   [ State_1111111( prog, shared_key, skV ) ]
   -->
    [
-   state_11111111( prog, shared_key, skV ),
+   State_11111111( prog, shared_key, skV ),
    Out( <aenc(shared_key, pk(skV)), 
          rep(aenc(shared_key, pk(skV)), <'loc', pk(skV)>)>
    )
@@ -572,154 +576,166 @@ rule (modulo E) outaencsharedkeypkskVrepaencsharedkeypkskVlocpkskV_0_1111111[col
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insencprgprogsharedkey_0_11111111[color=#804046 process=in(senc(prg(prog2), shared_key));]:
+rule (modulo E) insencprgprogsharedkey_0_11111111[color=#804046,
+                                                  process="in(senc(prg(prog2), shared_key));"]:
    [
-   state_11111111( prog, shared_key, skV ),
+   State_11111111( prog, shared_key, skV ),
    In( senc(prg(prog2), shared_key) )
    ]
   -->
-   [ state_111111111( prog, prog2, shared_key, skV ) ]
+   [ State_111111111( prog, prog2, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111111[color=#804046 process=!]:
-   [ state_111111111( prog, prog2, shared_key, skV ) ]
+rule (modulo E) p_0_111111111[color=#804046, process="!"]:
+   [ State_111111111( prog, prog2, shared_key, skV ) ]
   -->
-   [ !semistate_1111111111( prog, prog2, shared_key, skV ) ]
+   [ !Semistate_1111111111( prog, prog2, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111111111[color=#804046 process=!]:
-   [ !semistate_1111111111( prog, prog2, shared_key, skV ) ]
+rule (modulo E) p_1_111111111[color=#804046, process="!"]:
+   [ !Semistate_1111111111( prog, prog2, shared_key, skV ) ]
   -->
-   [ state_1111111111( prog, prog2, shared_key, skV ) ]
+   [ State_1111111111( prog, prog2, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ininput_0_1111111111[color=#804046 process=in(input);]:
-   [ state_1111111111( prog, prog2, shared_key, skV ), In( input ) ]
+rule (modulo E) ininput_0_1111111111[color=#804046,
+                                     process="in(input);"]:
+   [ State_1111111111( prog, prog2, shared_key, skV ), In( input ) ]
   -->
-   [ state_11111111111( input, prog, prog2, shared_key, skV ) ]
+   [ State_11111111111( input, prog, prog2, shared_key, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insenctkntokensharedkey_0_11111111111[color=#804046 process=in(senc(tkn(token), shared_key));]:
+rule (modulo E) insenctkntokensharedkey_0_11111111111[color=#804046,
+                                                      process="in(senc(tkn(token), shared_key));"]:
    [
-   state_11111111111( input, prog, prog2, shared_key, skV ),
+   State_11111111111( input, prog, prog2, shared_key, skV ),
    In( senc(tkn(token), shared_key) )
    ]
   -->
-   [ state_111111111111( input, prog, prog2, shared_key, skV, token ) ]
+   [ State_111111111111( input, prog, prog2, shared_key, skV, token ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newx_0_111111111111[color=#804046 process=new x;]:
+rule (modulo E) newx_0_111111111111[color=#804046, process="new x;"]:
    [
-   state_111111111111( input, prog, prog2, shared_key, skV, token ), Fr( x )
+   State_111111111111( input, prog, prog2, shared_key, skV, token ), Fr( x )
    ]
   -->
-   [ state_1111111111111( input, prog, prog2, shared_key, skV, token, x ) ]
+   [ State_1111111111111( input, prog, prog2, shared_key, skV, token, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsencaskxtkntokensharedkey_0_1111111111111[color=#804046 process=out(senc(ask(x, tkn(token)), shared_key));]:
-   [ state_1111111111111( input, prog, prog2, shared_key, skV, token, x ) ]
+rule (modulo E) outsencaskxtkntokensharedkey_0_1111111111111[color=#804046,
+                                                             process="out(senc(ask(x, tkn(token)), shared_key));"]:
+   [ State_1111111111111( input, prog, prog2, shared_key, skV, token, x ) ]
   -->
    [
-   state_11111111111111( input, prog, prog2, shared_key, skV, token, x ),
+   State_11111111111111( input, prog, prog2, shared_key, skV, token, x ),
    Out( senc(ask(x, tkn(token)), shared_key) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insencokxtkntokensharedkey_0_11111111111111[color=#804046 process=in(senc(ok(x, tkn(token)), shared_key));]:
+rule (modulo E) insencokxtkntokensharedkey_0_11111111111111[color=#804046,
+                                                            process="in(senc(ok(x, tkn(token)), shared_key));"]:
    [
-   state_11111111111111( input, prog, prog2, shared_key, skV, token, x ),
+   State_11111111111111( input, prog, prog2, shared_key, skV, token, x ),
    In( senc(ok(x, tkn(token)), shared_key) )
    ]
   -->
-   [ state_111111111111111( input, prog, prog2, shared_key, skV, token, x )
+   [ State_111111111111111( input, prog, prog2, shared_key, skV, token, x )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventPoutputinputtoken_0_111111111111111[color=#804046 process=event Poutput( input, token );]:
-   [ state_111111111111111( input, prog, prog2, shared_key, skV, token, x )
+rule (modulo E) eventPoutputinputtoken_0_111111111111111[color=#804046,
+                                                         process="event Poutput( input, token );"]:
+   [ State_111111111111111( input, prog, prog2, shared_key, skV, token, x )
    ]
   --[ Poutput( input, token ) ]->
-   [ state_1111111111111111( input, prog, prog2, shared_key, skV, token, x )
+   [ State_1111111111111111( input, prog, prog2, shared_key, skV, token, x )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outrunproginput_0_1111111111111111[color=#804046 process=out(run(prog2, input));]:
-   [ state_1111111111111111( input, prog, prog2, shared_key, skV, token, x )
+rule (modulo E) outrunproginput_0_1111111111111111[color=#804046,
+                                                   process="out(run(prog2, input));"]:
+   [ State_1111111111111111( input, prog, prog2, shared_key, skV, token, x )
    ]
   -->
    [
-   state_11111111111111111( input, prog, prog2, shared_key, skV, token, x ),
+   State_11111111111111111( input, prog, prog2, shared_key, skV, token, x ),
    Out( run(prog2, input) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111111111111111[color=#804046 process=0]:
+rule (modulo E) p_0_11111111111111111[color=#804046, process="0"]:
    [
-   state_11111111111111111( input, prog, prog2, shared_key, skV, token, x )
+   State_11111111111111111( input, prog, prog2, shared_key, skV, token, x )
    ]
   -->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_112[color=#ffffff process=!]:
-   [ state_112( prog ) ] --> [ !semistate_1121( prog ) ]
+rule (modulo E) p_0_112[color=#ffffff, process="!"]:
+   [ State_112( prog ) ] --> [ !Semistate_1121( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_112[color=#ffffff process=!]:
-   [ !semistate_1121( prog ) ] --> [ state_1121( prog ) ]
+rule (modulo E) p_1_112[color=#ffffff, process="!"]:
+   [ !Semistate_1121( prog ) ] --> [ State_1121( prog ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskV_0_1121[color=#406880 process=new skV;]:
-   [ state_1121( prog ), Fr( skV ) ] --> [ state_11211( prog, skV ) ]
+rule (modulo E) newskV_0_1121[color=#406880, process="new skV;"]:
+   [ State_1121( prog ), Fr( skV ) ] --> [ State_11211( prog, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestPpkskV_0_11211[color=#406880 process=event HonestP( pk(skV) );]:
-   [ state_11211( prog, skV ) ]
+rule (modulo E) eventHonestPpkskV_0_11211[color=#406880,
+                                          process="event HonestP( pk(skV) );"]:
+   [ State_11211( prog, skV ) ]
   --[ HonestP( pk(skV) ) ]->
-   [ state_112111( prog, skV ) ]
+   [ State_112111( prog, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpkskV_0_112111[color=#406880 process=out(pk(skV));]:
-   [ state_112111( prog, skV ) ]
+rule (modulo E) outpkskV_0_112111[color=#406880,
+                                  process="out(pk(skV));"]:
+   [ State_112111( prog, skV ) ]
   -->
-   [ state_1121111( prog, skV ), Out( pk(skV) ) ]
+   [ State_1121111( prog, skV ), Out( pk(skV) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inaencsharedkeypkskVsigned_0_1121111[color=#406880 process=in(<aenc(shared_key, pk(skV)), signed>);]:
-   [ state_1121111( prog, skV ), In( <aenc(shared_key, pk(skV)), signed> ) ]
+rule (modulo E) inaencsharedkeypkskVsigned_0_1121111[color=#406880,
+                                                     process="in(<aenc(shared_key, pk(skV)), signed>);"]:
+   [ State_1121111( prog, skV ), In( <aenc(shared_key, pk(skV)), signed> ) ]
   -->
-   [ state_11211111( prog, shared_key, signed, skV ) ]
+   [ State_11211111( prog, shared_key, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-   [ state_11211111( prog, shared_key, signed, skV ) ]
+rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406880,
+                                                                      process="if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+   [ State_11211111( prog, shared_key, signed, skV ) ]
   --[
   Pred_Eq( aenc(shared_key, pk(skV)), check_rep(signed, <'loc', pk(skV)>) )
   ]->
-   [ state_112111111( prog, shared_key, signed, skV ) ]
+   [ State_112111111( prog, shared_key, signed, skV ) ]
 
   /*
-  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-     [ state_11211111( prog, shared_key, signed, skV ) ]
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406880,
+                                                                         process="if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+     [ State_11211111( prog, shared_key, signed, skV ) ]
     --[ Pred_Eq( aenc(shared_key, pk(skV)), z ) ]->
-     [ state_112111111( prog, shared_key, signed, skV ) ]
+     [ State_112111111( prog, shared_key, signed, skV ) ]
     variants (modulo AC)
     1. signed
              = signed.6
@@ -732,20 +748,22 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_11211111[color=#406
        z     = x.6
   */
 
-rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-   [ state_11211111( prog, shared_key, signed, skV ) ]
+rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880,
+                                                                      process="if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+   [ State_11211111( prog, shared_key, signed, skV ) ]
   --[
   Pred_Not_Eq( aenc(shared_key, pk(skV)),
                check_rep(signed, <'loc', pk(skV)>)
   )
   ]->
-   [ state_112111112( prog, shared_key, signed, skV ) ]
+   [ State_112111112( prog, shared_key, signed, skV ) ]
 
   /*
-  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880 process=if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-     [ state_11211111( prog, shared_key, signed, skV ) ]
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406880,
+                                                                         process="if aenc(shared_key, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+     [ State_11211111( prog, shared_key, signed, skV ) ]
     --[ Pred_Not_Eq( aenc(shared_key, pk(skV)), z ) ]->
-     [ state_112111112( prog, shared_key, signed, skV ) ]
+     [ State_112111112( prog, shared_key, signed, skV ) ]
     variants (modulo AC)
     1. signed
              = signed.6
@@ -758,114 +776,123 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_11211111[color=#406
        z     = x.6
   */
 
-rule (modulo E) eventSessionVpkskVsharedkey_0_112111111[color=#406880 process=event SessionV( pk(skV), shared_key );]:
-   [ state_112111111( prog, shared_key, signed, skV ) ]
+rule (modulo E) eventSessionVpkskVsharedkey_0_112111111[color=#406880,
+                                                        process="event SessionV( pk(skV), shared_key );"]:
+   [ State_112111111( prog, shared_key, signed, skV ) ]
   --[ SessionV( pk(skV), shared_key ) ]->
-   [ state_1121111111( prog, shared_key, signed, skV ) ]
+   [ State_1121111111( prog, shared_key, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsencprgprogsharedkey_0_1121111111[color=#406880 process=out(senc(prg(prog), shared_key));]:
-   [ state_1121111111( prog, shared_key, signed, skV ) ]
+rule (modulo E) outsencprgprogsharedkey_0_1121111111[color=#406880,
+                                                     process="out(senc(prg(prog), shared_key));"]:
+   [ State_1121111111( prog, shared_key, signed, skV ) ]
   -->
    [
-   state_11211111111( prog, shared_key, signed, skV ),
+   State_11211111111( prog, shared_key, signed, skV ),
    Out( senc(prg(prog), shared_key) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11211111111[color=#406880 process=!]:
-   [ state_11211111111( prog, shared_key, signed, skV ) ]
+rule (modulo E) p_0_11211111111[color=#406880, process="!"]:
+   [ State_11211111111( prog, shared_key, signed, skV ) ]
   -->
-   [ !semistate_112111111111( prog, shared_key, signed, skV ) ]
+   [ !Semistate_112111111111( prog, shared_key, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11211111111[color=#406880 process=!]:
-   [ !semistate_112111111111( prog, shared_key, signed, skV ) ]
+rule (modulo E) p_1_11211111111[color=#406880, process="!"]:
+   [ !Semistate_112111111111( prog, shared_key, signed, skV ) ]
   -->
-   [ state_112111111111( prog, shared_key, signed, skV ) ]
+   [ State_112111111111( prog, shared_key, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newtoken_0_112111111111[color=#406880 process=new token;]:
-   [ state_112111111111( prog, shared_key, signed, skV ), Fr( token ) ]
+rule (modulo E) newtoken_0_112111111111[color=#406880,
+                                        process="new token;"]:
+   [ State_112111111111( prog, shared_key, signed, skV ), Fr( token ) ]
   -->
-   [ state_1121111111111( prog, shared_key, signed, skV, token ) ]
+   [ State_1121111111111( prog, shared_key, signed, skV, token ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventTokentoken_0_1121111111111[color=#406880 process=event Token( token );]:
-   [ state_1121111111111( prog, shared_key, signed, skV, token ) ]
+rule (modulo E) eventTokentoken_0_1121111111111[color=#406880,
+                                                process="event Token( token );"]:
+   [ State_1121111111111( prog, shared_key, signed, skV, token ) ]
   --[ Token( token ) ]->
-   [ state_11211111111111( prog, shared_key, signed, skV, token ) ]
+   [ State_11211111111111( prog, shared_key, signed, skV, token ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsenctkntokensharedkey_0_11211111111111[color=#406880 process=out(senc(tkn(token), shared_key));]:
-   [ state_11211111111111( prog, shared_key, signed, skV, token ) ]
+rule (modulo E) outsenctkntokensharedkey_0_11211111111111[color=#406880,
+                                                          process="out(senc(tkn(token), shared_key));"]:
+   [ State_11211111111111( prog, shared_key, signed, skV, token ) ]
   -->
    [
-   state_112111111111111( prog, shared_key, signed, skV, token ),
+   State_112111111111111( prog, shared_key, signed, skV, token ),
    Out( senc(tkn(token), shared_key) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insencaskxtkntokensharedkey_0_112111111111111[color=#406880 process=in(senc(ask(x, tkn(token2)), shared_key));]:
+rule (modulo E) insencaskxtkntokensharedkey_0_112111111111111[color=#406880,
+                                                              process="in(senc(ask(x, tkn(token2)), shared_key));"]:
    [
-   state_112111111111111( prog, shared_key, signed, skV, token ),
+   State_112111111111111( prog, shared_key, signed, skV, token ),
    In( senc(ask(x, tkn(token2)), shared_key) )
    ]
   -->
    [
-   state_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
+   State_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) iftkntokentkntoken_0_1121111111111111[color=#406880 process=if tkn(token)=tkn(token2)]:
+rule (modulo E) iftkntokentkntoken_0_1121111111111111[color=#406880,
+                                                      process="if tkn(token)=tkn(token2)"]:
    [
-   state_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
+   State_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
    ]
   --[ Pred_Eq( tkn(token), tkn(token2) ) ]->
    [
-   state_11211111111111111( prog, shared_key, signed, skV, token, token2, x
+   State_11211111111111111( prog, shared_key, signed, skV, token, token2, x
    )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) iftkntokentkntoken_1_1121111111111111[color=#406880 process=if tkn(token)=tkn(token2)]:
+rule (modulo E) iftkntokentkntoken_1_1121111111111111[color=#406880,
+                                                      process="if tkn(token)=tkn(token2)"]:
    [
-   state_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
+   State_1121111111111111( prog, shared_key, signed, skV, token, token2, x )
    ]
   --[ Pred_Not_Eq( tkn(token), tkn(token2) ) ]->
    [
-   state_11211111111111112( prog, shared_key, signed, skV, token, token2, x
+   State_11211111111111112( prog, shared_key, signed, skV, token, token2, x
    )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsencokxtkntokensharedkey_0_11211111111111111[color=#406880 process=out(senc(ok(x, tkn(token)), shared_key));]:
+rule (modulo E) outsencokxtkntokensharedkey_0_11211111111111111[color=#406880,
+                                                                process="out(senc(ok(x, tkn(token)), shared_key));"]:
    [
-   state_11211111111111111( prog, shared_key, signed, skV, token, token2, x
+   State_11211111111111111( prog, shared_key, signed, skV, token, token2, x
    )
    ]
   -->
    [
-   state_112111111111111111( prog, shared_key, signed, skV, token, token2, x
+   State_112111111111111111( prog, shared_key, signed, skV, token, token2, x
    ),
    Out( senc(ok(x, tkn(token)), shared_key) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_112111111111111111[color=#406880 process=0]:
+rule (modulo E) p_0_112111111111111111[color=#406880, process="0"]:
    [
-   state_112111111111111111( prog, shared_key, signed, skV, token, token2, x
+   State_112111111111111111( prog, shared_key, signed, skV, token, token2, x
    )
    ]
   -->
@@ -873,9 +900,9 @@ rule (modulo E) __0_112111111111111111[color=#406880 process=0]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11211111111111112[color=#406880 process=0]:
+rule (modulo E) p_0_11211111111111112[color=#406880, process="0"]:
    [
-   state_11211111111111112( prog, shared_key, signed, skV, token, token2, x
+   State_11211111111111112( prog, shared_key, signed, skV, token, token2, x
    )
    ]
   -->
@@ -883,8 +910,8 @@ rule (modulo E) __0_11211111111111112[color=#406880 process=0]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_112111112[color=#406880 process=0]:
-   [ state_112111112( prog, shared_key, signed, skV ) ] --> [ ]
+rule (modulo E) p_0_112111112[color=#406880, process="0"]:
+   [ State_112111112( prog, shared_key, signed, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -915,7 +942,7 @@ analyzing: examples/sapic/fast/feature-locations/licensing.spthy
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.587330835s
+  processing time: 5.500441012s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)
@@ -928,7 +955,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.587330835s
+  processing time: 5.500441012s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)

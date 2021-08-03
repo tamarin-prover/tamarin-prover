@@ -782,8 +782,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_one_pass_fix.spthy
@@ -792,7 +790,7 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 1.518404s
+  processing time: 1.899145054s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 
@@ -804,7 +802,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 1.518404s
+  processing time: 1.899145054s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (170 steps)
 

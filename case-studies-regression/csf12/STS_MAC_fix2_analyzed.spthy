@@ -413,8 +413,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/STS_MAC_fix2.spthy
@@ -423,7 +421,7 @@ analyzing: examples/csf12/STS_MAC_fix2.spthy
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 1.321581s
+  processing time: 1.54913053s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 
@@ -435,7 +433,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 1.321581s
+  processing time: 1.54913053s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 

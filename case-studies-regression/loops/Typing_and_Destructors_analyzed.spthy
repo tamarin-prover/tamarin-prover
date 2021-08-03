@@ -280,8 +280,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/Typing_and_Destructors.spthy
@@ -290,7 +288,7 @@ analyzing: examples/loops/Typing_and_Destructors.spthy
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.196769s
+  processing time: 0.168493475s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
@@ -306,7 +304,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.196769s
+  processing time: 0.168493475s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   

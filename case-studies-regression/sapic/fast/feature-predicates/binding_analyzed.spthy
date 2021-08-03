@@ -16,10 +16,10 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (C( ) @ #i)"
 */
 simplify
-solve( state_121( a ) ▶₀ #i )
+solve( State_121( a ) ▶₀ #i )
   case ifAddeda_0_12
-  solve( state_11( ~n ) ▶₀ #a )
-    case __0_1
+  solve( State_11( ~n ) ▶₀ #a )
+    case p_0_1
     SOLVED // trace found
   qed
 qed
@@ -31,69 +31,69 @@ guarded formula characterizing all counter-examples:
 "∃ #c. (C( ) @ #c) ∧ ∀ #a a.1. (A( a.1 ) @ #a) ⇒ ⊥"
 */
 simplify
-solve( state_121( a ) ▶₀ #c )
+solve( State_121( a ) ▶₀ #c )
   case ifAddeda_0_12
   by contradiction /* from formulas */
 qed
 
-rule (modulo E) Init[color=#ffffff process=new a;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new a;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_[color=#ffffff process=new a;]:
-   [ state_( ), Fr( a ) ] --> [ state_1( a ) ]
+rule (modulo E) newa_0_[color=#ffffff, process="new a;"]:
+   [ State_( ), Fr( a ) ] --> [ State_1( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=|]:
-   [ state_1( a ) ] --> [ state_11( a ), state_12( a ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+   [ State_1( a ) ] --> [ State_11( a ), State_12( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAa_0_11[color=#ffffff process=event A( a );]:
-   [ state_11( a ) ] --[ A( a ) ]-> [ state_111( a ) ]
+rule (modulo E) eventAa_0_11[color=#ffffff, process="event A( a );"]:
+   [ State_11( a ) ] --[ A( a ) ]-> [ State_111( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( a ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifAddeda_0_12_1:
+restriction Restr_ifAddeda_0_12_1:
   "∀ x #NOW.
-    (restr_ifAddeda_0_12_1( x ) @ #NOW) ⇒
+    (Restr_ifAddeda_0_12_1( x ) @ #NOW) ⇒
     (∃ #a. (A( x ) @ #a) ∧ (#a < #NOW))"
 
-rule (modulo E) ifAddeda_0_12[color=#ffffff process=if Added( a )]:
-   [ state_12( a ) ] --[ restr_ifAddeda_0_12_1( a ) ]-> [ state_121( a ) ]
+rule (modulo E) ifAddeda_0_12[color=#ffffff, process="if Added( a )"]:
+   [ State_12( a ) ] --[ Restr_ifAddeda_0_12_1( a ) ]-> [ State_121( a ) ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifAddeda_1_12_1:
+restriction Restr_ifAddeda_1_12_1:
   "∀ x #NOW.
-    (restr_ifAddeda_1_12_1( x ) @ #NOW) ⇒
+    (Restr_ifAddeda_1_12_1( x ) @ #NOW) ⇒
     (¬(∃ #a. (A( x ) @ #a) ∧ (#a < #NOW)))"
   // safety formula
 
-rule (modulo E) ifAddeda_1_12[color=#ffffff process=if Added( a )]:
-   [ state_12( a ) ] --[ restr_ifAddeda_1_12_1( a ) ]-> [ state_122( a ) ]
+rule (modulo E) ifAddeda_1_12[color=#ffffff, process="if Added( a )"]:
+   [ State_12( a ) ] --[ Restr_ifAddeda_1_12_1( a ) ]-> [ State_122( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_121[color=#ffffff process=event C( );]:
-   [ state_121( a ) ] --[ C( ) ]-> [ state_1211( a ) ]
+rule (modulo E) eventC_0_121[color=#ffffff, process="event C( );"]:
+   [ State_121( a ) ] --[ C( ) ]-> [ State_1211( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1211[color=#ffffff process=0]:
-   [ state_1211( a ) ] --> [ ]
+rule (modulo E) p_0_1211[color=#ffffff, process="0"]:
+   [ State_1211( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_122[color=#ffffff process=0]:
-   [ state_122( a ) ] --> [ ]
+rule (modulo E) p_0_122[color=#ffffff, process="0"]:
+   [ State_122( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -116,7 +116,7 @@ analyzing: examples/sapic/fast/feature-predicates/binding.spthy
 analyzed: examples/sapic/fast/feature-predicates/binding.spthy
 
   output:          examples/sapic/fast/feature-predicates/binding.spthy.tmp
-  processing time: 0.055814603s
+  processing time: 0.082351328s
   C_exists (exists-trace): verified (4 steps)
   A_before_C (all-traces): verified (3 steps)
 
@@ -128,7 +128,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/binding.spthy
 
   output:          examples/sapic/fast/feature-predicates/binding.spthy.tmp
-  processing time: 0.055814603s
+  processing time: 0.082351328s
   C_exists (exists-trace): verified (4 steps)
   A_before_C (all-traces): verified (3 steps)
 

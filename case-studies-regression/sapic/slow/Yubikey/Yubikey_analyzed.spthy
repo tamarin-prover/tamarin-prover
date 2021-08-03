@@ -53,7 +53,7 @@ next
              (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
              (¬(#t1 = #t2)))  ∥
            (∃ x #NOW x.1.
-             (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+             (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
             ∧
              (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
            (∃ x y #t3.
@@ -177,7 +177,7 @@ next
              ((tuple = <sid, k, otc>) ∧
               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
         case case_1
-        solve( state_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
+        solve( State_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
                ) ▶₀ #i )
           case ifSmallerotctc_0_111111111
           solve( splitEqs(1) )
@@ -522,7 +522,7 @@ next
              (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
              (¬(#t1 = #t2)))  ∥
            (∃ x #NOW x.1.
-             (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+             (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
             ∧
              (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
            (∃ x y #t3.
@@ -646,7 +646,7 @@ next
              ((tuple = <sid, k, otc>) ∧
               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
         case case_1
-        solve( state_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
+        solve( State_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
                ) ▶₀ #i )
           case ifSmallerotctc_0_111111111
           solve( splitEqs(1) )
@@ -655,7 +655,7 @@ next
               case split_case_1
               solve( Insert( <'Server', pid>, <sid, k, otc> ) @ #t2 )
                 case insertServerLpidsecretidktc_0_111111111111
-                solve( state_111111111111( pid, k, lock, nonce.1, npr.1, otc.1, sid, otc,
+                solve( State_111111111111( pid, k, lock, nonce.1, npr.1, otc.1, sid, otc,
                                            tuple
                        ) ▶₀ #t2 )
                   case eventLoginLpidktc_0_11111111111
@@ -663,7 +663,7 @@ next
                 qed
               next
                 case insertServerLpidsecretidkzero_0_21111
-                solve( state_21111( pid, k, sid ) ▶₀ #t2 )
+                solve( State_21111( pid, k, sid ) ▶₀ #t2 )
                   case newsecretid_0_2111
                   solve( !KU( senc(<~n.3, ('zero'+z), npr>, ~n.1) ) @ #vk.5 )
                     case c_senc
@@ -1032,7 +1032,7 @@ next
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
-           (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+           (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
           ∧
            (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
          (∃ x y #t3.
@@ -1154,7 +1154,7 @@ next
     case case_1
     solve( (last(#i))  ∥ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j)) )
       case case_1
-      solve( state_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
+      solve( State_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
              ) ▶₀ #i )
         case ifSmallerotctc_0_111111111
         solve( splitEqs(1) )
@@ -1165,7 +1165,7 @@ next
               case c_senc
               solve( Insert( <'Server', pid>, <sid, k, otc> ) @ #t2 )
                 case insertServerLpidsecretidktc_0_111111111111
-                solve( state_111111111111( pid, k, lock, nonce.1, npr.1, otc.1, sid, otc,
+                solve( State_111111111111( pid, k, lock, nonce.1, npr.1, otc.1, sid, otc,
                                            tuple
                        ) ▶₀ #t2 )
                   case eventLoginLpidktc_0_11111111111
@@ -1173,7 +1173,7 @@ next
                 qed
               next
                 case insertServerLpidsecretidkzero_0_21111
-                solve( state_21111( pid, k, sid ) ▶₀ #t2 )
+                solve( State_21111( pid, k, sid ) ▶₀ #t2 )
                   case newsecretid_0_2111
                   by solve( !KU( ~n.1 ) @ #j )
                 qed
@@ -1184,7 +1184,7 @@ next
                 case case_1
                 solve( Insert( <'Server', pid>, <~n.3, ~n, otc> ) @ #t2 )
                   case insertServerLpidsecretidktc_0_111111111111
-                  solve( state_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
+                  solve( State_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
                                              tuple
                          ) ▶₀ #t2 )
                     case eventLoginLpidktc_0_11111111111
@@ -1207,7 +1207,7 @@ next
                       case case_1
                       solve( (#vr.28 < #t2.3)  ∥ (#vr.28 = #t2.3) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1215,7 +1215,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1226,7 +1226,7 @@ next
                       case case_2
                       solve( (#vr.28 < #t2.3)  ∥ (#vr.28 = #t2.3)  ∥ (#vr.41 < #vr.28) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1240,7 +1240,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1254,7 +1254,7 @@ next
                         qed
                       next
                         case case_3
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1271,7 +1271,7 @@ next
                   qed
                 next
                   case insertServerLpidsecretidkzero_0_21111
-                  solve( state_21111( pid, ~n, ~n.3 ) ▶₀ #t2 )
+                  solve( State_21111( pid, ~n, ~n.3 ) ▶₀ #t2 )
                     case newsecretid_0_2111
                     by solve( !KU( ~n.1 ) @ #j )
                   qed
@@ -1280,7 +1280,7 @@ next
                 case case_2
                 solve( Insert( <'Server', pid>, <~n.3, ~n, otc> ) @ #t2.1 )
                   case insertServerLpidsecretidktc_0_111111111111
-                  solve( state_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
+                  solve( State_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
                                              tuple
                          ) ▶₀ #t2.1 )
                     case eventLoginLpidktc_0_11111111111
@@ -1303,7 +1303,7 @@ next
                       case case_1
                       solve( (#vr.27 < #t2.3)  ∥ (#vr.27 = #t2.3) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1311,7 +1311,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1322,7 +1322,7 @@ next
                       case case_2
                       solve( (#vr.27 < #t2.3)  ∥ (#vr.27 = #t2.3)  ∥ (#vr.40 < #vr.27) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1336,7 +1336,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1350,7 +1350,7 @@ next
                         qed
                       next
                         case case_3
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1367,7 +1367,7 @@ next
                   qed
                 next
                   case insertServerLpidsecretidkzero_0_21111
-                  solve( state_21111( pid, ~n, ~n.3 ) ▶₀ #t2.1 )
+                  solve( State_21111( pid, ~n, ~n.3 ) ▶₀ #t2.1 )
                     case newsecretid_0_2111
                     by solve( !KU( ~n.1 ) @ #j )
                   qed
@@ -1422,7 +1422,7 @@ next
       qed
     next
       case case_2
-      solve( state_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
+      solve( State_1111111111( pid, k, lock, nonce, npr, otc, sid, tc, tuple
              ) ▶₀ #i )
         case ifSmallerotctc_0_111111111
         solve( splitEqs(1) )
@@ -1438,7 +1438,7 @@ next
                 case case_1
                 solve( Insert( <'Server', pid>, <~n.3, ~n, otc> ) @ #t2 )
                   case insertServerLpidsecretidktc_0_111111111111
-                  solve( state_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
+                  solve( State_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
                                              tuple
                          ) ▶₀ #t2 )
                     case eventLoginLpidktc_0_11111111111
@@ -1461,7 +1461,7 @@ next
                       case case_1
                       solve( (#vr.28 < #t2.3)  ∥ (#vr.28 = #t2.3) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1469,7 +1469,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1480,7 +1480,7 @@ next
                       case case_2
                       solve( (#vr.28 < #t2.3)  ∥ (#vr.28 = #t2.3)  ∥ (#vr.41 < #vr.28) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1494,7 +1494,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1508,7 +1508,7 @@ next
                         qed
                       next
                         case case_3
-                        solve( state_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.5, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.1 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1525,7 +1525,7 @@ next
                   qed
                 next
                   case insertServerLpidsecretidkzero_0_21111
-                  solve( state_21111( pid, ~n, ~n.3 ) ▶₀ #t2 )
+                  solve( State_21111( pid, ~n, ~n.3 ) ▶₀ #t2 )
                     case newsecretid_0_2111
                     by solve( !KU( ~n.1 ) @ #j )
                   qed
@@ -1534,7 +1534,7 @@ next
                 case case_2
                 solve( Insert( <'Server', pid>, <~n.3, ~n, otc> ) @ #t2.1 )
                   case insertServerLpidsecretidktc_0_111111111111
-                  solve( state_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
+                  solve( State_111111111111( pid, ~n, lock, nonce.1, npr, otc.1, ~n.3, otc,
                                              tuple
                          ) ▶₀ #t2.1 )
                     case eventLoginLpidktc_0_11111111111
@@ -1557,7 +1557,7 @@ next
                       case case_1
                       solve( (#vr.27 < #t2.3)  ∥ (#vr.27 = #t2.3) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1565,7 +1565,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.2, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1576,7 +1576,7 @@ next
                       case case_2
                       solve( (#vr.27 < #t2.3)  ∥ (#vr.27 = #t2.3)  ∥ (#vr.40 < #vr.27) )
                         case case_1
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1590,7 +1590,7 @@ next
                         qed
                       next
                         case case_2
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1604,7 +1604,7 @@ next
                         qed
                       next
                         case case_3
-                        solve( state_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
+                        solve( State_1111111111111( ~n, k, ~n.6, nonce.2, npr.1, otc.1, secretid,
                                                     tc, tuple
                                ) ▶₀ #t2.2 )
                           case insertServerLpidsecretidktc_0_111111111111
@@ -1621,7 +1621,7 @@ next
                   qed
                 next
                   case insertServerLpidsecretidkzero_0_21111
-                  solve( state_21111( pid, ~n, ~n.3 ) ▶₀ #t2.1 )
+                  solve( State_21111( pid, ~n, ~n.3 ) ▶₀ #t2.1 )
                     case newsecretid_0_2111
                     by solve( !KU( ~n.1 ) @ #j )
                   qed
@@ -1989,7 +1989,7 @@ next
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
-           (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+           (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
           ∧
            (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
          (∃ x y #t3.
@@ -2112,7 +2112,7 @@ next
     solve( (last(#i))  ∥
            (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
       case case_1
-      solve( state_21111111112111111( pid, k, nonce, npr, sid, tc, lock
+      solve( State_21111111112111111( pid, k, nonce, npr, sid, tc, lock
              ) ▶₀ #i )
         case newnpr_0_2111111111211111
         by contradiction /* from formulas */
@@ -2456,7 +2456,7 @@ next
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
-           (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+           (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
           ∧
            (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
          (∃ x y #t3.
@@ -2580,7 +2580,7 @@ next
            (∃ #t1 sid.
              (YubiPress( pid, sid, k, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) )
       case case_1
-      solve( state_11111111111( pid, k, lock, nonce, npr, otc, secretid, x,
+      solve( State_11111111111( pid, k, lock, nonce, npr, otc, secretid, x,
                                 tuple
              ) ▶₀ #t2 )
         case eventInitStuffLpidsecretidktupleotctc_0_1111111111
@@ -3020,19 +3020,19 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   case case_1
-  solve( state_11111111111( pid, k, lock, nonce, npr, otc, secretid, tc1,
+  solve( State_11111111111( pid, k, lock, nonce, npr, otc, secretid, tc1,
                             tuple
          ) ▶₀ #t1 )
     case eventInitStuffLpidsecretidktupleotctc_0_1111111111
     solve( (#vr.14 < #t2)  ∥ (#vr.14 = #t2)  ∥ (#vr.6 < #vr.14) )
       case case_1
-      solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+      solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                       lock
              ) ▶₀ #t1.1 )
         case newnpr_0_2111111111211111
         solve( (#vr.13 < #t2.1)  ∥ (#vr.13 = #t2.1) )
           case case_1
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -3057,7 +3057,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3065,7 +3065,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3076,7 +3076,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3084,7 +3084,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3097,7 +3097,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3105,7 +3105,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3114,7 +3114,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3124,7 +3124,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.22 < #t2.3)  ∥ (#vr.22 = #t2.3)  ∥ (#vr.34 < #vr.22) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3144,7 +3144,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3164,7 +3164,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3179,7 +3179,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3199,7 +3199,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3216,7 +3216,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3236,7 +3236,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3255,7 +3255,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3263,7 +3263,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3272,7 +3272,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3282,7 +3282,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.22 < #t2.3)  ∥ (#vr.22 = #t2.3)  ∥ (#vr.34 < #vr.22) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3290,7 +3290,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3298,7 +3298,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3326,7 +3326,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
           qed
         next
           case case_2
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -3352,7 +3352,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.6
                        ) ▶₀ #t2.1 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3362,7 +3362,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3376,7 +3376,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3390,7 +3390,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3405,7 +3405,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.7
                        ) ▶₀ #t2.1 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3415,7 +3415,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3423,7 +3423,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3431,7 +3431,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3454,13 +3454,13 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
       qed
     next
       case case_2
-      solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+      solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                       lock
              ) ▶₀ #t1.1 )
         case newnpr_0_2111111111211111
         solve( (#vr.13 < #t2.1)  ∥ (#vr.13 = #t2.1) )
           case case_1
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -3485,7 +3485,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3493,7 +3493,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3504,7 +3504,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3512,7 +3512,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3525,7 +3525,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.6
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3533,7 +3533,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.6
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3542,7 +3542,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3552,7 +3552,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.6
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3572,7 +3572,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.6
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3592,7 +3592,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.6
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3607,7 +3607,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3627,7 +3627,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3644,7 +3644,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3664,7 +3664,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3683,7 +3683,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.7
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3691,7 +3691,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.7
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3700,7 +3700,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3710,7 +3710,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.7
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3718,7 +3718,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.7
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3726,7 +3726,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.7
                            ) ▶₀ #t2.1 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3754,7 +3754,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
           qed
         next
           case case_2
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -3780,7 +3780,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.6
                        ) ▶₀ #t2.2 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3790,7 +3790,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.20 < #t2.3)  ∥ (#vr.20 = #t2.3)  ∥ (#vr.32 < #vr.20) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3804,7 +3804,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3818,7 +3818,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3833,7 +3833,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.9
                        ) ▶₀ #t2.2 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3843,7 +3843,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.20 < #t2.3)  ∥ (#vr.20 = #t2.3)  ∥ (#vr.32 < #vr.20) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.9
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3851,7 +3851,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.9
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3859,7 +3859,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.9
                          ) ▶₀ #t2.2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3882,13 +3882,13 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
       qed
     next
       case case_3
-      solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+      solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                       lock
              ) ▶₀ #t1.1 )
         case newnpr_0_2111111111211111
         solve( (#vr.13 < #t2.1)  ∥ (#vr.13 = #t2.1) )
           case case_1
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -3913,7 +3913,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3921,7 +3921,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3932,7 +3932,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3940,7 +3940,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3953,7 +3953,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3961,7 +3961,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3970,7 +3970,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -3980,7 +3980,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.22 < #t2.3)  ∥ (#vr.22 = #t2.3)  ∥ (#vr.34 < #vr.22) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4000,7 +4000,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4020,7 +4020,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4035,7 +4035,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_1
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4055,7 +4055,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4072,7 +4072,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_2
                 solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4092,7 +4092,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4111,7 +4111,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_1
                   solve( (#vr.13 < #t2.3)  ∥ (#vr.13 = #t2.3) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4119,7 +4119,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4128,7 +4128,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.4
                          ) ▶₀ #t2 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4138,7 +4138,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   case case_3
                   solve( (#vr.22 < #t2.3)  ∥ (#vr.22 = #t2.3)  ∥ (#vr.34 < #vr.22) )
                     case case_1
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4146,7 +4146,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_2
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4154,7 +4154,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                     qed
                   next
                     case case_3
-                    solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                    solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                       ~n.4
                            ) ▶₀ #t2 )
                       case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4182,7 +4182,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
           qed
         next
           case case_2
-          solve( state_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
+          solve( State_21111111112111111( ~n, ~n.1, nonce.1, npr.1, sid, (otc+z),
                                           lock
                  ) ▶₀ #t1.2 )
             case newnpr_0_2111111111211111
@@ -4208,7 +4208,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.6
                        ) ▶₀ #t2.1 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4218,7 +4218,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4232,7 +4232,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4246,7 +4246,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.6
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4261,7 +4261,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 by contradiction /* from formulas */
               next
                 case case_2
-                solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                   ~n.7
                        ) ▶₀ #t2.1 )
                   case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4271,7 +4271,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                 case case_3
                 solve( (#vr.21 < #t2.3)  ∥ (#vr.21 = #t2.3)  ∥ (#vr.33 < #vr.21) )
                   case case_1
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4279,7 +4279,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_2
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4287,7 +4287,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                   qed
                 next
                   case case_3
-                  solve( state_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
+                  solve( State_2111111111211111111( ~n, k, nonce.1, npr.1, secretid, tc,
                                                     ~n.7
                          ) ▶₀ #t2.1 )
                     case outLpidnoncesencsecretidtcnprk_0_211111111121111111
@@ -4312,67 +4312,73 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=|]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=|]:
-   [ state_( ) ] --> [ state_1( ), state_2( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="|"]:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#806040 process=!]:
-   [ state_1( ) ] --> [ !semistate_11( ) ]
+rule (modulo E) p_0_1[color=#806040, process="!"]:
+   [ State_1( ) ] --> [ !Semistate_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1[color=#806040 process=!]:
-   [ !semistate_11( ) ] --> [ state_11( ) ]
+rule (modulo E) p_1_1[color=#806040, process="!"]:
+   [ !Semistate_11( ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inLpidnoncesencsecretidtcnprk_0_11[color=#806040 process=in(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);]:
-   [ state_11( ), In( <L_pid, nonce, senc(<secretid, tc, npr>, k)> ) ]
+rule (modulo E) inLpidnoncesencsecretidtcnprk_0_11[color=#806040,
+                                                   process="in(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);"]:
+   [ State_11( ), In( <L_pid, nonce, senc(<secretid, tc, npr>, k)> ) ]
   -->
-   [ state_111( L_pid, k, nonce, npr, secretid, tc ) ]
+   [ State_111( L_pid, k, nonce, npr, secretid, tc ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockServerLpid_0_111[color=#806040 process=lock <'Server', L_pid>;]:
-   [ state_111( L_pid, k, nonce, npr, secretid, tc ), Fr( lock ) ]
+rule (modulo E) lockServerLpid_0_111[color=#806040,
+                                     process="lock <'Server', L_pid>;"]:
+   [ State_111( L_pid, k, nonce, npr, secretid, tc ), Fr( lock ) ]
   --[
   Lock_0( '0', lock, <'Server', L_pid> ),
   Lock( '0', lock, <'Server', L_pid> )
   ]->
-   [ state_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
+   [ State_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupServerLpidastuple_0_1111[color=#806040 process=lookup <'Server', L_pid> as tuple]:
-   [ state_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
+rule (modulo E) lookupServerLpidastuple_0_1111[color=#806040,
+                                               process="lookup <'Server', L_pid> as tuple"]:
+   [ State_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
   --[ IsIn( <'Server', L_pid>, tuple ) ]->
-   [ state_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+   [ State_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupServerLpidastuple_1_1111[color=#806040 process=lookup <'Server', L_pid> as tuple]:
-   [ state_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
+rule (modulo E) lookupServerLpidastuple_1_1111[color=#806040,
+                                               process="lookup <'Server', L_pid> as tuple"]:
+   [ State_1111( L_pid, k, lock, nonce, npr, secretid, tc ) ]
   --[ IsNotSet( <'Server', L_pid> ) ]->
-   [ state_11112( L_pid, k, lock, nonce, npr, secretid, tc ) ]
+   [ State_11112( L_pid, k, lock, nonce, npr, secretid, tc ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) iffsttuplesecretid_0_11111[color=#806040 process=if fst(tuple)=secretid]:
-   [ state_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) iffsttuplesecretid_0_11111[color=#806040,
+                                           process="if fst(tuple)=secretid"]:
+   [ State_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   --[ Pred_Eq( fst(tuple), secretid ) ]->
-   [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+   [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
 
   /*
-  rule (modulo AC) iffsttuplesecretid_0_11111[color=#806040 process=if fst(tuple)=secretid]:
-     [ state_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+  rule (modulo AC) iffsttuplesecretid_0_11111[color=#806040,
+                                              process="if fst(tuple)=secretid"]:
+     [ State_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     --[ Pred_Eq( z, secretid ) ]->
-     [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+     [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     variants (modulo AC)
     1. tuple = tuple.10
        z     = fst(tuple.10)
@@ -4381,16 +4387,18 @@ rule (modulo E) iffsttuplesecretid_0_11111[color=#806040 process=if fst(tuple)=s
        z     = x.10
   */
 
-rule (modulo E) iffsttuplesecretid_1_11111[color=#806040 process=if fst(tuple)=secretid]:
-   [ state_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) iffsttuplesecretid_1_11111[color=#806040,
+                                           process="if fst(tuple)=secretid"]:
+   [ State_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   --[ Pred_Not_Eq( fst(tuple), secretid ) ]->
-   [ state_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+   [ State_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
 
   /*
-  rule (modulo AC) iffsttuplesecretid_1_11111[color=#806040 process=if fst(tuple)=secretid]:
-     [ state_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+  rule (modulo AC) iffsttuplesecretid_1_11111[color=#806040,
+                                              process="if fst(tuple)=secretid"]:
+     [ State_11111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     --[ Pred_Not_Eq( z, secretid ) ]->
-     [ state_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+     [ State_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     variants (modulo AC)
     1. tuple = tuple.10
        z     = fst(tuple.10)
@@ -4399,16 +4407,18 @@ rule (modulo E) iffsttuplesecretid_1_11111[color=#806040 process=if fst(tuple)=s
        z     = x.10
   */
 
-rule (modulo E) iffstsndtuplek_0_111111[color=#806040 process=if fst(snd(tuple))=k]:
-   [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) iffstsndtuplek_0_111111[color=#806040,
+                                        process="if fst(snd(tuple))=k"]:
+   [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   --[ Pred_Eq( fst(snd(tuple)), k ) ]->
-   [ state_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+   [ State_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
 
   /*
-  rule (modulo AC) iffstsndtuplek_0_111111[color=#806040 process=if fst(snd(tuple))=k]:
-     [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+  rule (modulo AC) iffstsndtuplek_0_111111[color=#806040,
+                                           process="if fst(snd(tuple))=k"]:
+     [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     --[ Pred_Eq( z, k ) ]->
-     [ state_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+     [ State_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     variants (modulo AC)
     1. tuple = tuple.10
        z     = fst(snd(tuple.10))
@@ -4420,16 +4430,18 @@ rule (modulo E) iffstsndtuplek_0_111111[color=#806040 process=if fst(snd(tuple))
        z     = x.11
   */
 
-rule (modulo E) iffstsndtuplek_1_111111[color=#806040 process=if fst(snd(tuple))=k]:
-   [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) iffstsndtuplek_1_111111[color=#806040,
+                                        process="if fst(snd(tuple))=k"]:
+   [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   --[ Pred_Not_Eq( fst(snd(tuple)), k ) ]->
-   [ state_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+   [ State_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
 
   /*
-  rule (modulo AC) iffstsndtuplek_1_111111[color=#806040 process=if fst(snd(tuple))=k]:
-     [ state_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+  rule (modulo AC) iffstsndtuplek_1_111111[color=#806040,
+                                           process="if fst(snd(tuple))=k"]:
+     [ State_111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     --[ Pred_Not_Eq( z, k ) ]->
-     [ state_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+     [ State_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
     variants (modulo AC)
     1. tuple = tuple.10
        z     = fst(snd(tuple.10))
@@ -4441,30 +4453,32 @@ rule (modulo E) iffstsndtuplek_1_111111[color=#806040 process=if fst(snd(tuple))
        z     = x.11
   */
 
-rule (modulo E) inotc_0_1111111[color=#806040 process=in(otc);]:
+rule (modulo E) inotc_0_1111111[color=#806040, process="in(otc);"]:
    [
-   state_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ),
+   State_1111111( L_pid, k, lock, nonce, npr, secretid, tc, tuple ),
    In( otc )
    ]
   -->
-   [ state_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   [ State_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifsndsndtupleotc_0_11111111[color=#806040 process=if snd(snd(tuple))=otc]:
-   [ state_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+rule (modulo E) ifsndsndtupleotc_0_11111111[color=#806040,
+                                            process="if snd(snd(tuple))=otc"]:
+   [ State_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   --[ Pred_Eq( snd(snd(tuple)), otc ) ]->
-   [ state_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   [ State_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /*
-  rule (modulo AC) ifsndsndtupleotc_0_11111111[color=#806040 process=if snd(snd(tuple))=otc]:
-     [ state_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+  rule (modulo AC) ifsndsndtupleotc_0_11111111[color=#806040,
+                                               process="if snd(snd(tuple))=otc"]:
+     [ State_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
      ]
     --[ Pred_Eq( z, otc ) ]->
-     [ state_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+     [ State_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
      ]
     variants (modulo AC)
     1. tuple = tuple.11
@@ -4477,19 +4491,21 @@ rule (modulo E) ifsndsndtupleotc_0_11111111[color=#806040 process=if snd(snd(tup
        z     = x.13
   */
 
-rule (modulo E) ifsndsndtupleotc_1_11111111[color=#806040 process=if snd(snd(tuple))=otc]:
-   [ state_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+rule (modulo E) ifsndsndtupleotc_1_11111111[color=#806040,
+                                            process="if snd(snd(tuple))=otc"]:
+   [ State_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   --[ Pred_Not_Eq( snd(snd(tuple)), otc ) ]->
-   [ state_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   [ State_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /*
-  rule (modulo AC) ifsndsndtupleotc_1_11111111[color=#806040 process=if snd(snd(tuple))=otc]:
-     [ state_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+  rule (modulo AC) ifsndsndtupleotc_1_11111111[color=#806040,
+                                               process="if snd(snd(tuple))=otc"]:
+     [ State_11111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
      ]
     --[ Pred_Not_Eq( z, otc ) ]->
-     [ state_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+     [ State_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
      ]
     variants (modulo AC)
     1. tuple = tuple.11
@@ -4502,76 +4518,82 @@ rule (modulo E) ifsndsndtupleotc_1_11111111[color=#806040 process=if snd(snd(tup
        z     = x.13
   */
 
-restriction restr_ifSmallerotctc_0_111111111_1:
+restriction Restr_ifSmallerotctc_0_111111111_1:
   "∀ x #NOW x.1.
-    (restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW) ⇒
+    (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW) ⇒
     (∃ z. (x+z) = x.1)"
 
-rule (modulo E) ifSmallerotctc_0_111111111[color=#806040 process=if Smaller( otc, tc )]:
-   [ state_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+rule (modulo E) ifSmallerotctc_0_111111111[color=#806040,
+                                           process="if Smaller( otc, tc )"]:
+   [ State_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
-  --[ restr_ifSmallerotctc_0_111111111_1( otc, tc ) ]->
+  --[ Restr_ifSmallerotctc_0_111111111_1( otc, tc ) ]->
    [
-   state_1111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_1111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifSmallerotctc_1_111111111_1:
+restriction Restr_ifSmallerotctc_1_111111111_1:
   "∀ x #NOW x.1.
-    (restr_ifSmallerotctc_1_111111111_1( x, x.1 ) @ #NOW) ⇒
+    (Restr_ifSmallerotctc_1_111111111_1( x, x.1 ) @ #NOW) ⇒
     (¬(∃ z. (x+z) = x.1))"
   // safety formula
 
-rule (modulo E) ifSmallerotctc_1_111111111[color=#806040 process=if Smaller( otc, tc )]:
-   [ state_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+rule (modulo E) ifSmallerotctc_1_111111111[color=#806040,
+                                           process="if Smaller( otc, tc )"]:
+   [ State_111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
-  --[ restr_ifSmallerotctc_1_111111111_1( otc, tc ) ]->
+  --[ Restr_ifSmallerotctc_1_111111111_1( otc, tc ) ]->
    [
-   state_1111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_1111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventInitStuffLpidsecretidktupleotctc_0_1111111111[color=#806040 process=event InitStuff( L_pid, secretid, k, tuple, otc, tc );]:
+rule (modulo E) eventInitStuffLpidsecretidktupleotctc_0_1111111111[color=#806040,
+                                                                   process="event InitStuff( L_pid, secretid, k, tuple, otc, tc );"]:
    [
-   state_1111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_1111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   --[ InitStuff( L_pid, secretid, k, tuple, otc, tc ) ]->
    [
-   state_11111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_11111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventLoginLpidktc_0_11111111111[color=#806040 process=event Login( L_pid, k, tc );]:
+rule (modulo E) eventLoginLpidktc_0_11111111111[color=#806040,
+                                                process="event Login( L_pid, k, tc );"]:
    [
-   state_11111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_11111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   --[ Login( L_pid, k, tc ) ]->
    [
-   state_111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
+   State_111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
    )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertServerLpidsecretidktc_0_111111111111[color=#806040 process=insert <'Server', L_pid>,<secretid, k, tc>;]:
+rule (modulo E) insertServerLpidsecretidktc_0_111111111111[color=#806040,
+                                                           process="insert <'Server', L_pid>,<secretid, k, tc>;"]:
    [
-   state_111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
+   State_111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
    )
    ]
   --[ Insert( <'Server', L_pid>, <secretid, k, tc> ) ]->
    [
-   state_1111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
+   State_1111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
    )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockServerLpid_0_1111111111111[color=#806040 process=unlock <'Server', L_pid>;]:
+rule (modulo E) unlockServerLpid_0_1111111111111[color=#806040,
+                                                 process="unlock <'Server', L_pid>;"]:
    [
-   state_1111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
+   State_1111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple
    )
    ]
   --[
@@ -4579,16 +4601,16 @@ rule (modulo E) unlockServerLpid_0_1111111111111[color=#806040 process=unlock <'
   Unlock( '0', lock, <'Server', L_pid> )
   ]->
    [
-   state_11111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc,
+   State_11111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc,
                          tuple
    )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111111111111[color=#806040 process=0]:
+rule (modulo E) p_0_11111111111111[color=#806040, process="0"]:
    [
-   state_11111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc,
+   State_11111111111111( L_pid, k, lock, nonce, npr, otc, secretid, tc,
                          tuple
    )
    ]
@@ -4597,391 +4619,423 @@ rule (modulo E) __0_11111111111111[color=#806040 process=0]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111112[color=#806040 process=0]:
+rule (modulo E) p_0_1111111112[color=#806040, process="0"]:
    [
-   state_1111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+   State_1111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   -->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111112[color=#806040 process=0]:
-   [ state_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
+rule (modulo E) p_0_111111112[color=#806040, process="0"]:
+   [ State_111111112( L_pid, k, lock, nonce, npr, otc, secretid, tc, tuple )
    ]
   -->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111112[color=#806040 process=0]:
-   [ state_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) p_0_1111112[color=#806040, process="0"]:
+   [ State_1111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   -->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111112[color=#806040 process=0]:
-   [ state_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
+rule (modulo E) p_0_111112[color=#806040, process="0"]:
+   [ State_111112( L_pid, k, lock, nonce, npr, secretid, tc, tuple ) ]
   -->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112[color=#806040 process=0]:
-   [ state_11112( L_pid, k, lock, nonce, npr, secretid, tc ) ] --> [ ]
+rule (modulo E) p_0_11112[color=#806040, process="0"]:
+   [ State_11112( L_pid, k, lock, nonce, npr, secretid, tc ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_2[color=#ffffff process=!]:
-   [ state_2( ) ] --> [ !semistate_21( ) ]
+rule (modulo E) p_0_2[color=#ffffff, process="!"]:
+   [ State_2( ) ] --> [ !Semistate_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_2[color=#ffffff process=!]:
-   [ !semistate_21( ) ] --> [ state_21( ) ]
+rule (modulo E) p_1_2[color=#ffffff, process="!"]:
+   [ !Semistate_21( ) ] --> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_21[color=#805140 process=new k;]:
-   [ state_21( ), Fr( k ) ] --> [ state_211( k ) ]
+rule (modulo E) newk_0_21[color=#805140, process="new k;"]:
+   [ State_21( ), Fr( k ) ] --> [ State_211( k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newLpid_0_211[color=#805140 process=new L_pid;]:
-   [ state_211( k ), Fr( L_pid ) ] --> [ state_2111( L_pid, k ) ]
+rule (modulo E) newLpid_0_211[color=#805140, process="new L_pid;"]:
+   [ State_211( k ), Fr( L_pid ) ] --> [ State_2111( L_pid, k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsecretid_0_2111[color=#805140 process=new secretid;]:
-   [ state_2111( L_pid, k ), Fr( secretid ) ]
+rule (modulo E) newsecretid_0_2111[color=#805140,
+                                   process="new secretid;"]:
+   [ State_2111( L_pid, k ), Fr( secretid ) ]
   -->
-   [ state_21111( L_pid, k, secretid ) ]
+   [ State_21111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertServerLpidsecretidkzero_0_21111[color=#805140 process=insert <'Server', L_pid>,<secretid, k, 'zero'>;]:
-   [ state_21111( L_pid, k, secretid ) ]
+rule (modulo E) insertServerLpidsecretidkzero_0_21111[color=#805140,
+                                                      process="insert <'Server', L_pid>,<secretid, k, 'zero'>;"]:
+   [ State_21111( L_pid, k, secretid ) ]
   --[ Insert( <'Server', L_pid>, <secretid, k, 'zero'> ) ]->
-   [ state_211111( L_pid, k, secretid ) ]
+   [ State_211111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertLYubikeyLpidonezero_0_211111[color=#805140 process=insert <'L_Yubikey', L_pid>,('one'+'zero');]:
-   [ state_211111( L_pid, k, secretid ) ]
+rule (modulo E) insertLYubikeyLpidonezero_0_211111[color=#805140,
+                                                   process="insert <'L_Yubikey', L_pid>,('one'+'zero');"]:
+   [ State_211111( L_pid, k, secretid ) ]
   --[ Insert( <'L_Yubikey', L_pid>, ('one'+'zero') ) ]->
-   [ state_2111111( L_pid, k, secretid ) ]
+   [ State_2111111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventYubiInitLpidsecretidk_0_2111111[color=#805140 process=event YubiInit( L_pid, secretid, k );]:
-   [ state_2111111( L_pid, k, secretid ) ]
+rule (modulo E) eventYubiInitLpidsecretidk_0_2111111[color=#805140,
+                                                     process="event YubiInit( L_pid, secretid, k );"]:
+   [ State_2111111( L_pid, k, secretid ) ]
   --[ YubiInit( L_pid, secretid, k ) ]->
-   [ state_21111111( L_pid, k, secretid ) ]
+   [ State_21111111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outLpid_0_21111111[color=#805140 process=out(L_pid);]:
-   [ state_21111111( L_pid, k, secretid ) ]
+rule (modulo E) outLpid_0_21111111[color=#805140, process="out(L_pid);"]:
+   [ State_21111111( L_pid, k, secretid ) ]
   -->
-   [ state_211111111( L_pid, k, secretid ), Out( L_pid ) ]
+   [ State_211111111( L_pid, k, secretid ), Out( L_pid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_211111111[color=#805140 process=!]:
-   [ state_211111111( L_pid, k, secretid ) ]
+rule (modulo E) p_0_211111111[color=#805140, process="!"]:
+   [ State_211111111( L_pid, k, secretid ) ]
   -->
-   [ !semistate_2111111111( L_pid, k, secretid ) ]
+   [ !Semistate_2111111111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_211111111[color=#805140 process=!]:
-   [ !semistate_2111111111( L_pid, k, secretid ) ]
+rule (modulo E) p_1_211111111[color=#805140, process="!"]:
+   [ !Semistate_2111111111( L_pid, k, secretid ) ]
   -->
-   [ state_2111111111( L_pid, k, secretid ) ]
+   [ State_2111111111( L_pid, k, secretid ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_2111111111[color=#805140 process=|]:
-   [ state_2111111111( L_pid, k, secretid ) ]
+rule (modulo E) p_0_2111111111[color=#805140, process="|"]:
+   [ State_2111111111( L_pid, k, secretid ) ]
   -->
    [
-   state_21111111111( L_pid, k, secretid ),
-   state_21111111112( L_pid, k, secretid )
+   State_21111111111( L_pid, k, secretid ),
+   State_21111111112( L_pid, k, secretid )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockYubikeyLpid_0_21111111111[color=#805140 process=lock <'Yubikey', L_pid>;]:
-   [ state_21111111111( L_pid, k, secretid ), Fr( lock.1 ) ]
+rule (modulo E) lockYubikeyLpid_0_21111111111[color=#805140,
+                                              process="lock <'Yubikey', L_pid>;"]:
+   [ State_21111111111( L_pid, k, secretid ), Fr( lock.1 ) ]
   --[
   Lock_1( '1', lock.1, <'Yubikey', L_pid> ),
   Lock( '1', lock.1, <'Yubikey', L_pid> )
   ]->
-   [ state_211111111111( L_pid, k, secretid, lock.1 ) ]
+   [ State_211111111111( L_pid, k, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) lockYubikeyLpid_0_21111111111[color=#805140 process=lock <'Yubikey', L_pid>;]:
-     [ state_21111111111( L_pid, k, secretid ), Fr( lock ) ]
+  rule (modulo AC) lockYubikeyLpid_0_21111111111[color=#805140,
+                                                 process="lock <'Yubikey', L_pid>;"]:
+     [ State_21111111111( L_pid, k, secretid ), Fr( lock ) ]
     --[
     Lock_1( '1', lock, <'Yubikey', L_pid> ),
     Lock( '1', lock, <'Yubikey', L_pid> )
     ]->
-     [ state_211111111111( L_pid, k, secretid, lock ) ]
+     [ State_211111111111( L_pid, k, secretid, lock ) ]
   */
 
-rule (modulo E) lookupLYubikeyLpidassc_0_211111111111[color=#805140 process=lookup <'L_Yubikey', L_pid> as sc]:
-   [ state_211111111111( L_pid, k, secretid, lock.1 ) ]
+rule (modulo E) lookupLYubikeyLpidassc_0_211111111111[color=#805140,
+                                                      process="lookup <'L_Yubikey', L_pid> as sc"]:
+   [ State_211111111111( L_pid, k, secretid, lock.1 ) ]
   --[ IsIn( <'L_Yubikey', L_pid>, sc ) ]->
-   [ state_2111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+   [ State_2111111111111( L_pid, k, sc, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) lookupLYubikeyLpidassc_0_211111111111[color=#805140 process=lookup <'L_Yubikey', L_pid> as sc]:
-     [ state_211111111111( L_pid, k, secretid, lock ) ]
+  rule (modulo AC) lookupLYubikeyLpidassc_0_211111111111[color=#805140,
+                                                         process="lookup <'L_Yubikey', L_pid> as sc"]:
+     [ State_211111111111( L_pid, k, secretid, lock ) ]
     --[ IsIn( <'L_Yubikey', L_pid>, sc ) ]->
-     [ state_2111111111111( L_pid, k, sc, secretid, lock ) ]
+     [ State_2111111111111( L_pid, k, sc, secretid, lock ) ]
   */
 
-rule (modulo E) lookupLYubikeyLpidassc_1_211111111111[color=#805140 process=lookup <'L_Yubikey', L_pid> as sc]:
-   [ state_211111111111( L_pid, k, secretid, lock.1 ) ]
+rule (modulo E) lookupLYubikeyLpidassc_1_211111111111[color=#805140,
+                                                      process="lookup <'L_Yubikey', L_pid> as sc"]:
+   [ State_211111111111( L_pid, k, secretid, lock.1 ) ]
   --[ IsNotSet( <'L_Yubikey', L_pid> ) ]->
-   [ state_2111111111112( L_pid, k, secretid, lock.1 ) ]
+   [ State_2111111111112( L_pid, k, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) lookupLYubikeyLpidassc_1_211111111111[color=#805140 process=lookup <'L_Yubikey', L_pid> as sc]:
-     [ state_211111111111( L_pid, k, secretid, lock ) ]
+  rule (modulo AC) lookupLYubikeyLpidassc_1_211111111111[color=#805140,
+                                                         process="lookup <'L_Yubikey', L_pid> as sc"]:
+     [ State_211111111111( L_pid, k, secretid, lock ) ]
     --[ IsNotSet( <'L_Yubikey', L_pid> ) ]->
-     [ state_2111111111112( L_pid, k, secretid, lock ) ]
+     [ State_2111111111112( L_pid, k, secretid, lock ) ]
   */
 
-rule (modulo E) insc_0_2111111111111[color=#805140 process=in(sc);]:
-   [ state_2111111111111( L_pid, k, sc, secretid, lock.1 ), In( sc ) ]
+rule (modulo E) insc_0_2111111111111[color=#805140, process="in(sc);"]:
+   [ State_2111111111111( L_pid, k, sc, secretid, lock.1 ), In( sc ) ]
   -->
-   [ state_21111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+   [ State_21111111111111( L_pid, k, sc, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) insc_0_2111111111111[color=#805140 process=in(sc);]:
-     [ state_2111111111111( L_pid, k, sc, secretid, lock ), In( sc ) ]
+  rule (modulo AC) insc_0_2111111111111[color=#805140, process="in(sc);"]:
+     [ State_2111111111111( L_pid, k, sc, secretid, lock ), In( sc ) ]
     -->
-     [ state_21111111111111( L_pid, k, sc, secretid, lock ) ]
+     [ State_21111111111111( L_pid, k, sc, secretid, lock ) ]
   */
 
-rule (modulo E) insertLYubikeyLpidonesc_0_21111111111111[color=#805140 process=insert <'L_Yubikey', L_pid>,('one'+sc);]:
-   [ state_21111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+rule (modulo E) insertLYubikeyLpidonesc_0_21111111111111[color=#805140,
+                                                         process="insert <'L_Yubikey', L_pid>,('one'+sc);"]:
+   [ State_21111111111111( L_pid, k, sc, secretid, lock.1 ) ]
   --[ Insert( <'L_Yubikey', L_pid>, ('one'+sc) ) ]->
-   [ state_211111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+   [ State_211111111111111( L_pid, k, sc, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) insertLYubikeyLpidonesc_0_21111111111111[color=#805140 process=insert <'L_Yubikey', L_pid>,('one'+sc);]:
-     [ state_21111111111111( L_pid, k, sc, secretid, lock ) ]
+  rule (modulo AC) insertLYubikeyLpidonesc_0_21111111111111[color=#805140,
+                                                            process="insert <'L_Yubikey', L_pid>,('one'+sc);"]:
+     [ State_21111111111111( L_pid, k, sc, secretid, lock ) ]
     --[ Insert( <'L_Yubikey', L_pid>, ('one'+sc) ) ]->
-     [ state_211111111111111( L_pid, k, sc, secretid, lock ) ]
+     [ State_211111111111111( L_pid, k, sc, secretid, lock ) ]
   */
 
-rule (modulo E) unlockYubikeyLpid_0_211111111111111[color=#805140 process=unlock <'Yubikey', L_pid>;]:
-   [ state_211111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+rule (modulo E) unlockYubikeyLpid_0_211111111111111[color=#805140,
+                                                    process="unlock <'Yubikey', L_pid>;"]:
+   [ State_211111111111111( L_pid, k, sc, secretid, lock.1 ) ]
   --[
   Unlock_1( '1', lock.1, <'Yubikey', L_pid> ),
   Unlock( '1', lock.1, <'Yubikey', L_pid> )
   ]->
-   [ state_2111111111111111( L_pid, k, sc, secretid, lock.1 ) ]
+   [ State_2111111111111111( L_pid, k, sc, secretid, lock.1 ) ]
 
   /*
-  rule (modulo AC) unlockYubikeyLpid_0_211111111111111[color=#805140 process=unlock <'Yubikey', L_pid>;]:
-     [ state_211111111111111( L_pid, k, sc, secretid, lock ) ]
+  rule (modulo AC) unlockYubikeyLpid_0_211111111111111[color=#805140,
+                                                       process="unlock <'Yubikey', L_pid>;"]:
+     [ State_211111111111111( L_pid, k, sc, secretid, lock ) ]
     --[
     Unlock_1( '1', lock, <'Yubikey', L_pid> ),
     Unlock( '1', lock, <'Yubikey', L_pid> )
     ]->
-     [ state_2111111111111111( L_pid, k, sc, secretid, lock ) ]
+     [ State_2111111111111111( L_pid, k, sc, secretid, lock ) ]
   */
 
-rule (modulo E) __0_2111111111111111[color=#805140 process=0]:
-   [ state_2111111111111111( L_pid, k, sc, secretid, lock.1 ) ] --> [ ]
+rule (modulo E) p_0_2111111111111111[color=#805140, process="0"]:
+   [ State_2111111111111111( L_pid, k, sc, secretid, lock.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_2111111111111111[color=#805140 process=0]:
-     [ state_2111111111111111( L_pid, k, sc, secretid, lock ) ] --> [ ]
+  rule (modulo AC) p_0_2111111111111111[color=#805140, process="0"]:
+     [ State_2111111111111111( L_pid, k, sc, secretid, lock ) ] --> [ ]
   */
 
-rule (modulo E) __0_2111111111112[color=#805140 process=0]:
-   [ state_2111111111112( L_pid, k, secretid, lock.1 ) ] --> [ ]
+rule (modulo E) p_0_2111111111112[color=#805140, process="0"]:
+   [ State_2111111111112( L_pid, k, secretid, lock.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_2111111111112[color=#805140 process=0]:
-     [ state_2111111111112( L_pid, k, secretid, lock ) ] --> [ ]
+  rule (modulo AC) p_0_2111111111112[color=#805140, process="0"]:
+     [ State_2111111111112( L_pid, k, secretid, lock ) ] --> [ ]
   */
 
-rule (modulo E) lockYubikeyLpid_0_21111111112[color=#805140 process=lock <'Yubikey', L_pid>;]:
-   [ state_21111111112( L_pid, k, secretid ), Fr( lock.2 ) ]
+rule (modulo E) lockYubikeyLpid_0_21111111112[color=#805140,
+                                              process="lock <'Yubikey', L_pid>;"]:
+   [ State_21111111112( L_pid, k, secretid ), Fr( lock.2 ) ]
   --[
   Lock_2( '2', lock.2, <'Yubikey', L_pid> ),
   Lock( '2', lock.2, <'Yubikey', L_pid> )
   ]->
-   [ state_211111111121( L_pid, k, secretid, lock.2 ) ]
+   [ State_211111111121( L_pid, k, secretid, lock.2 ) ]
 
   /*
-  rule (modulo AC) lockYubikeyLpid_0_21111111112[color=#805140 process=lock <'Yubikey', L_pid>;]:
-     [ state_21111111112( L_pid, k, secretid ), Fr( lock ) ]
+  rule (modulo AC) lockYubikeyLpid_0_21111111112[color=#805140,
+                                                 process="lock <'Yubikey', L_pid>;"]:
+     [ State_21111111112( L_pid, k, secretid ), Fr( lock ) ]
     --[
     Lock_2( '2', lock, <'Yubikey', L_pid> ),
     Lock( '2', lock, <'Yubikey', L_pid> )
     ]->
-     [ state_211111111121( L_pid, k, secretid, lock ) ]
+     [ State_211111111121( L_pid, k, secretid, lock ) ]
   */
 
-rule (modulo E) lookupLYubikeyLpidastc_0_211111111121[color=#805140 process=lookup <'L_Yubikey', L_pid> as tc]:
-   [ state_211111111121( L_pid, k, secretid, lock.2 ) ]
+rule (modulo E) lookupLYubikeyLpidastc_0_211111111121[color=#805140,
+                                                      process="lookup <'L_Yubikey', L_pid> as tc"]:
+   [ State_211111111121( L_pid, k, secretid, lock.2 ) ]
   --[ IsIn( <'L_Yubikey', L_pid>, tc ) ]->
-   [ state_2111111111211( L_pid, k, secretid, tc, lock.2 ) ]
+   [ State_2111111111211( L_pid, k, secretid, tc, lock.2 ) ]
 
   /*
-  rule (modulo AC) lookupLYubikeyLpidastc_0_211111111121[color=#805140 process=lookup <'L_Yubikey', L_pid> as tc]:
-     [ state_211111111121( L_pid, k, secretid, lock ) ]
+  rule (modulo AC) lookupLYubikeyLpidastc_0_211111111121[color=#805140,
+                                                         process="lookup <'L_Yubikey', L_pid> as tc"]:
+     [ State_211111111121( L_pid, k, secretid, lock ) ]
     --[ IsIn( <'L_Yubikey', L_pid>, tc ) ]->
-     [ state_2111111111211( L_pid, k, secretid, tc, lock ) ]
+     [ State_2111111111211( L_pid, k, secretid, tc, lock ) ]
   */
 
-rule (modulo E) lookupLYubikeyLpidastc_1_211111111121[color=#805140 process=lookup <'L_Yubikey', L_pid> as tc]:
-   [ state_211111111121( L_pid, k, secretid, lock.2 ) ]
+rule (modulo E) lookupLYubikeyLpidastc_1_211111111121[color=#805140,
+                                                      process="lookup <'L_Yubikey', L_pid> as tc"]:
+   [ State_211111111121( L_pid, k, secretid, lock.2 ) ]
   --[ IsNotSet( <'L_Yubikey', L_pid> ) ]->
-   [ state_2111111111212( L_pid, k, secretid, lock.2 ) ]
+   [ State_2111111111212( L_pid, k, secretid, lock.2 ) ]
 
   /*
-  rule (modulo AC) lookupLYubikeyLpidastc_1_211111111121[color=#805140 process=lookup <'L_Yubikey', L_pid> as tc]:
-     [ state_211111111121( L_pid, k, secretid, lock ) ]
+  rule (modulo AC) lookupLYubikeyLpidastc_1_211111111121[color=#805140,
+                                                         process="lookup <'L_Yubikey', L_pid> as tc"]:
+     [ State_211111111121( L_pid, k, secretid, lock ) ]
     --[ IsNotSet( <'L_Yubikey', L_pid> ) ]->
-     [ state_2111111111212( L_pid, k, secretid, lock ) ]
+     [ State_2111111111212( L_pid, k, secretid, lock ) ]
   */
 
-rule (modulo E) intc_0_2111111111211[color=#805140 process=in(tc);]:
-   [ state_2111111111211( L_pid, k, secretid, tc, lock.2 ), In( tc ) ]
+rule (modulo E) intc_0_2111111111211[color=#805140, process="in(tc);"]:
+   [ State_2111111111211( L_pid, k, secretid, tc, lock.2 ), In( tc ) ]
   -->
-   [ state_21111111112111( L_pid, k, secretid, tc, lock.2 ) ]
+   [ State_21111111112111( L_pid, k, secretid, tc, lock.2 ) ]
 
   /*
-  rule (modulo AC) intc_0_2111111111211[color=#805140 process=in(tc);]:
-     [ state_2111111111211( L_pid, k, secretid, tc, lock ), In( tc ) ]
+  rule (modulo AC) intc_0_2111111111211[color=#805140, process="in(tc);"]:
+     [ State_2111111111211( L_pid, k, secretid, tc, lock ), In( tc ) ]
     -->
-     [ state_21111111112111( L_pid, k, secretid, tc, lock ) ]
+     [ State_21111111112111( L_pid, k, secretid, tc, lock ) ]
   */
 
-rule (modulo E) insertLYubikeyLpidonetc_0_21111111112111[color=#805140 process=insert <'L_Yubikey', L_pid>,('one'+tc);]:
-   [ state_21111111112111( L_pid, k, secretid, tc, lock.2 ) ]
+rule (modulo E) insertLYubikeyLpidonetc_0_21111111112111[color=#805140,
+                                                         process="insert <'L_Yubikey', L_pid>,('one'+tc);"]:
+   [ State_21111111112111( L_pid, k, secretid, tc, lock.2 ) ]
   --[ Insert( <'L_Yubikey', L_pid>, ('one'+tc) ) ]->
-   [ state_211111111121111( L_pid, k, secretid, tc, lock.2 ) ]
+   [ State_211111111121111( L_pid, k, secretid, tc, lock.2 ) ]
 
   /*
-  rule (modulo AC) insertLYubikeyLpidonetc_0_21111111112111[color=#805140 process=insert <'L_Yubikey', L_pid>,('one'+tc);]:
-     [ state_21111111112111( L_pid, k, secretid, tc, lock ) ]
+  rule (modulo AC) insertLYubikeyLpidonetc_0_21111111112111[color=#805140,
+                                                            process="insert <'L_Yubikey', L_pid>,('one'+tc);"]:
+     [ State_21111111112111( L_pid, k, secretid, tc, lock ) ]
     --[ Insert( <'L_Yubikey', L_pid>, ('one'+tc) ) ]->
-     [ state_211111111121111( L_pid, k, secretid, tc, lock ) ]
+     [ State_211111111121111( L_pid, k, secretid, tc, lock ) ]
   */
 
-rule (modulo E) newnonce_0_211111111121111[color=#805140 process=new nonce;]:
-   [ state_211111111121111( L_pid, k, secretid, tc, lock.2 ), Fr( nonce ) ]
+rule (modulo E) newnonce_0_211111111121111[color=#805140,
+                                           process="new nonce;"]:
+   [ State_211111111121111( L_pid, k, secretid, tc, lock.2 ), Fr( nonce ) ]
   -->
-   [ state_2111111111211111( L_pid, k, nonce, secretid, tc, lock.2 ) ]
+   [ State_2111111111211111( L_pid, k, nonce, secretid, tc, lock.2 ) ]
 
   /*
-  rule (modulo AC) newnonce_0_211111111121111[color=#805140 process=new nonce;]:
-     [ state_211111111121111( L_pid, k, secretid, tc, lock ), Fr( nonce ) ]
+  rule (modulo AC) newnonce_0_211111111121111[color=#805140,
+                                              process="new nonce;"]:
+     [ State_211111111121111( L_pid, k, secretid, tc, lock ), Fr( nonce ) ]
     -->
-     [ state_2111111111211111( L_pid, k, nonce, secretid, tc, lock ) ]
+     [ State_2111111111211111( L_pid, k, nonce, secretid, tc, lock ) ]
   */
 
-rule (modulo E) newnpr_0_2111111111211111[color=#805140 process=new npr;]:
+rule (modulo E) newnpr_0_2111111111211111[color=#805140,
+                                          process="new npr;"]:
    [
-   state_2111111111211111( L_pid, k, nonce, secretid, tc, lock.2 ),
+   State_2111111111211111( L_pid, k, nonce, secretid, tc, lock.2 ),
    Fr( npr )
    ]
   -->
-   [ state_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ) ]
+   [ State_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ) ]
 
   /*
-  rule (modulo AC) newnpr_0_2111111111211111[color=#805140 process=new npr;]:
+  rule (modulo AC) newnpr_0_2111111111211111[color=#805140,
+                                             process="new npr;"]:
      [
-     state_2111111111211111( L_pid, k, nonce, secretid, tc, lock ), Fr( npr )
+     State_2111111111211111( L_pid, k, nonce, secretid, tc, lock ), Fr( npr )
      ]
     -->
-     [ state_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
+     [ State_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
   */
 
-rule (modulo E) eventYubiPressLpidsecretidktc_0_21111111112111111[color=#805140 process=event YubiPress( L_pid, secretid, k, tc );]:
-   [ state_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ) ]
+rule (modulo E) eventYubiPressLpidsecretidktc_0_21111111112111111[color=#805140,
+                                                                  process="event YubiPress( L_pid, secretid, k, tc );"]:
+   [ State_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ) ]
   --[ YubiPress( L_pid, secretid, k, tc ) ]->
-   [ state_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
+   [ State_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
    ]
 
   /*
-  rule (modulo AC) eventYubiPressLpidsecretidktc_0_21111111112111111[color=#805140 process=event YubiPress( L_pid, secretid, k, tc );]:
-     [ state_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
+  rule (modulo AC) eventYubiPressLpidsecretidktc_0_21111111112111111[color=#805140,
+                                                                     process="event YubiPress( L_pid, secretid, k, tc );"]:
+     [ State_21111111112111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
     --[ YubiPress( L_pid, secretid, k, tc ) ]->
-     [ state_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
+     [ State_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
   */
 
-rule (modulo E) outLpidnoncesencsecretidtcnprk_0_211111111121111111[color=#805140 process=out(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);]:
-   [ state_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
+rule (modulo E) outLpidnoncesencsecretidtcnprk_0_211111111121111111[color=#805140,
+                                                                    process="out(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);"]:
+   [ State_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
    ]
   -->
    [
-   state_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ),
+   State_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock.2 ),
    Out( <L_pid, nonce, senc(<secretid, tc, npr>, k)> )
    ]
 
   /*
-  rule (modulo AC) outLpidnoncesencsecretidtcnprk_0_211111111121111111[color=#805140 process=out(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);]:
-     [ state_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
+  rule (modulo AC) outLpidnoncesencsecretidtcnprk_0_211111111121111111[color=#805140,
+                                                                       process="out(<L_pid, nonce, senc(<secretid, tc, npr>, k)>);"]:
+     [ State_211111111121111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
     -->
      [
-     state_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock ),
+     State_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock ),
      Out( <L_pid, nonce, senc(<secretid, tc, npr>, k)> )
      ]
   */
 
-rule (modulo E) unlockYubikeyLpid_0_2111111111211111111[color=#805140 process=unlock <'Yubikey', L_pid>;]:
-   [ state_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
+rule (modulo E) unlockYubikeyLpid_0_2111111111211111111[color=#805140,
+                                                        process="unlock <'Yubikey', L_pid>;"]:
+   [ State_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
    ]
   --[
   Unlock_2( '2', lock.2, <'Yubikey', L_pid> ),
   Unlock( '2', lock.2, <'Yubikey', L_pid> )
   ]->
    [
-   state_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
+   State_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
    ]
 
   /*
-  rule (modulo AC) unlockYubikeyLpid_0_2111111111211111111[color=#805140 process=unlock <'Yubikey', L_pid>;]:
-     [ state_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
+  rule (modulo AC) unlockYubikeyLpid_0_2111111111211111111[color=#805140,
+                                                           process="unlock <'Yubikey', L_pid>;"]:
+     [ State_2111111111211111111( L_pid, k, nonce, npr, secretid, tc, lock ) ]
     --[
     Unlock_2( '2', lock, <'Yubikey', L_pid> ),
     Unlock( '2', lock, <'Yubikey', L_pid> )
     ]->
-     [ state_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock )
+     [ State_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock )
      ]
   */
 
-rule (modulo E) __0_21111111112111111111[color=#805140 process=0]:
+rule (modulo E) p_0_21111111112111111111[color=#805140, process="0"]:
    [
-   state_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
+   State_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock.2 )
    ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) __0_21111111112111111111[color=#805140 process=0]:
-     [ state_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock )
+  rule (modulo AC) p_0_21111111112111111111[color=#805140, process="0"]:
+     [ State_21111111112111111111( L_pid, k, nonce, npr, secretid, tc, lock )
      ]
     -->
      [ ]
   */
 
-rule (modulo E) __0_2111111111212[color=#805140 process=0]:
-   [ state_2111111111212( L_pid, k, secretid, lock.2 ) ] --> [ ]
+rule (modulo E) p_0_2111111111212[color=#805140, process="0"]:
+   [ State_2111111111212( L_pid, k, secretid, lock.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_2111111111212[color=#805140 process=0]:
-     [ state_2111111111212( L_pid, k, secretid, lock ) ] --> [ ]
+  rule (modulo AC) p_0_2111111111212[color=#805140, process="0"]:
+     [ State_2111111111212( L_pid, k, secretid, lock ) ] --> [ ]
   */
 
 restriction set_in:
@@ -5072,7 +5126,7 @@ analyzing: examples/sapic/slow/Yubikey/Yubikey.spthy
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 29.151528168s
+  processing time: 43.655993519s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)
@@ -5089,7 +5143,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 29.151528168s
+  processing time: 43.655993519s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)

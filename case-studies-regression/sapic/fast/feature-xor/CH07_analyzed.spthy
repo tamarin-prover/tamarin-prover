@@ -29,7 +29,7 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( Alive( x, 'Tag' ) @ #i )
   case eventAlivekTag_0_1111111111
-  solve( state_1111111111( ~id, ~k, ~r1, r2, x ) ▶₀ #i )
+  solve( State_1111111111( ~id, ~k, ~r1, r2, x ) ▶₀ #i )
     case ifxlhhkrrrotidhkrr_0_111111111
     solve( !KU( lh((h(x)⊕rot(~id, h(x)))) ) @ #vk.2 )
       case outrlhhkrrrotidhkrr_0_1111211111
@@ -74,7 +74,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( Alive( x, 'Reader' ) @ #i )
   case eventAlivekReader_0_111121111111
-  solve( state_111121111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
+  solve( State_111121111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
     case inrhhkrrrotidhkrr_0_11112111111
     solve( !KU( rh((h(x)⊕rot(~id, h(x)))) ) @ #vk )
       case c_rh
@@ -154,7 +154,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( Commit( <'T', 'R', t> ) @ #i )
   case eventCommitTRkrr_0_1111211111111
-  solve( state_1111211111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
+  solve( State_1111211111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
     case eventAlivekReader_0_111121111111
     solve( !KU( rh((h(x)⊕rot(~id, h(x)))) ) @ #vk )
       case c_rh
@@ -423,7 +423,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( Commit( <'R', 'T', t> ) @ #i )
   case eventCommitRTkrr_0_1111111111111
-  solve( state_1111111111111( ~id, ~k, ~r1, r2, x ) ▶₀ #i )
+  solve( State_1111111111111( ~id, ~k, ~r1, r2, x ) ▶₀ #i )
     case eventRunningTRkrr_0_111111111111
     solve( !KU( lh((h(x)⊕rot(~id, h(x)))) ) @ #vk.2 )
       case c_lh
@@ -663,7 +663,7 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( Alive( x, 'Reader' ) @ #i )
   case eventAlivekReader_0_111121111111
-  solve( state_111121111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
+  solve( State_111121111111( ~id, ~k, ~r2, r1 ) ▶₀ #i )
     case inrhhkrrrotidhkrr_0_11112111111
     solve( Response( ~k, 'Tag' ) @ #j )
       case eventResponsekTag_0_1111211
@@ -690,86 +690,89 @@ solve( Alive( x, 'Reader' ) @ #i )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_1[color=#ffffff process=new ~k;]:
-   [ state_1( ), Fr( ~k ) ] --> [ state_11( ~k ) ]
+rule (modulo E) newk_0_1[color=#ffffff, process="new ~k;"]:
+   [ State_1( ), Fr( ~k ) ] --> [ State_11( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newid_0_11[color=#ffffff process=new ~id;]:
-   [ state_11( ~k ), Fr( ~id ) ] --> [ state_111( ~id, ~k ) ]
+rule (modulo E) newid_0_11[color=#ffffff, process="new ~id;"]:
+   [ State_11( ~k ), Fr( ~id ) ] --> [ State_111( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=!]:
-   [ state_111( ~id, ~k ) ] --> [ !semistate_1111( ~id, ~k ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="!"]:
+   [ State_111( ~id, ~k ) ] --> [ !Semistate_1111( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111[color=#ffffff process=!]:
-   [ !semistate_1111( ~id, ~k ) ] --> [ state_1111( ~id, ~k ) ]
+rule (modulo E) p_1_111[color=#ffffff, process="!"]:
+   [ !Semistate_1111( ~id, ~k ) ] --> [ State_1111( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#ffffff process=|]:
-   [ state_1111( ~id, ~k ) ]
+rule (modulo E) p_0_1111[color=#ffffff, process="|"]:
+   [ State_1111( ~id, ~k ) ]
   -->
-   [ state_11111( ~id, ~k ), state_11112( ~id, ~k ) ]
+   [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newr_0_11111[color=#404480 process=new ~r1;]:
-   [ state_11111( ~id, ~k ), Fr( ~r1 ) ]
+rule (modulo E) newr_0_11111[color=#404480, process="new ~r1;"]:
+   [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
   -->
-   [ state_111111( ~id, ~k, ~r1 ) ]
+   [ State_111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventChallengerReader_0_111111[color=#404480 process=event Challenge( ~r1, 'Reader' );]:
-   [ state_111111( ~id, ~k, ~r1 ) ]
+rule (modulo E) eventChallengerReader_0_111111[color=#404480,
+                                               process="event Challenge( ~r1, 'Reader' );"]:
+   [ State_111111( ~id, ~k, ~r1 ) ]
   --[ Challenge( ~r1, 'Reader' ) ]->
-   [ state_1111111( ~id, ~k, ~r1 ) ]
+   [ State_1111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outr_0_1111111[color=#404480 process=out(~r1);]:
-   [ state_1111111( ~id, ~k, ~r1 ) ]
+rule (modulo E) outr_0_1111111[color=#404480, process="out(~r1);"]:
+   [ State_1111111( ~id, ~k, ~r1 ) ]
   -->
-   [ state_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
+   [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrx_0_11111111[color=#404480 process=in(<r2, x>);]:
-   [ state_11111111( ~id, ~k, ~r1 ), In( <r2, x> ) ]
+rule (modulo E) inrx_0_11111111[color=#404480, process="in(<r2, x>);"]:
+   [ State_11111111( ~id, ~k, ~r1 ), In( <r2, x> ) ]
   -->
-   [ state_111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifxlhhkrrrotidhkrr_0_111111111[color=#404480 process=if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))]:
-   [ state_111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) ifxlhhkrrrotidhkrr_0_111111111[color=#404480,
+                                               process="if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))"]:
+   [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Pred_Eq( x, lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))) ) ]->
-   [ state_1111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_1111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) ifxlhhkrrrotidhkrr_0_111111111[color=#404480 process=if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))]:
-     [ state_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
+  rule (modulo AC) ifxlhhkrrrotidhkrr_0_111111111[color=#404480,
+                                                  process="if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))"]:
+     [ State_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_Eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
-     [ state_1111111111( ~id, ~k, ~r1, r2, x.1 ) ]
+     [ State_1111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     variants (modulo AC)
     1. ~k    = ~k.16
        ~r1   = ~r1.17
@@ -817,16 +820,18 @@ rule (modulo E) ifxlhhkrrrotidhkrr_0_111111111[color=#404480 process=if x=lh((h(
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) ifxlhhkrrrotidhkrr_1_111111111[color=#404480 process=if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))]:
-   [ state_111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) ifxlhhkrrrotidhkrr_1_111111111[color=#404480,
+                                               process="if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))"]:
+   [ State_111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Pred_Not_Eq( x, lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))) ) ]->
-   [ state_1111111112( ~id, ~k, ~r1, r2, x ) ]
+   [ State_1111111112( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) ifxlhhkrrrotidhkrr_1_111111111[color=#404480 process=if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))]:
-     [ state_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
+  rule (modulo AC) ifxlhhkrrrotidhkrr_1_111111111[color=#404480,
+                                                  process="if x=lh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2)))))"]:
+     [ State_111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_Not_Eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
-     [ state_1111111112( ~id, ~k, ~r1, r2, x.1 ) ]
+     [ State_1111111112( ~id, ~k, ~r1, r2, x.1 ) ]
     variants (modulo AC)
     1. ~k    = ~k.16
        ~r1   = ~r1.17
@@ -874,30 +879,34 @@ rule (modulo E) ifxlhhkrrrotidhkrr_1_111111111[color=#404480 process=if x=lh((h(
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) eventAlivekTag_0_1111111111[color=#404480 process=event Alive( ~k, 'Tag' );]:
-   [ state_1111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
+                                            process="event Alive( ~k, 'Tag' );"]:
+   [ State_1111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Alive( ~k, 'Tag' ) ]->
-   [ state_11111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_11111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventResponsekReader_0_11111111111[color=#404480 process=event Response( ~k, 'Reader' );]:
-   [ state_11111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) eventResponsekReader_0_11111111111[color=#404480,
+                                                   process="event Response( ~k, 'Reader' );"]:
+   [ State_11111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Response( ~k, 'Reader' ) ]->
-   [ state_111111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventRunningTRkrr_0_111111111111[color=#404480 process=event Running( <'T', 'R', (~k⊕~r1⊕r2)> );]:
-   [ state_111111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) eventRunningTRkrr_0_111111111111[color=#404480,
+                                                 process="event Running( <'T', 'R', (~k⊕~r1⊕r2)> );"]:
+   [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Running( <'T', 'R', (~k⊕~r1⊕r2)> ) ]->
-   [ state_1111111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) eventRunningTRkrr_0_111111111111[color=#404480 process=event Running( <'T', 'R', (~k⊕~r1⊕r2)> );]:
-     [ state_111111111111( ~id, ~k, ~r1, r2, x ) ]
+  rule (modulo AC) eventRunningTRkrr_0_111111111111[color=#404480,
+                                                    process="event Running( <'T', 'R', (~k⊕~r1⊕r2)> );"]:
+     [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Running( <'T', 'R', z> ) ]->
-     [ state_1111111111111( ~id, ~k, ~r1, r2, x ) ]
+     [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
     variants (modulo AC)
     1. ~k    = ~k.11
        ~r1   = ~r1.12
@@ -945,16 +954,18 @@ rule (modulo E) eventRunningTRkrr_0_111111111111[color=#404480 process=event Run
        z     = (~r1.20⊕x.35)
   */
 
-rule (modulo E) eventCommitRTkrr_0_1111111111111[color=#404480 process=event Commit( <'R', 'T', (~k⊕~r1⊕r2)> );]:
-   [ state_1111111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) eventCommitRTkrr_0_1111111111111[color=#404480,
+                                                 process="event Commit( <'R', 'T', (~k⊕~r1⊕r2)> );"]:
+   [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
   --[ Commit( <'R', 'T', (~k⊕~r1⊕r2)> ) ]->
-   [ state_11111111111111( ~id, ~k, ~r1, r2, x ) ]
+   [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
 
   /*
-  rule (modulo AC) eventCommitRTkrr_0_1111111111111[color=#404480 process=event Commit( <'R', 'T', (~k⊕~r1⊕r2)> );]:
-     [ state_1111111111111( ~id, ~k, ~r1, r2, x ) ]
+  rule (modulo AC) eventCommitRTkrr_0_1111111111111[color=#404480,
+                                                    process="event Commit( <'R', 'T', (~k⊕~r1⊕r2)> );"]:
+     [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Commit( <'R', 'T', z> ) ]->
-     [ state_11111111111111( ~id, ~k, ~r1, r2, x ) ]
+     [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
     variants (modulo AC)
     1. ~k    = ~k.11
        ~r1   = ~r1.12
@@ -1002,20 +1013,22 @@ rule (modulo E) eventCommitRTkrr_0_1111111111111[color=#404480 process=event Com
        z     = (~r1.20⊕x.35)
   */
 
-rule (modulo E) outrhhkrrrotidhkrr_0_11111111111111[color=#404480 process=out(rh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))));]:
-   [ state_11111111111111( ~id, ~k, ~r1, r2, x ) ]
+rule (modulo E) outrhhkrrrotidhkrr_0_11111111111111[color=#404480,
+                                                    process="out(rh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))));"]:
+   [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
   -->
    [
-   state_111111111111111( ~id, ~k, ~r1, r2, x ),
+   State_111111111111111( ~id, ~k, ~r1, r2, x ),
    Out( rh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))) )
    ]
 
   /*
-  rule (modulo AC) outrhhkrrrotidhkrr_0_11111111111111[color=#404480 process=out(rh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))));]:
-     [ state_11111111111111( ~id, ~k, ~r1, r2, x.1 ) ]
+  rule (modulo AC) outrhhkrrrotidhkrr_0_11111111111111[color=#404480,
+                                                       process="out(rh((h((~k⊕~r1⊕r2))⊕rot(~id, h((~k⊕~r1⊕r2))))));"]:
+     [ State_11111111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     -->
      [
-     state_111111111111111( ~id, ~k, ~r1, r2, x.1 ),
+     State_111111111111111( ~id, ~k, ~r1, r2, x.1 ),
      Out( rh((h(x)⊕rot(~id, h(x)))) )
      ]
     variants (modulo AC)
@@ -1065,52 +1078,56 @@ rule (modulo E) outrhhkrrrotidhkrr_0_11111111111111[color=#404480 process=out(rh
        x     = (~r1.82⊕x.159)
   */
 
-rule (modulo E) __0_111111111111111[color=#404480 process=0]:
-   [ state_111111111111111( ~id, ~k, ~r1, r2, x ) ] --> [ ]
+rule (modulo E) p_0_111111111111111[color=#404480, process="0"]:
+   [ State_111111111111111( ~id, ~k, ~r1, r2, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111112[color=#404480 process=0]:
-   [ state_1111111112( ~id, ~k, ~r1, r2, x ) ] --> [ ]
+rule (modulo E) p_0_1111111112[color=#404480, process="0"]:
+   [ State_1111111112( ~id, ~k, ~r1, r2, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inr_0_11112[color=#40807c process=in(r1);]:
-   [ state_11112( ~id, ~k ), In( r1 ) ] --> [ state_111121( ~id, ~k, r1 ) ]
+rule (modulo E) inr_0_11112[color=#40807c, process="in(r1);"]:
+   [ State_11112( ~id, ~k ), In( r1 ) ] --> [ State_111121( ~id, ~k, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newr_0_111121[color=#40807c process=new ~r2;]:
-   [ state_111121( ~id, ~k, r1 ), Fr( ~r2 ) ]
+rule (modulo E) newr_0_111121[color=#40807c, process="new ~r2;"]:
+   [ State_111121( ~id, ~k, r1 ), Fr( ~r2 ) ]
   -->
-   [ state_1111211( ~id, ~k, ~r2, r1 ) ]
+   [ State_1111211( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventResponsekTag_0_1111211[color=#40807c process=event Response( ~k, 'Tag' );]:
-   [ state_1111211( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventResponsekTag_0_1111211[color=#40807c,
+                                            process="event Response( ~k, 'Tag' );"]:
+   [ State_1111211( ~id, ~k, ~r2, r1 ) ]
   --[ Response( ~k, 'Tag' ) ]->
-   [ state_11112111( ~id, ~k, ~r2, r1 ) ]
+   [ State_11112111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventChallengerTag_0_11112111[color=#40807c process=event Challenge( ~r2, 'Tag' );]:
-   [ state_11112111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventChallengerTag_0_11112111[color=#40807c,
+                                              process="event Challenge( ~r2, 'Tag' );"]:
+   [ State_11112111( ~id, ~k, ~r2, r1 ) ]
   --[ Challenge( ~r2, 'Tag' ) ]->
-   [ state_111121111( ~id, ~k, ~r2, r1 ) ]
+   [ State_111121111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventRunningRTkrr_0_111121111[color=#40807c process=event Running( <'R', 'T', (~k⊕~r2⊕r1)> );]:
-   [ state_111121111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventRunningRTkrr_0_111121111[color=#40807c,
+                                              process="event Running( <'R', 'T', (~k⊕~r2⊕r1)> );"]:
+   [ State_111121111( ~id, ~k, ~r2, r1 ) ]
   --[ Running( <'R', 'T', (~k⊕~r2⊕r1)> ) ]->
-   [ state_1111211111( ~id, ~k, ~r2, r1 ) ]
+   [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) eventRunningRTkrr_0_111121111[color=#40807c process=event Running( <'R', 'T', (~k⊕~r2⊕r1)> );]:
-     [ state_111121111( ~id, ~k, ~r2, r1 ) ]
+  rule (modulo AC) eventRunningRTkrr_0_111121111[color=#40807c,
+                                                 process="event Running( <'R', 'T', (~k⊕~r2⊕r1)> );"]:
+     [ State_111121111( ~id, ~k, ~r2, r1 ) ]
     --[ Running( <'R', 'T', z> ) ]->
-     [ state_1111211111( ~id, ~k, ~r2, r1 ) ]
+     [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
     variants (modulo AC)
     1. ~k    = ~k.10
        ~r2   = ~r2.11
@@ -1158,20 +1175,22 @@ rule (modulo E) eventRunningRTkrr_0_111121111[color=#40807c process=event Runnin
        z     = (~r2.18⊕x.31)
   */
 
-rule (modulo E) outrlhhkrrrotidhkrr_0_1111211111[color=#40807c process=out(<~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))>);]:
-   [ state_1111211111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) outrlhhkrrrotidhkrr_0_1111211111[color=#40807c,
+                                                 process="out(<~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))>);"]:
+   [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
   -->
    [
-   state_11112111111( ~id, ~k, ~r2, r1 ),
+   State_11112111111( ~id, ~k, ~r2, r1 ),
    Out( <~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))> )
    ]
 
   /*
-  rule (modulo AC) outrlhhkrrrotidhkrr_0_1111211111[color=#40807c process=out(<~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))>);]:
-     [ state_1111211111( ~id, ~k, ~r2, r1 ) ]
+  rule (modulo AC) outrlhhkrrrotidhkrr_0_1111211111[color=#40807c,
+                                                    process="out(<~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))>);"]:
+     [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
     -->
      [
-     state_11112111111( ~id, ~k, ~r2, r1 ),
+     State_11112111111( ~id, ~k, ~r2, r1 ),
      Out( <~r2, lh((h(x)⊕rot(~id, h(x))))> )
      ]
     variants (modulo AC)
@@ -1221,20 +1240,22 @@ rule (modulo E) outrlhhkrrrotidhkrr_0_1111211111[color=#40807c process=out(<~r2,
        x     = (~r2.75⊕x.145)
   */
 
-rule (modulo E) inrhhkrrrotidhkrr_0_11112111111[color=#40807c process=in(rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))));]:
+rule (modulo E) inrhhkrrrotidhkrr_0_11112111111[color=#40807c,
+                                                process="in(rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))));"]:
    [
-   state_11112111111( ~id, ~k, ~r2, r1 ),
+   State_11112111111( ~id, ~k, ~r2, r1 ),
    In( rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))) )
    ]
   -->
-   [ state_111121111111( ~id, ~k, ~r2, r1 ) ]
+   [ State_111121111111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) inrhhkrrrotidhkrr_0_11112111111[color=#40807c process=in(rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))));]:
-     [ state_11112111111( ~id, ~k, ~r2, r1 ), In( rh((h(x)⊕rot(~id, h(x)))) )
+  rule (modulo AC) inrhhkrrrotidhkrr_0_11112111111[color=#40807c,
+                                                   process="in(rh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1))))));"]:
+     [ State_11112111111( ~id, ~k, ~r2, r1 ), In( rh((h(x)⊕rot(~id, h(x)))) )
      ]
     -->
-     [ state_111121111111( ~id, ~k, ~r2, r1 ) ]
+     [ State_111121111111( ~id, ~k, ~r2, r1 ) ]
     variants (modulo AC)
     1. ~k    = ~k.15
        ~r2   = ~r2.16
@@ -1282,23 +1303,26 @@ rule (modulo E) inrhhkrrrotidhkrr_0_11112111111[color=#40807c process=in(rh((h((
        x     = (~r2.75⊕x.145)
   */
 
-rule (modulo E) eventAlivekReader_0_111121111111[color=#40807c process=event Alive( ~k, 'Reader' );]:
-   [ state_111121111111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventAlivekReader_0_111121111111[color=#40807c,
+                                                 process="event Alive( ~k, 'Reader' );"]:
+   [ State_111121111111( ~id, ~k, ~r2, r1 ) ]
   --[ Alive( ~k, 'Reader' ) ]->
-   [ state_1111211111111( ~id, ~k, ~r2, r1 ) ]
+   [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventCommitTRkrr_0_1111211111111[color=#40807c process=event Commit( <'T', 'R', (~k⊕~r2⊕r1)> );]:
-   [ state_1111211111111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventCommitTRkrr_0_1111211111111[color=#40807c,
+                                                 process="event Commit( <'T', 'R', (~k⊕~r2⊕r1)> );"]:
+   [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
   --[ Commit( <'T', 'R', (~k⊕~r2⊕r1)> ) ]->
-   [ state_11112111111111( ~id, ~k, ~r2, r1 ) ]
+   [ State_11112111111111( ~id, ~k, ~r2, r1 ) ]
 
   /*
-  rule (modulo AC) eventCommitTRkrr_0_1111211111111[color=#40807c process=event Commit( <'T', 'R', (~k⊕~r2⊕r1)> );]:
-     [ state_1111211111111( ~id, ~k, ~r2, r1 ) ]
+  rule (modulo AC) eventCommitTRkrr_0_1111211111111[color=#40807c,
+                                                    process="event Commit( <'T', 'R', (~k⊕~r2⊕r1)> );"]:
+     [ State_1111211111111( ~id, ~k, ~r2, r1 ) ]
     --[ Commit( <'T', 'R', z> ) ]->
-     [ state_11112111111111( ~id, ~k, ~r2, r1 ) ]
+     [ State_11112111111111( ~id, ~k, ~r2, r1 ) ]
     variants (modulo AC)
     1. ~k    = ~k.10
        ~r2   = ~r2.11
@@ -1346,8 +1370,8 @@ rule (modulo E) eventCommitTRkrr_0_1111211111111[color=#40807c process=event Com
        z     = (~r2.18⊕x.31)
   */
 
-rule (modulo E) __0_11112111111111[color=#40807c process=0]:
-   [ state_11112111111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
+rule (modulo E) p_0_11112111111111[color=#40807c, process="0"]:
+   [ State_11112111111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -1378,7 +1402,7 @@ analyzing: examples/sapic/fast/feature-xor/CH07.spthy
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 6.556087s
+  processing time: 7.815719898s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (87 steps)
@@ -1393,7 +1417,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 6.556087s
+  processing time: 7.815719898s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (87 steps)

@@ -5021,7 +5021,7 @@ analyzing: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 28.534480204s
+  processing time: 30.132522613s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)
   injectiveagreement_B (all-traces): verified (968 steps)
@@ -5037,7 +5037,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 28.534480204s
+  processing time: 30.132522613s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)
   injectiveagreement_B (all-traces): verified (968 steps)

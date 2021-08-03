@@ -206,8 +206,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/okamoto_eligibility.spthy
@@ -216,7 +214,7 @@ analyzing: examples/post17/okamoto_eligibility.spthy
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.941324s
+  processing time: 0.721283894s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)
@@ -229,7 +227,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.941324s
+  processing time: 0.721283894s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)

@@ -41,8 +41,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
@@ -51,7 +49,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
-  processing time: 0.129427s
+  processing time: 0.08851758s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ------------------------------------------------------------------------------
@@ -62,7 +60,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
-  processing time: 0.129427s
+  processing time: 0.08851758s
   DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ==============================================================================

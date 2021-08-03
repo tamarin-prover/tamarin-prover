@@ -16,51 +16,52 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (Bogus( ) @ #i)"
 */
 simplify
-solve( state_11( h ) ▶₀ #i )
+solve( State_11( h ) ▶₀ #i )
   case ifEqualhh_0_1
   SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff process=new h;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new h;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newh_0_[color=#ffffff process=new h;]:
-   [ state_( ), Fr( h ) ] --> [ state_1( h ) ]
+rule (modulo E) newh_0_[color=#ffffff, process="new h;"]:
+   [ State_( ), Fr( h ) ] --> [ State_1( h ) ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifEqualhh_0_1_1:
-  "∀ x #NOW x.1. (restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+restriction Restr_ifEqualhh_0_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
   // safety formula
 
-rule (modulo E) ifEqualhh_0_1[color=#ffffff process=if Equal( h, h )]:
-   [ state_1( h ) ] --[ restr_ifEqualhh_0_1_1( h, h ) ]-> [ state_11( h ) ]
+rule (modulo E) ifEqualhh_0_1[color=#ffffff, process="if Equal( h, h )"]:
+   [ State_1( h ) ] --[ Restr_ifEqualhh_0_1_1( h, h ) ]-> [ State_11( h ) ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifEqualhh_1_1_1:
-  "∀ x #NOW x.1. (restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+restriction Restr_ifEqualhh_1_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
   // safety formula
 
-rule (modulo E) ifEqualhh_1_1[color=#ffffff process=if Equal( h, h )]:
-   [ state_1( h ) ] --[ restr_ifEqualhh_1_1_1( h, h ) ]-> [ state_12( h ) ]
+rule (modulo E) ifEqualhh_1_1[color=#ffffff, process="if Equal( h, h )"]:
+   [ State_1( h ) ] --[ Restr_ifEqualhh_1_1_1( h, h ) ]-> [ State_12( h ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventBogus_0_11[color=#ffffff process=event Bogus( );]:
-   [ state_11( h ) ] --[ Bogus( ) ]-> [ state_111( h ) ]
+rule (modulo E) eventBogus_0_11[color=#ffffff,
+                                process="event Bogus( );"]:
+   [ State_11( h ) ] --[ Bogus( ) ]-> [ State_111( h ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( h ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( h ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12[color=#ffffff process=0]:
-   [ state_12( h ) ] --> [ ]
+rule (modulo E) p_0_12[color=#ffffff, process="0"]:
+   [ State_12( h ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -83,7 +84,7 @@ analyzing: examples/sapic/fast/feature-predicates/simple_example.spthy
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.044735924s
+  processing time: 0.057603869s
   bogus_exists (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.044735924s
+  processing time: 0.057603869s
   bogus_exists (exists-trace): verified (3 steps)
 
 ==============================================================================

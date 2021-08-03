@@ -24,6 +24,7 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
+import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -39,6 +40,7 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
+import Theory.Sapic ( AnProcess(ProcessNull) )
 
 
 -- | Parse a "(modulo ..)" information.
@@ -65,10 +67,11 @@ typeAssertions = fmap TypingE $
 -}
 
 -- | Parse a 'RuleAttribute'.
-ruleAttribute :: Parser RuleAttribute
+ruleAttribute :: Parser (Maybe RuleAttribute)
 ruleAttribute = asum
-    [ symbol "colour=" *> (RuleColor <$> parseColor)
-    , symbol "color="  *> (RuleColor <$> parseColor)
+    [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
+    , symbol "color="  *> (Just . RuleColor <$> parseColor)
+    , symbol "process="  *> parseAndIgnore
     ]
   where
     parseColor = do
@@ -76,6 +79,13 @@ ruleAttribute = asum
         case hexToRGB hc of
             Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
+    parseAndIgnore = do
+                        _ <-  symbol "\""
+                        _ <- manyTill anyChar (try (symbol "\"")) 
+                        return Nothing
+
+ruleAttributesp :: Parser [RuleAttribute]
+ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -83,7 +93,7 @@ protoRuleInfo = do
                 _ <- symbol "rule"
                 _ <- optional moduloE
                 ident <- identifier
-                att <- option [] $ list ruleAttribute
+                att <- ruleAttributesp
                 _ <- colon
                 return $ ProtoRuleEInfo (StandRule ident) att []
 
@@ -119,7 +129,7 @@ protoRule = do
 protoRuleACInfo :: Parser ProtoRuleACInfo
 protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
                                         (symbol "rule" *> moduloAC *> identifier))
-                               <*> (option [] $ list ruleAttribute))
+                               <*> ruleAttributesp)
                                <*> pure (Disj [emptySubstVFresh]) <*> pure []
                                <*  colon
 

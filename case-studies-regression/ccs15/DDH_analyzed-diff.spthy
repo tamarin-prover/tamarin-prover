@@ -7558,8 +7558,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/DDH.spthy
@@ -7568,7 +7566,7 @@ analyzing: examples/ccs15/DDH.spthy
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 22.417035s
+  processing time: 7.334164768s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
@@ -7579,7 +7577,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 22.417035s
+  processing time: 7.334164768s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

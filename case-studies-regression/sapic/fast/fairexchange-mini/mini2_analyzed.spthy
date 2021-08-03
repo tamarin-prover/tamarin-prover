@@ -19,7 +19,7 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-by solve( state_111( ~prog_, ~prog_111, k, m ) ▶₀ #t )
+by solve( State_111( ~prog_, ~prog_111, k, m ) ▶₀ #t )
 
 lemma B_possible:
   exists-trace "∃ #t. B( ) @ #t"
@@ -28,15 +28,15 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( state_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
+solve( State_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
   case outcm_0_121
-  solve( state_( ~prog_ ) ▶₀ #t.2 )
+  solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( state_( ~prog_ ) ▶₀ #t.3 )
+    solve( State_( ~prog_ ) ▶₀ #t.3 )
       case Init
-      solve( state_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
+      solve( State_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
         case outcm_0_121
-        solve( state_( ~prog_ ) ▶₀ #t.3 )
+        solve( State_( ~prog_ ) ▶₀ #t.3 )
           case Init
           SOLVED // trace found
         qed
@@ -45,71 +45,72 @@ solve( state_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
   qed
 qed
 
-rule (modulo E) MessageID-rule[color=#ffffff process=new k;]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="new k;"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff process=new k;]:
+rule (modulo E) Init[color=#ffffff, process="new k;"]:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
-   [ state_( ~prog_ ) ]
+   [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff process=new k;]:
-   [ state_( ~prog_ ), Fr( k ) ]
+rule (modulo E) newk_0_[color=#ffffff, process="new k;"]:
+   [ State_( ~prog_ ), Fr( k ) ]
   --[ ProgressTo_1( ~prog_ ) ]->
-   [ state_1( ~prog_, k ) ]
+   [ State_1( ~prog_, k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrsignmk_0_11[color=#ffffff process=in('r',sign(m, k));]:
+rule (modulo E) inrsignmk_0_11[color=#ffffff,
+                               process="in('r',sign(m, k));"]:
    [
-   Fr( ~prog_111 ), state_1( ~prog_, k ), In( sign(m, k) ),
+   Fr( ~prog_111 ), State_1( ~prog_, k ), In( sign(m, k) ),
    MID_Receiver( ~mid_11 )
    ]
   --[ ProgressFrom_111( ~prog_111 ), Receive( ~mid_11, sign(m, k) ) ]->
-   [ state_111( ~prog_, ~prog_111, k, m ) ]
+   [ State_111( ~prog_, ~prog_111, k, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#ffffff process=event A( );]:
-   [ state_111( ~prog_, ~prog_111, k, m ) ]
+rule (modulo E) eventA_0_111[color=#ffffff, process="event A( );"]:
+   [ State_111( ~prog_, ~prog_111, k, m ) ]
   --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
-   [ state_1111( ~prog_, ~prog_111, k, m ) ]
+   [ State_1111( ~prog_, ~prog_111, k, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#ffffff process=0]:
-   [ state_1111( ~prog_, ~prog_111, k, m ) ] --> [ ]
+rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
+   [ State_1111( ~prog_, ~prog_111, k, m ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrm_0_12[color=#ffffff process=in('r',m);]:
-   [ Fr( ~prog_121 ), state_1( ~prog_, k ), In( m ), MID_Receiver( ~mid_12 )
+rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',m);"]:
+   [ Fr( ~prog_121 ), State_1( ~prog_, k ), In( m ), MID_Receiver( ~mid_12 )
    ]
   --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m ) ]->
-   [ state_121( ~prog_, ~prog_121, k, m ) ]
+   [ State_121( ~prog_, ~prog_121, k, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outcm_0_121[color=#ffffff process=out('c',m);]:
-   [ state_121( ~prog_, ~prog_121, k, m ), In( 'c' ) ]
+rule (modulo E) outcm_0_121[color=#ffffff, process="out('c',m);"]:
+   [ State_121( ~prog_, ~prog_121, k, m ), In( 'c' ) ]
   --[ ChannelIn( 'c' ) ]->
-   [ state_1211( ~prog_, ~prog_121, k, m ), Out( m ) ]
+   [ State_1211( ~prog_, ~prog_121, k, m ), Out( m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_1211[color=#ffffff process=event B( );]:
-   [ state_1211( ~prog_, ~prog_121, k, m ) ]
+rule (modulo E) eventB_0_1211[color=#ffffff, process="event B( );"]:
+   [ State_1211( ~prog_, ~prog_121, k, m ) ]
   --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
-   [ state_12111( ~prog_, ~prog_121, k, m ) ]
+   [ State_12111( ~prog_, ~prog_121, k, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12111[color=#ffffff process=0]:
-   [ state_12111( ~prog_, ~prog_121, k, m ) ] --> [ ]
+rule (modulo E) p_0_12111[color=#ffffff, process="0"]:
+   [ State_12111( ~prog_, ~prog_121, k, m ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -117,16 +118,16 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction Progress_[]_to_[1]:
+restriction Progress__to_1:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
 
-restriction Progress_[1,1,1]_to_[1,1,1,1]:
+restriction Progress_111_to_1111:
   "∀ prog_111 #t.
     (ProgressFrom_111( prog_111 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_1111( prog_111 ) @ #t.1)"
 
-restriction Progress_[1,2,1]_to_[1,2,1,1,1]:
+restriction Progress_121_to_12111:
   "∀ prog_121 #t.
     (ProgressFrom_121( prog_121 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_12111( prog_121 ) @ #t.1)"
@@ -149,7 +150,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini2.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini2.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini2.spthy.tmp
-  processing time: 0.116928s
+  processing time: 0.117299786s
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)
 
@@ -161,7 +162,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini2.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini2.spthy.tmp
-  processing time: 0.116928s
+  processing time: 0.117299786s
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)
 

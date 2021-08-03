@@ -13329,8 +13329,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/UM_three_pass.spthy
@@ -13339,7 +13337,7 @@ analyzing: examples/ake/dh/UM_three_pass.spthy
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          examples/ake/dh/UM_three_pass.spthy.tmp
-  processing time: 103.926877s
+  processing time: 172.520994905s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 
@@ -13351,7 +13349,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          examples/ake/dh/UM_three_pass.spthy.tmp
-  processing time: 103.926877s
+  processing time: 172.520994905s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 

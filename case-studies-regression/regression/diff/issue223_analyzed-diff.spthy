@@ -3238,8 +3238,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/diff/issue223.spthy
@@ -3248,7 +3246,7 @@ analyzing: examples/regression/diff/issue223.spthy
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 11.926971s
+  processing time: 3.675142844s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ------------------------------------------------------------------------------
@@ -3259,7 +3257,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 11.926971s
+  processing time: 3.675142844s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

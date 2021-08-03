@@ -17,38 +17,38 @@ guarded formula characterizing all satisfying traces:
 "(∃ #c. (C( ) @ #c)) ∧ (∀ #a. (A( ) @ #a) ⇒ ⊥) ∧ (∀ #b. (B( ) @ #b) ⇒ ⊥)"
 */
 simplify
-solve( state_( ) ▶₀ #c )
+solve( State_( ) ▶₀ #c )
   case Init
   SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff process=+]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="+"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_1[color=#ffffff process=event A( );]:
-   [ state_( ) ] --[ A( ) ]-> [ state_11( ) ]
+rule (modulo E) eventA_0_1[color=#ffffff, process="event A( );"]:
+   [ State_( ) ] --[ A( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff process=event B( );]:
-   [ state_11( ) ] --[ B( ) ]-> [ state_111( ) ]
+rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
+   [ State_11( ) ] --[ B( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_2[color=#ffffff process=event C( );]:
-   [ state_( ) ] --[ C( ) ]-> [ state_21( ) ]
+rule (modulo E) eventC_0_2[color=#ffffff, process="event C( );"]:
+   [ State_( ) ] --[ C( ) ]-> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_21[color=#ffffff process=0]:
-   [ state_21( ) ] --> [ ]
+rule (modulo E) p_0_21[color=#ffffff, process="0"]:
+   [ State_21( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -71,7 +71,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-2.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.081458s
+  processing time: 0.064387737s
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.081458s
+  processing time: 0.064387737s
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 
 ==============================================================================

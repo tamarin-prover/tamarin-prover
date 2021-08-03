@@ -19,19 +19,19 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( state_1211( ~prog_, s, x ) ▶₀ #t )
+solve( State_1211( ~prog_, s, x ) ▶₀ #t )
   case ifxHELLO_0_121
-  solve( state_11( ~prog_, s ) ▶₀ #t.2 )
-    case __0_1
+  solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+    case p_0_1
     solve( (#t.2 < #t2)  ∥ (#t.2 = #t2)  ∥ (#vr.1 < #t.2) )
       case case_2
-      solve( state_11( ~prog_, s ) ▶₀ #t.2 )
-        case __0_1
+      solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+        case p_0_1
         solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
                (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
                (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
           case case_1
-          solve( state_1211( ~prog_, s, x ) ▶₀ #t.2 )
+          solve( State_1211( ~prog_, s, x ) ▶₀ #t.2 )
             case ifxHELLO_0_121
             solve( (#t2 < #t2.1)  ∥ (#t2 = #t2.1) )
               case case_2
@@ -51,7 +51,7 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( state_1212( ~prog_, s, x ) ▶₀ #t )
+solve( State_1212( ~prog_, s, x ) ▶₀ #t )
   case ifxHELLO_1_121
   by contradiction /* from formulas */
 qed
@@ -63,17 +63,17 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (C( ) @ #t)"
 */
 simplify
-solve( state_122( ~prog_, s ) ▶₀ #t )
+solve( State_122( ~prog_, s ) ▶₀ #t )
   case lookupsasx_1_12
-  solve( state_11( ~prog_, s ) ▶₀ #t.2 )
-    case __0_1
-    solve( state_11( ~prog_, s ) ▶₀ #t.3 )
-      case __0_1
+  solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+    case p_0_1
+    solve( State_11( ~prog_, s ) ▶₀ #t.3 )
+      case p_0_1
       solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
              (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
              (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
         case case_3
-        solve( state_122( ~prog_, s ) ▶₀ #t.3 )
+        solve( State_122( ~prog_, s ) ▶₀ #t.3 )
           case lookupsasx_1_12
           SOLVED // trace found
         qed
@@ -82,103 +82,104 @@ solve( state_122( ~prog_, s ) ▶₀ #t )
   qed
 qed
 
-rule (modulo E) MessageID-rule[color=#ffffff process=new s;]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="new s;"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff process=new s;]:
+rule (modulo E) Init[color=#ffffff, process="new s;"]:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
-   [ state_( ~prog_ ) ]
+   [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) news_0_[color=#ffffff process=new s;]:
-   [ state_( ~prog_ ), Fr( s ) ] --> [ state_1( ~prog_, s ) ]
+rule (modulo E) news_0_[color=#ffffff, process="new s;"]:
+   [ State_( ~prog_ ), Fr( s ) ] --> [ State_1( ~prog_, s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=|]:
-   [ state_1( ~prog_, s ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+   [ State_1( ~prog_, s ) ]
   -->
-   [ state_11( ~prog_, s ), state_12( ~prog_, s ) ]
+   [ State_11( ~prog_, s ), State_12( ~prog_, s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertsHELLO_0_11[color=#ffffff process=insert s,'HELLO';]:
-   [ state_11( ~prog_, s ) ]
+rule (modulo E) insertsHELLO_0_11[color=#ffffff,
+                                  process="insert s,'HELLO';"]:
+   [ State_11( ~prog_, s ) ]
   --[ ProgressTo_111( ~prog_ ), Insert( s, 'HELLO' ) ]->
-   [ state_111( ~prog_, s ) ]
+   [ State_111( ~prog_, s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( ~prog_, s ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( ~prog_, s ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupsasx_0_12[color=#ffffff process=lookup s as x]:
-   [ state_12( ~prog_, s ) ]
+rule (modulo E) lookupsasx_0_12[color=#ffffff, process="lookup s as x"]:
+   [ State_12( ~prog_, s ) ]
   --[ IsIn( s, x ) ]->
-   [ state_121( ~prog_, s, x ) ]
+   [ State_121( ~prog_, s, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupsasx_1_12[color=#ffffff process=lookup s as x]:
-   [ state_12( ~prog_, s ) ]
+rule (modulo E) lookupsasx_1_12[color=#ffffff, process="lookup s as x"]:
+   [ State_12( ~prog_, s ) ]
   --[ IsNotSet( s ) ]->
-   [ state_122( ~prog_, s ) ]
+   [ State_122( ~prog_, s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifxHELLO_0_121[color=#ffffff process=if x='HELLO']:
-   [ state_121( ~prog_, s, x ) ]
+rule (modulo E) ifxHELLO_0_121[color=#ffffff, process="if x='HELLO'"]:
+   [ State_121( ~prog_, s, x ) ]
   --[ Pred_Eq( x, 'HELLO' ) ]->
-   [ state_1211( ~prog_, s, x ) ]
+   [ State_1211( ~prog_, s, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifxHELLO_1_121[color=#ffffff process=if x='HELLO']:
-   [ state_121( ~prog_, s, x ) ]
+rule (modulo E) ifxHELLO_1_121[color=#ffffff, process="if x='HELLO'"]:
+   [ State_121( ~prog_, s, x ) ]
   --[ Pred_Not_Eq( x, 'HELLO' ) ]->
-   [ state_1212( ~prog_, s, x ) ]
+   [ State_1212( ~prog_, s, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_1211[color=#ffffff process=event A( );]:
-   [ state_1211( ~prog_, s, x ) ]
+rule (modulo E) eventA_0_1211[color=#ffffff, process="event A( );"]:
+   [ State_1211( ~prog_, s, x ) ]
   --[ ProgressTo_12111( ~prog_ ), A( ) ]->
-   [ state_12111( ~prog_, s, x ) ]
+   [ State_12111( ~prog_, s, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12111[color=#ffffff process=0]:
-   [ state_12111( ~prog_, s, x ) ] --> [ ]
+rule (modulo E) p_0_12111[color=#ffffff, process="0"]:
+   [ State_12111( ~prog_, s, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_1212[color=#ffffff process=event B( );]:
-   [ state_1212( ~prog_, s, x ) ]
+rule (modulo E) eventB_0_1212[color=#ffffff, process="event B( );"]:
+   [ State_1212( ~prog_, s, x ) ]
   --[ ProgressTo_12121( ~prog_ ), B( ) ]->
-   [ state_12121( ~prog_, s, x ) ]
+   [ State_12121( ~prog_, s, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12121[color=#ffffff process=0]:
-   [ state_12121( ~prog_, s, x ) ] --> [ ]
+rule (modulo E) p_0_12121[color=#ffffff, process="0"]:
+   [ State_12121( ~prog_, s, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_122[color=#ffffff process=event C( );]:
-   [ state_122( ~prog_, s ) ]
+rule (modulo E) eventC_0_122[color=#ffffff, process="event C( );"]:
+   [ State_122( ~prog_, s ) ]
   --[ ProgressTo_1221( ~prog_ ), C( ) ]->
-   [ state_1221( ~prog_, s ) ]
+   [ State_1221( ~prog_, s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1221[color=#ffffff process=0]:
-   [ state_1221( ~prog_, s ) ] --> [ ]
+rule (modulo E) p_0_1221[color=#ffffff, process="0"]:
+   [ State_1221( ~prog_, s ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -207,11 +208,11 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction Progress_[]_to_[1,1,1]:
+restriction Progress__to_111:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_111( prog_ ) @ #t.1)"
 
-restriction Progress_[]_to_[1,2,1,1,1]_or_[1,2,1,2,1]_or_[1,2,2,1]:
+restriction Progress__to_12111_or_12121_or_1221:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒
     ((∃ #t.1. ProgressTo_12111( prog_ ) @ #t.1) ∨
@@ -236,7 +237,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini5.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini5.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.186426s
+  processing time: 0.174002845s
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)
   C_possible (exists-trace): verified (7 steps)
@@ -249,7 +250,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini5.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini5.spthy.tmp
-  processing time: 0.186426s
+  processing time: 0.174002845s
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)
   C_possible (exists-trace): verified (7 steps)

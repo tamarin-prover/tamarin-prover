@@ -117,8 +117,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
@@ -127,7 +125,7 @@ analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 11.777222s
+  processing time: 9.728033036s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -138,7 +136,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 11.777222s
+  processing time: 9.728033036s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

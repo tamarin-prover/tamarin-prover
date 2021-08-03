@@ -7,33 +7,33 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#ffffff process=|]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=|]:
-   [ state_( ) ] --> [ state_1( ), state_2( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="|"]:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newx_0_1[color=#ffffff process=new x;]:
-   [ state_1( ), Fr( x ) ] --> [ state_11( x ) ]
+rule (modulo E) newx_0_1[color=#ffffff, process="new x;"]:
+   [ State_1( ), Fr( x ) ] --> [ State_11( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=0]:
-   [ state_11( x ) ] --> [ ]
+rule (modulo E) p_0_11[color=#ffffff, process="0"]:
+   [ State_11( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newx_0_2[color=#ffffff process=new x;]:
-   [ state_2( ), Fr( x ) ] --> [ state_21( x ) ]
+rule (modulo E) newx_0_2[color=#ffffff, process="new x;"]:
+   [ State_2( ), Fr( x ) ] --> [ State_21( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_21[color=#ffffff process=0]:
-   [ state_21( x ) ] --> [ ]
+rule (modulo E) p_0_21[color=#ffffff, process="0"]:
+   [ State_21( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -56,7 +56,7 @@ analyzing: examples/sapic/fast/feature-boundonce/boundonce.spthy
 analyzed: examples/sapic/fast/feature-boundonce/boundonce.spthy
 
   output:          examples/sapic/fast/feature-boundonce/boundonce.spthy.tmp
-  processing time: 0.053909s
+  processing time: 0.056027079s
 
 
 ------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-boundonce/boundonce.spthy
 
   output:          examples/sapic/fast/feature-boundonce/boundonce.spthy.tmp
-  processing time: 0.053909s
+  processing time: 0.056027079s
 
 
 ==============================================================================

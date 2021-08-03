@@ -27,7 +27,7 @@ guarded formula characterizing all counter-examples:
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
 simplify
-solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
+solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   case ifxoredhashidhrk_0_11111111
   solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk )
     case c_xor
@@ -62,7 +62,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
       case outidrrhrk_0_11121111
       solve( (#vl, 0) ~~> (#vk, 0) )
         case d_0_fst
-        solve( state_11121111( ~id.1, ~k.1, ~r2, r1.1 ) ▶₀ #vr.11 )
+        solve( State_11121111( ~id.1, ~k.1, ~r2, r1.1 ) ▶₀ #vr.11 )
           case eventResponsekTag_0_1112111
           solve( splitEqs(1) )
             case split
@@ -118,7 +118,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                     case outidrrhrk_0_11121111
                     solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                       case d_0_fst
-                      solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.21 )
+                      solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.21 )
                         case eventResponsekTag_0_1112111
                         solve( splitEqs(7) )
                           case split
@@ -144,7 +144,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                       case d_0_snd
                       solve( (#vr.22, 0) ~~> (#vk.1, 0) )
                         case Xor
-                        solve( state_11121111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.21 )
+                        solve( State_11121111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.21 )
                           case eventResponsekTag_0_1112111
                           solve( !KU( ~r1 ) @ #vk.2 )
                             case outr_0_111111
@@ -155,7 +155,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                         case d_xor_case_1
                         solve( (#vr.23, 0) ~~> (#vk.1, 0) )
                           case Xor
-                          solve( state_11121111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.21 )
+                          solve( State_11121111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.21 )
                             case eventResponsekTag_0_1112111
                             solve( !KU( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) @ #vk.3 )
                               case c_xor
@@ -214,7 +214,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                 case outidrrhrk_0_11121111
                                 solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                                   case d_0_fst
-                                  solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.23 )
+                                  solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.23 )
                                     case eventResponsekTag_0_1112111
                                     solve( splitEqs(12) )
                                       case split
@@ -242,7 +242,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                     case d_xor_case_2
                                     solve( (#vr.25, 0) ~~> (#vk.2, 0) )
                                       case Xor_case_1
-                                      solve( state_11121111( ~id.1, ~k, ~r2.1, r1.1 ) ▶₀ #vr.23 )
+                                      solve( State_11121111( ~id.1, ~k, ~r2.1, r1.1 ) ▶₀ #vr.23 )
                                         case eventResponsekTag_0_1112111
                                         solve( splitEqs(12) )
                                           case split
@@ -294,7 +294,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                               case outidrrhrk_0_11121111
                                               solve( (#vl.2, 0) ~~> (#vk.3, 0) )
                                                 case d_0_fst
-                                                solve( state_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.33 )
+                                                solve( State_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.33 )
                                                   case eventResponsekTag_0_1112111
                                                   solve( splitEqs(18) )
                                                     case split
@@ -320,13 +320,13 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                 case d_0_snd
                                                 solve( (#vr.34, 0) ~~> (#vk.3, 0) )
                                                   case Xor
-                                                  by solve( state_11121111( ~id.1, ~k, ~r2.1, ~r1
+                                                  by solve( State_11121111( ~id.1, ~k, ~r2.1, ~r1
                                                             ) ▶₀ #vr.33 )
                                                 next
                                                   case d_xor_case_1
                                                   solve( (#vr.35, 0) ~~> (#vk.3, 0) )
                                                     case Xor
-                                                    solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.2
+                                                    solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.2
                                                            ) ▶₀ #vr.33 )
                                                       case eventResponsekTag_0_1112111
                                                       by contradiction /* cyclic */
@@ -336,7 +336,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                   case d_xor_case_2
                                                   solve( (#vr.35, 0) ~~> (#vk.3, 0) )
                                                     case Xor
-                                                    solve( state_11121111( ~id.1, ~k, ~r2.2, ~r1 ) ▶₀ #vr.33 )
+                                                    solve( State_11121111( ~id.1, ~k, ~r2.2, ~r1 ) ▶₀ #vr.33 )
                                                       case eventResponsekTag_0_1112111
                                                       solve( splitEqs(18) )
                                                         case split
@@ -352,7 +352,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                             case outidrrhrk_0_11121111
                                                             solve( (#vl.3, 0) ~~> (#vk.4, 0) )
                                                               case d_0_fst
-                                                              solve( state_11121111( ~id.1, ~k.1, ~r2.3, r1.2
+                                                              solve( State_11121111( ~id.1, ~k.1, ~r2.3, r1.2
                                                                      ) ▶₀ #vr.43 )
                                                                 case eventResponsekTag_0_1112111
                                                                 solve( splitEqs(24) )
@@ -390,7 +390,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                                 case d_xor_case_1
                                                                 solve( (#vr.45, 0) ~~> (#vk.4, 0) )
                                                                   case Xor_case_1
-                                                                  solve( state_11121111( ~id.1, ~k.1, ~r2.2,
+                                                                  solve( State_11121111( ~id.1, ~k.1, ~r2.2,
                                                                                          r1.2
                                                                          ) ▶₀ #vr.43 )
                                                                     case eventResponsekTag_0_1112111
@@ -398,7 +398,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                                   qed
                                                                 next
                                                                   case Xor_case_2
-                                                                  solve( state_11121111( ~id.1, ~k.1, ~r2.1,
+                                                                  solve( State_11121111( ~id.1, ~k.1, ~r2.1,
                                                                                          r1.2
                                                                          ) ▶₀ #vr.43 )
                                                                     case eventResponsekTag_0_1112111
@@ -444,7 +444,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                       qed
                                     next
                                       case Xor_case_2
-                                      solve( state_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.23 )
+                                      solve( State_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.23 )
                                         case eventResponsekTag_0_1112111
                                         solve( splitEqs(12) )
                                           case split
@@ -460,7 +460,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                               case outidrrhrk_0_11121111
                                               solve( (#vl.2, 0) ~~> (#vk.3, 0) )
                                                 case d_0_fst
-                                                solve( state_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.33 )
+                                                solve( State_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.33 )
                                                   case eventResponsekTag_0_1112111
                                                   solve( splitEqs(18) )
                                                     case split
@@ -489,13 +489,13 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                 case d_0_snd
                                                 solve( (#vr.34, 0) ~~> (#vk.3, 0) )
                                                   case Xor
-                                                  by solve( state_11121111( ~id.1, ~k, ~r2.1, r1.1
+                                                  by solve( State_11121111( ~id.1, ~k, ~r2.1, r1.1
                                                             ) ▶₀ #vr.33 )
                                                 next
                                                   case d_xor_case_1
                                                   solve( (#vr.35, 0) ~~> (#vk.3, 0) )
                                                     case Xor
-                                                    solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.2
+                                                    solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.2
                                                            ) ▶₀ #vr.33 )
                                                       case eventResponsekTag_0_1112111
                                                       by contradiction /* cyclic */
@@ -505,7 +505,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                                   case d_xor_case_2
                                                   solve( (#vr.35, 0) ~~> (#vk.3, 0) )
                                                     case Xor
-                                                    solve( state_11121111( ~id.1, ~k, ~r2.2, r1.1
+                                                    solve( State_11121111( ~id.1, ~k, ~r2.2, r1.1
                                                            ) ▶₀ #vr.33 )
                                                       case eventResponsekTag_0_1112111
                                                       solve( splitEqs(18) )
@@ -552,7 +552,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                         case d_xor_case_2
                         solve( (#vr.23, 0) ~~> (#vk.1, 0) )
                           case Xor
-                          solve( state_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.21 )
+                          solve( State_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.21 )
                             case eventResponsekTag_0_1112111
                             solve( splitEqs(7) )
                               case split
@@ -568,7 +568,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                   case outidrrhrk_0_11121111
                                   solve( (#vl.2, 0) ~~> (#vk.2, 0) )
                                     case d_0_fst
-                                    solve( state_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.31 )
+                                    solve( State_11121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.31 )
                                       case eventResponsekTag_0_1112111
                                       solve( splitEqs(13) )
                                         case split
@@ -605,13 +605,13 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                                       case d_xor_case_1
                                       solve( (#vr.33, 0) ~~> (#vk.2, 0) )
                                         case Xor_case_1
-                                        solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.31 )
+                                        solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.31 )
                                           case eventResponsekTag_0_1112111
                                           by contradiction /* cyclic */
                                         qed
                                       next
                                         case Xor_case_2
-                                        solve( state_11121111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.31 )
+                                        solve( State_11121111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.31 )
                                           case eventResponsekTag_0_1112111
                                           solve( !KU( ~r1 ) @ #vk.4 )
                                             case outr_0_111111
@@ -668,18 +668,18 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
         case d_0_snd
         solve( (#vr.12, 0) ~~> (#vk, 0) )
           case Xor
-          by solve( state_11121111( ~id.1, ~k, ~id, ~r1 ) ▶₀ #vr.11 )
+          by solve( State_11121111( ~id.1, ~k, ~id, ~r1 ) ▶₀ #vr.11 )
         next
           case d_xor_case_1
           solve( (#vr.13, 0) ~~> (#vk, 0) )
             case Xor
-            by solve( state_11121111( ~id.1, ~k.1, ~id, r1.1 ) ▶₀ #vr.11 )
+            by solve( State_11121111( ~id.1, ~k.1, ~id, r1.1 ) ▶₀ #vr.11 )
           qed
         next
           case d_xor_case_2
           solve( (#vr.13, 0) ~~> (#vk, 0) )
             case Xor
-            solve( state_11121111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.11 )
+            solve( State_11121111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.11 )
               case eventResponsekTag_0_1112111
               solve( !KU( ~r1 ) @ #vk.2 )
                 case outr_0_111111
@@ -715,9 +715,9 @@ guarded formula characterizing all satisfying traces:
   ∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k"
 */
 simplify
-solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
+solve( State_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   case ifxoredhashidhrk_0_11111111
-  solve( state_1112111( ~id.1, ~k, ~r2, r1.1 ) ▶₀ #j )
+  solve( State_1112111( ~id.1, ~k, ~r2, r1.1 ) ▶₀ #j )
     case newr_0_111211
     solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk )
       case coerce
@@ -729,7 +729,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
             case d_xor_case_2
             solve( (#vr.19, 0) ~~> (#vk, 0) )
               case Xor
-              solve( state_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.17 )
+              solve( State_11121111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.17 )
                 case eventResponsekTag_0_1112111
                 solve( !KU( (~id⊕~r2) ) @ #vk.2 )
                   case coerce
@@ -737,7 +737,7 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                     case outidrrhrk_0_11121111
                     solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                       case d_0_fst
-                      solve( state_11121111( ~id.1, ~k.1, ~r2.1, r1.1 ) ▶₀ #vr.20 )
+                      solve( State_11121111( ~id.1, ~k.1, ~r2.1, r1.1 ) ▶₀ #vr.20 )
                         case eventResponsekTag_0_1112111
                         solve( (#vr.20, 0) ~~> (#vk.1, 0) )
                           case Xor
@@ -759,137 +759,145 @@ solve( state_111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=new ~k;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new ~k;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff process=new ~k;]:
-   [ state_( ), Fr( ~k ) ] --> [ state_1( ~k ) ]
+rule (modulo E) newk_0_[color=#ffffff, process="new ~k;"]:
+   [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newid_0_1[color=#ffffff process=new ~id;]:
-   [ state_1( ~k ), Fr( ~id ) ] --> [ state_11( ~id, ~k ) ]
+rule (modulo E) newid_0_1[color=#ffffff, process="new ~id;"]:
+   [ State_1( ~k ), Fr( ~id ) ] --> [ State_11( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=!]:
-   [ state_11( ~id, ~k ) ] --> [ !semistate_111( ~id, ~k ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="!"]:
+   [ State_11( ~id, ~k ) ] --> [ !Semistate_111( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11[color=#ffffff process=!]:
-   [ !semistate_111( ~id, ~k ) ] --> [ state_111( ~id, ~k ) ]
+rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+   [ !Semistate_111( ~id, ~k ) ] --> [ State_111( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=|]:
-   [ state_111( ~id, ~k ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="|"]:
+   [ State_111( ~id, ~k ) ]
   -->
-   [ state_1111( ~id, ~k ), state_1112( ~id, ~k ) ]
+   [ State_1111( ~id, ~k ), State_1112( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newr_0_1111[color=#404480 process=new ~r1;]:
-   [ state_1111( ~id, ~k ), Fr( ~r1 ) ] --> [ state_11111( ~id, ~k, ~r1 ) ]
+rule (modulo E) newr_0_1111[color=#404480, process="new ~r1;"]:
+   [ State_1111( ~id, ~k ), Fr( ~r1 ) ] --> [ State_11111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventChallengerReader_0_11111[color=#404480 process=event Challenge( ~r1, 'Reader' );]:
-   [ state_11111( ~id, ~k, ~r1 ) ]
+rule (modulo E) eventChallengerReader_0_11111[color=#404480,
+                                              process="event Challenge( ~r1, 'Reader' );"]:
+   [ State_11111( ~id, ~k, ~r1 ) ]
   --[ Challenge( ~r1, 'Reader' ) ]->
-   [ state_111111( ~id, ~k, ~r1 ) ]
+   [ State_111111( ~id, ~k, ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outr_0_111111[color=#404480 process=out(~r1);]:
-   [ state_111111( ~id, ~k, ~r1 ) ]
+rule (modulo E) outr_0_111111[color=#404480, process="out(~r1);"]:
+   [ State_111111( ~id, ~k, ~r1 ) ]
   -->
-   [ state_1111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
+   [ State_1111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inxoredhash_0_1111111[color=#404480 process=in(xoredhash);]:
-   [ state_1111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
+rule (modulo E) inxoredhash_0_1111111[color=#404480,
+                                      process="in(xoredhash);"]:
+   [ State_1111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
   -->
-   [ state_11111111( ~id, ~k, ~r1, xoredhash ) ]
+   [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifxoredhashidhrk_0_11111111[color=#404480 process=if xoredhash=(~id⊕h(<~r1, ~k>))]:
-   [ state_11111111( ~id, ~k, ~r1, xoredhash ) ]
+rule (modulo E) ifxoredhashidhrk_0_11111111[color=#404480,
+                                            process="if xoredhash=(~id⊕h(<~r1, ~k>))"]:
+   [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
-   [ state_111111111( ~id, ~k, ~r1, xoredhash ) ]
+   [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifxoredhashidhrk_1_11111111[color=#404480 process=if xoredhash=(~id⊕h(<~r1, ~k>))]:
-   [ state_11111111( ~id, ~k, ~r1, xoredhash ) ]
+rule (modulo E) ifxoredhashidhrk_1_11111111[color=#404480,
+                                            process="if xoredhash=(~id⊕h(<~r1, ~k>))"]:
+   [ State_11111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
-   [ state_111111112( ~id, ~k, ~r1, xoredhash ) ]
+   [ State_111111112( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAlivekTag_0_111111111[color=#404480 process=event Alive( ~k, 'Tag' );]:
-   [ state_111111111( ~id, ~k, ~r1, xoredhash ) ]
+rule (modulo E) eventAlivekTag_0_111111111[color=#404480,
+                                           process="event Alive( ~k, 'Tag' );"]:
+   [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   --[ Alive( ~k, 'Tag' ) ]->
-   [ state_1111111111( ~id, ~k, ~r1, xoredhash ) ]
+   [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111111[color=#404480 process=0]:
-   [ state_1111111111( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
+rule (modulo E) p_0_1111111111[color=#404480, process="0"]:
+   [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111112[color=#404480 process=0]:
-   [ state_111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
+rule (modulo E) p_0_111111112[color=#404480, process="0"]:
+   [ State_111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1112[color=#ffffff process=!]:
-   [ state_1112( ~id, ~k ) ] --> [ !semistate_11121( ~id, ~k ) ]
+rule (modulo E) p_0_1112[color=#ffffff, process="!"]:
+   [ State_1112( ~id, ~k ) ] --> [ !Semistate_11121( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1112[color=#ffffff process=!]:
-   [ !semistate_11121( ~id, ~k ) ] --> [ state_11121( ~id, ~k ) ]
+rule (modulo E) p_1_1112[color=#ffffff, process="!"]:
+   [ !Semistate_11121( ~id, ~k ) ] --> [ State_11121( ~id, ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inr_0_11121[color=#40807c process=in(r1);]:
-   [ state_11121( ~id, ~k ), In( r1 ) ] --> [ state_111211( ~id, ~k, r1 ) ]
+rule (modulo E) inr_0_11121[color=#40807c, process="in(r1);"]:
+   [ State_11121( ~id, ~k ), In( r1 ) ] --> [ State_111211( ~id, ~k, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newr_0_111211[color=#40807c process=new ~r2;]:
-   [ state_111211( ~id, ~k, r1 ), Fr( ~r2 ) ]
+rule (modulo E) newr_0_111211[color=#40807c, process="new ~r2;"]:
+   [ State_111211( ~id, ~k, r1 ), Fr( ~r2 ) ]
   -->
-   [ state_1112111( ~id, ~k, ~r2, r1 ) ]
+   [ State_1112111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventResponsekTag_0_1112111[color=#40807c process=event Response( ~k, 'Tag' );]:
-   [ state_1112111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) eventResponsekTag_0_1112111[color=#40807c,
+                                            process="event Response( ~k, 'Tag' );"]:
+   [ State_1112111( ~id, ~k, ~r2, r1 ) ]
   --[ Response( ~k, 'Tag' ) ]->
-   [ state_11121111( ~id, ~k, ~r2, r1 ) ]
+   [ State_11121111( ~id, ~k, ~r2, r1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outidrrhrk_0_11121111[color=#40807c process=out(<(~id⊕~r2), (~r2⊕h(<r1, ~k>))>);]:
-   [ state_11121111( ~id, ~k, ~r2, r1 ) ]
+rule (modulo E) outidrrhrk_0_11121111[color=#40807c,
+                                      process="out(<(~id⊕~r2), (~r2⊕h(<r1, ~k>))>);"]:
+   [ State_11121111( ~id, ~k, ~r2, r1 ) ]
   -->
    [
-   state_111211111( ~id, ~k, ~r2, r1 ),
+   State_111211111( ~id, ~k, ~r2, r1 ),
    Out( <(~id⊕~r2), (~r2⊕h(<r1, ~k>))> )
    ]
 
   /*
-  rule (modulo AC) outidrrhrk_0_11121111[color=#40807c process=out(<(~id⊕~r2), (~r2⊕h(<r1, ~k>))>);]:
-     [ state_11121111( ~id, ~k, ~r2, r1 ) ]
+  rule (modulo AC) outidrrhrk_0_11121111[color=#40807c,
+                                         process="out(<(~id⊕~r2), (~r2⊕h(<r1, ~k>))>);"]:
+     [ State_11121111( ~id, ~k, ~r2, r1 ) ]
     -->
-     [ state_111211111( ~id, ~k, ~r2, r1 ), Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
+     [ State_111211111( ~id, ~k, ~r2, r1 ), Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
     variants (modulo AC)
     1. ~id   = ~id.16
        ~r2   = ~id.16
@@ -900,8 +908,8 @@ rule (modulo E) outidrrhrk_0_11121111[color=#40807c process=out(<(~id⊕~r2), (~
        z     = (~id.16⊕~r2.18)
   */
 
-rule (modulo E) __0_111211111[color=#40807c process=0]:
-   [ state_111211111( ~id, ~k, ~r2, r1 ) ] --> [ ]
+rule (modulo E) p_0_111211111[color=#40807c, process="0"]:
+   [ State_111211111( ~id, ~k, ~r2, r1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -932,7 +940,7 @@ analyzing: examples/sapic/fast/feature-xor/KCL07.spthy
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 3.558778s
+  processing time: 5.476474841s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 
@@ -944,7 +952,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 3.558778s
+  processing time: 5.476474841s
   recentalive_tag (all-traces): verified (223 steps)
   executable (exists-trace): verified (16 steps)
 

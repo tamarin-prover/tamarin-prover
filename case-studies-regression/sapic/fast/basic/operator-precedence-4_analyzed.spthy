@@ -24,43 +24,43 @@ next
   by contradiction /* from formulas */
 qed
 
-rule (modulo E) Init[color=#ffffff process=|]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=|]:
-   [ state_( ) ] --> [ state_1( ), state_2( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="|"]:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_0_1[color=#ffffff process=in('1');]:
-   [ state_1( ), In( '1' ) ] --> [ state_11( ) ]
+rule (modulo E) in_0_1[color=#ffffff, process="in('1');"]:
+   [ State_1( ), In( '1' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventE_0_11[color=#ffffff process=event E( '1' );]:
-   [ state_11( ) ] --[ E( '1' ) ]-> [ state_111( ) ]
+rule (modulo E) eventE_0_11[color=#ffffff, process="event E( '1' );"]:
+   [ State_11( ) ] --[ E( '1' ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_0_2[color=#ffffff process=in('1');]:
-   [ state_2( ), In( '1' ) ] --> [ state_21( ) ]
+rule (modulo E) in_0_2[color=#ffffff, process="in('1');"]:
+   [ State_2( ), In( '1' ) ] --> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventE_0_21[color=#ffffff process=event E( '1' );]:
-   [ state_21( ) ] --[ E( '1' ) ]-> [ state_211( ) ]
+rule (modulo E) eventE_0_21[color=#ffffff, process="event E( '1' );"]:
+   [ State_21( ) ] --[ E( '1' ) ]-> [ State_211( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_211[color=#ffffff process=0]:
-   [ state_211( ) ] --> [ ]
+rule (modulo E) p_0_211[color=#ffffff, process="0"]:
+   [ State_211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -83,7 +83,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-4.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.066756s
+  processing time: 0.06399415s
   second_process_covered (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.066756s
+  processing time: 0.06399415s
   second_process_covered (all-traces): verified (4 steps)
 
 ==============================================================================

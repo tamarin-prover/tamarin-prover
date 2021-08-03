@@ -29,7 +29,7 @@ guarded formula characterizing all counter-examples:
   ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+solve( State_121111111( init, k, signed, skV ) ▶₀ #t1 )
   case eventVoutputaenckpkskVsigned_0_12111111
   by contradiction /* from formulas */
 qed
@@ -42,11 +42,11 @@ guarded formula characterizing all counter-examples:
 "∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (K( k ) @ #t2)"
 */
 simplify
-solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
+solve( State_121111111( init, k, signed, skV ) ▶₀ #t1 )
   case eventVoutputaenckpkskVsigned_0_12111111
-  solve( state_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.1 )
+  solve( State_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.1 )
     case newk_0_11111
-    solve( state_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.2 )
+    solve( State_111111( init, ~n.1, ~n.2 ) ▶₀ #t2.2 )
       case newk_0_11111
       solve( !KU( ~n.1 ) @ #vk.2 )
         case outaenckpkskVrepaenckpkskVlocpkskV_0_11111111_case_1
@@ -59,143 +59,150 @@ solve( state_121111111( init, k, signed, skV ) ▶₀ #t1 )
   qed
 qed
 
-restriction restr_Report-rule_1:
-  "∀ x #NOW. (restr_Report-rule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(∃ z. x = <'loc', z>))"
   // safety formula
 
-rule (modulo E) Report-rule[color=#ffffff process=new init;]:
+rule (modulo E) ReportRule[color=#ffffff, process="new init;"]:
    [ In( <x, loc> ) ]
-  --[ restr_Report-rule_1( loc ) ]->
+  --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff process=new init;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new init;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newinit_0_[color=#ffffff process=new init;]:
-   [ state_( ), Fr( init ) ] --> [ state_1( init ) ]
+rule (modulo E) newinit_0_[color=#ffffff, process="new init;"]:
+   [ State_( ), Fr( init ) ] --> [ State_1( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=|]:
-   [ state_1( init ) ] --> [ state_11( init ), state_12( init ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+   [ State_1( init ) ] --> [ State_11( init ), State_12( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=!]:
-   [ state_11( init ) ] --> [ !semistate_111( init ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="!"]:
+   [ State_11( init ) ] --> [ !Semistate_111( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11[color=#ffffff process=!]:
-   [ !semistate_111( init ) ] --> [ state_111( init ) ]
+rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+   [ !Semistate_111( init ) ] --> [ State_111( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inpkskV_0_111[color=#405280 process=in(pk(skV));]:
-   [ state_111( init ), In( pk(skV) ) ] --> [ state_1111( init, skV ) ]
+rule (modulo E) inpkskV_0_111[color=#405280, process="in(pk(skV));"]:
+   [ State_111( init ), In( pk(skV) ) ] --> [ State_1111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#405280 process=!]:
-   [ state_1111( init, skV ) ] --> [ !semistate_11111( init, skV ) ]
+rule (modulo E) p_0_1111[color=#405280, process="!"]:
+   [ State_1111( init, skV ) ] --> [ !Semistate_11111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1111[color=#405280 process=!]:
-   [ !semistate_11111( init, skV ) ] --> [ state_11111( init, skV ) ]
+rule (modulo E) p_1_1111[color=#405280, process="!"]:
+   [ !Semistate_11111( init, skV ) ] --> [ State_11111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_11111[color=#405280 process=new k;]:
-   [ state_11111( init, skV ), Fr( k ) ]
+rule (modulo E) newk_0_11111[color=#405280, process="new k;"]:
+   [ State_11111( init, skV ), Fr( k ) ]
   -->
-   [ state_111111( init, k, skV ) ]
+   [ State_111111( init, k, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSessionPpkskVk_0_111111[color=#405280 process=event SessionP( pk(skV), k );]:
-   [ state_111111( init, k, skV ) ]
+rule (modulo E) eventSessionPpkskVk_0_111111[color=#405280,
+                                             process="event SessionP( pk(skV), k );"]:
+   [ State_111111( init, k, skV ) ]
   --[ SessionP( pk(skV), k ) ]->
-   [ state_1111111( init, k, skV ) ]
+   [ State_1111111( init, k, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventPoutputaenckpkskVrepaenckpkskVlocpkskV_0_1111111[color=#405280 process=event Poutput( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)
+rule (modulo E) eventPoutputaenckpkskVrepaenckpkskVlocpkskV_0_1111111[color=#405280,
+                                                                      process="event Poutput( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)
          >
-);]:
-   [ state_1111111( init, k, skV ) ]
+);"]:
+   [ State_1111111( init, k, skV ) ]
   --[
   Poutput( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)> )
   ]->
-   [ state_11111111( init, k, skV ) ]
+   [ State_11111111( init, k, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outaenckpkskVrepaenckpkskVlocpkskV_0_11111111[color=#405280 process=out(<aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)>);]:
-   [ state_11111111( init, k, skV ) ]
+rule (modulo E) outaenckpkskVrepaenckpkskVlocpkskV_0_11111111[color=#405280,
+                                                              process="out(<aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)>);"]:
+   [ State_11111111( init, k, skV ) ]
   -->
    [
-   state_111111111( init, k, skV ),
+   State_111111111( init, k, skV ),
    Out( <aenc(k, pk(skV)), rep(aenc(k, pk(skV)), <'loc', pk(skV)>)> )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111111[color=#405280 process=0]:
-   [ state_111111111( init, k, skV ) ] --> [ ]
+rule (modulo E) p_0_111111111[color=#405280, process="0"]:
+   [ State_111111111( init, k, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12[color=#ffffff process=!]:
-   [ state_12( init ) ] --> [ !semistate_121( init ) ]
+rule (modulo E) p_0_12[color=#ffffff, process="!"]:
+   [ State_12( init ) ] --> [ !Semistate_121( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_12[color=#ffffff process=!]:
-   [ !semistate_121( init ) ] --> [ state_121( init ) ]
+rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+   [ !Semistate_121( init ) ] --> [ State_121( init ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskV_0_121[color=#658040 process=new skV;]:
-   [ state_121( init ), Fr( skV ) ] --> [ state_1211( init, skV ) ]
+rule (modulo E) newskV_0_121[color=#658040, process="new skV;"]:
+   [ State_121( init ), Fr( skV ) ] --> [ State_1211( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestPpkskV_0_1211[color=#658040 process=event HonestP( pk(skV) );]:
-   [ state_1211( init, skV ) ]
+rule (modulo E) eventHonestPpkskV_0_1211[color=#658040,
+                                         process="event HonestP( pk(skV) );"]:
+   [ State_1211( init, skV ) ]
   --[ HonestP( pk(skV) ) ]->
-   [ state_12111( init, skV ) ]
+   [ State_12111( init, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpkskV_0_12111[color=#658040 process=out(pk(skV));]:
-   [ state_12111( init, skV ) ]
+rule (modulo E) outpkskV_0_12111[color=#658040, process="out(pk(skV));"]:
+   [ State_12111( init, skV ) ]
   -->
-   [ state_121111( init, skV ), Out( pk(skV) ) ]
+   [ State_121111( init, skV ), Out( pk(skV) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inaenckpkskVsigned_0_121111[color=#658040 process=in(<aenc(k, pk(skV)), signed>);]:
-   [ state_121111( init, skV ), In( <aenc(k, pk(skV)), signed> ) ]
+rule (modulo E) inaenckpkskVsigned_0_121111[color=#658040,
+                                            process="in(<aenc(k, pk(skV)), signed>);"]:
+   [ State_121111( init, skV ), In( <aenc(k, pk(skV)), signed> ) ]
   -->
-   [ state_1211111( init, k, signed, skV ) ]
+   [ State_1211111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-   [ state_1211111( init, k, signed, skV ) ]
+rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040,
+                                                             process="if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+   [ State_1211111( init, k, signed, skV ) ]
   --[ Pred_Eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) ) ]->
-   [ state_12111111( init, k, signed, skV ) ]
+   [ State_12111111( init, k, signed, skV ) ]
 
   /*
-  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-     [ state_1211111( init, k, signed, skV ) ]
+  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040,
+                                                                process="if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+     [ State_1211111( init, k, signed, skV ) ]
     --[ Pred_Eq( aenc(k, pk(skV)), z ) ]->
-     [ state_12111111( init, k, signed, skV ) ]
+     [ State_12111111( init, k, signed, skV ) ]
     variants (modulo AC)
     1. signed
              = signed.6
@@ -208,17 +215,19 @@ rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_0_1211111[color=#658040 proce
        z     = x.6
   */
 
-rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-   [ state_1211111( init, k, signed, skV ) ]
+rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040,
+                                                             process="if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+   [ State_1211111( init, k, signed, skV ) ]
   --[ Pred_Not_Eq( aenc(k, pk(skV)), check_rep(signed, <'loc', pk(skV)>) )
   ]->
-   [ state_12111112( init, k, signed, skV ) ]
+   [ State_12111112( init, k, signed, skV ) ]
 
   /*
-  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 process=if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)]:
-     [ state_1211111( init, k, signed, skV ) ]
+  rule (modulo AC) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040,
+                                                                process="if aenc(k, pk(skV))=check_rep(signed, <'loc', pk(skV)>)"]:
+     [ State_1211111( init, k, signed, skV ) ]
     --[ Pred_Not_Eq( aenc(k, pk(skV)), z ) ]->
-     [ state_12111112( init, k, signed, skV ) ]
+     [ State_12111112( init, k, signed, skV ) ]
     variants (modulo AC)
     1. signed
              = signed.6
@@ -231,27 +240,29 @@ rule (modulo E) ifaenckpkskVcheckrepsignedlocpkskV_1_1211111[color=#658040 proce
        z     = x.6
   */
 
-rule (modulo E) eventVoutputaenckpkskVsigned_0_12111111[color=#658040 process=event Voutput( <aenc(k, pk(skV)), signed> );]:
-   [ state_12111111( init, k, signed, skV ) ]
+rule (modulo E) eventVoutputaenckpkskVsigned_0_12111111[color=#658040,
+                                                        process="event Voutput( <aenc(k, pk(skV)), signed> );"]:
+   [ State_12111111( init, k, signed, skV ) ]
   --[ Voutput( <aenc(k, pk(skV)), signed> ) ]->
-   [ state_121111111( init, k, signed, skV ) ]
+   [ State_121111111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSessionVpkskVk_0_121111111[color=#658040 process=event SessionV( pk(skV), k );]:
-   [ state_121111111( init, k, signed, skV ) ]
+rule (modulo E) eventSessionVpkskVk_0_121111111[color=#658040,
+                                                process="event SessionV( pk(skV), k );"]:
+   [ State_121111111( init, k, signed, skV ) ]
   --[ SessionV( pk(skV), k ) ]->
-   [ state_1211111111( init, k, signed, skV ) ]
+   [ State_1211111111( init, k, signed, skV ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1211111111[color=#658040 process=0]:
-   [ state_1211111111( init, k, signed, skV ) ] --> [ ]
+rule (modulo E) p_0_1211111111[color=#658040, process="0"]:
+   [ State_1211111111( init, k, signed, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12111112[color=#658040 process=0]:
-   [ state_12111112( init, k, signed, skV ) ] --> [ ]
+rule (modulo E) p_0_12111112[color=#658040, process="0"]:
+   [ State_12111112( init, k, signed, skV ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -282,7 +293,7 @@ analyzing: examples/sapic/fast/feature-locations/AKE.spthy
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.46415795s
+  processing time: 0.461580373s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -294,7 +305,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.46415795s
+  processing time: 0.461580373s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

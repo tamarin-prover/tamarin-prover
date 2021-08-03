@@ -19,27 +19,24 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( state_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ▶₀ #t )
+solve( State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ▶₀ #t )
   case inrm_0_111
-  solve( state_( ~prog_ ) ▶₀ #t.2 )
+  solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( state_( ~prog_ ) ▶₀ #t.3 )
+    solve( State_( ~prog_ ) ▶₀ #t.3 )
       case Init
-      solve( state_1111( ~prog_.1, ~prog_11.1, ~prog_1111, a, m.1 ) ▶₀ #t.3 )
+      solve( State_1111( ~prog_.1, ~prog_11.1, ~prog_1111, a, m.1 ) ▶₀ #t.3 )
         case inrm_0_111
-        solve( state_( ~prog_ ) ▶₀ #t.3 )
+        solve( State_( ~prog_ ) ▶₀ #t.3 )
           case Init
           solve( (∃ #t. (ProgressTo_111( ~prog_11 ) @ #t))  ∥
                  (∃ #t. (ProgressTo_1121( ~prog_11 ) @ #t)) )
             case case_1
-            solve( ProgressTo_111( ~prog_11 ) @ #t.3 )
-              case ifaa_0_11
-              solve( state_11( ~prog_.1, ~prog_11, a ) ▶₀ #t.3 )
-                case __1_1
-                solve( state_( ~prog_ ) ▶₀ #t.3 )
-                  case Init
-                  SOLVED // trace found
-                qed
+            solve( State_11( ~prog_.1, ~prog_11, a ) ▶₀ #t.3 )
+              case p_1_1
+              solve( State_( ~prog_ ) ▶₀ #t.3 )
+                case Init
+                SOLVED // trace found
               qed
             qed
           qed
@@ -56,84 +53,84 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-by solve( state_112( ~prog_, ~prog_11, a ) ▶₀ #t )
+by solve( State_112( ~prog_, ~prog_11, a ) ▶₀ #t )
 
-rule (modulo E) MessageID-rule[color=#ffffff process=new a;]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="new a;"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff process=new a;]:
+rule (modulo E) Init[color=#ffffff, process="new a;"]:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
-   [ state_( ~prog_ ) ]
+   [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_[color=#ffffff process=new a;]:
-   [ state_( ~prog_ ), Fr( a ) ]
+rule (modulo E) newa_0_[color=#ffffff, process="new a;"]:
+   [ State_( ~prog_ ), Fr( a ) ]
   --[ ProgressTo_1( ~prog_ ) ]->
-   [ state_1( ~prog_, a ) ]
+   [ State_1( ~prog_, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=!]:
-   [ state_1( ~prog_, a ) ] --> [ !semistate_11( ~prog_, a ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="!"]:
+   [ State_1( ~prog_, a ) ] --> [ !Semistate_11( ~prog_, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1[color=#ffffff process=!]:
-   [ Fr( ~prog_11 ), !semistate_11( ~prog_, a ) ]
+rule (modulo E) p_1_1[color=#ffffff, process="!"]:
+   [ Fr( ~prog_11 ), !Semistate_11( ~prog_, a ) ]
   --[ ProgressFrom_11( ~prog_11 ) ]->
-   [ state_11( ~prog_, ~prog_11, a ) ]
+   [ State_11( ~prog_, ~prog_11, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifaa_0_11[color=#ffffff process=if a=a]:
-   [ state_11( ~prog_, ~prog_11, a ) ]
+rule (modulo E) ifaa_0_11[color=#ffffff, process="if a=a"]:
+   [ State_11( ~prog_, ~prog_11, a ) ]
   --[ ProgressTo_111( ~prog_11 ), Pred_Eq( a, a ) ]->
-   [ state_111( ~prog_, ~prog_11, a ) ]
+   [ State_111( ~prog_, ~prog_11, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifaa_1_11[color=#ffffff process=if a=a]:
-   [ state_11( ~prog_, ~prog_11, a ) ]
-  --[ ProgressTo_111( ~prog_11 ), Pred_Not_Eq( a, a ) ]->
-   [ state_112( ~prog_, ~prog_11, a ) ]
+rule (modulo E) ifaa_1_11[color=#ffffff, process="if a=a"]:
+   [ State_11( ~prog_, ~prog_11, a ) ]
+  --[ Pred_Not_Eq( a, a ) ]->
+   [ State_112( ~prog_, ~prog_11, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrm_0_111[color=#ffffff process=in('r',m);]:
+rule (modulo E) inrm_0_111[color=#ffffff, process="in('r',m);"]:
    [
-   Fr( ~prog_1111 ), state_111( ~prog_, ~prog_11, a ), In( m ),
+   Fr( ~prog_1111 ), State_111( ~prog_, ~prog_11, a ), In( m ),
    MID_Receiver( ~mid_111 )
    ]
   --[ ProgressFrom_1111( ~prog_1111 ), Receive( ~mid_111, m ) ]->
-   [ state_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
+   [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_1111[color=#ffffff process=event A( );]:
-   [ state_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
+rule (modulo E) eventA_0_1111[color=#ffffff, process="event A( );"]:
+   [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
   --[ ProgressTo_11111( ~prog_1111 ), A( ) ]->
-   [ state_11111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
+   [ State_11111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111[color=#ffffff process=0]:
-   [ state_11111( ~prog_, ~prog_11, ~prog_1111, a, m ) ] --> [ ]
+rule (modulo E) p_0_11111[color=#ffffff, process="0"]:
+   [ State_11111( ~prog_, ~prog_11, ~prog_1111, a, m ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_112[color=#ffffff process=event B( );]:
-   [ state_112( ~prog_, ~prog_11, a ) ]
+rule (modulo E) eventB_0_112[color=#ffffff, process="event B( );"]:
+   [ State_112( ~prog_, ~prog_11, a ) ]
   --[ ProgressTo_1121( ~prog_11 ), B( ) ]->
-   [ state_1121( ~prog_, ~prog_11, a ) ]
+   [ State_1121( ~prog_, ~prog_11, a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1121[color=#ffffff process=0]:
-   [ state_1121( ~prog_, ~prog_11, a ) ] --> [ ]
+rule (modulo E) p_0_1121[color=#ffffff, process="0"]:
+   [ State_1121( ~prog_, ~prog_11, a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -149,17 +146,17 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction Progress_[]_to_[1]:
+restriction Progress__to_1:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
 
-restriction Progress_[1,1]_to_[1,1,1]_or_[1,1,2,1]:
+restriction Progress_11_to_111_or_1121:
   "∀ prog_11 #t.
     (ProgressFrom_11( prog_11 ) @ #t) ⇒
     ((∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1) ∨
      (∃ #t.1. ProgressTo_1121( prog_11 ) @ #t.1))"
 
-restriction Progress_[1,1,1,1]_to_[1,1,1,1,1]:
+restriction Progress_1111_to_11111:
   "∀ prog_1111 #t.
     (ProgressFrom_1111( prog_1111 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_11111( prog_1111 ) @ #t.1)"
@@ -182,8 +179,8 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini6.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini6.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.22571s
-  A_possible (exists-trace): verified (11 steps)
+  processing time: 0.143241065s
+  A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -194,8 +191,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini6.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini6.spthy.tmp
-  processing time: 0.22571s
-  A_possible (exists-trace): verified (11 steps)
+  processing time: 0.143241065s
+  A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 
 ==============================================================================

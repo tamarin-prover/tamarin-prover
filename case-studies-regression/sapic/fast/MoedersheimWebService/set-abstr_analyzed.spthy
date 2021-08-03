@@ -26,7 +26,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( HonestKey( sk ) @ #i )
   case ClientKeyuserskHonestKeynskClientKeyusernsk_0_1112111
-  solve( state_1112111( ~nsk, pki, user ) ▶₀ #i )
+  solve( State_1112111( ~nsk, pki, user ) ▶₀ #i )
     case newnsk_0_111211
     solve( !KU( ~nsk ) @ #vk )
       case outsk_0_111211111111
@@ -35,7 +35,7 @@ solve( HonestKey( sk ) @ #i )
   qed
 next
   case HonestKeyskServerDBpkiuserpkskClientKeyusersk_0_11111111
-  solve( state_11111111( ~sk, pki, user ) ▶₀ #i )
+  solve( State_11111111( ~sk, pki, user ) ▶₀ #i )
     case newsk_0_1111111
     solve( !KU( ~sk ) @ #vk )
       case outsk_0_111211111111
@@ -44,226 +44,240 @@ next
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newpki_0_1[color=#ffffff process=new pki;]:
-   [ state_1( ), Fr( pki ) ] --> [ state_11( pki ) ]
+rule (modulo E) newpki_0_1[color=#ffffff, process="new pki;"]:
+   [ State_1( ), Fr( pki ) ] --> [ State_11( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=!]:
-   [ state_11( pki ) ] --> [ !semistate_111( pki ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="!"]:
+   [ State_11( pki ) ] --> [ !Semistate_111( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11[color=#ffffff process=!]:
-   [ !semistate_111( pki ) ] --> [ state_111( pki ) ]
+rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+   [ !Semistate_111( pki ) ] --> [ State_111( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=|]:
-   [ state_111( pki ) ] --> [ state_1111( pki ), state_1112( pki ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="|"]:
+   [ State_111( pki ) ] --> [ State_1111( pki ), State_1112( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#806040 process=|]:
-   [ state_1111( pki ) ] --> [ state_11111( pki ), state_11112( pki ) ]
+rule (modulo E) p_0_1111[color=#806040, process="|"]:
+   [ State_1111( pki ) ] --> [ State_11111( pki ), State_11112( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111[color=#806040 process=|]:
-   [ state_11111( pki ) ] --> [ state_111111( pki ), state_111112( pki ) ]
+rule (modulo E) p_0_11111[color=#806040, process="|"]:
+   [ State_11111( pki ) ] --> [ State_111111( pki ), State_111112( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) innewuser_0_111111[color=#806040 process=in(<'new', user>);]:
-   [ state_111111( pki ), In( <'new', user> ) ]
+rule (modulo E) innewuser_0_111111[color=#806040,
+                                   process="in(<'new', user>);"]:
+   [ State_111111( pki ), In( <'new', user> ) ]
   -->
-   [ state_1111111( pki, user ) ]
+   [ State_1111111( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsk_0_1111111[color=#806040 process=new ~sk;]:
-   [ state_1111111( pki, user ), Fr( ~sk ) ]
+rule (modulo E) newsk_0_1111111[color=#806040, process="new ~sk;"]:
+   [ State_1111111( pki, user ), Fr( ~sk ) ]
   -->
-   [ state_11111111( ~sk, pki, user ) ]
+   [ State_11111111( ~sk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) HonestKeyskServerDBpkiuserpkskClientKeyusersk_0_11111111[color=#806040 process= [ ]
+rule (modulo E) HonestKeyskServerDBpkiuserpkskClientKeyusersk_0_11111111[color=#806040,
+                                                                         process=" [ ]
 --[ HonestKey( ~sk ) ]->
- [ ServerDB( pki, user, pk(~sk) ), ClientKey( user, ~sk ) ];]:
-   [ state_11111111( ~sk, pki, user ) ]
+ [ ServerDB( pki, user, pk(~sk) ), ClientKey( user, ~sk ) ];"]:
+   [ State_11111111( ~sk, pki, user ) ]
   --[ HonestKey( ~sk ) ]->
    [
-   state_111111111( ~sk, pki, user ), ServerDB( pki, user, pk(~sk) ),
+   State_111111111( ~sk, pki, user ), ServerDB( pki, user, pk(~sk) ),
    ClientKey( user, ~sk )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpksk_0_111111111[color=#806040 process=out(pk(~sk));]:
-   [ state_111111111( ~sk, pki, user ) ]
+rule (modulo E) outpksk_0_111111111[color=#806040,
+                                    process="out(pk(~sk));"]:
+   [ State_111111111( ~sk, pki, user ) ]
   -->
-   [ state_1111111111( ~sk, pki, user ), Out( pk(~sk) ) ]
+   [ State_1111111111( ~sk, pki, user ), Out( pk(~sk) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111111[color=#806040 process=0]:
-   [ state_1111111111( ~sk, pki, user ) ] --> [ ]
+rule (modulo E) p_0_1111111111[color=#806040, process="0"]:
+   [ State_1111111111( ~sk, pki, user ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inusersk_0_111112[color=#806040 process=in(<user, sk>);]:
-   [ state_111112( pki ), In( <user, sk> ) ]
+rule (modulo E) inusersk_0_111112[color=#806040,
+                                  process="in(<user, sk>);"]:
+   [ State_111112( pki ), In( <user, sk> ) ]
   -->
-   [ state_1111121( pki, sk, user ) ]
+   [ State_1111121( pki, sk, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ServerDBpkiuserpksk_0_1111121[color=#806040 process= [ ] --> [ ServerDB( pki, user, pk(sk) ) ];]:
-   [ state_1111121( pki, sk, user ) ]
+rule (modulo E) ServerDBpkiuserpksk_0_1111121[color=#806040,
+                                              process=" [ ] --> [ ServerDB( pki, user, pk(sk) ) ];"]:
+   [ State_1111121( pki, sk, user ) ]
   -->
-   [ state_11111211( pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
+   [ State_11111211( pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111211[color=#806040 process=0]:
-   [ state_11111211( pki, sk, user ) ] --> [ ]
+rule (modulo E) p_0_11111211[color=#806040, process="0"]:
+   [ State_11111211( pki, sk, user ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrenewuserpknsk_0_11112[color=#806040 process=in(<'renew', user, pk(nsk)>);]:
-   [ state_11112( pki ), In( <'renew', user, pk(nsk)> ) ]
+rule (modulo E) inrenewuserpknsk_0_11112[color=#806040,
+                                         process="in(<'renew', user, pk(nsk)>);"]:
+   [ State_11112( pki ), In( <'renew', user, pk(nsk)> ) ]
   -->
-   [ state_111121( nsk, pki, user ) ]
+   [ State_111121( nsk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insignrenewuserpknsksk_0_111121[color=#806040 process=in(sign(<'renew', user, pk(nsk)>, sk));]:
+rule (modulo E) insignrenewuserpknsksk_0_111121[color=#806040,
+                                                process="in(sign(<'renew', user, pk(nsk)>, sk));"]:
    [
-   state_111121( nsk, pki, user ), In( sign(<'renew', user, pk(nsk)>, sk) )
+   State_111121( nsk, pki, user ), In( sign(<'renew', user, pk(nsk)>, sk) )
    ]
   -->
-   [ state_1111211( nsk, pki, sk, user ) ]
+   [ State_1111211( nsk, pki, sk, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ServerDBpkiuserpkskServerDBpkiuserpknsk_0_1111211[color=#806040 process= [ ServerDB( pki, user, pk(sk) ) ]
+rule (modulo E) ServerDBpkiuserpkskServerDBpkiuserpknsk_0_1111211[color=#806040,
+                                                                  process=" [ ServerDB( pki, user, pk(sk) ) ]
 -->
- [ ServerDB( pki, user, pk(nsk) ) ];]:
-   [ state_1111211( nsk, pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
+ [ ServerDB( pki, user, pk(nsk) ) ];"]:
+   [ State_1111211( nsk, pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
   -->
-   [ state_11112111( nsk, pki, sk, user ), ServerDB( pki, user, pk(nsk) ) ]
+   [ State_11112111( nsk, pki, sk, user ), ServerDB( pki, user, pk(nsk) ) ]
 
   // loop breaker: [1]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsignconfirmsignrenewuserpknskskpki_0_11112111[color=#806040 process=out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));]:
-   [ state_11112111( nsk, pki, sk, user ) ]
+rule (modulo E) outsignconfirmsignrenewuserpknskskpki_0_11112111[color=#806040,
+                                                                 process="out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));"]:
+   [ State_11112111( nsk, pki, sk, user ) ]
   -->
    [
-   state_111121111( nsk, pki, sk, user ),
+   State_111121111( nsk, pki, sk, user ),
    Out( sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111121111[color=#806040 process=0]:
-   [ state_111121111( nsk, pki, sk, user ) ] --> [ ]
+rule (modulo E) p_0_111121111[color=#806040, process="0"]:
+   [ State_111121111( nsk, pki, sk, user ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newuser_0_1112[color=#ffffff process=new user;]:
-   [ state_1112( pki ), Fr( user ) ] --> [ state_11121( pki, user ) ]
+rule (modulo E) newuser_0_1112[color=#ffffff, process="new user;"]:
+   [ State_1112( pki ), Fr( user ) ] --> [ State_11121( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11121[color=#ffffff process=!]:
-   [ state_11121( pki, user ) ] --> [ !semistate_111211( pki, user ) ]
+rule (modulo E) p_0_11121[color=#ffffff, process="!"]:
+   [ State_11121( pki, user ) ] --> [ !Semistate_111211( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11121[color=#ffffff process=!]:
-   [ !semistate_111211( pki, user ) ] --> [ state_111211( pki, user ) ]
+rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
+   [ !Semistate_111211( pki, user ) ] --> [ State_111211( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newnsk_0_111211[color=#518040 process=new ~nsk;]:
-   [ state_111211( pki, user ), Fr( ~nsk ) ]
+rule (modulo E) newnsk_0_111211[color=#518040, process="new ~nsk;"]:
+   [ State_111211( pki, user ), Fr( ~nsk ) ]
   -->
-   [ state_1112111( ~nsk, pki, user ) ]
+   [ State_1112111( ~nsk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ClientKeyuserskHonestKeynskClientKeyusernsk_0_1112111[color=#518040 process= [ ClientKey( user, ~sk ) ]
+rule (modulo E) ClientKeyuserskHonestKeynskClientKeyusernsk_0_1112111[color=#518040,
+                                                                      process=" [ ClientKey( user, ~sk ) ]
 --[ HonestKey( ~nsk ) ]->
- [ ClientKey( user, ~nsk ) ];]:
-   [ state_1112111( ~nsk, pki, user ), ClientKey( user, ~sk ) ]
+ [ ClientKey( user, ~nsk ) ];"]:
+   [ State_1112111( ~nsk, pki, user ), ClientKey( user, ~sk ) ]
   --[ HonestKey( ~nsk ) ]->
-   [ state_11121111( ~nsk, ~sk, pki, user ), ClientKey( user, ~nsk ) ]
+   [ State_11121111( ~nsk, ~sk, pki, user ), ClientKey( user, ~nsk ) ]
 
   // loop breaker: [1]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outrenewuserpknsk_0_11121111[color=#518040 process=out(<'renew', user, pk(~nsk)>);]:
-   [ state_11121111( ~nsk, ~sk, pki, user ) ]
+rule (modulo E) outrenewuserpknsk_0_11121111[color=#518040,
+                                             process="out(<'renew', user, pk(~nsk)>);"]:
+   [ State_11121111( ~nsk, ~sk, pki, user ) ]
   -->
    [
-   state_111211111( ~nsk, ~sk, pki, user ), Out( <'renew', user, pk(~nsk)> )
+   State_111211111( ~nsk, ~sk, pki, user ), Out( <'renew', user, pk(~nsk)> )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsignrenewuserpknsksk_0_111211111[color=#518040 process=out(sign(<'renew', user, pk(~nsk)>, ~sk));]:
-   [ state_111211111( ~nsk, ~sk, pki, user ) ]
+rule (modulo E) outsignrenewuserpknsksk_0_111211111[color=#518040,
+                                                    process="out(sign(<'renew', user, pk(~nsk)>, ~sk));"]:
+   [ State_111211111( ~nsk, ~sk, pki, user ) ]
   -->
    [
-   state_1112111111( ~nsk, ~sk, pki, user ),
+   State_1112111111( ~nsk, ~sk, pki, user ),
    Out( sign(<'renew', user, pk(~nsk)>, ~sk) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_1112111111[color=#518040 process=in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));]:
+rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_1112111111[color=#518040,
+                                                                  process="in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));"]:
    [
-   state_1112111111( ~nsk, ~sk, pki, user ),
+   State_1112111111( ~nsk, ~sk, pki, user ),
    In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
    ]
   -->
-   [ state_11121111111( ~nsk, ~sk, pki, user ) ]
+   [ State_11121111111( ~nsk, ~sk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventRevokedsk_0_11121111111[color=#518040 process=event Revoked( ~sk );]:
-   [ state_11121111111( ~nsk, ~sk, pki, user ) ]
+rule (modulo E) eventRevokedsk_0_11121111111[color=#518040,
+                                             process="event Revoked( ~sk );"]:
+   [ State_11121111111( ~nsk, ~sk, pki, user ) ]
   --[ Revoked( ~sk ) ]->
-   [ state_111211111111( ~nsk, ~sk, pki, user ) ]
+   [ State_111211111111( ~nsk, ~sk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsk_0_111211111111[color=#518040 process=out(~sk);]:
-   [ state_111211111111( ~nsk, ~sk, pki, user ) ]
+rule (modulo E) outsk_0_111211111111[color=#518040, process="out(~sk);"]:
+   [ State_111211111111( ~nsk, ~sk, pki, user ) ]
   -->
-   [ state_1112111111111( ~nsk, ~sk, pki, user ), Out( ~sk ) ]
+   [ State_1112111111111( ~nsk, ~sk, pki, user ), Out( ~sk ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1112111111111[color=#518040 process=0]:
-   [ state_1112111111111( ~nsk, ~sk, pki, user ) ] --> [ ]
+rule (modulo E) p_0_1112111111111[color=#518040, process="0"]:
+   [ State_1112111111111( ~nsk, ~sk, pki, user ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -286,7 +300,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 0.472610909s
+  processing time: 0.516858231s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 
 ------------------------------------------------------------------------------
@@ -297,7 +311,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 0.472610909s
+  processing time: 0.516858231s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 
 ==============================================================================

@@ -52,7 +52,7 @@ next
            (∃ #j. (!KU( ni ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j. (OUT_I_1( aenc(<ni, pk(xA)>, pk(skB)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
-      solve( state_12111111( skB, xA, ni ) ▶₀ #i )
+      solve( State_12111111( skB, xA, ni ) ▶₀ #i )
         case inaencxNapkxApkskB_0_1211111
         solve( !KU( aenc(<ni, pk(xA)>, pk(~n)) ) @ #vk )
           case c_aenc
@@ -68,7 +68,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            solve( state_11111111( xNa, xA.1, ~n.2 ) ▶₀ #j )
+            solve( State_11111111( xNa, xA.1, ~n.2 ) ▶₀ #j )
               case newNa_0_1111111
               by contradiction /* impossible chain */
             qed
@@ -82,7 +82,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            solve( state_1211111111( xNb, xB, ~n.3, ~n.2 ) ▶₀ #j )
+            solve( State_1211111111( xNb, xB, ~n.3, ~n.2 ) ▶₀ #j )
               case newNb_0_121111111
               by contradiction /* impossible chain */
             qed
@@ -102,7 +102,7 @@ next
            (∃ #j. (!KU( nr ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
            (∃ #j. (OUT_R_1( aenc(<Na, nr, pk(xB)>, pk(skA)) ) @ #j) ∧ ¬(last(#j))) )
       case case_1
-      solve( state_11111111111( Na, skA, xB, nr ) ▶₀ #i )
+      solve( State_11111111111( Na, skA, xB, nr ) ▶₀ #i )
         case inaencNaxNbpkxBpkskA_0_1111111111
         solve( !KU( aenc(<~n, nr, pk(xB)>, pk(~n.1)) ) @ #vk )
           case c_aenc
@@ -118,7 +118,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            solve( state_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
+            solve( State_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
               case newNa_0_1111111
               by contradiction /* impossible chain */
             qed
@@ -132,7 +132,7 @@ next
             by contradiction /* cyclic */
           next
             case case_2
-            solve( state_1211111111( xNb, xB.1, ~n.4, ~n.3 ) ▶₀ #j )
+            solve( State_1211111111( xNb, xB.1, ~n.4, ~n.3 ) ▶₀ #j )
               case newNb_0_121111111
               by contradiction /* impossible chain */
             qed
@@ -163,14 +163,14 @@ guarded formula characterizing all counter-examples:
   (∃ #i. (HonestA( pka ) @ #i)) ∧ (∃ #i. (HonestB( pkb ) @ #i))"
 */
 simplify
-solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
+solve( State_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
   case outaencxNbkpkxB_0_1111111111111
   solve( (∃ #j. (!KU( xNb ) @ #j) ∧ #j < #vr.2)  ∥
          (∃ #j. (OUT_R_1( aenc(<~n.1, xNb, pk(xB)>, pk(~n)) ) @ #j)) )
     case case_1
-    solve( state_111( ~n ) ▶₀ #i )
+    solve( State_111( ~n ) ▶₀ #i )
       case newskA_0_11
-      solve( state_1211( xB ) ▶₀ #i.1 )
+      solve( State_1211( xB ) ▶₀ #i.1 )
         case newskB_0_121
         solve( !KU( aenc(<~n.1, xNb, pk(~n.3)>, pk(~n)) ) @ #vk.1 )
           case c_aenc
@@ -191,7 +191,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -210,7 +210,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -229,7 +229,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -263,7 +263,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                       by contradiction /* cyclic */
                     next
                       case case_2
-                      solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                      solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                         case newNa_0_1111111
                         solve( !KU( aenc(<xNa, pk(xA)>, pk(~n.2)) ) @ #vk.8 )
                           case c_aenc
@@ -294,7 +294,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                       by contradiction /* cyclic */
                     next
                       case case_2
-                      solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                      solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                         case newNa_0_1111111
                         solve( !KU( aenc(<xNa, pk(xA)>, pk(~n.2)) ) @ #vk.8 )
                           case c_aenc
@@ -325,7 +325,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                       by contradiction /* cyclic */
                     next
                       case case_2
-                      solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                      solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                         case newNa_0_1111111
                         solve( !KU( aenc(<xNa, pk(xA)>, pk(~n.2)) ) @ #vk.8 )
                           case c_aenc
@@ -341,7 +341,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
               qed
             next
               case case_2
-              solve( state_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
+              solve( State_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
                 case newNa_0_1111111
                 solve( !KU( ~n.5 ) @ #vk.4 )
                   case outaencxNbkpkxB_0_1111111111111
@@ -364,7 +364,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
+                        solve( State_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
                           case newNa_0_1111111
                           solve( !KU( aenc(<~n.1, pk(~n.2)>, pk(~n.3)) ) @ #vk.8 )
                             case c_aenc
@@ -395,7 +395,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
+                        solve( State_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
                           case newNa_0_1111111
                           solve( !KU( aenc(<~n.1, pk(~n.2)>, pk(~n.3)) ) @ #vk.8 )
                             case c_aenc
@@ -426,7 +426,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
+                        solve( State_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.1 )
                           case newNa_0_1111111
                           solve( !KU( aenc(<~n.1, pk(~n.2)>, pk(~n.3)) ) @ #vk.8 )
                             case c_aenc
@@ -459,7 +459,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -478,7 +478,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -497,7 +497,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+                    solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
                       case newNa_0_1111111
                       by solve( !KU( ~n.2 ) @ #vk.7 )
                     qed
@@ -545,7 +545,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           by solve( !KU( ~n.4 ) @ #vk.4 )
                         qed
@@ -591,7 +591,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                           by contradiction /* cyclic */
                         next
                           case case_2
-                          solve( state_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
+                          solve( State_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
                             case newNa_0_1111111
                             by solve( !KU( ~n.4 ) @ #vk.4 )
                           qed
@@ -604,7 +604,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                   qed
                 next
                   case case_2
-                  solve( state_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
+                  solve( State_11111111( xNa, xA, ~n.3 ) ▶₀ #j )
                     case newNa_0_1111111
                     solve( !KU( aenc(<~n.4, pk(~n)>, pk(~n.3)) ) @ #vk.3 )
                       case c_aenc
@@ -636,7 +636,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                             by contradiction /* cyclic */
                           next
                             case case_2
-                            solve( state_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.3 )
+                            solve( State_11111111( ~n.4, ~n, ~n.3 ) ▶₀ #j.3 )
                               case newNa_0_1111111
                               by solve( !KU( ~n.3 ) @ #vk.4 )
                             qed
@@ -681,7 +681,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.2, ~n, ~n.4 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           by solve( !KU( ~n.4 ) @ #vk.4 )
                         qed
@@ -696,7 +696,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
             qed
           next
             case case_2
-            solve( state_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
+            solve( State_11111111( ~n.1, ~n, ~n.3 ) ▶₀ #j )
               case newNa_0_1111111
               solve( !KU( ~n.3 ) @ #vk.1 )
                 case outaencxNbkpkxB_0_1111111111111
@@ -747,7 +747,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     qed
                   next
                     case case_2
-                    solve( state_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
+                    solve( State_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
                       case newNa_0_1111111
                       solve( !KU( aenc(<~n.1, pk(~n)>, pk(~n.2)) ) @ #vk.3 )
                         case c_aenc
@@ -800,11 +800,11 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
     qed
   next
     case case_2
-    solve( state_111( ~n ) ▶₀ #i )
+    solve( State_111( ~n ) ▶₀ #i )
       case newskA_0_11
-      solve( state_1211( xB ) ▶₀ #i.1 )
+      solve( State_1211( xB ) ▶₀ #i.1 )
         case newskB_0_121
-        solve( state_1211111111( xNb, ~n.1, ~n, ~n.2 ) ▶₀ #j )
+        solve( State_1211111111( xNb, ~n.1, ~n, ~n.2 ) ▶₀ #j )
           case newNb_0_121111111
           solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.22)  ∥
                  (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.2)) ) @ #j)) )
@@ -891,7 +891,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           solve( !KU( pk(~n) ) @ #vk.6 )
                             case c_pk
@@ -1006,7 +1006,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                           by contradiction /* cyclic */
                         next
                           case case_2
-                          solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                          solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                             case newNa_0_1111111
                             solve( !KU( pk(~n) ) @ #vk.6 )
                               case c_pk
@@ -1042,7 +1042,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     qed
                   next
                     case case_2
-                    solve( state_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
+                    solve( State_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
                       case newNa_0_1111111
                       solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.2)) ) @ #vk.5 )
                         case c_aenc
@@ -1120,7 +1120,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                             by contradiction /* cyclic */
                           next
                             case case_2
-                            solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.3 )
+                            solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.3 )
                               case newNa_0_1111111
                               solve( !KU( pk(~n) ) @ #vk.6 )
                                 case c_pk
@@ -1234,7 +1234,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           solve( !KU( pk(~n) ) @ #vk.6 )
                             case c_pk
@@ -1298,7 +1298,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           by solve( !KU( ~n.2 ) @ #vk.4 )
                         qed
@@ -1347,7 +1347,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                           by contradiction /* cyclic */
                         next
                           case case_2
-                          solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                          solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                             case newNa_0_1111111
                             solve( !KU( aenc(<xNa, pk(xA)>, pk(~n.2)) ) @ #vk.5 )
                               case c_aenc
@@ -1363,7 +1363,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                   qed
                 next
                   case case_2
-                  solve( state_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
+                  solve( State_11111111( xNa, xA, ~n.2 ) ▶₀ #j.1 )
                     case newNa_0_1111111
                     solve( !KU( ~n.4 ) @ #vk.2 )
                       case outaencxNbkpkxB_0_1111111111111
@@ -1401,7 +1401,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                             by contradiction /* cyclic */
                           next
                             case case_2
-                            solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.3 )
+                            solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.3 )
                               case newNa_0_1111111
                               solve( !KU( aenc(<~n.5, pk(~n.6)>, pk(~n.2)) ) @ #vk.5 )
                                 case c_aenc
@@ -1443,7 +1443,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                         by contradiction /* cyclic */
                       next
                         case case_2
-                        solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
+                        solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.2 )
                           case newNa_0_1111111
                           by solve( !KU( ~n.2 ) @ #vk.4 )
                         qed
@@ -1455,7 +1455,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
             qed
           next
             case case_2
-            solve( state_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.1 )
+            solve( State_11111111( ~n.3, ~n, ~n.2 ) ▶₀ #j.1 )
               case newNa_0_1111111
               solve( !KU( aenc(<~n.3, ~n.1, pk(~n.2)>, pk(~n)) ) @ #vk.1 )
                 case c_aenc
@@ -1742,7 +1742,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                       qed
                     next
                       case case_2
-                      solve( state_11111111( xNa, xA, ~n.2 ) ▶₀ #j.2 )
+                      solve( State_11111111( xNa, xA, ~n.2 ) ▶₀ #j.2 )
                         case newNa_0_1111111
                         solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.2)) ) @ #vk.5 )
                           case c_aenc
@@ -2065,7 +2065,7 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
                     qed
                   next
                     case case_2
-                    solve( state_11111111( xNa, xA, ~n.2 ) ▶₀ #j.2 )
+                    solve( State_11111111( xNa, xA, ~n.2 ) ▶₀ #j.2 )
                       case newNa_0_1111111
                       solve( !KU( ~n.4 ) @ #vk.2 )
                         case outaencxNbkpkxB_0_1111111111111
@@ -2113,210 +2113,224 @@ solve( state_11111111111111( Na, k, skA, xB, xNb ) ▶₀ #t1 )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=|]:
-   [ state_1( ) ] --> [ state_11( ), state_12( ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskA_0_11[color=#ffffff process=new skA;]:
-   [ state_11( ), Fr( skA ) ] --> [ state_111( skA ) ]
+rule (modulo E) newskA_0_11[color=#ffffff, process="new skA;"]:
+   [ State_11( ), Fr( skA ) ] --> [ State_111( skA ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestApkskA_0_111[color=#ffffff process=event HonestA( pk(skA) );]:
-   [ state_111( skA ) ] --[ HonestA( pk(skA) ) ]-> [ state_1111( skA ) ]
+rule (modulo E) eventHonestApkskA_0_111[color=#ffffff,
+                                        process="event HonestA( pk(skA) );"]:
+   [ State_111( skA ) ] --[ HonestA( pk(skA) ) ]-> [ State_1111( skA ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpkskA_0_1111[color=#ffffff process=out(pk(skA));]:
-   [ state_1111( skA ) ] --> [ state_11111( skA ), Out( pk(skA) ) ]
+rule (modulo E) outpkskA_0_1111[color=#ffffff, process="out(pk(skA));"]:
+   [ State_1111( skA ) ] --> [ State_11111( skA ), Out( pk(skA) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111[color=#ffffff process=!]:
-   [ state_11111( skA ) ] --> [ !semistate_111111( skA ) ]
+rule (modulo E) p_0_11111[color=#ffffff, process="!"]:
+   [ State_11111( skA ) ] --> [ !Semistate_111111( skA ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11111[color=#ffffff process=!]:
-   [ !semistate_111111( skA ) ] --> [ state_111111( skA ) ]
+rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+   [ !Semistate_111111( skA ) ] --> [ State_111111( skA ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inpkxB_0_111111[color=#ffffff process=in(pk(xB));]:
-   [ state_111111( skA ), In( pk(xB) ) ] --> [ state_1111111( skA, xB ) ]
+rule (modulo E) inpkxB_0_111111[color=#ffffff, process="in(pk(xB));"]:
+   [ State_111111( skA ), In( pk(xB) ) ] --> [ State_1111111( skA, xB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newNa_0_1111111[color=#ffffff process=new Na;]:
-   [ state_1111111( skA, xB ), Fr( Na ) ]
+rule (modulo E) newNa_0_1111111[color=#ffffff, process="new Na;"]:
+   [ State_1111111( skA, xB ), Fr( Na ) ]
   -->
-   [ state_11111111( Na, skA, xB ) ]
+   [ State_11111111( Na, skA, xB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventOUTIaencNapkskApkxB_0_11111111[color=#ffffff process=event OUT_I_1( aenc(<Na, pk(skA)>, pk(xB)) );]:
-   [ state_11111111( Na, skA, xB ) ]
+rule (modulo E) eventOUTIaencNapkskApkxB_0_11111111[color=#ffffff,
+                                                    process="event OUT_I_1( aenc(<Na, pk(skA)>, pk(xB)) );"]:
+   [ State_11111111( Na, skA, xB ) ]
   --[ OUT_I_1( aenc(<Na, pk(skA)>, pk(xB)) ) ]->
-   [ state_111111111( Na, skA, xB ) ]
+   [ State_111111111( Na, skA, xB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outaencNapkskApkxB_0_111111111[color=#ffffff process=out(aenc(<Na, pk(skA)>, pk(xB)));]:
-   [ state_111111111( Na, skA, xB ) ]
+rule (modulo E) outaencNapkskApkxB_0_111111111[color=#ffffff,
+                                               process="out(aenc(<Na, pk(skA)>, pk(xB)));"]:
+   [ State_111111111( Na, skA, xB ) ]
   -->
-   [ state_1111111111( Na, skA, xB ), Out( aenc(<Na, pk(skA)>, pk(xB)) ) ]
+   [ State_1111111111( Na, skA, xB ), Out( aenc(<Na, pk(skA)>, pk(xB)) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inaencNaxNbpkxBpkskA_0_1111111111[color=#ffffff process=in(aenc(<Na, xNb, pk(xB)>, pk(skA)));]:
-   [ state_1111111111( Na, skA, xB ), In( aenc(<Na, xNb, pk(xB)>, pk(skA)) )
+rule (modulo E) inaencNaxNbpkxBpkskA_0_1111111111[color=#ffffff,
+                                                  process="in(aenc(<Na, xNb, pk(xB)>, pk(skA)));"]:
+   [ State_1111111111( Na, skA, xB ), In( aenc(<Na, xNb, pk(xB)>, pk(skA)) )
    ]
   -->
-   [ state_11111111111( Na, skA, xB, xNb ) ]
+   [ State_11111111111( Na, skA, xB, xNb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventINInrxNbaencNaxNbpkxBpkskA_0_11111111111[color=#ffffff process=event IN_I_2_nr( xNb, aenc(<Na, xNb, pk(xB)>, pk(skA)) );]:
-   [ state_11111111111( Na, skA, xB, xNb ) ]
+rule (modulo E) eventINInrxNbaencNaxNbpkxBpkskA_0_11111111111[color=#ffffff,
+                                                              process="event IN_I_2_nr( xNb, aenc(<Na, xNb, pk(xB)>, pk(skA)) );"]:
+   [ State_11111111111( Na, skA, xB, xNb ) ]
   --[ IN_I_2_nr( xNb, aenc(<Na, xNb, pk(xB)>, pk(skA)) ) ]->
-   [ state_111111111111( Na, skA, xB, xNb ) ]
+   [ State_111111111111( Na, skA, xB, xNb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_111111111111[color=#ffffff process=new k;]:
-   [ state_111111111111( Na, skA, xB, xNb ), Fr( k ) ]
+rule (modulo E) newk_0_111111111111[color=#ffffff, process="new k;"]:
+   [ State_111111111111( Na, skA, xB, xNb ), Fr( k ) ]
   -->
-   [ state_1111111111111( Na, k, skA, xB, xNb ) ]
+   [ State_1111111111111( Na, k, skA, xB, xNb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outaencxNbkpkxB_0_1111111111111[color=#ffffff process=out(aenc(<xNb, k>, pk(xB)));]:
-   [ state_1111111111111( Na, k, skA, xB, xNb ) ]
+rule (modulo E) outaencxNbkpkxB_0_1111111111111[color=#ffffff,
+                                                process="out(aenc(<xNb, k>, pk(xB)));"]:
+   [ State_1111111111111( Na, k, skA, xB, xNb ) ]
   -->
    [
-   state_11111111111111( Na, k, skA, xB, xNb ),
+   State_11111111111111( Na, k, skA, xB, xNb ),
    Out( aenc(<xNb, k>, pk(xB)) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSessionApkskApkxBk_0_11111111111111[color=#ffffff process=event SessionA( pk(skA), pk(xB), k );]:
-   [ state_11111111111111( Na, k, skA, xB, xNb ) ]
+rule (modulo E) eventSessionApkskApkxBk_0_11111111111111[color=#ffffff,
+                                                         process="event SessionA( pk(skA), pk(xB), k );"]:
+   [ State_11111111111111( Na, k, skA, xB, xNb ) ]
   --[ SessionA( pk(skA), pk(xB), k ) ]->
-   [ state_111111111111111( Na, k, skA, xB, xNb ) ]
+   [ State_111111111111111( Na, k, skA, xB, xNb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111111111111[color=#ffffff process=0]:
-   [ state_111111111111111( Na, k, skA, xB, xNb ) ] --> [ ]
+rule (modulo E) p_0_111111111111111[color=#ffffff, process="0"]:
+   [ State_111111111111111( Na, k, skA, xB, xNb ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12[color=#ffffff process=!]:
-   [ state_12( ) ] --> [ !semistate_121( ) ]
+rule (modulo E) p_0_12[color=#ffffff, process="!"]:
+   [ State_12( ) ] --> [ !Semistate_121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_12[color=#ffffff process=!]:
-   [ !semistate_121( ) ] --> [ state_121( ) ]
+rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+   [ !Semistate_121( ) ] --> [ State_121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskB_0_121[color=#ffffff process=new skB;]:
-   [ state_121( ), Fr( skB ) ] --> [ state_1211( skB ) ]
+rule (modulo E) newskB_0_121[color=#ffffff, process="new skB;"]:
+   [ State_121( ), Fr( skB ) ] --> [ State_1211( skB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestBpkskB_0_1211[color=#ffffff process=event HonestB( pk(skB) );]:
-   [ state_1211( skB ) ] --[ HonestB( pk(skB) ) ]-> [ state_12111( skB ) ]
+rule (modulo E) eventHonestBpkskB_0_1211[color=#ffffff,
+                                         process="event HonestB( pk(skB) );"]:
+   [ State_1211( skB ) ] --[ HonestB( pk(skB) ) ]-> [ State_12111( skB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpkskB_0_12111[color=#ffffff process=out(pk(skB));]:
-   [ state_12111( skB ) ] --> [ state_121111( skB ), Out( pk(skB) ) ]
+rule (modulo E) outpkskB_0_12111[color=#ffffff, process="out(pk(skB));"]:
+   [ State_12111( skB ) ] --> [ State_121111( skB ), Out( pk(skB) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_121111[color=#ffffff process=!]:
-   [ state_121111( skB ) ] --> [ !semistate_1211111( skB ) ]
+rule (modulo E) p_0_121111[color=#ffffff, process="!"]:
+   [ State_121111( skB ) ] --> [ !Semistate_1211111( skB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_121111[color=#ffffff process=!]:
-   [ !semistate_1211111( skB ) ] --> [ state_1211111( skB ) ]
+rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+   [ !Semistate_1211111( skB ) ] --> [ State_1211111( skB ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inaencxNapkxApkskB_0_1211111[color=#ffffff process=in(aenc(<xNa, pk(xA)>, pk(skB)));]:
-   [ state_1211111( skB ), In( aenc(<xNa, pk(xA)>, pk(skB)) ) ]
+rule (modulo E) inaencxNapkxApkskB_0_1211111[color=#ffffff,
+                                             process="in(aenc(<xNa, pk(xA)>, pk(skB)));"]:
+   [ State_1211111( skB ), In( aenc(<xNa, pk(xA)>, pk(skB)) ) ]
   -->
-   [ state_12111111( skB, xA, xNa ) ]
+   [ State_12111111( skB, xA, xNa ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventINRnixNaaencxNapkxApkskB_0_12111111[color=#ffffff process=event IN_R_1_ni( xNa, aenc(<xNa, pk(xA)>, pk(skB)) );]:
-   [ state_12111111( skB, xA, xNa ) ]
+rule (modulo E) eventINRnixNaaencxNapkxApkskB_0_12111111[color=#ffffff,
+                                                         process="event IN_R_1_ni( xNa, aenc(<xNa, pk(xA)>, pk(skB)) );"]:
+   [ State_12111111( skB, xA, xNa ) ]
   --[ IN_R_1_ni( xNa, aenc(<xNa, pk(xA)>, pk(skB)) ) ]->
-   [ state_121111111( skB, xA, xNa ) ]
+   [ State_121111111( skB, xA, xNa ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newNb_0_121111111[color=#ffffff process=new Nb;]:
-   [ state_121111111( skB, xA, xNa ), Fr( Nb ) ]
+rule (modulo E) newNb_0_121111111[color=#ffffff, process="new Nb;"]:
+   [ State_121111111( skB, xA, xNa ), Fr( Nb ) ]
   -->
-   [ state_1211111111( Nb, skB, xA, xNa ) ]
+   [ State_1211111111( Nb, skB, xA, xNa ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventOUTRaencxNaNbpkskBpkxA_0_1211111111[color=#ffffff process=event OUT_R_1( aenc(<xNa, Nb, pk(skB)>, pk(xA)) );]:
-   [ state_1211111111( Nb, skB, xA, xNa ) ]
+rule (modulo E) eventOUTRaencxNaNbpkskBpkxA_0_1211111111[color=#ffffff,
+                                                         process="event OUT_R_1( aenc(<xNa, Nb, pk(skB)>, pk(xA)) );"]:
+   [ State_1211111111( Nb, skB, xA, xNa ) ]
   --[ OUT_R_1( aenc(<xNa, Nb, pk(skB)>, pk(xA)) ) ]->
-   [ state_12111111111( Nb, skB, xA, xNa ) ]
+   [ State_12111111111( Nb, skB, xA, xNa ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outaencxNaNbpkskBpkxA_0_12111111111[color=#ffffff process=out(aenc(<xNa, Nb, pk(skB)>, pk(xA)));]:
-   [ state_12111111111( Nb, skB, xA, xNa ) ]
+rule (modulo E) outaencxNaNbpkskBpkxA_0_12111111111[color=#ffffff,
+                                                    process="out(aenc(<xNa, Nb, pk(skB)>, pk(xA)));"]:
+   [ State_12111111111( Nb, skB, xA, xNa ) ]
   -->
    [
-   state_121111111111( Nb, skB, xA, xNa ),
+   State_121111111111( Nb, skB, xA, xNa ),
    Out( aenc(<xNa, Nb, pk(skB)>, pk(xA)) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inaencNbxkpkskB_0_121111111111[color=#ffffff process=in(aenc(<Nb, xk>, pk(skB)));]:
-   [ state_121111111111( Nb, skB, xA, xNa ), In( aenc(<Nb, xk>, pk(skB)) ) ]
+rule (modulo E) inaencNbxkpkskB_0_121111111111[color=#ffffff,
+                                               process="in(aenc(<Nb, xk>, pk(skB)));"]:
+   [ State_121111111111( Nb, skB, xA, xNa ), In( aenc(<Nb, xk>, pk(skB)) ) ]
   -->
-   [ state_1211111111111( Nb, skB, xA, xNa, xk ) ]
+   [ State_1211111111111( Nb, skB, xA, xNa, xk ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSessionBpkxApkskBxk_0_1211111111111[color=#ffffff process=event SessionB( pk(xA), pk(skB), xk );]:
-   [ state_1211111111111( Nb, skB, xA, xNa, xk ) ]
+rule (modulo E) eventSessionBpkxApkskBxk_0_1211111111111[color=#ffffff,
+                                                         process="event SessionB( pk(xA), pk(skB), xk );"]:
+   [ State_1211111111111( Nb, skB, xA, xNa, xk ) ]
   --[ SessionB( pk(xA), pk(skB), xk ) ]->
-   [ state_12111111111111( Nb, skB, xA, xNa, xk ) ]
+   [ State_12111111111111( Nb, skB, xA, xNa, xk ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_12111111111111[color=#ffffff process=0]:
-   [ state_12111111111111( Nb, skB, xA, xNa, xk ) ] --> [ ]
+rule (modulo E) p_0_12111111111111[color=#ffffff, process="0"]:
+   [ State_12111111111111( Nb, skB, xA, xNa, xk ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -2339,7 +2353,7 @@ analyzing: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 18.322075s
+  processing time: 23.516124671s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (636 steps)
 
@@ -2351,7 +2365,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 18.322075s
+  processing time: 23.516124671s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (636 steps)
 

@@ -7,23 +7,23 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#6c8040 process=new a;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#6c8040, process="new a;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_[color=#6c8040 process=new a;]:
-   [ state_( ), Fr( a ) ] --> [ state_1( a ) ]
+rule (modulo E) newa_0_[color=#6c8040, process="new a;"]:
+   [ State_( ), Fr( a ) ] --> [ State_1( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outa_0_1[color=#6c8040 process=out(a);]:
-   [ state_1( a ) ] --> [ state_11( a ), Out( a ) ]
+rule (modulo E) outa_0_1[color=#6c8040, process="out(a);"]:
+   [ State_1( a ) ] --> [ State_11( a ), Out( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#6c8040 process=0]:
-   [ state_11( a ) ] --> [ ]
+rule (modulo E) p_0_11[color=#6c8040, process="0"]:
+   [ State_11( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -46,7 +46,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/let-blocks3.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks3.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks3.spthy.tmp
-  processing time: 0.051026s
+  processing time: 0.055835662s
 
 
 ------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks3.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks3.spthy.tmp
-  processing time: 0.051026s
+  processing time: 0.055835662s
 
 
 ==============================================================================

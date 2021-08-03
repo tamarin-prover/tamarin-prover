@@ -383,8 +383,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
@@ -393,7 +391,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.412964s
+  processing time: 0.399877958s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -407,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.412964s
+  processing time: 0.399877958s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

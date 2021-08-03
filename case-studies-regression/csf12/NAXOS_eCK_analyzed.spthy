@@ -726,8 +726,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/NAXOS_eCK.spthy
@@ -736,7 +734,7 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 4.56824s
+  processing time: 3.553245909s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -747,7 +745,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 4.56824s
+  processing time: 3.553245909s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

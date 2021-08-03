@@ -25,9 +25,9 @@ guarded formula characterizing all counter-examples:
 "∃ ct #i #j. (AbortCert( ct ) @ #i) ∧ (ResolveCert( ct ) @ #j)"
 */
 simplify
-solve( state_111121212111( ct, pk2, sk1, skT ) ▶₀ #i )
+solve( State_111121212111( ct, pk2, sk1, skT ) ▶₀ #i )
   case insignctpkskpksignctpkskpkskskT_0_11112121211
-  solve( state_1111212121211( ct, sk1.1, sk2, skT ) ▶₀ #j )
+  solve( State_1111212121211( ct, sk1.1, sk2, skT ) ▶₀ #j )
     case insignsignctsksignctskskT_0_111121212121
     solve( !KU( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, ~n)
            ) @ #vk )
@@ -122,7 +122,7 @@ guarded formula characterizing all satisfying traces:
  (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ ⊥)"
 */
 simplify
-solve( state_111121212111( ct, pk2, sk1, skT ) ▶₀ #i )
+solve( State_111121212111( ct, pk2, sk1, skT ) ▶₀ #i )
   case insignctpkskpksignctpkskpkskskT_0_11112121211
   solve( !KU( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, ~n)
          ) @ #vk )
@@ -153,7 +153,7 @@ guarded formula characterizing all satisfying traces:
  (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ ⊥)"
 */
 simplify
-solve( state_1111212121211( ct, sk1, sk2, skT ) ▶₀ #i )
+solve( State_1111212121211( ct, sk1, sk2, skT ) ▶₀ #i )
   case insignsignctsksignctskskT_0_111121212121
   solve( !KU( sign(<sign(ct, sk1), sign(ct, sk2)>, ~n) ) @ #vk )
     case outsignysigconvertpcsskTypcsskT_0_111121211111112111
@@ -195,7 +195,7 @@ guarded formula characterizing all satisfying traces:
    (Resolve2( ct1 ) @ #i1) ∧ (Resolve2( ct2 ) @ #i2) ⇒ #i1 = #i2)"
 */
 simplify
-solve( state_1111212121211( ct, sk1, sk2, skT ) ▶₀ #i )
+solve( State_1111212121211( ct, sk1, sk2, skT ) ▶₀ #i )
   case insignsignctsksignctskskT_0_111121212121
   solve( !KU( sign(<sign(ct, sk1), sign(ct, sk2)>, ~n) ) @ #vk )
     case outsignconvertpcsskTypcsysigskT_0_1111211111112111
@@ -221,63 +221,66 @@ solve( state_1111212121211( ct, sk1, sk2, skT ) ▶₀ #i )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskT_0_1[color=#ffffff process=new skT;]:
-   [ state_1( ), Fr( skT ) ] --> [ state_11( skT ) ]
+rule (modulo E) newskT_0_1[color=#ffffff, process="new skT;"]:
+   [ State_1( ), Fr( skT ) ] --> [ State_11( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpkskT_0_11[color=#ffffff process=out(pk(skT));]:
-   [ state_11( skT ) ] --> [ state_111( skT ), Out( pk(skT) ) ]
+rule (modulo E) outpkskT_0_11[color=#ffffff, process="out(pk(skT));"]:
+   [ State_11( skT ) ] --> [ State_111( skT ), Out( pk(skT) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=!]:
-   [ state_111( skT ) ] --> [ !semistate_1111( skT ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="!"]:
+   [ State_111( skT ) ] --> [ !Semistate_1111( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111[color=#ffffff process=!]:
-   [ !semistate_1111( skT ) ] --> [ state_1111( skT ) ]
+rule (modulo E) p_1_111[color=#ffffff, process="!"]:
+   [ !Semistate_1111( skT ) ] --> [ State_1111( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#ffffff process=|]:
-   [ state_1111( skT ) ] --> [ state_11111( skT ), state_11112( skT ) ]
+rule (modulo E) p_0_1111[color=#ffffff, process="|"]:
+   [ State_1111( skT ) ] --> [ State_11111( skT ), State_11112( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inabortctpkpkysig_0_11111[color=#804046 process=in(<'abort', ct, pk1, pk2, ysig>);]:
-   [ state_11111( skT ), In( <'abort', ct, pk1, pk2, ysig> ) ]
+rule (modulo E) inabortctpkpkysig_0_11111[color=#804046,
+                                          process="in(<'abort', ct, pk1, pk2, ysig>);"]:
+   [ State_11111( skT ), In( <'abort', ct, pk1, pk2, ysig> ) ]
   -->
-   [ state_111111( ct, pk1, pk2, skT, ysig ) ]
+   [ State_111111( ct, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifcheckgetmsgysigpkctpkpk_0_111111[color=#804046 process=if check_getmsg(ysig, pk1)=<ct, pk1, pk2>]:
-   [ state_111111( ct, pk1, pk2, skT, ysig ) ]
+rule (modulo E) ifcheckgetmsgysigpkctpkpk_0_111111[color=#804046,
+                                                   process="if check_getmsg(ysig, pk1)=<ct, pk1, pk2>"]:
+   [ State_111111( ct, pk1, pk2, skT, ysig ) ]
   --[ Pred_Eq( check_getmsg(ysig, pk1), <ct, pk1, pk2> ) ]->
-   [ state_1111111( ct, pk1, pk2, skT, ysig ) ]
+   [ State_1111111( ct, pk1, pk2, skT, ysig ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkctpkpk_0_111111[color=#804046 process=if check_getmsg(ysig, pk1)=<ct, pk1, pk2>]:
-     [ state_111111( ct, pk1, pk2, skT, ysig ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkctpkpk_0_111111[color=#804046,
+                                                      process="if check_getmsg(ysig, pk1)=<ct, pk1, pk2>"]:
+     [ State_111111( ct, pk1, pk2, skT, ysig ) ]
     --[ Pred_Eq( z, <ct, pk1, pk2> ) ]->
-     [ state_1111111( ct, pk1, pk2, skT, ysig ) ]
+     [ State_1111111( ct, pk1, pk2, skT, ysig ) ]
     variants (modulo AC)
     1. pk1   = pk1.7
        ysig  = ysig.7
@@ -288,16 +291,18 @@ rule (modulo E) ifcheckgetmsgysigpkctpkpk_0_111111[color=#804046 process=if chec
        z     = x.10
   */
 
-rule (modulo E) ifcheckgetmsgysigpkctpkpk_1_111111[color=#804046 process=if check_getmsg(ysig, pk1)=<ct, pk1, pk2>]:
-   [ state_111111( ct, pk1, pk2, skT, ysig ) ]
+rule (modulo E) ifcheckgetmsgysigpkctpkpk_1_111111[color=#804046,
+                                                   process="if check_getmsg(ysig, pk1)=<ct, pk1, pk2>"]:
+   [ State_111111( ct, pk1, pk2, skT, ysig ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig, pk1), <ct, pk1, pk2> ) ]->
-   [ state_1111112( ct, pk1, pk2, skT, ysig ) ]
+   [ State_1111112( ct, pk1, pk2, skT, ysig ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkctpkpk_1_111111[color=#804046 process=if check_getmsg(ysig, pk1)=<ct, pk1, pk2>]:
-     [ state_111111( ct, pk1, pk2, skT, ysig ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkctpkpk_1_111111[color=#804046,
+                                                      process="if check_getmsg(ysig, pk1)=<ct, pk1, pk2>"]:
+     [ State_111111( ct, pk1, pk2, skT, ysig ) ]
     --[ Pred_Not_Eq( z, <ct, pk1, pk2> ) ]->
-     [ state_1111112( ct, pk1, pk2, skT, ysig ) ]
+     [ State_1111112( ct, pk1, pk2, skT, ysig ) ]
     variants (modulo AC)
     1. pk1   = pk1.7
        ysig  = ysig.7
@@ -308,114 +313,124 @@ rule (modulo E) ifcheckgetmsgysigpkctpkpk_1_111111[color=#804046 process=if chec
        z     = x.10
   */
 
-rule (modulo E) lockct_0_1111111[color=#804046 process=lock ct;]:
-   [ state_1111111( ct, pk1, pk2, skT, ysig ), Fr( lock ) ]
+rule (modulo E) lockct_0_1111111[color=#804046, process="lock ct;"]:
+   [ State_1111111( ct, pk1, pk2, skT, ysig ), Fr( lock ) ]
   --[ Lock_0( '0', lock, ct ), Lock( '0', lock, ct ) ]->
-   [ state_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
+   [ State_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupctasstate_0_11111111[color=#804046 process=lookup ct as state]:
-   [ state_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) lookupctasstate_0_11111111[color=#804046,
+                                           process="lookup ct as state"]:
+   [ State_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
   --[ IsIn( ct, state ) ]->
-   [ state_111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
+   [ State_111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupctasstate_1_11111111[color=#804046 process=lookup ct as state]:
-   [ state_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) lookupctasstate_1_11111111[color=#804046,
+                                           process="lookup ct as state"]:
+   [ State_11111111( ct, lock, pk1, pk2, skT, ysig ) ]
   --[ IsNotSet( ct ) ]->
-   [ state_111111112( ct, lock, pk1, pk2, skT, ysig ) ]
+   [ State_111111112( ct, lock, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockct_0_111111111[color=#804046 process=unlock ct;]:
-   [ state_111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
+rule (modulo E) unlockct_0_111111111[color=#804046,
+                                     process="unlock ct;"]:
+   [ State_111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
   --[ Unlock_0( '0', lock, ct ), Unlock( '0', lock, ct ) ]->
-   [ state_1111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
+   [ State_1111111111( ct, lock, pk1, pk2, skT, state, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111111[color=#804046 process=0]:
-   [ state_1111111111( ct, lock, pk1, pk2, skT, state, ysig ) ] --> [ ]
+rule (modulo E) p_0_1111111111[color=#804046, process="0"]:
+   [ State_1111111111( ct, lock, pk1, pk2, skT, state, ysig ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertctaborted_0_111111112[color=#804046 process=insert ct,'aborted';]:
-   [ state_111111112( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) insertctaborted_0_111111112[color=#804046,
+                                            process="insert ct,'aborted';"]:
+   [ State_111111112( ct, lock, pk1, pk2, skT, ysig ) ]
   --[ Insert( ct, 'aborted' ) ]->
-   [ state_1111111121( ct, lock, pk1, pk2, skT, ysig ) ]
+   [ State_1111111121( ct, lock, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAbortct_0_1111111121[color=#804046 process=event Abort1( ct );]:
-   [ state_1111111121( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) eventAbortct_0_1111111121[color=#804046,
+                                          process="event Abort1( ct );"]:
+   [ State_1111111121( ct, lock, pk1, pk2, skT, ysig ) ]
   --[ Abort1( ct ) ]->
-   [ state_11111111211( ct, lock, pk1, pk2, skT, ysig ) ]
+   [ State_11111111211( ct, lock, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockct_0_11111111211[color=#804046 process=unlock ct;]:
-   [ state_11111111211( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) unlockct_0_11111111211[color=#804046,
+                                       process="unlock ct;"]:
+   [ State_11111111211( ct, lock, pk1, pk2, skT, ysig ) ]
   --[ Unlock_0( '0', lock, ct ), Unlock( '0', lock, ct ) ]->
-   [ state_111111112111( ct, lock, pk1, pk2, skT, ysig ) ]
+   [ State_111111112111( ct, lock, pk1, pk2, skT, ysig ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outsignctpkpkysigskT_0_111111112111[color=#804046 process=out(sign(<<ct, pk1, pk2>, ysig>, skT));]:
-   [ state_111111112111( ct, lock, pk1, pk2, skT, ysig ) ]
+rule (modulo E) outsignctpkpkysigskT_0_111111112111[color=#804046,
+                                                    process="out(sign(<<ct, pk1, pk2>, ysig>, skT));"]:
+   [ State_111111112111( ct, lock, pk1, pk2, skT, ysig ) ]
   -->
    [
-   state_1111111121111( ct, lock, pk1, pk2, skT, ysig ),
+   State_1111111121111( ct, lock, pk1, pk2, skT, ysig ),
    Out( sign(<<ct, pk1, pk2>, ysig>, skT) )
    ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111111121111[color=#804046 process=0]:
-   [ state_1111111121111( ct, lock, pk1, pk2, skT, ysig ) ] --> [ ]
+rule (modulo E) p_0_1111111121111[color=#804046, process="0"]:
+   [ State_1111111121111( ct, lock, pk1, pk2, skT, ysig ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111112[color=#804046 process=0]:
-   [ state_1111112( ct, pk1, pk2, skT, ysig ) ] --> [ ]
+rule (modulo E) p_0_1111112[color=#804046, process="0"]:
+   [ State_1111112( ct, pk1, pk2, skT, ysig ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112[color=#ffffff process=!]:
-   [ state_11112( skT ) ] --> [ !semistate_111121( skT ) ]
+rule (modulo E) p_0_11112[color=#ffffff, process="!"]:
+   [ State_11112( skT ) ] --> [ !Semistate_111121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11112[color=#ffffff process=!]:
-   [ !semistate_111121( skT ) ] --> [ state_111121( skT ) ]
+rule (modulo E) p_1_11112[color=#ffffff, process="!"]:
+   [ !Semistate_111121( skT ) ] --> [ State_111121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111121[color=#ffffff process=|]:
-   [ state_111121( skT ) ]
+rule (modulo E) p_0_111121[color=#ffffff, process="|"]:
+   [ State_111121( skT ) ]
   -->
-   [ state_1111211( skT ), state_1111212( skT ) ]
+   [ State_1111211( skT ), State_1111212( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inresolvectpkpkypcsysig_0_1111211[color=#5c8040 process=in(<'resolve2', ct, pk1, pk2, ypcs1, ysig2>);]:
-   [ state_1111211( skT ), In( <'resolve2', ct, pk1, pk2, ypcs1, ysig2> ) ]
+rule (modulo E) inresolvectpkpkypcsysig_0_1111211[color=#5c8040,
+                                                  process="in(<'resolve2', ct, pk1, pk2, ypcs1, ysig2>);"]:
+   [ State_1111211( skT ), In( <'resolve2', ct, pk1, pk2, ypcs1, ysig2> ) ]
   -->
-   [ state_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifcheckgetmsgysigpkct_0_11112111[color=#5c8040 process=if check_getmsg(ysig2, pk2)=ct]:
-   [ state_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckgetmsgysigpkct_0_11112111[color=#5c8040,
+                                                 process="if check_getmsg(ysig2, pk2)=ct"]:
+   [ State_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Eq( check_getmsg(ysig2, pk2), ct ) ]->
-   [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkct_0_11112111[color=#5c8040 process=if check_getmsg(ysig2, pk2)=ct]:
-     [ state_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkct_0_11112111[color=#5c8040,
+                                                    process="if check_getmsg(ysig2, pk2)=ct"]:
+     [ State_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Eq( z, ct ) ]->
-     [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. pk2   = pk2.8
        ysig2 = ysig2.8
@@ -426,16 +441,18 @@ rule (modulo E) ifcheckgetmsgysigpkct_0_11112111[color=#5c8040 process=if check_
        z     = x.11
   */
 
-rule (modulo E) ifcheckgetmsgysigpkct_1_11112111[color=#5c8040 process=if check_getmsg(ysig2, pk2)=ct]:
-   [ state_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckgetmsgysigpkct_1_11112111[color=#5c8040,
+                                                 process="if check_getmsg(ysig2, pk2)=ct"]:
+   [ State_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig2, pk2), ct ) ]->
-   [ state_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkct_1_11112111[color=#5c8040 process=if check_getmsg(ysig2, pk2)=ct]:
-     [ state_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkct_1_11112111[color=#5c8040,
+                                                    process="if check_getmsg(ysig2, pk2)=ct"]:
+     [ State_11112111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
-     [ state_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. pk2   = pk2.8
        ysig2 = ysig2.8
@@ -446,16 +463,18 @@ rule (modulo E) ifcheckgetmsgysigpkct_1_11112111[color=#5c8040 process=if check_
        z     = x.11
   */
 
-rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_111121111[color=#5c8040 process=if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct]:
-   [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_111121111[color=#5c8040,
+                                                               process="if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct"]:
+   [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Eq( check_getmsg(convertpcs(skT, ypcs1), pk1), ct ) ]->
-   [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_111121111[color=#5c8040 process=if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct]:
-     [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_111121111[color=#5c8040,
+                                                                  process="if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct"]:
+     [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Eq( z, ct ) ]->
-     [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. pk1   = pk1.8
        skT   = skT.8
@@ -473,16 +492,18 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_111121111[color=#5c8040 pro
        z     = x.11
   */
 
-rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121111[color=#5c8040 process=if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct]:
-   [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121111[color=#5c8040,
+                                                               process="if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct"]:
+   [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Not_Eq( check_getmsg(convertpcs(skT, ypcs1), pk1), ct ) ]->
-   [ state_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_111121111[color=#5c8040 process=if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct]:
-     [ state_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_111121111[color=#5c8040,
+                                                                  process="if check_getmsg(convertpcs(skT, ypcs1), pk1)=ct"]:
+     [ State_111121111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
-     [ state_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. pk1   = pk1.8
        skT   = skT.8
@@ -500,16 +521,18 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121111[color=#5c8040 pro
        z     = x.11
   */
 
-rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_1111211111[color=#5c8040 process=if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true]:
-   [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_1111211111[color=#5c8040,
+                                                           process="if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true"]:
+   [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Eq( checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true ) ]->
-   [ state_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_1111211111[color=#5c8040 process=if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true]:
-     [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_1111211111[color=#5c8040,
+                                                              process="if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true"]:
+     [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Eq( z, true ) ]->
-     [ state_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. ct    = ct.8
        pk1   = pk1.8
@@ -533,16 +556,18 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_1111211111[color=#5c8040 process
        z     = true
   */
 
-rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111211111[color=#5c8040 process=if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true]:
-   [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111211111[color=#5c8040,
+                                                           process="if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true"]:
+   [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
   --[ Pred_Not_Eq( checkpcs(ct, pk1, pk2, pk(skT), ypcs1), true ) ]->
-   [ state_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+   [ State_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
 
   /*
-  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_1111211111[color=#5c8040 process=if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true]:
-     [ state_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_1111211111[color=#5c8040,
+                                                              process="if checkpcs(ct, pk1, pk2, pk(skT), ypcs1)=true"]:
+     [ State_1111211111( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     --[ Pred_Not_Eq( z, true ) ]->
-     [ state_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
+     [ State_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ]
     variants (modulo AC)
     1. ct    = ct.8
        pk1   = pk1.8
@@ -566,120 +591,134 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111211111[color=#5c8040 process
        z     = true
   */
 
-rule (modulo E) lockct_0_11112111111[color=#5c8040 process=lock ct;]:
-   [ state_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ), Fr( lock.1 ) ]
+rule (modulo E) lockct_0_11112111111[color=#5c8040, process="lock ct;"]:
+   [ State_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, ct ), Lock( '1', lock.1, ct ) ]->
-   [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+   [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
 
   /*
-  rule (modulo AC) lockct_0_11112111111[color=#5c8040 process=lock ct;]:
-     [ state_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ), Fr( lock ) ]
+  rule (modulo AC) lockct_0_11112111111[color=#5c8040, process="lock ct;"]:
+     [ State_11112111111( ct, pk1, pk2, skT, ypcs1, ysig2 ), Fr( lock ) ]
     --[ Lock_1( '1', lock, ct ), Lock( '1', lock, ct ) ]->
-     [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+     [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) lookupctasstatus_0_111121111111[color=#5c8040 process=lookup ct as status]:
-   [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) lookupctasstatus_0_111121111111[color=#5c8040,
+                                                process="lookup ct as status"]:
+   [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   --[ IsIn( ct, status ) ]->
-   [ state_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
+   [ State_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
    ]
 
   /*
-  rule (modulo AC) lookupctasstatus_0_111121111111[color=#5c8040 process=lookup ct as status]:
-     [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) lookupctasstatus_0_111121111111[color=#5c8040,
+                                                   process="lookup ct as status"]:
+     [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     --[ IsIn( ct, status ) ]->
-     [ state_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
+     [ State_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) lookupctasstatus_1_111121111111[color=#5c8040 process=lookup ct as status]:
-   [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) lookupctasstatus_1_111121111111[color=#5c8040,
+                                                process="lookup ct as status"]:
+   [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   --[ IsNotSet( ct ) ]->
-   [ state_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+   [ State_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
 
   /*
-  rule (modulo AC) lookupctasstatus_1_111121111111[color=#5c8040 process=lookup ct as status]:
-     [ state_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) lookupctasstatus_1_111121111111[color=#5c8040,
+                                                   process="lookup ct as status"]:
+     [ State_111121111111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     --[ IsNotSet( ct ) ]->
-     [ state_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+     [ State_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) unlockct_0_1111211111111[color=#5c8040 process=unlock ct;]:
-   [ state_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
+rule (modulo E) unlockct_0_1111211111111[color=#5c8040,
+                                         process="unlock ct;"]:
+   [ State_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
    ]
   --[ Unlock_1( '1', lock.1, ct ), Unlock( '1', lock.1, ct ) ]->
-   [ state_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
+   [ State_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
    ]
 
   /*
-  rule (modulo AC) unlockct_0_1111211111111[color=#5c8040 process=unlock ct;]:
-     [ state_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) unlockct_0_1111211111111[color=#5c8040,
+                                            process="unlock ct;"]:
+     [ State_1111211111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
     --[ Unlock_1( '1', lock, ct ), Unlock( '1', lock, ct ) ]->
-     [ state_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
+     [ State_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) __0_11112111111111[color=#5c8040 process=0]:
-   [ state_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
+rule (modulo E) p_0_11112111111111[color=#5c8040, process="0"]:
+   [ State_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock.1 )
    ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) __0_11112111111111[color=#5c8040 process=0]:
-     [ state_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) p_0_11112111111111[color=#5c8040, process="0"]:
+     [ State_11112111111111( ct, pk1, pk2, skT, status, ypcs1, ysig2, lock ) ]
     -->
      [ ]
   */
 
-rule (modulo E) insertctresolved_0_1111211111112[color=#5c8040 process=insert ct,'resolved2';]:
-   [ state_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) insertctresolved_0_1111211111112[color=#5c8040,
+                                                 process="insert ct,'resolved2';"]:
+   [ State_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   --[ Insert( ct, 'resolved2' ) ]->
-   [ state_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+   [ State_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
 
   /*
-  rule (modulo AC) insertctresolved_0_1111211111112[color=#5c8040 process=insert ct,'resolved2';]:
-     [ state_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) insertctresolved_0_1111211111112[color=#5c8040,
+                                                    process="insert ct,'resolved2';"]:
+     [ State_1111211111112( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     --[ Insert( ct, 'resolved2' ) ]->
-     [ state_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+     [ State_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) eventResolvect_0_11112111111121[color=#5c8040 process=event Resolve2( ct );]:
-   [ state_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) eventResolvect_0_11112111111121[color=#5c8040,
+                                                process="event Resolve2( ct );"]:
+   [ State_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   --[ Resolve2( ct ) ]->
-   [ state_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+   [ State_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
 
   /*
-  rule (modulo AC) eventResolvect_0_11112111111121[color=#5c8040 process=event Resolve2( ct );]:
-     [ state_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) eventResolvect_0_11112111111121[color=#5c8040,
+                                                   process="event Resolve2( ct );"]:
+     [ State_11112111111121( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     --[ Resolve2( ct ) ]->
-     [ state_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+     [ State_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) unlockct_0_111121111111211[color=#5c8040 process=unlock ct;]:
-   [ state_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) unlockct_0_111121111111211[color=#5c8040,
+                                           process="unlock ct;"]:
+   [ State_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   --[ Unlock_1( '1', lock.1, ct ), Unlock( '1', lock.1, ct ) ]->
-   [ state_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+   [ State_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
 
   /*
-  rule (modulo AC) unlockct_0_111121111111211[color=#5c8040 process=unlock ct;]:
-     [ state_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) unlockct_0_111121111111211[color=#5c8040,
+                                              process="unlock ct;"]:
+     [ State_111121111111211( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     --[ Unlock_1( '1', lock, ct ), Unlock( '1', lock, ct ) ]->
-     [ state_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+     [ State_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
   */
 
-rule (modulo E) outsignconvertpcsskTypcsysigskT_0_1111211111112111[color=#5c8040 process=out(sign(<convertpcs(skT, ypcs1), ysig2>, skT));]:
-   [ state_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) outsignconvertpcsskTypcsysigskT_0_1111211111112111[color=#5c8040,
+                                                                   process="out(sign(<convertpcs(skT, ypcs1), ysig2>, skT));"]:
+   [ State_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   -->
    [
-   state_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ),
+   State_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ),
    Out( sign(<convertpcs(skT, ypcs1), ysig2>, skT) )
    ]
 
   /*
-  rule (modulo AC) outsignconvertpcsskTypcsysigskT_0_1111211111112111[color=#5c8040 process=out(sign(<convertpcs(skT, ypcs1), ysig2>, skT));]:
-     [ state_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) outsignconvertpcsskTypcsysigskT_0_1111211111112111[color=#5c8040,
+                                                                      process="out(sign(<convertpcs(skT, ypcs1), ysig2>, skT));"]:
+     [ State_1111211111112111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     -->
      [
-     state_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ),
+     State_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ),
      Out( sign(<z, ysig2>, skT) )
      ]
     variants (modulo AC)
@@ -692,68 +731,71 @@ rule (modulo E) outsignconvertpcsskTypcsysigskT_0_1111211111112111[color=#5c8040
        z     = sign(x.11, x.12)
   */
 
-rule (modulo E) __0_11112111111121111[color=#5c8040 process=0]:
-   [ state_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
+rule (modulo E) p_0_11112111111121111[color=#5c8040, process="0"]:
+   [ State_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock.1 ) ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) __0_11112111111121111[color=#5c8040 process=0]:
-     [ state_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
+  rule (modulo AC) p_0_11112111111121111[color=#5c8040, process="0"]:
+     [ State_11112111111121111( ct, pk1, pk2, skT, ypcs1, ysig2, lock ) ]
     -->
      [ ]
   */
 
-rule (modulo E) __0_11112111112[color=#5c8040 process=0]:
-   [ state_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
+rule (modulo E) p_0_11112111112[color=#5c8040, process="0"]:
+   [ State_11112111112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111211112[color=#5c8040 process=0]:
-   [ state_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
+rule (modulo E) p_0_1111211112[color=#5c8040, process="0"]:
+   [ State_1111211112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111121112[color=#5c8040 process=0]:
-   [ state_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
+rule (modulo E) p_0_111121112[color=#5c8040, process="0"]:
+   [ State_111121112( ct, pk1, pk2, skT, ypcs1, ysig2 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111212[color=#ffffff process=!]:
-   [ state_1111212( skT ) ] --> [ !semistate_11112121( skT ) ]
+rule (modulo E) p_0_1111212[color=#ffffff, process="!"]:
+   [ State_1111212( skT ) ] --> [ !Semistate_11112121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1111212[color=#ffffff process=!]:
-   [ !semistate_11112121( skT ) ] --> [ state_11112121( skT ) ]
+rule (modulo E) p_1_1111212[color=#ffffff, process="!"]:
+   [ !Semistate_11112121( skT ) ] --> [ State_11112121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112121[color=#ffffff process=|]:
-   [ state_11112121( skT ) ]
+rule (modulo E) p_0_11112121[color=#ffffff, process="|"]:
+   [ State_11112121( skT ) ]
   -->
-   [ state_111121211( skT ), state_111121212( skT ) ]
+   [ State_111121211( skT ), State_111121212( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inresolvectpkpkysigypcs_0_111121211[color=#798040 process=in(<'resolve1', ct, pk1, pk2, ysig1, ypcs2>);]:
-   [ state_111121211( skT ), In( <'resolve1', ct, pk1, pk2, ysig1, ypcs2> )
+rule (modulo E) inresolvectpkpkysigypcs_0_111121211[color=#798040,
+                                                    process="in(<'resolve1', ct, pk1, pk2, ysig1, ypcs2>);"]:
+   [ State_111121211( skT ), In( <'resolve1', ct, pk1, pk2, ysig1, ypcs2> )
    ]
   -->
-   [ state_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifcheckgetmsgysigpkct_0_1111212111[color=#798040 process=if check_getmsg(ysig1, pk1)=ct]:
-   [ state_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckgetmsgysigpkct_0_1111212111[color=#798040,
+                                                   process="if check_getmsg(ysig1, pk1)=ct"]:
+   [ State_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Eq( check_getmsg(ysig1, pk1), ct ) ]->
-   [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkct_0_1111212111[color=#798040 process=if check_getmsg(ysig1, pk1)=ct]:
-     [ state_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkct_0_1111212111[color=#798040,
+                                                      process="if check_getmsg(ysig1, pk1)=ct"]:
+     [ State_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Eq( z, ct ) ]->
-     [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. pk1   = pk1.8
        ysig1 = ysig1.8
@@ -764,16 +806,18 @@ rule (modulo E) ifcheckgetmsgysigpkct_0_1111212111[color=#798040 process=if chec
        z     = x.12
   */
 
-rule (modulo E) ifcheckgetmsgysigpkct_1_1111212111[color=#798040 process=if check_getmsg(ysig1, pk1)=ct]:
-   [ state_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckgetmsgysigpkct_1_1111212111[color=#798040,
+                                                   process="if check_getmsg(ysig1, pk1)=ct"]:
+   [ State_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig1, pk1), ct ) ]->
-   [ state_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgysigpkct_1_1111212111[color=#798040 process=if check_getmsg(ysig1, pk1)=ct]:
-     [ state_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckgetmsgysigpkct_1_1111212111[color=#798040,
+                                                      process="if check_getmsg(ysig1, pk1)=ct"]:
+     [ State_1111212111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
-     [ state_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. pk1   = pk1.8
        ysig1 = ysig1.8
@@ -784,16 +828,18 @@ rule (modulo E) ifcheckgetmsgysigpkct_1_1111212111[color=#798040 process=if chec
        z     = x.12
   */
 
-rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_11112121111[color=#798040 process=if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct]:
-   [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_11112121111[color=#798040,
+                                                                 process="if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct"]:
+   [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Eq( check_getmsg(convertpcs(skT, ypcs2), pk2), ct ) ]->
-   [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_11112121111[color=#798040 process=if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct]:
-     [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_11112121111[color=#798040,
+                                                                    process="if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct"]:
+     [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Eq( z, ct ) ]->
-     [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. pk2   = pk2.8
        skT   = skT.8
@@ -811,16 +857,18 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_11112121111[color=#798040 p
        z     = x.10
   */
 
-rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_11112121111[color=#798040 process=if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct]:
-   [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_11112121111[color=#798040,
+                                                                 process="if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct"]:
+   [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Not_Eq( check_getmsg(convertpcs(skT, ypcs2), pk2), ct ) ]->
-   [ state_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_11112121111[color=#798040 process=if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct]:
-     [ state_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_11112121111[color=#798040,
+                                                                    process="if check_getmsg(convertpcs(skT, ypcs2), pk2)=ct"]:
+     [ State_11112121111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
-     [ state_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. pk2   = pk2.8
        skT   = skT.8
@@ -838,16 +886,18 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_11112121111[color=#798040 p
        z     = x.10
   */
 
-rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_111121211111[color=#798040 process=if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true]:
-   [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_111121211111[color=#798040,
+                                                             process="if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true"]:
+   [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Eq( checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true ) ]->
-   [ state_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_111121211111[color=#798040 process=if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true]:
-     [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_111121211111[color=#798040,
+                                                                process="if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true"]:
+     [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Eq( z, true ) ]->
-     [ state_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. ct    = ct.8
        pk1   = pk1.8
@@ -871,16 +921,18 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_111121211111[color=#798040 proce
        z     = true
   */
 
-rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_111121211111[color=#798040 process=if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true]:
-   [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_111121211111[color=#798040,
+                                                             process="if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true"]:
+   [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
   --[ Pred_Not_Eq( checkpcs(ct, pk2, pk1, pk(skT), ypcs2), true ) ]->
-   [ state_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+   [ State_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
 
   /*
-  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_111121211111[color=#798040 process=if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true]:
-     [ state_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+  rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_111121211111[color=#798040,
+                                                                process="if checkpcs(ct, pk2, pk1, pk(skT), ypcs2)=true"]:
+     [ State_111121211111( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     --[ Pred_Not_Eq( z, true ) ]->
-     [ state_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
+     [ State_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ]
     variants (modulo AC)
     1. ct    = ct.8
        pk1   = pk1.8
@@ -904,128 +956,144 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_111121211111[color=#798040 proce
        z     = true
   */
 
-rule (modulo E) lockct_0_1111212111111[color=#798040 process=lock ct;]:
-   [ state_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ), Fr( lock.2 ) ]
+rule (modulo E) lockct_0_1111212111111[color=#798040,
+                                       process="lock ct;"]:
+   [ State_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ), Fr( lock.2 ) ]
   --[ Lock_2( '2', lock.2, ct ), Lock( '2', lock.2, ct ) ]->
-   [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+   [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
 
   /*
-  rule (modulo AC) lockct_0_1111212111111[color=#798040 process=lock ct;]:
-     [ state_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ), Fr( lock ) ]
+  rule (modulo AC) lockct_0_1111212111111[color=#798040,
+                                          process="lock ct;"]:
+     [ State_1111212111111( ct, pk1, pk2, skT, ypcs2, ysig1 ), Fr( lock ) ]
     --[ Lock_2( '2', lock, ct ), Lock( '2', lock, ct ) ]->
-     [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+     [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
   */
 
-rule (modulo E) lookupctasstatus_0_11112121111111[color=#798040 process=lookup ct as status]:
-   [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) lookupctasstatus_0_11112121111111[color=#798040,
+                                                  process="lookup ct as status"]:
+   [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   --[ IsIn( ct, status ) ]->
    [
-   state_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
+   State_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
    ]
 
   /*
-  rule (modulo AC) lookupctasstatus_0_11112121111111[color=#798040 process=lookup ct as status]:
-     [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) lookupctasstatus_0_11112121111111[color=#798040,
+                                                     process="lookup ct as status"]:
+     [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     --[ IsIn( ct, status ) ]->
-     [ state_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
+     [ State_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
      ]
   */
 
-rule (modulo E) lookupctasstatus_1_11112121111111[color=#798040 process=lookup ct as status]:
-   [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) lookupctasstatus_1_11112121111111[color=#798040,
+                                                  process="lookup ct as status"]:
+   [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   --[ IsNotSet( ct ) ]->
-   [ state_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+   [ State_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
 
   /*
-  rule (modulo AC) lookupctasstatus_1_11112121111111[color=#798040 process=lookup ct as status]:
-     [ state_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) lookupctasstatus_1_11112121111111[color=#798040,
+                                                     process="lookup ct as status"]:
+     [ State_11112121111111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     --[ IsNotSet( ct ) ]->
-     [ state_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+     [ State_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
   */
 
-rule (modulo E) unlockct_0_111121211111111[color=#798040 process=unlock ct;]:
+rule (modulo E) unlockct_0_111121211111111[color=#798040,
+                                           process="unlock ct;"]:
    [
-   state_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
+   State_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
    ]
   --[ Unlock_2( '2', lock.2, ct ), Unlock( '2', lock.2, ct ) ]->
    [
-   state_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
+   State_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
    ]
 
   /*
-  rule (modulo AC) unlockct_0_111121211111111[color=#798040 process=unlock ct;]:
-     [ state_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
+  rule (modulo AC) unlockct_0_111121211111111[color=#798040,
+                                              process="unlock ct;"]:
+     [ State_111121211111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
      ]
     --[ Unlock_2( '2', lock, ct ), Unlock( '2', lock, ct ) ]->
-     [ state_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
+     [ State_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
      ]
   */
 
-rule (modulo E) __0_1111212111111111[color=#798040 process=0]:
+rule (modulo E) p_0_1111212111111111[color=#798040, process="0"]:
    [
-   state_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
+   State_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock.2 )
    ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) __0_1111212111111111[color=#798040 process=0]:
-     [ state_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
+  rule (modulo AC) p_0_1111212111111111[color=#798040, process="0"]:
+     [ State_1111212111111111( ct, pk1, pk2, skT, status, ypcs2, ysig1, lock )
      ]
     -->
      [ ]
   */
 
-rule (modulo E) insertctresolved_0_111121211111112[color=#798040 process=insert ct,'resolved1';]:
-   [ state_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) insertctresolved_0_111121211111112[color=#798040,
+                                                   process="insert ct,'resolved1';"]:
+   [ State_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   --[ Insert( ct, 'resolved1' ) ]->
-   [ state_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+   [ State_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
 
   /*
-  rule (modulo AC) insertctresolved_0_111121211111112[color=#798040 process=insert ct,'resolved1';]:
-     [ state_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) insertctresolved_0_111121211111112[color=#798040,
+                                                      process="insert ct,'resolved1';"]:
+     [ State_111121211111112( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     --[ Insert( ct, 'resolved1' ) ]->
-     [ state_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+     [ State_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
   */
 
-rule (modulo E) eventResolvect_0_1111212111111121[color=#798040 process=event Resolve1( ct );]:
-   [ state_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) eventResolvect_0_1111212111111121[color=#798040,
+                                                  process="event Resolve1( ct );"]:
+   [ State_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   --[ Resolve1( ct ) ]->
-   [ state_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+   [ State_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
 
   /*
-  rule (modulo AC) eventResolvect_0_1111212111111121[color=#798040 process=event Resolve1( ct );]:
-     [ state_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) eventResolvect_0_1111212111111121[color=#798040,
+                                                     process="event Resolve1( ct );"]:
+     [ State_1111212111111121( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     --[ Resolve1( ct ) ]->
-     [ state_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+     [ State_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
   */
 
-rule (modulo E) unlockct_0_11112121111111211[color=#798040 process=unlock ct;]:
-   [ state_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) unlockct_0_11112121111111211[color=#798040,
+                                             process="unlock ct;"]:
+   [ State_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   --[ Unlock_2( '2', lock.2, ct ), Unlock( '2', lock.2, ct ) ]->
-   [ state_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+   [ State_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
 
   /*
-  rule (modulo AC) unlockct_0_11112121111111211[color=#798040 process=unlock ct;]:
-     [ state_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) unlockct_0_11112121111111211[color=#798040,
+                                                process="unlock ct;"]:
+     [ State_11112121111111211( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     --[ Unlock_2( '2', lock, ct ), Unlock( '2', lock, ct ) ]->
-     [ state_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+     [ State_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
   */
 
-rule (modulo E) outsignysigconvertpcsskTypcsskT_0_111121211111112111[color=#798040 process=out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT));]:
-   [ state_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) outsignysigconvertpcsskTypcsskT_0_111121211111112111[color=#798040,
+                                                                     process="out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT));"]:
+   [ State_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   -->
    [
-   state_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ),
+   State_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ),
    Out( sign(<ysig1, convertpcs(skT, ypcs2)>, skT) )
    ]
 
   /*
-  rule (modulo AC) outsignysigconvertpcsskTypcsskT_0_111121211111112111[color=#798040 process=out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT));]:
-     [ state_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) outsignysigconvertpcsskTypcsskT_0_111121211111112111[color=#798040,
+                                                                        process="out(sign(<ysig1, convertpcs(skT, ypcs2)>, skT));"]:
+     [ State_111121211111112111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     -->
      [
-     state_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ),
+     State_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ),
      Out( sign(<ysig1, z>, skT) )
      ]
     variants (modulo AC)
@@ -1038,101 +1106,105 @@ rule (modulo E) outsignysigconvertpcsskTypcsskT_0_111121211111112111[color=#7980
        z     = sign(x.12, x.13)
   */
 
-rule (modulo E) __0_1111212111111121111[color=#798040 process=0]:
-   [ state_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
+rule (modulo E) p_0_1111212111111121111[color=#798040, process="0"]:
+   [ State_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock.2 ) ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) __0_1111212111111121111[color=#798040 process=0]:
-     [ state_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
+  rule (modulo AC) p_0_1111212111111121111[color=#798040, process="0"]:
+     [ State_1111212111111121111( ct, pk1, pk2, skT, ypcs2, ysig1, lock ) ]
     -->
      [ ]
   */
 
-rule (modulo E) __0_1111212111112[color=#798040 process=0]:
-   [ state_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
+rule (modulo E) p_0_1111212111112[color=#798040, process="0"]:
+   [ State_1111212111112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111121211112[color=#798040 process=0]:
-   [ state_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
+rule (modulo E) p_0_111121211112[color=#798040, process="0"]:
+   [ State_111121211112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112121112[color=#798040 process=0]:
-   [ state_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
+rule (modulo E) p_0_11112121112[color=#798040, process="0"]:
+   [ State_11112121112( ct, pk1, pk2, skT, ypcs2, ysig1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111121212[color=#ffffff process=!]:
-   [ state_111121212( skT ) ] --> [ !semistate_1111212121( skT ) ]
+rule (modulo E) p_0_111121212[color=#ffffff, process="!"]:
+   [ State_111121212( skT ) ] --> [ !Semistate_1111212121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111121212[color=#ffffff process=!]:
-   [ !semistate_1111212121( skT ) ] --> [ state_1111212121( skT ) ]
+rule (modulo E) p_1_111121212[color=#ffffff, process="!"]:
+   [ !Semistate_1111212121( skT ) ] --> [ State_1111212121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111212121[color=#ffffff process=|]:
-   [ state_1111212121( skT ) ]
+rule (modulo E) p_0_1111212121[color=#ffffff, process="|"]:
+   [ State_1111212121( skT ) ]
   -->
-   [ state_11112121211( skT ), state_11112121212( skT ) ]
+   [ State_11112121211( skT ), State_11112121212( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insignctpkskpksignctpkskpkskskT_0_11112121211[color=#804059 process=in(sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, skT));]:
+rule (modulo E) insignctpkskpksignctpkskpkskskT_0_11112121211[color=#804059,
+                                                              process="in(sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, skT));"]:
    [
-   state_11112121211( skT ),
+   State_11112121211( skT ),
    In( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, skT) )
    ]
   -->
-   [ state_111121212111( ct, pk2, sk1, skT ) ]
+   [ State_111121212111( ct, pk2, sk1, skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAbortCertct_0_111121212111[color=#804059 process=event AbortCert( ct );]:
-   [ state_111121212111( ct, pk2, sk1, skT ) ]
+rule (modulo E) eventAbortCertct_0_111121212111[color=#804059,
+                                                process="event AbortCert( ct );"]:
+   [ State_111121212111( ct, pk2, sk1, skT ) ]
   --[ AbortCert( ct ) ]->
-   [ state_1111212121111( ct, pk2, sk1, skT ) ]
+   [ State_1111212121111( ct, pk2, sk1, skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111212121111[color=#804059 process=0]:
-   [ state_1111212121111( ct, pk2, sk1, skT ) ] --> [ ]
+rule (modulo E) p_0_1111212121111[color=#804059, process="0"]:
+   [ State_1111212121111( ct, pk2, sk1, skT ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112121212[color=#ffffff process=!]:
-   [ state_11112121212( skT ) ] --> [ !semistate_111121212121( skT ) ]
+rule (modulo E) p_0_11112121212[color=#ffffff, process="!"]:
+   [ State_11112121212( skT ) ] --> [ !Semistate_111121212121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11112121212[color=#ffffff process=!]:
-   [ !semistate_111121212121( skT ) ] --> [ state_111121212121( skT ) ]
+rule (modulo E) p_1_11112121212[color=#ffffff, process="!"]:
+   [ !Semistate_111121212121( skT ) ] --> [ State_111121212121( skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insignsignctsksignctskskT_0_111121212121[color=#40805f process=in(sign(<sign(ct, sk1), sign(ct, sk2)>, skT));]:
+rule (modulo E) insignsignctsksignctskskT_0_111121212121[color=#40805f,
+                                                         process="in(sign(<sign(ct, sk1), sign(ct, sk2)>, skT));"]:
    [
-   state_111121212121( skT ),
+   State_111121212121( skT ),
    In( sign(<sign(ct, sk1), sign(ct, sk2)>, skT) )
    ]
   -->
-   [ state_1111212121211( ct, sk1, sk2, skT ) ]
+   [ State_1111212121211( ct, sk1, sk2, skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventResolveCertct_0_1111212121211[color=#40805f process=event ResolveCert( ct );]:
-   [ state_1111212121211( ct, sk1, sk2, skT ) ]
+rule (modulo E) eventResolveCertct_0_1111212121211[color=#40805f,
+                                                   process="event ResolveCert( ct );"]:
+   [ State_1111212121211( ct, sk1, sk2, skT ) ]
   --[ ResolveCert( ct ) ]->
-   [ state_11112121212111( ct, sk1, sk2, skT ) ]
+   [ State_11112121212111( ct, sk1, sk2, skT ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11112121212111[color=#40805f process=0]:
-   [ state_11112121212111( ct, sk1, sk2, skT ) ] --> [ ]
+rule (modulo E) p_0_11112121212111[color=#40805f, process="0"]:
+   [ State_11112121212111( ct, sk1, sk2, skT ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -1224,7 +1296,7 @@ analyzing: examples/sapic/fast/GJM-contract/contract.spthy
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 16.538653s
+  processing time: 19.298425994s
   aborted_and_resolved_exclusive (all-traces): verified (18 steps)
   aborted_contract_reachable (exists-trace): verified (6 steps)
   resolved1_contract_reachable (exists-trace): verified (10 steps)
@@ -1238,7 +1310,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 16.538653s
+  processing time: 19.298425994s
   aborted_and_resolved_exclusive (all-traces): verified (18 steps)
   aborted_contract_reachable (exists-trace): verified (6 steps)
   resolved1_contract_reachable (exists-trace): verified (10 steps)

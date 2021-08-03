@@ -19,74 +19,79 @@ guarded formula characterizing all satisfying traces:
 "(∃ #l. (LookupElse( ) @ #l)) ∧ (∃ #p. (PositiveBranch( ) @ #p))"
 */
 simplify
-solve( state_112( ) ▶₀ #l )
+solve( State_112( ) ▶₀ #l )
   case lookupxasx_1_11
-  solve( state_1( ) ▶₀ #p )
+  solve( State_1( ) ▶₀ #p )
     case ifTrue_0_
     SOLVED // trace found
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=if True( )]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="if True( )"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifTrue_0__1:
-  "∀ #NOW. (restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
+restriction Restr_ifTrue_0__1:
+  "∀ #NOW. (Restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
   // safety formula
 
-rule (modulo E) ifTrue_0_[color=#ffffff process=if True( )]:
-   [ state_( ) ] --[ restr_ifTrue_0__1( ) ]-> [ state_1( ) ]
+rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )"]:
+   [ State_( ) ] --[ Restr_ifTrue_0__1( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-restriction restr_ifTrue_1__1:
-  "∀ #NOW. (restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
+restriction Restr_ifTrue_1__1:
+  "∀ #NOW. (Restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
   // safety formula
 
-rule (modulo E) ifTrue_1_[color=#ffffff process=if True( )]:
-   [ state_( ) ] --[ restr_ifTrue_1__1( ) ]-> [ state_2( ) ]
+rule (modulo E) ifTrue_1_[color=#ffffff, process="if True( )"]:
+   [ State_( ) ] --[ Restr_ifTrue_1__1( ) ]-> [ State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventPositiveBranch_0_1[color=#ffffff process=event PositiveBranch( );]:
-   [ state_1( ) ] --[ PositiveBranch( ) ]-> [ state_11( ) ]
+rule (modulo E) eventPositiveBranch_0_1[color=#ffffff,
+                                        process="event PositiveBranch( );"]:
+   [ State_1( ) ] --[ PositiveBranch( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupxasx_0_11[color=#ffffff process=lookup 'x' as x]:
-   [ state_11( ) ] --[ IsIn( 'x', x ) ]-> [ state_111( x ) ]
+rule (modulo E) lookupxasx_0_11[color=#ffffff,
+                                process="lookup 'x' as x"]:
+   [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ State_111( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupxasx_1_11[color=#ffffff process=lookup 'x' as x]:
-   [ state_11( ) ] --[ IsNotSet( 'x' ) ]-> [ state_112( ) ]
+rule (modulo E) lookupxasx_1_11[color=#ffffff,
+                                process="lookup 'x' as x"]:
+   [ State_11( ) ] --[ IsNotSet( 'x' ) ]-> [ State_112( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( x ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventLookupElse_0_112[color=#ffffff process=event LookupElse( );]:
-   [ state_112( ) ] --[ LookupElse( ) ]-> [ state_1121( ) ]
+rule (modulo E) eventLookupElse_0_112[color=#ffffff,
+                                      process="event LookupElse( );"]:
+   [ State_112( ) ] --[ LookupElse( ) ]-> [ State_1121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertyy_0_1121[color=#ffffff process=insert 'y','y';]:
-   [ state_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ state_11211( ) ]
+rule (modulo E) insertyy_0_1121[color=#ffffff,
+                                process="insert 'y','y';"]:
+   [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ State_11211( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11211[color=#ffffff process=0]:
-   [ state_11211( ) ] --> [ ]
+rule (modulo E) p_0_11211[color=#ffffff, process="0"]:
+   [ State_11211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_2[color=#ffffff process=0]:
-   [ state_2( ) ] --> [ ]
+rule (modulo E) p_0_2[color=#ffffff, process="0"]:
+   [ State_2( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -122,7 +127,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-3.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.056159126s
+  processing time: 0.075308922s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -133,7 +138,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.056159126s
+  processing time: 0.075308922s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ==============================================================================

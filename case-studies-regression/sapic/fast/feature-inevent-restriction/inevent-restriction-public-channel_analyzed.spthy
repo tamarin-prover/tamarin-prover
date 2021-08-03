@@ -20,36 +20,36 @@ guarded formula characterizing all counter-examples:
   ∀ #k x. (K( x ) @ #k) ⇒ ((¬(#a < #k)) ∨ (¬(#k < #b)))"
 */
 simplify
-solve( state_( ) ▶₀ #a )
+solve( State_( ) ▶₀ #a )
   case Init
-  solve( state_11( ) ▶₀ #b )
+  solve( State_11( ) ▶₀ #b )
     case ina_0_1
     by contradiction /* from formulas */
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=event A( );]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="event A( );"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_[color=#ffffff process=event A( );]:
-   [ state_( ) ] --[ A( ), Event( ) ]-> [ state_1( ) ]
+rule (modulo E) eventA_0_[color=#ffffff, process="event A( );"]:
+   [ State_( ) ] --[ A( ), Event( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ina_0_1[color=#ffffff process=in('a');]:
-   [ state_1( ), In( 'a' ) ] --[ ChannelIn( 'a' ) ]-> [ state_11( ) ]
+rule (modulo E) ina_0_1[color=#ffffff, process="in('a');"]:
+   [ State_1( ), In( 'a' ) ] --[ ChannelIn( 'a' ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff process=event B( );]:
-   [ state_11( ) ] --[ B( ), Event( ) ]-> [ state_111( ) ]
+rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
+   [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -81,7 +81,7 @@ analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-p
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.050690107s
+  processing time: 0.069701195s
   test (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.050690107s
+  processing time: 0.069701195s
   test (all-traces): verified (4 steps)
 
 ==============================================================================
