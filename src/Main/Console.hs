@@ -78,14 +78,13 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2019"
+    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2020"
     ]
   , concat
     [ "Git revision: "
     , $(gitHash)
     , case $(gitDirty) of
           True  -> " (with uncommited changes)"
-          False -> ""
     , ", branch: "
     , $(gitBranch)
     ]

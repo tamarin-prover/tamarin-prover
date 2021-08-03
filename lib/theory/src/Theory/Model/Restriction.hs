@@ -123,6 +123,9 @@ rewrite f = State.runState (evalFreshT (traverseFormulaAtom fAt' f) 0 ) M.empty
                 isFree (Bound _) = False
                 isFree (Free  v) = v /= varNow
 
+restrPrefix :: String
+restrPrefix = "Restr_"
+
 -- | From f, create restriction with rname and an action that we insert in the
 -- protocol rule that had this restriction.
 --
@@ -139,7 +142,7 @@ fromRuleRestriction rname f =
                 -- creates restriction with f quantified over free variables
                 -- and varnow
                 mkRestriction f' = Restriction
-                                        ("restr_"++ rname)
+                                        (restrPrefix ++ rname)
                                         (foldr (hinted forall) f'' (frees f''))
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
@@ -151,4 +154,4 @@ fromRuleRestriction rname f =
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
-                mkFact = protoFactAnn Linear ("restr_"++ rname) S.empty
+                mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty

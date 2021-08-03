@@ -438,8 +438,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
@@ -448,7 +446,7 @@ analyzing: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 1.769824s
+  processing time: 0.817262322s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 
@@ -460,7 +458,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 1.769824s
+  processing time: 0.817262322s
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

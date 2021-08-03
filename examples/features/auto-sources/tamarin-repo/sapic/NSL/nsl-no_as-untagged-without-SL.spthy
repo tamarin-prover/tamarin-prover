@@ -1,0 +1,124 @@
+theory NeedhamSchroeder
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+builtins: asymmetric-encryption
+
+heuristic: p /* heuristic for SAPIC */
+
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule Par_: // [process=top-level] Par 
+ [State_()] --[]-> [State_1(), State_2()]
+
+rule Rep_0_1: // [process=top-level] Rep, 0 
+ [State_1()] --[]-> [!Semistate_11()]
+
+rule Rep_1_1: // [process=top-level] Rep, 1 
+ [!Semistate_11()] --[]-> [State_11()]
+
+rule new_skA_11: // [process=top-level] new skA 
+ [State_11(), Fr(skA)] --[]-> [State_111(skA)]
+
+rule event_HonestApkskA_111: // [process=top-level] event HonestA(pk(skA)) 
+ [State_111(skA)] --[Event(), HonestA(pk(skA))]-> [State_1111(skA)]
+
+rule out_pkskA_1111: // [process=top-level] out pk(skA) 
+ [State_1111(skA)] --[]-> [State_11111(skA), Out(pk(skA))]
+
+rule Rep_0_11111: // [process=top-level] Rep, 0 
+ [State_11111(skA)] --[]-> [!Semistate_111111(skA)]
+
+rule Rep_1_11111: // [process=top-level] Rep, 1 
+ [!Semistate_111111(skA)] --[]-> [State_111111(skA)]
+
+rule in_pkxB_111111: // [process=top-level] in pk(xB) 
+ [State_111111(skA), In(pk(xB))] --[]-> [State_1111111(skA, xB)]
+
+rule new_Na_1111111: // [process=top-level] new Na 
+ [State_1111111(skA, xB), Fr(Na)] --[]-> [State_11111111(Na, skA, xB)]
+
+rule event_OUT_I_1aenc_Na_pkskA_pkxB_11111111: // [process=top-level] event OUT_I_1(aenc(<Na, pk(skA)>, pk(xB))) 
+ [State_11111111(Na, skA, xB)] --[Event(), OUT_I_1(aenc(<Na, pk(skA)>, pk(xB)))]-> [State_111111111(Na, skA, xB)]
+
+rule out_aenc_Na_pkskA_pkxB_111111111: // [process=top-level] out aenc(<Na, pk(skA)>, pk(xB)) 
+ [State_111111111(Na, skA, xB)] --[]-> [State_1111111111(Na, skA, xB), Out(aenc(<Na, pk(skA)>, pk(xB)))]
+
+rule in_aenc_Na_xNb_pkxB_pkskA_1111111111: // [process=top-level] in aenc(<Na, xNb, pk(xB)>, pk(skA)) 
+ [State_1111111111(Na, skA, xB), In(aenc(<Na, xNb, pk(xB)>, pk(skA)))] --[]-> [State_11111111111(Na, skA, xB, xNb)]
+
+rule event_IN_I_2_nrxNb_aenc_Na_xNb_pkxB_pkskA_11111111111: // [process=top-level] event IN_I_2_nr(xNb, aenc(<Na, xNb, pk(xB)>, pk(skA))) 
+ [State_11111111111(Na, skA, xB, xNb)] --[Event(), IN_I_2_nr(xNb, aenc(<Na, xNb, pk(xB)>, pk(skA)))]-> [State_111111111111(Na, skA, xB, xNb)]
+
+rule new_k_111111111111: // [process=top-level] new k 
+ [State_111111111111(Na, skA, xB, xNb), Fr(k)] --[]-> [State_1111111111111(Na, k, skA, xB, xNb)]
+
+rule out_aenc_xNb_k_pkxB_1111111111111: // [process=top-level] out aenc(<xNb, k>, pk(xB)) 
+ [State_1111111111111(Na, k, skA, xB, xNb)] --[]-> [State_11111111111111(Na, k, skA, xB, xNb), Out(aenc(<xNb, k>, pk(xB)))]
+
+rule event_SessionApkskA_pkxB_k_11111111111111: // [process=top-level] event SessionA(pk(skA), pk(xB), k) 
+ [State_11111111111111(Na, k, skA, xB, xNb)] --[Event(), SessionA(pk(skA), pk(xB), k)]-> [State_111111111111111(Na, k, skA, xB, xNb)]
+
+rule Zero_111111111111111: // [process=top-level] Zero 
+ [State_111111111111111(Na, k, skA, xB, xNb)] --[]-> []
+
+rule Rep_0_2: // [process=top-level] Rep, 0 
+ [State_2()] --[]-> [!Semistate_21()]
+
+rule Rep_1_2: // [process=top-level] Rep, 1 
+ [!Semistate_21()] --[]-> [State_21()]
+
+rule new_skB_21: // [process=top-level] new skB 
+ [State_21(), Fr(skB)] --[]-> [State_211(skB)]
+
+rule event_HonestBpkskB_211: // [process=top-level] event HonestB(pk(skB)) 
+ [State_211(skB)] --[Event(), HonestB(pk(skB))]-> [State_2111(skB)]
+
+rule out_pkskB_2111: // [process=top-level] out pk(skB) 
+ [State_2111(skB)] --[]-> [State_21111(skB), Out(pk(skB))]
+
+rule Rep_0_21111: // [process=top-level] Rep, 0 
+ [State_21111(skB)] --[]-> [!Semistate_211111(skB)]
+
+rule Rep_1_21111: // [process=top-level] Rep, 1 
+ [!Semistate_211111(skB)] --[]-> [State_211111(skB)]
+
+rule in_aenc_xNa_pkxA_pkskB_211111: // [process=top-level] in aenc(<xNa, pk(xA)>, pk(skB)) 
+ [State_211111(skB), In(aenc(<xNa, pk(xA)>, pk(skB)))] --[]-> [State_2111111(skB, xA, xNa)]
+
+rule event_IN_R_1_nixNa_aenc_xNa_pkxA_pkskB_2111111: // [process=top-level] event IN_R_1_ni(xNa, aenc(<xNa, pk(xA)>, pk(skB))) 
+ [State_2111111(skB, xA, xNa)] --[Event(), IN_R_1_ni(xNa, aenc(<xNa, pk(xA)>, pk(skB)))]-> [State_21111111(skB, xA, xNa)]
+
+rule new_Nb_21111111: // [process=top-level] new Nb 
+ [State_21111111(skB, xA, xNa), Fr(Nb)] --[]-> [State_211111111(Nb, skB, xA, xNa)]
+
+rule event_OUT_R_1aenc_xNa_Nb_pkskB_pkxA_211111111: // [process=top-level] event OUT_R_1(aenc(<xNa, Nb, pk(skB)>, pk(xA))) 
+ [State_211111111(Nb, skB, xA, xNa)] --[Event(), OUT_R_1(aenc(<xNa, Nb, pk(skB)>, pk(xA)))]-> [State_2111111111(Nb, skB, xA, xNa)]
+
+rule out_aenc_xNa_Nb_pkskB_pkxA_2111111111: // [process=top-level] out aenc(<xNa, Nb, pk(skB)>, pk(xA)) 
+ [State_2111111111(Nb, skB, xA, xNa)] --[]-> [State_21111111111(Nb, skB, xA, xNa), Out(aenc(<xNa, Nb, pk(skB)>, pk(xA)))]
+
+rule in_aenc_Nb_xk_pkskB_21111111111: // [process=top-level] in aenc(<Nb, xk>, pk(skB)) 
+ [State_21111111111(Nb, skB, xA, xNa), In(aenc(<Nb, xk>, pk(skB)))] --[]-> [State_211111111111(Nb, skB, xA, xNa, xk)]
+
+rule event_SessionBpkxA_pkskB_xk_211111111111: // [process=top-level] event SessionB(pk(xA), pk(skB), xk) 
+ [State_211111111111(Nb, skB, xA, xNa, xk)] --[Event(), SessionB(pk(xA), pk(skB), xk)]-> [State_2111111111111(Nb, skB, xA, xNa, xk)]
+
+rule Zero_2111111111111: // [process=top-level] Zero 
+ [State_2111111111111(Nb, skB, xA, xNa, xk)] --[]-> []
+
+
+restriction single_session: // for a single session
+    "All #i #j. Init()@i & Init()@j ==> #i=#j"
+
+/* lemma source [sources, reuse]:
+"	( All ni m1 #i. IN_R_1_ni(ni, m1) @ i ==> ( ( Ex #j. KU(ni) @ j & j < i ) | ( Ex #j. OUT_I_1(m1) @ j ) ) ) & ( All nr m2 #i. IN_I_2_nr(nr, m2) @ i ==> ( ( Ex #j. KU(nr) @ j & j < i ) | ( Ex #j. OUT_R_1(m2) @ j ) ) )"
+*/
+
+lemma secrecy :
+"	not( Ex pka pkb k #t1 #t2. SessionA(pka, pkb, k) @ t1 & K(k) @ t2 & ( Ex #i. HonestA(pka) @ i ) & ( Ex #i. HonestB(pkb) @ i ) )"
+
+end

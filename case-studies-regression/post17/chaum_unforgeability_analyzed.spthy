@@ -122,8 +122,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/chaum_unforgeability.spthy
@@ -132,7 +130,7 @@ analyzing: examples/post17/chaum_unforgeability.spthy
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.140307s
+  processing time: 0.111978446s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 
@@ -144,7 +142,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.140307s
+  processing time: 0.111978446s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 

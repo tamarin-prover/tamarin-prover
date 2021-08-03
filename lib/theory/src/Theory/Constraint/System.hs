@@ -99,6 +99,8 @@ module Theory.Constraint.System (
   -- ** Node constraints
   , sNodes
   , allKDConcs
+  , allInPrems
+  , allPrems
 
   , nodeRule
   , nodeRuleSafe
@@ -413,16 +415,6 @@ eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPC
 -- Instances
 ------------
 
-instance HasFrees Source where
-    foldFrees f th =
-        foldFrees f (L.get cdGoal th)   `mappend`
-        foldFrees f (L.get cdCases th)
-
-    foldFreesOcc  _ _ = const mempty
-
-    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
-                                    <*> mapFrees f (L.get cdCases th)
-
 data DiffProofType = RuleEquivalence | None
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -502,9 +494,25 @@ insertLemmas fms sys = foldl' (flip insertLemma) sys fms
 -- | A list of all KD-conclusions in the 'System'.
 allKDConcs :: System -> [(NodeId, RuleACInst, LNTerm)]
 allKDConcs sys = do
-    (i, ru)                            <- M.toList $ L.get sNodes sys
+    (i, ru)                         <- M.toList $ L.get sNodes sys
     (_, kFactView -> Just (DnK, m)) <- enumConcs ru
     return (i, ru, m)
+
+-- | A list of all In-premises in the 'System'.
+allInPrems :: System -> [(NodeId, PremIdx, LNTerm)]
+allInPrems sys = do
+    (i, ru)                   <- M.toList $ L.get sNodes sys
+    (j, inFactView -> Just m) <- enumPrems ru
+    return (i, j, m)
+
+-- | A list of all In- and Protocol premises in the 'System'.
+allPrems :: System -> [(NodeId, PremIdx, Int, LNTerm)]
+allPrems sys = do
+    (i, ru)                           <- M.toList $ L.get sNodes sys
+    (j, protoOrInFactView -> Just m') <- enumPrems ru
+    (k, m)                            <- zip [0..] m'
+    return (i, j, k, m)
+
 
 -- | @nodeRule v@ accesses the rule label of node @v@ under the assumption that
 -- it is present in the sequent.
@@ -797,7 +805,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms {-$ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
+         (GAto ato)  -> unifiableAtoms {-- $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
@@ -864,7 +872,7 @@ doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME J
         res = step forms solved
 
     step :: [(LNGuarded, System)] -> Bool -> [(LNGuarded, System)]
-    step forms solved = map simpGuard $ concat {-$ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
+    step forms solved = map simpGuard $ concat {-- $ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
 
     valuation s' = safePartialAtomValuation ctxt s'
 
@@ -1272,7 +1280,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 --   , ("system",          text $ show se)
 --   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
 --   , ("DEBUG: Nodes",    vcat $ map prettyNode $ M.toList $ L.get sNodes se)
---   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
+--   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-- $ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -1467,6 +1475,15 @@ instance HasFrees System where
                <*> mapFrees fun k
                <*> mapFrees fun l
 
+instance HasFrees Source where
+    foldFrees f th =
+        foldFrees f (L.get cdGoal th)   `mappend`
+        foldFrees f (L.get cdCases th)
+
+    foldFreesOcc  _ _ = const mempty
+
+    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
+                                    <*> mapFrees f (L.get cdCases th)
 
 -- Special comparison functions to ignore new var instantiations
 ----------------------------------------------------------------

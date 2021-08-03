@@ -66,7 +66,7 @@ import           Theory                       (
     openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory
   )
-import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver, apDefaultHeuristic)
+import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
@@ -79,7 +79,6 @@ import           Web.Types
 import           Yesod.Core
 
 import           Control.Monad.Trans.Resource (runResourceT)
-import           Control.Monad.Trans.Unlift
 
 import           Data.Label
 import           Data.Maybe
@@ -103,8 +102,7 @@ import           Control.Applicative
 import           Control.Concurrent
 import qualified Control.Concurrent.Thread    as Thread ( forkIO )
 import           Control.DeepSeq
-import           Control.Exception.Base
-import qualified Control.Exception.Lifted     as E
+import           Control.Exception.Base       as E
 import           Control.Monad
 import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
@@ -300,11 +298,11 @@ getThreads = do
 ------------------------------------------------------------------------------
 
 -- | Print exceptions, if they happen.
-traceExceptions :: MonadBaseControl IO m => String -> m a -> m a
+traceExceptions :: String -> IO a -> IO a
 traceExceptions info =
     E.handle handler
   where
-    handler :: MonadBaseControl IO m => E.SomeException -> m a
+    handler :: E.SomeException -> IO a
     handler e =
       trace (info ++ ": exception `" ++ show e ++ "'") $ E.throwIO e
 
@@ -329,7 +327,7 @@ responseToJson = go
 -- | Fully evaluate a value in a thread that can be canceled.
 evalInThread :: NFData a
              => IO a
-             -> Handler (Either SomeException a)
+             -> Handler (Either E.SomeException a)
 evalInThread io = do
     renderF <- getUrlRender
     maybeRoute <- getCurrentRoute
@@ -594,11 +592,9 @@ getTheoryPathMR idx path = do
     -- Handle method paths by trying to solve the given goal/method
     --
     go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-        (\thy -> return $ applyMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> return $ applyMethodAtPath thy lemma proofPath (tiAutoProver ti) i)
         (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (tiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them
@@ -622,17 +618,13 @@ getTheoryPathDiffMR idx path = do
     -- Handle method paths by trying to solve the given goal/method
     --
     goDiff _ (DiffTheoryMethod s lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath heuristic i)
+        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath (dtiAutoProver ti) i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof s lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (dtiAutoProver ti)
     goDiff _ (DiffTheoryDiffMethod lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath heuristic i)
+        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath (dtiAutoProver ti) i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
-      where
-        heuristic = apDefaultHeuristic (dtiAutoProver ti)
 
     --
     -- Handle generic paths by trying to render them

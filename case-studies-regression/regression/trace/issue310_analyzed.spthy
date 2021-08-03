@@ -19,8 +19,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/trace/issue310.spthy
@@ -29,7 +27,7 @@ analyzing: examples/regression/trace/issue310.spthy
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.045307s
+  processing time: 0.045344448s
 
 
 ------------------------------------------------------------------------------
@@ -40,7 +38,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.045307s
+  processing time: 0.045344448s
 
 
 ==============================================================================

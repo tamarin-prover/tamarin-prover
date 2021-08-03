@@ -4,11 +4,11 @@
 -- |
 -- Copyright   : (c) 2010-12 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Positions and replacement in terms.
-module Term.Positions 
+module Term.Positions
 
 where
 
@@ -43,6 +43,32 @@ atPos (viewTerm -> FApp  _ as)              (i:ps) = case atMay as i of
 atPos (viewTerm -> Lit _)                   (_:_)  =
     error "Term.Positions.atPos: invalid position given"
 
+-- | @t `atPosMay` p@ returns Just the subterm of term @t@ at position @p@
+--   if it exists, Nothing otherwise.
+atPosMay :: Ord a => Term a -> Position -> Maybe (Term a)
+atPosMay t                                     []     = Just t
+atPosMay (viewTerm -> FApp (AC _) (a:_))       (0:ps) =
+    a `atPosMay` ps
+atPosMay (viewTerm -> FApp (AC _) [_])         _      = Nothing
+atPosMay (viewTerm -> FApp fsym@(AC _) (_:as)) (1:ps) =
+    (fApp fsym as) `atPosMay` ps
+atPosMay (viewTerm -> FApp (AC _) [])          _      = Nothing
+atPosMay (viewTerm -> FApp  _ as)              (i:ps) = do
+  a <- as `atMay` i
+  t <- a `atPosMay` ps
+  return t
+atPosMay (viewTerm -> Lit _)                   (_:_)  = Nothing
+
+-- | @findPos t s@ returns the position of the term @s@ inside term @t@ if @s@
+--  is a subterm, or Nothing otherwise.
+findPos :: Ord a => Term a -> Term a -> Maybe [Position]
+findPos t t' | t == t'            = Just [[]]
+findPos t (viewTerm -> FApp _ ts) = foldr f Nothing $ zip [0..] $ map (findPos t) ts
+  where
+    f (_, Nothing) s        = s
+    f (x, Just p)  Nothing  = Just (map (x:) p)
+    f (x, Just p)  (Just s) = Just (s++(map (x:) p))
+findPos _ (viewTerm -> Lit _)     = Nothing
 
 -- | @t `replacePos` (s,p)@ returns the term @t'@ where the subterm at position @p@
 --   is replaced by @s@. The standard notation for @t `replacePos` (s,p)@ is @t[s]_p@.
@@ -94,3 +120,17 @@ positions =
 
     position i len | i == len - 1 = replicate i 1
                    | otherwise    = replicate i 1 ++ [0]
+
+-- Return the deepest "protected" subterm with respect to a given position
+-- NB: here anything but a pair or an AC symbol is an "encryption"!
+deepestProtSubterm :: (Show a, Eq a) => Term a -> Position -> Maybe (Term a)
+deepestProtSubterm term = f term term
+  where
+    f st _                         []
+       | st == term && (isPair term || isAC term) = Nothing
+       -- If there is no protected subterm, return Nothig!
+    f st _                         []
+       | otherwise                                = Just st
+    f st t@(viewTerm -> FApp _ as) (i:is) = case atMay as i of
+          Nothing -> error "deepestProtSubterm: invalid position given"
+          Just a  -> f (if isPair t || isAC t then st else t) a is

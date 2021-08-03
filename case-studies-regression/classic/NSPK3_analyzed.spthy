@@ -361,8 +361,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/classic/NSPK3.spthy
@@ -371,7 +369,7 @@ analyzing: examples/classic/NSPK3.spthy
 analyzed: examples/classic/NSPK3.spthy
 
   output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 2.171367s
+  processing time: 1.90254142s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)
@@ -385,7 +383,7 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 2.171367s
+  processing time: 1.90254142s
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

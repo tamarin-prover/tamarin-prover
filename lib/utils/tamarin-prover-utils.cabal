@@ -2,7 +2,7 @@ name:               tamarin-prover-utils
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            1.5.1
+version:            1.7.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -71,7 +71,6 @@ library
         Extension.Prelude
         Extension.Data.Label
         Extension.Data.Monoid
-        Extension.Data.Bounded
         Extension.Data.ByteString
 
         Text.Dot

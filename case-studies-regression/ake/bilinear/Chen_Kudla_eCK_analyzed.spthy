@@ -510,8 +510,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
@@ -520,7 +518,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 38.471097s
+  processing time: 55.676907561s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ------------------------------------------------------------------------------
@@ -531,7 +529,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 38.471097s
+  processing time: 55.676907561s
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

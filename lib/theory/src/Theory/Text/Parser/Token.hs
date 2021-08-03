@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -7,9 +6,12 @@
 -- Portability : portable
 --
 -- Tokenizing infrastructure
+
+{-# LANGUAGE FlexibleInstances #-}
 module Theory.Text.Parser.Token (
+    lexeme
   -- * Symbols
-    symbol
+  , symbol
   , symbol_
   , dot
   , comma
@@ -111,6 +113,8 @@ import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
 import           Theory
+import qualified Control.Monad.Catch as Catch
+import Data.Functor.Identity
 
 
 ------------------------------------------------------------------------------
@@ -119,6 +123,10 @@ import           Theory
 
 -- | A parser for a stream of tokens.
 type Parser a = Parsec String MaudeSig a
+
+-- We can throw exceptions, but not catch them
+instance Catch.MonadThrow (ParsecT String MaudeSig Data.Functor.Identity.Identity) where
+    throwM e = fail (show e)
 
 -- Use Parsec's support for defining token parsers.
 spthy :: T.TokenParser MaudeSig
@@ -159,6 +167,9 @@ parseString srcDesc parser =
 
 -- Token parsers
 ----------------
+
+lexeme :: ParsecT String MaudeSig Identity a -> ParsecT String MaudeSig Identity a
+lexeme = T.lexeme spthy
 
 -- | Parse a symbol.
 symbol :: String -> Parser String
@@ -221,7 +232,7 @@ naturalSubscript = T.lexeme spthy $ do
   where
     subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
-    
+
 -- | A comma separated list of elements.
 commaSep :: Parser a -> Parser [a]
 commaSep = T.commaSep spthy
@@ -389,7 +400,7 @@ opLTrue = symbol_ "⊤" <|> T.reserved spthy "T"
 
 -- | The requires-a-premise operator, @▶ subscript-idx@.
 opRequires :: Parser PremIdx
-opRequires = (PremIdx . fromIntegral) <$> (symbol "▶" *> naturalSubscript)
+opRequires = PremIdx . fromIntegral <$> (symbol "▶" *> naturalSubscript)
 
 -- | The chain operator @~~>@.
 opChain :: Parser ()

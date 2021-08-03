@@ -1648,8 +1648,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
@@ -1658,7 +1656,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 16.64442s
+  processing time: 25.332039896s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   one_count_foreach_login (all-traces): verified (11 steps)
@@ -1675,7 +1673,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 16.64442s
+  processing time: 25.332039896s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   one_count_foreach_login (all-traces): verified (11 steps)

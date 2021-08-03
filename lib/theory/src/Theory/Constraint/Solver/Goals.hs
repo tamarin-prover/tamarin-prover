@@ -21,6 +21,7 @@ module Theory.Constraint.Solver.Goals (
   , AnnotatedGoal
   , openGoals
   , solveGoal
+  , plainOpenGoals
   ) where
 
 -- import           Debug.Trace
@@ -42,7 +43,7 @@ import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
 import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
 import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
-import           Extension.Data.Label
+import           Extension.Data.Label                    as L
 
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -103,7 +104,8 @@ openGoals sys = do
         ChainG c p     ->
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
-                  not solved && allMsgVarsKnownEarlier c args
+              -- do not solve Union conclusions if they contain only known msg vars
+                  not solved && not (allMsgVarsKnownEarlier c args)
               -- open chains for msg vars are only solved if N5'' is applicable
               Just (DnK,  m) | isMsgVar m          -> (not solved) &&
                                                       (chainToEquality m c p)
@@ -170,9 +172,8 @@ openGoals sys = do
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]
 
-
-    allMsgVarsKnownEarlier (i,_) args =
-        all (`elem` earlierMsgVars) (filter isMsgVar args)
+    allMsgVarsKnownEarlier (i,_) args = (all isMsgVar args) &&
+        (all (`elem` earlierMsgVars) args)
       where earlierMsgVars = do (j, _, t) <- allKUActions sys
                                 guard $ isMsgVar t && alwaysBefore sys j i
                                 return t
@@ -192,6 +193,15 @@ openGoals sys = do
                               map (\(i, _, m) -> (m, i)) $ allKUActions sys
             -- and check whether any of them happens before the KD-conclusion
             ku_before   = any (\(_, x) -> alwaysBefore sys x (fst conc)) ku_start
+
+
+-- | The list of all open goals left together with their status.
+plainOpenGoals:: System -> [(Goal, GoalStatus)]
+plainOpenGoals sys = openGoalsLeft
+  where
+    openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
+    isOpen(_, status) = case status of
+      GoalStatus s _ _ -> not s
 
 ------------------------------------------------------------------------------
 -- Solving 'Goal's
@@ -308,7 +318,6 @@ solveChain rules (c, p) = do
                       _              -> error $ "solveChain: impossible"
             caseName (viewTerm -> FApp o _)    = showFunSymName o
             caseName (viewTerm -> Lit l)       = showLitName l
-            caseName t                         = show t
         contradictoryIf (illegalCoerce pRule mPrem)
         return (caseName mPrem)
      `disjunction`
