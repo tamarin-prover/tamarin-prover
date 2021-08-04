@@ -22,10 +22,10 @@ our parser is stateful and remembers what functions have been defined. It will
 only parse function applications of defined functions.
 
     signature_spec := functions | equations | built_in
-    functions      := 'functions' ':' function_sym (',' function_sym)*
+    functions      := 'functions' ':' function_sym (',' function_sym)* [',']
     function_sym   := ident '/' arity ['[private]']
     arity          := digit+
-    equations      := 'equations' ':' equation (',' equation)*
+    equations      := 'equations' ':' equation (',' equation)* [',']
     equation       := (term '=' term)
 
 Note that the equations must be convergent and have the
@@ -38,7 +38,7 @@ is special. It refers to the equations given in Section [Cryptographic
 Messages](004_cryptographic-messages.html#sec:equational-theories). You need to
 enable it to parse terms containing exponentiations, e.g.,  g ^ x.
 
-    built_in       := 'builtins' ':' built_ins (',' built_ins)*
+    built_in       := 'builtins' ':' built_ins (',' built_ins)* [',']
     built_ins      := 'diffie-hellman'
                     | 'hashing' | 'symmetric-encryption'
                     | 'asymmetric-encryption' | 'signing'
@@ -60,7 +60,7 @@ specified in the body of the theory.
             [let_block]
             '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
     modulo     := '(' 'modulo' ('E' | 'AC') ')'
-    rule_attrs := '[' rule_attr (',' rule_attr)* ']'
+    rule_attrs := '[' rule_attr (',' rule_attr)* [','] ']'
     rule_attr  := ('color=' | 'colour=') hexcolor
     let_block  := 'let' (msg_var '=' msetterm)+ 'in'
     msg_var    := ident ['.' natural] [':' 'msg']
@@ -101,16 +101,16 @@ quantifier.
              [trace_quantifier]
              '"' formula '"'
              proof_skeleton
-    lemma_attrs      := '[' lemma_attr (',' lemma_attr)* ']'
+    lemma_attrs      := '[' lemma_attr (',' lemma_attr)* [','] ']'
     lemma_attr       := 'sources' | 'reuse' | 'use_induction' |
                              'hide_lemma=' ident | 'heuristic=' heuristic
     trace_quantifier := 'all-traces' | 'exists-trace'
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attrs      := '[' ('sources' | 'reuse' | 'use_induction' | 
-                             'hide_lemma=' ident | 'heuristic=' heuristic |
-                             'left' | 'right') ']'
+    lemma_attr      := 'sources' | 'reuse' | 'use_induction' | 
+                            'hide_lemma=' ident | 'heuristic=' heuristic |
+                            'left' | 'right' 
 
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
