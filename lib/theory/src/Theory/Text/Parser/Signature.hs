@@ -132,7 +132,7 @@ equations =
       symbol "equations" *> colon *> commaSep1 equation *> pure ()
     where
       equation = do
-        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        rrule <- RRule <$> msetterm True llitNoPub <*> (equalSign *> msetterm True llitNoPub)
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyState (addCtxtStRule str)
