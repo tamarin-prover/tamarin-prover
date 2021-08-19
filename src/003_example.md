@@ -78,7 +78,7 @@ default Tamarin setup, there is only one public channel modeling the network
 controlled by the adversary, i.e., the adversary receives all messages from the
 `Out( )` facts, and generates the protocol's inputs in the `In( )` facts.
 Private channels can be added if required, see [Channel
-Models](009_advanced-features.html#sec:channel-models) for details.]
+Models](010_advanced-features.html#sec:channel-models) for details.]
 
 The example starts with the model of a public key infrastructure (PKI). Again, 
 we use facts to store information about the state given by their arguments. The rules 
@@ -94,7 +94,7 @@ modeling the registration of a public key:
 Here the only premise is an instance of the `Fr` fact. The `Fr` fact is
 a built-in fact that denotes a freshly generated name. This mechanism is used to
 model random numbers such as nonces or keys (see [Model
-Specification](005_protocol-specification.html#sec:model-specification) for
+Specification](005_protocol-specification-rules.html#sec:model-specification) for
 details).
 
 In Tamarin, the sort of a variable is expressed using prefixes:
@@ -123,7 +123,7 @@ In the example, we allow the adversary to retrieve any public key
 using the following rule. Essentially, it reads a public-key database
 entry and sends the public key to the network using the built-in fact
 `Out`, which denotes sending a message to the network (see the section on 
-[Model Specification](005_protocol-specification.html#sec:model-specification)
+[Model Specification](005_protocol-specification-rules.html#sec:model-specification)
 for more information).
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=23 upper=26}
@@ -238,7 +238,7 @@ you will then see the following output on the command line:
 At this point, if there were any syntax or wellformedness errors (for example if
 the same fact is used with different arities an error would be displayed) they
 would be displayed. See the part on [Modeling
-Issues](008_modeling-issues.html#sec:modeling-issues) for details on how to deal
+Issues](009_modeling-issues.html#sec:modeling-issues) for details on how to deal
 with such errors.
 
 However, there are no such errors in our example, and thus the above command

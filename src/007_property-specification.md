@@ -15,7 +15,7 @@ system. The system's state is a multiset (bag) of facts and the
 initial system state is the empty multiset.  The rules define how the
 system can make a transition to a new state. The types of facts and
 their use are described in Section
-[Rules](005_protocol-specification.html#sec:rules). Here we focus on
+[Rules](005_protocol-specification-rules.html#sec:rules). Here we focus on
 the *action facts*, which are used to reason about a protocol's
 behaviour.
 

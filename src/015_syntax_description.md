@@ -47,7 +47,7 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
 
 A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified heuristic can be any of those discussed in
-Section [Heuristics](009_advanced-features.html#sec:heuristics).
+Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
     global_heuristic := 'heuristic' ':' heuristic
     heuristic        := alpha+
@@ -194,7 +194,7 @@ information.
 Fact annotations can be used to adjust the priority of corresponding
 goals in the heuristics, or influence the precomputation step performed by
 Tamarin, as described in
-Section [Advanced Features](009_advanced-features.html#sec:fact-annotations).
+Section [Advanced Features](010_advanced-features.html#sec:fact-annotations).
 
 Formulas are trace formulas as described previously. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
