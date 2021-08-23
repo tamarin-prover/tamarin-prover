@@ -55,7 +55,7 @@ clean:	tamarin-clean sapic-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.7.0
+VERSION=1.6.1
 
 ###############################################################################
 ## Case Studies

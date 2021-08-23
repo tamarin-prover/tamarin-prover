@@ -7,6 +7,7 @@ Obervational Equivalence authors:
   Ralf Sasse    <ralf.sasse@gmail.com>
 
 Contributors:
-  protocol models, GUI:   Cas Cremers <cas.cremers@cs.ox.ac.uk>
-  original web interface: Cedric Staub <cs@cssx.ch
-  YubiKey models:         Robert Kuennemann <kunneman@lsv.ens-cachan.fr>
+  protocol models, GUI:   Cas Cremers <cremers@cispa.de>
+  original web interface: Cedric Staub <cs@cssx.ch>
+  YubiKey models, SAPIC:  Robert Kuennemann <robert.kuennemann@cispa.de>
+  and many others
