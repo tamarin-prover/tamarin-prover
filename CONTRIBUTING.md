@@ -44,8 +44,7 @@ The Tamarin Prover is distributed through a number of channels: source and binar
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
 
-   1. run 'make case-studies' and compare 'case-studies/' with
-      'case-studies-regression/'
+   1. run 'python3 regressionTests.py -ed system.info' and check for any error
 
    2. run 'tamarin-prover test'
 
@@ -57,7 +56,7 @@ The Tamarin Prover is distributed through a number of channels: source and binar
    4. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
       in data/ so:
       'tamarin-prover variants > tmp.txt'
-      'diff tmp.txt data/intrudervariants_both_bp_dh_for_diff.txt'
+      'diff tmp.txt data/intruder_variants_both_bp_dh_for_diff.txt'
       which should be empty.
 
    5. call 'tamarin-prover' and copy CSF'12 interactive command and
@@ -104,19 +103,11 @@ Before submitting a pull request, please double check that your changes do not b
 
 ```
 rm -rf case-studies
-make case-studies
-diff -r case-studies case-studies-regression
+python3 regressionTests.py --ed system.info
 ```
 
-This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on). If that is the only change, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
+This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. The script shows any differences between the outputs, and also compares the runtimes. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on), hence the times are shown using a color code: green for small changes, yellow for bigger changes, and red for significant changes. If small runtime changes are only differences, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
 
-If you are running the regression on a server you can run multiple case studies in parallel by adding the "-j #" parameter where # is the number of parallel runs. Note that your machine should have 16GB of memory per run, and each run uses 3 threads already. For example:
-
-```
-make -j 6 case-studies
-```
-
-to run 6 case studies in parallel.
 
 Editor support
 --------------
@@ -144,4 +135,3 @@ git subtree push --prefix etc https://github.com/$github_user/editors $branch
 ```
 git subtree add --prefix $local_dir $remote_url $remote_branch --squash
 ```
-
