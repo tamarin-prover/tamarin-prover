@@ -15,46 +15,47 @@ guarded formula characterizing all satisfying traces:
 "∃ #i #j x y. (Secret( x ) @ #i) ∧ (Secret( y ) @ #j) ∧ ¬(x = y)"
 */
 simplify
-solve( state_11( x ) ▶₀ #i )
+solve( State_11( x ) ▶₀ #i )
   case news_0_1
-  solve( state_11( y ) ▶₀ #j )
+  solve( State_11( y ) ▶₀ #j )
     case news_0_1
     SOLVED // trace found
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) news_0_1[color=#ffffff process=new s;]:
-   [ state_1( ), Fr( s ) ] --> [ state_11( s ) ]
+rule (modulo E) news_0_1[color=#ffffff, process="new s;"]:
+   [ State_1( ), Fr( s ) ] --> [ State_11( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSecrets_0_11[color=#ffffff process=event Secret( s );]:
-   [ state_11( s ) ] --[ Secret( s ) ]-> [ state_111( s ) ]
+rule (modulo E) eventSecrets_0_11[color=#ffffff,
+                                  process="event Secret( s );"]:
+   [ State_11( s ) ] --[ Secret( s ) ]-> [ State_111( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outs_0_111[color=#ffffff process=out(s);]:
-   [ state_111( s ) ] --> [ state_1111( s ), Out( s ) ]
+rule (modulo E) outs_0_111[color=#ffffff, process="out(s);"]:
+   [ State_111( s ) ] --> [ State_1111( s ), Out( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#ffffff process=0]:
-   [ state_1111( s ) ] --> [ ]
+rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
+   [ State_1111( s ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -77,7 +78,7 @@ analyzing: examples/sapic/fast/basic/replication.spthy
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.07138s
+  processing time: 0.070310397s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -88,7 +89,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.07138s
+  processing time: 0.070310397s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ==============================================================================

@@ -199,8 +199,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/xor/basicfunctionality/xor-basic.spthy
@@ -209,7 +207,7 @@ analyzing: examples/features/xor/basicfunctionality/xor-basic.spthy
 analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
 
   output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 0.879543s
+  processing time: 0.860298883s
   secrecybroken (all-traces): falsified - found trace (19 steps)
 
 ------------------------------------------------------------------------------
@@ -220,7 +218,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
 
   output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 0.879543s
+  processing time: 0.860298883s
   secrecybroken (all-traces): falsified - found trace (19 steps)
 
 ==============================================================================

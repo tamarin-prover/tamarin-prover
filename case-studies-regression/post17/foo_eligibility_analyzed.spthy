@@ -319,8 +319,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/foo_eligibility.spthy
@@ -329,7 +327,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.687395s
+  processing time: 0.817489894s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -342,7 +340,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.687395s
+  processing time: 0.817489894s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

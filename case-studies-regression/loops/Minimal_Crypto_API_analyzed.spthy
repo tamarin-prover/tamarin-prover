@@ -72,8 +72,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/Minimal_Crypto_API.spthy
@@ -82,7 +80,7 @@ analyzing: examples/loops/Minimal_Crypto_API.spthy
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          examples/loops/Minimal_Crypto_API.spthy.tmp
-  processing time: 0.06403s
+  processing time: 0.077478874s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 
@@ -94,7 +92,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          examples/loops/Minimal_Crypto_API.spthy.tmp
-  processing time: 0.06403s
+  processing time: 0.077478874s
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 

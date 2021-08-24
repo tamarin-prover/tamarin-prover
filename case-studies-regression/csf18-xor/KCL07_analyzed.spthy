@@ -523,8 +523,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/KCL07.spthy
@@ -533,7 +531,7 @@ analyzing: examples/csf18-xor/KCL07.spthy
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.426343s
+  processing time: 1.347348191s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -545,7 +543,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.426343s
+  processing time: 1.347348191s
   recentalive_tag (all-traces): verified (128 steps)
   executable (exists-trace): verified (17 steps)
 

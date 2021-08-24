@@ -26,7 +26,7 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( HonestKey( sk ) @ #i )
   case eventHonestKeynsk_0_1112111111
-  solve( state_1112111111( ~nsk, ~sk, pki, user, lock ) ▶₀ #i )
+  solve( State_1112111111( ~nsk, ~sk, pki, user, lock ) ▶₀ #i )
     case lookupUSERuserassk_0_111211111
     solve( !KU( ~nsk ) @ #vk )
       case outsk_0_111211111111111111
@@ -35,7 +35,7 @@ solve( HonestKey( sk ) @ #i )
   qed
 next
   case eventHonestKeysk_0_11111111
-  solve( state_11111111( ~sk, lock, pki, user ) ▶₀ #i )
+  solve( State_11111111( ~sk, lock, pki, user ) ▶₀ #i )
     case lockSERVERuser_0_1111111
     solve( !KU( ~sk ) @ #vk )
       case outsk_0_111211111111111111
@@ -44,7 +44,7 @@ next
   qed
 next
   case eventHonestKeysk_0_11111111111
-  solve( state_11111111111( ~sk, lock, pki, user ) ▶₀ #i )
+  solve( State_11111111111( ~sk, lock, pki, user ) ▶₀ #i )
     case insertUSERusersk_0_1111111111
     solve( !KU( ~sk ) @ #vk )
       case outsk_0_111211111111111111
@@ -53,502 +53,554 @@ next
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newpki_0_1[color=#ffffff process=new pki;]:
-   [ state_1( ), Fr( pki ) ] --> [ state_11( pki ) ]
+rule (modulo E) newpki_0_1[color=#ffffff, process="new pki;"]:
+   [ State_1( ), Fr( pki ) ] --> [ State_11( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=!]:
-   [ state_11( pki ) ] --> [ !semistate_111( pki ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="!"]:
+   [ State_11( pki ) ] --> [ !Semistate_111( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_11[color=#ffffff process=!]:
-   [ !semistate_111( pki ) ] --> [ state_111( pki ) ]
+rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+   [ !Semistate_111( pki ) ] --> [ State_111( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=|]:
-   [ state_111( pki ) ] --> [ state_1111( pki ), state_1112( pki ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="|"]:
+   [ State_111( pki ) ] --> [ State_1111( pki ), State_1112( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#806040 process=|]:
-   [ state_1111( pki ) ] --> [ state_11111( pki ), state_11112( pki ) ]
+rule (modulo E) p_0_1111[color=#806040, process="|"]:
+   [ State_1111( pki ) ] --> [ State_11111( pki ), State_11112( pki ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) innewuser_0_11111[color=#806040 process=in(<'new', user>);]:
-   [ state_11111( pki ), In( <'new', user> ) ]
+rule (modulo E) innewuser_0_11111[color=#806040,
+                                  process="in(<'new', user>);"]:
+   [ State_11111( pki ), In( <'new', user> ) ]
   -->
-   [ state_111111( pki, user ) ]
+   [ State_111111( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsk_0_111111[color=#806040 process=new ~sk;]:
-   [ state_111111( pki, user ), Fr( ~sk ) ]
+rule (modulo E) newsk_0_111111[color=#806040, process="new ~sk;"]:
+   [ State_111111( pki, user ), Fr( ~sk ) ]
   -->
-   [ state_1111111( ~sk, pki, user ) ]
+   [ State_1111111( ~sk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockSERVERuser_0_1111111[color=#806040 process=lock <'SERVER', user>;]:
-   [ state_1111111( ~sk, pki, user ), Fr( lock ) ]
+rule (modulo E) lockSERVERuser_0_1111111[color=#806040,
+                                         process="lock <'SERVER', user>;"]:
+   [ State_1111111( ~sk, pki, user ), Fr( lock ) ]
   --[
   Lock_0( '0', lock, <'SERVER', user> ),
   Lock( '0', lock, <'SERVER', user> )
   ]->
-   [ state_11111111( ~sk, lock, pki, user ) ]
+   [ State_11111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestKeysk_0_11111111[color=#806040 process=event HonestKey( ~sk );]:
-   [ state_11111111( ~sk, lock, pki, user ) ]
+rule (modulo E) eventHonestKeysk_0_11111111[color=#806040,
+                                            process="event HonestKey( ~sk );"]:
+   [ State_11111111( ~sk, lock, pki, user ) ]
   --[ HonestKey( ~sk ) ]->
-   [ state_111111111( ~sk, lock, pki, user ) ]
+   [ State_111111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertSERVERpkiuserpksk_0_111111111[color=#806040 process=insert <'SERVER', pki, user>,pk(~sk);]:
-   [ state_111111111( ~sk, lock, pki, user ) ]
+rule (modulo E) insertSERVERpkiuserpksk_0_111111111[color=#806040,
+                                                    process="insert <'SERVER', pki, user>,pk(~sk);"]:
+   [ State_111111111( ~sk, lock, pki, user ) ]
   --[ Insert( <'SERVER', pki, user>, pk(~sk) ) ]->
-   [ state_1111111111( ~sk, lock, pki, user ) ]
+   [ State_1111111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertUSERusersk_0_1111111111[color=#806040 process=insert <'USER', user>,~sk;]:
-   [ state_1111111111( ~sk, lock, pki, user ) ]
+rule (modulo E) insertUSERusersk_0_1111111111[color=#806040,
+                                              process="insert <'USER', user>,~sk;"]:
+   [ State_1111111111( ~sk, lock, pki, user ) ]
   --[ Insert( <'USER', user>, ~sk ) ]->
-   [ state_11111111111( ~sk, lock, pki, user ) ]
+   [ State_11111111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventHonestKeysk_0_11111111111[color=#806040 process=event HonestKey( ~sk );]:
-   [ state_11111111111( ~sk, lock, pki, user ) ]
+rule (modulo E) eventHonestKeysk_0_11111111111[color=#806040,
+                                               process="event HonestKey( ~sk );"]:
+   [ State_11111111111( ~sk, lock, pki, user ) ]
   --[ HonestKey( ~sk ) ]->
-   [ state_111111111111( ~sk, lock, pki, user ) ]
+   [ State_111111111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockSERVERuser_0_111111111111[color=#806040 process=unlock <'SERVER', user>;]:
-   [ state_111111111111( ~sk, lock, pki, user ) ]
+rule (modulo E) unlockSERVERuser_0_111111111111[color=#806040,
+                                                process="unlock <'SERVER', user>;"]:
+   [ State_111111111111( ~sk, lock, pki, user ) ]
   --[
   Unlock_0( '0', lock, <'SERVER', user> ),
   Unlock( '0', lock, <'SERVER', user> )
   ]->
-   [ state_1111111111111( ~sk, lock, pki, user ) ]
+   [ State_1111111111111( ~sk, lock, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outpksk_0_1111111111111[color=#806040 process=out(pk(~sk));]:
-   [ state_1111111111111( ~sk, lock, pki, user ) ]
+rule (modulo E) outpksk_0_1111111111111[color=#806040,
+                                        process="out(pk(~sk));"]:
+   [ State_1111111111111( ~sk, lock, pki, user ) ]
   -->
-   [ state_11111111111111( ~sk, lock, pki, user ), Out( pk(~sk) ) ]
+   [ State_11111111111111( ~sk, lock, pki, user ), Out( pk(~sk) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111111111111[color=#806040 process=0]:
-   [ state_11111111111111( ~sk, lock, pki, user ) ] --> [ ]
+rule (modulo E) p_0_11111111111111[color=#806040, process="0"]:
+   [ State_11111111111111( ~sk, lock, pki, user ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrenewuserpknsk_0_11112[color=#806040 process=in(<'renew', user, pk(nsk)>);]:
-   [ state_11112( pki ), In( <'renew', user, pk(nsk)> ) ]
+rule (modulo E) inrenewuserpknsk_0_11112[color=#806040,
+                                         process="in(<'renew', user, pk(nsk)>);"]:
+   [ State_11112( pki ), In( <'renew', user, pk(nsk)> ) ]
   -->
-   [ state_111121( nsk, pki, user ) ]
+   [ State_111121( nsk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insignrenewuserpknsksk_0_111121[color=#806040 process=in(sign(<'renew', user, pk(nsk)>, sk));]:
+rule (modulo E) insignrenewuserpknsksk_0_111121[color=#806040,
+                                                process="in(sign(<'renew', user, pk(nsk)>, sk));"]:
    [
-   state_111121( nsk, pki, user ), In( sign(<'renew', user, pk(nsk)>, sk) )
+   State_111121( nsk, pki, user ), In( sign(<'renew', user, pk(nsk)>, sk) )
    ]
   -->
-   [ state_1111211( nsk, pki, sk, user ) ]
+   [ State_1111211( nsk, pki, sk, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockSERVERuser_0_1111211[color=#806040 process=lock <'SERVER', user>;]:
-   [ state_1111211( nsk, pki, sk, user ), Fr( lock.1 ) ]
+rule (modulo E) lockSERVERuser_0_1111211[color=#806040,
+                                         process="lock <'SERVER', user>;"]:
+   [ State_1111211( nsk, pki, sk, user ), Fr( lock.1 ) ]
   --[
   Lock_1( '1', lock.1, <'SERVER', user> ),
   Lock( '1', lock.1, <'SERVER', user> )
   ]->
-   [ state_11112111( nsk, pki, sk, user, lock.1 ) ]
+   [ State_11112111( nsk, pki, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) lockSERVERuser_0_1111211[color=#806040 process=lock <'SERVER', user>;]:
-     [ state_1111211( nsk, pki, sk, user ), Fr( lock ) ]
+  rule (modulo AC) lockSERVERuser_0_1111211[color=#806040,
+                                            process="lock <'SERVER', user>;"]:
+     [ State_1111211( nsk, pki, sk, user ), Fr( lock ) ]
     --[
     Lock_1( '1', lock, <'SERVER', user> ),
     Lock( '1', lock, <'SERVER', user> )
     ]->
-     [ state_11112111( nsk, pki, sk, user, lock ) ]
+     [ State_11112111( nsk, pki, sk, user, lock ) ]
   */
 
-rule (modulo E) lookupSERVERpkiuseraspksk_0_11112111[color=#806040 process=lookup <'SERVER', pki, user> as pksk]:
-   [ state_11112111( nsk, pki, sk, user, lock.1 ) ]
+rule (modulo E) lookupSERVERpkiuseraspksk_0_11112111[color=#806040,
+                                                     process="lookup <'SERVER', pki, user> as pksk"]:
+   [ State_11112111( nsk, pki, sk, user, lock.1 ) ]
   --[ IsIn( <'SERVER', pki, user>, pksk ) ]->
-   [ state_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) lookupSERVERpkiuseraspksk_0_11112111[color=#806040 process=lookup <'SERVER', pki, user> as pksk]:
-     [ state_11112111( nsk, pki, sk, user, lock ) ]
+  rule (modulo AC) lookupSERVERpkiuseraspksk_0_11112111[color=#806040,
+                                                        process="lookup <'SERVER', pki, user> as pksk"]:
+     [ State_11112111( nsk, pki, sk, user, lock ) ]
     --[ IsIn( <'SERVER', pki, user>, pksk ) ]->
-     [ state_111121111( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_111121111( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) lookupSERVERpkiuseraspksk_1_11112111[color=#806040 process=lookup <'SERVER', pki, user> as pksk]:
-   [ state_11112111( nsk, pki, sk, user, lock.1 ) ]
+rule (modulo E) lookupSERVERpkiuseraspksk_1_11112111[color=#806040,
+                                                     process="lookup <'SERVER', pki, user> as pksk"]:
+   [ State_11112111( nsk, pki, sk, user, lock.1 ) ]
   --[ IsNotSet( <'SERVER', pki, user> ) ]->
-   [ state_111121112( nsk, pki, sk, user, lock.1 ) ]
+   [ State_111121112( nsk, pki, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) lookupSERVERpkiuseraspksk_1_11112111[color=#806040 process=lookup <'SERVER', pki, user> as pksk]:
-     [ state_11112111( nsk, pki, sk, user, lock ) ]
+  rule (modulo AC) lookupSERVERpkiuseraspksk_1_11112111[color=#806040,
+                                                        process="lookup <'SERVER', pki, user> as pksk"]:
+     [ State_11112111( nsk, pki, sk, user, lock ) ]
     --[ IsNotSet( <'SERVER', pki, user> ) ]->
-     [ state_111121112( nsk, pki, sk, user, lock ) ]
+     [ State_111121112( nsk, pki, sk, user, lock ) ]
   */
 
-rule (modulo E) ifpkskpksk_0_111121111[color=#806040 process=if pksk=pk(sk)]:
-   [ state_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) ifpkskpksk_0_111121111[color=#806040,
+                                       process="if pksk=pk(sk)"]:
+   [ State_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
   --[ Pred_Eq( pksk, pk(sk) ) ]->
-   [ state_1111211111( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_1111211111( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) ifpkskpksk_0_111121111[color=#806040 process=if pksk=pk(sk)]:
-     [ state_111121111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) ifpkskpksk_0_111121111[color=#806040,
+                                          process="if pksk=pk(sk)"]:
+     [ State_111121111( nsk, pki, pksk, sk, user, lock ) ]
     --[ Pred_Eq( pksk, pk(sk) ) ]->
-     [ state_1111211111( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_1111211111( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) ifpkskpksk_1_111121111[color=#806040 process=if pksk=pk(sk)]:
-   [ state_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) ifpkskpksk_1_111121111[color=#806040,
+                                       process="if pksk=pk(sk)"]:
+   [ State_111121111( nsk, pki, pksk, sk, user, lock.1 ) ]
   --[ Pred_Not_Eq( pksk, pk(sk) ) ]->
-   [ state_1111211112( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_1111211112( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) ifpkskpksk_1_111121111[color=#806040 process=if pksk=pk(sk)]:
-     [ state_111121111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) ifpkskpksk_1_111121111[color=#806040,
+                                          process="if pksk=pk(sk)"]:
+     [ State_111121111( nsk, pki, pksk, sk, user, lock ) ]
     --[ Pred_Not_Eq( pksk, pk(sk) ) ]->
-     [ state_1111211112( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_1111211112( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) deleteSERVERpkiuser_0_1111211111[color=#806040 process=delete <'SERVER', pki, user>;]:
-   [ state_1111211111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) deleteSERVERpkiuser_0_1111211111[color=#806040,
+                                                 process="delete <'SERVER', pki, user>;"]:
+   [ State_1111211111( nsk, pki, pksk, sk, user, lock.1 ) ]
   --[ Delete( <'SERVER', pki, user> ) ]->
-   [ state_11112111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_11112111111( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) deleteSERVERpkiuser_0_1111211111[color=#806040 process=delete <'SERVER', pki, user>;]:
-     [ state_1111211111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) deleteSERVERpkiuser_0_1111211111[color=#806040,
+                                                    process="delete <'SERVER', pki, user>;"]:
+     [ State_1111211111( nsk, pki, pksk, sk, user, lock ) ]
     --[ Delete( <'SERVER', pki, user> ) ]->
-     [ state_11112111111( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_11112111111( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) insertSERVERpkiuserpknsk_0_11112111111[color=#806040 process=insert <'SERVER', pki, user>,pk(nsk);]:
-   [ state_11112111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) insertSERVERpkiuserpknsk_0_11112111111[color=#806040,
+                                                       process="insert <'SERVER', pki, user>,pk(nsk);"]:
+   [ State_11112111111( nsk, pki, pksk, sk, user, lock.1 ) ]
   --[ Insert( <'SERVER', pki, user>, pk(nsk) ) ]->
-   [ state_111121111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_111121111111( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) insertSERVERpkiuserpknsk_0_11112111111[color=#806040 process=insert <'SERVER', pki, user>,pk(nsk);]:
-     [ state_11112111111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) insertSERVERpkiuserpknsk_0_11112111111[color=#806040,
+                                                          process="insert <'SERVER', pki, user>,pk(nsk);"]:
+     [ State_11112111111( nsk, pki, pksk, sk, user, lock ) ]
     --[ Insert( <'SERVER', pki, user>, pk(nsk) ) ]->
-     [ state_111121111111( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_111121111111( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) unlockSERVERuser_0_111121111111[color=#806040 process=unlock <'SERVER', user>;]:
-   [ state_111121111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) unlockSERVERuser_0_111121111111[color=#806040,
+                                                process="unlock <'SERVER', user>;"]:
+   [ State_111121111111( nsk, pki, pksk, sk, user, lock.1 ) ]
   --[
   Unlock_1( '1', lock.1, <'SERVER', user> ),
   Unlock( '1', lock.1, <'SERVER', user> )
   ]->
-   [ state_1111211111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+   [ State_1111211111111( nsk, pki, pksk, sk, user, lock.1 ) ]
 
   /*
-  rule (modulo AC) unlockSERVERuser_0_111121111111[color=#806040 process=unlock <'SERVER', user>;]:
-     [ state_111121111111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) unlockSERVERuser_0_111121111111[color=#806040,
+                                                   process="unlock <'SERVER', user>;"]:
+     [ State_111121111111( nsk, pki, pksk, sk, user, lock ) ]
     --[
     Unlock_1( '1', lock, <'SERVER', user> ),
     Unlock( '1', lock, <'SERVER', user> )
     ]->
-     [ state_1111211111111( nsk, pki, pksk, sk, user, lock ) ]
+     [ State_1111211111111( nsk, pki, pksk, sk, user, lock ) ]
   */
 
-rule (modulo E) outsignconfirmsignrenewuserpknskskpki_0_1111211111111[color=#806040 process=out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));]:
-   [ state_1111211111111( nsk, pki, pksk, sk, user, lock.1 ) ]
+rule (modulo E) outsignconfirmsignrenewuserpknskskpki_0_1111211111111[color=#806040,
+                                                                      process="out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));"]:
+   [ State_1111211111111( nsk, pki, pksk, sk, user, lock.1 ) ]
   -->
    [
-   state_11112111111111( nsk, pki, pksk, sk, user, lock.1 ),
+   State_11112111111111( nsk, pki, pksk, sk, user, lock.1 ),
    Out( sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki) )
    ]
 
   /*
-  rule (modulo AC) outsignconfirmsignrenewuserpknskskpki_0_1111211111111[color=#806040 process=out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));]:
-     [ state_1111211111111( nsk, pki, pksk, sk, user, lock ) ]
+  rule (modulo AC) outsignconfirmsignrenewuserpknskskpki_0_1111211111111[color=#806040,
+                                                                         process="out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));"]:
+     [ State_1111211111111( nsk, pki, pksk, sk, user, lock ) ]
     -->
      [
-     state_11112111111111( nsk, pki, pksk, sk, user, lock ),
+     State_11112111111111( nsk, pki, pksk, sk, user, lock ),
      Out( sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki) )
      ]
   */
 
-rule (modulo E) __0_11112111111111[color=#806040 process=0]:
-   [ state_11112111111111( nsk, pki, pksk, sk, user, lock.1 ) ] --> [ ]
+rule (modulo E) p_0_11112111111111[color=#806040, process="0"]:
+   [ State_11112111111111( nsk, pki, pksk, sk, user, lock.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_11112111111111[color=#806040 process=0]:
-     [ state_11112111111111( nsk, pki, pksk, sk, user, lock ) ] --> [ ]
+  rule (modulo AC) p_0_11112111111111[color=#806040, process="0"]:
+     [ State_11112111111111( nsk, pki, pksk, sk, user, lock ) ] --> [ ]
   */
 
-rule (modulo E) __0_1111211112[color=#806040 process=0]:
-   [ state_1111211112( nsk, pki, pksk, sk, user, lock.1 ) ] --> [ ]
+rule (modulo E) p_0_1111211112[color=#806040, process="0"]:
+   [ State_1111211112( nsk, pki, pksk, sk, user, lock.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_1111211112[color=#806040 process=0]:
-     [ state_1111211112( nsk, pki, pksk, sk, user, lock ) ] --> [ ]
+  rule (modulo AC) p_0_1111211112[color=#806040, process="0"]:
+     [ State_1111211112( nsk, pki, pksk, sk, user, lock ) ] --> [ ]
   */
 
-rule (modulo E) __0_111121112[color=#806040 process=0]:
-   [ state_111121112( nsk, pki, sk, user, lock.1 ) ] --> [ ]
+rule (modulo E) p_0_111121112[color=#806040, process="0"]:
+   [ State_111121112( nsk, pki, sk, user, lock.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_111121112[color=#806040 process=0]:
-     [ state_111121112( nsk, pki, sk, user, lock ) ] --> [ ]
+  rule (modulo AC) p_0_111121112[color=#806040, process="0"]:
+     [ State_111121112( nsk, pki, sk, user, lock ) ] --> [ ]
   */
 
-rule (modulo E) newuser_0_1112[color=#ffffff process=new user;]:
-   [ state_1112( pki ), Fr( user ) ] --> [ state_11121( pki, user ) ]
+rule (modulo E) newuser_0_1112[color=#ffffff, process="new user;"]:
+   [ State_1112( pki ), Fr( user ) ] --> [ State_11121( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outuser_0_11121[color=#ffffff process=out(user);]:
-   [ state_11121( pki, user ) ]
+rule (modulo E) outuser_0_11121[color=#ffffff, process="out(user);"]:
+   [ State_11121( pki, user ) ]
   -->
-   [ state_111211( pki, user ), Out( user ) ]
+   [ State_111211( pki, user ), Out( user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111211[color=#ffffff process=!]:
-   [ state_111211( pki, user ) ] --> [ !semistate_1112111( pki, user ) ]
+rule (modulo E) p_0_111211[color=#ffffff, process="!"]:
+   [ State_111211( pki, user ) ] --> [ !Semistate_1112111( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_111211[color=#ffffff process=!]:
-   [ !semistate_1112111( pki, user ) ] --> [ state_1112111( pki, user ) ]
+rule (modulo E) p_1_111211[color=#ffffff, process="!"]:
+   [ !Semistate_1112111( pki, user ) ] --> [ State_1112111( pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newnsk_0_1112111[color=#518040 process=new ~nsk;]:
-   [ state_1112111( pki, user ), Fr( ~nsk ) ]
+rule (modulo E) newnsk_0_1112111[color=#518040, process="new ~nsk;"]:
+   [ State_1112111( pki, user ), Fr( ~nsk ) ]
   -->
-   [ state_11121111( ~nsk, pki, user ) ]
+   [ State_11121111( ~nsk, pki, user ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockUSERuser_0_11121111[color=#518040 process=lock <'USER', user>;]:
-   [ state_11121111( ~nsk, pki, user ), Fr( lock.2 ) ]
+rule (modulo E) lockUSERuser_0_11121111[color=#518040,
+                                        process="lock <'USER', user>;"]:
+   [ State_11121111( ~nsk, pki, user ), Fr( lock.2 ) ]
   --[
   Lock_2( '2', lock.2, <'USER', user> ),
   Lock( '2', lock.2, <'USER', user> )
   ]->
-   [ state_111211111( ~nsk, pki, user, lock.2 ) ]
+   [ State_111211111( ~nsk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) lockUSERuser_0_11121111[color=#518040 process=lock <'USER', user>;]:
-     [ state_11121111( ~nsk, pki, user ), Fr( lock ) ]
+  rule (modulo AC) lockUSERuser_0_11121111[color=#518040,
+                                           process="lock <'USER', user>;"]:
+     [ State_11121111( ~nsk, pki, user ), Fr( lock ) ]
     --[
     Lock_2( '2', lock, <'USER', user> ), Lock( '2', lock, <'USER', user> )
     ]->
-     [ state_111211111( ~nsk, pki, user, lock ) ]
+     [ State_111211111( ~nsk, pki, user, lock ) ]
   */
 
-rule (modulo E) lookupUSERuserassk_0_111211111[color=#518040 process=lookup <'USER', user> as ~sk]:
-   [ state_111211111( ~nsk, pki, user, lock.2 ) ]
+rule (modulo E) lookupUSERuserassk_0_111211111[color=#518040,
+                                               process="lookup <'USER', user> as ~sk"]:
+   [ State_111211111( ~nsk, pki, user, lock.2 ) ]
   --[ IsIn( <'USER', user>, ~sk ) ]->
-   [ state_1112111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_1112111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) lookupUSERuserassk_0_111211111[color=#518040 process=lookup <'USER', user> as ~sk]:
-     [ state_111211111( ~nsk, pki, user, lock ) ]
+  rule (modulo AC) lookupUSERuserassk_0_111211111[color=#518040,
+                                                  process="lookup <'USER', user> as ~sk"]:
+     [ State_111211111( ~nsk, pki, user, lock ) ]
     --[ IsIn( <'USER', user>, ~sk ) ]->
-     [ state_1112111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_1112111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) lookupUSERuserassk_1_111211111[color=#518040 process=lookup <'USER', user> as ~sk]:
-   [ state_111211111( ~nsk, pki, user, lock.2 ) ]
+rule (modulo E) lookupUSERuserassk_1_111211111[color=#518040,
+                                               process="lookup <'USER', user> as ~sk"]:
+   [ State_111211111( ~nsk, pki, user, lock.2 ) ]
   --[ IsNotSet( <'USER', user> ) ]->
-   [ state_1112111112( ~nsk, pki, user, lock.2 ) ]
+   [ State_1112111112( ~nsk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) lookupUSERuserassk_1_111211111[color=#518040 process=lookup <'USER', user> as ~sk]:
-     [ state_111211111( ~nsk, pki, user, lock ) ]
+  rule (modulo AC) lookupUSERuserassk_1_111211111[color=#518040,
+                                                  process="lookup <'USER', user> as ~sk"]:
+     [ State_111211111( ~nsk, pki, user, lock ) ]
     --[ IsNotSet( <'USER', user> ) ]->
-     [ state_1112111112( ~nsk, pki, user, lock ) ]
+     [ State_1112111112( ~nsk, pki, user, lock ) ]
   */
 
-rule (modulo E) eventHonestKeynsk_0_1112111111[color=#518040 process=event HonestKey( ~nsk );]:
-   [ state_1112111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) eventHonestKeynsk_0_1112111111[color=#518040,
+                                               process="event HonestKey( ~nsk );"]:
+   [ State_1112111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   --[ HonestKey( ~nsk ) ]->
-   [ state_11121111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_11121111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) eventHonestKeynsk_0_1112111111[color=#518040 process=event HonestKey( ~nsk );]:
-     [ state_1112111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) eventHonestKeynsk_0_1112111111[color=#518040,
+                                                  process="event HonestKey( ~nsk );"]:
+     [ State_1112111111( ~nsk, ~sk, pki, user, lock ) ]
     --[ HonestKey( ~nsk ) ]->
-     [ state_11121111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_11121111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) deleteUSERuser_0_11121111111[color=#518040 process=delete <'USER', user>;]:
-   [ state_11121111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) deleteUSERuser_0_11121111111[color=#518040,
+                                             process="delete <'USER', user>;"]:
+   [ State_11121111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   --[ Delete( <'USER', user> ) ]->
-   [ state_111211111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_111211111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) deleteUSERuser_0_11121111111[color=#518040 process=delete <'USER', user>;]:
-     [ state_11121111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) deleteUSERuser_0_11121111111[color=#518040,
+                                                process="delete <'USER', user>;"]:
+     [ State_11121111111( ~nsk, ~sk, pki, user, lock ) ]
     --[ Delete( <'USER', user> ) ]->
-     [ state_111211111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_111211111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) insertUSERusernsk_0_111211111111[color=#518040 process=insert <'USER', user>,~nsk;]:
-   [ state_111211111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) insertUSERusernsk_0_111211111111[color=#518040,
+                                                 process="insert <'USER', user>,~nsk;"]:
+   [ State_111211111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   --[ Insert( <'USER', user>, ~nsk ) ]->
-   [ state_1112111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_1112111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) insertUSERusernsk_0_111211111111[color=#518040 process=insert <'USER', user>,~nsk;]:
-     [ state_111211111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) insertUSERusernsk_0_111211111111[color=#518040,
+                                                    process="insert <'USER', user>,~nsk;"]:
+     [ State_111211111111( ~nsk, ~sk, pki, user, lock ) ]
     --[ Insert( <'USER', user>, ~nsk ) ]->
-     [ state_1112111111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_1112111111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) unlockUSERuser_0_1112111111111[color=#518040 process=unlock <'USER', user>;]:
-   [ state_1112111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) unlockUSERuser_0_1112111111111[color=#518040,
+                                               process="unlock <'USER', user>;"]:
+   [ State_1112111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   --[
   Unlock_2( '2', lock.2, <'USER', user> ),
   Unlock( '2', lock.2, <'USER', user> )
   ]->
-   [ state_11121111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_11121111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) unlockUSERuser_0_1112111111111[color=#518040 process=unlock <'USER', user>;]:
-     [ state_1112111111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) unlockUSERuser_0_1112111111111[color=#518040,
+                                                  process="unlock <'USER', user>;"]:
+     [ State_1112111111111( ~nsk, ~sk, pki, user, lock ) ]
     --[
     Unlock_2( '2', lock, <'USER', user> ),
     Unlock( '2', lock, <'USER', user> )
     ]->
-     [ state_11121111111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_11121111111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) outrenewuserpknsk_0_11121111111111[color=#518040 process=out(<'renew', user, pk(~nsk)>);]:
-   [ state_11121111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) outrenewuserpknsk_0_11121111111111[color=#518040,
+                                                   process="out(<'renew', user, pk(~nsk)>);"]:
+   [ State_11121111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   -->
    [
-   state_111211111111111( ~nsk, ~sk, pki, user, lock.2 ),
+   State_111211111111111( ~nsk, ~sk, pki, user, lock.2 ),
    Out( <'renew', user, pk(~nsk)> )
    ]
 
   /*
-  rule (modulo AC) outrenewuserpknsk_0_11121111111111[color=#518040 process=out(<'renew', user, pk(~nsk)>);]:
-     [ state_11121111111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) outrenewuserpknsk_0_11121111111111[color=#518040,
+                                                      process="out(<'renew', user, pk(~nsk)>);"]:
+     [ State_11121111111111( ~nsk, ~sk, pki, user, lock ) ]
     -->
      [
-     state_111211111111111( ~nsk, ~sk, pki, user, lock ),
+     State_111211111111111( ~nsk, ~sk, pki, user, lock ),
      Out( <'renew', user, pk(~nsk)> )
      ]
   */
 
-rule (modulo E) outsignrenewuserpknsksk_0_111211111111111[color=#518040 process=out(sign(<'renew', user, pk(~nsk)>, ~sk));]:
-   [ state_111211111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) outsignrenewuserpknsksk_0_111211111111111[color=#518040,
+                                                          process="out(sign(<'renew', user, pk(~nsk)>, ~sk));"]:
+   [ State_111211111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   -->
    [
-   state_1112111111111111( ~nsk, ~sk, pki, user, lock.2 ),
+   State_1112111111111111( ~nsk, ~sk, pki, user, lock.2 ),
    Out( sign(<'renew', user, pk(~nsk)>, ~sk) )
    ]
 
   /*
-  rule (modulo AC) outsignrenewuserpknsksk_0_111211111111111[color=#518040 process=out(sign(<'renew', user, pk(~nsk)>, ~sk));]:
-     [ state_111211111111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) outsignrenewuserpknsksk_0_111211111111111[color=#518040,
+                                                             process="out(sign(<'renew', user, pk(~nsk)>, ~sk));"]:
+     [ State_111211111111111( ~nsk, ~sk, pki, user, lock ) ]
     -->
      [
-     state_1112111111111111( ~nsk, ~sk, pki, user, lock ),
+     State_1112111111111111( ~nsk, ~sk, pki, user, lock ),
      Out( sign(<'renew', user, pk(~nsk)>, ~sk) )
      ]
   */
 
-rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_1112111111111111[color=#518040 process=in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));]:
+rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_1112111111111111[color=#518040,
+                                                                        process="in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));"]:
    [
-   state_1112111111111111( ~nsk, ~sk, pki, user, lock.2 ),
+   State_1112111111111111( ~nsk, ~sk, pki, user, lock.2 ),
    In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
    ]
   -->
-   [ state_11121111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_11121111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_1112111111111111[color=#518040 process=in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));]:
+  rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_1112111111111111[color=#518040,
+                                                                           process="in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));"]:
      [
-     state_1112111111111111( ~nsk, ~sk, pki, user, lock ),
+     State_1112111111111111( ~nsk, ~sk, pki, user, lock ),
      In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
      ]
     -->
-     [ state_11121111111111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_11121111111111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) eventRevokedsk_0_11121111111111111[color=#518040 process=event Revoked( ~sk );]:
-   [ state_11121111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) eventRevokedsk_0_11121111111111111[color=#518040,
+                                                   process="event Revoked( ~sk );"]:
+   [ State_11121111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   --[ Revoked( ~sk ) ]->
-   [ state_111211111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+   [ State_111211111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
 
   /*
-  rule (modulo AC) eventRevokedsk_0_11121111111111111[color=#518040 process=event Revoked( ~sk );]:
-     [ state_11121111111111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) eventRevokedsk_0_11121111111111111[color=#518040,
+                                                      process="event Revoked( ~sk );"]:
+     [ State_11121111111111111( ~nsk, ~sk, pki, user, lock ) ]
     --[ Revoked( ~sk ) ]->
-     [ state_111211111111111111( ~nsk, ~sk, pki, user, lock ) ]
+     [ State_111211111111111111( ~nsk, ~sk, pki, user, lock ) ]
   */
 
-rule (modulo E) outsk_0_111211111111111111[color=#518040 process=out(~sk);]:
-   [ state_111211111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
+rule (modulo E) outsk_0_111211111111111111[color=#518040,
+                                           process="out(~sk);"]:
+   [ State_111211111111111111( ~nsk, ~sk, pki, user, lock.2 ) ]
   -->
-   [ state_1112111111111111111( ~nsk, ~sk, pki, user, lock.2 ), Out( ~sk ) ]
+   [ State_1112111111111111111( ~nsk, ~sk, pki, user, lock.2 ), Out( ~sk ) ]
 
   /*
-  rule (modulo AC) outsk_0_111211111111111111[color=#518040 process=out(~sk);]:
-     [ state_111211111111111111( ~nsk, ~sk, pki, user, lock ) ]
+  rule (modulo AC) outsk_0_111211111111111111[color=#518040,
+                                              process="out(~sk);"]:
+     [ State_111211111111111111( ~nsk, ~sk, pki, user, lock ) ]
     -->
-     [ state_1112111111111111111( ~nsk, ~sk, pki, user, lock ), Out( ~sk ) ]
+     [ State_1112111111111111111( ~nsk, ~sk, pki, user, lock ), Out( ~sk ) ]
   */
 
-rule (modulo E) __0_1112111111111111111[color=#518040 process=0]:
-   [ state_1112111111111111111( ~nsk, ~sk, pki, user, lock.2 ) ] --> [ ]
+rule (modulo E) p_0_1112111111111111111[color=#518040, process="0"]:
+   [ State_1112111111111111111( ~nsk, ~sk, pki, user, lock.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_1112111111111111111[color=#518040 process=0]:
-     [ state_1112111111111111111( ~nsk, ~sk, pki, user, lock ) ] --> [ ]
+  rule (modulo AC) p_0_1112111111111111111[color=#518040, process="0"]:
+     [ State_1112111111111111111( ~nsk, ~sk, pki, user, lock ) ] --> [ ]
   */
 
-rule (modulo E) __0_1112111112[color=#518040 process=0]:
-   [ state_1112111112( ~nsk, pki, user, lock.2 ) ] --> [ ]
+rule (modulo E) p_0_1112111112[color=#518040, process="0"]:
+   [ State_1112111112( ~nsk, pki, user, lock.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) __0_1112111112[color=#518040 process=0]:
-     [ state_1112111112( ~nsk, pki, user, lock ) ] --> [ ]
+  rule (modulo AC) p_0_1112111112[color=#518040, process="0"]:
+     [ State_1112111112( ~nsk, pki, user, lock ) ] --> [ ]
   */
 
 restriction set_in:
@@ -643,7 +695,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.088207s
+  processing time: 1.418922566s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -654,7 +706,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.088207s
+  processing time: 1.418922566s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ==============================================================================

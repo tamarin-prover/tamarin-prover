@@ -14,40 +14,41 @@ guarded formula characterizing all counter-examples:
 "∃ #i. (Reached( ) @ #i)"
 */
 simplify
-by solve( state_111( a, c ) ▶₀ #i )
+by solve( State_111( a, c ) ▶₀ #i )
 
-rule (modulo E) Init[color=#ffffff process=new c;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) newc_0_[color=#ffffff process=new c;]:
-   [ state_( ), Fr( c ) ] --> [ state_1( c ) ]
+rule (modulo E) Init[color=#ffffff, process="new c;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#6c8040 process=new a;]:
-   [ state_1( c ), Fr( a ) ] --> [ state_11( a, c ) ]
+rule (modulo E) newc_0_[color=#ffffff, process="new c;"]:
+   [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_0_11[color=#6c8040 process=out(c,a);]:
-   [ state_11( a, c ) ] --> [ Message( c, a ), semistate_111( a, c ) ]
+rule (modulo E) newa_0_1[color=#6c8040, process="new a;"]:
+   [ State_1( c ), Fr( a ) ] --> [ State_11( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_1_11[color=#6c8040 process=out(c,a);]:
-   [ semistate_111( a, c ), Ack( c, a ) ] --> [ state_111( a, c ) ]
+rule (modulo E) outca_0_11[color=#6c8040, process="out(c,a);"]:
+   [ State_11( a, c ) ] --> [ Message( c, a ), Semistate_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventReached_0_111[color=#6c8040 process=event Reached( );]:
-   [ state_111( a, c ) ] --[ Reached( ) ]-> [ state_1111( a, c ) ]
+rule (modulo E) outca_1_11[color=#6c8040, process="out(c,a);"]:
+   [ Semistate_111( a, c ), Ack( c, a ) ] --> [ State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#6c8040 process=0]:
-   [ state_1111( a, c ) ] --> [ ]
+rule (modulo E) eventReached_0_111[color=#6c8040,
+                                   process="event Reached( );"]:
+   [ State_111( a, c ) ] --[ Reached( ) ]-> [ State_1111( a, c ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#6c8040, process="0"]:
+   [ State_1111( a, c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -70,7 +71,7 @@ analyzing: examples/sapic/fast/basic/channels2.spthy
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.060366s
+  processing time: 0.065993147s
   received (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.060366s
+  processing time: 0.065993147s
   received (all-traces): verified (2 steps)
 
 ==============================================================================

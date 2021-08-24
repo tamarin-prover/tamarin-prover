@@ -4430,8 +4430,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/trace/issue216.spthy
@@ -4440,7 +4438,7 @@ analyzing: examples/regression/trace/issue216.spthy
 analyzed: examples/regression/trace/issue216.spthy
 
   output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 16.120601s
+  processing time: 12.849731353s
   ClientAuth (exists-trace): verified (16 steps)
   Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
   Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)
@@ -4455,7 +4453,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue216.spthy
 
   output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 16.120601s
+  processing time: 12.849731353s
   ClientAuth (exists-trace): verified (16 steps)
   Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
   Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)

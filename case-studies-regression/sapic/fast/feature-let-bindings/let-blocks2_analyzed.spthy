@@ -8,22 +8,22 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#6c8040 process=new a;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#6c8040, process="new a;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_[color=#6c8040 process=new a;]:
-   [ state_( ), Fr( a ) ] --> [ state_1( a ) ]
+rule (modulo E) newa_0_[color=#6c8040, process="new a;"]:
+   [ State_( ), Fr( a ) ] --> [ State_1( a ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outga_0_1[color=#6c8040 process=out('g'^a);]:
-   [ state_1( a ) ] --> [ state_11( a ), Out( 'g'^a ) ]
+rule (modulo E) outga_0_1[color=#6c8040, process="out('g'^a);"]:
+   [ State_1( a ) ] --> [ State_11( a ), Out( 'g'^a ) ]
 
   /*
-  rule (modulo AC) outga_0_1[color=#6c8040 process=out('g'^a);]:
-     [ state_1( a ) ] --> [ state_11( a ), Out( z ) ]
+  rule (modulo AC) outga_0_1[color=#6c8040, process="out('g'^a);"]:
+     [ State_1( a ) ] --> [ State_11( a ), Out( z ) ]
     variants (modulo AC)
     1. a     = a.3
        z     = 'g'^a.3
@@ -32,8 +32,8 @@ rule (modulo E) outga_0_1[color=#6c8040 process=out('g'^a);]:
        z     = 'g'
   */
 
-rule (modulo E) __0_11[color=#6c8040 process=0]:
-   [ state_11( a ) ] --> [ ]
+rule (modulo E) p_0_11[color=#6c8040, process="0"]:
+   [ State_11( a ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -56,7 +56,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
-  processing time: 0.074959s
+  processing time: 0.068568599s
 
 
 ------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
-  processing time: 0.074959s
+  processing time: 0.068568599s
 
 
 ==============================================================================

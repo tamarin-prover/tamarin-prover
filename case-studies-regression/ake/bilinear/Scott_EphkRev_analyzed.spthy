@@ -299,8 +299,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
@@ -309,7 +307,7 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 19.559522s
+  processing time: 22.678431773s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 
@@ -321,7 +319,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 19.559522s
+  processing time: 22.678431773s
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (15 steps)
 

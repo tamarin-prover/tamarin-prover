@@ -14,7 +14,7 @@ guarded formula characterizing all counter-examples:
 "∃ #i. (AcceptP( ) @ #i)"
 */
 simplify
-by solve( state_1111( a, c ) ▶₀ #i )
+by solve( State_1111( a, c ) ▶₀ #i )
 
 lemma acceptQ:
   exists-trace "∃ #i. AcceptQ( ) @ #i"
@@ -23,65 +23,69 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (AcceptQ( ) @ #i)"
 */
 simplify
-solve( state_211( c ) ▶₀ #i )
+solve( State_211( c ) ▶₀ #i )
   case inctesttoto_0_21
   SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff process=|]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=|]:
-   [ state_( ) ] --> [ state_1( ), state_2( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="|"]:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inc_0_1[color=#6c8040 process=in(c);]:
-   [ state_1( ), In( c ) ] --> [ state_11( c ) ]
+rule (modulo E) inc_0_1[color=#6c8040, process="in(c);"]:
+   [ State_1( ), In( c ) ] --> [ State_11( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_11[color=#6c8040 process=new a;]:
-   [ state_11( c ), Fr( a ) ] --> [ state_111( a, c ) ]
+rule (modulo E) newa_0_11[color=#6c8040, process="new a;"]:
+   [ State_11( c ), Fr( a ) ] --> [ State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inatesttoto_0_111[color=#6c8040 process=in(<<a, 'test'>, 'toto'>);]:
-   [ state_111( a, c ), In( <<a, 'test'>, 'toto'> ) ]
+rule (modulo E) inatesttoto_0_111[color=#6c8040,
+                                  process="in(<<a, 'test'>, 'toto'>);"]:
+   [ State_111( a, c ), In( <<a, 'test'>, 'toto'> ) ]
   -->
-   [ state_1111( a, c ) ]
+   [ State_1111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAcceptP_0_1111[color=#6c8040 process=event AcceptP( );]:
-   [ state_1111( a, c ) ] --[ AcceptP( ) ]-> [ state_11111( a, c ) ]
+rule (modulo E) eventAcceptP_0_1111[color=#6c8040,
+                                    process="event AcceptP( );"]:
+   [ State_1111( a, c ) ] --[ AcceptP( ) ]-> [ State_11111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111[color=#6c8040 process=0]:
-   [ state_11111( a, c ) ] --> [ ]
+rule (modulo E) p_0_11111[color=#6c8040, process="0"]:
+   [ State_11111( a, c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inc_0_2[color=#807140 process=in(c);]:
-   [ state_2( ), In( c ) ] --> [ state_21( c ) ]
+rule (modulo E) inc_0_2[color=#807140, process="in(c);"]:
+   [ State_2( ), In( c ) ] --> [ State_21( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inctesttoto_0_21[color=#807140 process=in(<<c, 'test'>, 'toto'>);]:
-   [ state_21( c ), In( <<c, 'test'>, 'toto'> ) ] --> [ state_211( c ) ]
+rule (modulo E) inctesttoto_0_21[color=#807140,
+                                 process="in(<<c, 'test'>, 'toto'>);"]:
+   [ State_21( c ), In( <<c, 'test'>, 'toto'> ) ] --> [ State_211( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventAcceptQ_0_211[color=#807140 process=event AcceptQ( );]:
-   [ state_211( c ) ] --[ AcceptQ( ) ]-> [ state_2111( c ) ]
+rule (modulo E) eventAcceptQ_0_211[color=#807140,
+                                   process="event AcceptQ( );"]:
+   [ State_211( c ) ] --[ AcceptQ( ) ]-> [ State_2111( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_2111[color=#807140 process=0]:
-   [ state_2111( c ) ] --> [ ]
+rule (modulo E) p_0_2111[color=#807140, process="0"]:
+   [ State_2111( c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -104,7 +108,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/match_new.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.08257s
+  processing time: 0.082457109s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 
@@ -116,7 +120,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.08257s
+  processing time: 0.082457109s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 

@@ -15,7 +15,7 @@ guarded formula characterizing all counter-examples:
 "∃ x y #i. (Alive( x, y ) @ #i) ∧ ∀ #j. (Response( y ) @ #j) ⇒ ⊥"
 */
 simplify
-solve( state_11111111( ~k, ~na, m, nb ) ▶₀ #i )
+solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   case ifhknanbm_0_1111111
   solve( splitEqs(1) )
     case split_case_1
@@ -362,7 +362,7 @@ guarded formula characterizing all satisfying traces:
    ((¬(#k < #j)) ∨ (¬(#j < #i)))"
 */
 simplify
-solve( state_11111111( ~k, ~na, m, nb ) ▶₀ #i )
+solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   case ifhknanbm_0_1111111
   solve( splitEqs(1) )
     case split_case_7
@@ -403,9 +403,9 @@ guarded formula characterizing all satisfying traces:
   (∀ #l. (NeqForExec( x, x ) @ #l) ⇒ ⊥)"
 */
 simplify
-solve( state_11111111( ~k, ~na, m, nb ) ▶₀ #i )
+solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   case ifhknanbm_0_1111111
-  solve( state_1121121( ~k, ~nb.1, na.1 ) ▶₀ #j )
+  solve( State_1121121( ~k, ~nb.1, na.1 ) ▶₀ #j )
     case eventNeqForExecnazero_0_112112
     solve( splitEqs(2) )
       case split_case_3
@@ -426,65 +426,68 @@ solve( state_11111111( ~k, ~na, m, nb ) ▶₀ #i )
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=new ~k;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new ~k;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff process=new ~k;]:
-   [ state_( ), Fr( ~k ) ] --> [ state_1( ~k ) ]
+rule (modulo E) newk_0_[color=#ffffff, process="new ~k;"]:
+   [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=!]:
-   [ state_1( ~k ) ] --> [ !semistate_11( ~k ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="!"]:
+   [ State_1( ~k ) ] --> [ !Semistate_11( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_1[color=#ffffff process=!]:
-   [ !semistate_11( ~k ) ] --> [ state_11( ~k ) ]
+rule (modulo E) p_1_1[color=#ffffff, process="!"]:
+   [ !Semistate_11( ~k ) ] --> [ State_11( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11[color=#ffffff process=|]:
-   [ state_11( ~k ) ] --> [ state_111( ~k ), state_112( ~k ) ]
+rule (modulo E) p_0_11[color=#ffffff, process="|"]:
+   [ State_11( ~k ) ] --> [ State_111( ~k ), State_112( ~k ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newna_0_111[color=#80404f process=new ~na;]:
-   [ state_111( ~k ), Fr( ~na ) ] --> [ state_1111( ~k, ~na ) ]
+rule (modulo E) newna_0_111[color=#80404f, process="new ~na;"]:
+   [ State_111( ~k ), Fr( ~na ) ] --> [ State_1111( ~k, ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventChallengena_0_1111[color=#80404f process=event Challenge( ~na );]:
-   [ state_1111( ~k, ~na ) ]
+rule (modulo E) eventChallengena_0_1111[color=#80404f,
+                                        process="event Challenge( ~na );"]:
+   [ State_1111( ~k, ~na ) ]
   --[ Challenge( ~na ) ]->
-   [ state_11111( ~k, ~na ) ]
+   [ State_11111( ~k, ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outna_0_11111[color=#80404f process=out(~na);]:
-   [ state_11111( ~k, ~na ) ] --> [ state_111111( ~k, ~na ), Out( ~na ) ]
+rule (modulo E) outna_0_11111[color=#80404f, process="out(~na);"]:
+   [ State_11111( ~k, ~na ) ] --> [ State_111111( ~k, ~na ), Out( ~na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inmnb_0_111111[color=#80404f process=in(<m, nb>);]:
-   [ state_111111( ~k, ~na ), In( <m, nb> ) ]
+rule (modulo E) inmnb_0_111111[color=#80404f, process="in(<m, nb>);"]:
+   [ State_111111( ~k, ~na ), In( <m, nb> ) ]
   -->
-   [ state_1111111( ~k, ~na, m, nb ) ]
+   [ State_1111111( ~k, ~na, m, nb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifhknanbm_0_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=m]:
-   [ state_1111111( ~k, ~na, m, nb ) ]
+rule (modulo E) ifhknanbm_0_1111111[color=#80404f,
+                                    process="if h((~k⊕~na⊕nb))=m"]:
+   [ State_1111111( ~k, ~na, m, nb ) ]
   --[ Pred_Eq( h((~k⊕~na⊕nb)), m ) ]->
-   [ state_11111111( ~k, ~na, m, nb ) ]
+   [ State_11111111( ~k, ~na, m, nb ) ]
 
   /*
-  rule (modulo AC) ifhknanbm_0_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=m]:
-     [ state_1111111( ~k, ~na, m, nb ) ]
+  rule (modulo AC) ifhknanbm_0_1111111[color=#80404f,
+                                       process="if h((~k⊕~na⊕nb))=m"]:
+     [ State_1111111( ~k, ~na, m, nb ) ]
     --[ Pred_Eq( h(z), m ) ]->
-     [ state_11111111( ~k, ~na, m, nb ) ]
+     [ State_11111111( ~k, ~na, m, nb ) ]
     variants (modulo AC)
     1. ~k    = ~k.6
        ~na   = ~na.6
@@ -532,16 +535,18 @@ rule (modulo E) ifhknanbm_0_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=
        z     = (x.8⊕~k.9)
   */
 
-rule (modulo E) ifhknanbm_1_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=m]:
-   [ state_1111111( ~k, ~na, m, nb ) ]
+rule (modulo E) ifhknanbm_1_1111111[color=#80404f,
+                                    process="if h((~k⊕~na⊕nb))=m"]:
+   [ State_1111111( ~k, ~na, m, nb ) ]
   --[ Pred_Not_Eq( h((~k⊕~na⊕nb)), m ) ]->
-   [ state_11111112( ~k, ~na, m, nb ) ]
+   [ State_11111112( ~k, ~na, m, nb ) ]
 
   /*
-  rule (modulo AC) ifhknanbm_1_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=m]:
-     [ state_1111111( ~k, ~na, m, nb ) ]
+  rule (modulo AC) ifhknanbm_1_1111111[color=#80404f,
+                                       process="if h((~k⊕~na⊕nb))=m"]:
+     [ State_1111111( ~k, ~na, m, nb ) ]
     --[ Pred_Not_Eq( h(z), m ) ]->
-     [ state_11111112( ~k, ~na, m, nb ) ]
+     [ State_11111112( ~k, ~na, m, nb ) ]
     variants (modulo AC)
     1. ~k    = ~k.6
        ~na   = ~na.6
@@ -589,76 +594,81 @@ rule (modulo E) ifhknanbm_1_1111111[color=#80404f process=if h((~k⊕~na⊕nb))=
        z     = (x.8⊕~k.9)
   */
 
-rule (modulo E) eventAlivenak_0_11111111[color=#80404f process=event Alive( ~na, ~k );]:
-   [ state_11111111( ~k, ~na, m, nb ) ]
+rule (modulo E) eventAlivenak_0_11111111[color=#80404f,
+                                         process="event Alive( ~na, ~k );"]:
+   [ State_11111111( ~k, ~na, m, nb ) ]
   --[ Alive( ~na, ~k ) ]->
-   [ state_111111111( ~k, ~na, m, nb ) ]
+   [ State_111111111( ~k, ~na, m, nb ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111111111[color=#80404f process=0]:
-   [ state_111111111( ~k, ~na, m, nb ) ] --> [ ]
+rule (modulo E) p_0_111111111[color=#80404f, process="0"]:
+   [ State_111111111( ~k, ~na, m, nb ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111112[color=#80404f process=0]:
-   [ state_11111112( ~k, ~na, m, nb ) ] --> [ ]
+rule (modulo E) p_0_11111112[color=#80404f, process="0"]:
+   [ State_11111112( ~k, ~na, m, nb ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inna_0_112[color=#805d40 process=in(na);]:
-   [ state_112( ~k ), In( na ) ] --> [ state_1121( ~k, na ) ]
+rule (modulo E) inna_0_112[color=#805d40, process="in(na);"]:
+   [ State_112( ~k ), In( na ) ] --> [ State_1121( ~k, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newnb_0_1121[color=#805d40 process=new ~nb;]:
-   [ state_1121( ~k, na ), Fr( ~nb ) ] --> [ state_11211( ~k, ~nb, na ) ]
+rule (modulo E) newnb_0_1121[color=#805d40, process="new ~nb;"]:
+   [ State_1121( ~k, na ), Fr( ~nb ) ] --> [ State_11211( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifnazero_0_11211[color=#805d40 process=if na=zero]:
-   [ state_11211( ~k, ~nb, na ) ]
+rule (modulo E) ifnazero_0_11211[color=#805d40, process="if na=zero"]:
+   [ State_11211( ~k, ~nb, na ) ]
   --[ Pred_Eq( na, zero ) ]->
-   [ state_112111( ~k, ~nb, na ) ]
+   [ State_112111( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ifnazero_1_11211[color=#805d40 process=if na=zero]:
-   [ state_11211( ~k, ~nb, na ) ]
+rule (modulo E) ifnazero_1_11211[color=#805d40, process="if na=zero"]:
+   [ State_11211( ~k, ~nb, na ) ]
   --[ Pred_Not_Eq( na, zero ) ]->
-   [ state_112112( ~k, ~nb, na ) ]
+   [ State_112112( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_112111[color=#805d40 process=0]:
-   [ state_112111( ~k, ~nb, na ) ] --> [ ]
+rule (modulo E) p_0_112111[color=#805d40, process="0"]:
+   [ State_112111( ~k, ~nb, na ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventNeqForExecnazero_0_112112[color=#805d40 process=event NeqForExec( na, zero );]:
-   [ state_112112( ~k, ~nb, na ) ]
+rule (modulo E) eventNeqForExecnazero_0_112112[color=#805d40,
+                                               process="event NeqForExec( na, zero );"]:
+   [ State_112112( ~k, ~nb, na ) ]
   --[ NeqForExec( na, zero ) ]->
-   [ state_1121121( ~k, ~nb, na ) ]
+   [ State_1121121( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventResponsek_0_1121121[color=#805d40 process=event Response( ~k );]:
-   [ state_1121121( ~k, ~nb, na ) ]
+rule (modulo E) eventResponsek_0_1121121[color=#805d40,
+                                         process="event Response( ~k );"]:
+   [ State_1121121( ~k, ~nb, na ) ]
   --[ Response( ~k ) ]->
-   [ state_11211211( ~k, ~nb, na ) ]
+   [ State_11211211( ~k, ~nb, na ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outhknbnanb_0_11211211[color=#805d40 process=out(<h((~k⊕~nb⊕na)), ~nb>);]:
-   [ state_11211211( ~k, ~nb, na ) ]
+rule (modulo E) outhknbnanb_0_11211211[color=#805d40,
+                                       process="out(<h((~k⊕~nb⊕na)), ~nb>);"]:
+   [ State_11211211( ~k, ~nb, na ) ]
   -->
-   [ state_112112111( ~k, ~nb, na ), Out( <h((~k⊕~nb⊕na)), ~nb> ) ]
+   [ State_112112111( ~k, ~nb, na ), Out( <h((~k⊕~nb⊕na)), ~nb> ) ]
 
   /*
-  rule (modulo AC) outhknbnanb_0_11211211[color=#805d40 process=out(<h((~k⊕~nb⊕na)), ~nb>);]:
-     [ state_11211211( ~k, ~nb, na ) ]
+  rule (modulo AC) outhknbnanb_0_11211211[color=#805d40,
+                                          process="out(<h((~k⊕~nb⊕na)), ~nb>);"]:
+     [ State_11211211( ~k, ~nb, na ) ]
     -->
-     [ state_112112111( ~k, ~nb, na ), Out( <h(z), ~nb> ) ]
+     [ State_112112111( ~k, ~nb, na ), Out( <h(z), ~nb> ) ]
     variants (modulo AC)
     1. ~k    = ~k.5
        ~nb   = ~nb.5
@@ -706,8 +716,8 @@ rule (modulo E) outhknbnanb_0_11211211[color=#805d40 process=out(<h((~k⊕~nb⊕
        z     = (x.6⊕~k.7)
   */
 
-rule (modulo E) __0_112112111[color=#805d40 process=0]:
-   [ state_112112111( ~k, ~nb, na ) ] --> [ ]
+rule (modulo E) p_0_112112111[color=#805d40, process="0"]:
+   [ State_112112111( ~k, ~nb, na ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -738,7 +748,7 @@ analyzing: examples/sapic/fast/feature-xor/CRxor.spthy
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.04206s
+  processing time: 2.252370951s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)
@@ -751,7 +761,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.04206s
+  processing time: 2.252370951s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)

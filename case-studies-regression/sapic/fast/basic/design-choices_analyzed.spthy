@@ -17,9 +17,9 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   case case_1
-  solve( state_112( lock ) ▶₀ #t1 )
+  solve( State_112( lock ) ▶₀ #t1 )
     case lookupvisitedasv_1_11
-    solve( state_112( lock ) ▶₀ #t2 )
+    solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
       solve( ((#vr.1 < #vr.6) ∧
               (∃ #t2.
@@ -40,10 +40,10 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( state_111( ~n, v ) ▶₀ #t2.1 )
+          by solve( State_111( ~n, v ) ▶₀ #t2.1 )
         next
           case unlocks_0_11211
-          solve( state_11211( ~n ) ▶₀ #t2.1 )
+          solve( State_11211( ~n ) ▶₀ #t2.1 )
             case insertvisiteds_0_1121
             by contradiction /* cyclic */
           qed
@@ -52,10 +52,10 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
         case case_2
         solve( Unlock_0( '0', ~n.1, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( state_111( ~n.1, v ) ▶₀ #t2.1 )
+          by solve( State_111( ~n.1, v ) ▶₀ #t2.1 )
         next
           case unlocks_0_11211
-          solve( state_11211( ~n.1 ) ▶₀ #t2.1 )
+          solve( State_11211( ~n.1 ) ▶₀ #t2.1 )
             case insertvisiteds_0_1121
             by contradiction /* cyclic */
           qed
@@ -68,9 +68,9 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   qed
 next
   case case_2
-  solve( state_112( lock ) ▶₀ #t1 )
+  solve( State_112( lock ) ▶₀ #t1 )
     case lookupvisitedasv_1_11
-    solve( state_112( lock ) ▶₀ #t2 )
+    solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
       solve( ((#vr.1 < #vr.6) ∧
               (∃ #t2.
@@ -91,10 +91,10 @@ next
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( state_111( ~n, v ) ▶₀ #t2.1 )
+          by solve( State_111( ~n, v ) ▶₀ #t2.1 )
         next
           case unlocks_0_11211
-          solve( state_11211( ~n ) ▶₀ #t2.1 )
+          solve( State_11211( ~n ) ▶₀ #t2.1 )
             case insertvisiteds_0_1121
             by contradiction /* cyclic */
           qed
@@ -103,10 +103,10 @@ next
         case case_2
         solve( Unlock_0( '0', ~n.1, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( state_111( ~n.1, v ) ▶₀ #t2.1 )
+          by solve( State_111( ~n.1, v ) ▶₀ #t2.1 )
         next
           case unlocks_0_11211
-          solve( state_11211( ~n.1 ) ▶₀ #t2.1 )
+          solve( State_11211( ~n.1 ) ▶₀ #t2.1 )
             case insertvisiteds_0_1121
             by contradiction /* cyclic */
           qed
@@ -119,73 +119,77 @@ next
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=!]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_[color=#ffffff process=!]:
-   [ state_( ) ] --> [ !semistate_1( ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __1_[color=#ffffff process=!]:
-   [ !semistate_1( ) ] --> [ state_1( ) ]
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) locks_0_1[color=#ffffff process=lock 's';]:
-   [ state_1( ), Fr( lock ) ]
+rule (modulo E) locks_0_1[color=#ffffff, process="lock 's';"]:
+   [ State_1( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 's' ), Lock( '0', lock, 's' ) ]->
-   [ state_11( lock ) ]
+   [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupvisitedasv_0_11[color=#ffffff process=lookup 'visited' as v]:
-   [ state_11( lock ) ]
+rule (modulo E) lookupvisitedasv_0_11[color=#ffffff,
+                                      process="lookup 'visited' as v"]:
+   [ State_11( lock ) ]
   --[ IsIn( 'visited', v ) ]->
-   [ state_111( lock, v ) ]
+   [ State_111( lock, v ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lookupvisitedasv_1_11[color=#ffffff process=lookup 'visited' as v]:
-   [ state_11( lock ) ] --[ IsNotSet( 'visited' ) ]-> [ state_112( lock ) ]
+rule (modulo E) lookupvisitedasv_1_11[color=#ffffff,
+                                      process="lookup 'visited' as v"]:
+   [ State_11( lock ) ] --[ IsNotSet( 'visited' ) ]-> [ State_112( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlocks_0_111[color=#ffffff process=unlock 's';]:
-   [ state_111( lock, v ) ]
+rule (modulo E) unlocks_0_111[color=#ffffff, process="unlock 's';"]:
+   [ State_111( lock, v ) ]
   --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ state_1111( lock, v ) ]
+   [ State_1111( lock, v ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1111[color=#ffffff process=0]:
-   [ state_1111( lock, v ) ] --> [ ]
+rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
+   [ State_1111( lock, v ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventVisit_0_112[color=#ffffff process=event Visit( );]:
-   [ state_112( lock ) ] --[ Visit( ) ]-> [ state_1121( lock ) ]
+rule (modulo E) eventVisit_0_112[color=#ffffff,
+                                 process="event Visit( );"]:
+   [ State_112( lock ) ] --[ Visit( ) ]-> [ State_1121( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertvisiteds_0_1121[color=#ffffff process=insert 'visited','s';]:
-   [ state_1121( lock ) ]
+rule (modulo E) insertvisiteds_0_1121[color=#ffffff,
+                                      process="insert 'visited','s';"]:
+   [ State_1121( lock ) ]
   --[ Insert( 'visited', 's' ) ]->
-   [ state_11211( lock ) ]
+   [ State_11211( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlocks_0_11211[color=#ffffff process=unlock 's';]:
-   [ state_11211( lock ) ]
+rule (modulo E) unlocks_0_11211[color=#ffffff, process="unlock 's';"]:
+   [ State_11211( lock ) ]
   --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ state_112111( lock ) ]
+   [ State_112111( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_112111[color=#ffffff process=0]:
-   [ state_112111( lock ) ] --> [ ]
+rule (modulo E) p_0_112111[color=#ffffff, process="0"]:
+   [ State_112111( lock ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -237,7 +241,7 @@ analyzing: examples/sapic/fast/basic/design-choices.spthy
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.318836s
+  processing time: 0.274754383s
   visit_once (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
@@ -248,7 +252,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.318836s
+  processing time: 0.274754383s
   visit_once (all-traces): verified (26 steps)
 
 ==============================================================================

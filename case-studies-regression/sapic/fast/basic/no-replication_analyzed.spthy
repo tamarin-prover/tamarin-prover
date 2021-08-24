@@ -15,36 +15,37 @@ guarded formula characterizing all counter-examples:
 "∃ #i #j x y. (Secret( x ) @ #i) ∧ (Secret( y ) @ #j) ∧ ¬(x = y)"
 */
 simplify
-solve( state_1( x ) ▶₀ #i )
+solve( State_1( x ) ▶₀ #i )
   case news_0_
-  solve( state_1( y ) ▶₀ #j )
+  solve( State_1( y ) ▶₀ #j )
     case news_0_
     by contradiction /* from formulas */
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff process=new s;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new s;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) news_0_[color=#ffffff process=new s;]:
-   [ state_( ), Fr( s ) ] --> [ state_1( s ) ]
+rule (modulo E) news_0_[color=#ffffff, process="new s;"]:
+   [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSecrets_0_1[color=#ffffff process=event Secret( s );]:
-   [ state_1( s ) ] --[ Secret( s ) ]-> [ state_11( s ) ]
+rule (modulo E) eventSecrets_0_1[color=#ffffff,
+                                 process="event Secret( s );"]:
+   [ State_1( s ) ] --[ Secret( s ) ]-> [ State_11( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outs_0_11[color=#ffffff process=out(s);]:
-   [ state_11( s ) ] --> [ state_111( s ), Out( s ) ]
+rule (modulo E) outs_0_11[color=#ffffff, process="out(s);"]:
+   [ State_11( s ) ] --> [ State_111( s ), Out( s ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_111[color=#ffffff process=0]:
-   [ state_111( s ) ] --> [ ]
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( s ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -67,7 +68,7 @@ analyzing: examples/sapic/fast/basic/no-replication.spthy
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.065841s
+  processing time: 0.067513174s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.065841s
+  processing time: 0.067513174s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ==============================================================================

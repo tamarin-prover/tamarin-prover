@@ -519,8 +519,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features//multiset/counter.spthy
@@ -529,7 +527,7 @@ analyzing: examples/features//multiset/counter.spthy
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.724957s
+  processing time: 1.202574927s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
@@ -543,7 +541,7 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.724957s
+  processing time: 1.202574927s
   counters_linear_order (all-traces): verified (52 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)

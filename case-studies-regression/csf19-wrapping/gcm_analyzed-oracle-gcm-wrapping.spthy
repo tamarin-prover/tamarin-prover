@@ -13926,7 +13926,7 @@ analyzing: examples/csf19-wrapping/gcm.spthy
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 82.890982914s
+  processing time: 170.359835563s
   origin (all-traces): verified (1597 steps)
   Counter_Monotonicity (all-traces): verified (1880 steps)
   IV_Uniqueness (all-traces): verified (8 steps)
@@ -13942,7 +13942,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 82.890982914s
+  processing time: 170.359835563s
   origin (all-traces): verified (1597 steps)
   Counter_Monotonicity (all-traces): verified (1880 steps)
   IV_Uniqueness (all-traces): verified (8 steps)

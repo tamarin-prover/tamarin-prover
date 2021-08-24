@@ -1,11 +1,4 @@
-Processes: 313 total, 3 running, 5 stuck, 305 sleeping, 1344 threads 
-2018/08/21 16:42:09
-Load Avg: 1.40, 1.58, 1.64 
-CPU usage: 13.54% user, 20.83% sys, 65.62% idle 
-SharedLibs: 133M resident, 24M data, 12M linkedit.
-MemRegions: 88991 total, 4583M resident, 98M private, 4020M shared.
-PhysMem: 16G used (2652M wired), 366M unused.
-VM: 1406G vsize, 533M framework vsize, 3012806(0) swapins, 3309285(0) swapouts.
-Networks: packets: 30746595/17G in, 21718553/19G out.
-Disks: 1879031/59G read, 1254751/57G written.
-peachum.local
+Colossus04
+model name	: Intel(R) Xeon(R) CPU E5-4650L 0 @ 2.60GHz
+64
+MemTotal:       792422404 kB

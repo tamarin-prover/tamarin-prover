@@ -15824,7 +15824,7 @@ analyzing: examples/csf19-wrapping/siv.spthy
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 99.485251751s
+  processing time: 197.757533804s
   origin (all-traces): verified (2087 steps)
   Counter_Monotonicity (all-traces): verified (1880 steps)
   IV_Uniqueness (all-traces): verified (8 steps)
@@ -15840,7 +15840,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 99.485251751s
+  processing time: 197.757533804s
   origin (all-traces): verified (2087 steps)
   Counter_Monotonicity (all-traces): verified (1880 steps)
   IV_Uniqueness (all-traces): verified (8 steps)

@@ -107,8 +107,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
@@ -117,7 +115,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 49.843657s
+  processing time: 63.170017084s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -128,7 +126,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 49.843657s
+  processing time: 63.170017084s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

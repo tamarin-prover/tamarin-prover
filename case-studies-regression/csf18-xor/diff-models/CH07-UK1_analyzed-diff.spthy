@@ -9795,8 +9795,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
@@ -9805,7 +9803,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 53.035388s
+  processing time: 38.155994655s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3244 steps)
@@ -9818,7 +9816,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 53.035388s
+  processing time: 38.155994655s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3244 steps)

@@ -1048,8 +1048,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Joux.spthy
@@ -1058,7 +1056,7 @@ analyzing: examples/ake/bilinear/Joux.spthy
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 26.729701s
+  processing time: 22.324868009s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 
@@ -1070,7 +1068,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 26.729701s
+  processing time: 22.324868009s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 

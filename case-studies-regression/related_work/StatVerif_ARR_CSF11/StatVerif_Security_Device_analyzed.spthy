@@ -275,8 +275,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
@@ -285,7 +283,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.s
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.280417s
+  processing time: 0.225448141s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
@@ -299,7 +297,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.280417s
+  processing time: 0.225448141s
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)

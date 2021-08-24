@@ -155,6 +155,8 @@ var ui = {
             65  : function() { mainDisplay.applyProver('characterization'); },          // A
             98  : function() { mainDisplay.applyProver('bounded-autoprove'); },         // b
             66  : function() { mainDisplay.applyProver('bounded-characterization'); },  // B
+            115 : function() { mainDisplay.applyProver('autoprove-all'); },             // s
+            83  : function() { mainDisplay.applyProver('characterization-all'); },      // S
             74  : function() { proofScript.jump('next/smart', null); },  // j
             75  : function() { proofScript.jump('prev/smart', null); },  // k
             106 : function() { proofScript.jump('next/normal', null); }, // J

@@ -280,8 +280,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
@@ -290,7 +288,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.83247s
+  processing time: 0.393369416s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -302,7 +300,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.83247s
+  processing time: 0.393369416s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 

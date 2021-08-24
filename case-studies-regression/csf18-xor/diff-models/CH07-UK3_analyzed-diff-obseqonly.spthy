@@ -256,8 +256,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
@@ -266,7 +264,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 138.965898s
+  processing time: 251.603385171s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
@@ -283,7 +281,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 138.965898s
+  processing time: 251.603385171s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)

@@ -6132,8 +6132,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
@@ -6142,7 +6140,7 @@ analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 26.573067s
+  processing time: 32.591030345s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6155,7 +6153,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 26.573067s
+  processing time: 32.591030345s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

@@ -1820,8 +1820,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/DH2_original.spthy
@@ -1830,7 +1828,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
+  processing time: 32.570030858s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ------------------------------------------------------------------------------
@@ -1841,7 +1839,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
+  processing time: 32.570030858s
   KAS_key_secrecy (all-traces): verified (503 steps)
 
 ==============================================================================

@@ -14,7 +14,7 @@ guarded formula characterizing all counter-examples:
 "∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
 */
 simplify
-solve( state_111( x, c ) ▶₀ #i )
+solve( State_111( x, c ) ▶₀ #i )
   case newa_0_11
   by solve( !KU( ~n ) @ #vk )
 qed
@@ -26,63 +26,65 @@ guarded formula characterizing all satisfying traces:
 "∃ x #i. (Received( x ) @ #i)"
 */
 simplify
-solve( state_121( c, x ) ▶₀ #i )
+solve( State_121( c, x ) ▶₀ #i )
   case incx_0_12
   SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff process=new c;]:
-   [ ] --[ Init( ) ]-> [ state_( ) ]
+rule (modulo E) Init[color=#ffffff, process="new c;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newc_0_[color=#ffffff process=new c;]:
-   [ state_( ), Fr( c ) ] --> [ state_1( c ) ]
+rule (modulo E) newc_0_[color=#ffffff, process="new c;"]:
+   [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1[color=#ffffff process=|]:
-   [ state_1( c ) ] --> [ state_11( c ), state_12( c ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+   [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_11[color=#6c8040 process=new a;]:
-   [ state_11( c ), Fr( a ) ] --> [ state_111( a, c ) ]
+rule (modulo E) newa_0_11[color=#6c8040, process="new a;"]:
+   [ State_11( c ), Fr( a ) ] --> [ State_111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventSecreta_0_111[color=#6c8040 process=event Secret( a );]:
-   [ state_111( a, c ) ] --[ Secret( a ) ]-> [ state_1111( a, c ) ]
+rule (modulo E) eventSecreta_0_111[color=#6c8040,
+                                   process="event Secret( a );"]:
+   [ State_111( a, c ) ] --[ Secret( a ) ]-> [ State_1111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_0_1111[color=#6c8040 process=out(c,a);]:
-   [ state_1111( a, c ) ] --> [ Message( c, a ), semistate_11111( a, c ) ]
+rule (modulo E) outca_0_1111[color=#6c8040, process="out(c,a);"]:
+   [ State_1111( a, c ) ] --> [ Message( c, a ), Semistate_11111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_1_1111[color=#6c8040 process=out(c,a);]:
-   [ semistate_11111( a, c ), Ack( c, a ) ] --> [ state_11111( a, c ) ]
+rule (modulo E) outca_1_1111[color=#6c8040, process="out(c,a);"]:
+   [ Semistate_11111( a, c ), Ack( c, a ) ] --> [ State_11111( a, c ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_11111[color=#6c8040 process=0]:
-   [ state_11111( a, c ) ] --> [ ]
+rule (modulo E) p_0_11111[color=#6c8040, process="0"]:
+   [ State_11111( a, c ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) incx_0_12[color=#807140 process=in(c,x);]:
-   [ state_12( c ), Message( c, x ) ] --> [ Ack( c, x ), state_121( c, x ) ]
+rule (modulo E) incx_0_12[color=#807140, process="in(c,x);"]:
+   [ State_12( c ), Message( c, x ) ] --> [ Ack( c, x ), State_121( c, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventReceivedx_0_121[color=#807140 process=event Received( x );]:
-   [ state_121( c, x ) ] --[ Received( x ) ]-> [ state_1211( c, x ) ]
+rule (modulo E) eventReceivedx_0_121[color=#807140,
+                                     process="event Received( x );"]:
+   [ State_121( c, x ) ] --[ Received( x ) ]-> [ State_1211( c, x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) __0_1211[color=#807140 process=0]:
-   [ state_1211( c, x ) ] --> [ ]
+rule (modulo E) p_0_1211[color=#807140, process="0"]:
+   [ State_1211( c, x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -105,7 +107,7 @@ analyzing: examples/sapic/fast/basic/channels4.spthy
 analyzed: examples/sapic/fast/basic/channels4.spthy
 
   output:          examples/sapic/fast/basic/channels4.spthy.tmp
-  processing time: 0.106155s
+  processing time: 0.100195014s
   secret (all-traces): verified (3 steps)
   received (exists-trace): verified (3 steps)
 
@@ -117,7 +119,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels4.spthy
 
   output:          examples/sapic/fast/basic/channels4.spthy.tmp
-  processing time: 0.106155s
+  processing time: 0.100195014s
   secret (all-traces): verified (3 steps)
   received (exists-trace): verified (3 steps)
 

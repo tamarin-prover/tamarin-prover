@@ -1112,7 +1112,7 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 prettyRuleAttribute :: (HighlightDocument d) => RuleAttribute -> d
 prettyRuleAttribute attr = case attr of
     RuleColor c -> text "color=" <> text (rgbToHex c)
-    Process   p -> text "process=" <> text (prettySapicTopLevel' f p)
+    Process   p -> text "process=" <> text ("\"" ++ prettySapicTopLevel' f p ++ "\"")
         where f l a r rest = render $ prettyRuleRestr l a r rest
 
 -- | Pretty print the rule name such that it can be used as a case name
@@ -1170,7 +1170,7 @@ prettyNamedRule prefix ppInfo ru =
     facts proj     = L.get proj ru
     ppAttributes = case ruleAttributes ru of
         []    -> text ""
-        attrs -> hcat [text "[", hsep $ map prettyRuleAttribute attrs, text "]"]
+        attrs -> hcat [text "[", fsep $ punctuate comma $ map prettyRuleAttribute attrs, text "]"]
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =
