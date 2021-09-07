@@ -32,6 +32,7 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics
 import           Control.Category
@@ -89,6 +90,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -100,6 +102,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -119,6 +122,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -130,6 +134,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -395,3 +400,38 @@ insertImpliedFormulas = do
           then return (insertFormula implied)
           else []
 
+-- | CR-rule *S_fresh-order*:
+--
+-- `i:f`, `j:g`, `t1 ⊏ s1`, ..., `t_(n-1) ⊏ s_(n-1)`
+-- -- insert --
+-- `i<j`
+-- *with `prems(f)u = Fr(~s)` and `prems(g)v = Fact(t))`*
+-- *if `s` is syntactically in `t` and not below a reducible operator*
+freshOrdering :: Reduction ChangeIndicator
+freshOrdering = do
+  nodes <- M.assocs <$> getM sNodes
+  el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let freshVars = concatMap getFreshVars nodes
+  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el freshVars r]
+
+  sys <- gets id
+  mconcat <$> mapM (\(i,j) ->
+      if alwaysBefore sys i j
+        then return Unchanged
+        else insertLess i j >> return Changed
+    ) newLesses
+
+    where
+      getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
+      getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (idx, head $ factTerms prem)
+          _         -> Nothing
+        ) prems
+
+      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, LNTerm)] -> Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) -> [NodeId]
+      connectNodeToFreshes _ [] _ = []
+      connectNodeToFreshes el ((nid, freshVar):xs) r@(get rPrems -> prems) =
+        [nid | t <- concatMap factTerms (filter notFresh prems), freshVar `el` t] ++ connectNodeToFreshes el xs r
+      
+      notFresh (factTag -> FreshFact) = False
+      notFresh _                      = True
