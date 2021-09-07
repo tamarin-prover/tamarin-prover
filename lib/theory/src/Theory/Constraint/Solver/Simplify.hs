@@ -402,7 +402,7 @@ insertImpliedFormulas = do
 
 -- | CR-rule *S_fresh-order*:
 --
--- `i:f`, `j:g`, `t1 ⊏ s1`, ..., `t_(n-1) ⊏ s_(n-1)`
+-- `i:f`, `j:g`
 -- -- insert --
 -- `i<j`
 -- *with `prems(f)u = Fr(~s)` and `prems(g)v = Fact(t))`*
