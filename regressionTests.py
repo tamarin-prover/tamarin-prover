@@ -255,6 +255,7 @@ def main() :
     parser.add_argument("-wkeep", "--with-git-keep", help = "Recreate empty directories with .gitkeep in them", action="store_true")
     parser.add_argument("-d", "--debug", help = "Run in debug mode. (Temporary files won't be deleted)", action="store_true")
     parser.add_argument("-nodur", "--no-display-duration", help = "Won't display the total duration of the script", action="store_true")
+    parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously; Each Tamarin instance should have 3 threads and 16GB RAM available.", type=int, default=1)
 
     args = parser.parse_args()
     
@@ -324,13 +325,17 @@ def main() :
     ## Make case studies ##
 
     if not OPT_NOM :
+        jobs = ""
+        if args.jobs > 1:
+            jobs = " -j " + str(args.jobs)
+        print(jobs)
         if args.fast :
-            makeOut = subprocess.run("make fast-case-studies FAST=y 2>/dev/null", shell=True)
+            makeOut = subprocess.run("make" + jobs + " fast-case-studies FAST=y 2>/dev/null", shell=True)
             if makeOut.returncode != 0 :
                 colorPrint(bcolors.FAIL, "Make failed with return code " + str(makeOut.returncode))
                 exit(1)
         else :
-            makeOut = subprocess.run("make case-studies 2>/dev/null", shell=True)
+            makeOut = subprocess.run("make" + jobs + " case-studies 2>/dev/null", shell=True)
             if makeOut.returncode != 0 :
                 colorPrint(bcolors.FAIL, "Make failed with return code " + str(makeOut.returncode))
                 exit(1)
