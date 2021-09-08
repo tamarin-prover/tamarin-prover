@@ -40,11 +40,12 @@ DISPLAY_ERRORS = True           # Display of errors
 GRADUATION_TIME = [0.3, 0.8]    # Colorization of processing times
 ALLOW_DUPLICATE = False         # Output can't show duplicates by default
 OPT_DFF = True                  # Delete final files by default
-OPT_ASK = False                 # Won't ask to delete files at the beggining of the script by default. (Not deleting them can corrupt the results)
+OPT_ASK = False                 # Won't ask to delete files at the beginning of the script by default. (Not deleting them can corrupt the results)
 OPT_NOD = False                 # Option to delete temporary files
 OPT_NOM = False                 # Make by default
 OPT_NOKEEP = True               # Won't recreate directories with .gitkeep in them by default
 NO_DUR = False                  # Show total duration by default
+COMPARE_SYSTEM = False          # Compare the system.info file as well
 
 SUCCESS = 0
 FAIL = 1
@@ -69,6 +70,8 @@ def files():
 ## Split a file, remove "diff" display from the main diff command ##
 def splitFile(filename) :
     pat = "diff -r"
+    if not COMPARE_SYSTEM:
+        pat += " '--exclude=system.info'"
     if EXCEPT_DIR != None :
         for dir in EXCEPT_DIR :
             pat += " '--exclude=" + dir + "'"   # Each --exclude argument appears in diff command output, we remove them
@@ -237,7 +240,7 @@ def main() :
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--fast", help = "Run fast tests", action="store_true")
-    parser.add_argument("-ed","--except-dir", help = "Run script ignoring a file/directory (csv format for two or more files/directories", type=str)
+    parser.add_argument("-ed","--except-dir", help = "Run script ignoring a file/directory (values separated by , for two or more files/directories", type=str)
     parser.add_argument("-grad","--time-graduation", help = "2 csv thresholds (Default : -grad=0.3,0.8) to color processing times (from 0 to 1). Do not combine this argument with -t.")
     parser.add_argument("-nofn","--without-filename", help="Output time file won't contain filenames",
                     action="store_true")
@@ -256,6 +259,7 @@ def main() :
     parser.add_argument("-d", "--debug", help = "Run in debug mode. (Temporary files won't be deleted)", action="store_true")
     parser.add_argument("-nodur", "--no-display-duration", help = "Won't display the total duration of the script", action="store_true")
     parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously; Each Tamarin instance should have 3 threads and 16GB RAM available.", type=int, default=1)
+    parser.add_argument("-cs", "--compare-system", help = "Removes system.info from the except directories", action="store_true")
 
     args = parser.parse_args()
     
@@ -300,6 +304,8 @@ def main() :
         listOfGlobals["OPT_NOD"] = True
     if args.no_display_duration :
         listOfGlobals["NO_DUR"] = True
+    if args.compare_system :
+        listOfGlobals["COMPARE_SYSTEM"] = True
 
 
     ## Init ##
@@ -328,7 +334,6 @@ def main() :
         jobs = ""
         if args.jobs > 1:
             jobs = " -j " + str(args.jobs)
-        print(jobs)
         if args.fast :
             makeOut = subprocess.run("make" + jobs + " fast-case-studies FAST=y 2>/dev/null", shell=True)
             if makeOut.returncode != 0 :
@@ -345,6 +350,8 @@ def main() :
 
 
     excluded = ""
+    if not COMPARE_SYSTEM:
+        excluded += " '--exclude=system.info' "
     if args.except_dir :
         for dir in EXCEPT_DIR :
             excluded += " '--exclude=" + dir + "' "
