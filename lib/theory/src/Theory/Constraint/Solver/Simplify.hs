@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE TupleSections      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -410,9 +411,10 @@ insertImpliedFormulas = do
 freshOrdering :: Reduction ChangeIndicator
 freshOrdering = do
   nodes <- M.assocs <$> getM sNodes
-  el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-  let freshVars = concatMap getFreshVars nodes
-  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el freshVars r]
+  reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let origins = concatMap getFreshFactVars nodes
+  let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
+  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
   sys <- gets id
   mconcat <$> mapM (\(i,j) ->
@@ -422,16 +424,21 @@ freshOrdering = do
     ) newLesses
 
     where
-      getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
-      getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
-          FreshFact -> Just (idx, head $ factTerms prem)
+      getFreshFactVars :: (NodeId, RuleACInst) -> [(LNTerm, NodeId)]
+      getFreshFactVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (head $ factTerms prem, idx)
           _         -> Nothing
         ) prems
-
-      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, LNTerm)] -> Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) -> [NodeId]
-      connectNodeToFreshes _ [] _ = []
-      connectNodeToFreshes el ((nid, freshVar):xs) r@(get rPrems -> prems) =
-        [nid | t <- concatMap factTerms (filter notFresh prems), freshVar `el` t] ++ connectNodeToFreshes el xs r
       
-      notFresh (factTag -> FreshFact) = False
-      notFresh _                      = True
+      getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
+      getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
+          FreshFact -> []
+          _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
+        ) prems
+      
+      extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
+      extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
+                                      = concatMap (extractFreshNotBelowReducible reducible) as
+      extractFreshNotBelowReducible _ t | isFreshVar t = [t]
+      extractFreshNotBelowReducible _ _                = []
+      
