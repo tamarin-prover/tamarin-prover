@@ -129,7 +129,7 @@ def compare():
 
 		## results differ ##
 		if resA != resB:
-			logging.error(color(colors.RED, pathB))
+			logging.error(color(colors.RED, pathB.strip(settings.folderB + "/")))
 			for i in range(len(lemmas)):
 				if resA[i] != resB[i]:
 					logging.error(color(colors.RED + colors.BOLD, f"The result changed from {resA[i]} to {resB[i]} in {lemmas[i]}"))
@@ -137,10 +137,11 @@ def compare():
 			continue
 
 		## compare steps and times ##
-		if stepsA != stepsB and settings.verbose < 3:
-			logging.info(pathB)
 		timeColor = getColorQuality(timeA, timeB)
-		logging.debug("The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB}")
+		timeText = "The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB.strip(settings.folderB + '/')}"
+		if stepsA != stepsB and settings.verbose < 3:
+			logging.info(timeText)
+		logging.debug(timeText)
 		for i in range(len(lemmas)):
 			if stepsA[i] != stepsB[i]:
 				logging.info("  The step count changed from " + color(colors.PINK, f"{str(stepsA[i]).rjust(4)} steps to {str(stepsB[i]).rjust(11)} steps") + f" in {lemmas[i]}")
