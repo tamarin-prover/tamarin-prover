@@ -49,7 +49,6 @@ import           Extension.Prelude
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
-import           Theory.Constraint.System.Dot
 import           Theory.Model
 import           Theory.Text.Pretty
 
@@ -419,7 +418,10 @@ freshOrdering = do
 
   oldLesses <- gets (get sLessAtoms)
   mapM_ (uncurry insertLess) newLesses
+<<<<<<< HEAD
   --modify dropEntailedOrdConstraints
+=======
+>>>>>>> fresh-order
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged

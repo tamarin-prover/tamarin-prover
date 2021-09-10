@@ -13,7 +13,6 @@ module Theory.Constraint.System.Dot (
   , nonEmptyGraphDiff
   , dotSystemLoose
   , dotSystemCompact
-  , dropEntailedOrdConstraints
   , compressSystem
   , BoringNodeStyle(..)
   ) where
