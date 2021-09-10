@@ -40,15 +40,16 @@ import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets)
+import           Control.Monad.State                (gets, modify)
 
 
-import           Extension.Data.Label
+import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
+import           Theory.Constraint.System.Dot
 import           Theory.Model
 import           Theory.Text.Pretty
 
@@ -416,12 +417,13 @@ freshOrdering = do
   let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
   let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
-  sys <- gets id
-  mconcat <$> mapM (\(i,j) ->
-      if alwaysBefore sys i j
-        then return Unchanged
-        else insertLess i j >> return Changed
-    ) newLesses
+  oldLesses <- gets (get sLessAtoms)
+  mapM_ (uncurry insertLess) newLesses
+  modify dropEntailedOrdConstraints
+  modifiedLesses <- gets (get sLessAtoms)
+  return $ if oldLesses == modifiedLesses
+    then Unchanged
+    else Changed
 
     where
       getFreshFactVars :: (NodeId, RuleACInst) -> [(LNTerm, NodeId)]
