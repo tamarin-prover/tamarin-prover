@@ -140,10 +140,10 @@ def compare():
 		if stepsA != stepsB and settings.verbose < 3:
 			logging.info(pathB)
 		timeColor = getColorQuality(timeA, timeB)
-		logging.debug("The time changed from " + color(timeColor, f"{str(timeA).rjust(16)}s to {str(timeB).rjust(16)}s") + f" in {pathB}")
+		logging.debug("The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB}")
 		for i in range(len(lemmas)):
 			if stepsA[i] != stepsB[i]:
-				logging.info("The step count changed from " + color(colors.PINK, f"{str(stepsA[i]).rjust(5)} steps to {str(stepsB[i]).rjust(11)} steps") + f" in {lemmas[i]}")
+				logging.info("  The step count changed from " + color(colors.PINK, f"{str(stepsA[i]).rjust(4)} steps to {str(stepsB[i]).rjust(11)} steps") + f" in {lemmas[i]}")
 
 		## aggregate the results ##
 		stepSumA += sum(stepsA)
@@ -193,7 +193,7 @@ def getArguments():
 
 	## save the settings ##
 	global settings
-	settings = parser.parse_args(["-noi", "-nor"])
+	settings = parser.parse_args()
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
