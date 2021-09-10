@@ -1,11 +1,8 @@
 import subprocess, sys, re, os, argparse, logging
 
-folderA = "case-studies-regression"
-folderB = "case-studies"
 
-
-
-class colors:          # Colors for colorPrint and colorWrite functions
+class colors:
+	""" terminal coloring """
 	PINK = '\033[95m'
 	BLUE = '\033[94m'
 	CYAN = '\033[96m'
@@ -19,6 +16,7 @@ def color(color, text):
 	return(color + text + colors.ENDC)
 
 def getColorQuality(valueA, valueB):
+	""" fakes a gradient depending on the relative quality of valueB """
 	valueDiv = 1 if valueA == 0 else valueB/valueA
 	if valueDiv < 0.5:
 		return colors.BLUE
@@ -34,6 +32,7 @@ def getColorQuality(valueA, valueB):
 
 
 def iterFolder(folder):
+	""" Yields all files in the folder that have a .spthy ending. """
 	for dname, dirs, files in os.walk(folder):
 		for fname in files:
 			fpath = os.path.join(dname, fname)
@@ -44,24 +43,36 @@ def iterFolder(folder):
 
 
 def parseFile(path):
+	"""
+	Parses a _analyzed.spthy file and returns their content in a tuple
+
+	(lemmas([str]), results([bool]), steps([int]), time(float))
+	Note that time is not a list but a single value.
+	If there is an error, the error message is returned as a string
+	"""
+
+	## open file ##
 	content = ""
 	try:
 		with open(path) as f:
+			# strip everything before the summary part
 			content = f.read().split("summary of summaries")[-1]
 	except Exception:
 		return f"There was an error while reading {path}"
 
+	## parse time ##
+	times = re.findall(r"processing time: (.*)s", content)
+	if len(times) != 1:
+		return f"Parse error - time: {path}"
+
+	## parse lemmas ##
 	try:
-		times = re.findall(r"processing time: (.*)s", content)
-		if len(times) != 1:
-			return f"Parse error - time: {path}"
 		parsed = re.findall(r"(\w+) \(.*\): (.*) \((\d+) steps\)\n", content)
-		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]
-		parsed = list(zip(*parsed))
-		if (parsed == []):
-			return ([],[],[], float(times[0]))
-		else:
-			return (parsed[0], parsed[1], parsed[2], float(times[0]))
+		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
+		parsed = list(zip(*parsed))             # transpose matrix
+		if (parsed == []): parsed = [[],[],[]]  #
+		return (parsed[0], parsed[1], parsed[2], float(times[0]))
+
 	except Exception as ex:
 		raise ex
 		return f"Parse error - lemmas: {path}"
@@ -69,6 +80,10 @@ def parseFile(path):
 
 
 def parseFiles(pathB):
+	"""
+	Finds the corresponding file in case-studies-regression to the file pathB which is in case-studies.
+	Returns a tuple containing the parsed results from both files.
+	"""
 
 	## infer regression path name pathA from pathB ##
 	pathA = folderA + pathB.strip(folderB)
@@ -92,6 +107,14 @@ def parseFiles(pathB):
 
 
 def compare():
+	"""
+	Searches for all files in case-studies for the corresponding file in case-studies-regression.
+	If this search fails, it gives an error message and continues.
+	Otherwise, it outputs changed values depending on the verbosity.
+	At the end, it outputs a summary
+	"""
+
+
 	resultsDiffer = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
 
@@ -152,26 +175,31 @@ def compare():
 
 
 def getArguments():
+
 	## set up argparse ##
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--slow", help = "Run all (not only fast) tests", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
-	parser.add_argument("-nor", "--no-regression", help = "Regression tests won't be run, i.e., 'make case-studies' is not called.", action="store_true")
+	parser.add_argument("-nor", "--no-regression", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously; Each Tamarin instance should have 3 threads and 16GB RAM available.", type=int, default=1)
+	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are: 0 1 2 3. Default is 1\n" +
+		help="Level of verbosity, values are: 0 1 2 3. Default is 2\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
 			"3: show time differences for all lemmas"
-			, type=int, default=1)
+			, type=int, default=2)
+
+	## save the settings ##
 	global settings
 	settings = parser.parse_args()
+	settings.folderA = settings.directory
+	settings.folderB = "case-studies"
 
 	## set up logging ##
 	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][settings.verbose]
 	logging.basicConfig(level=loglevel,format='%(message)s')
-
 
 
 
@@ -193,7 +221,7 @@ def main():
 		logging.warning(f"running '{command}' ...")
 		makeOut = subprocess.check_output(command, shell=True)
 
-	## measure time and steps ##
+	## compare time and steps ##
 	if compare() == False:
 		exit(1)
 	else:
