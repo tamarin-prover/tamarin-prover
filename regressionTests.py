@@ -167,10 +167,12 @@ def compare():
 		stepColor = colors.GREEN
 	else:
 		stepColor = colors.PINK
-	logging.warning("The total amount of time  changed from "+ color(timeColor, f"{timeSumA} to {timeSumB} - this is {timeDiv}%"))
+	logging.warning("The total amount of time  changed from "+ color(timeColor, f"{int(timeSumA)}s to {int(timeSumB)}s - this is {timeDiv}%"))
 	if stepSumA != stepSumB:
 		logging.warning("The total amount of steps changed from " + color(stepColor, f"{stepSumA} steps to {stepSumB} steps - this is {stepDiv}%"))
 		return False
+	else:
+		logging.warning("The total amount of steps did not change")
 	return True
 
 
@@ -181,7 +183,7 @@ def getArguments():
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--slow", help = "Run all (not only fast) tests", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
-	parser.add_argument("-nor", "--no-regression", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
+	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously; Each Tamarin instance should have 3 threads and 16GB RAM available.", type=int, default=1)
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-v", "--verbose", 
@@ -214,14 +216,18 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		subprocess.check_output("stack install", shell=True).decode("utf-8")
+		if settings.verbose != 3:
+			subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT, text=True)
+		else:
+			subprocess.run("stack install", shell=True)
 
 	## make case-studies ##
-	if not settings.no_regression:
+	if not settings.no_make:
 		cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
 		command = f"make -j {settings.jobs} {cases} 2>/dev/null"
 		logging.warning(f"running '{command}' ...")
-		makeOut = subprocess.check_output(command, shell=True)
+		makeOut = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True)
+		logging.debug(makeOut)
 
 	## compare time and steps ##
 	successful = compare()
