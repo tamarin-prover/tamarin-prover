@@ -1,4 +1,4 @@
-import subprocess, sys, re, os, argparse, logging, datetime
+import subprocess, sys, re, os, argparse, logging, datetime, shutil
 
 
 class colors:
@@ -198,7 +198,7 @@ def getArguments():
 
 	## save the settings ##
 	global settings
-	settings = parser.parse_args()
+	settings = parser.parse_args(["-noi", "-r", "2"])
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
@@ -227,8 +227,10 @@ def main():
 	successful = True
 	for r in range(settings.repeat):
 		if (settings.repeat != 1):
+			shutil.rmtree(settings.folderB)
 			logging.warning("\n" + "="*80 + "\n")
 			logging.warning(color(colors.BOLD, f"This is repetition number {r+1}\n"))
+
 
 		## make case-studies ##
 		if not settings.no_make:
