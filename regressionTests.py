@@ -153,7 +153,7 @@ def compare():
 		timeSumB += timeB
 
 	## results differ ##
-	logging.warning("\n" + "="*80 + "\n")
+	logging.warning("\n" + "-"*80 + "\n")
 	if resultsDiffer:
 		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas!"))
 		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
@@ -184,14 +184,16 @@ def getArguments():
 	parser.add_argument("-s", "--slow", help = "Run all (not only fast) tests", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
 	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
-	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously; Each Tamarin instance should have 3 threads and 16GB RAM available.", type=int, default=1)
+	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available", type=int, default=1)
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
+	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are: 0 1 2 3. Default is 2\n" +
+		help="Level of verbosity, values are: 0 1 2 3 4. Default is 2\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
-			"3: show time differences for all lemmas"
+			"3: show time differences for all lemmas" +
+			"4: show shell command output"
 			, type=int, default=2)
 
 	## save the settings ##
@@ -201,14 +203,14 @@ def getArguments():
 	settings.folderB = "case-studies"
 
 	## set up logging ##
-	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][settings.verbose]
+	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.DEBUG][settings.verbose]
 	logging.basicConfig(level=loglevel,format='%(message)s')
 
 
 
 
 def main():
-	start_time = datetime.datetime.now() 
+	startTime = datetime.datetime.now() 
 
 	## read command line arguments ##
 	getArguments()
@@ -216,23 +218,35 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		if settings.verbose != 3:
-			subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT, text=True)
-		else:
+		if settings.verbose > 3:
 			subprocess.run("stack install", shell=True)
+		else:
+			subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT)
+			
+	## repeat case-studies r times for higher confidence in time measurements ##
+	successful = True
+	for r in range(settings.repeat):
+		if (settings.repeat != 1):
+			logging.warning("\n" + "="*80 + "\n")
+			logging.warning(color(colors.BOLD, f"This is repetition number {r+1}\n"))
 
-	## make case-studies ##
-	if not settings.no_make:
-		cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
-		command = f"make -j {settings.jobs} {cases} 2>/dev/null"
-		logging.warning(f"running '{command}' ...")
-		makeOut = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, text=True)
-		logging.debug(makeOut)
+		## make case-studies ##
+		if not settings.no_make:
+			cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
+			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
+			logging.warning(f"running '{command}' ...")
+			if settings.verbose > 3:
+				subprocess.run(command, shell=True)
+			else:
+				subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 
-	## compare time and steps ##
-	successful = compare()
-	print(f"Time elapsed: {str(datetime.datetime.now() - start_time).split('.')[0]}")
-	exit(int(not successful))
+		## compare time and steps ##
+		successful = compare() & successful
+
+	## measure time ##
+	print(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")
+	if not successful:
+		exit(1)
 
 if __name__ == '__main__':
 	main()
