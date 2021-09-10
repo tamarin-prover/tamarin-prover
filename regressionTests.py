@@ -1,4 +1,4 @@
-import subprocess, sys, re, os, argparse, logging
+import subprocess, sys, re, os, argparse, logging, datetime
 
 
 class colors:
@@ -86,7 +86,7 @@ def parseFiles(pathB):
 	"""
 
 	## infer regression path name pathA from pathB ##
-	pathA = folderA + pathB.strip(folderB)
+	pathA = settings.folderA + pathB.strip(settings.folderB)
 
 	## parse files ##
 	parsedB = parseFile(pathB)
@@ -118,7 +118,7 @@ def compare():
 	resultsDiffer = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
 
-	for pathB in iterFolder(folderB):
+	for pathB in iterFolder(settings.folderB):
 
 		## parse file ##
 		parsed = parseFiles(pathB)
@@ -155,7 +155,7 @@ def compare():
 	logging.warning("\n" + "="*80 + "\n")
 	if resultsDiffer:
 		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas!"))
-		logging.error(f"For more information, run 'diff -r {folderA} {folderB}'")
+		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
 		return False
 
 	## summary of step and time differences ##
@@ -193,7 +193,7 @@ def getArguments():
 
 	## save the settings ##
 	global settings
-	settings = parser.parse_args()
+	settings = parser.parse_args(["-noi", "-nor"])
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
@@ -205,6 +205,7 @@ def getArguments():
 
 
 def main():
+	start_time = datetime.datetime.now() 
 
 	## read command line arguments ##
 	getArguments()
@@ -222,12 +223,9 @@ def main():
 		makeOut = subprocess.check_output(command, shell=True)
 
 	## compare time and steps ##
-	if compare() == False:
-		exit(1)
-	else:
-		exit(0)
-
-
+	successful = compare()
+	print(f"Time elapsed: {str(datetime.datetime.now() - start_time).split('.')[0]}")
+	exit(int(not successful))
 
 if __name__ == '__main__':
 	main()
