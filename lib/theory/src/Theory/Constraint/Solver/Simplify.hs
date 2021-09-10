@@ -419,7 +419,7 @@ freshOrdering = do
 
   oldLesses <- gets (get sLessAtoms)
   mapM_ (uncurry insertLess) newLesses
-  modify dropEntailedOrdConstraints
+  --modify dropEntailedOrdConstraints
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
