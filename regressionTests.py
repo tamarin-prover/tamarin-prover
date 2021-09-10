@@ -198,7 +198,7 @@ def getArguments():
 
 	## save the settings ##
 	global settings
-	settings = parser.parse_args(["-noi", "-r", "2"])
+	settings = parser.parse_args()
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
