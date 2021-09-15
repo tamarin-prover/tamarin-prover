@@ -67,7 +67,7 @@ def parseFile(path):
 
 	## parse lemmas ##
 	try:
-		parsed = re.findall(r"(\w+) \(.*\): (.*) \((\d+) steps\)\n", content)
+		parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", content)
 		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
 		parsed = list(zip(*parsed))             # transpose matrix
 		if (parsed == []): parsed = [[],[],[]]  #
@@ -129,7 +129,7 @@ def compare():
 
 		## results differ ##
 		if resA != resB:
-			logging.error(color(colors.RED, pathB.strip(settings.folderB + "/")))
+			logging.error(color(colors.RED, pathB.strip(settings.folderB)))
 			for i in range(len(lemmas)):
 				if resA[i] != resB[i]:
 					logging.error(color(colors.RED + colors.BOLD, f"The result changed from {resA[i]} to {resB[i]} in {lemmas[i]}"))
@@ -138,7 +138,7 @@ def compare():
 
 		## compare steps and times ##
 		timeColor = getColorQuality(timeA, timeB)
-		timeText = "The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB.strip(settings.folderB + '/')}"
+		timeText = "The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB.strip(settings.folderB)}"
 		if stepsA != stepsB and settings.verbose < 3:
 			logging.info(timeText)
 		logging.debug(timeText)
