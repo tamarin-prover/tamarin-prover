@@ -84,7 +84,7 @@ analyzing: examples/sapic/fast/feature-predicates/simple_example.spthy
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.057603869s
+  processing time: 0.071130495s
   bogus_exists (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.057603869s
+  processing time: 0.071130495s
   bogus_exists (exists-trace): verified (3 steps)
 
 ==============================================================================
