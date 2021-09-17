@@ -5126,7 +5126,7 @@ analyzing: examples/sapic/slow/Yubikey/Yubikey.spthy
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 43.655993519s
+  processing time: 37.739510996s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)
@@ -5143,7 +5143,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 43.655993519s
+  processing time: 37.739510996s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)

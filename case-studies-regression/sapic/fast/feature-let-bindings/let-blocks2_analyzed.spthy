@@ -56,7 +56,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
-  processing time: 0.068568599s
+  processing time: 0.067941627s
 
 
 ------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks2.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks2.spthy.tmp
-  processing time: 0.068568599s
+  processing time: 0.067941627s
 
 
 ==============================================================================
