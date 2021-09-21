@@ -115,7 +115,7 @@ def compare():
 	"""
 
 
-	resultsDiffer = False
+	majorDifferences = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
 
 	for pathB in iterFolder(settings.folderB):
@@ -124,6 +124,7 @@ def compare():
 		parsed = parseFiles(pathB)
 		if type(parsed) == str:
 			logging.error(color(colors.RED + colors.BOLD, parsed))
+			majorDifferences = True
 			continue
 		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB) = parsed
 
@@ -133,7 +134,7 @@ def compare():
 			for i in range(len(lemmas)):
 				if resA[i] != resB[i]:
 					logging.error(color(colors.RED + colors.BOLD, f"The result changed from {resA[i]} to {resB[i]} in {lemmas[i]}"))
-			resultsDiffer = True
+			majorDifferences = True
 			continue
 
 		## compare steps and times ##
@@ -154,8 +155,8 @@ def compare():
 
 	## results differ ##
 	logging.warning("\n" + "-"*80 + "\n")
-	if resultsDiffer:
-		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas!"))
+	if majorDifferences:
+		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
 		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
 		return False
 
@@ -192,7 +193,7 @@ def getArguments():
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
-			"3: show time differences for all lemmas" +
+			"3: show time differences for all lemmas\n" +
 			"4: show shell command output"
 			, type=int, default=2)
 
@@ -249,6 +250,7 @@ def main():
 	print(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")
 	if not successful:
 		exit(1)
+	exit(0)
 
 if __name__ == '__main__':
 	main()

@@ -44,24 +44,24 @@ The Tamarin Prover is distributed through a number of channels: source and binar
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
 
-   1. run 'python3 regressionTests.py -ed system.info' and check for any error
+   1. run `python3 regressionTests.py` and check for any error
 
-   2. run 'tamarin-prover test'
+   2. run `tamarin-prover test`
 
-   3. call 'tamarin-prover' and copy CSF'12 automatic command and
+   3. call `tamarin-prover` and copy CSF'12 automatic command and
       check whether verification succeeds, i.e., run
-      'tamarin-prover --prove *.spthy'
+      `tamarin-prover --prove *.spthy`
       in the examples/csf12 folder.
 
-   4. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
+   4. generate `intruder_variants_{dh,bp}.spthy` and diff with versions
       in data/ so:
-      'tamarin-prover variants > tmp.txt'
-      'diff tmp.txt data/intruder_variants_both_bp_dh_for_diff.txt'
+      `tamarin-prover variants > tmp.txt`
+      `diff tmp.txt data/intruder_variants_both_bp_dh_for_diff.txt`
       which should be empty.
 
-   5. call 'tamarin-prover' and copy CSF'12 interactive command and
+   5. call `tamarin-prover` and copy CSF'12 interactive command and
       execute the following steps in the GUI after running
-      'tamarin-prover interactive .'
+      `tamarin-prover interactive .`
       in the examples/csf12 folder.
 
         (a) open one of the presented theories
@@ -71,7 +71,7 @@ The Tamarin Prover is distributed through a number of channels: source and binar
         (e) try 'Loading a new theory' from the start page
 
    6. Bump version number to even minor version in cabal files and code,
-      commit version bump, by running the 'version-change.sh' script as
+      commit version bump, by running the `version-change.sh` script as
       described in its comments. Then merge from 'develop' into 'master'
       and use "Release" functionality to prepare the release.
 
@@ -114,7 +114,8 @@ If you are running the regression on a server you can run multiple case studies 
 python3 regressionTests.py -j 6
 ```
 
-to run 6 case studies in parallel.
+For more details about `regressionTests.py`, have a look at `doc/READMEregressionTests.md`
+
 
 Editor support
 --------------
