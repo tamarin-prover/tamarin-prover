@@ -247,7 +247,7 @@ def main():
 		successful = compare() & successful
 
 	## measure time ##
-	print(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")
+	logging.warning(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")
 	if not successful:
 		exit(1)
 	exit(0)
