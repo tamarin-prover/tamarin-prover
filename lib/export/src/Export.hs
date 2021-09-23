@@ -908,6 +908,8 @@ attribHeaders tc hd =
           | Type _ <- x = (e1,f1,(pph x):s1)
           where (e1,f1,s1) = splitHeaders xs
 
+attChanName :: String
+attChanName = "att"
 
 mkAttackerChannel :: (-- MonadThrow m,PlainProcess
                    MonadFresh m
@@ -915,13 +917,17 @@ mkAttackerChannel :: (-- MonadThrow m,PlainProcess
                   -- ,Foldable (AnProcess ProcessAnnotation)
                 )
                     => LProcess (ProcessAnnotation LVar) -> m LVar
-mkAttackerChannel _ = (freshLVar "att" LSortMsg)
+mkAttackerChannel _ = (freshLVar attChanName LSortMsg)
 
 mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProVerifHeader)
 mkAttackerContext tc p =
   (tc{attackerChannel = Just attackerVar}, S.singleton hd)
   where
-    attackerVar@(LVar n _ _)  = (evalFresh (mkAttackerChannel p) 0)
+    attackerVar@(LVar n _ _)  = (evalFresh (mkAttackerChannel p) (initStateAtt))
+    initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
+    initStateAtt = case M.lookup attChanName initState of
+                     Nothing -> 0
+                     Just i -> i
     hd =  (Sym "free" n ":channel" [])
 
 

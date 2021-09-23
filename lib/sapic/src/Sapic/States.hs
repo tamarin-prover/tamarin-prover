@@ -72,12 +72,17 @@ getAllStates (ProcessComb _ _ pl pr) boundNames =
 
 type StateMap = M.Map SapicTerm (AnVar LVar)
 
+stateChannelName :: String
+stateChannelName = "StateChannel"
 
 addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
-addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) 0
+addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) initStateChan
  where
    allBoundStates =  fst $ getAllStates p S.empty
-
+   initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
+   initStateChan = case M.lookup stateChannelName initState of
+                     Nothing -> 0
+                     Just i -> i
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
 declareStateChannel ::  MonadFresh m => LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> S.Set SapicLVar -> StateMap -> m (LProcess (ProcessAnnotation LVar))
@@ -114,7 +119,7 @@ newStates :: MonadFresh m =>  LProcess (ProcessAnnotation LVar) -> [SapicTerm] -
   -> StateMap -> m ([(LVar, SapicTerm)], StateMap)
 newStates _ [] declared stateMap = return (declared, stateMap)
 newStates p (v:declarables) declared stateMap = do
-    newvar <-  freshLVar "StateChannel" LSortMsg
+    newvar <-  freshLVar stateChannelName LSortMsg
 --    let  newslvar = SapicLVar newvar (Just "channel")
     let newMap =  M.insert v (AnVar newvar) stateMap
     newStates p declarables ((newvar, v):declared) newMap
