@@ -215,9 +215,8 @@ diffEquivLemma thy = do
                _ <- colon
                msig <- getState
                putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
-               p1 <- process thy
-               p2 <- process thy
-               return $ EquivLemma p1 p2
+               p <- process thy
+               return $ DiffEquivLemma p
 
 
 elseprocess :: OpenTheory

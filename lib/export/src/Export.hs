@@ -512,8 +512,12 @@ ppSapic _ (ProcessComb (Lookup _ _ ) _ _ _) =
 
 ppSapic tc@TranslationContext{trans=ProVerif} (ProcessAction Rep _ p)  = (text "!" $$ parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
+
+-- TODO: have some parameter in the tc for replication numbers
 ppSapic tc@TranslationContext{trans=DeepSec} (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
+
+
 ppSapic tc  (ProcessAction a an (ProcessNull _))  = if unNeedZero then (pa, sh)
                                                     else (pa <> text "0", sh)
                                      where (pa, sh, unNeedZero) = ppAction an tc a
@@ -557,6 +561,7 @@ loadMacroProcs _ _ [] = ([text ""], S.empty)
 loadMacroProcs tc thy (p:q) =
       let (docs,  heads) = loadMacroProcs tc3 thy q in
         case L.get pVars p of
+          -- TODO bugfix, this is probably wrong when the macro does not have any parameter
           [] -> (docs, hd `S.union` heads)
           pvars ->
             let (new_text, new_heads) = ppSapic tc3 mainProc in
@@ -964,13 +969,15 @@ makeAnnotations thy p = res
 -- Core DeepSec Export
 ------------------------------------------------------------------------------
 
-deepsecTemplate :: Document d => [d] -> [d] ->  [d]  -> d
-deepsecTemplate headers macroproc requests =
+deepsecTemplate :: Document d => [d] -> [d] -> [d]-> [d] -> d
+deepsecTemplate headers macroproc requests equivlemmas =
   vcat headers
   $$
   vcat macroproc
   $$
   vcat requests
+  $$
+  vcat equivlemmas
 
 emptyTypeEnv :: TypingEnvironment
 emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
@@ -980,16 +987,45 @@ prettyDeepSecTheory :: OpenTheory -> IO (Doc)
 prettyDeepSecTheory thy = do
   headers <- loadHeaders tc thy emptyTypeEnv
   let hd = attribHeaders tc $ S.toList (headers
-                                       `S.union` macroprochd)
-  return $ deepsecTemplate hd macroproc requests
+                                       `S.union` macroprochd
+                                       `S.union` equivhd)
+  return $ deepsecTemplate hd macroproc requests equivlemmas
   where
         tc = emptyTC{trans = DeepSec}
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy
+        (equivlemmas, equivhd) =  loadEquivProc tc thy
+
+loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader)
+loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
+
+loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader)
+loadEquivProcs _ _ [] = ([text ""], S.empty)
+loadEquivProcs tc thy ((p1,p2):q) =
+      let (docs,  heads) = loadEquivProcs tc3 thy q in
+      let (new_text1, new_heads1) = ppSapic tc3 mainProc1 in
+      let (new_text2, new_heads2) = ppSapic tc3 mainProc2 in
+      let macro_def = text "query session_equiv(" $$
+                      (nest 4 new_text1) <> text "," $$
+                      (nest 4 new_text2) <> text ")."
+      in
+        (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads)
+  where
+    mainProc1 = makeAnnotations thy p1
+    mainProc2 = makeAnnotations thy p2
+    hasStates1 = hasBoundUnboundStates mainProc1
+    hasStates2 =  hasBoundUnboundStates mainProc2
+    (tc2,hd) = case attackerChannel tc of
+          -- we set up the attacker channel if it does not already exists
+          Nothing -> mkAttackerContext tc mainProc2
+          Just _ -> (tc, S.empty)
+    tc3 = tc2{hasBoundStates = fst hasStates1 || fst hasStates2, hasUnboundStates = snd hasStates1 || snd hasStates2}
+
 
         -- Loader of the export functions
 ------------------------------------------------------------------------------
 loadRequests :: Theory sig c b p SapicElement -> [Doc]
-loadRequests thy = [text $ get_text (lookupExportInfo "requests" thy)]
+loadRequests thy =
+  [text $ get_text (lookupExportInfo "requests" thy)]
   where get_text Nothing = ""
         get_text (Just m) = L.get eText m
