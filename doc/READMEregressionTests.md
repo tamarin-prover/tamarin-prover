@@ -59,12 +59,13 @@ optional arguments:
   -r REPEAT, --repeat REPEAT
                         Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements
   -v VERBOSE, --verbose VERBOSE
-                        Level of verbosity, values are: 0 1 2 3 4. Default is 2
+                        Level of verbosity, values are from 0 to 5. Default is 2
                         0: show only critical error output and changes of verified vs. trace found
                         1: show summary of time and step differences
                         2: show step differences for changed lemmas
                         3: show time differences for all lemmas
                         4: show shell command output
+                        5: show diff output if the corresponding proofs changed
 ```
 
 

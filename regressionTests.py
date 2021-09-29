@@ -46,35 +46,36 @@ def parseFile(path):
 	"""
 	Parses a _analyzed.spthy file and returns their content in a tuple
 
-	(lemmas([str]), results([bool]), steps([int]), time(float))
+	(lemmas([str]), results([bool]), steps([int]), time(float), proof)
 	Note that time is not a list but a single value.
 	If there is an error, the error message is returned as a string
 	"""
 
 	## open file ##
-	content = ""
+	summary = ""
 	try:
 		with open(path) as f:
 			# strip everything before the summary part
-			content = f.read().split("summary of summaries")[-1]
+			allContent = f.read().split("summary of summaries")
+			summary = allContent[-1]
+			proof = allContent[0].split("------------------------------------------------------------------------------")[0]
 	except Exception:
 		return f"There was an error while reading {path}"
 
 	## parse time ##
-	times = re.findall(r"processing time: (.*)s", content)
+	times = re.findall(r"processing time: (.*)s", summary)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
 
 	## parse lemmas ##
 	try:
-		parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", content)
+		parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", summary)
 		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
 		parsed = list(zip(*parsed))             # transpose matrix
 		if (parsed == []): parsed = [[],[],[]]  #
-		return (parsed[0], parsed[1], parsed[2], float(times[0]))
+		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof)
 
 	except Exception as ex:
-		raise ex
 		return f"Parse error - lemmas: {path}"
 
 
@@ -95,14 +96,14 @@ def parseFiles(pathB):
 	parsedA = parseFile(pathA)
 	if type(parsedA) == str:
 		return parsedA
-	(lemmasA, resA, stepsA, timeA) = parsedA
-	(lemmasB, resB, stepsB, timeB) = parsedB
+	(lemmasA, resA, stepsA, timeA, proofA) = parsedA
+	(lemmasB, resB, stepsB, timeB, proofB) = parsedB
 
 	## check compatibility ##
 	if lemmasA != lemmasB:
 		return f"The lemmas for {pathA} cannot be compared, they are different."
 
-	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB)
+	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB)
 
 
 
@@ -126,7 +127,16 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, parsed))
 			majorDifferences = True
 			continue
-		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB) = parsed
+		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB) = parsed
+
+		## proofs differ ##
+		if proofA != proofB:
+			if settings.verbose >= 5:
+				pathA = settings.folderA + pathB.strip(settings.folderB)
+				command = f"diff {pathA} {pathB} || :"
+				output = subprocess.check_output(command, shell=True).decode("utf-8")
+				logging.debug(output.split("\n<   processing time")[0])
+
 
 		## results differ ##
 		if resA != resB:
@@ -189,12 +199,13 @@ def getArguments():
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are: 0 1 2 3 4. Default is 2\n" +
+		help="Level of verbosity, values are from 0 to 5. Default is 2\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
 			"3: show time differences for all lemmas\n" +
-			"4: show shell command output"
+			"4: show shell command output\n" +
+			"5: show diff output if the corresponding proofs changed"
 			, type=int, default=2)
 
 	## save the settings ##
@@ -204,7 +215,7 @@ def getArguments():
 	settings.folderB = "case-studies"
 
 	## set up logging ##
-	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.DEBUG][settings.verbose]
+	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.DEBUG, logging.DEBUG][settings.verbose]
 	logging.basicConfig(level=loglevel,format='%(message)s')
 
 
