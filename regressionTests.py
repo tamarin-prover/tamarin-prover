@@ -149,13 +149,13 @@ def compare():
 
 		## compare steps and times ##
 		timeColor = getColorQuality(timeA, timeB)
-		timeText = "The time changed from " + color(timeColor, f"{str(timeA).rjust(17)}s to {str(timeB).rjust(16)}s") + f" in {pathB.strip(settings.folderB)}"
+		timeText = "The time changed from " + color(timeColor, f"{str(round(timeA,2)).rjust(12)}s to {str(round(timeB,2)).rjust(9)}s") + f" in {pathB.strip(settings.folderB)}"
 		if stepsA != stepsB and settings.verbose < 3:
 			logging.info(timeText)
 		logging.debug(timeText)
 		for i in range(len(lemmas)):
 			if stepsA[i] != stepsB[i]:
-				logging.info("  The step count changed from " + color(colors.PINK, f"{str(stepsA[i]).rjust(4)} steps to {str(stepsB[i]).rjust(11)} steps") + f" in {lemmas[i]}")
+				logging.info("  The steps changed from " + color(colors.PINK, f"{str(stepsA[i]).rjust(4)} steps to {str(stepsB[i]).rjust(4)} steps") + f" in {lemmas[i]}")
 
 		## aggregate the results ##
 		stepSumA += sum(stepsA)
