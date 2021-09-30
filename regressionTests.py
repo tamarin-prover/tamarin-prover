@@ -230,16 +230,14 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		if settings.verbose > 3:
-			subprocess.run("stack install", shell=True)
-		else:
-			subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT)
+		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+		logging.debug(output)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True
 	for r in range(settings.repeat):
 		if (settings.repeat != 1):
-			shutil.rmtree(settings.folderB)
+			shutil.rmtree(settings.folderB, ignore_errors=True)
 			logging.warning("\n" + "="*80 + "\n")
 			logging.warning(color(colors.BOLD, f"This is repetition number {r+1}\n"))
 
@@ -249,10 +247,8 @@ def main():
 			cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
 			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
 			logging.warning(f"running '{command}' ...")
-			if settings.verbose > 3:
-				subprocess.run(command, shell=True)
-			else:
-				subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+			logging.debug(output)
 
 		## compare time and steps ##
 		successful = compare() & successful
