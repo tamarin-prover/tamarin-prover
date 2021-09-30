@@ -1,0 +1,417 @@
+theory RYY begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing
+functions: fst/1, hp/1, kdf/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* RYY : UM-like identity based key exchange protocol *}
+
+rule (modulo E) KGC_Setup:
+   [ Fr( msk ) ] --> [ !MSK( msk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) KGC_request:
+   [ !MSK( s ) ] --> [ !LTK( $ID, pmult(s, hp($ID)) ) ]
+
+  /*
+  rule (modulo AC) KGC_request:
+     [ !MSK( s ) ] --> [ !LTK( $ID, z ) ]
+    variants (modulo AC)
+    1. $ID   = $ID.4
+       s     = s.4
+       z     = pmult(s.4, hp($ID.4))
+    
+    2. $ID   = $ID.4
+       s     = one
+       z     = hp($ID.4)
+  */
+
+rule (modulo E) Reveal_ltk:
+   [ !LTK( $ID, skID ) ] --[ LtkRev( $ID ) ]-> [ Out( skID ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_master_key:
+   [ !MSK( msk ) ] --[ MskRev( ) ]-> [ Out( msk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_session_key:
+   [ !Sessk( ~ey, sek ) ] --[ SesskRev( ~ey ) ]-> [ Out( sek ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ex ) ] --> [ Init( ~ex, $A, $B ), Out( 'g'^~ex ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [ Init( ~ex, $A, $B ), !LTK( $A, skA ), In( Y ) ]
+  --[
+  Accept( ~ex, kdf(<Y^~ex, em(skA, hp($B)), $A, $B, 'g'^~ex, Y>) ),
+  Sid( ~ex, <$A, $B, 'g'^~ex, Y, 'Init'> )
+  ]->
+   [ !Sessk( ~ex, kdf(<Y^~ex, em(skA, hp($B)), $A, $B, 'g'^~ex, Y>) ) ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [ Init( ~ex, $A, $B ), !LTK( $A, skA ), In( Y ) ]
+    --[
+    Accept( ~ex, kdf(<z, z.1, $A, $B, 'g'^~ex, Y>) ),
+    Sid( ~ex, <$A, $B, 'g'^~ex, Y, 'Init'> )
+    ]->
+     [ !Sessk( ~ex, kdf(<z, z.1, $A, $B, 'g'^~ex, Y>) ) ]
+    variants (modulo AC)
+     1. $B    = $B.12
+        ~ex   = ~ex.13
+        Y     = Y.14
+        skA   = skA.15
+        z     = Y.14^~ex.13
+        z.1   = em(skA.15, hp($B.12))
+    
+     2. $B    = $B.13
+        ~ex   = ~ex.14
+        Y     = z.17^inv(~ex.14)
+        skA   = skA.16
+        z     = z.17
+        z.1   = em(skA.16, hp($B.13))
+    
+     3. $B    = $B.52
+        ~ex   = ~ex.53
+        Y     = Y.54
+        skA   = pmult(x.100, x.101)
+        z     = Y.54^~ex.53
+        z.1   = em(x.101, hp($B.52))^x.100
+    
+     4. $B    = $B.52
+        ~ex   = ~ex.53
+        Y     = x.100^x.101
+        skA   = skA.55
+        z     = x.100^(~ex.53*x.101)
+        z.1   = em(skA.55, hp($B.52))
+    
+     5. $B    = $B.53
+        ~ex   = ~ex.54
+        Y     = x.102^inv((~ex.54*x.103))
+        skA   = skA.56
+        z     = x.102^inv(x.103)
+        z.1   = em(skA.56, hp($B.53))
+    
+     6. $B    = $B.53
+        ~ex   = ~ex.54
+        Y     = x.102^(x.103*inv(~ex.54))
+        skA   = skA.56
+        z     = x.102^x.103
+        z.1   = em(skA.56, hp($B.53))
+    
+     7. $B    = $B.54
+        ~ex   = ~ex.55
+        Y     = z.58^inv(~ex.55)
+        skA   = pmult(x.104, x.105)
+        z     = z.58
+        z.1   = em(x.105, hp($B.54))^x.104
+    
+     8. $B    = $B.54
+        ~ex   = ~ex.55
+        Y     = x.102^x.103
+        skA   = pmult(x.104, x.105)
+        z     = x.102^(~ex.55*x.103)
+        z.1   = em(x.105, hp($B.54))^x.104
+    
+     9. $B    = $B.54
+        ~ex   = ~ex.55
+        Y     = x.103^(x.104*inv((~ex.55*x.105)))
+        skA   = skA.57
+        z     = x.103^(x.104*inv(x.105))
+        z.1   = em(skA.57, hp($B.54))
+    
+    10. $B    = $B.55
+        ~ex   = ~ex.56
+        Y     = x.104^inv((~ex.56*x.105))
+        skA   = pmult(x.106, x.107)
+        z     = x.104^inv(x.105)
+        z.1   = em(x.107, hp($B.55))^x.106
+    
+    11. $B    = $B.55
+        ~ex   = ~ex.56
+        Y     = x.104^(x.105*inv(~ex.56))
+        skA   = pmult(x.106, x.107)
+        z     = x.104^x.105
+        z.1   = em(x.107, hp($B.55))^x.106
+    
+    12. $B    = $B.56
+        ~ex   = ~ex.57
+        Y     = x.105^(x.106*inv((~ex.57*x.107)))
+        skA   = pmult(x.108, x.109)
+        z     = x.105^(x.106*inv(x.107))
+        z.1   = em(x.109, hp($B.56))^x.108
+  */
+
+rule (modulo E) Resp_1:
+   [ Fr( ~ey ), !LTK( $B, skB ), In( X ) ]
+  --[
+  Accept( ~ey, kdf(<X^~ey, em(skB, hp($A)), $A, $B, X, 'g'^~ey>) ),
+  Sid( ~ey, <$B, $A, 'g'^~ey, X, 'Resp'> )
+  ]->
+   [
+   Out( 'g'^~ey ),
+   !Sessk( ~ey, kdf(<X^~ey, em(skB, hp($A)), $A, $B, X, 'g'^~ey>) )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ Fr( ~ey ), !LTK( $B, skB ), In( X ) ]
+    --[
+    Accept( ~ey, kdf(<z, z.1, $A, $B, X, 'g'^~ey>) ),
+    Sid( ~ey, <$B, $A, 'g'^~ey, X, 'Resp'> )
+    ]->
+     [ Out( 'g'^~ey ), !Sessk( ~ey, kdf(<z, z.1, $A, $B, X, 'g'^~ey>) ) ]
+    variants (modulo AC)
+     1. $A    = $A.14
+        ~ey   = ~ey.16
+        X     = X.17
+        skB   = skB.18
+        z     = X.17^~ey.16
+        z.1   = em(skB.18, hp($A.14))
+    
+     2. $A    = $A.16
+        ~ey   = ~ey.18
+        X     = z.22^inv(~ey.18)
+        skB   = skB.20
+        z     = z.22
+        z.1   = em(skB.20, hp($A.16))
+    
+     3. $A    = $A.57
+        ~ey   = ~ey.59
+        X     = X.60
+        skB   = pmult(x.111, x.112)
+        z     = X.60^~ey.59
+        z.1   = em(x.112, hp($A.57))^x.111
+    
+     4. $A    = $A.57
+        ~ey   = ~ey.59
+        X     = x.111^x.112
+        skB   = skB.61
+        z     = x.111^(~ey.59*x.112)
+        z.1   = em(skB.61, hp($A.57))
+    
+     5. $A    = $A.58
+        ~ey   = ~ey.60
+        X     = x.113^inv((~ey.60*x.114))
+        skB   = skB.62
+        z     = x.113^inv(x.114)
+        z.1   = em(skB.62, hp($A.58))
+    
+     6. $A    = $A.58
+        ~ey   = ~ey.60
+        X     = x.113^(x.114*inv(~ey.60))
+        skB   = skB.62
+        z     = x.113^x.114
+        z.1   = em(skB.62, hp($A.58))
+    
+     7. $A    = $A.59
+        ~ey   = ~ey.61
+        X     = z.65^inv(~ey.61)
+        skB   = pmult(x.115, x.116)
+        z     = z.65
+        z.1   = em(x.116, hp($A.59))^x.115
+    
+     8. $A    = $A.59
+        ~ey   = ~ey.61
+        X     = x.113^x.114
+        skB   = pmult(x.115, x.116)
+        z     = x.113^(~ey.61*x.114)
+        z.1   = em(x.116, hp($A.59))^x.115
+    
+     9. $A    = $A.59
+        ~ey   = ~ey.61
+        X     = x.114^(x.115*inv((~ey.61*x.116)))
+        skB   = skB.63
+        z     = x.114^(x.115*inv(x.116))
+        z.1   = em(skB.63, hp($A.59))
+    
+    10. $A    = $A.60
+        ~ey   = ~ey.62
+        X     = x.115^inv((~ey.62*x.116))
+        skB   = pmult(x.117, x.118)
+        z     = x.115^inv(x.116)
+        z.1   = em(x.118, hp($A.60))^x.117
+    
+    11. $A    = $A.60
+        ~ey   = ~ey.62
+        X     = x.115^(x.116*inv(~ey.62))
+        skB   = pmult(x.117, x.118)
+        z     = x.115^x.116
+        z.1   = em(x.118, hp($A.60))^x.117
+    
+    12. $A    = $A.61
+        ~ey   = ~ey.63
+        X     = x.116^(x.117*inv((~ey.63*x.118)))
+        skB   = pmult(x.119, x.120)
+        z     = x.116^(x.117*inv(x.118))
+        z.1   = em(x.120, hp($A.61))^x.119
+  */
+
+lemma key_agreement_reachable:
+  exists-trace
+  "∃ #i #j A B X Y t1 t2 k role1 role2.
+    ((((Accept( t1, k ) @ #i) ∧ (Sid( t1, <A, B, X, Y, role1> ) @ #i)) ∧
+      (Accept( t2, k ) @ #j)) ∧
+     (Sid( t2, <B, A, Y, X, role2> ) @ #j)) ∧
+    (¬(role1 = role2))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j A B X Y t1 t2 k role1 role2.
+  (Accept( t1, k ) @ #i) ∧
+  (Sid( t1, <A, B, X, Y, role1> ) @ #i) ∧
+  (Accept( t2, k ) @ #j) ∧
+  (Sid( t2, <B, A, Y, X, role2> ) @ #j)
+ ∧
+  ¬(role1 = role2)"
+*/
+simplify
+solve( Accept( t1, k ) @ #i )
+  case Init_2
+  solve( Init( ~ex, $A, $B ) ▶₀ #i )
+    case Init_1
+    solve( !LTK( $A, skA ) ▶₁ #i )
+      case KGC_request
+      solve( Sid( ~ex, <A.1, B.1, X, Y.1, role1> ) @ #i )
+        case Init_2
+        solve( Accept( t2, kdf(<z, em(hp($A), hp($B))^~n, $A, $B, 'g'^~ex, Y>)
+               ) @ #j )
+          case Resp_1
+          solve( !LTK( $B, pmult(~n, hp($B)) ) ▶₁ #j )
+            case KGC_request
+            solve( Sid( ~ey, <$B, $A, 'g'^~ey, 'g'^~ex, role2> ) @ #j )
+              case Resp_1
+              solve( !KU( 'g'^~ey ) @ #vk )
+                case Resp_1
+                solve( !KU( 'g'^~ex ) @ #vk.1 )
+                  case Init_1
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma key_secrecy_PFS:
+  all-traces
+  "∀ #i1 #i2 test A B X Y role1 k.
+    (((Accept( test, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+     (Sid( test, <A, B, X, Y, role1> ) @ #i1)) ⇒
+    (((∃ #i3. SesskRev( test ) @ #i3) ∨
+      (∃ matching #i3 role2.
+        ((Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ (¬(role1 = role2))) ∧
+        ((((∃ #i5. SesskRev( matching ) @ #i5) ∨
+           (∃ #i5. (LtkRev( B ) @ #i5) ∧ (#i5 < #i1))) ∨
+          (∃ #i5. (LtkRev( A ) @ #i5) ∧ (#i5 < #i1))) ∨
+         (∃ #i5. (MskRev( ) @ #i5) ∧ (#i5 < #i1))))) ∨
+     ((¬(∃ matching #i3 role2.
+          (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ (¬(role1 = role2)))) ∧
+      (((∃ #i3. (LtkRev( B ) @ #i3) ∧ (#i3 < #i1)) ∨
+        (∃ #i3. (LtkRev( A ) @ #i3) ∧ (#i3 < #i1))) ∨
+       (∃ #i3. (MskRev( ) @ #i3) ∧ (#i3 < #i1)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 #i2 test A B X Y role1 k.
+  (Accept( test, k ) @ #i1) ∧
+  (K( k ) @ #i2) ∧
+  (Sid( test, <A, B, X, Y, role1> ) @ #i1)
+ ∧
+  (∀ #i3. (SesskRev( test ) @ #i3) ⇒ ⊥) ∧
+  (∀ matching #i3 role2.
+    (Sid( matching, <B, A, Y, X, role2> ) @ #i3)
+   ⇒
+    ((role1 = role2) ∨
+     ((∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5. (LtkRev( B ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (LtkRev( A ) @ #i5) ⇒ ¬(#i5 < #i1)) ∧
+      (∀ #i5. (MskRev( ) @ #i5) ⇒ ¬(#i5 < #i1))))) ∧
+  (((∃ matching #i3 role2.
+      (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2)) ∨
+    ((∀ #i3. (LtkRev( B ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ¬(#i3 < #i1)))))"
+*/
+simplify
+solve( (∃ matching #i3 role2.
+         (Sid( matching, <B, A, Y, X, role2> ) @ #i3) ∧ ¬(role1 = role2))  ∥
+       ((∀ #i3. (LtkRev( B ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+        (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ¬(#i3 < #i1)) ∧
+        (∀ #i3. (MskRev( ) @ #i3) ⇒ ¬(#i3 < #i1))) )
+  case case_2
+  solve( Accept( test, k ) @ #i1 )
+    case Init_2
+    solve( Init( ~ex, $A, $B ) ▶₀ #i1 )
+      case Init_1
+      solve( !LTK( $A, skA ) ▶₁ #i1 )
+        case KGC_request
+        solve( Sid( ~ex, <A.1, B.1, X, Y.1, role1> ) @ #i1 )
+          case Init_2
+          solve( !KU( kdf(<z, em(hp($A), hp($B))^~n, $A, $B, 'g'^~ex, Y>) ) @ #vk )
+            case c_kdf
+            solve( !KU( em(hp($A), hp($B))^~n ) @ #vk.6 )
+              case Reveal_ltk_case_1
+              solve( splitEqs(0) )
+                case split_case_1
+                solve( !KU( Y^~ex ) @ #vk.8 )
+                  case Init_1
+                  solve( !KU( hp($A) ) @ #vk.11 )
+                    case c_hp
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/ake/bilinear/RYY_PFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/ake/bilinear/RYY_PFS.spthy
+
+  output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
+  processing time: 7.095292923s
+  key_agreement_reachable (exists-trace): verified (11 steps)
+  key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/ake/bilinear/RYY_PFS.spthy
+
+  output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
+  processing time: 7.095292923s
+  key_agreement_reachable (exists-trace): verified (11 steps)
+  key_secrecy_PFS (all-traces): falsified - found trace (12 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,67 @@
+theory AxiomDiffTest2 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Test:
+   [ Fr( ~f ) ] --[ Never1( ~f ) ]-> [ Fact( ~f ) ]
+
+rule (modulo E) Test2:
+   [ Fact( f ) ] --[ Never2( f ) ]-> [ Fact2( f ) ]
+
+restriction blockLeft [left]:
+  "∀ #i #j f. ((Never1( f ) @ #i) ∧ (Never2( f ) @ #j)) ⇒ (⊥)"
+  // safety formula
+
+restriction blockLeft2 [left]:
+  "∀ #i f. (Never2( f ) @ #i) ⇒ (∀ #j. (Never1( f ) @ #j) ⇒ (⊥))"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Test2
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( Fact( f ) ▶₀ #i ) )
+      case Test
+      by ATTACK // trace found
+    qed
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/features/equivalence/AxiomDiffTest2.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
+
+  output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
+  processing time: 0.086978894s
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
+
+  output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
+  processing time: 0.086978894s
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,752 @@
+theory NAXOS_eCK begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, h1/1, h2/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* NAXOS *}
+
+rule (modulo E) generate_ltk:
+   [ Fr( ~lkA ) ]
+  --[ RegKey( $A ) ]->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~eskI ), !Ltk( $I, ~lkI ) ]
+  -->
+   [
+   Init_1( ~eskI, $I, $R, ~lkI, 'g'^h1(<~eskI, ~lkI>) ),
+   !Ephk( ~eskI, ~eskI ), Out( 'g'^h1(<~eskI, ~lkI>) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [ Init_1( ~eskI, $I, $R, ~lkI, hkI ), !Pk( $R, 'g'^~lkR ), In( Y ) ]
+  --[
+  Accept( ~eskI, $I, $R,
+          h2(<Y^~lkI, 'g'^~lkR^h1(<~eskI, ~lkI>), Y^h1(<~eskI, ~lkI>), $I, $R>)
+  ),
+  Sid( ~eskI, <'Init', $I, $R, hkI, Y> ),
+  Match( ~eskI, <'Resp', $R, $I, hkI, Y> )
+  ]->
+   [
+   !Sessk( ~eskI,
+           h2(<Y^~lkI, 'g'^~lkR^h1(<~eskI, ~lkI>), Y^h1(<~eskI, ~lkI>), $I, $R>)
+   )
+   ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [ Init_1( ~eskI, $I, $R, ~lkI, hkI ), !Pk( $R, 'g'^~x ), In( Y ) ]
+    --[
+    Accept( ~eskI, $I, $R, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>)
+    ),
+    Sid( ~eskI, <'Init', $I, $R, hkI, Y> ),
+    Match( ~eskI, <'Resp', $R, $I, hkI, Y> )
+    ]->
+     [ !Sessk( ~eskI, h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) ]
+    variants (modulo AC)
+     1. ~eskI = ~eskI.31
+        ~lkI  = ~lkI.32
+        Y     = Y.34
+        z     = Y.34^~lkI.32
+        z.1   = Y.34^h1(<~eskI.31, ~lkI.32>)
+    
+     2. ~eskI = ~eskI.34
+        ~lkI  = ~lkI.35
+        Y     = z.40^inv(~lkI.35)
+        z     = z.40
+        z.1   = z.40^(h1(<~eskI.34, ~lkI.35>)*inv(~lkI.35))
+    
+     3. ~eskI = ~eskI.36
+        ~lkI  = ~lkI.37
+        Y     = z.44^inv(h1(<~eskI.36, ~lkI.37>))
+        z     = z.44^(~lkI.37*inv(h1(<~eskI.36, ~lkI.37>)))
+        z.1   = z.44
+    
+     4. ~eskI = ~eskI.303
+        ~lkI  = ~lkI.304
+        Y     = x.601^x.602
+        z     = x.601^(~lkI.304*x.602)
+        z.1   = x.601^(x.602*h1(<~eskI.303, ~lkI.304>))
+    
+     5. ~eskI = ~eskI.305
+        ~lkI  = ~lkI.306
+        Y     = x.605^inv((~lkI.306*x.606))
+        z     = x.605^inv(x.606)
+        z.1   = x.605^(h1(<~eskI.305, ~lkI.306>)*inv((~lkI.306*x.606)))
+    
+     6. ~eskI = ~eskI.305
+        ~lkI  = ~lkI.306
+        Y     = x.605^(x.606*inv(~lkI.306))
+        z     = x.605^x.606
+        z.1   = x.605^(x.606*h1(<~eskI.305, ~lkI.306>)*inv(~lkI.306))
+    
+     7. ~eskI = ~eskI.305
+        ~lkI  = ~lkI.306
+        Y     = x.606^inv((~lkI.306*h1(<~eskI.305, ~lkI.306>)))
+        z     = x.606^inv(h1(<~eskI.305, ~lkI.306>))
+        z.1   = x.606^inv(~lkI.306)
+    
+     8. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.606^(x.607*inv((~lkI.307*x.608)))
+        z     = x.606^(x.607*inv(x.608))
+        z.1   = x.606^(x.607*h1(<~eskI.306, ~lkI.307>)*inv((~lkI.307*x.608)))
+    
+     9. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^inv((~lkI.307*x.608*h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^inv((x.608*h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^inv((~lkI.307*x.608))
+    
+    10. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^inv((x.608*h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^(~lkI.307*inv((x.608*h1(<~eskI.306, ~lkI.307>))))
+        z.1   = x.607^inv(x.608)
+    
+    11. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^(x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z     = x.607^(~lkI.307*x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^x.608
+    
+    12. ~eskI = ~eskI.306
+        ~lkI  = ~lkI.307
+        Y     = x.607^(x.608*inv((~lkI.307*h1(<~eskI.306, ~lkI.307>))))
+        z     = x.607^(x.608*inv(h1(<~eskI.306, ~lkI.307>)))
+        z.1   = x.607^(x.608*inv(~lkI.307))
+    
+    13. ~eskI = ~eskI.307
+        ~lkI  = ~lkI.308
+        Y     = x.608^(x.609*inv((~lkI.308*x.610*h1(<~eskI.307, ~lkI.308>))))
+        z     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z.1   = x.608^(x.609*inv((~lkI.308*x.610)))
+    
+    14. ~eskI = ~eskI.307
+        ~lkI  = ~lkI.308
+        Y     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z     = x.608^(~lkI.308*x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
+        z.1   = x.608^(x.609*inv(x.610))
+  */
+
+rule (modulo E) Resp_1:
+   [ Fr( ~eskR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ), In( X ) ]
+  --[
+  Accept( ~eskR, $R, $I,
+          h2(<'g'^~lkI^h1(<~eskR, ~lkR>), X^~lkR, X^h1(<~eskR, ~lkR>), $I, $R>)
+  ),
+  Sid( ~eskR, <'Resp', $R, $I, X, 'g'^h1(<~eskR, ~lkR>)> ),
+  Match( ~eskR, <'Init', $I, $R, X, 'g'^h1(<~eskR, ~lkR>)> )
+  ]->
+   [
+   Out( 'g'^h1(<~eskR, ~lkR>) ), !Ephk( ~eskR, ~eskR ),
+   !Sessk( ~eskR,
+           h2(<'g'^~lkI^h1(<~eskR, ~lkR>), X^~lkR, X^h1(<~eskR, ~lkR>), $I, $R>)
+   )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ Fr( ~eskR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ), In( X ) ]
+    --[
+    Accept( ~eskR, $R, $I, h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>)
+    ),
+    Sid( ~eskR, <'Resp', $R, $I, X, 'g'^h1(<~eskR, ~lkR>)> ),
+    Match( ~eskR, <'Init', $I, $R, X, 'g'^h1(<~eskR, ~lkR>)> )
+    ]->
+     [
+     Out( 'g'^h1(<~eskR, ~lkR>) ), !Ephk( ~eskR, ~eskR ),
+     !Sessk( ~eskR, h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>) )
+     ]
+    variants (modulo AC)
+     1. ~eskR = ~eskR.38
+        ~lkR  = ~lkR.40
+        X     = X.41
+        z     = X.41^~lkR.40
+        z.1   = X.41^h1(<~eskR.38, ~lkR.40>)
+    
+     2. ~eskR = ~eskR.42
+        ~lkR  = ~lkR.44
+        X     = z.49^inv(~lkR.44)
+        z     = z.49
+        z.1   = z.49^(h1(<~eskR.42, ~lkR.44>)*inv(~lkR.44))
+    
+     3. ~eskR = ~eskR.43
+        ~lkR  = ~lkR.45
+        X     = z.51^inv(h1(<~eskR.43, ~lkR.45>))
+        z     = z.51^(~lkR.45*inv(h1(<~eskR.43, ~lkR.45>)))
+        z.1   = z.51
+    
+     4. ~eskR = ~eskR.537
+        ~lkR  = ~lkR.539
+        X     = x.1069^x.1070
+        z     = x.1069^(~lkR.539*x.1070)
+        z.1   = x.1069^(x.1070*h1(<~eskR.537, ~lkR.539>))
+    
+     5. ~eskR = ~eskR.538
+        ~lkR  = ~lkR.540
+        X     = x.1071^inv((~lkR.540*x.1072))
+        z     = x.1071^inv(x.1072)
+        z.1   = x.1071^(h1(<~eskR.538, ~lkR.540>)*inv((~lkR.540*x.1072)))
+    
+     6. ~eskR = ~eskR.538
+        ~lkR  = ~lkR.540
+        X     = x.1071^(x.1072*inv(~lkR.540))
+        z     = x.1071^x.1072
+        z.1   = x.1071^(x.1072*h1(<~eskR.538, ~lkR.540>)*inv(~lkR.540))
+    
+     7. ~eskR = ~eskR.539
+        ~lkR  = ~lkR.541
+        X     = x.1072^(x.1073*inv((~lkR.541*x.1074)))
+        z     = x.1072^(x.1073*inv(x.1074))
+        z.1   = x.1072^(x.1073*h1(<~eskR.539, ~lkR.541>)*inv((~lkR.541*x.1074)))
+    
+     8. ~eskR = ~eskR.539
+        ~lkR  = ~lkR.541
+        X     = x.1074^inv((~lkR.541*h1(<~eskR.539, ~lkR.541>)))
+        z     = x.1074^inv(h1(<~eskR.539, ~lkR.541>))
+        z.1   = x.1074^inv(~lkR.541)
+    
+     9. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^inv((~lkR.542*x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^inv((~lkR.542*x.1076))
+    
+    10. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^(~lkR.542*inv((x.1076*h1(<~eskR.540, ~lkR.542>))))
+        z.1   = x.1075^inv(x.1076)
+    
+    11. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z     = x.1075^(~lkR.542*x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^x.1076
+    
+    12. ~eskR = ~eskR.540
+        ~lkR  = ~lkR.542
+        X     = x.1075^(x.1076*inv((~lkR.542*h1(<~eskR.540, ~lkR.542>))))
+        z     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
+        z.1   = x.1075^(x.1076*inv(~lkR.542))
+    
+    13. ~eskR = ~eskR.541
+        ~lkR  = ~lkR.543
+        X     = x.1076^(x.1077*inv((~lkR.543*x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z.1   = x.1076^(x.1077*inv((~lkR.543*x.1078)))
+    
+    14. ~eskR = ~eskR.541
+        ~lkR  = ~lkR.543
+        X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
+        z.1   = x.1076^(x.1077*inv(x.1078))
+  */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, lkA ) ] --[ LtkRev( $A ) ]-> [ Out( lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~s, ~ek ) ] --[ EphkRev( ~s ) ]-> [ Out( ~ek ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma eCK_key_secrecy:
+  all-traces
+  "∀ #i1 #i2 Test A B k.
+    ((Accept( Test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ⇒
+    ((((∃ #i3. SesskRev( Test ) @ #i3) ∨
+       (∃ MatchingSession #i3 #i4 ms.
+         ((Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∧
+         (∃ #i5. SesskRev( MatchingSession ) @ #i5))) ∨
+      (∃ MatchingSession #i3 #i4 ms.
+        ((Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∧
+        ((∃ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6)) ∨
+         (∃ #i5 #i6.
+           (LtkRev( B ) @ #i5) ∧ (EphkRev( MatchingSession ) @ #i6))))) ∨
+     ((¬(∃ MatchingSession #i3 #i4 ms.
+          (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4))) ∧
+      ((∃ #i5. LtkRev( B ) @ #i5) ∨
+       (∃ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 #i2 Test A B k.
+  (Accept( Test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i3. (SesskRev( Test ) @ #i3) ⇒ ⊥) ∧
+  (∀ MatchingSession #i3 #i4 ms.
+    (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)
+   ⇒
+    ∀ #i5. (SesskRev( MatchingSession ) @ #i5) ⇒ ⊥) ∧
+  (∀ MatchingSession #i3 #i4 ms.
+    (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)
+   ⇒
+    (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i5 #i6.
+      (LtkRev( B ) @ #i5) ∧ (EphkRev( MatchingSession ) @ #i6) ⇒ ⊥)) ∧
+  (((∃ MatchingSession #i3 #i4 ms.
+      (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥))))"
+*/
+simplify
+solve( (∃ MatchingSession #i3 #i4 ms.
+         (Sid( MatchingSession, ms ) @ #i3) ∧ (Match( Test, ms ) @ #i4))  ∥
+       ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+        (∀ #i5 #i6. (LtkRev( A ) @ #i5) ∧ (EphkRev( Test ) @ #i6) ⇒ ⊥)) )
+  case case_1
+  solve( Accept( Test, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init_1( ~eskI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
+      case Init_1
+      solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
+        case generate_ltk
+        solve( Sid( MatchingSession, ms ) @ #i3 )
+          case Init_2
+          solve( Init_1( ~eskI.1, $I.1, $R.1, ~lkI.1, hkI ) ▶₀ #i3 )
+            case Init_1
+            solve( !Pk( $R.1, 'g'^~x.1 ) ▶₁ #i3 )
+              case generate_ltk
+              by solve( Match( ~eskI,
+                               <'Init', $I.1, $R.1, 'g'^h1(<~eskI.1, ~lkI.1>), Y.1>
+                        ) @ #i4 )
+            qed
+          qed
+        next
+          case Resp_1
+          solve( !Ltk( $R.1, ~lkR ) ▶₁ #i3 )
+            case generate_ltk
+            solve( !Pk( $I.1, 'g'^~x.1 ) ▶₂ #i3 )
+              case generate_ltk
+              solve( Match( ~eskI, <'Resp', $R.1, $I.1, X, 'g'^h1(<~eskR, ~lkR>)>
+                     ) @ #i4 )
+                case Init_2
+                solve( Init_1( ~eskI, $I.1, $R.1, ~lkI.1, X ) ▶₀ #i4 )
+                  case Init_1
+                  solve( !KU( h2(<'g'^(~lkI*h1(<~eskR, ~lkR>)), 
+                                  'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)), 
+                                  $I, $R>)
+                         ) @ #vk )
+                    case Sessk_reveal_case_1
+                    by contradiction /* from formulas */
+                  next
+                    case Sessk_reveal_case_2
+                    by contradiction /* from formulas */
+                  next
+                    case c_h2
+                    solve( !KU( 'g'^(~lkI*h1(<~eskR, ~lkR>)) ) @ #vk.4 )
+                      case Resp_1
+                      solve( !KU( ~lkI ) @ #vk.12 )
+                        case Ltk_reveal
+                        solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.7 )
+                          case Init_1
+                          solve( !KU( ~x ) @ #vk.13 )
+                            case Ltk_reveal
+                            solve( !KU( 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)) ) @ #vk.10 )
+                              case Init_1
+                              solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.14 )
+                                case c_h1
+                                solve( !KU( ~eskR ) @ #vk.16 )
+                                  case Ephk_reveal
+                                  by contradiction /* from formulas */
+                                qed
+                              qed
+                            next
+                              case Resp_1
+                              solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.14 )
+                                case c_h1
+                                solve( !KU( ~eskI ) @ #vk.16 )
+                                  case Ephk_reveal
+                                  by contradiction /* from formulas */
+                                qed
+                              qed
+                            next
+                              case c_exp
+                              solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
+                                case c_h1
+                                solve( !KU( ~eskI ) @ #vk.19 )
+                                  case Ephk_reveal
+                                  by contradiction /* from formulas */
+                                qed
+                              qed
+                            qed
+                          qed
+                        next
+                          case c_exp
+                          solve( !KU( ~x ) @ #vk.15 )
+                            case Ltk_reveal
+                            solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
+                              case c_h1
+                              solve( !KU( ~eskI ) @ #vk.18 )
+                                case Ephk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        next
+                          case generate_ltk
+                          solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.13 )
+                            case c_h1
+                            solve( !KU( ~eskI ) @ #vk.15 )
+                              case Ephk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        qed
+                      qed
+                    next
+                      case c_exp
+                      solve( !KU( ~lkI ) @ #vk.14 )
+                        case Ltk_reveal
+                        solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.15 )
+                          case c_h1
+                          solve( !KU( ~eskR ) @ #vk.17 )
+                            case Ephk_reveal
+                            solve( !KU( ~lkR ) @ #vk.18 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        qed
+                      qed
+                    next
+                      case generate_ltk
+                      solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.12 )
+                        case c_h1
+                        solve( !KU( ~eskR ) @ #vk.14 )
+                          case Ephk_reveal
+                          solve( !KU( ~lkR ) @ #vk.15 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_1
+    solve( !Ltk( $R, ~lkR ) ▶₁ #i1 )
+      case generate_ltk
+      solve( !Pk( $I, 'g'^~x ) ▶₂ #i1 )
+        case generate_ltk
+        solve( Sid( MatchingSession, ms ) @ #i3 )
+          case Init_2
+          solve( Init_1( ~eskI, $I.1, $R.1, ~lkI, hkI ) ▶₀ #i3 )
+            case Init_1
+            solve( !Pk( $R.1, 'g'^~x.1 ) ▶₁ #i3 )
+              case generate_ltk
+              solve( Match( ~eskR, <'Init', $I.1, $R.1, 'g'^h1(<~eskI, ~lkI>), Y>
+                     ) @ #i4 )
+                case Resp_1
+                solve( !KU( h2(<'g'^(~x*h1(<~eskR, ~lkR>)), 
+                                'g'^(~lkR*h1(<~eskI, ~lkI>)), 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)), 
+                                $I, $R>)
+                       ) @ #vk )
+                  case Sessk_reveal_case_1
+                  by contradiction /* from formulas */
+                next
+                  case Sessk_reveal_case_2
+                  by contradiction /* from formulas */
+                next
+                  case c_h2
+                  solve( !KU( 'g'^(~x*h1(<~eskR, ~lkR>)) ) @ #vk.4 )
+                    case Resp_1
+                    solve( !KU( ~x ) @ #vk.12 )
+                      case Ltk_reveal
+                      solve( !KU( 'g'^(~lkR*h1(<~eskI, ~lkI>)) ) @ #vk.7 )
+                        case Init_1
+                        solve( !KU( ~lkR ) @ #vk.13 )
+                          case Ltk_reveal
+                          solve( !KU( 'g'^(h1(<~eskI, ~lkI>)*h1(<~eskR, ~lkR>)) ) @ #vk.10 )
+                            case Init_1
+                            solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.14 )
+                              case c_h1
+                              solve( !KU( ~eskR ) @ #vk.16 )
+                                case Ephk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          next
+                            case Resp_1
+                            solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.14 )
+                              case c_h1
+                              solve( !KU( ~eskI ) @ #vk.16 )
+                                case Ephk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          next
+                            case c_exp
+                            solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
+                              case c_h1
+                              solve( !KU( ~eskI ) @ #vk.19 )
+                                case Ephk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        qed
+                      next
+                        case c_exp
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.16 )
+                            case c_h1
+                            solve( !KU( ~eskI ) @ #vk.18 )
+                              case Ephk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        qed
+                      next
+                        case generate_ltk
+                        solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.13 )
+                          case c_h1
+                          solve( !KU( ~eskI ) @ #vk.15 )
+                            case Ephk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case c_exp
+                    solve( !KU( ~x ) @ #vk.14 )
+                      case Ltk_reveal
+                      solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.15 )
+                        case c_h1
+                        solve( !KU( ~eskR ) @ #vk.17 )
+                          case Ephk_reveal
+                          solve( !KU( ~lkR ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case generate_ltk
+                    solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.12 )
+                      case c_h1
+                      solve( !KU( ~eskR ) @ #vk.14 )
+                        case Ephk_reveal
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case Resp_1
+          solve( !Ltk( $R.1, ~lkR.1 ) ▶₁ #i3 )
+            case generate_ltk
+            solve( !Pk( $I.1, 'g'^~x.1 ) ▶₂ #i3 )
+              case generate_ltk
+              solve( Match( ~eskR, <'Resp', $R.1, $I.1, X.1, 'g'^h1(<~eskR.1, ~lkR.1>)>
+                     ) @ #i4 )
+                case Init_2
+                by solve( Init_1( ~eskR, $I.1, $R.1, ~lkI, X.1 ) ▶₀ #i4 )
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( Accept( Test, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init_1( ~eskI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
+      case Init_1
+      solve( !Pk( $R, 'g'^~x ) ▶₁ #i1 )
+        case generate_ltk
+        solve( !KU( h2(<z, 'g'^(~x*h1(<~eskI, ~lkI>)), z.1, $I, $R>) ) @ #vk )
+          case Sessk_reveal_case_1
+          by contradiction /* from formulas */
+        next
+          case Sessk_reveal_case_2
+          solve( splitEqs(1) )
+            case split_case_1
+            by contradiction /* from formulas */
+          next
+            case split_case_2
+            solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)*inv(~lkI)) ) @ #vk.2 )
+              case Init_1
+              solve( !KU( ~x ) @ #vk.4 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            next
+              case c_exp
+              solve( !KU( ~x ) @ #vk.5 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            next
+              case generate_ltk
+              solve( !KU( ~lkI ) @ #vk.6 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case c_h2
+          solve( !KU( 'g'^(~x*h1(<~eskI, ~lkI>)) ) @ #vk.5 )
+            case Init_1
+            solve( !KU( ~x ) @ #vk.11 )
+              case Ltk_reveal
+              by contradiction /* from formulas */
+            qed
+          next
+            case c_exp
+            solve( !KU( ~x ) @ #vk.13 )
+              case Ltk_reveal
+              by contradiction /* from formulas */
+            qed
+          next
+            case generate_ltk
+            solve( !KU( h1(<~eskI, ~lkI>) ) @ #vk.11 )
+              case c_h1
+              solve( !KU( ~eskI ) @ #vk.13 )
+                case Ephk_reveal
+                solve( !KU( ~lkI ) @ #vk.14 )
+                  case Ltk_reveal
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_1
+    solve( !Ltk( $R, ~lkR ) ▶₁ #i1 )
+      case generate_ltk
+      solve( !Pk( $I, 'g'^~x ) ▶₂ #i1 )
+        case generate_ltk
+        solve( !KU( h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>) ) @ #vk )
+          case Sessk_reveal_case_1
+          solve( splitEqs(1) )
+            case split_case_1
+            by contradiction /* from formulas */
+          next
+            case split_case_2
+            solve( !KU( 'g'^(~x*h1(<~eskR, ~lkI>)*inv(~lkI)) ) @ #vk.2 )
+              case Resp_1
+              solve( !KU( ~x ) @ #vk.4 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            next
+              case c_exp
+              solve( !KU( ~x ) @ #vk.5 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            next
+              case generate_ltk
+              solve( !KU( ~lkI ) @ #vk.6 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        next
+          case Sessk_reveal_case_2
+          by contradiction /* from formulas */
+        next
+          case c_h2
+          solve( !KU( 'g'^(~x*h1(<~eskR, ~lkR>)) ) @ #vk.3 )
+            case Resp_1
+            solve( !KU( ~x ) @ #vk.11 )
+              case Ltk_reveal
+              by contradiction /* from formulas */
+            qed
+          next
+            case c_exp
+            solve( !KU( ~x ) @ #vk.13 )
+              case Ltk_reveal
+              by contradiction /* from formulas */
+            qed
+          next
+            case generate_ltk
+            solve( !KU( h1(<~eskR, ~lkR>) ) @ #vk.11 )
+              case c_h1
+              solve( !KU( ~eskR ) @ #vk.13 )
+                case Ephk_reveal
+                solve( !KU( ~lkR ) @ #vk.14 )
+                  case Ltk_reveal
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/NAXOS_eCK.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/NAXOS_eCK.spthy
+
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 3.09039101s
+  eCK_key_secrecy (all-traces): verified (134 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/NAXOS_eCK.spthy
+
+  output:          examples/csf12/NAXOS_eCK.spthy.tmp
+  processing time: 3.09039101s
+  eCK_key_secrecy (all-traces): verified (134 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,165 @@
+theory seqdfsneeded begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+lemma slow:
+  exists-trace "∃ #t. End( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (End( ) @ #t)"
+*/
+simplify
+solve( Foo( h(h(h(~x))) ) ▶₀ #t )
+  case AAA_hash
+  solve( Foo( h(h(~x)) ) ▶₀ #vr )
+    case AAA_hash
+    solve( Foo( h(~x) ) ▶₀ #vr.1 )
+      case AAA_hash
+      solve( Foo( ~x ) ▶₀ #vr.2 )
+        case step_2
+        solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>)))))))))))))))))
+               ) ▶₀ #vr.4 )
+          case AAA_hash
+          solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>))))))))))))))))
+                 ) ▶₀ #vr.5 )
+            case AAA_hash
+            solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>)))))))))))))))
+                   ) ▶₀ #vr.6 )
+              case AAA_hash
+              solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>))))))))))))))
+                     ) ▶₀ #vr.7 )
+                case AAA_hash
+                solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>))))))))))))) ) ▶₀ #vr.8 )
+                  case AAA_hash
+                  solve( Foo( h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>)))))))))))) ) ▶₀ #vr.9 )
+                    case AAA_hash
+                    solve( Foo( h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>))))))))))) ) ▶₀ #vr.10 )
+                      case AAA_hash
+                      solve( Foo( h(h(h(h(h(h(h(h(h(h(<~x, ~x>)))))))))) ) ▶₀ #vr.11 )
+                        case AAA_hash
+                        solve( Foo( h(h(h(h(h(h(h(h(h(<~x, ~x>))))))))) ) ▶₀ #vr.12 )
+                          case AAA_hash
+                          solve( Foo( h(h(h(h(h(h(h(h(<~x, ~x>)))))))) ) ▶₀ #vr.13 )
+                            case AAA_hash
+                            solve( Foo( h(h(h(h(h(h(h(<~x, ~x>))))))) ) ▶₀ #vr.14 )
+                              case AAA_hash
+                              solve( Foo( h(h(h(h(h(h(<~x, ~x>)))))) ) ▶₀ #vr.15 )
+                                case AAA_hash
+                                solve( Foo( h(h(h(h(h(<~x, ~x>))))) ) ▶₀ #vr.16 )
+                                  case AAA_hash
+                                  solve( Foo( h(h(h(h(<~x, ~x>)))) ) ▶₀ #vr.17 )
+                                    case AAA_hash
+                                    solve( Foo( h(h(h(<~x, ~x>))) ) ▶₀ #vr.18 )
+                                      case AAA_hash
+                                      solve( Foo( h(h(<~x, ~x>)) ) ▶₀ #vr.19 )
+                                        case AAA_hash
+                                        solve( Foo( h(<~x, ~x>) ) ▶₀ #vr.20 )
+                                          case AAA_hash
+                                          solve( Foo( <~x, ~x> ) ▶₀ #vr.21 )
+                                            case gen
+                                            SOLVED // trace found
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+rule (modulo E) finish:
+   [ Foo( h(h(h(~x))) ) ] --[ End( ) ]-> [ End( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) AAA_hash:
+   [ Foo( x ) ] --> [ Foo( h(x) ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) step_2:
+   [ Foo( h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(h(<~x, ~x>)))))))))))))))))) ) ]
+  -->
+   [ Foo( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) gen:
+   [ In( ~x ) ] --> [ Foo( <~x, ~x> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) decoy:
+   [ Fr( x ), Bar( 'a' )[-, no_precomp] ] --> [ Foo( h(x) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) amplify_decoy_case1:
+   [ Bar( y ), In( 'a' ), In( x ) ] --> [ Bar( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) amplify_decoy_case2:
+   [ Bar( y ), In( 'b' ), In( x ) ] --> [ Bar( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) amplify_decoy_case3:
+   [ Bar( y ), In( 'c' ), In( x ) ] --> [ Bar( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/regression/trace/seqdfsneeded.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/regression/trace/seqdfsneeded.spthy
+
+  output:          examples/regression/trace/seqdfsneeded.spthy.tmp
+  processing time: 0.185597766s
+  slow (exists-trace): verified (24 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/seqdfsneeded.spthy
+
+  output:          examples/regression/trace/seqdfsneeded.spthy.tmp
+  processing time: 0.185597766s
+  slow (exists-trace): verified (24 steps)
+
+==============================================================================
+*/

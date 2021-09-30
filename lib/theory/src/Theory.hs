@@ -172,6 +172,7 @@ module Theory (
   , unfoldRuleVariants
 
   , getLemmas
+  , getEitherLemmas
   , getDiffLemmas
   , getIntrVariants
   , getIntrVariantsDiff
@@ -1801,9 +1802,8 @@ getDiffLemmas :: ClosedDiffTheory -> [DiffLemma IncrementalDiffProof]
 getDiffLemmas = diffTheoryDiffLemmas
 
 -- | All side lemmas.
--- REMOVE
--- getEitherLemmas :: ClosedDiffTheory -> [(Side, Lemma IncrementalProof)]
--- getEitherLemmas = diffTheoryLemmas
+getEitherLemmas :: ClosedDiffTheory -> [(Side, Lemma IncrementalProof)]
+getEitherLemmas = diffTheoryLemmas
 
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]

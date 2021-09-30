@@ -1,0 +1,143 @@
+theory nsscbc begin
+
+// Function signature and definition of the equational theory E
+
+functions: dec/2, enc/2, fst/1, pair/2, prefix/1, snd/1, succ/1
+equations:
+    dec(enc(M, k), k) = M,
+    fst(<x.1, x.2>) = x.1,
+    prefix(enc(<X, Y>, k)) = enc(X, k),
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) setup:
+   [ Fr( ~k ) ] --[ KeyGen( $A ) ]-> [ !SharedKeyWithServer( $A, ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reveal:
+   [ !SharedKeyWithServer( X, k ) ] --[ Reveal( X ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator1Request:
+   [ Fr( ~na ) ]
+  --[ Initate( $A, $B, ~na ) ]->
+   [ InitiatorRequested( $A, $B, ~na ), Out( <$A, $B, ~na> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator2KeyAndForward:
+   [
+   InitiatorRequested( $A, $B, ~na ), !SharedKeyWithServer( $A, kas ),
+   In( enc(<<<~na, $B>, ~k>, enc(<~k, $A>, kbs)>, kas) ),
+   !SharedKeyWithServer( $B, kbs )
+   ]
+  --[ KeySharedInit( $A, $B, ~k ) ]->
+   [ Out( enc(<~k, $A>, kbs) ), InitiatorWaitConfirm( $A, $B, ~na, ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator3Confirm:
+   [ InitiatorWaitConfirm( $A, $B, ~na, ~k ), In( enc(~nb, ~k) ) ]
+  --[ KeySharedInitConfirmed( $A, $B, ~k, ~nb ) ]->
+   [ Out( enc(succ(~nb), ~k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ResponderKeyConfirm:
+   [ In( enc(<~k, $A>, kbs) ), !SharedKeyWithServer( $B, kbs ), Fr( ~nb ) ]
+  --[ KeySharedResp( $B, $A, ~k, ~nb ) ]->
+   [ ResponderWaitConfirm( $B, $A, ~k, ~nb ), Out( enc(~nb, ~k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ResponderConfirmed:
+   [ ResponderWaitConfirm( $B, $A, ~k, ~nb ), In( enc(succ(~nb), ~k) ) ]
+  --[ KeySharedRespConfirmed( $B, $A, ~k, ~nb ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Server:
+   [
+   In( <$A, $B, ~n> ), Fr( ~k ), !SharedKeyWithServer( $A, kas ),
+   !SharedKeyWithServer( $B, kbs )
+   ]
+  --[ CreatedKey( $A, $B, ~k ) ]->
+   [ Out( enc(<<<~n, $B>, ~k>, enc(<~k, $A>, kbs)>, kas) ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction singlesharedkeyperuser:
+  "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma secrecy:
+  all-traces
+  "∀ A B k n #i.
+    (KeySharedRespConfirmed( B, A, k, n ) @ #i) ⇒
+    (((¬(∃ #j. K( k ) @ #j)) ∨ (∃ #j. Reveal( B ) @ #j)) ∨
+     (∃ #j. Reveal( A ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B k n #i.
+  (KeySharedRespConfirmed( B, A, k, n ) @ #i)
+ ∧
+  (∃ #j. (K( k ) @ #j)) ∧
+  (∀ #j. (Reveal( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (Reveal( A ) @ #j) ⇒ ⊥)"
+*/
+simplify
+solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #i )
+  case ResponderKeyConfirm
+  solve( !KU( ~k ) @ #vk.1 )
+    case Initiator1Request
+    solve( !KU( enc(succ(~nb), ~k) ) @ #vk.1 )
+      case c_enc
+      solve( !KU( enc(<~k, $A>, ~k.1) ) @ #vk.2 )
+        case Server_case_5
+        solve( !KU( succ(~nb) ) @ #vk.4 )
+          case c_succ
+          solve( !KU( ~nb ) @ #vk.8 )
+            case ResponderKeyConfirm
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
+
+  output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
+  processing time: 11.195426545s
+  secrecy (all-traces): falsified - found trace (8 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
+
+  output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
+  processing time: 11.195426545s
+  secrecy (all-traces): falsified - found trace (8 steps)
+
+==============================================================================
+*/

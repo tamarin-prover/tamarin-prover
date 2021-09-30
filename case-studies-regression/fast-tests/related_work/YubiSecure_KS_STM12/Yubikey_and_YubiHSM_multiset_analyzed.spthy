@@ -1,0 +1,1671 @@
+theory YubikeyHSMmultiset begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
+           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2, senc/2, snd/1,
+           xorc/2
+equations:
+    demac(mac(m, k), k) = m,
+    dexor1(xorc(a, b), a) = b,
+    dexor2(xorc(a, b), b) = a,
+    fst(<x.1, x.2>) = x.1,
+    keystream_kh(keystream(kh, n)) = kh,
+    keystream_n(keystream(n, n)) = n,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: S_Counter/2, Y_counter/2 */
+
+section{* The Yubikey-Protocol with a YubiHSM *}
+
+rule (modulo E) isendHSM:
+   [ In( x ) ] --[ HSMWrite( x ) ]-> [ InHSM( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) irecvHSM:
+   [ OutHSM( x ) ] --[ HSMRead( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) read_AEAD:
+   [ !S_AEAD( pid, aead ) ]
+  --[ AEADRead( aead ), HSMRead( aead ) ]->
+   [ Out( aead ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) write_AEAD:
+   [ In( aead ), In( pid ) ]
+  --[ AEADWrite( aead ), HSMWrite( aead ) ]->
+   [ !S_AEAD( pid, aead ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) HSMInit:
+   [ Fr( ~k ), Fr( ~kh ) ]
+  --[ Protocol( ), GenerateRole1( ~k ), MasterKey( ~k ), OneTime( ) ]->
+   [ !HSM( ~kh, ~k ), Out( ~kh ), !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) YSM_AEAD_RANDOM_GENERATE:
+   [
+   Fr( ~data ), InHSM( <N, kh> ), !HSM( kh, k ),
+   !YSM_AEAD_RANDOM_GENERATE( kh )
+   ]
+  --[ GenerateRandomAEAD( ~data ) ]->
+   [ OutHSM( <xorc(senc(keystream(kh, N), k), ~data), mac(~data, k)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) YSM_AEAD_GENERATE:
+   [ InHSM( <N, kh, data> ), !HSM( kh, k ), !YSM_AEAD_GENERATE( kh ) ]
+  --[
+  GenerateAEAD( data, <xorc(senc(keystream(kh, N), k), data), mac(data, k)>
+  )
+  ]->
+   [ OutHSM( <xorc(senc(keystream(kh, N), k), data), mac(data, k)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) YSM_AES_ESC_BLOCK_ENCRYPT:
+   [ InHSM( <kh, data> ), !HSM( kh, k ), !YSM_AES_ESC_BLOCK_ENCRYPT( kh ) ]
+  -->
+   [ OutHSM( senc(data, k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) YSM_AEAD_YUBIKEY_OTP_DECODE:
+   [
+   InHSM( <did, kh, 
+           <xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)>, 
+           senc(<did, sc, rand>, k2)>
+   ),
+   !HSM( kh, k ), !YSM_AEAD_YUBIKEY_OTP_DECODE( kh )
+   ]
+  --[
+  OtpDecode( k2, k, <did, sc, rand>, sc,
+             xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)
+  ),
+  OtpDecodeMaster( k2, k )
+  ]->
+   [ OutHSM( sc ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) BuyANewYubikey:
+   [ Fr( ~k2 ), Fr( ~pid ), Fr( ~sid ), !HSM( kh, ~k ), In( '1' ) ]
+  --[ Init( ~pid, ~k2 ) ]->
+   [
+   Y_counter( ~pid, '1' ), !Y_Key( ~pid, ~k2 ), !Y_sid( ~pid, ~sid ),
+   S_Counter( ~pid, '1' ),
+   !S_AEAD( ~pid,
+            <xorc(senc(keystream(kh, ~pid), ~k), <~k2, ~sid>), mac(<~k2, ~sid>, ~k)>
+   ),
+   !S_sid( ~pid, ~sid ), Out( ~pid )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Yubikey_Plugin:
+   [ Y_counter( pid, sc ), In( Ssc ) ]
+  --[ Yubi( pid, Ssc ), Smaller( sc, Ssc ) ]->
+   [ Y_counter( pid, Ssc ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Yubikey_PressButton:
+   [
+   Y_counter( pid, tc ), !Y_Key( pid, k2 ), !Y_sid( pid, sid ), Fr( ~pr ),
+   Fr( ~nonce ), In( ('1'+tc) )
+   ]
+  --[ YubiPress( pid, tc ), YubiPressOtp( pid, <sid, tc, ~pr>, tc, k2 ) ]->
+   [
+   Y_counter( pid, ('1'+tc) ),
+   Out( <pid, ~nonce, senc(<sid, tc, ~pr>, k2)> )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Server_ReceiveOTP_NewSession:
+   [
+   In( <pid, nonce, senc(<sid, tc, ~pr>, k2)> ), !HSM( kh, k ),
+   !S_AEAD( pid,
+            <xorc(senc(keystream(kh, pid), k), <k2, sid>), mac(<k2, sid>, k)>
+   ),
+   S_Counter( pid, otc ), !S_sid( pid, sid )
+   ]
+  --[
+  Login( pid, sid, tc, senc(<sid, tc, ~pr>, k2) ),
+  LoginCounter( pid, otc, tc ), Smaller( otc, tc )
+  ]->
+   [ S_Counter( pid, tc ) ]
+
+  // loop breaker: [3]
+  /* has exactly the trivial AC variant */
+
+restriction smaller:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a+z) = b)"
+
+lemma transitivity:
+  all-traces
+  "∀ #t1 #t2 a b c.
+    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒ (∃ z. (a+z) = c)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 a b c.
+  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2) ∧ ∀ z. ((a+z) = c) ⇒ ⊥"
+*/
+simplify
+by contradiction /* from formulas */
+
+restriction onetime:
+  "∀ #t3 #t4. ((OneTime( ) @ #t3) ∧ (OneTime( ) @ #t4)) ⇒ (#t3 = #t4)"
+  // safety formula
+
+lemma adv_can_guess_counter [reuse, use_induction]:
+  all-traces
+  "∀ pid sc #t2.
+    (YubiPress( pid, sc ) @ #t2) ⇒ (∃ #t1. (K( sc ) @ #t1) ∧ (#t1 < #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sc #t2.
+  (YubiPress( pid, sc ) @ #t2) ∧ ∀ #t1. (K( sc ) @ #t1) ⇒ ¬(#t1 < #t2)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ pid sc #t2.
+           (YubiPress( pid, sc ) @ #t2)
+          ⇒
+           ((last(#t2)) ∨
+            (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
+         (∃ #i a b.
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t2))  ∥
+           (∃ #t1. (K( sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) )
+      case case_1
+      solve( !Y_Key( pid, k2 ) ▶₁ #t2 )
+        case BuyANewYubikey
+        solve( !Y_sid( ~pid, sid ) ▶₂ #t2 )
+          case BuyANewYubikey
+          solve( Y_counter( ~pid, sc ) ▶₀ #t2 )
+            case BuyANewYubikey
+            by contradiction /* from formulas */
+          next
+            case Yubikey_Plugin
+            by contradiction /* from formulas */
+          next
+            case Yubikey_PressButton
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma otp_decode_does_not_help_adv_use_induction [reuse, use_induction]:
+  all-traces
+  "∀ #t3 k2 k m sc enc mac.
+    (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3) ⇒
+    (∃ #t1 pid. (YubiPress( pid, sc ) @ #t1) ∧ (#t1 < #t3))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t3 k2 k m sc enc mac.
+  (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
+ ∧
+  ∀ #t1 pid. (YubiPress( pid, sc ) @ #t1) ⇒ ¬(#t1 < #t3)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ #t3 k2 k m sc enc mac.
+           (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
+          ⇒
+           ((last(#t3)) ∨
+            (∃ #t1 pid.
+              (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3))))  ∥
+         (∃ #i a b.
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t3))  ∥
+           (∃ #t1 pid.
+             (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3)) )
+      case case_1
+      solve( InHSM( <did, kh, 
+                     <xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)>, 
+                     senc(<did, sc, rand>, k2)>
+             ) ▶₀ #t3 )
+        case isendHSM
+        solve( !HSM( kh, k ) ▶₁ #t3 )
+          case HSMInit
+          solve( !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh ) ▶₂ #t3 )
+            case HSMInit
+            solve( !KU( xorc(senc(keystream(~kh, N), ~k), <k2, did>) ) @ #vk.6 )
+              case c_xorc
+              solve( !KU( mac(<k2, did>, ~k) ) @ #vk.8 )
+                case c_mac
+                solve( !KU( ~k ) @ #vk.12 )
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                qed
+              next
+                case irecvHSM
+                by contradiction /* cyclic */
+              next
+                case read_AEAD
+                solve( !KU( ~sid ) @ #vk.4 )
+                  case Yubikey_PressButton
+                  solve( !KU( ~k2 ) @ #vk.11 )
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD_case_1
+                    solve( !KU( senc(<~sid, sc, rand>, ~k2) ) @ #vk.10 )
+                      case Yubikey_PressButton
+                      by contradiction /* from formulas */
+                    next
+                      case c_senc
+                      solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.12 )
+                        case c_senc
+                        solve( !KU( ~k ) @ #vk.21 )
+                          case irecvHSM
+                          by contradiction /* cyclic */
+                        qed
+                      next
+                        case irecvHSM
+                        by contradiction /* cyclic */
+                      next
+                        case read_AEAD
+                        solve( !KU( ~k2.1 ) @ #vk.21 )
+                          case irecvHSM
+                          by contradiction /* cyclic */
+                        next
+                          case read_AEAD_case_1
+                          by contradiction /* cyclic */
+                        next
+                          case read_AEAD_case_2
+                          solve( !KU( ~k ) @ #vk.23 )
+                            case irecvHSM
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case read_AEAD_case_2
+                    solve( !KU( ~k ) @ #vk.15 )
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                next
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                next
+                  case read_AEAD_case_1
+                  solve( !KU( senc(<~sid, sc, rand>, ~k2) ) @ #vk.9 )
+                    case Yubikey_PressButton
+                    by contradiction /* from formulas */
+                  next
+                    case c_senc
+                    solve( !KU( senc(keystream(~kh, N), ~k) ) @ #vk.11 )
+                      case c_senc
+                      solve( !KU( ~k ) @ #vk.19 )
+                        case irecvHSM
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      solve( !KU( ~k2.1 ) @ #vk.19 )
+                        case irecvHSM
+                        by contradiction /* cyclic */
+                      next
+                        case read_AEAD_case_1
+                        by contradiction /* cyclic */
+                      next
+                        case read_AEAD_case_2
+                        solve( !KU( ~k ) @ #vk.21 )
+                          case irecvHSM
+                          by contradiction /* cyclic */
+                        qed
+                      qed
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case read_AEAD_case_2
+                  solve( !KU( ~k ) @ #vk.13 )
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              qed
+            next
+              case irecvHSM
+              by contradiction /* cyclic */
+            next
+              case read_AEAD
+              solve( !KU( ~sid ) @ #vk.2 )
+                case Yubikey_PressButton
+                solve( !KU( ~k2 ) @ #vk.12 )
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                next
+                  case read_AEAD_case_1
+                  solve( !KU( senc(<~sid, sc, rand>, ~k2) ) @ #vk.9 )
+                    case Yubikey_PressButton
+                    by contradiction /* from formulas */
+                  next
+                    case c_senc
+                    solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.14 )
+                      case c_senc
+                      solve( !KU( ~k ) @ #vk.19 )
+                        case irecvHSM
+                        by contradiction /* cyclic */
+                      qed
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case read_AEAD_case_2
+                  solve( !KU( ~k ) @ #vk.13 )
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  qed
+                qed
+              next
+                case irecvHSM
+                by contradiction /* cyclic */
+              next
+                case read_AEAD_case_1
+                solve( !KU( senc(<~sid, sc, rand>, ~k2) ) @ #vk.8 )
+                  case Yubikey_PressButton
+                  by contradiction /* from formulas */
+                next
+                  case c_senc
+                  solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.11 )
+                    case c_senc
+                    solve( !KU( ~k ) @ #vk.17 )
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* cyclic */
+                  qed
+                next
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                qed
+              next
+                case read_AEAD_case_2
+                solve( !KU( ~k ) @ #vk.10 )
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma k2_is_secret_use_induction [use_induction, reuse]:
+  all-traces
+  "∀ #t1 #t2 pid k2.
+    ((Init( pid, k2 ) @ #t1) ∧ (K( k2 ) @ #t2)) ⇒
+    (∃ #t3 #t4 k. ((K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)) ∧ (#t3 < #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 pid k2.
+  (Init( pid, k2 ) @ #t1) ∧ (K( k2 ) @ #t2)
+ ∧
+  ∀ #t3 #t4 k. (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4) ⇒ ¬(#t3 < #t2)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ #t1 #t2 pid k2.
+           (Init( pid, k2 ) @ #t1) ∧ (K( k2 ) @ #t2)
+          ⇒
+           ((last(#t2)) ∨
+            (last(#t1)) ∨
+            (∃ #t3 #t4 k.
+              (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
+             ∧
+              (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2))))  ∥
+         (∃ #i a b.
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t2))  ∥
+           (∃ #t3 #t4 k.
+             (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
+            ∧
+             (¬(last(#t4))) ∧ (¬(last(#t3))) ∧ (#t3 < #t2)) )
+      case case_1
+      solve( !HSM( kh, ~k ) ▶₃ #t1 )
+        case HSMInit
+        solve( !KU( ~k2 ) @ #vk.1 )
+          case irecvHSM
+          by contradiction /* cyclic */
+        next
+          case read_AEAD_case_1
+          solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.2 )
+            case c_senc
+            solve( !KU( ~k ) @ #vk.4 )
+              case irecvHSM
+              by contradiction /* cyclic */
+            qed
+          next
+            case irecvHSM
+            by contradiction /* cyclic */
+          next
+            case read_AEAD
+            by contradiction /* cyclic */
+          qed
+        next
+          case read_AEAD_case_2
+          solve( !KU( ~k ) @ #vk.2 )
+            case irecvHSM
+            by contradiction /* cyclic */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma neither_k_nor_k2_are_ever_leaked_inv [use_induction, reuse]:
+  all-traces
+  "(¬(∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2))) ∧
+   (¬(∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
+  (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2))  ∥
+         (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)) )
+    case case_1
+    solve( ((∀ #t1 #t2 k.
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
+            (∀ #t5 #t6 k6 pid.
+              (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
+             ⇒
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
+           (∃ #i a b.
+             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+      case case_1
+      solve( (last(#t2))  ∥ (last(#t1)) )
+        case case_1
+        solve( !KU( ~k ) @ #t2 )
+          case irecvHSM
+          by contradiction /* cyclic */
+        qed
+      next
+        case case_2
+        solve( !KU( ~k ) @ #t2 )
+          case irecvHSM
+          by contradiction /* cyclic */
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( ((∀ #t1 #t2 k.
+              (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)
+             ⇒
+              ((last(#t2)) ∨ (last(#t1)))) ∧
+            (∀ #t5 #t6 k6 pid.
+              (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)
+             ⇒
+              ((last(#t6)) ∨ (last(#t5)))))  ∥
+           (∃ #i a b.
+             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+      case case_1
+      solve( (last(#t6))  ∥ (last(#t5)) )
+        case case_1
+        solve( !HSM( kh, ~k ) ▶₃ #t5 )
+          case HSMInit
+          solve( !KU( ~k2 ) @ #t6 )
+            case irecvHSM
+            by contradiction /* cyclic */
+          next
+            case read_AEAD_case_1
+            solve( !KU( senc(keystream(~kh, ~pid), ~k) ) @ #vk.1 )
+              case c_senc
+              by contradiction /* from formulas */
+            next
+              case irecvHSM
+              by contradiction /* cyclic */
+            next
+              case read_AEAD
+              by contradiction /* cyclic */
+            qed
+          next
+            case read_AEAD_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case case_2
+        solve( !HSM( kh, ~k ) ▶₃ #t5 )
+          case HSMInit
+          solve( !KU( ~k2 ) @ #t6 )
+            case irecvHSM
+            by contradiction /* cyclic */
+          next
+            case read_AEAD_case_1
+            by contradiction /* from formulas */
+          next
+            case read_AEAD_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma one_count_foreach_login [reuse, use_induction]:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1. (YubiPress( pid, x ) @ #t1) ⇒ ¬(#t1 < #t2)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ pid sid x otp #t2.
+           (Login( pid, sid, x, otp ) @ #t2)
+          ⇒
+           ((last(#t2)) ∨
+            (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
+         (∃ #i a b.
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t2))  ∥
+           (∃ #t1.
+             (YubiPress( pid, (otc+z) ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) )
+      case case_1
+      solve( !HSM( kh, k ) ▶₁ #t2 )
+        case HSMInit
+        solve( !S_AEAD( pid,
+                        <xorc(senc(keystream(~kh, pid), ~k), <k2, sid>), mac(<k2, sid>, ~k)>
+               ) ▶₂ #t2 )
+          case BuyANewYubikey
+          solve( !S_sid( ~pid, ~sid ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !KU( senc(<~sid, (otc+z), ~pr>, ~k2) ) @ #vk.4 )
+              case Yubikey_PressButton
+              by contradiction /* from formulas */
+            next
+              case c_senc
+              by contradiction /* from formulas */
+            next
+              case irecvHSM
+              by contradiction /* cyclic */
+            qed
+          qed
+        next
+          case write_AEAD
+          solve( !S_sid( pid, sid ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !KU( senc(<~sid, (otc+z), ~pr>, k2) ) @ #vk.4 )
+              case Yubikey_PressButton
+              by contradiction /* from formulas */
+            next
+              case c_senc
+              solve( !KU( ~sid ) @ #vk.11 )
+                case Yubikey_PressButton
+                by contradiction /* from formulas */
+              next
+                case irecvHSM
+                by contradiction /* cyclic */
+              next
+                case read_AEAD_case_1
+                solve( !KU( ~pr ) @ #vk.16 )
+                  case BuyANewYubikey
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case HSMInit
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case Yubikey_PressButton_case_1
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case Yubikey_PressButton_case_2
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case Yubikey_PressButton_case_3
+                  by contradiction /* from formulas */
+                next
+                  case Yubikey_PressButton_case_4
+                  by contradiction /* from formulas */
+                next
+                  case fresh
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case irecvHSM
+                  by contradiction /* cyclic */
+                next
+                  case read_AEAD_case_1
+                  by contradiction /* from formulas */
+                next
+                  case read_AEAD_case_2
+                  solve( !KU( xorc(senc(keystream(~kh, ~pid), ~k), <k2, ~sid>) ) @ #vk.9 )
+                    case c_xorc
+                    solve( !KU( mac(<k2, ~sid>, ~k) ) @ #vk.12 )
+                      case c_mac
+                      by contradiction /* from formulas */
+                    next
+                      case irecvHSM
+                      by contradiction /* cyclic */
+                    next
+                      case read_AEAD
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case irecvHSM
+                    by contradiction /* cyclic */
+                  next
+                    case read_AEAD
+                    by contradiction /* from formulas */
+                  qed
+                next
+                  case read_AEAD_case_3
+                  by contradiction /* from formulas */
+                next
+                  case read_AEAD_case_4
+                  by contradiction /* from formulas */
+                next
+                  case read_AEAD_case_5
+                  by contradiction /* from formulas */
+                qed
+              next
+                case read_AEAD_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case irecvHSM
+              by contradiction /* cyclic */
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma slightly_weaker_invariant [reuse, use_induction]:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+    ((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+     (LoginCounter( pid, otc2, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. tc2 = (tc1+z))) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2)
+ ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = (tc1+z)) ⇒ ⊥))) ∧
+  (¬(#t2 < #t1)) ∧
+  (¬(#t1 = #t2))"
+*/
+induction
+  case empty_trace
+  by contradiction
+next
+  case non_empty_trace
+  simplify
+  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2+z.1) = (otc1+z+z.2)) ⇒ ⊥) )
+    case case_1
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction
+    next
+      case case_2
+      by contradiction
+    qed
+  next
+    case case_2
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction
+    next
+      case case_2
+      solve( S_Counter( pid, otc2 ) ▶₃ #t2 )
+        case BuyANewYubikey
+        by contradiction /* non-injective facts (#vr,#t1,#t2) */
+      next
+        case Server_ReceiveOTP_NewSession_case_1
+        solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+                 (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+                 (LoginCounter( pid, otc2, tc2 ) @ #t2)
+                ⇒
+                 ((last(#t2)) ∨
+                  (last(#t1)) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  (#t2 < #t1) ∨
+                  (#t1 = #t2)))  ∥
+               (∃ #i a b.
+                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+          case case_1
+          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
+                 (#t1 < #vr)  ∥ (#vr = #t1) )
+            case case_1_case_01
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_02
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_03
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_04
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_05
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_06
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_07
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_08
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_09
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_10
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_11
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_12
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_13
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_14
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_15
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_16
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_17
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_18
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_19
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_20
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_21
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_22
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_23
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_24
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_25
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_2_case_01
+            by contradiction /* from formulas */
+          next
+            case case_2_case_02
+            by contradiction /* from formulas */
+          next
+            case case_2_case_03
+            by contradiction /* from formulas */
+          next
+            case case_2_case_04
+            by contradiction /* from formulas */
+          next
+            case case_2_case_05
+            by contradiction /* from formulas */
+          next
+            case case_2_case_06
+            by contradiction /* from formulas */
+          next
+            case case_2_case_07
+            by contradiction /* from formulas */
+          next
+            case case_2_case_08
+            by contradiction /* from formulas */
+          next
+            case case_2_case_09
+            by contradiction /* from formulas */
+          next
+            case case_2_case_10
+            by contradiction /* from formulas */
+          next
+            case case_2_case_11
+            by contradiction /* from formulas */
+          next
+            case case_2_case_12
+            by contradiction /* from formulas */
+          next
+            case case_2_case_13
+            by contradiction /* from formulas */
+          next
+            case case_2_case_14
+            by contradiction /* from formulas */
+          next
+            case case_2_case_15
+            by contradiction /* from formulas */
+          next
+            case case_2_case_16
+            by contradiction /* from formulas */
+          next
+            case case_2_case_17
+            by contradiction /* from formulas */
+          next
+            case case_2_case_18
+            by contradiction /* from formulas */
+          next
+            case case_2_case_19
+            by contradiction /* from formulas */
+          next
+            case case_2_case_20
+            by contradiction /* from formulas */
+          next
+            case case_2_case_21
+            by contradiction /* from formulas */
+          next
+            case case_2_case_22
+            by contradiction /* from formulas */
+          next
+            case case_2_case_23
+            by contradiction /* from formulas */
+          next
+            case case_2_case_24
+            by contradiction /* from formulas */
+          next
+            case case_2_case_25
+            by contradiction /* from formulas */
+          next
+            case case_3
+            by contradiction /* from formulas */
+          qed
+        next
+          case case_2
+          by contradiction /* from formulas */
+        qed
+      next
+        case Server_ReceiveOTP_NewSession_case_2
+        solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+                 (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+                 (LoginCounter( pid, otc2, tc2 ) @ #t2)
+                ⇒
+                 ((last(#t2)) ∨
+                  (last(#t1)) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  (#t2 < #t1) ∨
+                  (#t1 = #t2)))  ∥
+               (∃ #i a b.
+                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+          case case_1
+          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
+                 (#t1 < #vr)  ∥ (#vr = #t1) )
+            case case_1_case_01
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_02
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_03
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_04
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_05
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_06
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_07
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_08
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_09
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_10
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_11
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_12
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_13
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_14
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_15
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_16
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_17
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_18
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_19
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_20
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_21
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_22
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_23
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_24
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_1_case_25
+            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+          next
+            case case_2_case_01
+            by contradiction /* from formulas */
+          next
+            case case_2_case_02
+            by contradiction /* from formulas */
+          next
+            case case_2_case_03
+            by contradiction /* from formulas */
+          next
+            case case_2_case_04
+            by contradiction /* from formulas */
+          next
+            case case_2_case_05
+            by contradiction /* from formulas */
+          next
+            case case_2_case_06
+            by contradiction /* from formulas */
+          next
+            case case_2_case_07
+            by contradiction /* from formulas */
+          next
+            case case_2_case_08
+            by contradiction /* from formulas */
+          next
+            case case_2_case_09
+            by contradiction /* from formulas */
+          next
+            case case_2_case_10
+            by contradiction /* from formulas */
+          next
+            case case_2_case_11
+            by contradiction /* from formulas */
+          next
+            case case_2_case_12
+            by contradiction /* from formulas */
+          next
+            case case_2_case_13
+            by contradiction /* from formulas */
+          next
+            case case_2_case_14
+            by contradiction /* from formulas */
+          next
+            case case_2_case_15
+            by contradiction /* from formulas */
+          next
+            case case_2_case_16
+            by contradiction /* from formulas */
+          next
+            case case_2_case_17
+            by contradiction /* from formulas */
+          next
+            case case_2_case_18
+            by contradiction /* from formulas */
+          next
+            case case_2_case_19
+            by contradiction /* from formulas */
+          next
+            case case_2_case_20
+            by contradiction /* from formulas */
+          next
+            case case_2_case_21
+            by contradiction /* from formulas */
+          next
+            case case_2_case_22
+            by contradiction /* from formulas */
+          next
+            case case_2_case_23
+            by contradiction /* from formulas */
+          next
+            case case_2_case_24
+            by contradiction /* from formulas */
+          next
+            case case_2_case_25
+            by contradiction /* from formulas */
+          next
+            case case_3
+            by contradiction /* from formulas */
+          qed
+        next
+          case case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma no_replay:
+  all-traces
+  "¬(∃ #i #j pid sid x otp1 otp2.
+      ((Login( pid, sid, x, otp1 ) @ #i) ∧ (Login( pid, sid, x, otp2 ) @ #j)) ∧
+      (¬(#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j pid sid x otp1 otp2.
+  (Login( pid, sid, x, otp1 ) @ #i) ∧ (Login( pid, sid, x, otp2 ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+simplify
+  case 1
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 2
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 3
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 4
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 5
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 6
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 7
+  by solve( (#i < #j)  ∥ (#j < #i) )
+qed
+
+lemma injective_correspondance:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1.
+      ((YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2)) ∧
+      (∀ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ⇒ (#t3 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1.
+   (YubiPress( pid, x ) @ #t1)
+  ⇒
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
+*/
+simplify
+solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+  case case_1
+  solve( !HSM( kh, k ) ▶₁ #t2 )
+    case HSMInit
+    solve( !S_AEAD( pid,
+                    <xorc(senc(keystream(~kh, pid), ~k), <k2.1, sid.1>), 
+                     mac(<k2.1, sid.1>, ~k)>
+           ) ▶₂ #t2 )
+      case BuyANewYubikey
+      solve( !S_sid( ~pid, ~sid.1 ) ▶₄ #t2 )
+        case BuyANewYubikey
+        solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+          case BuyANewYubikey
+          solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( K( (otc+z) ) @ #t1.1 )
+              case isend
+              solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                case Yubikey_PressButton
+                solve( !Y_Key( ~pid, k2.1 ) ▶₁ #t1.2 )
+                  case BuyANewYubikey
+                  solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                    case BuyANewYubikey
+                    solve( K( (otc+z) ) @ #t1.3 )
+                      case isend
+                      by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case write_AEAD
+      solve( !S_sid( pid, sid.1 ) ▶₄ #t2 )
+        case BuyANewYubikey
+        solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+          case BuyANewYubikey
+          solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( K( (otc+z) ) @ #t1.1 )
+              case isend
+              solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                case Yubikey_PressButton
+                solve( !Y_Key( ~pid, k2.2 ) ▶₁ #t1.2 )
+                  case BuyANewYubikey
+                  solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                    case BuyANewYubikey
+                    solve( K( (otc+z) ) @ #t1.3 )
+                      case isend
+                      by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( (¬(#t1.4 < #t2))  ∥
+         (∃ otp2 #t3. (Login( pid, sid.1, (otc+z), otp2 ) @ #t3) ∧ ¬(#t3 = #t2)) )
+    case case_1
+    solve( (#t1.4 = #t2)  ∥ (#t2 < #t1.4) )
+      case case_1
+      solve( !HSM( kh, k ) ▶₁ #t2 )
+        case HSMInit
+        solve( !S_AEAD( pid,
+                        <xorc(senc(keystream(~kh, pid), ~k), <k2.1, sid.1>), 
+                         mac(<k2.1, sid.1>, ~k)>
+               ) ▶₂ #t2 )
+          case BuyANewYubikey
+          solve( !S_sid( ~pid, ~sid.1 ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+              case BuyANewYubikey
+              solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+                case BuyANewYubikey
+                solve( K( (otc+z) ) @ #t1.1 )
+                  case isend
+                  solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                    case Yubikey_PressButton
+                    solve( !Y_Key( ~pid, k2.1 ) ▶₁ #t1.2 )
+                      case BuyANewYubikey
+                      solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                        case BuyANewYubikey
+                        solve( K( (otc+z) ) @ #t1.3 )
+                          case isend
+                          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case write_AEAD
+          solve( !S_sid( pid, sid.1 ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+              case BuyANewYubikey
+              solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+                case BuyANewYubikey
+                solve( K( (otc+z) ) @ #t1.1 )
+                  case isend
+                  solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                    case Yubikey_PressButton
+                    solve( !Y_Key( ~pid, k2.2 ) ▶₁ #t1.2 )
+                      case BuyANewYubikey
+                      solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                        case BuyANewYubikey
+                        solve( K( (otc+z) ) @ #t1.3 )
+                          case isend
+                          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      solve( !HSM( kh, k ) ▶₁ #t2 )
+        case HSMInit
+        solve( !S_AEAD( pid,
+                        <xorc(senc(keystream(~kh, pid), ~k), <k2.1, sid.1>), 
+                         mac(<k2.1, sid.1>, ~k)>
+               ) ▶₂ #t2 )
+          case BuyANewYubikey
+          solve( !S_sid( ~pid, ~sid.1 ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+              case BuyANewYubikey
+              solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+                case BuyANewYubikey
+                solve( K( (otc+z) ) @ #t1.2 )
+                  case isend
+                  solve( YubiPress( ~pid, (otc+z) ) @ #t1.3 )
+                    case Yubikey_PressButton
+                    solve( !Y_Key( ~pid, k2.1 ) ▶₁ #t1.2 )
+                      case BuyANewYubikey
+                      solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                        case BuyANewYubikey
+                        solve( K( (otc+z) ) @ #t1.4 )
+                          case isend
+                          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case write_AEAD
+          solve( !S_sid( pid, sid.1 ) ▶₄ #t2 )
+            case BuyANewYubikey
+            solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+              case BuyANewYubikey
+              solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+                case BuyANewYubikey
+                solve( K( (otc+z) ) @ #t1.2 )
+                  case isend
+                  solve( YubiPress( ~pid, (otc+z) ) @ #t1.3 )
+                    case Yubikey_PressButton
+                    solve( !Y_Key( ~pid, k2.2 ) ▶₁ #t1.2 )
+                      case BuyANewYubikey
+                      solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                        case BuyANewYubikey
+                        solve( K( (otc+z) ) @ #t1.4 )
+                          case isend
+                          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( !HSM( kh, k ) ▶₁ #t2 )
+      case HSMInit
+      solve( !S_AEAD( pid,
+                      <xorc(senc(keystream(~kh, pid), ~k), <k2.1, sid.1>), 
+                       mac(<k2.1, sid.1>, ~k)>
+             ) ▶₂ #t2 )
+        case BuyANewYubikey
+        solve( !S_sid( ~pid, ~sid.1 ) ▶₄ #t2 )
+          case BuyANewYubikey
+          solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+            case BuyANewYubikey
+            solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+              case BuyANewYubikey
+              solve( K( (otc+z) ) @ #t1.1 )
+                case isend
+                solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                  case Yubikey_PressButton
+                  solve( !Y_Key( ~pid, k2.1 ) ▶₁ #t1.2 )
+                    case BuyANewYubikey
+                    solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                      case BuyANewYubikey
+                      solve( K( (otc+z) ) @ #t1.3 )
+                        case isend
+                        by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case write_AEAD
+        solve( !S_sid( pid, sid.1 ) ▶₄ #t2 )
+          case BuyANewYubikey
+          solve( !Y_Key( ~pid, k2 ) ▶₁ #t1 )
+            case BuyANewYubikey
+            solve( !Y_sid( ~pid, sid ) ▶₂ #t1 )
+              case BuyANewYubikey
+              solve( K( (otc+z) ) @ #t1.1 )
+                case isend
+                solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+                  case Yubikey_PressButton
+                  solve( !Y_Key( ~pid, k2.2 ) ▶₁ #t1.2 )
+                    case BuyANewYubikey
+                    solve( !Y_sid( ~pid, sid.1 ) ▶₂ #t1.2 )
+                      case BuyANewYubikey
+                      solve( K( (otc+z) ) @ #t1.3 )
+                        case isend
+                        by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Login_invalidates_smaller_counters:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
+    (((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+      (LoginCounter( pid, otc2, tc2 ) @ #t2)) ∧
+     (tc2 = (tc1+z))) ⇒
+    (#t1 < #t2)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2) ∧
+  (tc2 = (tc1+z))
+ ∧
+  ¬(#t1 < #t2)"
+*/
+simplify
+solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( !HSM( kh, k ) ▶₁ #t1 )
+    case HSMInit
+    solve( !S_AEAD( pid,
+                    <xorc(senc(keystream(~kh, pid), ~k), <k2, sid>), mac(<k2, sid>, ~k)>
+           ) ▶₂ #t1 )
+      case BuyANewYubikey
+      solve( !S_sid( ~pid, ~sid ) ▶₄ #t1 )
+        case BuyANewYubikey
+        by solve( LoginCounter( ~pid, otc2, (otc1+z+z.1) ) @ #t1 )
+      qed
+    next
+      case write_AEAD
+      solve( !S_sid( pid, sid ) ▶₄ #t1 )
+        case BuyANewYubikey
+        by solve( LoginCounter( ~pid, otc2, (otc1+z+z.1) ) @ #t1 )
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
+
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
+  processing time: 6.189875569s
+  transitivity (all-traces): verified (2 steps)
+  adv_can_guess_counter (all-traces): verified (13 steps)
+  otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
+  k2_is_secret_use_induction (all-traces): verified (17 steps)
+  neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
+  one_count_foreach_login (all-traces): verified (72 steps)
+  slightly_weaker_invariant (all-traces): verified (119 steps)
+  no_replay (all-traces): verified (8 steps)
+  injective_correspondance (all-traces): verified (84 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (8 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
+
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
+  processing time: 6.189875569s
+  transitivity (all-traces): verified (2 steps)
+  adv_can_guess_counter (all-traces): verified (13 steps)
+  otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
+  k2_is_secret_use_induction (all-traces): verified (17 steps)
+  neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
+  one_count_foreach_login (all-traces): verified (72 steps)
+  slightly_weaker_invariant (all-traces): verified (119 steps)
+  no_replay (all-traces): verified (8 steps)
+  injective_correspondance (all-traces): verified (84 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (8 steps)
+
+==============================================================================
+*/

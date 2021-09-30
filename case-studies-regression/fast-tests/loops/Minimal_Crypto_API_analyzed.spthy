@@ -1,0 +1,100 @@
+theory Minimal_Crypto_API begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) NewKey:
+   [ Fr( ~h ), Fr( ~k ) ]
+  --[ NewKey( ~h, ~k ) ]->
+   [ !Store( ~h, ~k ), Out( ~h ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) EncryptMsg:
+   [ !Store( h, k ), In( <h, m> ) ] --> [ Out( senc(m, k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) WrapKey:
+   [ !Store( h1, k1 ), !Store( h2, k2 ), In( <h1, h2> ) ]
+  -->
+   [ Out( senc(k1, k2) ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma NewKey_invariant [reuse, use_induction]:
+  all-traces "¬(∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#j))  ∥ (last(#i)) )
+    case case_1
+    solve( !KU( ~k ) @ #j )
+      case WrapKey
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( !KU( ~k ) @ #j )
+      case WrapKey
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma NewKey_secrecy:
+  all-traces "¬(∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j)"
+*/
+simplify
+by contradiction /* from formulas */
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/Minimal_Crypto_API.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/Minimal_Crypto_API.spthy
+
+  output:          examples/loops/Minimal_Crypto_API.spthy.tmp
+  processing time: 0.085082055s
+  NewKey_invariant (all-traces): verified (8 steps)
+  NewKey_secrecy (all-traces): verified (2 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/Minimal_Crypto_API.spthy
+
+  output:          examples/loops/Minimal_Crypto_API.spthy.tmp
+  processing time: 0.085082055s
+  NewKey_invariant (all-traces): verified (8 steps)
+  NewKey_secrecy (all-traces): verified (2 steps)
+
+==============================================================================
+*/
