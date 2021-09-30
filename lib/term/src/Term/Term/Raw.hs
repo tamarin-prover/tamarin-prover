@@ -174,6 +174,7 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == expSym    -> FExp   t1 t2  -- ensure here that FExp is always exp, never a user-defined symbol
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
+    [ t1, t2 ] | o == diffSym   -> FDiff  t1 t2
     [ t1, t2 ] | o == consSym   -> FCons  t1 t2
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
