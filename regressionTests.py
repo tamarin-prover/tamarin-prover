@@ -87,7 +87,7 @@ def parseFiles(pathB):
 	"""
 
 	## infer regression path name pathA from pathB ##
-	pathA = settings.folderA + pathB.strip(settings.folderB)
+	pathA = settings.folderA + pathB.split(settings.folderB, 1)[-1]
 
 	## parse files ##
 	parsedB = parseFile(pathB)
@@ -132,7 +132,7 @@ def compare():
 		## proofs differ ##
 		if proofA != proofB:
 			if settings.verbose >= 5:
-				pathA = settings.folderA + pathB.strip(settings.folderB)
+				pathA = settings.folderA + pathB.split(settings.folderB, 1)[-1]
 				command = f"diff {pathA} {pathB} || :"
 				output = subprocess.check_output(command, shell=True).decode("utf-8")
 				logging.debug(output.split("\n<   processing time")[0])
@@ -140,7 +140,7 @@ def compare():
 
 		## results differ ##
 		if resA != resB:
-			logging.error(color(colors.RED, pathB.strip(settings.folderB)))
+			logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 			for i in range(len(lemmas)):
 				if resA[i] != resB[i]:
 					logging.error(color(colors.RED + colors.BOLD, f"The result changed from {resA[i]} to {resB[i]} in {lemmas[i]}"))
@@ -149,7 +149,7 @@ def compare():
 
 		## compare steps and times ##
 		timeColor = getColorQuality(timeA, timeB)
-		timeText = "The time changed from " + color(timeColor, f"{str(round(timeA,2)).rjust(12)}s to {str(round(timeB,2)).rjust(9)}s") + f" in {pathB.strip(settings.folderB)}"
+		timeText = "The time changed from " + color(timeColor, f"{str(round(timeA,2)).rjust(12)}s to {str(round(timeB,2)).rjust(9)}s") + f" in {pathB.split(settings.folderB, 1)[-1]}"
 		if stepsA != stepsB and settings.verbose < 3:
 			logging.info(timeText)
 		logging.debug(timeText)
