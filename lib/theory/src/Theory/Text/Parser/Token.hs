@@ -23,6 +23,9 @@ module Theory.Text.Parser.Token (
   -- ** Formal comments
   , formalComment
 
+  -- ** File Path
+  , filePath
+
   -- * Identifiers and Variables
   , identifier
   , indexedIdentifier
@@ -97,6 +100,7 @@ module Theory.Text.Parser.Token (
     -- * Basic Parsing
   , Parser
   , parseFile
+  , parseFileWState
   , parseString
   ) where
 
@@ -108,6 +112,8 @@ import           Data.List (foldl')
 import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+
+import           System.FilePath
 
 import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
@@ -148,12 +154,23 @@ spthy =
       }
 
 -- | Run a parser on the contents of a file.
-parseFile :: Parser a -> FilePath -> IO a
-parseFile parser inFile = do
+parseFileWState :: MaudeSig -> Parser a -> FilePath -> IO a
+parseFileWState initState parser inFile = do
     inp <- readFile inFile
-    case parseString inFile parser inp of
+    case parseStringWState initState inFile parser inp of
         Right x  -> return x
         Left err -> error $ show err
+
+-- | Run a given parser on a given string.
+parseStringWState :: MaudeSig
+            -> FilePath
+            -- ^ Description of the source file. (For error reporting.)"
+            -> Parser a
+            -> String         -- ^ Input string.
+            -> Either ParseError a
+parseStringWState initState srcDesc parser =
+    runParser (T.whiteSpace spthy *> parser) initState srcDesc
+                                           -- was "minimalMaudeSig" -> could lead to errors with parsing diff terms!
 
 -- | Run a given parser on a given string.
 parseString :: FilePath
@@ -161,9 +178,11 @@ parseString :: FilePath
             -> Parser a
             -> String         -- ^ Input string.
             -> Either ParseError a
-parseString srcDesc parser =
-    runParser (T.whiteSpace spthy *> parser) pairMaudeSig srcDesc
-                                           -- was "minimalMaudeSig" -> could lead to errors with parsing diff terms!
+parseString = parseStringWState pairMaudeSig
+
+parseFile :: Parser a -> FilePath -> IO a
+parseFile = parseFileWState pairMaudeSig
+
 
 -- Token parsers
 ----------------
@@ -471,3 +490,21 @@ opNDC = symbol_ "+"
 -- | Operator for 0-process (terminator of sequence)
 opNull :: Parser()
 opNull = symbol_ "0"
+
+
+-- File Path
+-- | Parse a file path, returned with the given prefix s
+filePath :: Parser FilePath
+filePath = many char
+--  parseDir s
+  where
+    parseDir fp = asum
+         [  do dir <- identifier
+               _   <- opSlash
+               parseDir (fp <> dir <> [pathSeparator])
+         , do fn <- identifier
+              _ <- symbol "."
+              ext <- identifier
+              return (fp <> fn <> "." <> ext)]
+
+    char = alphaNum <|> oneOf ("." <> [pathSeparator])

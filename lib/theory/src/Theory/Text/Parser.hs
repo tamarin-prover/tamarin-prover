@@ -33,6 +33,7 @@ import           System.FilePath
 import           Control.Category
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
+import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 import           Theory
@@ -160,69 +161,92 @@ theory flags0 inFile = do
     when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    symbol_ "begin"
-        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
+    (thy', _) <- symbol_ "begin"
+        *> addItems inFile (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
         <* symbol "end"
+    return thy'
   where
-    addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
-    addItems flags thy = asum
+    addItems :: Maybe FilePath -> S.Set String -> OpenTheory -> Parser (OpenTheory, S.Set String)
+    addItems inFile0 flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do thy' <- builtins thy
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
+           addItems inFile0 flags $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do functions
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems inFile0 flags $ set (sigpMaudeSig . thySignature) msig thy
       , do equations
            msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           addItems inFile0 flags $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems flags thy'
+--           addItems inFile0 flags thy'
       , do thy' <- liftedAddRestriction thy =<< restriction
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
-           addItems flags thy'
+           addItems inFile0 flags thy'
            -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma thy =<< lemma workDir
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
            -- thy'' <- foldM liftedAddRestriction thy' $
            --  map (Restriction "name") [get (preRestriction . rInfo) ru]
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACs [r] thy)
+           addItems inFile0 flags (addIntrRuleACs [r] thy)
       , do c <- formalComment
-           addItems flags (addFormalComment c thy)
+           addItems inFile0 flags (addFormalComment c thy)
       , do procc <- process thy                          -- try parsing a process
-           addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
+           addItems inFile0 flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems inFile0 call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
-           addItems flags thy'
+           addItems inFile0 flags thy'
       , do thy' <- preddeclaration thy
-           addItems flags (thy')
-      , do ifdef flags thy
-      , do define flags thy
-      , do return thy
+           addItems inFile0 flags (thy')
+      , do ifdef inFile0 flags thy
+      , do define inFile0 flags thy
+      , do include inFile0 flags thy
+      , do return (thy, flags)
       ]
-
-    workDir = takeDirectory <$> inFile
-
-    define flags thy = do
+      where workDir = (takeDirectory <$> inFile0)
+    define inFile0 flags thy = do
        flag <- try (symbol "#define") *> identifier
-       addItems (S.insert flag flags) thy
+       addItems inFile0 (S.insert flag flags) thy
 
-    ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
-    ifdef flags thy = do
+
+    include :: Maybe FilePath -> S.Set String -> OpenTheory -> Parser  (OpenTheory, S.Set String)
+    include inFile0 flags thy = do
+         filepath <- try (symbol "#include") *> filePathParser
+         msig <- getState
+         let (thy', flags', sig') = unsafePerformIO (parseFileWState msig (addItems' (Just filepath) flags thy) filepath)
+         _ <- putState sig'
+         addItems inFile0 flags' $ set (sigpMaudeSig . thySignature) sig' thy'
+      where
+        addItems' :: Maybe FilePath -> S.Set String -> OpenTheory -> Parser (OpenTheory, S.Set String, MaudeSig)
+        addItems' inFile1 flags1 thy1 = do
+             (thy',fl') <- addItems inFile1 flags1 thy1
+             msig <- getState
+             return (thy', fl', msig)
+
+        filePathParser = case takeDirectory <$> inFile0 of
+              Nothing -> do
+                x <- doubleQuoted filePath
+                return (x <> [pathSeparator])
+              Just s ->  do
+                x <- doubleQuoted filePath
+                return (s </> x)
+
+    ifdef :: Maybe FilePath -> S.Set String -> OpenTheory ->  Parser (OpenTheory, S.Set String)
+    ifdef inFile0 flags thy = do
        flag <- symbol_ "#ifdef" *> identifier
        if flag `S.member` flags
-         then do thy' <- addItems flags thy
+         then do (thy', flags') <- addItems inFile0 flags thy
                  symbol_ "#endif"
-                 addItems flags thy'
+                 addItems inFile0 flags' thy'
          else do _ <- manyTill anyChar (try (symbol_ "#endif"))
-                 addItems flags thy
+                 addItems inFile0 flags thy
 
     -- check process defined only once
     -- add process to theoryitems
