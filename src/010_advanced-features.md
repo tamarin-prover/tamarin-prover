@@ -146,8 +146,8 @@ by including both separated by commas---e.g., a premise
 
 ### Using an Oracle
 
-Oracles allow the manual ranking of proof goals.
-They are invoked as a process with the lemma under scrutiny as the first
+Oracles allow to implement user-defined heuristics as custom rankings of proof
+goals. They are invoked as a process with the lemma under scrutiny as the first
 argument and all current proof goals seperated by EOL over stdin. Proof goals
 match the regex `(\d+):(.+)` where `(\d+)` is the goal's index, and `(.+)` is
 the actual goal. A proof goal is formatted like one of the applicable proof
