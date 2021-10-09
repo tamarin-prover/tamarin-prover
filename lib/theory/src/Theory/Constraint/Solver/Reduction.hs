@@ -101,6 +101,7 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
 
+import Debug.Trace
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
 ------------------------------------------------------------------------------
@@ -282,7 +283,7 @@ insertEdges edges = do
 -- that no rule is applicable.
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
 insertAction i fa@(Fact _ ann _) = do
-    present <- (goal `M.member`) <$> getM sGoals
+    present <- trace (show fa) (goal `M.member`) <$> getM sGoals
     isdiff <- getM sDiffSystem
     nodePresent <- (i `M.member`) <$> getM sNodes
     if present
@@ -306,7 +307,7 @@ insertAction i fa@(Fact _ ann _) = do
                        else do
                           insertGoal goal False
                           requiresKU m1 *> requiresKU m2 *> return Changed
-                Just (UpK, viewTerm2 -> FCons m1 m2) -> do
+                Just (UpK, viewTerm2 -> FConc m1 m2) -> do
                           insertGoal goal False
                           requiresKU m1 *> requiresKU m2 *> return Changed
 
@@ -368,7 +369,26 @@ insertAction i fa@(Fact _ ann _) = do
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
+                Just (UpK, viewTerm2 -> FConc t1 t2) -> do
+                -- In the diff case, add union (?) rule instead of goal
+                    if isdiff
+                       then do
+                          -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
+                          if not nodePresent
+                             then do
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_concat")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               insertGoal goal False
+                               markGoalAsSolved "union" goal
+                               mapM_ requiresKU ms *> return Changed
+                             else do
+                               insertGoal goal False
+                               markGoalAsSolved "exists" goal
+                               return Changed
 
+                       else do
+                          insertGoal goal False
+                          mapM_ requiresKU ms *> return Changed
+                          where ms = splitConc (fAppConcat (t1,t2))
                 _ -> do
                     insertGoal goal False
                     return Unchanged
@@ -381,6 +401,8 @@ insertAction i fa@(Fact _ ann _) = do
       let faKU = kuFactAnn ann t
       insertLess j i
       void (insertAction j faKU)
+    splitConc (viewTerm2 -> FConc t1 t2) = splitConc t1 ++ splitConc t2
+    splitConc t                          = [t]
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
 insertLess :: NodeId -> NodeId -> Reduction ()

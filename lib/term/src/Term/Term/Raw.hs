@@ -149,7 +149,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
                  | FXor [Term a] | Zero
                  | FUnion [Term a]
                  | FPair (Term a) (Term a)
-                 | FCons (Term a) (Term a)
+                 | FConc (Term a) (Term a)
                  | FDiff (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
                  | FAppC CSym [Term a]
@@ -175,7 +175,7 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == pmultSym  -> FPMult t1 t2
     [ t1, t2 ] | o == pairSym   -> FPair  t1 t2
     [ t1, t2 ] | o == diffSym   -> FDiff  t1 t2
-    [ t1, t2 ] | o == consSym   -> FCons  t1 t2
+    [ t1, t2 ] | o == concatSym -> FConc  t1 t2
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"

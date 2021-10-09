@@ -63,7 +63,6 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
             FList ts                                        -> all go ts
             FPair t1 t2                                     -> go t1 && go t2
-            FCons t1 t2                                     -> go t1 && go t2
             FDiff t1 t2                                     -> go t1 && go t2
             One                                             -> True
             Zero                                            -> True
@@ -81,6 +80,9 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult ts | fAppOne `elem` ts  || any isProduct ts || invalidMult ts   -> False
             -- xor
             FXor ts | fAppZero `elem` ts  || any isXor ts || invalidXor ts   -> False
+            -- cons
+            FConc t1 t2 | isConcat t1 || isConcat t2   -> False
+
             -- point multiplication
             FPMult _                  (viewTerm2 -> FPMult _ _) -> False
             FPMult (viewTerm2 -> One) _                         -> False
@@ -89,6 +91,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FEMap (viewTerm2 -> FPMult _ _) _                         -> False
 
             -- topmost position not reducible, check subterms
+            FConc      t1 t2 -> go t1 && go t2
             FExp       t1 t2 -> go t1 && go t2
             FPMult     t1 t2 -> go t1 && go t2
             FEMap      t1 t2 -> go t1 && go t2

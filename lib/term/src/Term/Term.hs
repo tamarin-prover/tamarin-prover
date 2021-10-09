@@ -20,6 +20,7 @@ module Term.Term (
     , fAppZero
     , fAppDiff
     , fAppExp
+    , fAppConcat
     , fAppInv
     , fAppPMult
     , fAppEMap
@@ -29,7 +30,7 @@ module Term.Term (
 
     -- ** Destructors and classifiers
     , isPair
-    , isCons
+    , isConcat
     , isDiff
     , isInverse
     , isProduct
@@ -115,10 +116,11 @@ fAppZero :: Term a
 fAppZero = fAppNoEq zeroSym []
 
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
-fAppDiff, fAppPair, fAppExp, fAppPMult :: (Term a, Term a) -> Term a
+fAppDiff, fAppPair, fAppExp, fAppPMult, fAppConcat :: (Term a, Term a) -> Term a
 fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
+fAppConcat (b,e) = fAppNoEq concatSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
 fAppEMap :: Ord a => (Term a, Term a) -> Term a
 fAppEMap  (x,y) = fAppC    EMap     [x, y]
@@ -144,9 +146,9 @@ isPair _                        = False
 
 
 -- | 'True' iff the term is a well-formed concatenation.
-isCons :: Show a => Term a -> Bool
-isCons (viewTerm2 -> FCons _ _) = True
-isCons _                        = False
+isConcat :: Show a => Term a -> Bool
+isConcat (viewTerm2 -> FConc _ _) = True
+isConcat _                        = False
 
 -- | 'True' iff the term is a well-formed diff term.
 isDiff :: Show a => Term a -> Bool
@@ -245,6 +247,7 @@ prettyTerm ppLit = ppTerm
         Lit l                                     -> ppLit l
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)      [t1,t2] | s == concatSym  -> ppTerm t1 <> text "||" <> ppTerm t2
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
 --        FApp (NoEq s)      _       | s == consSym -> ppTerms "; " 1 "[|" "|]" (splitCons t)
@@ -263,9 +266,6 @@ prettyTerm ppLit = ppTerm
 
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
     split t                          = [t]
-
-    splitCons (viewTerm2 -> FCons t1 t2) = splitCons t1 ++ splitCons t2
-    splitCons t                          = [t]
 
     ppFun f ts =
         text (BC.unpack f ++"(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"

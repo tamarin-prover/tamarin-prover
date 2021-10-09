@@ -92,7 +92,7 @@ openGoals sys = do
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
                     || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
                     -- handled by 'insertAction'
-                    || isPair m ||  isCons m ||  isInverse m || isProduct m -- || isXor m
+                    || isPair m ||  isConcat m ||  isInverse m || isProduct m -- || isXor m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
@@ -167,7 +167,7 @@ openGoals sys = do
 
     toplevelTerms t@(viewTerm2 -> FPair t1 t2) =
         t : toplevelTerms t1 ++ toplevelTerms t2
-    toplevelTerms t@(viewTerm2 -> FCons t1 t2) =
+    toplevelTerms t@(viewTerm2 -> FConc t1 t2) =
         t : toplevelTerms t1 ++ toplevelTerms t2
     toplevelTerms t@(viewTerm2 -> FInv t1) = t : toplevelTerms t1
     toplevelTerms t = [t]

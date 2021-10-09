@@ -42,7 +42,7 @@ module Term.Term.FunctionSymbols (
     , oneSym
     , invSym
     , pairSym
-    , consSym
+    , concatSym
     , nilSym
     , fstSym
     , sndSym
@@ -127,7 +127,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, consSym, nilSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, concatSym, nilSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -147,7 +147,7 @@ pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public))
 
-consSym = ("cons",(2,Public))
+concatSym = ("concat",(2,Public))
 
 nilSym  = ("nil",(0,Public))
 
@@ -174,7 +174,7 @@ msetFunSig = S.fromList [AC Union]
 
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
-pairFunSig = S.fromList [ pairSym, fstSym, sndSym, consSym, nilSym ]
+pairFunSig = S.fromList [ pairSym, fstSym, sndSym, concatSym, nilSym ]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig

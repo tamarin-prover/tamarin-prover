@@ -131,13 +131,17 @@ xorterm eqn plit = do
         then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else multterm eqn plit
 
+-- | A left-associative sequence of concatenations.
+concterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+concterm eqn plit = chainl1 (xorterm eqn plit) (curry fAppConcat <$ opConcat)
+
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 msetterm eqn plit = do
     mset <- enableMSet <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
-        else xorterm eqn plit
+        then chainl1 (concterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        else concterm eqn plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)

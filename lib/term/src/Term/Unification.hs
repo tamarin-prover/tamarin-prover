@@ -242,7 +242,7 @@ unifyRaw l0 r0 = do
        (_,             Lit (Var vr) ) -> elim vr l
        (Lit (Con cl),  Lit (Con cr) ) -> guard (cl == cr)
 
-       (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) | lfsym == consSym ->
+       (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) | lfsym == concatSym ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> tell [Equal l r]  -- delay unification
 
@@ -299,7 +299,7 @@ matchRaw sortOf t p = do
                 modify (M.insert vp t)
               Just tp | t == tp  -> return ()
                       | otherwise -> throwError NoMatcher
-      (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) | lfsym == consSym ->
+      (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) | lfsym == concatSym ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> throwError ACProblem
       (Lit (Con ct),  Lit (Con cp)) -> guard (ct == cp)
