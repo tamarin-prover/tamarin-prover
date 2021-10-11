@@ -15,6 +15,7 @@ module Term.Term.FunctionSymbols (
     -- ** AC, C, and NonAC funcion symbols
       FunSym(..)
     , ACSym(..)
+    , ASym(..)
     , CSym(..)
     , Privacy(..)
     , NoEqSym
@@ -34,6 +35,7 @@ module Term.Term.FunctionSymbols (
     , multSymString
     , zeroSymString
     , xorSymString
+    , concatSymString
 
     -- ** concrete symbols
     , diffSym
@@ -42,8 +44,6 @@ module Term.Term.FunctionSymbols (
     , oneSym
     , invSym
     , pairSym
-    , concatSym
-    , nilSym
     , fstSym
     , sndSym
     , zeroSym
@@ -51,12 +51,14 @@ module Term.Term.FunctionSymbols (
     -- ** concrete signatures
     , dhFunSig
     , xorFunSig
+    , concatFunSig
     , bpFunSig
     , msetFunSig
     , pairFunSig
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
+    , concatReducibleFunSig
     , implicitFunSig
     ) where
 
@@ -83,6 +85,10 @@ import qualified Data.Set as S
 data ACSym = Union | Mult | Xor
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | AC function symbols.
+data ASym = Concat
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | A function symbol can be either Private (unknown to adversary) or Public.
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
@@ -98,6 +104,7 @@ data CSym = EMap
 data FunSym = NoEq  NoEqSym   -- ^ a free function function symbol of a given arity
             | AC    ACSym     -- ^ an AC function symbol, can be used n-ary
             | C     CSym      -- ^ a C function symbol of a given arity
+            | A     ASym      -- ^ an Associative function symbol, can be used n-ary
             | List            -- ^ a free n-ary function symbol of TOP sort
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
@@ -111,7 +118,7 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString, concatSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
@@ -119,6 +126,7 @@ oneSymString = "one"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
+concatSymString = "concat"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -127,7 +135,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, concatSym, nilSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -147,11 +155,6 @@ pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public))
 
-concatSym = ("concat",(2,Public))
-
-nilSym  = ("nil",(0,Public))
-
-
 ----------------------------------------------------------------------
 -- Fixed signatures
 ----------------------------------------------------------------------
@@ -164,6 +167,10 @@ dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
 xorFunSig :: FunSig
 xorFunSig = S.fromList [ AC Xor, NoEq zeroSym ]
 
+-- | The signature for the associative function symbol
+concatFunSig :: FunSig
+concatFunSig = S.fromList [ A Concat ]
+
 -- | The signature for the bilinear pairing function symbols.
 bpFunSig :: FunSig
 bpFunSig = S.fromList [ NoEq pmultSym, C EMap ]
@@ -174,7 +181,7 @@ msetFunSig = S.fromList [AC Union]
 
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
-pairFunSig = S.fromList [ pairSym, fstSym, sndSym, concatSym, nilSym ]
+pairFunSig = S.fromList [ pairSym, fstSym, sndSym]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig
@@ -187,6 +194,10 @@ bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
 -- | Reducible function symbols for XOR.
 xorReducibleFunSig :: FunSig
 xorReducibleFunSig = S.fromList [ AC Xor ]
+
+-- | Reducible function symbols for Concatenation.
+concatReducibleFunSig :: FunSig
+concatReducibleFunSig = S.fromList [ A Concat ]
 
 -- | Implicit function symbols.
 implicitFunSig :: FunSig

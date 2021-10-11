@@ -133,7 +133,7 @@ xorterm eqn plit = do
 
 -- | A left-associative sequence of concatenations.
 concterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
-concterm eqn plit = chainl1 (xorterm eqn plit) (curry fAppConcat <$ opConcat)
+concterm eqn plit = chainl1 (xorterm eqn plit) ((\a b -> fAppA Concat [a,b]) <$ opConcat)
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)

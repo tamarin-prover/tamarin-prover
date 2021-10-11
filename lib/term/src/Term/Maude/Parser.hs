@@ -23,7 +23,6 @@ import Term.LTerm
 import Term.Maude.Types
 import Term.Maude.Signature
 import Term.Rewriting.Definitions
-import Term.Term.FunctionSymbols
 
 import Control.Monad.Bind
 
@@ -114,6 +113,9 @@ ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> replaceUnderscore o
 ppMaudeCSym :: CSym -> ByteString
 ppMaudeCSym EMap = funSymPrefix <> emapSymString
 
+-- | Pretty print a A symbol for Maude.
+ppMaudeASym :: ASym -> ByteString
+ppMaudeASym Concat = funSymPrefix <> concatSymString
 
 -- | @ppMaude t@ pretty prints the term @t@ for Maude.
 ppMaude :: Term MaudeLit -> ByteString
@@ -125,13 +127,14 @@ ppMaude t = case viewTerm t of
     FApp (NoEq fsym) as      -> ppMaudeNoEqSym fsym <> ppArgs as
     FApp (C fsym) as         -> ppMaudeCSym fsym    <> ppArgs as
     FApp (AC op) as          -> ppMaudeACSym op     <> ppArgs as
+    FApp (A  op) as          -> ppMaudeASym op      <> ppArgs as
     FApp List as             -> ppList as
   where
     ppArgs as     = "(" <> (B.intercalate "," (map ppMaude as)) <> ")"
     ppInt         = BC.pack . show
-    ppList [x,x2] = funSymPrefix <> "concat(" <> ppMaude x <> "," <> ppMaude x2 <> ")"
-    ppList (x:xs) = funSymPrefix <> "concat(" <> ppMaude x <> "," <> ppList xs <> ")"
-    ppList []     = funSymPrefix <> "nil"
+    ppList []     = "nil"
+    ppList (x:xs) = "cons(" <> ppMaude x <> "," <> ppList xs <> ")"
+
 ------------------------------------------------------------------------------
 -- Pretty printing a 'MaudeSig' as a Maude functional module.
 ------------------------------------------------------------------------------
@@ -153,14 +156,17 @@ ppTheory msig = BC.unlines $
     , "  op n : Nat -> Node ."
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op list : TOP -> TOP ."
-    , theoryOp "nil  : -> Msg "
-    , theoryOp "concat : Msg Msg -> Msg [assoc]"
- ]
+    , "  op cons : TOP TOP -> TOP ."
+    , "  op nil  : -> TOP ." ]
     ++
     (if enableMSet msig
        then
        [ theoryOp "mun : Msg Msg -> Msg [comm assoc]" ]
+       else [])
+    ++
+    (if enableConc msig
+       then
+       [ theoryOp "concat : Msg Msg -> Msg [assoc]" ]
        else [])
     ++
     (if enableDH msig
@@ -183,7 +189,7 @@ ppTheory msig = BC.unlines $
        , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
-    map theoryFunSym (S.toList $ (stFunSyms msig) `S.difference` (S.fromList [concatSym,nilSym]))
+    map theoryFunSym (S.toList $ (stFunSyms msig))
     ++
     map theoryRule (S.toList $ rrulesForMaudeSig msig)
     ++
@@ -273,9 +279,6 @@ parseTerm msig = choice
                ]
    ]
   where
-    -- consSym = (funSymPrefix <> "cons",(2,Public))
-    -- nilSym  = (funSymPrefix <> "nil",(0,Public))
-
     parseFunSym ident args
       | op `elem` allowedfunSyms = replaceMinusFun op
       | otherwise                =
@@ -283,13 +286,12 @@ parseTerm msig = choice
                   ++ "symbol `"++ show op ++"', not in "
                   ++ show allowedfunSyms
       where prefixLen      = BC.length funSymPrefix
-            special        = ident `elem` ["list", "concat", "nil" ]
+            special        = ident `elem` ["list"]
             priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident
                                then Private else Public
             op             = (if special then ident else BC.drop prefixLen ident
                              , ( length args, priv))
-            allowedfunSyms = [concatSym, nilSym]
-                ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
+            allowedfunSyms = (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
@@ -300,13 +302,9 @@ parseTerm msig = choice
                        | ident == ppMaudeACSym Union      = fAppAC Union args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
-        appIdent args  | ident == funSymPrefix <> "concat"  = mkConcat args
+                       | ident == ppMaudeASym  Concat     = fAppA  Concat  args
         appIdent args                                     = fAppNoEq op args
           where op = parseFunSym ident args
-
-        mkConcat [x,xs] = fAppNoEq concatSym [x,xs]
-        mkConcat (x:xs) = fAppNoEq concatSym [x,mkConcat xs]
-        mkConcat [] = fAppNoEq nilSym []
 
     parseFAppConst ident = return $ fAppNoEq (parseFunSym ident []) []
 

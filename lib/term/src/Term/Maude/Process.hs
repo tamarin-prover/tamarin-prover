@@ -122,7 +122,9 @@ startMaudeProcess maudePath maudeSig = do
         B.hPutStr hin cmd >> hFlush hin >> getToDelim hout >> return ()
     setupCmds = [ "set show command off .\n"
                 , "set show timing off .\n"
-                , "set show stats off .\n" ]
+                , "set show stats off .\n"
+                , "set show advisories off .\n"
+                ]
     dEBUGMAUDE = envIsSet "DEBUG_MAUDE"
 
 

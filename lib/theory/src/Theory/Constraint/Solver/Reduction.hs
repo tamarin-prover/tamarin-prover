@@ -101,7 +101,6 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
 
-import Debug.Trace
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
 ------------------------------------------------------------------------------
@@ -283,7 +282,7 @@ insertEdges edges = do
 -- that no rule is applicable.
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
 insertAction i fa@(Fact _ ann _) = do
-    present <- trace (show fa) (goal `M.member`) <$> getM sGoals
+    present <- (goal `M.member`) <$> getM sGoals
     isdiff <- getM sDiffSystem
     nodePresent <- (i `M.member`) <$> getM sNodes
     if present
@@ -305,9 +304,6 @@ insertAction i fa@(Fact _ ann _) = do
                                markGoalAsSolved "exists" goal
                                return Changed
                        else do
-                          insertGoal goal False
-                          requiresKU m1 *> requiresKU m2 *> return Changed
-                Just (UpK, viewTerm2 -> FConc m1 m2) -> do
                           insertGoal goal False
                           requiresKU m1 *> requiresKU m2 *> return Changed
 
@@ -369,7 +365,7 @@ insertAction i fa@(Fact _ ann _) = do
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
-                Just (UpK, viewTerm2 -> FConc t1 t2) -> do
+                Just (UpK, viewTerm2 -> FConcat ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
                        then do
@@ -388,7 +384,6 @@ insertAction i fa@(Fact _ ann _) = do
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
-                          where ms = splitConc (fAppConcat (t1,t2))
                 _ -> do
                     insertGoal goal False
                     return Unchanged
@@ -401,8 +396,6 @@ insertAction i fa@(Fact _ ann _) = do
       let faKU = kuFactAnn ann t
       insertLess j i
       void (insertAction j faKU)
-    splitConc (viewTerm2 -> FConc t1 t2) = splitConc t1 ++ splitConc t2
-    splitConc t                          = [t]
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
 insertLess :: NodeId -> NodeId -> Reduction ()
@@ -639,7 +632,7 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
+          | (isMsgVar m || isProduct m || isUnion m || isConcat m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
                   M'.insertWith combineGoalStatus (apply subst goal) status

@@ -104,6 +104,7 @@ applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
 applyVTerm subst t = case viewTerm t of
     Lit l            -> applyLit subst l
     FApp (AC o) ts   -> fAppAC   o (map (applyVTerm subst) ts)
+    FApp (A o) ts    -> fAppA    o (map (applyVTerm subst) ts)
     FApp (C o)  ts   -> fAppC    o (map (applyVTerm subst) ts)
     FApp (NoEq o) ts -> fAppNoEq o (map (applyVTerm subst) ts)
     FApp List ts     -> fAppList   (map (applyVTerm subst) ts)
