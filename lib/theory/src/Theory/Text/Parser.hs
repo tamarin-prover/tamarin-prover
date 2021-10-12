@@ -32,6 +32,7 @@ import qualified Data.Set                   as S
 import           System.FilePath
 import           Control.Category
 import           Control.Monad
+import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
 import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
@@ -152,6 +153,35 @@ liftedAddProtoRule thy ru
                 fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
                 counter = zip [1::Int ..]
 
+-- | Flag formulas
+
+data FlagFormula =
+     FAtom String
+   | FOr FlagFormula FlagFormula
+   | FAnd FlagFormula FlagFormula
+   | FNot FlagFormula
+
+flagatom :: Parser FlagFormula
+flagatom = FAtom <$> try identifier
+
+-- | Parse a negation.
+flagnegation :: Parser FlagFormula
+flagnegation = opLNot *> (FNot <$> flagatom) <|> flagatom
+
+-- | Parse a left-associative sequence of conjunctions.
+flagconjuncts :: Parser FlagFormula
+flagconjuncts = chainl1 flagnegation (FAnd <$ opLAnd)
+
+-- | Parse a left-associative sequence of disjunctions.
+flagdisjuncts :: Parser FlagFormula
+flagdisjuncts = chainl1 flagconjuncts (FOr <$ opLOr)
+
+evalformula :: S.Set String -> FlagFormula -> Bool
+evalformula flags0 (FAtom t) = S.member t flags0
+evalformula flags0 (FNot t) = not (evalformula flags0 t)
+evalformula flags0 (FOr t1 t2) = (evalformula flags0 t1) || (evalformula flags0 t2)
+evalformula flags0 (FAnd t1 t2) = (evalformula flags0 t1) && (evalformula flags0 t2)
+
 -- | Parse a theory.
 theory :: Maybe FilePath
        -> Parser OpenTheory
@@ -240,9 +270,9 @@ theory inFile = do
 
     ifdef :: Maybe FilePath -> OpenTheory ->  Parser OpenTheory
     ifdef inFile0 thy = do
-       flag <- symbol_ "#ifdef" *> identifier
+       flagf <- symbol_ "#ifdef" *> flagdisjuncts
        flags0 <- flags <$> getState
-       if flag `S.member` flags0
+       if evalformula flags0 flagf
          then do thy' <- addItems inFile0 thy
                  asum [do symbol_ "#else"
                           _ <- manyTill anyChar (try (symbol_ "#endif"))
@@ -335,9 +365,9 @@ diffTheory inFile = do
 
     ifdef :: Maybe FilePath -> OpenDiffTheory ->  Parser OpenDiffTheory
     ifdef inFile0 thy = do
-       flag <- symbol_ "#ifdef" *> identifier
+       flagf <- symbol_ "#ifdef" *> flagdisjuncts
        flags0 <- flags <$> getState
-       if flag `S.member` flags0
+       if evalformula flags0 flagf
          then do thy' <- addItems inFile0 thy
                  asum [do symbol_ "#else"
                           _ <- manyTill anyChar (try (symbol_ "#endif"))
