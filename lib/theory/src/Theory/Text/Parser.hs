@@ -333,17 +333,32 @@ diffTheory inFile = do
        modifyStateFlag (S.insert flag)
        addItems inFile0 thy
 
-    ifdef :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
+    ifdef :: Maybe FilePath -> OpenDiffTheory ->  Parser OpenDiffTheory
     ifdef inFile0 thy = do
        flag <- symbol_ "#ifdef" *> identifier
        flags0 <- flags <$> getState
        if flag `S.member` flags0
          then do thy' <- addItems inFile0 thy
-                 symbol_ "#endif"
-                 addItems inFile0 thy'
-         else do _ <- manyTill anyChar (try (string "#"))
-                 symbol_ "endif"
-                 addItems inFile0 thy
+                 asum [do symbol_ "#else"
+                          _ <- manyTill anyChar (try (symbol_ "#endif"))
+                          addItems inFile0 thy'
+                       ,do symbol_ "#endif"
+                           addItems inFile0 thy'
+                      ]
+
+         else parseelse
+         where
+           parseelse =
+             do _ <- manyTill anyChar (try (symbol_ "#"))
+                asum
+                 [do (symbol_ "else")
+                     thy' <- addItems inFile0 thy
+                     symbol_ "#endif"
+                     addItems inFile0 thy'
+                 ,do _ <- symbol_ "endif"
+                     addItems inFile0 thy
+                 , parseelse
+                 ]
 
     include :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     include inFile0 thy = do
