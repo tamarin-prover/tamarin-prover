@@ -46,6 +46,8 @@ module Theory (
   , stateChannelOpt
   , asynchronousChannels
   , compressEvents
+  , forcedInjectiveFacts
+  , setforcedInjectiveFacts
   , thyOptions
   , setOption
   , Option
@@ -465,12 +467,13 @@ closeIntrRule _   ir                                        = [ir]
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Restrictions to use.
                -> [LNGuarded]        -- ^ Source lemmas to use.
+               -> S.Set FactTag      -- ^ Fact tags forced to be injective
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -481,8 +484,8 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
-    injFactInstances =
-        simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
+    injFactInstances = forcedInjFacts `S.union`
+        (simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules)
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
@@ -568,6 +571,7 @@ data Option = Option
         , _stateChannelOpt            :: Bool
         , _asynchronousChannels       :: Bool
         , _compressEvents       :: Bool
+        , _forcedInjectiveFacts :: S.Set FactTag
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1407,6 +1411,12 @@ setOption :: Data.Label.Poly.Lens
              -> Theory sig c r p s -> Theory sig c r p s
 setOption l = L.set (l . thyOptions) True
 
+
+setforcedInjectiveFacts :: S.Set FactTag
+             -> Theory sig c r p s -> Theory sig c r p s
+setforcedInjectiveFacts f = L.set (forcedInjectiveFacts . thyOptions) f
+
+
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestrictionDiff :: Side -> Restriction -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addRestrictionDiff s l thy = do
@@ -1540,7 +1550,7 @@ itemToRule _            = Nothing
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False
+defaultOption = Option False False False False False False False S.empty
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
@@ -2090,10 +2100,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items)
   where
     h              = L.get diffThyHeuristic thy0
-    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
-    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
-    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
-    cacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
+    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
+    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
+    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
+    cacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
 
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
@@ -2185,7 +2195,8 @@ closeTheoryWithMaude sig thy0 autoSources =
       $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
-    cache its  = closeRuleCache restrictions (typAsms its) sig (rules its) (L.get thyCache thy0) False
+    forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
+    cache its  = closeRuleCache restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle

@@ -20,6 +20,7 @@ module Sapic.Facts (
    , factToFact
    , actionToFact
    , actionToFactFormula
+   , pureStateFactTag
    , toRule
    , varMID
    , varProgress
@@ -241,6 +242,8 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
 factToFact (TamarinFact f) = f
 factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
 
+pureStateFactTag :: FactTag
+pureStateFactTag =  ProtoFact Linear ("L_PureState") 2
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
 prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
@@ -303,7 +306,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
           where
             name = case processName of
                 Just s -> s
-                Nothing -> 
+                Nothing ->
                          unNull (stripNonAlphanumerical (prettySapicTopLevel process))
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position

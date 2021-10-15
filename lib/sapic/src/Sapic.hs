@@ -71,7 +71,7 @@ translate th = case theoryProcesses th of
                 rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
-                let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                let th3 = setPureStateInjective $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
                 return (removeSapicItems th3)
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
@@ -91,6 +91,12 @@ translate th = case theoryProcesses th of
         annotatePureStates anp
       else
         anp
+    setPureStateInjective thy =
+      if L.get stateChannelOpt ops then
+          setforcedInjectiveFacts (S.singleton pureStateFactTag) thy
+--         L.set (forcedInjectiveFacts . thyOptions) S.empty thy
+      else
+        thy
     sigRules =  stRules (L.get sigpMaudeSig (L.get thySignature th))
     checkOps lens x
         | L.get lens ops = Just x
