@@ -68,12 +68,12 @@ type TransFComb t = ProcessCombinator SapicLVar
 -- | The basetranslation has three functions, one for translating the Null
 -- Process, one for actions (i.e. constructs with only one child process) and
 -- one for combinators (i.e., constructs with two child processes).
-baseTrans :: MonadThrow m => Bool ->
+baseTrans :: MonadThrow m => Bool -> Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction needsInEvRes ac an p tx,
+baseTrans asyncChannels needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction asyncChannels needsInEvRes ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -91,8 +91,8 @@ mergeWithStateRule' (l',a',r') (l,a,r,f)
 mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)] -> [([TransFact], [a1], [a2], d)]
 mergeWithStateRule r' = map (mergeWithStateRule' r')
 
-baseTransAction :: Bool -> TransFAct TranslationResultAct
-baseTransAction needsInEvRes ac an p tildex
+baseTransAction :: Bool -> Bool -> TransFAct TranslationResultAct
+baseTransAction asyncChannels needsInEvRes ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -116,24 +116,34 @@ baseTransAction needsInEvRes ac an p tildex
                            ([ ([def_state, In t], [ ], [def_state' tx2'], []) ], tx2')
             Just tc' -> let tc = toLNTerm tc' in
                         let ts = fAppPair (tc,varTerm x) in
-                          (mergeWithStateRule ([Message tc xt], [], [Ack tc xt]) rules
+                        let ack = if asyncChannels then [] else [Ack tc xt] in
+                          (mergeWithStateRule ([Message tc xt], [], ack) rules
                             ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
                                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
                                  else []
                                ), tx')
     | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let semistate = State LSemiState (p++[1]) tildex in
-          ([
-          ([def_state], [], [Message tc t,semistate], []),
-          ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
+          if asyncChannels then
+              ([
+              ([def_state], [], [Message tc t, def_state' tildex], [])], tildex)
+          else
+            let semistate = State LSemiState (p++[1]) tildex in
+              ([
+               ([def_state], [], [Message tc t,semistate], []),
+               ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
     | (ChOut (Just tc') t') <- ac, Nothing <- secretChannel an
       , tc <- toLNTerm tc', t <- toLNTerm t' =
-          let semistate = State LSemiState (p++[1]) tildex in
-          ([
-          ([def_state, In tc], channelIn tc, [Out t, def_state' tildex], []),
-          ([def_state], [], [Message tc t,semistate], []),
-          ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
+          if asyncChannels then
+              ([
+              ([def_state, In tc], channelIn tc, [Out t, def_state' tildex], []),
+              ([def_state], [], [Message tc t,def_state' tildex], [])], tildex)
+          else
+            let semistate = State LSemiState (p++[1]) tildex in
+              ([
+              ([def_state, In tc], channelIn tc, [Out t, def_state' tildex], []),
+              ([def_state], [], [Message tc t,semistate], []),
+              ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
     | (ChOut Nothing t') <- ac
       , t <- toLNTerm t' =
           ([

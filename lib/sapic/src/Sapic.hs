@@ -101,7 +101,7 @@ translate th = case theoryProcesses th of
                         , checkOps transReliable (RCT.reliableChannelInit anP)
                         , checkOps transReport (reportInit anP)
                       ]
-    trans anP = foldr ($) (BT.baseTrans needsInEvRes)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+    trans anP = foldr ($) (BT.baseTrans (L.get asynchronousChannels ops) needsInEvRes)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )

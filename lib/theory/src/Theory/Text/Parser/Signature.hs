@@ -174,6 +174,7 @@ options thy0 =do
       [  try (symbol "translation-progress") Data.Functor.$> Just transProgress
         , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
         , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
+        , symbol "asynchronous-channels" Data.Functor.$> Just asynchronousChannels
       ]
 
 predicate :: Parser Predicate
