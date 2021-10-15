@@ -85,7 +85,7 @@ translate th = case theoryProcesses th of
       if L.get transProgress ops then
         return p
       else
-        pathCompression p
+        pathCompression (L.get compressEvents ops) p
     optimizeStateChannel anp =
       if L.get stateChannelOpt ops then
         annotatePureStates anp

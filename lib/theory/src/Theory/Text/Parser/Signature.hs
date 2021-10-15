@@ -175,6 +175,7 @@ options thy0 =do
         , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
         , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
         , symbol "asynchronous-channels" Data.Functor.$> Just asynchronousChannels
+        , symbol "compress-events" Data.Functor.$> Just compressEvents
       ]
 
 predicate :: Parser Predicate
