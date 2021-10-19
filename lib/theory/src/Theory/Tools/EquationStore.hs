@@ -418,7 +418,6 @@ simpAbstractFun (subst:others) = case commonOperators of
         let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
             fsubst  = substFromList [(v, fApp o (map varTerm [fv1,fv2]))]
         return $ Just (Just fsubst, [S.fromList substs'])
-    -- abstract first two arguments
     (v, o@(A _), argss):_ -> do
         fv1 <- freshLVar "x" LSortMsg
         fv2 <- freshLVar "x" LSortMsg
