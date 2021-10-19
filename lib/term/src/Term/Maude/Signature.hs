@@ -109,7 +109,6 @@ maudeSig msig@MaudeSig{enableDH,enableBP,enableMSet,enableXor,enableDiff=_,enabl
     reducibleWithoutMult =
         S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules]
           `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig
-          `S.union` concatReducibleFunSig
         --careful! the AC Mult is missing here (probably intentionally)
     reducible = S.fromList [ o | RRule (viewTerm -> FApp o _) _ <- S.toList $ rrulesForMaudeSig msig ]
 
