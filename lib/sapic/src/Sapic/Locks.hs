@@ -39,10 +39,18 @@ annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) =
             else do
                 p' <- annotateEachClosestUnlock t v p
                 return $ProcessAction (Unlock t') a' p'
+annotateEachClosestUnlock t v (ProcessAction (Insert t1 t2) a' p) | t1==t =
+               do
+                p' <- annotateEachClosestUnlock t v p
+                return $ProcessAction (Insert t1 t2)  (a' <> annUnlock v) p'
 annotateEachClosestUnlock _ _ (ProcessAction Rep _ _) = throwM $ LocalException WFRep
 annotateEachClosestUnlock _ _ (ProcessComb Parallel _ _ _) = throwM $ LocalException WFPar
 annotateEachClosestUnlock t v (ProcessAction ac a' p) = do p' <- annotateEachClosestUnlock t v p
                                                            return $ ProcessAction ac a' p'
+annotateEachClosestUnlock t v (ProcessComb (Lookup st vt) a' pl pr ) | st==t =
+  do pl' <- annotateEachClosestUnlock t v pl
+     pr' <- annotateEachClosestUnlock t v pr
+     return $ ProcessComb (Lookup st vt) (a' <> annUnlock v) pl' pr'
 annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEachClosestUnlock t v pl
                                                              pr' <- annotateEachClosestUnlock t v pr
                                                              return $ ProcessComb c a' pl' pr'

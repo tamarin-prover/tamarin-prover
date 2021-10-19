@@ -191,7 +191,7 @@ nonInjectiveFactInstances ctxt se = do
 
         -- FIXME: There should be a weaker version of the rule that just
         -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
+        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 
@@ -287,9 +287,9 @@ hasForbiddenChain sys =
         -- and whether we do not have an equality rule instance at the end
         is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys
         -- and check whether any of them happens before the KD-conclusion
-        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing

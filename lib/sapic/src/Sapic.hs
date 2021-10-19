@@ -129,6 +129,7 @@ translate th = case theoryProcesses th of
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
+                          , (stateChannelOpt, BT.resLockingPure)
                            ]
     heuristics = [SapicRanking]
     needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)

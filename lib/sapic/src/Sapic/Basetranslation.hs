@@ -15,6 +15,7 @@ module Sapic.Basetranslation (
    , baseTrans
    , baseInit
    , baseRestr
+   , resLockingPure
    -- helper
    , toEx
    , toLVar
@@ -150,17 +151,17 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
           ([def_state], [], [def_state' tildex, Out t], [])], tildex)
 
       -- Pure cell translation
-    | (Insert t1' t2' ) <- ac, True <- pureState an,
+    | (Insert t1' t2' ) <- ac, True <- pureState an,  (Just (AnVar v)) <- unlock an,
       t1 <- toLNTerm t1' , t2 <- toLNTerm t2' =
+          let tx' = v `insert` tildex in
           ([
-          ([def_state], [], [def_state' tildex, PureCell t1 t2], [])], tildex)
+          ([def_state], [UnlockUnnamed t1 v], [def_state' tx', PureCell t1 t2], [])], tx')
+
     | (Lock _) <- ac, True <- pureState an =
       ([
-      ([def_state], [ ], [def_state' tildex], [])], tildex)
-
+      ([def_state], [], [def_state' tildex], [])], tildex)
     | (Unlock _) <- ac, True <- pureState an =
-      ([
-      ([def_state], [ ], [def_state' tildex], [])], tildex)
+          ([([def_state], [], [def_state' tildex], [])], tildex)
 
     -- Classical state translation
     | (Insert t1' t2' ) <- ac
@@ -181,6 +182,8 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
       , t <- toLNTerm t' =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
+
+-- CHARLIE : still add locks and unlocks in the pure state thing, but with weaker formula only used to contradict injectivity, e.g    Lock(x,s)@i & Unlock(x,s)@j ==> not(Ex k s2. Lock(x,s2)@k & i<k<j) & not(Ex k s2. UnLock(x,s2)@k & i<k<j)
     | (Event f' ) <- ac
       , f <- toLNFact f' =
           ([([def_state], TamarinAct f : [EventEmpty | needsInEvRes], [def_state' tildex], [])], tildex)
@@ -264,11 +267,11 @@ baseTransComb c an p tildex
             tildexl, tildex)
 
     -- Pure cell translation
-    | Lookup t' v' <- c,  True <- pureState an
-      , t <- toLNTerm t', v <- toLVar v' =
-           let tx' = v `insert` tildex in
+    | Lookup t' v' <- c,  True <- pureState an,  (Just (AnVar vs)) <- unlock an,
+       t <- toLNTerm t', v <- toLVar v' =
+           let tx' = vs `insert ` (v `insert` tildex) in
                 (
-       [ ([def_state,  PureCell t (varTerm v)], [], [def_state1 tx' ], [])
+       [ ([def_state,  PureCell t (varTerm v), Fr vs], [ LockUnnamed t vs], [def_state1 tx' ], [])
 --        , ([def_state], [IsNotSet t], [def_state2 tildex], [])
        ]
              , tx', tildex )
@@ -381,6 +384,23 @@ resLockingNoUnlock  = [QQ.r|restriction locking:
                    ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
+
+-- | Restrictions for Locking and Unlocking in the pureState case.
+resLockingPure ::  MonadThrow m => [SyntacticRestriction] -> m [SyntacticRestriction]
+resLockingPure prev = do
+  news <- mapM toEx [
+    [QQ.r|restriction locking1:
+         "All p l x #t1 pp lp #t2 #t3 . Lock(p,l,x)@t1 &  Lock(pp,lp,x)@t2
+                     & Unlock(p,l,x)@t3 & not(#t1=#t2)
+                   ==> (t2 < t1) | (t3 < t2)"
+                   |] ,
+      [QQ.r|restriction locking2:
+           "All p l x #t1 pp lp #t2 #t3 . Lock(p,l,x)@t1 &  Unlock(pp,lp,x)@t2
+           & Unlock(p,l,x)@t3 & not(#t2=#t3)
+           ==> (t3 < t2) | (t2 < t1)"
+           |]
+      ]
+  return $ news ++ prev
 -- | Produce locking lemma for variable v by instantiating resLockingL
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
