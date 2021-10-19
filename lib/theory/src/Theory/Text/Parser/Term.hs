@@ -119,7 +119,7 @@ expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 multterm eqn plit = do
     dh <- enableDH . sig  <$> getState
-    if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+    if dh -- && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit eqn
 
