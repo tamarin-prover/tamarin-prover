@@ -161,7 +161,7 @@ instance HasFrees EqStore where
 
 
 instance Apply EqStore where
-    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c) 
+    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c)
 
 
 -- Equation Store
@@ -413,6 +413,13 @@ simpAbstractFun (subst:others) = case commonOperators of
         return $ Just (Just fsubst, [S.fromList substs'])
     -- abstract first two arguments
     (v, o@(AC _), argss):_ -> do
+        fv1 <- freshLVar "x" LSortMsg
+        fv2 <- freshLVar "x" LSortMsg
+        let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
+            fsubst  = substFromList [(v, fApp o (map varTerm [fv1,fv2]))]
+        return $ Just (Just fsubst, [S.fromList substs'])
+    -- abstract first two arguments
+    (v, o@(A _), argss):_ -> do
         fv1 <- freshLVar "x" LSortMsg
         fv2 <- freshLVar "x" LSortMsg
         let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
