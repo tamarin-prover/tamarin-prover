@@ -48,6 +48,7 @@ module Theory.Text.Parser.Token (
   , opXor
 
   , opEqual
+  , opSubterm
   , opLess
   , opAt
   , opForall
@@ -358,6 +359,10 @@ opAt = symbol_ "@"
 -- | The equality operator @=@.
 opEqual :: Parser ()
 opEqual = symbol_ "="
+
+-- | The equality operator @=@.
+opSubterm :: Parser ()
+opSubterm = symbol_ "<<" <|> symbol_ "⊏"
 
 -- | The logical-forall operator @All@ or @∀@.
 opForall :: Parser ()
