@@ -406,5 +406,5 @@ solveSplit x = do
 solveDisjunction :: Disj LNGuarded -> Reduction String
 solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
-    insertFormula gfm
+    void $ insertFormula gfm
     return $ "case_" ++ show i
