@@ -292,12 +292,12 @@ solveUniqueActions = do
 -- required to decompose the formula in the initial constraint system.
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
-    formulas <- getM sFormulas
-    applyChangeList $ do
-        fm <- S.toList formulas
-        guard (reducibleFormula fm)
-        return $ do modM sFormulas $ S.delete fm
-                    insertFormula fm
+    formulas  <- S.toList <$> getM sFormulas
+    changedList <- mapM (\fm -> do
+        modM sFormulas $ S.delete fm
+        insertFormula fm
+      ) formulas
+    return $ if Changed `elem` changedList then Changed else Unchanged
 
 -- | Try to simplify the atoms contained in the formulas. See
 -- 'partialAtomValuation' for an explanation of what CR-rules are exploited
@@ -316,7 +316,7 @@ evalFormulaAtoms = do
                 _          -> return ()
               modM sFormulas       $ S.delete fm
               modM sSolvedFormulas $ S.insert fm
-              insertFormula fm'
+              void $ insertFormula fm'
           Nothing  -> []
 
 -- | A partial valuation for atoms. The return value of this function is
@@ -328,6 +328,8 @@ evalFormulaAtoms = do
 --
 -- The interpretation for @Just False@ is analogous. @Nothing@ is used to
 -- represent *unknown*.
+-- 
+-- FIXME this function is almost identical to System>safePartial evaluation -> join them
 --
 partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 partialAtomValuation ctxt sys =
@@ -337,6 +339,7 @@ partialAtomValuation ctxt sys =
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+    redElem    = elemNotBelowReducible (reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt)
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -374,6 +377,11 @@ partialAtomValuation ctxt sys =
                     | i `before` j || j `before` i  -> Just False
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
+                  
+          Subterm small big
+             | big `redElem` small                  -> Just False  -- includes equality
+             | small `redElem` big                  -> Just True -- small /= big because of the previous condition
+             | otherwise                            -> Nothing
 
           Last (ltermNodeId' -> i)
             | isLast sys i                       -> Just True
@@ -398,7 +406,7 @@ insertImpliedFormulas = do
         implied <- impliedFormulas hnd sys clause
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
-          then return (insertFormula implied)
+          then return (void $ insertFormula implied)
           else []
 
 -- | CR-rule *S_fresh-order*:
