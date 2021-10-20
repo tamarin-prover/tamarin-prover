@@ -644,6 +644,7 @@ formulaFacts =
     atomFacts (Action _ fa)   = [fa]
     atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
     atomFacts (EqE _ _)       = mempty
+    atomFacts (Subterm _ _)   = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
 
@@ -656,6 +657,7 @@ formulaTerms =
     atomTerms (Syntactic _)       = []
     -- atomTerms (Syntactic (Pred p)) = factTerms p
     atomTerms (EqE t s)            = [t, s]
+    atomTerms (Subterm i j)        = [i, j]
     atomTerms (Less i j)           = [i, j]
     atomTerms (Last i)             = [i]
 
