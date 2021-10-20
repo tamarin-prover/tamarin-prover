@@ -107,7 +107,7 @@ canMerge compEvents r1 r2
 merge:: Bool -> Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> S.Set (Rule ProtoRuleEInfo) ->S.Set (Rule ProtoRuleEInfo)
 merge compEvents rule1 rule2 ruleset =
   if canMerge compEvents rule1 rule2 then
-    Rule (mergeInfo rinfo rinfo2) newprem newrconc (ract++ract2) (rnew++rnew2) `S.insert` ruleset
+    Rule (mergeInfo rinfo rinfo2) newprem newrconc (List.union ract ract2) (rnew++rnew2) `S.insert` ruleset
   else
     rule1 `S.insert` (rule2 `S.insert` ruleset)
   where Rule rinfo rprem rconc ract rnew = rule1
