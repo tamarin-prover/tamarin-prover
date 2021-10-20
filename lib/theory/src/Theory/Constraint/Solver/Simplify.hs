@@ -411,8 +411,8 @@ insertImpliedFormulas = do
 -- If:
 --    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
 --    -  i<j & f(t,...) occurs at j concs, then k<j.
-nonInjectiveFactInstances1 :: ProofContext -> System -> [(NodeId, NodeId)]
-nonInjectiveFactInstances1 ctxt se = do
+nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
+nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
     let kFaPrem            = nodeConcFact c se
         kTag               = factTag kFaPrem
@@ -424,55 +424,40 @@ nonInjectiveFactInstances1 ctxt se = do
     (j, _) <- M.toList $ get sNodes se
     -- check that j<k
     guard  (k `S.member` D.reachableSet [j] less)
-    let isCounterExample = (j /= i) && (j /= k) &&
+    let isCounterExample checkRule = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ get sNodes se)
-        checkRule jRu    = (
+        checkRuleJK jRu    = (
                            -- check that f(t,...) occurs at j in prems and j<k
-                           any conflictingFact (get rPrems jRu) &&
-                           (k `S.member` D.reachableSet [j] less)
+                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
+                           (k `S.member` D.reachableSet [j] less) &&
+                            nonUnifiableNodes j i
                            )
-
-    guard isCounterExample
-    return (j,i)
+        checkRuleIJ jRu    = (
+                           -- check that f(t,...) occurs at j in concs and i<j
+                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
+                           (j `S.member` D.reachableSet [i] less) &&
+                            nonUnifiableNodes k j
+                           )
+    if (isCounterExample checkRuleJK) then return (j,i)
+      else do
+         guard (isCounterExample checkRuleIJ)
+         return (k,j)
+    -- (guard (isCounterExample checkRuleConcs)
+    --  return (k,j))
 --    insertLess k i
 --    return (i, j, k) -- counter-example to unique fact instances
   where
     less      = rawLessRel se
     firstTerm = headMay . factTerms
-
-nonInjectiveFactInstances2 :: ProofContext -> System -> [(NodeId, NodeId)]
-nonInjectiveFactInstances2 ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
-    let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
-        kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
-
-    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
---    j <- S.toList $ D.reachableSet [i] less
-    (j, _) <- M.toList $ get sNodes se
-    -- check that j<k
-    guard  (k `S.member` D.reachableSet [j] less)
-    let isCounterExample = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ get sNodes se)
-
-
-        checkRule jRu    = (
-                           any conflictingFact (get rConcs jRu) &&
-                           (j `S.member` D.reachableSet [i] less)
-                           )
-
-    guard isCounterExample
-    return (k,j)
---    insertLess k i
---    return (i, j, k) -- counter-example to unique fact instances
-  where
-    less      = rawLessRel se
-    firstTerm = headMay . factTerms
+    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    nonUnifiableNodes :: NodeId -> NodeId -> Bool
+    nonUnifiableNodes i j = maybe False (not . runMaude) $
+        (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
+                               <*> M.lookup j (get sNodes se)
 
 addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = nonInjectiveFactInstances1 ctxt se ++ nonInjectiveFactInstances2 ctxt se
+  let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
