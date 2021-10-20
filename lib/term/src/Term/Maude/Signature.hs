@@ -80,7 +80,7 @@ data MaudeSig = MaudeSig
     , enableMSet         :: Bool
     , enableXor          :: Bool
     , enableDiff         :: Bool
-    , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory
+    , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory TODO-MY: change to Set FunSym
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
 
     , funSyms            :: FunSig        -- ^ function signature including the
