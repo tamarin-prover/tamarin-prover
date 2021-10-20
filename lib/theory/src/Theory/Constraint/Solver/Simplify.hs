@@ -40,6 +40,7 @@ import           Control.Monad.Disj
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 
+import           Safe                           (headMay)
 
 import           Extension.Data.Label
 import           Extension.Prelude
@@ -66,7 +67,9 @@ simplifySystem = do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals    
+        removeSolvedSplitGoals
+        -- Add ordering constraint from injective facts
+        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -224,7 +227,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
+
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -395,3 +398,81 @@ insertImpliedFormulas = do
           then return (insertFormula implied)
           else []
 
+-- | Compute all less relations implied by injective fact instances.
+--
+-- Formally, they are computed as follows. Let 'f' be a fact symbol with
+-- injective instances. Let i and k be temporal variables ordered
+-- according to
+--
+--   i < k
+--
+-- and let there be an edge from (i,u) to (k,w) for some indices u and w
+-- corresponding to fact f(t,...).
+-- If:
+--    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
+--    -  i<j & f(t,...) occurs at j concs, then k<j.
+nonInjectiveFactInstances1 :: ProofContext -> System -> [(NodeId, NodeId)]
+nonInjectiveFactInstances1 ctxt se = do
+    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
+    let kFaPrem            = nodeConcFact c se
+        kTag               = factTag kFaPrem
+        kTerm              = firstTerm kFaPrem
+        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+
+    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
+--    j <- S.toList $ D.reachableSet [i] less
+    (j, _) <- M.toList $ get sNodes se
+    -- check that j<k
+    guard  (k `S.member` D.reachableSet [j] less)
+    let isCounterExample = (j /= i) && (j /= k) &&
+                           maybe False checkRule (M.lookup j $ get sNodes se)
+        checkRule jRu    = (
+                           -- check that f(t,...) occurs at j in prems and j<k
+                           any conflictingFact (get rPrems jRu) &&
+                           (k `S.member` D.reachableSet [j] less)
+                           )
+
+    guard isCounterExample
+    return (j,i)
+--    insertLess k i
+--    return (i, j, k) -- counter-example to unique fact instances
+  where
+    less      = rawLessRel se
+    firstTerm = headMay . factTerms
+
+nonInjectiveFactInstances2 :: ProofContext -> System -> [(NodeId, NodeId)]
+nonInjectiveFactInstances2 ctxt se = do
+    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
+    let kFaPrem            = nodeConcFact c se
+        kTag               = factTag kFaPrem
+        kTerm              = firstTerm kFaPrem
+        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+
+    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
+--    j <- S.toList $ D.reachableSet [i] less
+    (j, _) <- M.toList $ get sNodes se
+    -- check that j<k
+    guard  (k `S.member` D.reachableSet [j] less)
+    let isCounterExample = (j /= i) && (j /= k) &&
+                           maybe False checkRule (M.lookup j $ get sNodes se)
+
+
+        checkRule jRu    = (
+                           any conflictingFact (get rConcs jRu) &&
+                           (j `S.member` D.reachableSet [i] less)
+                           )
+
+    guard isCounterExample
+    return (k,j)
+--    insertLess k i
+--    return (i, j, k) -- counter-example to unique fact instances
+  where
+    less      = rawLessRel se
+    firstTerm = headMay . factTerms
+
+addNonInjectiveFactInstances :: Reduction ()
+addNonInjectiveFactInstances = do
+  se <- gets id
+  ctxt <- ask
+  let list = nonInjectiveFactInstances1 ctxt se ++ nonInjectiveFactInstances2 ctxt se
+  mapM_ (uncurry insertLess) list
