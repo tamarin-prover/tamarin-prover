@@ -29,6 +29,7 @@ module Theory.Constraint.System.Guarded (
   , gconj
   , gex
   , gall
+  , gnotAtom
   , gnot
   , ginduct
 
@@ -55,6 +56,8 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
+  , bTermToLTerm
+  , lTermToBTerm
 --  , unbindAtom
   , openGuarded
 
@@ -181,7 +184,7 @@ isGAction _             = False
 -- | Convert 'Atom's to 'GAtom's, if possible.
 atomToGAtom :: Show t => Atom t -> GAtom t
 atomToGAtom = conv
-  where conv (EqE s t)     = GEqE s t
+  where conv (EqE s t)     = GEqE s t  --TODO-SUBTERM
         conv (Action i f)  = GAction i f
         conv a             = error $ "atomsToGAtom: "++ show a
                                  ++ "is not a guarded atom."
@@ -320,6 +323,20 @@ bvarToLVar =
   where
     boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
+
+-- | Assuming that there are no more bound variables left in a term,
+-- convert it to a term with free variables only.
+-- This is especially used in 'insertFormula' where it is surrounded by
+-- an empty universal quantification that cannot have any bound variables.
+bTermToLTerm :: BLTerm -> LNTerm
+bTermToLTerm = fmapTerm (fmap (foldBVar boundError id))
+  where
+    boundError v = error $ "bvarToLVar: left-over bound variable '"
+                           ++ show v ++ "'"
+
+-- | convert a term to a term with bounded variables
+lTermToBTerm :: LNTerm -> BLTerm
+lTermToBTerm = fmapTerm (fmap Free)
 
 -- | Assuming that there are no more bound variables left in an atom of a
 -- formula, convert it to an atom with free variables only.
@@ -496,7 +513,7 @@ formulaToGuarded fmOrig =
 
         conjActionsEqs (Conn And f1 f2)     = conjActionsEqs f1 ++ conjActionsEqs f2
         conjActionsEqs (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]
+        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]  --TODO-SUBTERM
         conjActionsEqs f                    = [Right f]
 
         -- Given a list of unguarded variables and a list of atoms, compute the
@@ -596,7 +613,7 @@ toInductionHypothesis =
             (j, (_, LSortNode)) <- zip [0..] $ reverse ss
             return $ Last (varTerm (Bound j))
 
-    go (GAto (Less i j)) = return $ gdisj [GAto (EqE i j), GAto (Less j i)]
+    go (GAto (Less i j)) = return $ gdisj [GAto (EqE i j), GAto (Less j i)]  --TODO-SUBTERM
     go (GAto (Last _))   = throwError "formula not last-free"
     go (GAto ato)        = return $ gnotAtom ato
     go (GDisj disj)      = gconj <$> traverse go (getDisj disj)
