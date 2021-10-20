@@ -21,6 +21,7 @@ module Sapic.Facts (
    , actionToFact
    , actionToFactFormula
    , pureStateFactTag
+   , pureStateLockFactTag
    , toRule
    , varMID
    , varProgress
@@ -99,6 +100,7 @@ data TransFact =  Fr LVar | In LNTerm
             | TamarinFact LNFact
             -- pure storage
             | PureCell LNTerm LNTerm
+            | CellLocked LNTerm LNTerm
 
 data SpecialPosition = InitPosition -- initial position, is logically the predecessor of []
                      | NoPosition -- no real position, e.g., message id rule
@@ -241,9 +243,15 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
+factToFact (CellLocked t1 t2) = protoFact Linear ("L_CellLocked") [t1, t2]
+
 
 pureStateFactTag :: FactTag
 pureStateFactTag =  ProtoFact Linear ("L_PureState") 2
+
+pureStateLockFactTag :: FactTag
+pureStateLockFactTag =  ProtoFact Linear ("L_CellLocked") 2
+
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
 prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos

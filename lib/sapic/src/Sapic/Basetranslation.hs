@@ -155,7 +155,9 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
       t1 <- toLNTerm t1' , t2 <- toLNTerm t2' =
           let tx' = v `insert` tildex in
           ([
-          ([def_state], [UnlockUnnamed t1 v], [def_state' tx', PureCell t1 t2], [])], tx')
+          ([def_state, CellLocked t1 (varTerm v)], [
+              --UnlockUnnamed t1 v
+                                                   ], [def_state' tx', PureCell t1 t2], [])], tx')
 
     | (Lock _) <- ac, True <- pureState an =
       ([
@@ -271,7 +273,9 @@ baseTransComb c an p tildex
        t <- toLNTerm t', v <- toLVar v' =
            let tx' = vs `insert ` (v `insert` tildex) in
                 (
-       [ ([def_state,  PureCell t (varTerm v), Fr vs], [ LockUnnamed t vs], [def_state1 tx' ], [])
+       [ ([def_state,  PureCell t (varTerm v), Fr vs], [
+             --LockUnnamed t vs
+                                                       ], [def_state1 tx', CellLocked t (varTerm vs) ], [])
 --        , ([def_state], [IsNotSet t], [def_state2 tildex], [])
        ]
              , tx', tildex )

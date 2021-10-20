@@ -93,7 +93,7 @@ translate th = case theoryProcesses th of
         anp
     setPureStateInjective thy =
       if L.get stateChannelOpt ops then
-          setforcedInjectiveFacts (S.singleton pureStateFactTag) thy
+          setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag] ) thy
 --         L.set (forcedInjectiveFacts . thyOptions) S.empty thy
       else
         thy
@@ -129,7 +129,7 @@ translate th = case theoryProcesses th of
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
-                          , (stateChannelOpt, BT.resLockingPure)
+--                          , (stateChannelOpt, BT.resLockingPure)
                            ]
     heuristics = [SapicRanking]
     needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
