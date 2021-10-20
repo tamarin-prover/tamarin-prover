@@ -43,6 +43,7 @@ module Term.Term (
 
     -- ** "Protected" subterms
     , allProtSubterms
+    , elemNotBelowReducible
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -218,6 +219,16 @@ allProtSubterms t@(viewTerm -> FApp _ as) | isPair t || isAC t
 allProtSubterms t@(viewTerm -> FApp _ as) | otherwise
         = t:concatMap allProtSubterms as
 allProtSubterms _                                     = []
+
+-- | Is term @inner@ in term @outer@ and not below a reducible function symbol?
+-- This is used for the Subterm relation
+elemNotBelowReducible :: Eq a => FunSig -> Term a -> Term a -> Bool
+elemNotBelowReducible _ inner outer
+                      | inner == outer = True
+elemNotBelowReducible reducible inner (viewTerm -> FApp f as)
+                      | f `S.notMember` reducible
+                            = any (elemNotBelowReducible reducible inner) as
+elemNotBelowReducible _ _ _ = False
 
 ----------------------------------------------------------------------
 -- Pretty printing
