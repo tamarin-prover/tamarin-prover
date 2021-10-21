@@ -364,25 +364,25 @@ splitSubterm reducible subterm = S.toList <$> recurse (SubtermD subterm)
     -- It especially returns @Just []@ if @small ⊏ big@ is trivially false.
     step :: MonadFresh m => (LNTerm, LNTerm) -> m (Maybe (S.Set SubtermSplit))
     step (small, big)
-      | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat =  -- terms like 1+1 < x+y+z
-        return $ Just $ S.singleton TrueD  -- true
-      | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
-        ac <- processAC NatPlus (small, big)
-        return $ case ac of
-          Right False -> Just S.empty
-          Right True -> Just $ S.singleton TrueD
-          Left tuple -> Just $ S.singleton $ NatSubtermD tuple
+      --- | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat =  -- terms like 1+1 < x+y+z
+      --  return $ Just $ S.singleton TrueD  -- true
+      --- | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
+      --  ac <- processAC NatPlus (small, big)
+      --  return $ case ac of
+      --    Right False -> Just S.empty
+      --    Right True -> Just $ S.singleton TrueD
+      --    Left tuple -> Just $ S.singleton $ NatSubtermD tuple
       | big `redElem` small =  -- trivially false (big == small included)
         return $ Just S.empty  -- false
       | small `redElem` big =  -- trivially true
         return $ Just $ S.singleton TrueD  -- true
-          where
-            onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
-            l t = length $ flattenedACTerms NatPlus t
+      --    where
+      --      onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
+      --      l t = length $ flattenedACTerms NatPlus t
     step (_, viewTerm -> Lit (Con _)) =  -- nothing can be a strict subterm of a constant
         return $ Just S.empty  -- false
     step (small, big@(viewTerm -> Lit (Var _)))
-      | isPubVar big || isFreshVar big || (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat) =  -- CR-rule S_invalid
+      | isPubVar big || isFreshVar big {--|| (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat)-} =  -- CR-rule S_invalid
         return $ Just S.empty  -- false
     step (_, viewTerm -> Lit (Var _)) =  -- variable: do not recurse further
         return Nothing

@@ -565,6 +565,7 @@ substSystem = do
     substEdges
     substLastAtom
     substLessAtoms
+    substSubtermStore
     substFormulas
     substSolvedFormulas
     substLemmas
@@ -578,6 +579,7 @@ substEdges, substLessAtoms, substLastAtom, substFormulas,
 
 substEdges          = substPart sEdges
 substLessAtoms      = substPart sLessAtoms
+substSubtermStore   = substPart sSubtermStore
 substLastAtom       = substPart sLastAtom
 substFormulas       = substPart sFormulas
 substSolvedFormulas = substPart sSolvedFormulas

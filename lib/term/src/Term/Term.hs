@@ -94,6 +94,7 @@ module Term.Term (
 -- import           Data.Monoid
 -- import           Data.Foldable (foldMap)
 
+import qualified Data.Set as S
 import qualified Data.ByteString.Char8 as BC
 import           Extension.Data.ByteString ()
 
