@@ -108,6 +108,7 @@ library
       Theory.Tools.IntruderRules
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
+      Theory.Tools.SubtermStore
       Theory.Tools.Wellformedness
 
     other-modules:

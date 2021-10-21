@@ -162,6 +162,10 @@ module Theory.Constraint.System (
   , sSubst
   , sConjDisjEqs
 
+  -- ** Subterms
+  , module Theory.Tools.SubtermStore
+  , sSubtermStore
+
   -- ** Formulas
   , sFormulas
   , sSolvedFormulas

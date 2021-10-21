@@ -24,7 +24,7 @@ module Theory.Tools.SubtermStore (
   , addSubterm
   , removeSubterm
   , isContradicting
-  , simp
+  , simpSubtermStore
 
   -- ** Pretty printing
   , prettySubtermStore
@@ -34,6 +34,7 @@ import           GHC.Generics          (Generic)
 --import           Logic.Connectives
 import           Term.Unification
 import           Theory.Text.Pretty
+import           Theory.Constraint.System.Constraints
 
 --import           Control.Monad.Fresh
 --import           Control.Monad.Bind
@@ -62,8 +63,9 @@ import           Extension.Data.Label  hiding (for, get)
 ------------------------------------------------------------------------------
 
 data SubtermStore = SubtermStore {
-      _negSubterms :: S.Set (LNTerm, LNTerm)
-    , _subterms    :: S.Set (LNTerm, LNTerm)
+      _negSubterms    :: S.Set (LNTerm, LNTerm)
+    , _subterms       :: S.Set (LNTerm, LNTerm)
+    , _solvedSubterms :: S.Set (LNTerm, LNTerm)
     }
   deriving( Eq, Ord, Generic )
 
@@ -74,10 +76,10 @@ $(mkLabels [''SubtermStore])
 
 -- | @emptyEqStore@ is the empty equation store.
 emptySubtermStore :: SubtermStore
-emptySubtermStore = SubtermStore S.empty S.empty
+emptySubtermStore = SubtermStore S.empty S.empty S.empty
 
-addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
-addSubterm _ sst = sst
+addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> (SubtermStore, Maybe Goal)
+addSubterm _ sst = (sst, Nothing)
 
 removeSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 removeSubterm _ sst = sst
@@ -88,8 +90,8 @@ addNegSubterm _ sst = (sst, [])
 isContradicting :: SubtermStore -> Bool
 isContradicting _ = False
 
-simp :: SubtermStore -> (SubtermStore, [Equal LNTerm])
-simp sst = (sst, [])
+simpSubtermStore :: SubtermStore -> (SubtermStore, [Equal LNTerm], [Goal])
+simpSubtermStore sst = (sst, [], [])
 
 
 -- Instances
@@ -97,16 +99,17 @@ simp sst = (sst, [])
 
 
 instance HasFrees SubtermStore where
-    foldFrees f (SubtermStore negSt st) =
-        foldFrees f negSt <> foldFrees f st
+    foldFrees f (SubtermStore negSt st solvedSt) =
+        foldFrees f negSt <> foldFrees f st <> foldFrees f solvedSt
     foldFreesOcc  _ _ = const mempty
-    mapFrees f (SubtermStore negSt st) =
+    mapFrees f (SubtermStore negSt st solvedSt) =
         SubtermStore <$> mapFrees f negSt
                 <*> mapFrees f st
+                <*> mapFrees f solvedSt
 
 
 instance Apply SubtermStore where
-    apply subst (SubtermStore a b) = SubtermStore (apply subst a) (apply subst b)
+    apply subst (SubtermStore a b c) = SubtermStore (apply subst a) (apply subst b) (apply subst c)
 
 
 ------------------------------------------------------------------------------
@@ -115,10 +118,11 @@ instance Apply SubtermStore where
 
 -- | Pretty print an 'EqStore'.
 prettySubtermStore :: HighlightDocument d => SubtermStore -> d
-prettySubtermStore (SubtermStore negSt st) = vcat $
+prettySubtermStore (SubtermStore negSt st solvedSt) = vcat $
   map combine
     [ ("Subterms", numbered' $ map ppSt (S.toList st))
     , ("Negative Subterms", numbered' $ map ppSt (S.toList negSt))
+    , ("Solved Subterms", numbered' $ map ppSt (S.toList solvedSt))
     ]
   where
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]

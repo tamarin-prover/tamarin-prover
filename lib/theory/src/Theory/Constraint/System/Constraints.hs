@@ -97,7 +97,7 @@ data Goal =
        ActionG LVar LNFact
        -- ^ An action that must exist in the trace.
      | ChainG NodeConc NodePrem
-       -- A destruction chain.
+       -- ^ A destruction chain.
      | PremiseG NodePrem LNFact
        -- ^ A premise that must have an incoming direct edge.
      | SplitG SplitId
