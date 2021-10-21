@@ -292,12 +292,12 @@ solveUniqueActions = do
 -- required to decompose the formula in the initial constraint system.
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
-    formulas  <- S.toList <$> getM sFormulas
-    changedList <- mapM (\fm -> do
-        modM sFormulas $ S.delete fm
-        insertFormula fm
-      ) formulas
-    return $ if Changed `elem` changedList then Changed else Unchanged
+    formulas <- getM sFormulas
+    applyChangeList $ do
+        fm <- S.toList formulas
+        guard (reducibleFormula fm)
+        return $ do modM sFormulas $ S.delete fm
+                    insertFormula fm
 
 -- | Try to simplify the atoms contained in the formulas. See
 -- 'partialAtomValuation' for an explanation of what CR-rules are exploited
@@ -316,7 +316,7 @@ evalFormulaAtoms = do
                 _          -> return ()
               modM sFormulas       $ S.delete fm
               modM sSolvedFormulas $ S.insert fm
-              void $ insertFormula fm'
+              insertFormula fm'
           Nothing  -> []
 
 -- | A partial valuation for atoms. The return value of this function is
@@ -406,7 +406,7 @@ insertImpliedFormulas = do
         implied <- impliedFormulas hnd sys clause
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
-          then return (void $ insertFormula implied)
+          then return (insertFormula implied)
           else []
 
 -- | CR-rule *S_fresh-order*:
