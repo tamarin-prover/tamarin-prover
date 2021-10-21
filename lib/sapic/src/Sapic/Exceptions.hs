@@ -44,7 +44,6 @@ data SapicException p = NotImplementedError String
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
                     -- | UnAnnotatedLock String
-                    | CaseTestsUndefined [(String, [String])]
                     | ProcessNotWellformed (WFerrror p)
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
@@ -62,9 +61,6 @@ prettyVarSet = List.intercalate ", "  . List.map show . toList
 
 instance (Show p) => Show (SapicException p) where
     -- show SomethingBad = "Something bad happened"
-    show (CaseTestsUndefined el) =
-        "The following case tests are undefined but are required in a lemma: \n" ++
-        List.intercalate "\n" (fmap (\(a, c) -> "  '" ++ (List.intercalate "', '" c) ++ "' required by lemma '" ++ a ++ "'") el)
 
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s

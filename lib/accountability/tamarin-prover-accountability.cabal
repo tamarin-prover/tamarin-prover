@@ -1,4 +1,4 @@
-name:               tamarin-prover-sapic
+name:               tamarin-prover-accountability
 
 cabal-version:      >= 1.8
 build-type:         Simple
@@ -6,18 +6,20 @@ version:            1.7.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
-author:             Robert Künnemann <robert@kunnemann.de>,
-                    Alexander Dax <alexander.dax@cispa.saarland>
+author:             Robert Künnemann <robert@kunnemann.de>, 
+                    Kevin Morio <kevin.morio@cispa.de>,
+                    Yavor Ivanov <yavor.ivanov@cispa.de>
+                    
 maintainer:         Robert Künnemann <robert@kunnemann.de>
-copyright:          Robert Künnemann, Alexander Dax, CISPA-Helmholtz-Centre Saarbrücken, 2019
+copyright:          (c) 2019-2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
 
-synopsis:           Library for input processes in SAPIC calculus for the tamarin prover.
+synopsis:           Library for accountability for the tamarin prover.
 
 description:        This is an internal library of the Tamarin prover for
                     security protocol verification
                     (<hackage.haskell.org/package/tamarin-prover>).
                     .
-                    This library provides a translation from processes stated in the SAPIC calculus into multiset rewrite rules.
+                    This library provides support for accountability verification.
 homepage:           https://tamarin-prover.github.io/
 
 
@@ -62,17 +64,7 @@ library
     hs-source-dirs: src
 
     exposed-modules:
-        Sapic.Annotation
-      , Sapic.Exceptions
-      , Sapic.ProcessUtils
-      , Sapic.Locks
-      , Sapic.SecretChannels
-      , Sapic.Facts
-      , Sapic.Basetranslation
-      , Sapic.ProgressFunction
-      , Sapic.ProgressTranslation
-      , Sapic.ReliableChannelTranslation
-      , Sapic.Report
-      , Sapic
+        Accountability
+      , Accountability.Generation
 
     other-modules:

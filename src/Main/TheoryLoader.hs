@@ -50,6 +50,9 @@ module Main.TheoryLoader (
 
 import           Prelude                             hiding (id, (.))
 
+import           Accountability                      as Acc
+import           Accountability.Generation      
+
 import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf,intersperse)
@@ -70,7 +73,6 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import           Sapic
-import           Sapic.Accountability
 import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
 
 import           Main.Environment
@@ -144,14 +146,16 @@ loadOpenTranslatedThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
 loadOpenTranslatedThy as inFile =  do
     thy <- loadOpenThy as inFile
     thy' <- Sapic.translate thy
-    return thy'
+    thy'' <- Acc.translate thy'
+    return (removeTranslationItems thy'')
 
 -- | Load an open theory from a file. Returns the open and the translated theory.
 loadOpenAndTranslatedThy :: Arguments -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
 loadOpenAndTranslatedThy as inFile =  do
     thy <- loadOpenThy as inFile
     thy' <- Sapic.translate thy
-    return (thy, thy')
+    thy'' <- Acc.translate thy'
+    return (thy, removeTranslationItems thy'')
 
 -- | Load a closed theory from a file.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
@@ -223,7 +227,8 @@ loadClosedThyString as input =
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
             thy' <- Sapic.translate thy
-            Right <$> closeThy as thy thy' -- No "return" because closeThy gives IO (ClosedTheory)
+            thy'' <- Acc.translate thy'
+            Right <$> closeThy as thy (removeTranslationItems thy'') -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
@@ -249,8 +254,9 @@ reportOnClosedThyStringWellformedness as input =
       Left  err   -> return $ "parse error: " ++ show err
       Right thy -> do
             thy' <- Sapic.translate thy
-            sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
-            case checkWellformedness thy' sig
+            thy'' <- Acc.translate thy'
+            sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy''
+            case checkWellformedness (removeTranslationItems thy'') sig
               ++ checkPreTransWellformedness thy of
                   []     -> return ""
                   report -> do

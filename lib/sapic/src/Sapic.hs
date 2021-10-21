@@ -23,7 +23,6 @@ import Theory
 import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
-import Data.List
 import qualified Data.Set as S
 import qualified Data.List as List
 import qualified Extension.Data.Label                as L
@@ -35,7 +34,6 @@ import Sapic.Facts
 import Sapic.Locks
 import Sapic.ProcessUtils
 import qualified Sapic.Basetranslation as BT
-import           Sapic.Accountability
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
@@ -43,13 +41,12 @@ import Theory.Text.Parser
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
-             -> m OpenTranslatedTheory
+             -> m OpenTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
                throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
-               -- NOTE: fmap f m = m >>= (return . f)
-               fmap removeSapicItems (addAccountabilityLemmas th)
+               return th
       [p] -> if all allUnique (bindings p) then do
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
@@ -62,11 +59,9 @@ translate th = case theoryProcesses th of
                 -- add restrictions
                 rest<- restrictions an_proc protoRule
                 th2 <- foldM liftedAddRestriction th1 rest
-                -- add accountability lemma
-                th3 <- addAccountabilityLemmas th2
                 -- add heuristic, if not already defined:
-                let th4 = fromMaybe th3 (addHeuristic heuristics th3) -- does not overwrite user defined heuristic
-                return (removeSapicItems th4)
+                let th4 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                return th4
              else
                 throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p)
                             :: SapicException AnnotatedProcess)
@@ -79,11 +74,6 @@ translate th = case theoryProcesses th of
     bindingsComb _            = []
     bindingsAct (New v) = [v]
     bindingsAct _       = []
-
-    undefinedCaseTests accLem = (L.get aName accLem, required \\ defined) <$ guard (required /= defined)
-      where
-        required =  L.get aCaseIdentifiers accLem
-        defined = map (L.get cName) (L.get aCaseTests accLem)
 
     allUnique = all ( (==) 1 . length) . List.group . List.sort
     repeater  = head . head . filter ((/=) 1 . length) . List.group . List.sort
@@ -129,12 +119,6 @@ translate th = case theoryProcesses th of
     heuristics = [SapicRanking]
     needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
     containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
-
-    addAccountabilityLemmas thy = do
-      let undef = mapMaybe undefinedCaseTests (theoryAccLemmas thy)
-      when (not $ null undef) (throwM (CaseTestsUndefined undef :: SapicException AnnotatedProcess))
-      accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas thy)
-      foldM liftedAddLemma thy (concat accLemmas) 
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:

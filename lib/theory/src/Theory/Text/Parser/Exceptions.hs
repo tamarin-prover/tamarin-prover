@@ -41,8 +41,8 @@ instance Show ParsingException where
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
-    show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
-    show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
+    show (DuplicateItem (TranslationItem (ProcessItem _))) =  undefined
+    show (DuplicateItem (TranslationItem (ProcessDefItem pDef))) =
         "duplicate process: " ++ get pName pDef
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 

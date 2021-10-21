@@ -1,22 +1,22 @@
 {-# LANGUAGE FlexibleContexts #-}
--- Copyright   : (c) 2019-2021 Robert Künnemann & Kevin Morio
+-- Copyright   : (c) 2019-2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
 -- Portability : GHC only
 --
 -- Compute translation-specific restrictions
-module Sapic.Accountability (
+module Accountability.Generation (
         generateAccountabilityLemmas
       , checkPreTransWellformedness
 ) where
 
-import           Text.PrettyPrint.Class ( Document(text, ($-$)), ($--$), vcat, Doc )
-import           Control.Monad.Catch ( MonadThrow )
-import           Control.Monad.Fresh ( MonadFresh, evalFreshT )
-import qualified Extension.Data.Label            as L
+import           Control.Monad.Catch         (MonadThrow)
+import           Control.Monad.Fresh         (MonadFresh, evalFreshT)
+import qualified Extension.Data.Label        as L
+import           Text.PrettyPrint.Class      (Document(text, ($-$)), ($--$), vcat, Doc)
 import           Theory
-import           Theory.Tools.Wellformedness ( WfErrorReport )
+import           Theory.Tools.Wellformedness (WfErrorReport)
 
 
 

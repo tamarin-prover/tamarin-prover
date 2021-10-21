@@ -193,6 +193,6 @@ goalRanking diff workDir = try oracleRanking <|> regularRanking <?> "goal rankin
 
 
 liftedAddPredicate :: Catch.MonadThrow m =>
-                      Theory sig c r p SapicElement
-                      -> Predicate -> m (Theory sig c r p SapicElement)
+                      Theory sig c r p TranslationElement
+                      -> Predicate -> m (Theory sig c r p TranslationElement)
 liftedAddPredicate thy prd = liftMaybeToEx (DuplicateItem (PredicateItem prd)) (addPredicate prd thy)

@@ -11,12 +11,13 @@ module Main.Mode.Batch (
     batchMode
   ) where
 
+import           Accountability.Generation       (checkPreTransWellformedness)
+
 import           Control.Basics
 import           Control.DeepSeq                 (force)
 import           Control.Exception               (evaluate)
 import           Data.List
 import           Data.Maybe
-import           Sapic.Accountability            (checkPreTransWellformedness)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing                   (timed)

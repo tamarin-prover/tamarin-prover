@@ -111,10 +111,10 @@ library
       Theory.Tools.Wellformedness
 
     other-modules:
+      Theory.Text.Parser.Accountability
       Theory.Text.Parser.Exceptions
       Theory.Text.Parser.Fact
       Theory.Text.Parser.Formula
-      Theory.Text.Parser.CaseTest
       Theory.Text.Parser.Lemma
       Theory.Text.Parser.Let
       Theory.Text.Parser.Proof

@@ -40,7 +40,7 @@ import           Text.PrettyPrint.Class     (render)
 import           Theory
 import           Theory.Text.Parser.Token
 
-import           Theory.Text.Parser.CaseTest
+import           Theory.Text.Parser.Accountability
 import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Exceptions
@@ -127,16 +127,16 @@ liftedAddLemma thy lem = do
                                          -- ++ "."
 
 liftedAddAccLemma :: Catch.MonadThrow m => 
-                     Theory sig c r p SapicElement 
-                     -> AccLemma -> m (Theory sig c r p SapicElement)
+                     Theory sig c r p TranslationElement 
+                     -> AccLemma -> m (Theory sig c r p TranslationElement)
 liftedAddAccLemma thy lem =
-   liftMaybeToEx (DuplicateItem $ SapicItem $ AccLemmaItem lem) (addAccLemma lem thy)
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ AccLemmaItem lem) (addAccLemma lem thy)
 
 liftedAddCaseTest :: Catch.MonadThrow m =>
-                     Theory sig c r p SapicElement
-                     -> CaseTest -> m (Theory sig c r p SapicElement)
+                     Theory sig c r p TranslationElement
+                     -> CaseTest -> m (Theory sig c r p TranslationElement)
 liftedAddCaseTest thy cTest =
-   liftMaybeToEx (DuplicateItem $ SapicItem $ CaseTestItem cTest) (addCaseTest cTest thy)
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ CaseTestItem cTest) (addCaseTest cTest thy)
 
 
 -- | Add new protocol rule and introduce restrictions for _restrict contruct
