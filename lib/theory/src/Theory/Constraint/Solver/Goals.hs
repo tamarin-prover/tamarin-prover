@@ -115,6 +115,7 @@ openGoals sys = do
         -- FIXME: Split goals may be duplicated, we always have to check
         -- explicitly if they still exist.
         SplitG idx -> splitExists (get sEqStore sys) idx
+        SubtermG st -> st `elem` L.get (subterms . sSubtermStore) sys
 
     let
         useful = case goal of
@@ -220,6 +221,7 @@ solveGoal goal = do
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
+      SubtermG st   -> solveSubterm st
 
 -- The following functions are internal to 'solveGoal'. Use them with great
 -- care.
@@ -408,3 +410,6 @@ solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
     insertFormula gfm
     return $ "case_" ++ show i
+
+solveSubterm :: (LNTerm, LNTerm) -> Reduction String
+solveSubterm _ = return "hi"  --TODO-BIG implement this

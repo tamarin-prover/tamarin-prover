@@ -529,6 +529,7 @@ markGoalAsSolved how goal =
       DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
                          modM sSolvedFormulas (S.insert $ GDisj disj) >>
                          updateStatus
+      SubtermG _      -> updateStatus
   where
     updateStatus = do
         mayStatus <- M.lookup goal <$> getM sGoals

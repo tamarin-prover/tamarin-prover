@@ -1131,6 +1131,7 @@ unsolvedTrivialGoals sys = foldl f [] $ M.toList (L.get sGoals sys)
     f l (ChainG _ _, _)               = l
     f l (SplitG _, _)                 = l
     f l (DisjG _, _)                  = l
+    f l (SubtermG _, _)               = l
 
 -- | Tests whether there are common Variables in the Facts
 noCommonVarsInGoals :: [(Either NodePrem LVar, LNFact)] -> Bool
@@ -1168,6 +1169,7 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
         r = nodeRule nid sys
     goalIsSimpleFact ret (SplitG _)               (GoalStatus solved _ _) = ret && solved
     goalIsSimpleFact ret (DisjG _)                (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (SubtermG _)             (GoalStatus solved _ _) = ret && solved
 
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool

@@ -18,6 +18,7 @@
 module Theory.Tools.SubtermStore (
   -- ** Construction
     SubtermStore(..)
+  , subterms
   , emptySubtermStore
 
   -- ** Accessors

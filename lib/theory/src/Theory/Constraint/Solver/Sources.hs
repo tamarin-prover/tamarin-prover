@@ -142,6 +142,7 @@ solveAllSafeGoals ths' =
         -- Uncomment to get more extensive case splitting
         SplitG _      -> doSplit --extensiveSplitting &&
         -- SplitG _      -> False
+        SubtermG _    -> doSplit
 
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
