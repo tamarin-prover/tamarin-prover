@@ -92,7 +92,7 @@ contradictions ctxt sys = F.asum
     -- CR-rule **
     [ guard (D.cyclic $ rawLessRel sys)                            *> pure Cyclic
     -- CR-rule *S_Subterm-Chain-Fail*
-    , guard (hasSubtermCycle reducible subtermRel)                 *> pure SubtermCyclic
+    , guard (L.get isContradictory subtermStore)                   *> pure SubtermCyclic
     -- CR-rule *N1*
     , guard (hasNonNormalTerms sig sys)                            *> pure NonNormalTerms
     -- FIXME: add CR-rule
@@ -122,8 +122,7 @@ contradictions ctxt sys = F.asum
   where
     sig  = L.get pcSignature ctxt
     msig = mhMaudeSig . L.get pcMaudeHandle $ ctxt
-    subtermRel = [] --rawSubtermRel $ L.get sEqStore sys  --TODO-BIG: adapt this to not take the rel from the Eqstore
-    reducible = reducibleFunSyms msig
+    subtermStore = L.get sSubtermStore sys --rawSubtermRel $ L.get sEqStore sys  --TODO-BIG: adapt this to not take the rel from the Eqstore
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain

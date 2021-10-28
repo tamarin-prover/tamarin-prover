@@ -23,6 +23,7 @@ module Theory.Tools.SubtermStore (
   -- ** Accessors
   , addNegSubterm
   , addSubterm
+  , isContradictory
   , simpSubtermStore
 
   -- ** Computation
@@ -42,8 +43,8 @@ import           Theory.Constraint.System.Constraints
 import           Theory.Model
 
 import           Control.Monad.Fresh
-import           Control.Monad.Bind
-import           Control.Monad.Reader
+--import           Control.Monad.Bind
+--import           Control.Monad.Reader
 --import           Extension.Prelude
 --import           Utils.Misc
 
@@ -70,7 +71,7 @@ import           Data.Data
 
 data SubtermStore = SubtermStore {
       _negSubterms     :: S.Set (LNTerm, LNTerm)  -- negative subterms
-    , _subterms :: S.Set (LNTerm, LNTerm)  -- subterms
+    , _subterms        :: S.Set (LNTerm, LNTerm)  -- subterms
     , _solvedSubterms  :: S.Set (LNTerm, LNTerm)  -- subterms that have been split
     , _isContradictory :: Bool
     , _oldNegSubterms  :: S.Set (LNTerm, LNTerm)  -- copy of negSubterms that is not changed by apply/HasFrees/add[Neg]Subterm

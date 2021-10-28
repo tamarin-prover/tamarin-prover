@@ -212,7 +212,7 @@ import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
 import           Data.List                            (foldl', partition, intersect)
 import qualified Data.Map                             as M
-import           Data.Maybe                           (fromMaybe,mapMaybe,isNothing)
+import           Data.Maybe                           (fromMaybe,mapMaybe)
 -- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S

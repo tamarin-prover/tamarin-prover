@@ -385,19 +385,11 @@ insertLess i j = modM sLessAtoms (S.insert (i, j))
 
 -- | Insert a 'Subterm' atom. *x ⊏ y* is added to the SubtermStore
 insertSubterm :: LNTerm -> LNTerm -> Reduction ()
-insertSubterm x y = do
-    sst <- getM sSubtermStore
-    let (sst1, mayGoal) = addSubterm (x, y) sst
-    maybe (return ()) (`insertGoal` False) mayGoal
-    setM sSubtermStore sst1
+insertSubterm x y = setM sSubtermStore . addSubterm (x, y) =<< getM sSubtermStore
 
 -- | Insert the negation of a 'Subterm' atom. *¬ x ⊏ y* is added to the SubtermStore
 insertNegSubterm :: LNTerm -> LNTerm -> Reduction()
-insertNegSubterm x y = do
-    sst <- getM sSubtermStore
-    let (sst1, equations) = addNegSubterm (x, y) sst
-    mapM_ (\(a, b) -> insertFormula $ GAto $ EqE (lTermToBTerm a) (lTermToBTerm b)) equations 
-    setM sSubtermStore sst1
+insertNegSubterm x y = setM sSubtermStore . addNegSubterm (x, y) =<< getM sSubtermStore
 
 -- | Insert a 'Last' atom and ensure their uniqueness.
 insertLast :: NodeId -> Reduction ChangeIndicator
