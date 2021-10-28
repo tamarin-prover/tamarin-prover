@@ -32,6 +32,7 @@ module Theory.Constraint.System.Guarded (
   , gnotAtom
   , gnot
   , ginduct
+  , closeGuarded
 
   , formulaToGuarded
   , formulaToGuarded_

@@ -149,7 +149,6 @@ module Theory.Constraint.System (
   , rawEdgeRel
 
   , alwaysBefore
-  , hasSubtermCycle
   , isInTrace
 
   -- ** The last node
@@ -1245,27 +1244,6 @@ alwaysBefore sys =
          -- speed-up check by first checking less-atoms
          ((i, j) `S.member` L.get sLessAtoms sys)
       || (j `S.member` D.reachableSet [i] lessRel)
-
--- | Computes whether there is a cycle @t0 ⊏ x0, ..., tn ⊏ xn@ in @dag@ such that
--- @xi@ is syntactically in @t_i+1@ and not below a reducible function symbol, see @elemNotBelowReducible@
-hasSubtermCycle :: FunSig -> [(LNTerm, LNTerm)] -> Bool
-hasSubtermCycle reducible dag = isNothing $ foldM visitForest S.empty dag
-  where
-    -- adapted from cyclic in Simple.hs but using tuples of LNTerm instead of LNTerm
-    visitForest :: S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> Maybe (S.Set (LNTerm, LNTerm))
-    visitForest visited x
-      | x `S.member` visited = return visited
-      | otherwise            = findLoop S.empty visited x
-
-    findLoop :: S.Set (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> Maybe (S.Set (LNTerm, LNTerm))
-    findLoop parents visited x
-      | x `S.member` parents = mzero
-      | x `S.member` visited = return visited
-      | otherwise            =
-          S.insert x <$> foldM (findLoop parents') visited next
-      where
-        next     = [ (e,e') | (e,e') <- dag, elemNotBelowReducible reducible (snd x) e]
-        parents' = S.insert x parents
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an
 -- index in the trace.

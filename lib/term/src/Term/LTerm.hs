@@ -59,8 +59,6 @@ module Term.LTerm (
   , variableToConst
   , niFactors
   , flattenedACTerms
-  , SubtermSplit(..)
-  , splitSubterm
   , containsPrivate
   , containsNoPrivateExcept
   , neverContainsFreshPriv
@@ -336,99 +334,6 @@ flattenedACTerms :: ACSym -> Term t -> [Term t]
 flattenedACTerms f (viewTerm -> FApp (AC sym) ts)
   | sym == f = concatMap (flattenedACTerms f) ts
 flattenedACTerms _ term = [term]
-
-
-data SubtermSplit = SubtermD    (LNTerm, LNTerm)
-                  | NatSubtermD (LNTerm, LNTerm, LVar)  -- small, big, newVar
-                  | EqualD      (LNTerm, LNTerm)
-                  | ACNewVarD   (LNTerm, LNTerm, LVar)  -- small+newVar, big, newVar
-                  | TrueD
-  deriving (Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary)
-
--- | Deconstructs a subterm according to the CR-rules S_subterm-[ac-]recurse, S_invalid and stops destructing for S_nat / S_neg-nat
--- Returns @set@ such that @small ⊏ big@ is equivalent to the disjunction of @set@
--- If the subterm is trivially false, [] is returned as the empty disjunction
-splitSubterm :: MonadFresh m => FunSig -> (LNTerm, LNTerm) -> m [SubtermSplit]
-splitSubterm reducible subterm = S.toList <$> recurse (SubtermD subterm)
-  where
-    recurse :: MonadFresh m => SubtermSplit -> m (S.Set SubtermSplit)
-    recurse std@(SubtermD st) = do
-      res <- step st
-      case res of
-        Just entries -> S.unions <$> mapM recurse (S.toList entries)
-        Nothing -> return $ S.singleton std
-    recurse x = return $ S.singleton x  -- for everything except SubtermD we stop the recursion
-
-    -- @step@ returns nothing if @small ⊏ big@ cannot be further destructed.
-    -- Else it returns @Just list@ if @small ⊏ big@ can be replaced by the disjunction of the list.
-    -- It especially returns @Just []@ if @small ⊏ big@ is trivially false.
-    step :: MonadFresh m => (LNTerm, LNTerm) -> m (Maybe (S.Set SubtermSplit))
-    step (small, big)
-      --- | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat =  -- terms like 1+1 < x+y+z
-      --  return $ Just $ S.singleton TrueD  -- true
-      --- | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
-      --  ac <- processAC NatPlus (small, big)
-      --  return $ case ac of
-      --    Right False -> Just S.empty
-      --    Right True -> Just $ S.singleton TrueD
-      --    Left tuple -> Just $ S.singleton $ NatSubtermD tuple
-      | big `redElem` small =  -- trivially false (big == small included)
-        return $ Just S.empty  -- false
-      | small `redElem` big =  -- trivially true
-        return $ Just $ S.singleton TrueD  -- true
-      --    where
-      --      onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
-      --      l t = length $ flattenedACTerms NatPlus t
-    step (_, viewTerm -> Lit (Con _)) =  -- nothing can be a strict subterm of a constant
-        return $ Just S.empty  -- false
-    step (small, big@(viewTerm -> Lit (Var _)))
-      | isPubVar big || isFreshVar big {--|| (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat)-} =  -- CR-rule S_invalid
-        return $ Just S.empty  -- false
-    step (_, viewTerm -> Lit (Var _)) =  -- variable: do not recurse further
-        return Nothing
-    step (small, big@(viewTerm -> FApp (AC f) _))  -- apply CR-rule S_subterm-ac-recurse
-      | AC f `S.notMember` reducible = do
-        ac <- processAC f (small, big)
-        return $ case ac of
-          Right False -> Just S.empty
-          Right True -> Just $ S.singleton TrueD
-          Left (nSmall, nBig, newVar) ->
-            let acSpecial = ACNewVarD (fAppAC f [nSmall, varTerm newVar], nBig, newVar)
-            in Just $ acSpecial `S.insert` S.unions (map (eqOrSubterm small) (flattenedACTerms f big))
-    step (small, viewTerm -> FApp (NoEq f) ts)  -- apply CR-rule S_subterm-recurse
-      | NoEq f `S.notMember` reducible = do
-        return $ Just $ S.unions (map (eqOrSubterm small) ts)
-    step (_, viewTerm -> FApp (C _) _) =  -- we treat commutative but not associative symbols as reducible functions
-        return Nothing
-    step (_, viewTerm -> FApp List _) =  -- list seems to be unused (?)
-        return Nothing
-    step _ =  -- reducible function symbol observed (when applying subterm-[ac-]recurse)
-        return Nothing
-
-    redElem = elemNotBelowReducible reducible
-    eqOrSubterm :: LNTerm -> LNTerm -> S.Set SubtermSplit
-    eqOrSubterm s t = S.fromList [SubtermD (s, t), EqualD (s, t)]  -- the unifiers for the equation
-
-    -- returns the triple @((nSmall, nBig), newVar, ac)@
-    -- nSmall, nBig are small, big where terms are removed that were on both sides
-    -- newVar is for the CR-rule S_neg-ac-recurse
-    processAC :: MonadFresh m => ACSym -> (LNTerm, LNTerm) -> m (Either (LNTerm, LNTerm, LVar) Bool)
-    processAC f (small, big) = do
-        newVar <- freshLVar "newVar" (sortOfLNTerm big)  -- generate a new variable
-        return $ case lists of
-          (_, []) -> Right False
-          ([], _) -> Right True
-          (lSmall, lBig) -> Left (fAppAC f lSmall, fAppAC f lBig, newVar)
-        --let term = fAppAC f [nSmall, varTerm newVar]  -- build the term = small + newVar
-      where
-        -- removes terms that are on both sides of the subterm
-        -- lists have to be sorted before removeSame works
-        removeSame (a:as, b:bs) | a == b = removeSame (as,   bs)
-        removeSame (a:as, b:bs) | a < b  = first (a:) $ removeSame (as, b:bs)
-        removeSame (a:as, b:bs) | a > b  = second (b:) $ removeSame (a:as, bs)
-        removeSame x = x  -- one of the lists is empty
-
-        lists = removeSame (L.sort $ flattenedACTerms f small, L.sort $ flattenedACTerms f big)
 
 
 -- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.

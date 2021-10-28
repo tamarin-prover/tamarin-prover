@@ -391,6 +391,14 @@ insertSubterm x y = do
     maybe (return ()) (`insertGoal` False) mayGoal
     setM sSubtermStore sst1
 
+-- | Insert the negation of a 'Subterm' atom. *¬ x ⊏ y* is added to the SubtermStore
+insertNegSubterm :: LNTerm -> LNTerm -> Reduction()
+insertNegSubterm x y = do
+    sst <- getM sSubtermStore
+    let (sst1, equations) = addNegSubterm (x, y) sst
+    mapM_ (\(a, b) -> insertFormula $ GAto $ EqE (lTermToBTerm a) (lTermToBTerm b)) equations 
+    setM sSubtermStore sst1
+
 -- | Insert a 'Last' atom and ensure their uniqueness.
 insertLast :: NodeId -> Reduction ChangeIndicator
 insertLast i = do
@@ -458,7 +466,7 @@ insertFormula = do
           -- negative Subterm
           GGuarded All [] [Subterm i j] gf  | gf == gfalse -> do
               markAsSolved
-              --TODO-AFTER-COMPILE insert negative subterm into subterm store
+              insertNegSubterm (bTermToLTerm i) (bTermToLTerm j)
 
           -- CR-rule: FIXME add this rule to paper
           GGuarded All [] [EqE i@(bltermNodeId -> Just _)
