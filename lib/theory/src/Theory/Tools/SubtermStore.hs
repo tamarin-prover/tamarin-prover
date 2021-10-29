@@ -18,13 +18,16 @@
 module Theory.Tools.SubtermStore (
   -- ** Construction
     SubtermStore(..)
-  , subterms
+  , negSubterms
+  , posSubterms
+  , solvedSubterms
+  , isContradictory
+  --, oldSubterms  --no need to show this internal detail
   , emptySubtermStore
 
   -- ** Accessors
   , addNegSubterm
   , addSubterm
-  , isContradictory
   , simpSubtermStore
 
   -- ** Computation
@@ -72,7 +75,7 @@ import           Data.Data
 
 data SubtermStore = SubtermStore {
       _negSubterms     :: S.Set (LNTerm, LNTerm)  -- negative subterms
-    , _subterms        :: S.Set (LNTerm, LNTerm)  -- subterms
+    , _posSubterms     :: S.Set (LNTerm, LNTerm)  -- subterms
     , _solvedSubterms  :: S.Set (LNTerm, LNTerm)  -- subterms that have been split
     , _isContradictory :: Bool
     , _oldNegSubterms  :: S.Set (LNTerm, LNTerm)  -- copy of negSubterms that is not changed by apply/HasFrees/add[Neg]Subterm
@@ -92,7 +95,7 @@ emptySubtermStore = SubtermStore S.empty S.empty S.empty False S.empty
 addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addSubterm st sst = if st `elem` L.get solvedSubterms sst
                       then sst
-                      else modify subterms (S.insert st) sst  --TODO-BIG do apply stuff as in eqStore???
+                      else modify posSubterms (S.insert st) sst  --TODO-BIG do apply stuff as in eqStore???
 
 addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addNegSubterm st = modify negSubterms (S.insert st)  --TODO-BIG do apply stuff as in eqStore???
@@ -127,21 +130,21 @@ simpSubtermStore reducible sst = do
 -- - cope with [SubtermD] -> ignore
 -- - cope with [TrueD] -> remove this subterm as it's true anyways
 -- - cope with lists of [ACNewVarD, SubtermD...] or [EqualD...,SubtermD...] -> indicate possible split
--- 
+--
 -- if the goals are [] then no goals have to be removed (as subterms cannot go from splittable to unsplittable)
 -- otherwise, all SubtermG should be removed and then replaced by this list
 simpSplitSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [Goal])
 simpSplitSt reducible sst = do
-    let subts = S.toList $ L.get subterms sst
+    let subts = S.toList $ L.get posSubterms sst
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
-    let splittableSubterms = [ x | (x, splitCases) <- zip subts splits, length splitCases > 1]
+    let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, length splitCases > 1]
     let toRemoveAsTrue = S.fromList [ x | (x, [TrueD]) <- zip subts splits]
-    
-    let sst1 = modify subterms (`S.difference` toRemoveAsTrue) sst
+
+    let sst1 = modify posSubterms (`S.difference` toRemoveAsTrue) sst
     let sst2 = modify isContradictory (|| [] `elem` splits) sst1
-    
-    return (sst2, [])  -- TODO-BIG take care that goals contain SubtermG with all splittableSubterms
+
+    return (sst2, splittableSubterms)
 
 
 
@@ -181,7 +184,7 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
   where
     -- extract dag from store
     dag :: [(LNTerm, LNTerm)]
-    dag = S.toList $ L.get subterms store
+    dag = S.toList $ L.get posSubterms store
 
     -- adapted from cyclic in Simple.hs but using tuples of LNTerm instead of LNTerm
     visitForest :: S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> Maybe (S.Set (LNTerm, LNTerm))
@@ -202,7 +205,7 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
 
 
 data SubtermSplit = SubtermD    (LNTerm, LNTerm)
-                  | NatSubtermD (LNTerm, LNTerm, LVar)  -- small, big, newVar
+                  --  | NatSubtermD (LNTerm, LNTerm, LVar)  -- small, big, newVar
                   | EqualD      (LNTerm, LNTerm)
                   | ACNewVarD   (LNTerm, LNTerm, LVar)  -- small+newVar, big, newVar
                   | TrueD

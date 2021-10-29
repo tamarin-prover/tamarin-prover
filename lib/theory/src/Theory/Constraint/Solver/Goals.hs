@@ -115,7 +115,7 @@ openGoals sys = do
         -- FIXME: Split goals may be duplicated, we always have to check
         -- explicitly if they still exist.
         SplitG idx -> splitExists (get sEqStore sys) idx
-        SubtermG st -> st `elem` L.get (subterms . sSubtermStore) sys
+        SubtermG st -> st `elem` L.get (posSubterms . sSubtermStore) sys
 
     let
         useful = case goal of
@@ -411,5 +411,30 @@ solveDisjunction disj = do
     insertFormula gfm
     return $ "case_" ++ show i
 
+-- | remove from subterms
+-- get split
+-- behave according to split
+--   insert subterms
+--   insert equalities
+--   insert eqFormulas
+--   ignore TrueD
+--   contradict if emptyset
 solveSubterm :: (LNTerm, LNTerm) -> Reduction String
-solveSubterm _ = return "hi"  --TODO-BIG implement this
+solveSubterm st = do
+      -- mark subterm as solved
+      modM (posSubterms . sSubtermStore) (st `S.delete`)
+      modM (solvedSubterms . sSubtermStore) (st `S.insert`)
+      
+      -- find all splits
+      reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+      splitList <- splitSubterm reducible True st
+      (i, split) <- disjunctionOfList $ zip [(1::Int)..] splitList  -- make disjunction over all splits
+      
+      -- from here on: only look at a single split
+      case split of
+        TrueD -> return ()
+        SubtermD st1 -> modM sSubtermStore (addSubterm st1)
+        EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
+        ACNewVarD (smallPlus, big, newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
+        
+      return $ "SubtermSplit" ++ show i

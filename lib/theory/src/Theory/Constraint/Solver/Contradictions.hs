@@ -122,7 +122,7 @@ contradictions ctxt sys = F.asum
   where
     sig  = L.get pcSignature ctxt
     msig = mhMaudeSig . L.get pcMaudeHandle $ ctxt
-    subtermStore = L.get sSubtermStore sys --rawSubtermRel $ L.get sEqStore sys  --TODO-BIG: adapt this to not take the rel from the Eqstore
+    subtermStore = L.get sSubtermStore sys
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain
