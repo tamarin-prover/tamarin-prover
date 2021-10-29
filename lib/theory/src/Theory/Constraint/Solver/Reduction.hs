@@ -487,12 +487,13 @@ insertFormula = do
 -- 'insertFormula'.
 reducibleFormula :: LNGuarded -> Bool
 reducibleFormula fm = case fm of
-    GAto _                        -> True
-    GConj _                       -> True
-    GGuarded Ex _ _ _             -> True
-    GGuarded All [] [Less _ _] gf -> gf == gfalse
-    GGuarded All [] [Last _]   gf -> gf == gfalse
-    _                             -> False
+    GAto _                           -> True
+    GConj _                          -> True
+    GGuarded Ex _ _ _                -> True
+    GGuarded All [] [Less _ _]    gf -> gf == gfalse
+    GGuarded All [] [Subterm _ _] gf -> gf == gfalse
+    GGuarded All [] [Last _]      gf -> gf == gfalse
+    _                                -> False
     --TODO-AFTER-COMPILE: add a case for subterms? I suspect that this is not necessary as reduceFormula will no longer handle subterms (i.e. insert them)
 
 
