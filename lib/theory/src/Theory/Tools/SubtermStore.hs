@@ -22,7 +22,7 @@ module Theory.Tools.SubtermStore (
   , posSubterms
   , solvedSubterms
   , isContradictory
-  --, oldSubterms  --no need to show this internal detail
+  , oldNegSubterms
   , emptySubtermStore
 
   -- ** Accessors
@@ -161,13 +161,6 @@ simpSplitNegSt reducible sst = do
     let sst3 = modify isContradictory (|| TrueD `elem` splits) sst2
 
     return (sst3, eqFormulas ++ acFormulas)
-    -- TODO-BIG take care acFormulas are not inserted twice with different newVar's !!!!!!!
-    --          if z ⊏ x+y is substituted to z ⊏ x+y'+y'' then
-    --          the formula ∀newVar... in the LNGuarded formulas is updated automatically correctly.
-    --          We only have to add z ⊏ y', z ⊏ y'' and could remove z ⊏ y'+y'' (formerly z ⊏ y)
-    --          However, I'm not sure wether removing z ⊏ y'+y'' and the corresponding ∀newVar is beneficial:
-    --            ∀n. n+z ≠ y'+y'' is clearly subsumed by ∀n. n+z ≠ x+y'+y''
-    --            but it is hard to search for these collisions.
 
 
 

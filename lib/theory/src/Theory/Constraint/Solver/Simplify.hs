@@ -92,6 +92,7 @@ simplifySystem = do
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
+              c10 <- simpSubterms
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -104,6 +105,7 @@ simplifySystem = do
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
                     , ("orderings for ~vars (S_fresh-order)", c9)
+                    , ("simplification of SubtermStore",     c10)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -124,6 +126,7 @@ simplifySystem = do
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
+              c10 <- simpSubterms
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -136,6 +139,7 @@ simplifySystem = do
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
                     , ("orderings for ~vars (S_fresh-order)", c9)
+                    , ("simplification of SubtermStore",     c10)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -450,3 +454,63 @@ freshOrdering = do
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
       
+
+-- | simplify the subterm store
+-- It also computes contradictions (which are indicated by isContradictory)
+-- These contradictions are only later handled by Contradictions.hs to yield meaningful user output.
+-- 
+-- executes simplifySubtermStore
+-- removes all SubtermGoals and inserts the new ones (if the new ones are'nt [])
+-- adds the equations from negSubterm splits
+-- determines wether anything has changed
+simpSubterms :: Reduction ChangeIndicator
+simpSubterms = do
+    reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+    sst <- getM sSubtermStore
+    (sst1, formulas, goals) <- simpSubtermStore reducible sst
+    
+    -- updateSubtermStore
+    setM sSubtermStore sst1
+    let ignoringOldSst1 = set oldNegSubterms (get oldNegSubterms sst) sst1
+    let changedStore = ignoringOldSst1 == sst
+    
+    -- uptate goals
+    changedGoals <- if null goals then return False else do  -- if goals = [] then goalsToRemove = [] holds because goals cannot disappear due to substitution
+      oldGoals <- gets plainOpenGoals
+      let oldSubtermGoals = [SubtermG st | (SubtermG st, _) <- oldGoals]
+      let goalsToRemove = oldSubtermGoals \\ goals
+      let goalsToAdd = goals \\ oldSubtermGoals
+      forM_ goalsToRemove (modM sGoals . M.delete)
+      forM_ goalsToAdd (`insertGoal` False)
+      return ((length goalsToAdd + length goalsToRemove) > 0)
+      
+    -- insert formulas
+    allFormulas <- S.union <$> getM sSolvedFormulas <*> getM sFormulas
+    forM_ formulas insertFormula
+    let changedFormulas = not $ all (`S.member` allFormulas) formulas
+    return $ if changedStore || changedGoals || changedFormulas then Changed else Unchanged
+    -- TODO-BIG take care acFormulas are not inserted twice with different newVar's !!!!!!!
+    --          if z ⊏ x+y is substituted to z ⊏ x+y'+y'' then
+    --          the formula ∀newVar... in the LNGuarded formulas is updated automatically correctly.
+    --          We only have to add z ⊏ y', z ⊏ y'' and could remove z ⊏ y'+y'' (formerly z ⊏ y)
+    --          However, I'm not sure wether removing z ⊏ y'+y'' and the corresponding ∀newVar is beneficial:
+    --            ∀n. n+z ≠ y'+y'' is clearly subsumed by ∀n. n+z ≠ x+y'+y''
+    --            but it is hard to search for these collisions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
