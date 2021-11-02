@@ -494,7 +494,6 @@ reducibleFormula fm = case fm of
     GGuarded All [] [Subterm _ _] gf -> gf == gfalse
     GGuarded All [] [Last _]      gf -> gf == gfalse
     _                                -> False
-    --TODO-AFTER-COMPILE: add a case for subterms? I suspect that this is not necessary as reduceFormula will no longer handle subterms (i.e. insert them)
 
 
 -- Goal management
