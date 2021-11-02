@@ -61,7 +61,7 @@ import           Control.DeepSeq
 
 import           Data.Binary
 --import qualified Data.Foldable         as F
-import           Data.List             (sort, length)
+import           Data.List             (sort)
 import           Data.Maybe            (isNothing, fromMaybe)
 import qualified Data.Set              as S
 import           Extension.Data.Label  hiding (for, get)
@@ -110,12 +110,12 @@ addNegSubterm st = modify negSubterms (S.insert st)  --TODO-BIG do apply stuff a
 -- does also some "cleaning up", i.e., generating goals and new equations
 simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSubtermStore reducible sst = do
-    (sst1, newGuarded) <- simpSplitNegSt reducible sst  -- split negative subterms
+    (sst1, newFormulas) <- simpSplitNegSt reducible sst  -- split negative subterms
     (sst2, goals) <- simpSplitSt reducible sst1  -- split positive subterms
-    let sst3 = modify isContradictory (|| hasSubtermCycle reducible sst2) sst2  -- CR-rule S_chain
-    -- CR-rule S_neg (negativeSubtermVars)
-
-    return (sst3, newGuarded, goals)
+    let (sst3, newNegEqs) = negativeSubtermVars sst2
+    let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
+    
+    return (sst4, newFormulas ++ newNegEqs, goals)
 
 
     -- NOT resolve constants (already done by splitting)
@@ -251,7 +251,7 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
         return Nothing
     step (small, big@(viewTerm -> FApp (AC f) _))  -- apply CR-rule S_subterm-ac-recurse
       | AC f `S.notMember` reducible = do
-        ac <- processAC f (small, big)
+        ac <- processAC f (small, fAppAC f $ flattenedACTerms f big)
         return $ case ac of
           Right False -> Just S.empty
           Right True -> Just $ S.singleton TrueD
@@ -294,26 +294,18 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
         lists = removeSame (sort $ flattenedACTerms f small, sort $ flattenedACTerms f big)
 
 
-{-
--- | CR-rule *S_subterm-neg*: @s ¬⊏ x, t ⊏ x --insert--> s ¬⊏ t, s ≠ t@
-negativeSubtermVars :: Reduction ChangeIndicator
-negativeSubtermVars = do
-  formulas <- getM sFormulas
-  changelists <- mapM (\f -> case f of
-      (GGuarded All [] [Subterm i j] gf) | gf == gfalse && isMsgVar (bTermToLTerm j) -> do
-          subtermRel <- liftM rawSubtermRel $ getM sEqStore
-          let matching = filter ((bTermToLTerm j ==) . snd) subtermRel
-          mapM (\(small, _) -> do
-            let smallB = lTermToBTerm small
-            c1 <- insertFormula (gnotAtom $ Subterm i smallB)
-            c2 <- insertFormula (gnotAtom $ EqE i smallB)
-            return [c1, c2]
-            ) matching
-      _ -> return []
-    ) (S.toList formulas)
-  let changed = Changed `elem` concat (concat changelists)
-  return $ if changed then Changed else Unchanged
--}
+
+-- | CR-rule *S_subterm-neg*: @s ¬⊏ r, t ⊏ r --insert--> s ¬⊏ t, s ≠ t@
+negativeSubtermVars :: SubtermStore -> (SubtermStore, [LNGuarded])
+negativeSubtermVars sst = (sst1, equations)
+  where
+    negSt = S.toList $ L.get negSubterms sst
+    posSt = S.toList (L.get posSubterms sst `S.union` L.get solvedSubterms sst)
+    pairs = [(x, y) | x@(_,a) <- negSt, y@(_,b) <- posSt, a == b]
+    equations = [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | ((x,_),(y,_)) <- pairs]
+    newSubterms = S.fromList [(x,y) | ((x,_),(y,_)) <- pairs]
+    sst1 = modify negSubterms (`S.union` newSubterms) sst
+
 
 
 -- Instances
@@ -342,18 +334,18 @@ instance Apply SubtermStore where
 
 -- | Pretty print an 'EqStore'.
 prettySubtermStore :: HighlightDocument d => SubtermStore -> d
-prettySubtermStore (SubtermStore negSt st solvedSt contr _) = vcat $
+prettySubtermStore (SubtermStore negSt posSt solvedSt contr _) = vcat $
   map combine $
-    [("Contradictory", text "SubtermStore !!") | contr] ++
-    [ ("Subterms", numbered' $ map ppSt (S.toList st))
-    , ("Negative Subterms", numbered' $ map ppSt (S.toList negSt))
-    , ("Solved Subterms", numbered' $ map ppSt (S.toList solvedSt))
-    ]
+    [("Contradictory", text "yes") | contr] ++
+    [ ("Negative Subterms", numbered' $ map ppSt (S.toList negSt)) | not allEmpty] ++
+    [ ("Subterms", numbered' $ map ppSt (S.toList posSt)) | not allEmpty] ++
+    [ ("Solved Subterms", numbered' $ map ppSt (S.toList solvedSt)) | not allEmpty]
   where
+    allEmpty = negSt == S.empty && posSt == S.empty && solvedSt == S.empty
     combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
 
     ppSt (a,b) =
-      prettyNTerm (lit (Var a)) $$ nest (3::Int) (opSubterm <-> prettyNTerm b)
+      prettyNTerm a $$ nest (3::Int) (opSubterm <-> prettyNTerm b)
 
 
 

@@ -432,7 +432,7 @@ isForbiddenDEMapOrder sys (i, ruDEMap) = fromMaybe False $ do
 prettyContradiction :: Document d => Contradiction -> d
 prettyContradiction contra = case contra of
     Cyclic                       -> text "cyclic"
-    SubtermCyclic                -> text "subterm cyclic"
+    SubtermCyclic                -> text "contradictory subterm store"
     IncompatibleEqs              -> text "incompatible equalities"
     NonNormalTerms               -> text "non-normal terms"
     ForbiddenExp                 -> text "non-normal exponentiation rule instance"

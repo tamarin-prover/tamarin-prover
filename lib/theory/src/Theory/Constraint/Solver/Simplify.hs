@@ -458,7 +458,7 @@ freshOrdering = do
 -- | simplify the subterm store
 -- It also computes contradictions (which are indicated by isContradictory)
 -- These contradictions are only later handled by Contradictions.hs to yield meaningful user output.
--- 
+--
 -- executes simplifySubtermStore
 -- removes all SubtermGoals and inserts the new ones (if the new ones are'nt [])
 -- adds the equations from negSubterm splits
@@ -468,12 +468,12 @@ simpSubterms = do
     reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
     sst <- getM sSubtermStore
     (sst1, formulas, goals) <- simpSubtermStore reducible sst
-    
+
     -- updateSubtermStore
     setM sSubtermStore sst1
     let ignoringOldSst1 = set oldNegSubterms (get oldNegSubterms sst) sst1
-    let changedStore = ignoringOldSst1 == sst
-    
+    let changedStore = ignoringOldSst1 /= sst
+
     -- uptate goals
     changedGoals <- if null goals then return False else do  -- if goals = [] then goalsToRemove = [] holds because goals cannot disappear due to substitution
       oldGoals <- gets plainOpenGoals
@@ -483,7 +483,7 @@ simpSubterms = do
       forM_ goalsToRemove (modM sGoals . M.delete)
       forM_ goalsToAdd (`insertGoal` False)
       return ((length goalsToAdd + length goalsToRemove) > 0)
-      
+
     -- insert formulas
     allFormulas <- S.union <$> getM sSolvedFormulas <*> getM sFormulas
     forM_ formulas insertFormula
