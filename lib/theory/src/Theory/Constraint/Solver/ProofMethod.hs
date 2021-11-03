@@ -239,7 +239,7 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
         Solved
-          | null (plainOpenGoals sys) -> return M.empty
+          | null (openGoals sys) -> return M.empty
           | otherwise                 -> Nothing 
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
