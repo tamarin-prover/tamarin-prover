@@ -33,7 +33,7 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe)
+import           Data.Maybe                         (mapMaybe, listToMaybe)
 
 import           Control.Basics
 import           Control.Category
@@ -476,10 +476,10 @@ simpSubterms = do
 
     -- uptate goals
     changedGoals <- if null goals then return False else do  -- if goals = [] then goalsToRemove = [] holds because goals cannot disappear due to substitution
-      oldGoals <- gets plainOpenGoals
-      let oldSubtermGoals = [SubtermG st | (SubtermG st, _) <- oldGoals]
-      let goalsToRemove = oldSubtermGoals \\ goals
-      let goalsToAdd = goals \\ oldSubtermGoals
+      oldOpenGoals <- gets plainOpenGoals
+      oldGoals <- M.toList <$> getM sGoals
+      let goalsToRemove = [SubtermG st | (SubtermG st, _) <- oldGoals] \\ goals
+      let goalsToAdd = goals \\ [SubtermG st | (SubtermG st, _) <- oldGoals]
       forM_ goalsToRemove (modM sGoals . M.delete)
       forM_ goalsToAdd (`insertGoal` False)
       return ((length goalsToAdd + length goalsToRemove) > 0)

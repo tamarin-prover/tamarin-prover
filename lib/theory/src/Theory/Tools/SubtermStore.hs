@@ -24,6 +24,7 @@ module Theory.Tools.SubtermStore (
   , isContradictory
   , oldNegSubterms
   , emptySubtermStore
+  , rawSubtermRel
 
   -- ** Accessors
   , addNegSubterm
@@ -92,6 +93,9 @@ $(mkLabels [''SubtermStore])
 emptySubtermStore :: SubtermStore
 emptySubtermStore = SubtermStore S.empty S.empty S.empty False S.empty
 
+rawSubtermRel :: SubtermStore -> [(LNTerm, LNTerm)]
+rawSubtermRel sst = S.toList (L.get posSubterms sst `S.union` L.get solvedSubterms sst)
+
 addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addSubterm st sst = if st `elem` L.get solvedSubterms sst
                       then sst
@@ -110,9 +114,10 @@ addNegSubterm st = modify negSubterms (S.insert st)  --TODO-BIG do apply stuff a
 -- does also some "cleaning up", i.e., generating goals and new equations
 simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSubtermStore reducible sst = do
-    (sst1, newFormulas) <- simpSplitNegSt reducible sst  -- split negative subterms
-    (sst2, goals) <- simpSplitSt reducible sst1  -- split positive subterms
-    let (sst3, newNegEqs) = negativeSubtermVars sst2
+    let sst0 = modify posSubterms (`S.difference` L.get solvedSubterms sst) sst  -- when a subterm gets substituted to one which is already solved
+    (sst1, newFormulas) <- simpSplitNegSt reducible sst0  -- split negative subterms
+    (sst2, goals) <- simpSplitPosSt reducible sst1  -- split positive subterms
+    let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
     let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
     
     return (sst4, newFormulas ++ newNegEqs, goals)
@@ -133,8 +138,8 @@ simpSubtermStore reducible sst = do
 --
 -- if the goals are [] then no goals have to be removed (as subterms cannot go from splittable to unsplittable)
 -- otherwise, all SubtermG should be removed and then replaced by this list
-simpSplitSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [Goal])
-simpSplitSt reducible sst = do
+simpSplitPosSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [Goal])
+simpSplitPosSt reducible sst = do
     let subts = S.toList $ L.get posSubterms sst
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
