@@ -415,45 +415,52 @@ insertImpliedFormulas = do
 
 -- | CR-rule *S_fresh-order*:
 --
--- `i:f`, `j:g`
+-- `i:f`, `j:g`, `t1 ⊏ s1`, ..., `t_(n-1) ⊏ s_(n-1)`
 -- -- insert --
 -- `i<j`
--- *with `prems(f)u = Fr(~s)` and `prems(g)v = Fact(t))`*
--- *if `s` is syntactically in `t` and not below a reducible operator*
+-- *with `prems(f)u = Fr(~s0)` and `prems(g)v = Fact(tn))`*
+-- *if `si` is syntactically in `t_(i+1)` and not below a reducible operator*
 freshOrdering :: Reduction ChangeIndicator
 freshOrdering = do
+  rawSubterms <- rawSubtermRel <$> getM sSubtermStore
   nodes <- M.assocs <$> getM sNodes
-  reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-  let origins = concatMap getFreshFactVars nodes
-  let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
-  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
-
+  el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let freshVars = concatMap getFreshVars nodes
+  let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  --add a fake-subterm for each freshVar
+  let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms
+  let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]
+  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]
+  
   oldLesses <- gets (get sLessAtoms)
   mapM_ (uncurry insertLess) newLesses
+  --modify dropEntailedOrdConstraints
   modifiedLesses <- gets (get sLessAtoms)
-  return $ if oldLesses == modifiedLesses
+  return $ (trace (show ("freshOrdering", oldLesses, modifiedLesses))) $ if oldLesses == modifiedLesses
     then Unchanged
     else Changed
 
     where
-      getFreshFactVars :: (NodeId, RuleACInst) -> [(LNTerm, NodeId)]
-      getFreshFactVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
-          FreshFact -> Just (head $ factTerms prem, idx)
+      getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
+      getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (idx, head $ factTerms prem)
           _         -> Nothing
         ) prems
+
+      floodFill :: M.Map LNTerm [(LNTerm, LNTerm)] -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm)
+      floodFill graph visited (s,x)
+        | (s,x) `S.member` visited = visited
+        | otherwise                = foldl (floodFill graph) (S.insert (s,x) visited) (M.findWithDefault [] x graph)
+
+      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, [LNTerm])] -> Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) -> [NodeId]
+      connectNodeToFreshes _ [] _ = []
+      connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
+        case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
+          Just nid -> nid : connectNodeToFreshes el xs r
+          _        ->       connectNodeToFreshes el xs r
       
-      getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
-      getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
-          FreshFact -> []
-          _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
-        ) prems
-      
-      extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
-      extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
-                                      = concatMap (extractFreshNotBelowReducible reducible) as
-      extractFreshNotBelowReducible _ t | isFreshVar t = [t]
-      extractFreshNotBelowReducible _ _                = []
-      
+      notFresh (factTag -> FreshFact) = False
+      notFresh _                      = True
+
 
 -- | simplify the subterm store
 -- It also computes contradictions (which are indicated by isContradictory)
