@@ -485,7 +485,7 @@ simpSubterms = do
     changedGoals <- if null goals then return False else do  -- if goals = [] then goalsToRemove = [] holds because goals cannot disappear due to substitution
       oldOpenGoals <- gets plainOpenGoals
       oldGoals <- M.toList <$> getM sGoals
-      let goalsToRemove = [SubtermG st | (SubtermG st, _) <- oldGoals] \\ goals
+      let goalsToRemove = [SubtermG st | (SubtermG st, _) <- oldOpenGoals] \\ goals
       let goalsToAdd = goals \\ [SubtermG st | (SubtermG st, _) <- oldGoals]
       forM_ goalsToRemove (modM sGoals . M.delete)
       forM_ goalsToAdd (`insertGoal` False)
