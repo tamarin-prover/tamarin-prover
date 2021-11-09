@@ -455,8 +455,8 @@ freshOrdering = do
       connectNodeToFreshes _ [] _ = []
       connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
         case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
-          Just nid -> nid : connectNodeToFreshes el xs r
-          _        ->       connectNodeToFreshes el xs r
+          Just nid1 -> nid1 : connectNodeToFreshes el xs r
+          _         ->       connectNodeToFreshes el xs r
       
       notFresh (factTag -> FreshFact) = False
       notFresh _                      = True

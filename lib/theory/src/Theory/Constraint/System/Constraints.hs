@@ -104,7 +104,7 @@ data Goal =
        -- ^ A case split over equalities.
      | DisjG (Disj LNGuarded)
        -- ^ A case split over a disjunction.
-     | SubtermG (LNTerm, LNTerm)
+     | SubtermG (LNTerm, LNTerm)  --TODO-MY if I create a separate NatSubtermG, I have to adapt moveNatToEnd
        -- ^ A split of a Subterm which is in SubtermStore -> _subterms
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
