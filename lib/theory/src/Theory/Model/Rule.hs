@@ -80,6 +80,7 @@ module Theory.Model.Rule (
   , isIEqualityRule
   , isConstrRule
   , isPubConstrRule
+  , isNatConstrRule
   , isFreshRule
   , isIRecvRule
   , isISendRule
@@ -483,6 +484,7 @@ data IntrRuleACInfo =
   | IRecvRule
   | ISendRule
   | PubConstrRule
+  | NatConstrRule
   | FreshConstrRule
   | IEqualityRule -- Necessary for diff
   deriving( Ord, Eq, Show, Data, Typeable, Generic)
@@ -644,6 +646,7 @@ isConstrRule ru = case ruleName ru of
   IntrInfo (ConstrRule _)  -> True
   IntrInfo FreshConstrRule -> True
   IntrInfo PubConstrRule   -> True
+  IntrInfo NatConstrRule   -> True
   IntrInfo CoerceRule      -> True
   _                        -> False
 
@@ -651,6 +654,12 @@ isConstrRule ru = case ruleName ru of
 isPubConstrRule :: HasRuleName r => r -> Bool
 isPubConstrRule ru = case ruleName ru of
   IntrInfo PubConstrRule   -> True
+  _                        -> False
+  
+-- | True iff the rule is a construction rule.
+isNatConstrRule :: HasRuleName r => r -> Bool
+isNatConstrRule ru = case ruleName ru of
+  IntrInfo NatConstrRule   -> True
   _                        -> False
 
 -- | True iff the rule is the special fresh rule.
@@ -724,6 +733,7 @@ getRuleName ru = case ruleName ru of
                                       IRecvRule         -> "Recv"
                                       ISendRule         -> "Send"
                                       PubConstrRule     -> "PubConstr"
+                                      NatConstrRule     -> "NatConstr"
                                       FreshConstrRule   -> "FreshConstr"
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> case p of
@@ -740,6 +750,7 @@ getRuleNameDiff ru = case ruleName ru of
                                       IRecvRule         -> "Recv"
                                       ISendRule         -> "Send"
                                       PubConstrRule     -> "PubConstr"
+                                      NatConstrRule     -> "NatConstr"
                                       FreshConstrRule   -> "FreshConstr"
                                       IEqualityRule     -> "Equality"
                       ProtoInfo p -> "Proto" ++ case p of
@@ -1127,6 +1138,7 @@ prettyIntrRuleACInfo rn = text $ case rn of
     CoerceRule           -> "coerce"
     FreshConstrRule      -> "fresh"
     PubConstrRule        -> "pub"
+    NatConstrRule        -> "nat"
     IEqualityRule        -> "iequality"
     ConstrRule name      -> prefixIfReserved ('c' : BC.unpack name)
     DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)

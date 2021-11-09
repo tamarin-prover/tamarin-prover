@@ -715,7 +715,7 @@ formulaReports thy = do
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
+        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
     -- check that only bound variables and public names are used
     checkTerms header fm
@@ -738,7 +738,8 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        allowed (viewTerm2 -> FUnion args)               = all allowed args
+        allowed (viewTerm2 -> FNatPlus args)             = all allowed args  --TODO-MY-UNCERTAIN: what this line does
         -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False

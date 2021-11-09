@@ -95,6 +95,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult      ts    -> all go ts
             FXor       ts    -> all go ts
             FUnion     ts    -> all go ts
+            FNatPlus   ts    -> all go ts
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 

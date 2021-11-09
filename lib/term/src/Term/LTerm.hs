@@ -33,6 +33,7 @@ module Term.LTerm (
   -- ** Construction
   , freshTerm
   , pubTerm
+  , natTerm
 
   -- * LVar
   , LSort(..)
@@ -51,6 +52,7 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isPubVar
+  , isNatVar
   , isPubConst
   , isSimpleTerm
   , getVar
@@ -152,17 +154,24 @@ import           Term.VTerm
 --
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
+-- >  LSortNat   < LSortMsg
 --
 data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
+           | LSortNat   -- ^ Arbitrary natural numbers.
            deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data, Generic, NFData, Binary )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      Msg
---                           /   \
---                         Pub  Fresh
+-- Partial order:
+--     Node
+--
+--     Msg
+--     |-- Fresh
+--     |-- Pub
+--     |-- Nat
+--
 sortCompare :: LSort -> LSort -> Maybe Ordering
 sortCompare s1 s2 = case (s1, s2) of
     (a, b) | a == b          -> Just EQ
@@ -172,7 +181,7 @@ sortCompare s1 s2 = case (s1, s2) of
     -- Msg is greater than all sorts except Node
     (LSortMsg,   _        )  -> Just GT
     (_,          LSortMsg )  -> Just LT
-    -- The remaining combinations (Pub/Fresh) are incomparable
+    -- The remaining combinations (Pub/Fresh/Nat) are incomparable
     _                        -> Nothing
 
 -- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
@@ -181,6 +190,7 @@ sortPrefix LSortMsg   = ""
 sortPrefix LSortFresh = "~"
 sortPrefix LSortPub   = "$"
 sortPrefix LSortNode  = "#"
+sortPrefix LSortNat   = "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
@@ -188,6 +198,7 @@ sortSuffix LSortMsg   = "msg"
 sortSuffix LSortFresh = "fresh"
 sortSuffix LSortPub   = "pub"
 sortSuffix LSortNode  = "node"
+sortSuffix LSortNat   = "nat"
 
 
 ------------------------------------------------------------------------------
@@ -199,7 +210,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName | NodeName
+data NameTag = FreshName | PubName | NodeName | NatName
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
@@ -219,6 +230,7 @@ instance Show Name where
   show (Name FreshName  n) = "~'" ++ show n ++ "'"
   show (Name PubName    n) = "'"  ++ show n ++ "'"
   show (Name NodeName   n) = "#'" ++ show n ++ "'"
+  show (Name NatName   n) = "%'" ++ show n ++ "'"
 
 instance Show NameId where
   show = getNameId
@@ -234,15 +246,20 @@ freshTerm = lit . Con . Name FreshName . NameId
 pubTerm :: String -> NTerm v
 pubTerm = lit . Con . Name PubName . NameId
 
+-- | @natTerm f@ represents the nat name @f@.
+natTerm :: String -> NTerm v
+natTerm = lit . Con . Name NatName . NameId
+
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
 sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
+sortOfName (Name NatName   _) = LSortNat
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
-isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)
+isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)  --TODO-MY understand how this is used
 isPubConst _                         = False
 
 
@@ -281,6 +298,7 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
     Lit2 (Var lv) -> lvarSort lv
+    FNatPlus _    -> LSortNat
     _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
@@ -300,7 +318,12 @@ isMsgVar _                         = False
 -- | Is a term a public variable?
 isPubVar :: LNTerm -> Bool
 isPubVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortPub)
-isPubVar _                         = False
+isPubVar _                         = False  --TODO-MY understand how this is used
+
+-- | Is a term a number variable?
+isNatVar :: LNTerm -> Bool
+isNatVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortNat)
+isNatVar _                         = False
 
 -- | Is a term a fresh variable?
 isFreshVar :: LNTerm -> Bool
@@ -322,7 +345,7 @@ getMsgVar _                                                    = Nothing
 -------------------------------------------
 
 -- | The non-inverse factors of a term.
-niFactors :: LNTerm -> [LNTerm]
+niFactors :: LNTerm -> [LNTerm]  --TODO-MY pay special attention to this!!
 niFactors t = case viewTerm2 t of
                 FMult ts -> concatMap niFactors ts
                 FInv t1  -> niFactors t1
@@ -383,6 +406,7 @@ variableToConst cvar = constTerm (Name (nameOfSort cvar) (NameId ("constVar_" ++
     nameOfSort (LVar _ LSortFresh _) = FreshName
     nameOfSort (LVar _ LSortPub   _) = PubName
     nameOfSort (LVar _ LSortNode  _) = NodeName
+    nameOfSort (LVar _ LSortNat   _) = NatName
     nameOfSort (LVar _ LSortMsg   _) = error "Invalid sort Msg"
 
 

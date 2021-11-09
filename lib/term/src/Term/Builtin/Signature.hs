@@ -15,6 +15,7 @@ import qualified Data.Set as S
 -- Builtin symbols (pair and inv are defined in Term.Term)
 ----------------------------------------------------------------------
 
+--TODO-MY add the + for the natural numbers
 -- | Binary builtin function symbols.
 sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym, repSym, checkRepSym :: NoEqSym
 sdecSym = ("sdec",(2, Public))
@@ -47,6 +48,7 @@ trueSym = ("true",(0, Public))
 -- Builtin signatures
 ----------------------------------------------------------------------
 
+--TODO-MY add the natural numbers
 -- | The signature for symmetric encryption.
 symEncFunSig :: NoEqFunSig
 symEncFunSig = S.fromList $ [ sdecSym, sencSym ]

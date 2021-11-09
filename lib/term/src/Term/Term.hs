@@ -26,6 +26,7 @@ module Term.Term (
     , fAppPair
     , fAppFst
     , fAppSnd
+    , fAppNatOne
 
     -- ** Destructors and classifiers
     , isPair
@@ -63,6 +64,8 @@ module Term.Term (
     , pmultSymString
     , emapSymString
     , unionSymString
+    , natPlusSymString
+    , natOneSymString
     , oneSymString
     , multSymString
     , zeroSymString
@@ -72,6 +75,7 @@ module Term.Term (
     , diffSym
     , expSym
     , pmultSym
+    , natOneSym
     , oneSym
     , zeroSym
 
@@ -79,6 +83,7 @@ module Term.Term (
     , dhFunSig
     , bpFunSig
     , msetFunSig
+    , natFunSig
     , xorFunSig
     , pairFunSig
     , dhReducibleFunSig
@@ -114,6 +119,10 @@ fAppOne = fAppNoEq oneSym []
 
 fAppZero :: Term a
 fAppZero = fAppNoEq zeroSym []
+
+-- | Smart constructors for one on naturals.
+fAppNatOne :: Term a
+fAppNatOne  = fAppNoEq natOneSym []
 
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
 fAppDiff, fAppPair, fAppExp, fAppPMult :: (Term a, Term a) -> Term a
@@ -212,7 +221,7 @@ getRightTerm t = getSide DiffRight t
 -- NB: here anything but a pair or an AC symbol is protected!
 ----------------------------------------------------------------------
 
--- Given a term, compute all protected subterms, i.e. all terms
+-- | Given a term, compute all protected subterms, i.e. all terms
 -- which top symbol is a function, but not a pair, nor an AC symbol
 allProtSubterms :: Show a => Term a -> [Term a]
 allProtSubterms t@(viewTerm -> FApp _ as) | isPair t || isAC t
@@ -248,19 +257,21 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
-        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
-        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
+        FApp (AC o)            ts                 -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (NoEq s)   [t1,t2] | s == expSym     -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)   [t1,t2] | s == diffSym    -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+        FApp (NoEq s)   []      | s == natOneSym  -> text "1"
+        FApp (NoEq s)   _       | s == pairSym    -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
 
-    ppACOp Mult  = "*"
-    ppACOp Union = "+"
-    ppACOp Xor   = "⊕"
-
+    ppACOp Mult    = "*"
+    ppACOp Xor     = "⊕"
+    ppACOp Union   = "++"
+    ppACOp NatPlus = "%+"
+ 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts

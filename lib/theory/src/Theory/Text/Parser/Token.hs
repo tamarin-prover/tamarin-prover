@@ -31,6 +31,7 @@ module Theory.Text.Parser.Token (
 
   , freshName
   , pubName
+  , natName
 
   , sortedLVar
   , lvar
@@ -77,6 +78,7 @@ module Theory.Text.Parser.Token (
   , opSlash
   , opMinus
   , opPlus
+  , opUnion
   , opLeftarrow
   , opRightarrow
   , opLongleftarrow
@@ -291,10 +293,11 @@ sortedLVar ss =
 
     mkPrefixParser s = do
         case s of
-          LSortMsg   -> pure ()
-          LSortPub   -> void $ char '$'
-          LSortFresh -> void $ char '~'
-          LSortNode  -> void $ char '#'
+          LSortMsg       -> pure ()
+          LSortPub       -> void $ char '$'
+          LSortFresh     -> void $ char '~'
+          LSortNode      -> void $ char '#'
+          LSortNat       -> void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -304,7 +307,7 @@ lvar = sortedLVar [minBound..]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
-msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg]
+msgvar = sortedLVar [LSortFresh, LSortPub, LSortNat, LSortMsg]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
@@ -320,6 +323,10 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
 pubName = singleQuoted identifier
+
+-- | Parse a literal nat name, e.g. @:'n'@.
+natName :: Parser String
+natName = try (symbol ":" *> singleQuoted identifier)
 
 
 -- Term Operators
@@ -340,9 +347,13 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The addition operator @*@.
+-- | The addition operator @%+@.
 opPlus :: Parser ()
-opPlus = symbol_ "+"
+opPlus = symbol_ "%+"
+
+-- | The multiset operator @+@.
+opUnion :: Parser ()
+opUnion = symbol_ "++" <|> symbol_ "+"
 
 -- | The xor operator @XOR@ or @⊕@.
 opXor :: Parser ()
@@ -471,7 +482,7 @@ opSeq = symbol_ ";"
 
 -- | operator for non-deterministic choice in processes
 opNDC :: Parser()
-opNDC = symbol_ "+"
+opNDC = symbol_ "+"  --TODO-MY-PARSER
 
 -- | Operator for 0-process (terminator of sequence)
 opNull :: Parser()

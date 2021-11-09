@@ -28,6 +28,7 @@ import Control.Monad.Bind
 
 import Control.Basics
 
+import Data.Maybe
 import qualified Data.Set as S
 
 import qualified Data.ByteString as B
@@ -45,17 +46,19 @@ import Data.Attoparsec.ByteString.Char8
 -- | Pretty print an 'LSort'.
 ppLSort :: LSort -> ByteString
 ppLSort s = case s of
-    LSortPub   -> "Pub"
-    LSortFresh -> "Fresh"
-    LSortMsg   -> "Msg"
-    LSortNode  -> "Node"
+    LSortPub       -> "Pub"
+    LSortFresh     -> "Fresh"
+    LSortMsg       -> "Msg"
+    LSortNat       -> "TamNat"
+    LSortNode      -> "Node"
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
-    LSortFresh -> "f"
-    LSortPub   -> "p"
-    LSortMsg   -> "c"
-    LSortNode  -> "n"
+    LSortFresh     -> "f"
+    LSortPub       -> "p"
+    LSortMsg       -> "c"
+    LSortNode      -> "n"
+    LSortNat       -> "t"
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -63,6 +66,7 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
+    "t"  -> Just LSortNat
     _    -> Nothing
 
 -- | Used to prevent clashes with predefined Maude function symbols
@@ -100,9 +104,10 @@ replaceMinusFun (s, p) = (replaceMinus s, p)
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> "mult"
-                      Union -> "mun"
-                      Xor   -> "xor"
+                      Mult       -> "mult"
+                      Union      -> "mun"
+                      Xor        -> "xor"
+                      NatPlus    -> "tplus"
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -140,9 +145,10 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node TOP ."
+    , "  sort Pub Fresh Msg Node TamNat TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
+    , "  subsort TamNat < Msg ."
     , "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
     -- constants
@@ -253,6 +259,7 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
+         <|> string "TamNat"   *> return LSortNat
          <|> string "M"        *> -- FIXME: why?
                (    string "sg"  *> return LSortMsg )
 
@@ -286,7 +293,7 @@ parseTerm msig = choice
                                then Private else Public
             op             = (if special then ident else BC.drop prefixLen ident
                              , ( length args, priv))
-            allowedfunSyms = [consSym, nilSym]
+            allowedfunSyms = [consSym, nilSym, natOneSym]
                 ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
@@ -294,8 +301,9 @@ parseTerm msig = choice
     parseFApp ident =
         appIdent <$> sepBy1 (parseTerm msig) (string ", ") <* string ")"
       where
-        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
-                       | ident == ppMaudeACSym Union      = fAppAC Union args
+        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult    args
+                       | ident == ppMaudeACSym Union      = fAppAC Union   args
+                       | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)

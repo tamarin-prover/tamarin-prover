@@ -18,6 +18,7 @@ module Theory.Tools.IntruderRules (
   , mkDUnionRule
   , specialIntruderRules
   , variantsIntruder
+  , natIntruderRules
 
   -- ** Classifiers
   , isDExpRule
@@ -63,6 +64,9 @@ rule coerce:
 
 rule pub:
    [ ] --[ KU( $x ) ]-> [ KU( $x ) ]
+   
+rule nat:
+   [ ] --[ KU( x:nat ) ]-> [ KU( x:nat ) ]
 
 rule gen_fresh:
    [ Fr( ~x ) ] --[ KU( ~x ) ]-> [ KU( ~x ) ]
@@ -83,6 +87,7 @@ specialIntruderRules :: Bool -> [IntrRuleAC]
 specialIntruderRules diff =
     [ kuRule CoerceRule      [kdFact x_var]                 (x_var)         [] 
     , kuRule PubConstrRule   []                             (x_pub_var)     [(x_pub_var)]
+    , kuRule NatConstrRule   []                             (x_nat_var)     [(x_nat_var)]  --TODO-UNCERTAIN added natural variable deduction
     , kuRule FreshConstrRule [freshFact x_fresh_var] (x_fresh_var)          []
     , Rule ISendRule [kuFact x_var]  [inFact x_var] [kLogFact x_var]        []
     , Rule IRecvRule [outFact x_var] [kdFact x_var] []                      []
@@ -95,6 +100,7 @@ specialIntruderRules diff =
 
     x_var       = varTerm (LVar "x"  LSortMsg   0)
     x_pub_var   = varTerm (LVar "x"  LSortPub   0)
+    x_nat_var   = varTerm (LVar "x"  LSortNat   0)
     x_fresh_var = varTerm (LVar "x"  LSortFresh 0)
 
 
@@ -406,6 +412,28 @@ bpVariantsIntruder hnd ru = do
         mappings = substToListVFresh subst
         doms     = map fst mappings
         rngs     = map snd mappings
+
+------------------------------------------------------------------------------
+-- Natural numbers intruder rules
+------------------------------------------------------------------------------
+
+-- TODO-UNCERTAIN: these two rules should be unused if nat is public [remove completely after making nat public]
+natIntruderRules :: [IntrRuleAC]
+natIntruderRules =
+    [ mkCPlusRule x_var y_var
+    , kuRule (ConstrRule natOneSymString) [] (fAppNoEq natOneSym [])
+    ]
+  where
+    x_var = varTerm (LVar "x" LSortNat 0)
+    y_var = varTerm (LVar "y" LSortNat 0)
+    kuRule name prems t = Rule name prems [kuFact t] [kuFact t] []
+
+mkCPlusRule :: LNTerm -> LNTerm -> IntrRuleAC
+mkCPlusRule x_var y_var =
+    Rule (ConstrRule natPlusSymString)
+         [kuFact x_var, kuFact y_var]
+         [kuFact $ fAppAC NatPlus [x_var, y_var]] [] []  --TODO-UNCERTAIN: why is there no action fact?
+
 
 ------------------------------------------------------------------------------
 -- Classification functions

@@ -31,9 +31,13 @@ module Term.Term.FunctionSymbols (
     , emapSymString
     , unionSymString
     , oneSymString
+    , fstSymString
+    , sndSymString
     , multSymString
     , zeroSymString
     , xorSymString
+    , natPlusSymString
+    , natOneSymString
 
     -- ** concrete symbols
     , diffSym
@@ -45,6 +49,7 @@ module Term.Term.FunctionSymbols (
     , fstSym
     , sndSym
     , zeroSym
+    , natOneSym
 
     -- ** concrete signatures
     , dhFunSig
@@ -56,6 +61,7 @@ module Term.Term.FunctionSymbols (
     , bpReducibleFunSig
     , xorReducibleFunSig
     , implicitFunSig
+    , natFunSig
     ) where
 
 import           GHC.Generics (Generic)
@@ -78,7 +84,7 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = Union | Mult | Xor
+data ACSym = Union | Mult | Xor | NatPlus
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.
@@ -109,14 +115,20 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, fstSymString, sndSymString, multSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
+fstSymString = "fst"
+sndSymString = "snd"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
+
+natPlusSymString, natOneSymString :: ByteString
+natPlusSymString = "tplus"
+natOneSymString = "tone"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -125,7 +137,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, natOneSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -144,6 +156,11 @@ sndSym   = ("snd",(1,Public))
 pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public))
+--zeroSym    = NoEqSym zeroSymString 0 Public Nothing
+-- | One for natural numbers.
+natOneSym = (natOneSymString, (0,Public))
+--natOneSym  = NoEqSym natOneSymString 0 Public (Just ["Nat"])
+
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -185,3 +202,7 @@ xorReducibleFunSig = S.fromList [ AC Xor ]
 implicitFunSig :: FunSig
 implicitFunSig = S.fromList [ NoEq invSym, NoEq pairSym
                             , AC Mult, AC Union ]
+
+-- | The signature for the natural numbers addition function symbols.
+natFunSig :: FunSig
+natFunSig = S.fromList [ NoEq natOneSym, AC NatPlus ]
