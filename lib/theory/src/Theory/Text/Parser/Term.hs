@@ -11,6 +11,7 @@
 module Theory.Text.Parser.Term (
     msetterm
     , llit
+    , natLit
     , term
     , llitNoPub
 )
@@ -23,7 +24,7 @@ import           Data.Foldable              (asum)
 import qualified Data.Set                   as S
 import           Control.Category
 import           Control.Monad
-import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec                --hiding ((<|>))
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
@@ -31,7 +32,10 @@ import           Theory.Text.Parser.Token
 
 -- | Parse an lit with logical variables.
 llit :: Parser LNTerm
-llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
+llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, natTerm <$> natName, varTerm <$> msgvar]
+
+natLit :: Parser LNTerm
+natLit = natTerm <$> natName
 
 -- | Parse an lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
@@ -47,7 +51,7 @@ lookupArity op = do
         Just (k,priv) -> return (k,priv)
 
 -- | Parse an n-ary operator application for arbitrary n.
-naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+naryOpApp :: Bool -> Parser LNTerm -> Parser LNTerm
 naryOpApp eqn plit = do
     op <- identifier
     --traceM $ show op ++ " " ++ show eqn
@@ -65,7 +69,7 @@ naryOpApp eqn plit = do
     return $ app (BC.pack op, (k,priv)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
-binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+binaryAlgApp :: Bool -> Parser LNTerm -> Parser LNTerm
 binaryAlgApp eqn plit = do
     op <- identifier
     when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
@@ -77,7 +81,7 @@ binaryAlgApp eqn plit = do
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
 
-diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+diffOp :: Bool -> Parser LNTerm -> Parser LNTerm
 diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
@@ -92,12 +96,14 @@ diffOp eqn plit = do
   return $ fAppDiff (arg1, arg2)
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
+term :: Parser LNTerm -> Bool -> Parser LNTerm
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1" *> pure fAppOne
-    , application <?> "function application"
+    , symbol "1:nat" *> pure fAppNatOne
+    , symbol "%1"    *> pure fAppNatOne
+    , symbol "1"     *> pure fAppOne
+    , application   <?> "function application"
     , nullaryApp
     , plit
     ]
@@ -112,11 +118,11 @@ term plit eqn = asum
            | NoEq (sym,(0,priv)) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
-expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+expterm :: Bool -> Parser LNTerm -> Parser LNTerm
 expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
 
 -- | A left-associative sequence of multiplications.
-multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+multterm :: Bool -> Parser LNTerm -> Parser LNTerm
 multterm eqn plit = do
     dh <- enableDH <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
@@ -124,7 +130,7 @@ multterm eqn plit = do
         else term plit eqn
 
 -- | A left-associative sequence of xors.
-xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+xorterm :: Bool -> Parser LNTerm -> Parser LNTerm
 xorterm eqn plit = do
     xor <- enableXor <$> getState
     if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
@@ -132,13 +138,40 @@ xorterm eqn plit = do
         else multterm eqn plit
 
 -- | A left-associative sequence of multiset unions.
-msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+msetterm :: Bool -> Parser LNTerm -> Parser LNTerm
 msetterm eqn plit = do
     mset <- enableMSet <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        then chainl1 (natterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
+        else natterm eqn plit
+
+-- | A left-associative sequence of terms on natural numbers.
+natterm :: Bool -> Parser LNTerm -> Parser LNTerm
+natterm eqn plit = do
+    nats <- enableNat <$> getState
+    if nats -- if nat is not enabled, do not accept 'natterms's
+        then try (xorterm eqn plit) <|> sumterm  --TODO-UNCERTAIN: not sure whether the order (mset-nat-xor-mult) matters (Cedric's was nat-mult-mset)
         else xorterm eqn plit
+  where
+    --sumterm :: Ord l => Parser (Term l)
+    sumterm = chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
+
+    {-natLlit :: Ord l => Parser (Term l)
+    natLlit = varTerm <$> asum
+      [ try $ sortedLVar [LSortNat]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n LSortNat i ]-}
+
+    --subnatterm :: Ord l => Parser (Term l)
+    subnatterm = try $ asum
+      [ parens sumterm
+      , symbol "1:nat" *> pure fAppNatOne
+      , symbol "%1"    *> pure fAppNatOne
+      , symbol "1"     *> pure fAppNatOne  -- if we expect a nat, we take 1 as nat instead of diffie-hellman
+      , natLit
+      ]
+
 
 -- | A right-associative sequence of tuples.
-tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+tupleterm :: Bool -> Parser LNTerm -> Parser LNTerm
 tupleterm eqn plit = chainr1 (msetterm eqn plit) (curry fAppPair <$ comma)
