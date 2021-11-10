@@ -57,6 +57,8 @@ builtins thy0 =do
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "natural-numbers")
+          *> extendSig natMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
       , try (symbol "multiset")
@@ -89,6 +91,8 @@ diffbuiltins =
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
+      , try (symbol "natural-numbers")
+          *> extendSig natMaudeSig
       , try (symbol "bilinear-pairing")
           *> extendSig bpMaudeSig
       , try (symbol "multiset")

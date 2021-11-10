@@ -31,7 +31,7 @@ import Theory.Text.Parser.Term
 -- | Parse a fact annotation
 factAnnotation :: Parser FactAnnotation
 factAnnotation = asum
-  [ opPlus  *> pure SolveFirst
+  [ opUnion *> pure SolveFirst
   , opMinus *> pure SolveLast
   , symbol "no_precomp" *> pure NoSources
   ]
