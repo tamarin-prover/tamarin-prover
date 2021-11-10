@@ -948,8 +948,8 @@ smartRanking ctxt allowPremiseGLoopBreakers sys =
     sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
 
     moveNatToEnd = sortOn isNatSubtermSplit
-    isNatSubtermSplit (SubtermG (_, t), _) = sortOfLNTerm t == LSortNat
-    isNatSubtermSplit _                    = False
+    isNatSubtermSplit (SubtermG st, _) = isNatSubterm st
+    isNatSubtermSplit _                = False
 
     tagUsefulness Useful                = 0 :: Int
     tagUsefulness ProbablyConstructible = 1
