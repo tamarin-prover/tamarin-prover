@@ -50,6 +50,7 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
+import           Term.Builtin.Convenience
 
 import           Utils.Misc                              (twoPartitions)
 
@@ -434,6 +435,12 @@ solveSubterm st = do
       case split of
         TrueD -> return ()
         SubtermD st1 -> modM sSubtermStore (addSubterm st1)
+        NatSubtermD st1@(s,t) -> if length splitList == 1
+                                    then do
+                                      newVar <- freshLVar "newVar" LSortNat
+                                      let sPlus = s ++: varTerm newVar
+                                      insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
+                                    else modM sSubtermStore (addSubterm st1)
         EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
         ACNewVarD (smallPlus, big, newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
         

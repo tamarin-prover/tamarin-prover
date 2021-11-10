@@ -24,6 +24,7 @@ module Theory.Tools.SubtermStore (
   , isContradictory
   , oldNegSubterms
   , emptySubtermStore
+  , isNatSubterm
   , rawSubtermRel
 
   -- ** Accessors
@@ -46,6 +47,7 @@ import           Term.Unification
 import           Theory.Text.Pretty
 import           Theory.Constraint.System.Constraints
 import           Theory.Model
+import           Term.Builtin.Convenience
 
 import           Control.Monad.Fresh
 --import           Control.Monad.Bind
@@ -93,6 +95,9 @@ $(mkLabels [''SubtermStore])
 emptySubtermStore :: SubtermStore
 emptySubtermStore = SubtermStore S.empty S.empty S.empty False S.empty
 
+isNatSubterm :: (LNTerm, LNTerm) -> Bool
+isNatSubterm (small, big) = (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat
+
 rawSubtermRel :: SubtermStore -> [(LNTerm, LNTerm)]
 rawSubtermRel sst = S.toList (L.get posSubterms sst `S.union` L.get solvedSubterms sst)
 
@@ -111,7 +116,7 @@ addNegSubterm st = modify negSubterms (S.insert st)  --TODO-BIG do apply stuff a
 -- Simplification
 ------------
 
--- does also some "cleaning up", i.e., generating goals and new equations
+-- does some "cleaning up" as well, i.e., generating goals and new equations
 simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSubtermStore reducible sst = do
     let sst0 = modify posSubterms (`S.difference` L.get solvedSubterms sst) sst  -- when a subterm gets substituted to one which is already solved
@@ -143,7 +148,7 @@ simpSplitPosSt reducible sst = do
     let subts = S.toList $ L.get posSubterms sst
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
-    let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, length splitCases > 1]
+    let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, splitCases /= [TrueD]]
     let toRemoveAsTrue = S.fromList [ x | (x, [TrueD]) <- zip subts splits]
 
     let sst1 = modify posSubterms (`S.difference` toRemoveAsTrue) sst
@@ -157,15 +162,17 @@ simpSplitNegSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LN
 simpSplitNegSt reducible sst = do
     let changedNegSubterms = S.toList (L.get negSubterms sst `S.difference` L.get oldNegSubterms sst)
     splits <- concat <$> mapM (splitSubterm reducible False) changedNegSubterms
-    let splitSubterms = S.fromList [eq | SubtermD eq <- splits]
+    let splitSubterms = S.fromList $ [st | SubtermD st <- splits] ++ [st | NatSubtermD st <- splits]
+    let flippedNatSubterms = S.fromList [(t, s ++: fAppNatOne) | NatSubtermD (s, t) <- splits, isNatSubterm (s,t)]  -- isNatSubterm is necessary to exclude that s is a msgVar!!!
     let eqFormulas = S.toList $ S.fromList [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | EqualD (x,y) <- splits]  -- ¬ x=y
     let acFormulas = S.toList $ S.fromList [closeGuarded All [newVar] [EqE smallPlus big] gfalse | ACNewVarD (smallPlus, big, newVar) <- splits] -- ∀ newVar. x+newVar=y ⇒ ⊥
 
-    let sst1 = modify negSubterms (`S.union` splitSubterms) sst
-    let sst2 = set oldNegSubterms (L.get negSubterms sst1) sst1
-    let sst3 = modify isContradictory (|| TrueD `elem` splits) sst2
+    let sst1 = modify posSubterms (`S.union` flippedNatSubterms) sst
+    let sst2 = modify negSubterms (`S.union` splitSubterms) sst1
+    let sst3 = set oldNegSubterms (L.get negSubterms sst1) sst2
+    let sst4 = modify isContradictory (|| TrueD `elem` splits) sst3
 
-    return (sst3, eqFormulas ++ acFormulas)
+    return (sst4, eqFormulas ++ acFormulas)
 
 
 
@@ -203,7 +210,7 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
 
 
 data SubtermSplit = SubtermD    (LNTerm, LNTerm)
-                  | NatSubtermD (LNTerm, LNTerm, LVar)  -- small, big, newVar
+                  | NatSubtermD (LNTerm, LNTerm)
                   | EqualD      (LNTerm, LNTerm)
                   | ACNewVarD   (LNTerm, LNTerm, LVar)  -- small+newVar, big, newVar
                   | TrueD
@@ -240,7 +247,7 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
         return $ case ac of
           Right False -> Just S.empty
           Right True -> Just $ S.singleton TrueD
-          Left tuple -> Just $ S.singleton $ NatSubtermD tuple
+          Left (s, t, _) -> Just $ S.singleton $ NatSubtermD (s, t)
       | big `redElem` small =  -- trivially false (big == small included)
         return $ Just S.empty  -- false
       | small `redElem` big =  -- trivially true
