@@ -64,13 +64,19 @@ import           Control.DeepSeq
 
 import           Data.Binary
 --import qualified Data.Foldable         as F
-import           Data.List             (sort)
-import           Data.Maybe            (isNothing, fromMaybe)
+import           Data.List             (sort, (\\), delete)
+import           Data.Maybe            (isNothing, fromMaybe, fromJust, mapMaybe)
 import qualified Data.Set              as S
+import qualified Data.Map              as M
 import           Extension.Data.Label  hiding (for, get)
 import qualified Extension.Data.Label  as L
 import           Data.Data
--- import           Extension.Data.Monoid
+
+import           Data.Array.ST
+import           Data.Array
+import qualified Data.Graph            as G
+import qualified Data.Tree             as T
+
 
 ------------------------------------------------------------------------------
 -- Subterm Store
@@ -124,8 +130,9 @@ simpSubtermStore reducible sst = do
     (sst2, goals) <- simpSplitPosSt reducible sst1  -- split positive subterms
     let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
     let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
+    let (sst5, newNatEqs) = simpNatCycles sst4
     
-    return (sst4, newFormulas ++ newNegEqs, goals)
+    return (sst5, newFormulas ++ newNegEqs ++ newNatEqs, goals)
 
 
     -- NOT resolve constants (already done by splitting)
@@ -173,6 +180,13 @@ simpSplitNegSt reducible sst = do
     let sst4 = modify isContradictory (|| TrueD `elem` splits) sst3
 
     return (sst4, eqFormulas ++ acFormulas)
+
+simpNatCycles :: SubtermStore -> (SubtermStore, [LNGuarded])
+simpNatCycles sst = (sst1, equalities)
+  where
+    maybeEqual = natSubtermEqualities $ S.toList $ L.get posSubterms sst
+    equalities = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (Equal l r) <- concat maybeEqual]
+    sst1 = modify isContradictory (|| isNothing maybeEqual) sst
 
 
 
@@ -319,6 +333,156 @@ negativeSubtermVars sst = (sst1, equations)
     equations = [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | ((x,_),(y,_)) <- pairs]
     newSubterms = S.fromList [(x,y) | ((x,_),(y,_)) <- pairs]
     sst1 = modify negSubterms (`S.union` newSubterms) sst
+
+
+
+-- This procedure generates some (not all!) equalities that are implied by the natSubterm relation.
+-- It filters the relation for UTVPI's (≤ 2 vars) and performs the algorithm from the following paper:
+-- "An Efficient Decision Procedure for UTVPI Constraints"
+natSubtermEqualities :: [(LNTerm, LNTerm)] -> Maybe [Equal LNTerm]
+natSubtermEqualities relation = {-trace (show (("natSubtermEqualities"
+                                      ,"relation", relation
+                                      ,"realEdges", realEdges
+                                      ,"vertices", vertices
+                                      ,"oneEdges", oneEdges)
+                                      ,("floydWarshall", floydWarshall
+                                      ,"tightenedEdges", tightenedEdges
+                                      ,"bellmanFord", bellmanFord
+                                      ,"slackEdges", slackEdges
+                                      ,"sccs", sccs
+                                      ,"equalities", equalities
+                                      ))) $-} if null bellmanFord then Nothing else Just equalities
+      where
+
+      --True = positive
+      --False = negative
+      formatEdge :: (LNTerm, LNTerm) -> [(((Bool,LVar), (Bool,LVar)), Int)]  -- empty list for invalid (>2 vars, nonNat); otherwise 1 or 2 elements
+      formatEdge st | not $ isNatSubterm st = []
+      formatEdge (a, b) = case (flattenedACTerms NatPlus a, flattenedACTerms NatPlus b) of
+        (l, r) | length (getVars l ++ getVars r) == 1 -> [((from, to), d)]
+          where
+            d = 2 * (countOnes r - countOnes l - 1)
+            from = head $ map (True,) (getVars l) ++ map (False,) (getVars r)
+            to = first not from
+        (l, r) | length (getVars l ++ getVars r) == 2 -> zip (zip froms tos) ds
+          where
+            ds = replicate 2 (countOnes r - countOnes l - 1)
+            froms = map (True,) (getVars l) ++ map (False,) (getVars r)
+            tos = map (first not) (reverse froms)
+        _ -> []
+       where
+        getVars :: [LNTerm] -> [LVar]
+        getVars = mapMaybe getVar . filter (/= fAppNatOne)
+        countOnes :: [LNTerm] -> Int
+        countOnes = length . filter (== fAppNatOne)
+
+
+      realEdges :: [(((Bool,LVar), (Bool,LVar)), Int)]
+      realEdges = concatMap formatEdge relation
+
+      vertices :: [(Bool,LVar)]
+      vertices = S.toList $ S.fromList $ concatMap (\x -> [fst $ fst x, snd $ fst x]) realEdges
+
+      --intToVertex i = fromJust $ M.lookup i $ M.fromList $ zip [0 .. length vertices - 1] vertices
+      vertexToInt v = fromJust $ M.lookup v $ M.fromList $ zip vertices [0 .. length vertices - 1]
+
+      oneEdges :: [(((Bool,LVar), (Bool,LVar)), Int)]
+      oneEdges = map (\(_,x) -> (((False, x), (True, x)), -2)) $ filter fst vertices
+
+      rawEdges :: [(((Bool,LVar), (Bool,LVar)), Int)]
+      rawEdges = realEdges ++ oneEdges
+
+      inf :: Int
+      inf = (maxBound :: Int) `div` (2 :: Int)
+
+      floydWarshall :: Array Int Int
+      floydWarshall = {- trace (show ("fwSolution", getSolution)) -} getSolution
+        where
+          getSolution :: Array Int Int
+          getSolution = runSTArray $ do
+            let n = length vertices
+            solution <- newArray (0, (n * n) - 1) inf  --initialize solution to ∞
+            forM_ rawEdges $ \((from, to), w) -> do
+              writeArray solution (vertexToInt from * n + vertexToInt to) w  -- initialize edges to w
+            forM_ [0.. n - 1] $ \i -> do
+              writeArray solution (i*n + i) 0  -- initialize solution[i][i] to 0
+
+            forM_ [0.. n - 1] $ \k -> do  -- execute Floyd Warshall
+              forM_ [0.. n - 1] $ \i -> do
+                forM_ [0.. n - 1] $ \j -> do
+                  ij <- readArray solution (i*n + j)
+                  ik <- readArray solution (i*n + k)
+                  kj <- readArray solution (k*n + j)
+                  writeArray solution (i*n + j) (min ij $ ik + kj)
+            return solution
+
+      tightenedEdges :: [(((Bool,LVar), (Bool,LVar)), Int)]
+      tightenedEdges = mapMaybe buildEdge $ filter fst vertices
+        where
+          distToNeg v = floydWarshall ! (vertexToInt v * length vertices + vertexToInt (first not v))
+          buildEdge v = if even (distToNeg v) && (distToNeg v < inf `div` 2) then Nothing else Just $ ((v, first not v), distToNeg v - 1)
+
+      edges :: [(((Bool,LVar), (Bool,LVar)), Int)]
+      edges = rawEdges ++ tightenedEdges
+
+      bellmanFord :: Maybe (Array Int Int)
+      bellmanFord = {- trace (show ("bfSolution", getSolution)) $ -} if solvable getSolution then Just getSolution else Nothing
+       where
+        getSolution :: Array Int Int
+        getSolution = runSTArray $ do
+          solution <- newArray (0, length vertices - 1) 0
+          forM_ [0.. length vertices - 1] $ \_ -> do
+            forM_ edges $ \((from, to), w) -> do
+              distFrom <- readArray solution (vertexToInt from)
+              distTo <- readArray solution (vertexToInt to)
+              writeArray solution (vertexToInt to) (min distTo $ w + distFrom)
+          return solution
+
+        solvable :: Array Int Int -> Bool
+        solvable solution = and $ flip map edges $ \((from, to), w) -> let
+          distFrom = solution ! vertexToInt from
+          distTo = solution ! vertexToInt to
+          in w + distFrom >= distTo
+
+
+
+
+      slackEdges :: [((Bool,LVar), (Bool,LVar))]
+      slackEdges = case bellmanFord of
+        Nothing -> []
+        Just solution -> map fst $ flip filter edges $ \((from, to), w) -> let
+          distFrom = solution ! vertexToInt from
+          distTo = solution ! vertexToInt to
+          in w + distFrom == distTo
+
+      -- compute strongly connected components of slackEdges
+      sccs :: [[(Bool,LVar)]]
+      sccs = map (map ((\(a,_,_)->a) . nodeFromVertex) . T.flatten) (G.scc graph)
+        where
+          preparedEdges :: [((Bool,LVar), Int, [Int])]
+          preparedEdges = flip map vertices $ \v -> (
+            v,
+            vertexToInt v,
+            map (vertexToInt . snd) $ filter (\(from, _) -> from == v) slackEdges)
+          (graph, nodeFromVertex, _) = G.graphFromEdges preparedEdges
+
+      equalities :: [Equal LNTerm]
+      equalities = relationEqs ++ absoluteEqs  -- get equalities from scc and the graph
+        where
+          getValue vertex = case bellmanFord of
+            Nothing -> 0
+            Just solution -> solution ! vertexToInt vertex
+          smallest = map (foldr1 (\x y -> if getValue x < getValue y then x else y) ) sccs  -- finds the smallest variable for each scc
+          zipped = smallest `zip` map (filter fst) sccs  -- zips this smallest variable to the rest of the list
+          removedEq = map (\(x,ys) -> (x, delete x ys)) zipped  -- removes equal variables -> no equations like x=x arise
+          addN y n = iterate (++: fAppNatOne) (varTerm y) !! n  -- helper that adds n ones to a variable y
+          buildEq x y = Equal (varTerm (snd x)) $ addN (snd y) (getValue y - getValue x)  -- helper that builds x=y+n
+          relationEqs = concatMap (\(x,ys) -> map (buildEq x) ys) removedEq -- end result
+
+          duplicates = concatMap ((\xs -> xs \\ S.toList (S.fromList xs)) . map snd) sccs  --variables that occur with + and - in any scc
+          termN n = iterate (++: fAppNatOne) fAppNatOne !! (n-1)  -- the term that represents n (with n>0)
+          buildAbsoluteEq v = Equal (varTerm v) $ termN $ (getValue (False, v) - getValue (True, v)) `div` 2  -- helper that builds x=n
+          absoluteEqs = map buildAbsoluteEq duplicates  -- end result
 
 
 
