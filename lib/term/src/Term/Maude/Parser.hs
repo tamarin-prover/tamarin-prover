@@ -156,6 +156,7 @@ ppTheory msig = BC.unlines $
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
     , "  op n : Nat -> Node ."
+    , "  op t : Nat -> TamNat ."
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op list : TOP -> TOP ."
@@ -185,6 +186,12 @@ ppTheory msig = BC.unlines $
        then
        [ theoryOp "zero : -> Msg"
        , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
+       else [])
+    ++    
+    (if enableNat msig
+       then
+       [ theoryOp "tone : -> TamNat"
+       , theoryOp $ "tplus : TamNat TamNat -> TamNat [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)
