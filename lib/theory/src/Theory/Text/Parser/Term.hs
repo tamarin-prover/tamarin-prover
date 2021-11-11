@@ -153,23 +153,20 @@ natterm eqn plit = do
         then try (xorterm eqn plit) <|> sumterm  --TODO-UNCERTAIN: not sure whether the order (mset-nat-xor-mult) matters (Cedric's was nat-mult-mset)
         else xorterm eqn plit
   where
-    --sumterm :: Ord l => Parser (Term l)
-    sumterm = chainl1 subnatterm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
+    sumterm = chainl1 subNatTerm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
 
-    {-natLlit :: Ord l => Parser (Term l)
-    natLlit = varTerm <$> asum
-      [ try $ sortedLVar [LSortNat]
-      , do (n, i) <- indexedIdentifier
-           return $ LVar n LSortNat i ]-}
-
-    --subnatterm :: Ord l => Parser (Term l)
-    subnatterm = try $ asum
+    subNatTerm = try $ asum
       [ parens sumterm
       , symbol "1:nat" *> pure fAppNatOne
       , symbol "%1"    *> pure fAppNatOne
       , symbol "1"     *> pure fAppNatOne  -- if we expect a nat, we take 1 as nat instead of diffie-hellman
-      , natLit
+      , natLlit
       ]
+      
+    natLlit = varTerm <$> asum
+      [ try $ sortedLVar [LSortNat]
+      , do (n, i) <- indexedIdentifier
+           return $ LVar n LSortNat i ]
 
 
 -- | A right-associative sequence of tuples.
