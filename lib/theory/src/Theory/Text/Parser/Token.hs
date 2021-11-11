@@ -324,9 +324,9 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 pubName :: Parser String
 pubName = singleQuoted identifier
 
--- | Parse a literal nat name, e.g. @:'n'@.
+-- | Parse a literal nat name, e.g. @%'n'@.
 natName :: Parser String
-natName = try (symbol ":" *> singleQuoted identifier)
+natName = try (symbol "%" *> singleQuoted identifier)
 
 
 -- Term Operators
