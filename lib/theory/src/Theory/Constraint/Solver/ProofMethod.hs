@@ -117,7 +117,7 @@ isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" n
 isProgressFact _ = False
 
 isProgressDisj :: Goal -> Bool
-isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of 
+isProgressDisj (DisjG (Disj disj )) = all (\f ->  (case f of
         GGuarded Ex [(_,LSortNode)] [Action _ f' ] _ -> isProgressFact f'
         _                                            -> False
         )) disj
@@ -202,7 +202,7 @@ data DiffProofMethod =
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-  
+
 instance HasFrees ProofMethod where
     foldFrees f (SolveGoal g)     = foldFrees f g
     foldFrees f (Contradiction c) = foldFrees f c
@@ -239,8 +239,8 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
         Solved
-          | null (plainOpenGoals sys) -> return M.empty
-          | otherwise                 -> Nothing 
+          | null (openGoals sys) && not (contradictorySystem ctxt sys) -> return M.empty
+          | otherwise                                                  -> Nothing
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
           | otherwise                        -> Nothing
@@ -343,9 +343,9 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TTrue))
-                                                                                                        then return M.empty 
+                                                                                                        then return M.empty
                                                                                                         else Nothing
-                                                                      (_ , _ , _)                 -> Nothing                                                       
+                                                                      (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
@@ -362,7 +362,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
           | otherwise                                         -> Nothing
-          
+
   where
     protoRules       = (L.get dpcProtoRules  ctxt)
     destrRules       = (L.get dpcDestrRules  ctxt)
@@ -371,29 +371,29 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     protoRulesAC :: Side -> [RuleAC]
     protoRulesAC LHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
     protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
-    
+
     ruleEquivalenceSystem :: String -> DiffSystem
-    ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
-      $ L.set dsConstrRules (S.fromList constrRules) 
-      $ L.set dsDestrRules (S.fromList destrRules) 
-      $ L.set dsProtoRules (S.fromList protoRules) 
+    ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule)
+      $ L.set dsConstrRules (S.fromList constrRules)
+      $ L.set dsDestrRules (S.fromList destrRules)
+      $ L.set dsProtoRules (S.fromList protoRules)
       $ L.set dsProofType (Just RuleEquivalence) sys
-      
+
     formula :: String -> LNFormula
     formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact (ProtoFact Linear ("Diff" ++ rulename) 0) S.empty [])))
-    
+
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
-    
+
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in restrictions.
     -- LHS or RHS is not important in this case as we only need the names of the rules.
     ruleEquivalence :: M.Map CaseName DiffSystem
     ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
-    
+
     isTrivial :: System -> Bool
     isTrivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts ctxt sys') && (allOpenFactGoalsAreIndependent sys')
-    
+
     backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
       $ L.set dsSystem (Just ruleSys) sys'
@@ -403,7 +403,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 
     startBackwardSearch :: String -> M.Map CaseName DiffSystem
     startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
-    
+
     applyStep :: ProofMethod -> Side -> System -> Maybe (M.Map CaseName DiffSystem)
     applyStep m s sys' = case (execProofMethod (eitherProofContext ctxt s) m sys') of
                            Nothing    -> Nothing
@@ -548,7 +548,7 @@ oracleRanking oracle ctxt _sys ags0
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
       outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
-      
+
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
@@ -624,14 +624,14 @@ isMID_Sender (PremiseG _ (Fact (ProtoFact _ "MID_Sender" _) _ _)) = True
 isMID_Sender  _                                 = False
 
 isFirstInsertAction :: Goal -> Bool
-isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
+isFirstInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) =
     case t of
     (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "F_" (show a)
     _ -> False
 isFirstInsertAction _ = False
 
 isLastInsertAction :: Goal -> Bool
-isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
+isLastInsertAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) =
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) ->  isPrefixOf "L_" (show a)
             _ -> False
@@ -646,11 +646,11 @@ isNotReceiveAction (ActionG _ (Fact (ProtoFact _ "Receive" _) _ _)) = False
 isNotReceiveAction  _                                 = True
 
 isStandardActionGoalButNotInsertOrReceive :: Goal -> Bool
-isStandardActionGoalButNotInsertOrReceive g = 
+isStandardActionGoalButNotInsertOrReceive g =
    (isStandardActionGoal g) && (isNotInsertAction g) && (isNotReceiveAction g)
 
 isStandardActionGoalButNotInsert :: Goal -> Bool
-isStandardActionGoalButNotInsert g = 
+isStandardActionGoalButNotInsert g =
        (isStandardActionGoal g) &&  (isNotInsertAction g) && (not $ isEventAction g)
 
 -- | A ranking function tuned for the automatic verification of
@@ -680,8 +680,8 @@ sapicRanking ctxt sys =
     tagUsefulness LoopBreaker           = 0
     tagUsefulness CurrentlyDeducible    = 2
 
-    solveLast = 
-        [ 
+    solveLast =
+        [
         isLastInsertAction . fst, -- move insert actions for positions that start with L_ to the end
         isLastProtoFact . fst, -- move Last proto facts (L_) to the end.
         isKnowsLastNameGoal . fst, -- move last names (L_key) to the end
@@ -707,7 +707,7 @@ sapicRanking ctxt sys =
         , isSplitGoalSmall . fst
         , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
+        , isNoLargeSplitGoal . fst
         ]
         -- move the rest (mostly more expensive KU-goals) before expensive
         -- equation splits
@@ -756,8 +756,8 @@ sapicPKCS11Ranking ctxt sys =
     tagUsefulness LoopBreaker           = 0
     tagUsefulness CurrentlyDeducible    = 2
 
-    solveLast = 
-        [ 
+    solveLast =
+        [
         -- isNotInsertAction . fst 
         -- ,        
         isKnowsHandleGoal . fst,
@@ -781,7 +781,7 @@ sapicPKCS11Ranking ctxt sys =
         , isSplitGoalSmall . fst
         , isMsgOneCaseGoal . fst
         , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
+        , isNoLargeSplitGoal . fst
         ]
         -- move the rest (mostly more expensive KU-goals) before expensive
         -- equation splits
@@ -792,7 +792,7 @@ sapicPKCS11Ranking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) = 
+    isInsertTemplateAction (ActionG _ (Fact (ProtoFact _ "Insert" _) _ (t:_)) ) =
         case t of
             (viewTerm2 -> FPair (viewTerm2 -> Lit2( Con (Name PubName a)))  _) -> isPrefixOf "template" (show a)
             _ -> False
@@ -1030,7 +1030,7 @@ smartDiffRanking ctxt sys =
     delayTrivial agl = fst parts ++ snd parts
       where
         parts = partition (not . trivialKUGoal) agl
-    
+
     trivialKUGoal ((ActionG _ fa), _) = isKUFact fa && (isTrivialMsgFact fa /= Nothing)
     trivialKUGoal _                   = False
 
@@ -1044,7 +1044,7 @@ smartDiffRanking ctxt sys =
         combine Nothing    _        = Nothing
         combine (Just _ )  Nothing  = Nothing
         combine (Just l1) (Just l2) = if noDuplicates l1 l2 then (Just (l1++l2)) else Nothing
-      
+
         noDuplicates l1 l2 = S.null (S.intersection (S.fromList l1) (S.fromList l2))
 
 
@@ -1077,6 +1077,6 @@ prettyDiffProofMethod method = case method of
 -- MERGED with solved.
 --    DiffTrivial              -> keyword_ "trivial"
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
-    DiffBackwardSearch       -> keyword_ "backward-search"  
+    DiffBackwardSearch       -> keyword_ "backward-search"
     DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
 
