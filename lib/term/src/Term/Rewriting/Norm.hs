@@ -66,6 +66,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FDiff t1 t2                                     -> go t1 && go t2
             One                                             -> True
             Zero                                            -> True
+            NatOne                                          -> True
             Lit2 _                                          -> True
             -- subterm rules
             FAppNoEq _ _ | setAny (struleApplicable t) strules -> False

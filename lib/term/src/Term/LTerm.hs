@@ -299,6 +299,7 @@ sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
     Lit2 (Var lv) -> lvarSort lv
     FNatPlus _    -> LSortNat
+    NatOne        -> LSortNat
     _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.

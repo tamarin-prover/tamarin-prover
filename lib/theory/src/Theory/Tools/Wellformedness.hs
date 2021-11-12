@@ -739,7 +739,7 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
         allowed (viewTerm2 -> FUnion args)               = all allowed args
-        allowed (viewTerm2 -> FNatPlus args)             = all allowed args  --TODO-MY-UNCERTAIN: what this line does
+        -- allowed (viewTerm2 -> FNatPlus args)             = all allowed args  -- line from Cedric Staub which seems to be unnecessary
         -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False
