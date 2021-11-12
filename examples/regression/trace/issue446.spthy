@@ -1,0 +1,24 @@
+theory lemma_falsified_verified
+begin
+
+/*
+* Date: November 2021
+* Comment: minimal example for the second issue from PR#394, which is also the issue solved by PR#446 
+*/
+
+rule A:
+   [ ]
+ --[ A('x')]->
+   [ ]
+
+lemma lemma_falsified:
+  all-traces
+  "All x #i.  A(x) @ i ==> (A(x)@i | F)"
+
+lemma lemma_verfified:
+  all-traces
+  "All x #i.  A(x) @ i ==> (A(x)@i | F)"
+simplify
+SOLVED //trace formula
+
+end
