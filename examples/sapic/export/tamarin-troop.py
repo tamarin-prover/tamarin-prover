@@ -12,18 +12,21 @@ PROVERIF = "proverif"
 TAMARIN_COMMAND = "tamarin-prover-proverif-output"
 # Dict mapping tool to file type
 TOOL_TO_FILE_TYPE = { "spthy": ".spthy", "proverif": ".pv", "deepsec": ".dps" }
-# Get current working directory
-WD = os.path.dirname(os.path.realpath(__file__))
 
 
-def generate_module_files(input_file, flags, lemmas, argdict):
+def generate_deepsec_proverif_files(input_file, flags, lemmas, argdict):
     for key in argdict.keys():
+        # TODO: Charlie says that this translation does not need
+        # to happen for -m=spthy. There we directly call Tamarin on the input
+        # file via `tamarin-prover input.spthy --prove`
+        if key == SPTHY:
+            # Skip spthy.
+            continue
+
         # For each tool generate a file using Tamarin -m
         # TODO: In the future, we want to do this for every lemmas too.
         # However, currently Tamarin does not support this yet.
 
-        # Absolute path to the input file
-        input_file = WD + '/' + input_file
         # Format flags in the way the Tamarin CLI wants them
         flags = [ '-D=' + flag for flag in flags ] if flags else []
         # And convert them into a string
@@ -82,7 +85,7 @@ if __name__ == '__main__':
             argdict[SPTHY] = args.heuristic
 
     # Generate desired model files from the input file
-    generate_module_files(args.input_file, flags, lemmas, argdict)
+    generate_deepsec_proverif_files(args.input_file, flags, lemmas, argdict)
 
     # Concurrently execute the cross-product of the given args
     # on the generate model files
