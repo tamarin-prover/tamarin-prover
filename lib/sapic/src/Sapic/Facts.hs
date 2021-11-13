@@ -15,6 +15,10 @@ module Sapic.Facts (
    , StateKind(..)
    , isSemiState
    , isState
+   , isOutFact
+   , isStateFact
+   , isLetFact
+   , isLockFact
    , isNonSemiState
    , addVarToState
    , factToFact
@@ -47,6 +51,7 @@ import Data.Char
 import Data.Bits
 import qualified Data.Set as S
 import Data.Color
+import qualified Data.List              as List
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
@@ -251,6 +256,30 @@ pureStateFactTag =  ProtoFact Linear ("L_PureState") 2
 
 pureStateLockFactTag :: FactTag
 pureStateLockFactTag =  ProtoFact Linear ("L_CellLocked") 2
+
+
+isOutFact :: Fact t -> Bool
+isOutFact (Fact OutFact _ _) = True
+isOutFact _                 = False
+
+
+isLetFact :: Fact LNTerm -> Bool
+isLetFact (Fact (ProtoFact _ name _) _ _) =
+  "Let" `List.isPrefixOf` name
+isLetFact _ = False
+
+
+isStateFact :: Fact LNTerm -> Bool
+isStateFact (Fact (ProtoFact _ name _) _ _) =
+  "State" `List.isPrefixOf` name
+  ||
+  "Semistate" `List.isPrefixOf` name
+isStateFact _ = False
+
+isLockFact :: Fact LNTerm -> Bool
+isLockFact (Fact (ProtoFact _ name _) _ _) =
+  "L_CellLocked" `List.isPrefixOf` name
+isLockFact _ = False
 
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String

@@ -25,23 +25,6 @@ import Theory
 import Sapic.Facts
 
 -- We compress as much as possible silent actions
-isOutFact :: Fact t -> Bool
-isOutFact (Fact OutFact _ _) = True
-isOutFact _                 = False
-
-
-isLetFact :: Fact LNTerm -> Bool
-isLetFact (Fact (ProtoFact _ name _) _ _) =
-  "Let" `List.isPrefixOf` name
-isLetFact _ = False
-
-
-isStateFact :: Fact LNTerm -> Bool
-isStateFact (Fact (ProtoFact _ name _) _ _) =
-  "State" `List.isPrefixOf` name
-  ||
-  "Semistate" `List.isPrefixOf` name
-isStateFact _ = False
 
 
 noCompressSapicKeyWords :: [String]
@@ -94,7 +77,7 @@ canMerge compEvents r1 r2
   | (any isSapicNoCompress ract) && (any isSapicNoCompress ract2)  = False  -- we cannot merge rules if it makes events be simulataneous
 
   | not(compEvents) && (ract /= []) && (ract2 /= [])  = False  -- we cannot merge rules if it makes events be simulataneous
-  | (List.length rprem2 > 1) && (List.length rconc >1) = False   -- we cannot merge rules if we are breaking asynchronous behavior (i.e u->v,w and w,r->t cannot be compress, as r might be produced byi
+  | (List.length rprem2' > 1) && (List.length rconc >1) = False   -- we cannot merge rules if we are breaking asynchronous behavior (i.e u->v,w and w,r->t cannot be compress, as r might be produced byi
   | (List.length rconc > 1) && (ract2 /= []) = False   -- we cannot merge rules if we are breaking asynchronous behavior (i.e u->v,w, and v-E->t cannot be compressed, else an event that could have happened with w before E cannot do so anymore.
   | List.any isOutFact rconc && List.any isOutFact rconc2 = False -- we cannot merge rules if two Out become simultaneous (might break the fact that the attacker can know smth and not smth else at a timepoint
   | List.any isLetFact rconc ||  List.any isLetFact rprem   = False -- we cannot merge rules when we are performing a let pattern matching
@@ -102,6 +85,7 @@ canMerge compEvents r1 r2
   |otherwise = True
   where Rule _ rprem rconc ract _ = r1
         Rule _ rprem2 rconc2 ract2 _ = r2
+        rprem2' = List.filter (not . isLockFact) rprem2
 
 -- We try to merge two rules together, and add the result or themselves in case of failure to a set
 merge:: Bool -> Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> S.Set (Rule ProtoRuleEInfo) ->S.Set (Rule ProtoRuleEInfo)
