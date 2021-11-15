@@ -173,13 +173,16 @@ simpSplitNegSt reducible sst = do
     let flippedNatSubterms = S.fromList [(t, s ++: fAppNatOne) | NatSubtermD (s, t) <- splits, isNatSubterm (s,t)]  -- isNatSubterm is necessary to exclude that s is a msgVar!!!
     let eqFormulas = S.toList $ S.fromList [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | EqualD (x,y) <- splits]  -- ¬ x=y
     let acFormulas = S.toList $ S.fromList [closeGuarded All [newVar] [EqE smallPlus big] gfalse | ACNewVarD (smallPlus, big, newVar) <- splits] -- ∀ newVar. x+newVar=y ⇒ ⊥
+    zippedIsFalse <- zip changedNegSubterms <$> mapM (liftM null . splitSubterm reducible False) changedNegSubterms
+    let alreadyFalseNegSt = S.fromList [st | (st, True) <- zippedIsFalse]
 
     let sst1 = modify posSubterms (`S.union` flippedNatSubterms) sst
     let sst2 = modify negSubterms (`S.union` splitSubterms) sst1
-    let sst3 = set oldNegSubterms (L.get negSubterms sst1) sst2
-    let sst4 = modify isContradictory (|| TrueD `elem` splits) sst3
+    let sst3 = modify negSubterms (`S.difference` alreadyFalseNegSt) sst2
+    let sst4 = set oldNegSubterms (L.get negSubterms sst1) sst3
+    let sst5 = modify isContradictory (|| TrueD `elem` splits) sst4
 
-    return (sst4, eqFormulas ++ acFormulas)
+    return (sst5, eqFormulas ++ acFormulas)
 
 simpNatCycles :: SubtermStore -> (SubtermStore, [LNGuarded])
 simpNatCycles sst = (sst1, equalities)
