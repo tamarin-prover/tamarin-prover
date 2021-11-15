@@ -154,8 +154,8 @@ simpSplitPosSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [Go
 simpSplitPosSt reducible sst = do
     let subts = S.toList $ L.get posSubterms sst
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
+    let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, splitCases `notElem` [[TrueD],[SubtermD x]] ]
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
-    let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, splitCases /= [TrueD]]
     let toRemoveAsTrue = S.fromList [ x | (x, [TrueD]) <- zip subts splits]
 
     let sst1 = modify posSubterms (`S.difference` toRemoveAsTrue) sst
