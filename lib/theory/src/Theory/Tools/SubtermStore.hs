@@ -127,12 +127,12 @@ simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [
 simpSubtermStore reducible sst = do
     let sst0 = modify posSubterms (`S.difference` L.get solvedSubterms sst) sst  -- when a subterm gets substituted to one which is already solved
     (sst1, newFormulas) <- simpSplitNegSt reducible sst0  -- split negative subterms
-    (sst2, goals) <- simpSplitPosSt reducible sst1  -- split positive subterms
+    (sst2, arity1Equations, goals) <- simpSplitPosSt reducible sst1  -- split positive subterms
     let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
     let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
     let (sst5, newNatEqs) = simpNatCycles sst4
     
-    return (sst5, newFormulas ++ newNegEqs ++ newNatEqs, goals)
+    return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
 
 
     -- NOT resolve constants (already done by splitting)
@@ -150,18 +150,20 @@ simpSubtermStore reducible sst = do
 --
 -- if the goals are [] then no goals have to be removed (as subterms cannot go from splittable to unsplittable)
 -- otherwise, all SubtermG should be removed and then replaced by this list
-simpSplitPosSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [Goal])
+simpSplitPosSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSplitPosSt reducible sst = do
     let subts = S.toList $ L.get posSubterms sst
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
     let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, splitCases `notElem` [[TrueD],[SubtermD x]] ]
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
     let toRemoveAsTrue = S.fromList [ x | (x, [TrueD]) <- zip subts splits]
+    let arity1Eq = [eq | [SubtermD st, EqualD eq] <- map sort splits, st `elem` L.get negSubterms sst]  --arity-one-deduction
+    let arity1Formulas = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- arity1Eq]
 
     let sst1 = modify posSubterms (`S.difference` toRemoveAsTrue) sst
     let sst2 = modify isContradictory (|| [] `elem` splits) sst1
 
-    return (sst2, splittableSubterms)
+    return (sst2, arity1Formulas, splittableSubterms)
 
 
 
@@ -226,6 +228,8 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
 
 
 
+-- if you ever want to reorder these data-names, make sure the sorting in simpSplitPosSt still works
+-- i.e. SubtermD is defined before EqualD
 data SubtermSplit = SubtermD    (LNTerm, LNTerm)
                   | NatSubtermD (LNTerm, LNTerm)
                   | EqualD      (LNTerm, LNTerm)
@@ -262,8 +266,8 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
       | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
         ac <- processAC NatPlus (small, big)
         return $ case ac of
-          Right False -> Just S.empty
-          Right True -> Just $ S.singleton TrueD
+          Right False -> Just S.empty  -- false
+          Right True -> Just $ S.singleton TrueD  -- true
           Left (s, t, _) -> Just $ S.singleton $ NatSubtermD (s, t)
       | big `redElem` small =  -- trivially false (big == small included)
         return $ Just S.empty  -- false
