@@ -415,24 +415,30 @@ insertImpliedFormulas = do
 
 -- | CR-rule *S_fresh-order*:
 --
--- `i:f`, `j:g`, `t1 ⊏ s1`, ..., `t_(n-1) ⊏ s_(n-1)`
+-- `i0:f0`, `j:g`, `t1 ⊂ s1`, ..., `t_(n-1) ⊂ s_(n-1)`
 -- -- insert --
--- `i<j`
--- *with `prems(f)u = Fr(~s0)` and `prems(g)v = Fact(tn))`*
--- *if `si` is syntactically in `t_(i+1)` and not below a reducible operator*
+-- `im<j`
+-- where `∃u,v,Fact,tn` with `prems(f0)u = Fr(~s0)` and `prems(g)v = Fact(tn))`* and `j:g ∉ route(i0:f0, ~s0)`
+-- if `si` is syntactically in `t_(i+1)` and not below a cancellation operator
+-- where `route(i0:f0, ~s0)` is the maximal list `[i0:f0,...,im:fm]` where for two consecutive elements `ia:fa` `ib:fb` holds:
+-- - `fa` has only one conclusion which is a non-persistent fact (especially not a `!KU` / `!KD`)
+-- - `∃ w,t` with `concs(fa)1 = prems(fb)w = Fact(t)`
+-- - and there is an edge `(ia,1) ↣ (ib,ub)`
 freshOrdering :: Reduction ChangeIndicator
 freshOrdering = do
   rawSubterms <- rawSubtermRel <$> getM sSubtermStore
-  nodes <- M.assocs <$> getM sNodes
   el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-  let freshVars = concatMap getFreshVars nodes
-  let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  --add a fake-subterm for each freshVar
-  let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms
+  route <- getRoute <$> getM sNodes <*> getM sEdges
+  nodes <- M.assocs <$> getM sNodes
+  let freshVars = concatMap getFreshVars nodes  -- all (i,~x) where Fr(~x) is a premise of a node at position i
+  let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
+  let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
   let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]
-  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]
+  let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]  -- new ordering constraints that can be added (or enhanced and then added)
+  let enhancedNewLesses = [(last $ route (i,f), j) | (i,j) <- newLesses, (i,f) <- freshVars, j `notElem` route (i,f)]  -- improved orderings according to routeOfFreshVar
   
   oldLesses <- gets (get sLessAtoms)
-  mapM_ (uncurry insertLess) newLesses
+  mapM_ (uncurry insertLess) enhancedNewLesses
   --modify dropEntailedOrdConstraints
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
@@ -440,23 +446,36 @@ freshOrdering = do
     else Changed
 
     where
+      -- returns all (i,~x) where Fr(~x) is a premise of a node at position i
       getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
       getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
           FreshFact -> Just (idx, head $ factTerms prem)
           _         -> Nothing
         ) prems
+      
+      -- the route function as described in the documentation of freshOrdering 
+      getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> (NodeId, LNTerm) -> [NodeId]  -- also needs nodes and edges
+      getRoute nodeMap edges (nid, _) = plainRoute nid
+        where
+          edgeMap :: M.Map NodeConc NodeId
+          edgeMap = M.fromList [(eSrc edge, fst $ eTgt edge) | edge <- S.toList edges]
+          
+          plainRoute :: NodeId -> [NodeId]
+          plainRoute i = case i `M.lookup` nodeMap of
+            Just (enumConcs -> [(concIdx,_)]) -> i : maybe [] plainRoute ((i,concIdx) `M.lookup` edgeMap) 
+            _ -> [i]
 
       floodFill :: M.Map LNTerm [(LNTerm, LNTerm)] -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm)
       floodFill graph visited (s,x)
         | (s,x) `S.member` visited = visited
         | otherwise                = foldl (floodFill graph) (S.insert (s,x) visited) (M.findWithDefault [] x graph)
 
-      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, [LNTerm])] -> Rule (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) -> [NodeId]
+      connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, [LNTerm])] -> RuleACInst -> [NodeId]
       connectNodeToFreshes _ [] _ = []
       connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
         case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
           Just nid1 -> nid1 : connectNodeToFreshes el xs r
-          _         ->       connectNodeToFreshes el xs r
+          _         ->        connectNodeToFreshes el xs r
       
       notFresh (factTag -> FreshFact) = False
       notFresh _                      = True
