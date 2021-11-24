@@ -104,8 +104,10 @@ emptySubtermStore = SubtermStore S.empty S.empty S.empty False S.empty
 isNatSubterm :: (LNTerm, LNTerm) -> Bool
 isNatSubterm (small, big) = (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat
 
+-- | used only in freshOrdering in "Simplify.hs"
+-- does not include solved subterms as they are not needed for freshOrdering
 rawSubtermRel :: SubtermStore -> [(LNTerm, LNTerm)]
-rawSubtermRel sst = S.toList (L.get posSubterms sst `S.union` L.get solvedSubterms sst)
+rawSubtermRel sst = S.toList (L.get posSubterms sst)
 
 addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addSubterm st sst = if st `elem` L.get solvedSubterms sst

@@ -433,9 +433,9 @@ freshOrdering = do
   let freshVars = concatMap getFreshVars nodes  -- all (i,~x) where Fr(~x) is a premise of a node at position i
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
-  let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]
+  let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
   let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]  -- new ordering constraints that can be added (or enhanced and then added)
-  let enhancedNewLesses = [(last $ route (i,f), j) | (i,j) <- newLesses, (i,f) <- freshVars, j `notElem` route (i,f)]  -- improved orderings according to routeOfFreshVar
+  let enhancedNewLesses = [(last $ route frI, j) | (i,j) <- newLesses, (frI,_) <- freshVars, i == frI, j `notElem` route frI]  -- improved orderings according to routeOfFreshVar
   
   oldLesses <- gets (get sLessAtoms)
   mapM_ (uncurry insertLess) enhancedNewLesses
@@ -454,15 +454,15 @@ freshOrdering = do
         ) prems
       
       -- the route function as described in the documentation of freshOrdering 
-      getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> (NodeId, LNTerm) -> [NodeId]  -- also needs nodes and edges
-      getRoute nodeMap edges (nid, _) = plainRoute nid
+      getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> NodeId -> [NodeId]  -- also needs nodes and edges
+      getRoute nodeMap edges nid = plainRoute nid
         where
           edgeMap :: M.Map NodeConc NodeId
           edgeMap = M.fromList [(eSrc edge, fst $ eTgt edge) | edge <- S.toList edges]
-          
+
           plainRoute :: NodeId -> [NodeId]
           plainRoute i = case i `M.lookup` nodeMap of
-            Just (enumConcs -> [(concIdx,_)]) -> i : maybe [] plainRoute ((i,concIdx) `M.lookup` edgeMap) 
+            Just (enumConcs -> [(concIdx, fact)]) | isLinearFact fact -> i : maybe [] plainRoute ((i,concIdx) `M.lookup` edgeMap)
             _ -> [i]
 
       floodFill :: M.Map LNTerm [(LNTerm, LNTerm)] -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm)
