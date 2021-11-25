@@ -44,28 +44,24 @@ The Tamarin Prover is distributed through a number of channels: source and binar
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
 
-   1. run 'make case-studies' and compare 'case-studies/' with
-      'case-studies-regression/'
+   1. run `python3 regressionTests.py` and check for any error
 
-   2. run 'make sapic-case-studies' and compare 'case-studies-sapic/' with
-      'case-studies-sapic-regression/'
+   2. run `tamarin-prover test`
 
-   3. run 'tamarin-prover test'
-
-   4. call 'tamarin-prover' and copy CSF'12 automatic command and
+   3. call `tamarin-prover` and copy CSF'12 automatic command and
       check whether verification succeeds, i.e., run
-      'tamarin-prover --prove *'
+      `tamarin-prover --prove *.spthy`
       in the examples/csf12 folder.
 
-   5. generate 'intruder_variants_{dh,bp}.spthy' and diff with versions
+   4. generate `intruder_variants_{dh,bp}.spthy` and diff with versions
       in data/ so:
-      'tamarin-prover variants > tmp.txt'
-      'diff tmp.txt data/intrudervariants_both_bp_dh_for_diff.txt'
+      `tamarin-prover variants > tmp.txt`
+      `diff tmp.txt data/intruder_variants_both_bp_dh_for_diff.txt`
       which should be empty.
 
-   6. call 'tamarin-prover' and copy CSF'12 interactive command and
+   5. call `tamarin-prover` and copy CSF'12 interactive command and
       execute the following steps in the GUI after running
-      'tamarin-prover interactive .'
+      `tamarin-prover interactive .`
       in the examples/csf12 folder.
 
         (a) open one of the presented theories
@@ -74,8 +70,8 @@ The Tamarin Prover is distributed through a number of channels: source and binar
         (d) try Download
         (e) try 'Loading a new theory' from the start page
 
-   7. Bump version number to even minor version in cabal files and code,
-      commit version bump, by running the 'version-change.sh' script as
+   6. Bump version number to even minor version in cabal files and code,
+      commit version bump, by running the `version-change.sh` script as
       described in its comments. Then merge from 'develop' into 'master'
       and use "Release" functionality to prepare the release.
 
@@ -107,16 +103,43 @@ Before submitting a pull request, please double check that your changes do not b
 
 ```
 rm -rf case-studies
-make case-studies
-diff -r case-studies case-studies-regression
+python3 regressionTests.py
 ```
 
-This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on). If that is the only change, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
+This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. The script shows any differences between the outputs, and also compares the runtimes. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on), hence the times are shown using a color code: green for small changes, yellow for bigger changes, and red for significant changes. If small runtime changes are only differences, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
 
 If you are running the regression on a server you can run multiple case studies in parallel by adding the "-j #" parameter where # is the number of parallel runs. Note that your machine should have 16GB of memory per run, and each run uses 3 threads already. For example:
 
 ```
-make -j 6 case-studies
+python3 regressionTests.py -j 6
 ```
 
-to run 6 case studies in parallel.
+For more details about `regressionTests.py`, have a look at `doc/READMEregressionTests.md`
+
+
+Editor support
+--------------
+
+The directory `etc` holds files for editor support. For the `vim` editor, it is
+desirable to have a separate repository for these files, hence we include this
+directory as a git-subtree. [Here is
+a tutorial](https://www.atlassian.com/git/tutorials/git-subtree). In summary:
+
+1. To merge changes from the outside  repository into `etc` here, run the
+   following command, where $branch is the branch you are in now, which is
+   almost always `develop`.
+```
+ git subtree pull --prefix etc https://github.com/tamarin-prover/editors $branch --squash
+```
+
+2. To contribute changes in `etc` back to that outside repository, run the
+   following, where `$github_user` is your github user name, because you need
+   to fork that directory, too.
+```
+git subtree push --prefix etc https://github.com/$github_user/editors $branch
+```
+
+3. FYI: if we ever want to add another subtree, we use:
+```
+git subtree add --prefix $local_dir $remote_url $remote_branch --squash
+```

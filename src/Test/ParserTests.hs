@@ -39,7 +39,7 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
         Nothing                  ->
             return  (thy0, prettyOpenTheory thy0)
         Just (maudePath, prover) -> do
-            closedThy <- proveTheory (const True) prover <$> closeTheory maudePath (removeSapicItems thy0)
+            closedThy <- proveTheory (const True) prover <$> closeTheory maudePath (removeSapicItems thy0) False
             return $ ( normalizeTheory $ openTheory closedThy
                      , prettyClosedTheory closedThy)
     thy' <- parse "pretty printed theory:" (render thyPretty)

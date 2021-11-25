@@ -1,0 +1,1686 @@
+theory YubikeyMultisets begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Server/3, Y_counter/2 */
+
+section{* The Yubikey-Protocol *}
+
+rule (modulo E) BuyANewYubikey:
+   [ Fr( ~k ), Fr( ~pid ), Fr( ~sid ) ]
+  --[ Protocol( ), Init( ~pid, ~k ), ExtendedInit( ~pid, ~sid, ~k ) ]->
+   [
+   !Y( ~pid, ~sid ), Y_counter( ~pid, '1' ), Server( ~pid, ~sid, '1' ),
+   !SharedKey( ~pid, ~k ), Out( ~pid )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Yubikey_Plugin:
+   [ Y_counter( pid, sc ), In( sc ) ]
+  --[ Yubi( pid, ('1'+sc) ) ]->
+   [ Y_counter( pid, ('1'+sc) ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Yubikey_PressButton:
+   [
+   !Y( pid, sid ), Y_counter( pid, tc ), !SharedKey( pid, k ), In( tc ),
+   Fr( ~npr ), Fr( ~nonce )
+   ]
+  --[
+  YubiPress( pid, tc ), YubiOTP( pid, senc(<sid, tc, ~npr>, k) ),
+  YubiSid( pid, sid, k )
+  ]->
+   [
+   Y_counter( pid, ('1'+tc) ),
+   Out( <pid, ~nonce, senc(<sid, tc, ~npr>, k)> )
+   ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Server_ReceiveOTP_NewSession:
+   [
+   Server( pid, sid, otc ), In( <pid, nonce, senc(<sid, tc, ~pr>, k)> ),
+   !SharedKey( pid, k ), In( otc )
+   ]
+  --[
+  Login( pid, sid, tc, senc(<sid, tc, ~pr>, k) ),
+  LoginCounter( pid, otc, tc ), Smaller( otc, tc )
+  ]->
+   [ Server( pid, sid, tc ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+restriction smaller:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a+z) = b)"
+
+lemma transitivity:
+  all-traces
+  "∀ #t1 #t2 a b c.
+    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒ (∃ z. (a+z) = c)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 a b c.
+  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2) ∧ ∀ z. ((a+z) = c) ⇒ ⊥"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma Login_reachable:
+  exists-trace "∃ #i pid sid x otp1. Login( pid, sid, x, otp1 ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i pid sid x otp1. (Login( pid, sid, x, otp1 ) @ #i)"
+*/
+simplify
+solve( !SharedKey( pid, k ) ▶₂ #i )
+  case BuyANewYubikey
+  solve( !KU( senc(<sid, (otc+z), ~pr>, ~k) ) @ #vk.4 )
+    case Yubikey_PressButton
+    solve( Server( ~pid, ~sid, otc ) ▶₀ #i )
+      case BuyANewYubikey
+      solve( Y_counter( ~pid, ('1'+z) ) ▶₁ #vr.1 )
+        case Yubikey_Plugin
+        solve( Y_counter( ~pid, z ) ▶₀ #vr.4 )
+          case BuyANewYubikey
+          solve( !KU( ~pid ) @ #vk.3 )
+            case BuyANewYubikey
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma one_count_foreach_login [reuse, use_induction]:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1. (YubiPress( pid, x ) @ #t1) ⇒ ¬(#t1 < #t2)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ pid sid x otp #t2.
+           (Login( pid, sid, x, otp ) @ #t2)
+          ⇒
+           ((last(#t2)) ∨
+            (∃ #t1. (YubiPress( pid, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
+         (∃ #i a b.
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t2))  ∥
+           (∃ #t1.
+             (YubiPress( pid, (otc+z) ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) )
+      case case_1
+      solve( !SharedKey( pid, k ) ▶₂ #t2 )
+        case BuyANewYubikey
+        solve( !KU( senc(<sid, (otc+z), ~pr>, ~k) ) @ #vk.4 )
+          case Yubikey_PressButton
+          by contradiction /* from formulas */
+        next
+          case c_senc
+          by solve( !KU( ~k ) @ #vk.8 )
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma slightly_weaker_invariant [reuse, use_induction]:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+    ((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+     (LoginCounter( pid, otc2, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. (tc1+z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2)
+ ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+  (¬(#t2 < #t1)) ∧
+  (¬(#t1 = #t2))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc1+z+z.2) = (otc2+z.1)) ⇒ ⊥) )
+    case case_1
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+               (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+               (LoginCounter( pid, otc2, tc2 ) @ #t2)
+              ⇒
+               ((last(#t2)) ∨
+                (last(#t1)) ∨
+                ((#t1 < #t2) ∧ (∃ z. ((tc1+z) = tc2))) ∨
+                (#t2 < #t1) ∨
+                (#t1 = #t2)))  ∥
+             (∃ #i a b.
+               (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+        case case_1
+        solve( (last(#t2))  ∥ (∃ z.2. ((otc1+z+z.2) = (otc2+z.1))) )
+          case case_1
+          solve( !SharedKey( pid, k ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
+              case BuyANewYubikey
+              solve( YubiPress( ~pid, (otc1+z) ) @ #t1.1 )
+                case Yubikey_PressButton
+                solve( !Y( ~pid, sid.3 ) ▶₀ #t1.1 )
+                  case BuyANewYubikey
+                  solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.1 )
+                    case BuyANewYubikey
+                    solve( YubiPress( ~pid, (otc2+z.1) ) @ #t1.2 )
+                      case Yubikey_PressButton
+                      solve( !Y( ~pid, sid.3 ) ▶₀ #t1.2 )
+                        case BuyANewYubikey
+                        solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.2 )
+                          case BuyANewYubikey
+                          solve( !KU( senc(<sid, (otc1+z), ~pr>, ~k) ) @ #vk.5 )
+                            case Yubikey_PressButton
+                            solve( !KU( senc(<sid.1, (otc2+z.1), ~pr.1>, ~k) ) @ #vk.10 )
+                              case Yubikey_PressButton
+                              solve( Server( ~pid, ~sid, otc1 ) ▶₀ #t1 )
+                                case BuyANewYubikey
+                                solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
+                                  case BuyANewYubikey
+                                  by contradiction /* cyclic */
+                                next
+                                  case Server_ReceiveOTP_NewSession
+                                  solve( ((#vr.7 < #t1) ∧ (∃ z.2. ((otc+z.1+z.2) = ('1'+z))))  ∥
+                                         (#t1 < #vr.7)  ∥ (#vr.7 = #t1) )
+                                    case case_1_case_1
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_1_case_2
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_1_case_3
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_1_case_4
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_1_case_5
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_1_case_6
+                                    by contradiction /* non-injective facts (#vr,#vr.7,#t1) */
+                                  next
+                                    case case_2_case_01
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_02
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_03
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_04
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_05
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_06
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_07
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_08
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_09
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_10
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_11
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_12
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_13
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_14
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_15
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_2_case_16
+                                    by contradiction /* from formulas */
+                                  next
+                                    case case_3
+                                    by contradiction /* from formulas */
+                                  qed
+                                qed
+                              next
+                                case Server_ReceiveOTP_NewSession
+                                solve( YubiPress( ~pid, (otc+z) ) @ #t1.3 )
+                                  case Yubikey_PressButton
+                                  solve( !Y( ~pid, sid.1 ) ▶₀ #t1.3 )
+                                    case BuyANewYubikey
+                                    solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.3 )
+                                      case BuyANewYubikey
+                                      solve( !KU( senc(<~sid, (otc+z), ~pr.2>, ~k) ) @ #vk.18 )
+                                        case Yubikey_PressButton
+                                        solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
+                                          case BuyANewYubikey
+                                          by contradiction /* non-injective facts (#vr,#t1,#t2) */
+                                        next
+                                          case Server_ReceiveOTP_NewSession
+                                          solve( ((#vr.11 < #t1) ∧
+                                                  (∃ z.3. ((otc.1+z.2+z.3) = (otc+z+z.1))))  ∥
+                                                 (#t1 < #vr.11)  ∥ (#vr.11 = #t1) )
+                                            case case_1_case_001
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_002
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_003
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_004
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_005
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_006
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_007
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_008
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_009
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_010
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_011
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_012
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_013
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_014
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_015
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_016
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_017
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_018
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_019
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_020
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_021
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_022
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_023
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_024
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_025
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_026
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_027
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_028
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_029
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_030
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_031
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_032
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_033
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_034
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_035
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_036
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_037
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_038
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_039
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_040
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_041
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_042
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_043
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_044
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_045
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_046
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_047
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_048
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_049
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_050
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_051
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_052
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_053
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_054
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_055
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_056
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_057
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_058
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_059
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_060
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_061
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_062
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_063
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_064
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_065
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_066
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_067
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_068
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_069
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_070
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_071
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_072
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_073
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_074
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_075
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_076
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_077
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_078
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_079
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_080
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_081
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_082
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_083
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_084
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_085
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_086
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_087
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_088
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_089
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_090
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_091
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_092
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_093
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_094
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_095
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_096
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_097
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_098
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_099
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_100
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_101
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_102
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_103
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_104
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_105
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_106
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_107
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_108
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_109
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_110
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_111
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_112
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_113
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_114
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_115
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_116
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_117
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_118
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_119
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_120
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_121
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_122
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_123
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_124
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_125
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_126
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_127
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_128
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_129
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_130
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_131
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_132
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_133
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_134
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_135
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_136
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_137
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_138
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_139
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_140
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_141
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_142
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_143
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_144
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_145
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_146
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_147
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_148
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_149
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_150
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_151
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_152
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_153
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_154
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_155
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_156
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_157
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_158
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_159
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_160
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_161
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_162
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_163
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_164
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_165
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_166
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_167
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_168
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_169
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_170
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_171
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_172
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_173
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_174
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_175
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_176
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_177
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_178
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_179
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_180
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_181
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_182
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_183
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_184
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_185
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_186
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_187
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_188
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_189
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_190
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_191
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_192
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_193
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_194
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_195
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_196
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_197
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_198
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_199
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_200
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_201
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_202
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_203
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_204
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_205
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_206
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_207
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_208
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_209
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_210
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_211
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_212
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_213
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_214
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_215
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_216
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_217
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_218
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_219
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_220
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_221
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_222
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_223
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_224
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_225
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_226
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_227
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_228
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_229
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_230
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_231
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_232
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_233
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_234
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_235
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_236
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_237
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_238
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_239
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_240
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_241
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_242
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_243
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_244
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_245
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_246
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_247
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_248
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_249
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_250
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_251
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_252
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_253
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_254
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_255
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_256
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_257
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_258
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_259
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_260
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_261
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_262
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_263
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_264
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_1_case_265
+                                            by contradiction /* non-injective facts (#vr.11,#t1,#t2) */
+                                          next
+                                            case case_2_case_01
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_02
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_03
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_04
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_05
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_06
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_07
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_08
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_09
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_10
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_11
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_12
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_13
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_14
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_15
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_16
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_17
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_18
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_19
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_20
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_21
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_22
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_23
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_24
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_25
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_26
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_27
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_28
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_29
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_30
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_31
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_32
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_33
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_34
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_35
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_36
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_37
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_38
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_39
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_40
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_41
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_42
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_43
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_44
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_45
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_46
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_47
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_48
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_49
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_50
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_51
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_52
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_53
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_54
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_55
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_56
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_57
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_58
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_59
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_60
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_61
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_62
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_63
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_64
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_65
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_66
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_67
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_68
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_69
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_70
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_71
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_72
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_73
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_74
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_75
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_76
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_77
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_78
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_2_case_79
+                                            by contradiction /* from formulas */
+                                          next
+                                            case case_3
+                                            by contradiction /* from formulas */
+                                          qed
+                                        qed
+                                      next
+                                        case c_senc
+                                        by solve( !KU( ~k ) @ #vk.23 )
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            next
+                              case c_senc
+                              by solve( !KU( ~k ) @ #vk.17 )
+                            qed
+                          next
+                            case c_senc
+                            by solve( !KU( ~k ) @ #vk.17 )
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case case_2_case_01
+          by contradiction /* from formulas */
+        next
+          case case_2_case_02
+          by contradiction /* from formulas */
+        next
+          case case_2_case_03
+          by contradiction /* from formulas */
+        next
+          case case_2_case_04
+          by contradiction /* from formulas */
+        next
+          case case_2_case_05
+          by contradiction /* from formulas */
+        next
+          case case_2_case_06
+          by contradiction /* from formulas */
+        next
+          case case_2_case_07
+          by contradiction /* from formulas */
+        next
+          case case_2_case_08
+          by contradiction /* from formulas */
+        next
+          case case_2_case_09
+          by contradiction /* from formulas */
+        next
+          case case_2_case_10
+          by contradiction /* from formulas */
+        next
+          case case_2_case_11
+          by contradiction /* from formulas */
+        next
+          case case_2_case_12
+          by contradiction /* from formulas */
+        next
+          case case_2_case_13
+          by contradiction /* from formulas */
+        next
+          case case_2_case_14
+          by contradiction /* from formulas */
+        next
+          case case_2_case_15
+          by contradiction /* from formulas */
+        next
+          case case_2_case_16
+          by contradiction /* from formulas */
+        next
+          case case_2_case_17
+          by contradiction /* from formulas */
+        next
+          case case_2_case_18
+          by contradiction /* from formulas */
+        next
+          case case_2_case_19
+          by contradiction /* from formulas */
+        next
+          case case_2_case_20
+          by contradiction /* from formulas */
+        next
+          case case_2_case_21
+          by contradiction /* from formulas */
+        next
+          case case_2_case_22
+          by contradiction /* from formulas */
+        next
+          case case_2_case_23
+          by contradiction /* from formulas */
+        next
+          case case_2_case_24
+          by contradiction /* from formulas */
+        next
+          case case_2_case_25
+          by contradiction /* from formulas */
+        qed
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma no_replay:
+  all-traces
+  "¬(∃ #i #j pid sid x otp1 otp2.
+      ((Login( pid, sid, x, otp1 ) @ #i) ∧ (Login( pid, sid, x, otp2 ) @ #j)) ∧
+      (¬(#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j pid sid x otp1 otp2.
+  (Login( pid, sid, x, otp1 ) @ #i) ∧ (Login( pid, sid, x, otp2 ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+simplify
+  case 1
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 2
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 3
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 4
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 5
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 6
+  by solve( (#i < #j)  ∥ (#j < #i) )
+next
+  case 7
+  by solve( (#i < #j)  ∥ (#j < #i) )
+qed
+
+lemma injective_correspondance:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1.
+      ((YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2)) ∧
+      (∀ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ⇒ (#t3 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1.
+   (YubiPress( pid, x ) @ #t1)
+  ⇒
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
+*/
+simplify
+solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+  case case_1
+  solve( !SharedKey( pid, k.1 ) ▶₂ #t2 )
+    case BuyANewYubikey
+    solve( !Y( ~pid, sid ) ▶₀ #t1 )
+      case BuyANewYubikey
+      solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+        case BuyANewYubikey
+        solve( YubiPress( ~pid, (otc+z) ) @ #t1.1 )
+          case Yubikey_PressButton
+          solve( !Y( ~pid, sid.2 ) ▶₀ #t1.1 )
+            case BuyANewYubikey
+            solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.1 )
+              case BuyANewYubikey
+              by solve( Login( ~pid, sid.1, (otc+z), otp2 ) @ #t3 )
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( (¬(#t1.2 < #t2))  ∥
+         (∃ otp2 #t3. (Login( pid, sid.1, (otc+z), otp2 ) @ #t3) ∧ ¬(#t3 = #t2)) )
+    case case_1
+    solve( (#t1.2 = #t2)  ∥ (#t2 < #t1.2) )
+      case case_1
+      solve( !SharedKey( pid, k.1 ) ▶₂ #t2 )
+        case BuyANewYubikey
+        solve( !Y( ~pid, sid ) ▶₀ #t1 )
+          case BuyANewYubikey
+          solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( YubiPress( ~pid, (otc+z) ) @ #t1.1 )
+              case Yubikey_PressButton
+              solve( !Y( ~pid, sid.2 ) ▶₀ #t1.1 )
+                case BuyANewYubikey
+                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.1 )
+                  case BuyANewYubikey
+                  by solve( Login( ~pid, sid.1, (otc+z), otp2 ) @ #t3 )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      solve( !SharedKey( pid, k.1 ) ▶₂ #t2 )
+        case BuyANewYubikey
+        solve( !Y( ~pid, sid ) ▶₀ #t1 )
+          case BuyANewYubikey
+          solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( YubiPress( ~pid, (otc+z) ) @ #t1.2 )
+              case Yubikey_PressButton
+              solve( !Y( ~pid, sid.2 ) ▶₀ #t1.1 )
+                case BuyANewYubikey
+                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.1 )
+                  case BuyANewYubikey
+                  by solve( Login( ~pid, sid.1, (otc+z), otp2 ) @ #t3 )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( !SharedKey( pid, k.1 ) ▶₂ #t2 )
+      case BuyANewYubikey
+      solve( !Y( ~pid, sid ) ▶₀ #t1 )
+        case BuyANewYubikey
+        solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+          case BuyANewYubikey
+          solve( YubiPress( ~pid, (otc+z) ) @ #t1.1 )
+            case Yubikey_PressButton
+            solve( !Y( ~pid, sid.2 ) ▶₀ #t1.1 )
+              case BuyANewYubikey
+              solve( !SharedKey( ~pid, k.1 ) ▶₂ #t1.1 )
+                case BuyANewYubikey
+                by solve( Login( ~pid, sid.1, (otc+z), otp2 ) @ #t3 )
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Login_invalidates_smaller_counters:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2 #t3.
+    (((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+      (LoginCounter( pid, otc2, tc2 ) @ #t2)) ∧
+     (Smaller( tc1, tc2 ) @ #t3)) ⇒
+    (#t1 < #t2)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2 #t3.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2) ∧
+  (Smaller( tc1, tc2 ) @ #t3)
+ ∧
+  ¬(#t1 < #t2)"
+*/
+simplify
+solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( !SharedKey( pid, k ) ▶₂ #t1 )
+    case BuyANewYubikey
+    by solve( LoginCounter( ~pid, otc2, (otc1+z+z.1) ) @ #t1 )
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
+
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
+  processing time: 22.739737244s
+  transitivity (all-traces): verified (2 steps)
+  Login_reachable (exists-trace): verified (8 steps)
+  one_count_foreach_login (all-traces): verified (11 steps)
+  slightly_weaker_invariant (all-traces): verified (429 steps)
+  no_replay (all-traces): verified (8 steps)
+  injective_correspondance (all-traces): verified (32 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
+
+  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
+  processing time: 22.739737244s
+  transitivity (all-traces): verified (2 steps)
+  Login_reachable (exists-trace): verified (8 steps)
+  one_count_foreach_login (all-traces): verified (11 steps)
+  slightly_weaker_invariant (all-traces): verified (429 steps)
+  no_replay (all-traces): verified (8 steps)
+  injective_correspondance (all-traces): verified (32 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
+
+==============================================================================
+*/

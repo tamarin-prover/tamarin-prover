@@ -32,16 +32,17 @@ import           Term.Builtin.Signature
 reportInit ::  Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
 reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
   where
-        reportrule = AnnotatedRule (Just "Report-rule") anP (Right NoPosition)
+        reportrule = AnnotatedRule (Just "ReportRule") anP (Right NoPosition)
                     [In $ fAppPair (varTerm x,varTerm loc)] -- prem
-                    [Report x loc]
-                    [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
                     []
+                    [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
+                    [Ato protFact]
                     0
         var s = LVar s LSortMsg 0
         x = var "x"
         loc = var "loc"
--- [In(<x,loc>)] -[Pred_rep(x,loc)]->[Out(rep(x,loc))]
+        protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm (Free x), varTerm (Free loc)])
+-- This rules use the builtin restriction system to bind the Report predicate (which must be defined by the user), to this rule.
 
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation -> Maybe SapicTerm
 opt_loc loc ann =

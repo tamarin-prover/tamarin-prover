@@ -32,10 +32,14 @@ before_install:
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
   - chmod a+x ~/.local/bin/stack
   - stack --no-terminal setup
-  - travis_retry curl -L https://bintray.com/tamarin-prover-org/tamarin-prover/download_file?file_path=Maude-2.7.1-linux.zip > maude.zip
+  - travis_retry curl -L https://github.com/tamarin-prover/tamarin-prover/releases/download/1.6.0/Maude-2.7.1-linux.zip > maude.zip
   - unzip -o maude.zip -d ~/.local/bin/
   - mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
   - chmod a+x ~/.local/bin/maude
+  # create directories for automated tests
+  - mkdir -p case-studies case-studies/ake case-studies/ake/bilinear case-studies/ake/dh case-studies/related_work case-studies/related_work/StatVerif_ARR_CSF11 case-studies/related_work/AIF_Moedersheim_CCS10 case-studies/related_work/TPM_DKRS_CSF11 case-studies/related_work/YubiSecure_KS_STM12 case-studies/features case-studies/features/auto-sources case-studies/features/auto-sources/spore case-studies/features/xor case-studies/features/xor/basicfunctionality case-studies/features/injectivity case-studies/features/multiset case-studies/features/private_function_symbols case-studies/features/equivalence case-studies/fast-tests case-studies/fast-tests/related_work case-studies/fast-tests/related_work/StatVerif_ARR_CSF11 case-studies/fast-tests/related_work/AIF_Moedersheim_CCS10 case-studies/fast-tests/related_work/TPM_DKRS_CSF11 case-studies/fast-tests/related_work/YubiSecure_KS_STM12 case-studies/fast-tests/features case-studies/fast-tests/features/injectivity case-studies/fast-tests/features/multiset case-studies/fast-tests/features/private_function_symbols case-studies/fast-tests/features/equivalence case-studies/fast-tests/csf18-xor case-studies/fast-tests/csf18-xor/diff-models case-studies/fast-tests/regression case-studies/fast-tests/regression/diff case-studies/fast-tests/cav13 case-studies/fast-tests/post17 case-studies/fast-tests/csf12 case-studies/fast-tests/loops case-studies/fast-tests/ccs15 case-studies/classic case-studies/sapic case-studies/sapic/fast case-studies/sapic/fast/GJM-contract case-studies/sapic/fast/statVerifLeftRight case-studies/sapic/fast/feature-inevent-restriction case-studies/sapic/fast/basic case-studies/sapic/fast/MoedersheimWebService case-studies/sapic/fast/feature-let-bindings case-studies/sapic/fast/feature-locations case-studies/sapic/fast/feature-boundonce case-studies/sapic/fast/feature-xor case-studies/sapic/fast/SCADA case-studies/sapic/fast/feature-secret-channel case-studies/sapic/fast/fairexchange-mini case-studies/sapic/fast/feature-predicates case-studies/sapic/slow case-studies/sapic/slow/NSL case-studies/sapic/slow/PKCS11 case-studies/sapic/slow/encWrapDecUnwrap case-studies/sapic/slow/feature-locations case-studies/sapic/slow/Yubikey case-studies/csf18-xor case-studies/csf18-xor/diff-models case-studies/regression case-studies/regression/trace case-studies/regression/diff case-studies/cav13 case-studies/post17 case-studies/csf12 case-studies/csf19-wrapping case-studies/loops case-studies/ccs15 case-studies/classic case-studies/fast-tests/ake case-studies/fast-tests/ake/bilinear
+
+
 
 install:
   # pre-build 'mwc-random' and 'SHA' as otherwise Travis CI sometimes runs out of memory
@@ -51,7 +55,4 @@ install:
 script:
   - tamarin-prover test
   # - make sapic-case-studies
-
-notifications:
-  slack:
-    secure: Jbo4DleHEw22sDT4H4R0qY5yIkzho7u6uS0UKi9EYOe4o8ec8yrdkf3/VhyGdNvPHW+7I9RR6zFQ4j3iqJs5/TlT+Hfa4Duq9Epvr33SGuo/H8JXicly8QiWJunaTFz7t5kMttg/aUQcN8VAqwzkrUovB+gnHy9G6FmiKr1ejTQ=
+  - python3 regressionTests.py -noi

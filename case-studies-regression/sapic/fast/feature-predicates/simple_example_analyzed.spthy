@@ -1,0 +1,102 @@
+theory SimpleIf begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Equal( h1, h2 )<=>h1 = h2
+
+lemma bogus_exists:
+  exists-trace "∃ #i. Bogus( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Bogus( ) @ #i)"
+*/
+simplify
+solve( State_11( h ) ▶₀ #i )
+  case ifEqualhh_0_1
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new h;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newh_0_[color=#ffffff, process="new h;"]:
+   [ State_( ), Fr( h ) ] --> [ State_1( h ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_ifEqualhh_0_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+rule (modulo E) ifEqualhh_0_1[color=#ffffff, process="if Equal( h, h )"]:
+   [ State_1( h ) ] --[ Restr_ifEqualhh_0_1_1( h, h ) ]-> [ State_11( h ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_ifEqualhh_1_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+  // safety formula
+
+rule (modulo E) ifEqualhh_1_1[color=#ffffff, process="if Equal( h, h )"]:
+   [ State_1( h ) ] --[ Restr_ifEqualhh_1_1_1( h, h ) ]-> [ State_12( h ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventBogus_0_11[color=#ffffff,
+                                process="event Bogus( );"]:
+   [ State_11( h ) ] --[ Bogus( ) ]-> [ State_111( h ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+   [ State_111( h ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0"]:
+   [ State_12( h ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-predicates/simple_example.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
+
+  output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
+  processing time: 0.071130495s
+  bogus_exists (exists-trace): verified (3 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
+
+  output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
+  processing time: 0.071130495s
+  bogus_exists (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

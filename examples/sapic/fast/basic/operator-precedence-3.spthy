@@ -1,0 +1,21 @@
+theory OperatorPrecedenceLookup
+begin
+section{* A few test cases for operator precedence *}
+
+predicate: True() <=> T
+
+if True() then
+    event PositiveBranch();
+    lookup 'x' as x in
+        0
+    else // else branch does not belong to conditional, but to lookup
+        event LookupElse();
+        insert 'y','y' //to avoid wellformedness error
+
+lemma elseIsResolvedInnerFirst:
+    exists-trace
+    "(Ex #l. LookupElse()@l)
+     & (Ex #p. PositiveBranch()@p)
+     "
+
+end

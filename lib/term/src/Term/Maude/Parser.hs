@@ -224,7 +224,7 @@ parseVariantsReply msig reply = flip parseOnly reply $ do
     <* endOfLine <* string "rewrites: "
     <* takeWhile1 isDigit <* endOfLine <* endOfInput
   where
-    parseVariant = string "Variant #" *> takeWhile1 isDigit *> endOfLine *>
+    parseVariant = string "Variant " *> optional (char '#') *> takeWhile1 isDigit *> endOfLine *>
                    string "rewrites: " *> takeWhile1 isDigit *> endOfLine *>
                    parseReprintedTerm *> manyTill parseEntry endOfLine
     parseReprintedTerm = choice [ string "TOP" *> pure LSortMsg, parseSort ]
@@ -235,7 +235,7 @@ parseVariantsReply msig reply = flip parseOnly reply $ do
 -- | @parseSubstitution l@ parses a single substitution returned by Maude.
 parseSubstitution :: MaudeSig -> Parser MSubst
 parseSubstitution msig = do
-    endOfLine *> string "Solution " *> takeWhile1 isDigit *> endOfLine
+    endOfLine *> choice [string "Solution ", string "Unifier ", string "Matcher "] *> takeWhile1 isDigit *> endOfLine
     choice [ string "empty substitution" *> endOfLine *> pure []
            , many1 parseEntry]
   where 

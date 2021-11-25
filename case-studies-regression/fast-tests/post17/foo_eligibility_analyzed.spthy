@@ -1,0 +1,349 @@
+theory FOO_Eligibility begin
+
+// Function signature and definition of the equational theory E
+
+functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, unblind/2
+equations:
+    checksign(sign(m, k), pk(k)) = m,
+    fst(<x.1, x.2>) = x.1,
+    open(commit(m, r), r) = m,
+    snd(<x.1, x.2>) = x.2,
+    unblind(blind(m, r), r) = m,
+    unblind(sign(blind(m, r), sk), r) = sign(m, sk)
+
+
+
+rule (modulo E) Register_Voter_pk:
+   [ Fr( ~ltkV ) ]
+  -->
+   [ !Ltk( $V, ~ltkV ), !Pk( $V, pk(~ltkV) ), Out( pk(~ltkV) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Register_Admin_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !AdminLtk( $A, ~ltkA ), !AdminPk( $A, pk(~ltkA) ), Out( pk(~ltkA) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) V_1:
+   [ Fr( ~r ), Fr( ~b ), !Ltk( V, ~ltkV ) ]
+  --[
+  Created_vote_V_1( commit($vote, ~r) ),
+  Created_commit_V_1( blind(commit($vote, ~r), ~b) )
+  ]->
+   [
+   Out( <blind(commit($vote, ~r), ~b), 
+         sign(blind(commit($vote, ~r), ~b), ~ltkV)>
+   ),
+   St_V_1( V, $vote, ~r, ~b )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_1:
+   [ In( <e, sign(e, ~ltkV)> ), !AdminLtk( A, ~ltkA ), !Ltk( V, ~ltkV ) ]
+  --[ Registered( e ), In_A_1( e ) ]->
+   [ Out( <e, sign(e, ~ltkA)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) V_2:
+   [
+   In( <blind(commit(vote, ~r), ~b), 
+        sign(blind(commit(vote, ~r), ~b), ~ltkA)>
+   ),
+   St_V_1( V, vote, ~r, ~b ), !AdminLtk( A, ~ltkA )
+   ]
+  -->
+   [
+   Out( <commit(vote, ~r), sign(commit(vote, ~r), ~ltkA)> ),
+   St_V_2( V, A, vote, ~r )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) C_1:
+   [ In( <x, sign(x, ~ltkA)> ), !AdminLtk( A, ~ltkA ) ]
+  -->
+   [ St_C_1( A, x ), Out( <x, sign(x, ~ltkA)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) V_3:
+   [ In( commit(vote, ~r) ), St_V_2( V, A, vote, ~r ) ] --> [ Out( ~r ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) C_2:
+   [ In( r ), St_C_1( A, commit(open(x, r), r) ) ]
+  --[ VotePublished( open(x, r) ), Out_C_2( commit(open(x, r), r) ) ]->
+   [ Out( open(x, r) ) ]
+
+  /*
+  rule (modulo AC) C_2:
+     [ In( r ), St_C_1( A, commit(z, r) ) ]
+    --[ VotePublished( z ), Out_C_2( commit(z, r) ) ]->
+     [ Out( z ) ]
+  */
+
+lemma types [sources]:
+  all-traces
+  "(∀ e #i.
+     (In_A_1( e ) @ #i) ⇒
+     (∃ #j. (Created_commit_V_1( e ) @ #j) ∧ (#j < #i))) ∧
+   (∀ v #i.
+     (Out_C_2( v ) @ #i) ⇒ (∃ #j. (Created_vote_V_1( v ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ e #i.
+    (In_A_1( e ) @ #i) ∧ ∀ #j. (Created_commit_V_1( e ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ v #i.
+    (Out_C_2( v ) @ #i) ∧ ∀ #j. (Created_vote_V_1( v ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ e #i.
+           (In_A_1( e ) @ #i)
+          ∧
+           ∀ #j. (Created_commit_V_1( e ) @ #j) ⇒ ¬(#j < #i))  ∥
+         (∃ v #i.
+           (Out_C_2( v ) @ #i) ∧ ∀ #j. (Created_vote_V_1( v ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (Created_commit_V_1( e ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !AdminLtk( A, ~ltkA ) ▶₁ #i )
+        case Register_Admin_pk
+        solve( !Ltk( V, ~ltkV ) ▶₂ #i )
+          case Register_Voter_pk
+          solve( !KU( sign(e, ~ltkV) ) @ #vk.2 )
+            case A_1
+            solve( (#vr.7, 0) ~~> (#vk, 0) )
+              case d_0_open
+              by contradiction /* forbidden KD-fact */
+            qed
+          next
+            case C_2
+            by contradiction /* forbidden KD-fact */
+          next
+            case V_1_case_1
+            solve( !KU( ~b ) @ #vk.3 )
+              case A_1
+              solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                case d_0_open
+                by contradiction /* forbidden KD-fact */
+              qed
+            next
+              case C_2
+              by contradiction /* forbidden KD-fact */
+            qed
+          next
+            case V_1_case_2
+            by contradiction /* from formulas */
+          next
+            case V_1_case_3
+            solve( !KU( ~b ) @ #vk.4 )
+              case A_1
+              solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+                case d_0_open
+                by contradiction /* forbidden KD-fact */
+              qed
+            next
+              case C_2
+              by contradiction /* forbidden KD-fact */
+            qed
+          next
+            case V_1_case_4
+            solve( !KU( ~b ) @ #vk.3 )
+              case A_1
+              solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+                case d_0_open
+                by contradiction /* forbidden KD-fact */
+              qed
+            next
+              case C_2
+              by contradiction /* forbidden KD-fact */
+            qed
+          next
+            case c_sign
+            solve( !KU( ~ltkV ) @ #vk.3 )
+              case A_1
+              solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                case d_0_open
+                by contradiction /* forbidden KD-fact */
+              qed
+            next
+              case C_2
+              by contradiction /* forbidden KD-fact */
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j.
+             (Created_vote_V_1( commit(z, r) ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( St_C_1( A, commit(z, r) ) ▶₁ #i )
+        case C_1
+        solve( !KU( sign(commit(z, r), ~ltkA) ) @ #vk.3 )
+          case A_1_case_1
+          by contradiction /* from formulas */
+        next
+          case A_1_case_2
+          solve( (#vr.7, 0) ~~> (#vk, 0) )
+            case d_0_open
+            by contradiction /* forbidden KD-fact */
+          qed
+        next
+          case C_2
+          by contradiction /* forbidden KD-fact */
+        next
+          case V_1_case_1
+          by contradiction /* from formulas */
+        next
+          case V_1_case_2
+          by contradiction /* from formulas */
+        next
+          case V_2
+          by contradiction /* from formulas */
+        next
+          case c_sign
+          solve( !KU( ~ltkA ) @ #vk.4 )
+            case A_1
+            solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              case d_0_open
+              by contradiction /* forbidden KD-fact */
+            qed
+          next
+            case C_2
+            by contradiction /* forbidden KD-fact */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma exec:
+  exists-trace "∃ v #i. VotePublished( v ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ v #i. (VotePublished( v ) @ #i)"
+*/
+simplify
+solve( St_C_1( A, commit(v, r) ) ▶₁ #i )
+  case C_1
+  solve( !KU( sign(commit(v, r), ~ltkA) ) @ #vk.3 )
+    case V_2
+    solve( !KU( ~r ) @ #vk.1 )
+      case V_3
+      solve( !KU( sign(blind(commit($vote, ~r), ~b), ~ltkA) ) @ #vk.6 )
+        case A_1
+        solve( !KU( sign(blind(commit($vote, ~r), ~b), ~ltkV.1) ) @ #vk.8 )
+          case V_1
+          solve( !KU( commit($vote, ~r) ) @ #vk.6 )
+            case V_2_case_1
+            solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 )
+              case V_1_case_1
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma eligibility:
+  all-traces
+  "∀ vote #j.
+    (VotePublished( vote ) @ #j) ⇒
+    (∃ r b #i. (Registered( blind(commit(vote, r), b) ) @ #i) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ vote #j.
+  (VotePublished( vote ) @ #j)
+ ∧
+  ∀ r b #i. (Registered( blind(commit(vote, r), b) ) @ #i) ⇒ ¬(#i < #j)"
+*/
+simplify
+solve( St_C_1( A, commit(vote, r) ) ▶₁ #j )
+  case C_1
+  solve( !KU( sign(commit(vote, r), ~ltkA) ) @ #vk.3 )
+    case A_1
+    by contradiction /* from formulas */
+  next
+    case V_1_case_1
+    by solve( !KU( ~b ) @ #vk.4 )
+  next
+    case V_1_case_2
+    by solve( !KU( ~b ) @ #vk.5 )
+  next
+    case V_2
+    solve( !KU( ~r ) @ #vk.1 )
+      case V_3
+      solve( !KU( sign(blind(commit($vote, ~r), ~b), ~ltkA) ) @ #vk.6 )
+        case A_1
+        by contradiction /* from formulas */
+      next
+        case c_sign
+        by solve( !KU( ~ltkA ) @ #vk.7 )
+      qed
+    qed
+  next
+    case c_sign
+    by solve( !KU( ~ltkA ) @ #vk.4 )
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/post17/foo_eligibility.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/post17/foo_eligibility.spthy
+
+  output:          examples/post17/foo_eligibility.spthy.tmp
+  processing time: 1.074399146s
+  types (all-traces): verified (44 steps)
+  exec (exists-trace): verified (9 steps)
+  eligibility (all-traces): verified (11 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/post17/foo_eligibility.spthy
+
+  output:          examples/post17/foo_eligibility.spthy.tmp
+  processing time: 1.074399146s
+  types (all-traces): verified (44 steps)
+  exec (exists-trace): verified (9 steps)
+  eligibility (all-traces): verified (11 steps)
+
+==============================================================================
+*/

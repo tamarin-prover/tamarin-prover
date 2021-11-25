@@ -1,0 +1,155 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:        Stéphanie Delaune (CODAGE EN COURS)
+  Date:           March 2020
+  Time:            ??
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/yahalomBAN.html)
+
+  BAN simplified version of Yahalom
+
+  A, B, S :    principal
+  Na, Nb :    number fresh
+  Kas, Kbs, Kab :    key
+
+  A knows :    A, B, S, Kas
+  B knows :    B, S, Kbs
+  S knows :    S, A, B, Kas, Kbs
+
+  1.    A  ->  B  :    A, Na
+  2.    B  ->  S  :    B, Nb, {A, Na}Kbs
+  3.    S  ->  A  :    Nb, {B, Kab, Na}Kas, {A, Kab, Nb}Kbs
+  4.    A  ->  B  :    {A, Kab, Nb}Kbs, {Nb}Kab
+
+  The fresh symmetric shared key Kab is created by the server S
+  and sent encrypted, in message 3 both to A (directly) and to B (indirectly).
+
+  Compared to the original version of the Yahalom protocol,
+  the nonce Nb is added to the second cipher of message 3,
+  to prevent a malicious A to reuse an old value of Kab.
+
+  Also, Nb is sent in cleartext in message 2, which makes possible the attacks below.
+
+  The protocol must guaranty the secrecy of Kab: in every session,
+  the value of Kab must be known only by the participants playing the roles of A, B and S.
+
+
+  We consider here the tagged version of this protocol.
+
+*/
+
+theory Yahalom_BAN
+begin
+
+builtins: symmetric-encryption
+
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[KeyGen($X)]->
+  [ !LongtermKey(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !LongtermKey(~sk,$A)]
+  --[ Compromise($A)]->
+    [ Out(~sk) ]
+
+rule Reveal_Shortterm_Key:
+    [ !ShorttermKey(~kab,$B,$A)]
+  --[ Compromise($A), Compromise($B)]->
+    [ Out(~kab) ]
+
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+//  1.    A  ->  B  :    A, Na
+rule A_1:
+[Fr(~na)]  --[]->
+  [Out(<$A, ~na>), StateA1($A, $B, ~na)]
+
+//  2.    B  ->  S  :    B, Nb, {A, Na}Kbs
+rule B_1:
+  let msg = senc(<'1', yA, yna>,ykbs) in
+  [In(<yA, yna>), !LongtermKey(ykbs,yB), Fr(~nb)]
+  --[RunningB(yB,yA,<yna,~nb>)]->
+  [Out(<yB, ~nb, msg>), StateB1(yB, yA, yna, ~nb)]
+
+//  3.    S  ->  A  :   Nb, {B, Kab, Na}Kas, {A, Kab, Nb}Kbs
+rule S_1:
+ [Fr(~kab), In(<zB, znb, senc(<'1',zA,zna>,zkbs)>), !LongtermKey(zkbs,zB), !LongtermKey(zkas,zA)]
+--[Serveur(zA,zB,<~kab,zna,znb>)]->
+[Out(<znb, senc(<'2',zB,~kab,zna>,zkas),senc(<'3',zA,~kab, znb>,zkbs)>)]
+
+//  4.    A  ->  B  :    {A, Kab, Nb}Kbs, {Nb}Kab
+rule A_2:
+[StateA1(xA,xB,na), !LongtermKey(xkas,xA), In(<xnb, senc(<'2',xB,xkab,na>,xkas), xcfw>)]
+--[CommitA(xA,xB,<na,xnb>), RunningA(xA,xB,<xkab,na,xnb>),Secret(xA,xB,xkab)]->
+[Out(<xcfw, senc(<'4',xnb>,xkab)>)]
+
+//
+rule B_2:
+[StateB1(yB,yA,yna,nb), !LongtermKey(ykbs,yB), In(<senc(<'3',yA,ykab,nb>,ykbs),senc(<'4',nb>,ykab)>)]
+--[CommitB(yB,yA,<ykab,yna,nb>),Secret(yB,yA,ykab)]->
+[]
+
+restriction singlelongtermkeyperuser:
+  "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
+
+
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+lemma executability:
+exists-trace
+"Ex A B kab na nb #i #j #k.
+  CommitB(B,A,<kab,na,nb>)@i 
+  & CommitA(A,B,<na,nb>)@j & #j<#i
+  & Serveur(A,B,<kab,na,nb>)@k & #k < #j
+  & not(Ex #r1. Compromise(A)@#r1) 
+  & not(Ex #r2. Compromise(B)@#r2)"
+
+
+// check the secrecy of the newly generated session key
+lemma secrecy:
+  "All A B k #i. Secret(A,B,k)@i ==> not (Ex #j. K(k)@j ) |  (Ex #j. Compromise(B)@j)  |  (Ex #j. Compromise(A)@j)  "
+
+
+
+
+// check the authenticity of the transaction from B's point of view
+// status: false
+
+lemma noninjectiveagreement_B:
+  "All A B t #i.
+    CommitB(B, A, t) @i
+    ==> ((Ex #j. RunningA(A,B, t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+// check the authenticity of the transaction from A's point of view
+// status false
+lemma noninjectiveagreement_A:
+  "All A B t #i.
+    CommitA(A, B, t) @i
+    ==> ((Ex #j. RunningB(B,A,t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+end
+

@@ -2,7 +2,7 @@ name:               tamarin-prover-theory
 
 cabal-version:      >= 1.8
 build-type:         Simple
-version:            1.5.1
+version:            1.7.1
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -10,7 +10,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
+maintainer:         Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
 copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
@@ -50,6 +50,7 @@ library
       , deepseq
       , dlist
       , fclabels
+      , filepath
       , mtl
       , parallel
       , parsec
@@ -99,6 +100,7 @@ library
       Theory.Text.Pretty
       Theory.Text.Parser
       Theory.Text.Parser.Token
+      Theory.Text.Parser.Restriction
 
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
@@ -109,3 +111,13 @@ library
       Theory.Tools.Wellformedness
 
     other-modules:
+      Theory.Text.Parser.Exceptions
+      Theory.Text.Parser.Fact
+      Theory.Text.Parser.Formula
+      Theory.Text.Parser.Lemma
+      Theory.Text.Parser.Let
+      Theory.Text.Parser.Proof
+      Theory.Text.Parser.Rule
+      Theory.Text.Parser.Sapic
+      Theory.Text.Parser.Signature
+      Theory.Text.Parser.Term

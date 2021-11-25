@@ -89,15 +89,15 @@ import           Web.Types
 ------------------------------------------------------------------------------
 
 applyMethodAtPath :: ClosedTheory -> String -> ProofPath
-                  -> Heuristic             -- ^ How to extract/order the proof methods.
+                  -> AutoProver            -- ^ How to extract/order the proof methods.
                   -> Int                   -- What proof method to use.
                   -> Maybe ClosedTheory
-applyMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
+applyMethodAtPath thy lemmaName proofPath prover i = do
     lemma <- lookupLemma lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
     let ctxt  = getProofContext lemma thy
         sys   = psInfo (root subProof)
-        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic ctxt
+        heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -109,15 +109,15 @@ applyMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
       )
 
 applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
-                      -> Heuristic             -- ^ How to extract/order the proof methods.
+                      -> AutoProver             -- ^ How to extract/order the proof methods.
                       -> Int                   -- What proof method to use.
                       -> Maybe ClosedDiffTheory
-applyMethodAtPathDiff thy s lemmaName proofPath defaultHeuristic i = do
+applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
     lemma <- lookupLemmaDiff s lemmaName thy
     subProof <- get lProof lemma `atPath` proofPath
     let ctxt  = getProofContextDiff s lemma thy
         sys   = psInfo (root subProof)
-        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic ctxt
+        heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -129,15 +129,15 @@ applyMethodAtPathDiff thy s lemmaName proofPath defaultHeuristic i = do
       )
 
 applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
-                      -> Heuristic             -- ^ How to extract/order the proof methods.
+                      -> AutoProver             -- ^ How to extract/order the proof methods.
                       -> Int                   -- What proof method to use.
                       -> Maybe ClosedDiffTheory
-applyDiffMethodAtPath thy lemmaName proofPath defaultHeuristic i = do
+applyDiffMethodAtPath thy lemmaName proofPath prover i = do
     lemma <- lookupDiffLemma lemmaName thy
     subProof <- get lDiffProof lemma `atPathDiff` proofPath
     let ctxt  = getDiffProofContext lemma thy
         sys   = dpsInfo (root subProof)
-        heuristic = fromMaybe defaultHeuristic $ get pcHeuristic $ get dpcPCLeft ctxt
+        heuristic = selectDiffHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
     methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
@@ -528,11 +528,26 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
+          , autoProverLinks 's' "all-"     allProve      0
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
-
+          allProve  = text $ " for all lemmas "
+    autoProverLinks key "all-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverAllR tidx CutDFS bound (TheoryProof lemma proofPath))
+            ["autoprove-all"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverAllR tidx CutNothing bound (TheoryProof lemma proofPath))
+              ["characterization-all"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
@@ -556,8 +571,7 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    heuristic               = fromMaybe (apDefaultHeuristic $ tiAutoProver ti)
-                                $ get pcHeuristic ctxt
+    heuristic               = selectHeuristic (tiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
     proofMethods            = rankProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
@@ -605,11 +619,27 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
+          , autoProverLinks 's' "all-"     allProve      0
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+          allProve  = text $ " for all lemmas "
 
+    autoProverLinks key "all-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverAllDiffR tidx CutDFS bound)
+            ["autoprove-all"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverAllDiffR tidx CutNothing bound)
+              ["characterization-all"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
@@ -633,8 +663,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    heuristic               = fromMaybe (apDefaultHeuristic $ dtiAutoProver ti)
-                                $ get pcHeuristic ctxt
+    heuristic               = selectHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
     proofMethods            = rankProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
@@ -683,10 +712,12 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
+          , autoProverLinks 's' "all-"     allProve      0
           ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
+          allProve  = text $ " for all lemmas "
 
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
@@ -700,7 +731,20 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
                         [ text "" ]
                 else []
 
-
+    autoProverLinks key "all-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverAllDiffR tidx CutDFS bound)
+            ["autoprove-all"]
+            (keyword_ $ "autoprove")
+      , parens $
+          text (toUpper key : ".") <->
+          linkToPath renderUrl
+              (AutoProverAllDiffR tidx CutNothing bound)
+              ["characterization-all"]
+              (keyword_ "for all solutions")
+      , nameSuffix
+      ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
@@ -724,8 +768,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
 
     nCases                  = show $ M.size $ children prf
     depth                   = length proofPath
-    heuristic               = fromMaybe (apDefaultHeuristic $ dtiAutoProver ti)
-                                $ get pcHeuristic $ get dpcPCLeft ctxt
+    heuristic               = selectDiffHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
     diffProofMethods        = rankDiffProofMethods ranking ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
@@ -782,13 +825,15 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
       ]
     ppCase (i, (names, se)) =
       [ withTag "h3" [] $ fsep [ text "Source", int i, text "of", nCases
-                               , text " / named ", doubleQuotes (text name) ]
+                               , text " / named ", doubleQuotes (text name),
+                                 if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
       , withTag "p" [] $ ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
         name = intercalate "_" names
+        isPartial = not $ null $ unsolvedChains se
 
 
 -- | Build the Html document showing the source cases.
@@ -839,7 +884,7 @@ messageSnippet thy = vcat
 rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 rulesDiffSnippet thy = vcat
     [ ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyProtoRuleE msrRules
+        vsep $ map prettyDiffRule msrRules
     ]
   where
     msrRules   = diffTheoryDiffRules thy
@@ -1008,7 +1053,7 @@ htmlThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformedness $ removeSapicItems (openTheory thy)
+             report = checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy)
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1143,7 +1188,7 @@ htmlDiffThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformednessDiff $ openDiffTheory thy
+             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
 
 
 

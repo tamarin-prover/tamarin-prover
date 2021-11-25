@@ -1,0 +1,149 @@
+theory dsscbc begin
+
+// Function signature and definition of the equational theory E
+
+functions: dec/2, enc/2, fst/1, pair/2, prefix/1, snd/1
+equations:
+    dec(enc(M, k), k) = M,
+    fst(<x.1, x.2>) = x.1,
+    prefix(enc(<X, Y>, k)) = enc(X, k),
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) setup:
+   [ Fr( ~k ) ] --[ KeyGen( $A ) ]-> [ !SharedKeyWithServer( $A, ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reveal:
+   [ !SharedKeyWithServer( X, k ) ] --[ Reveal( X ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator1:
+   [ ]
+  --[ Initate( $A, $B ) ]->
+   [ InitiatorRequested( $A, $B ), Out( <$A, $B> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Initiator2:
+   [
+   InitiatorRequested( $A, $B ), !SharedKeyWithServer( $A, kas ),
+   In( enc(<<$B, ~k>, enc(<$A, ~k>, kbs)>, kas) ),
+   !SharedKeyWithServer( $B, kbs )
+   ]
+  --[ KeySharedInit( $A, $B, ~k ) ]->
+   [ Out( enc(<$A, ~k>, kbs) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Responder:
+   [ In( enc(<$A, ~k>, kbs) ), !SharedKeyWithServer( $B, kbs ) ]
+  --[ KeySharedResp( $B, $A, ~k ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Server:
+   [
+   In( <$A, $B> ), Fr( ~k ), !SharedKeyWithServer( $A, kas ),
+   !SharedKeyWithServer( $B, kbs )
+   ]
+  --[ CreatedKey( $A, $B, ~k ) ]->
+   [ Out( enc(<<$B, ~k>, enc(<$A, ~k>, kbs)>, kas) ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction singlesharedkeyperuser:
+  "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma executable:
+  exists-trace
+  "∃ A B k #i #j.
+    (KeySharedInit( A, B, k ) @ #i) ∧ (KeySharedResp( B, A, k ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B k #i #j.
+  (KeySharedInit( A, B, k ) @ #i) ∧ (KeySharedResp( B, A, k ) @ #j)"
+*/
+simplify
+solve( InitiatorRequested( $A, $B ) ▶₀ #i )
+  case Initiator1
+  solve( !SharedKeyWithServer( $A, kas ) ▶₁ #i )
+    case setup
+    solve( !SharedKeyWithServer( $B, kbs ) ▶₃ #i )
+      case setup
+      solve( !SharedKeyWithServer( $B, kbs ) ▶₁ #j )
+        case setup
+        solve( !KU( enc(<<$B, ~k.1>, enc(<$A, ~k.1>, ~k.2)>, ~k) ) @ #vk )
+          case Server
+          solve( !KU( enc(<$A, ~k.1>, ~k.2) ) @ #vk.1 )
+            case Initiator2
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma sessionsmatch:
+  all-traces
+  "∀ A B k #i.
+    (KeySharedResp( B, A, k ) @ #i) ⇒
+    (((∃ #j. KeySharedInit( A, B, k ) @ #j) ∨ (∃ #j. Reveal( B ) @ #j)) ∨
+     (∃ #j. Reveal( A ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B k #i.
+  (KeySharedResp( B, A, k ) @ #i)
+ ∧
+  (∀ #j. (KeySharedInit( A, B, k ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (Reveal( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (Reveal( A ) @ #j) ⇒ ⊥)"
+*/
+simplify
+solve( !SharedKeyWithServer( $B, kbs ) ▶₁ #i )
+  case setup
+  solve( !KU( enc(<$A, ~k>, ~k.1) ) @ #vk )
+    case Server_case_3
+    SOLVED // trace found
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
+
+  output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
+  processing time: 0.2226811s
+  executable (exists-trace): verified (8 steps)
+  sessionsmatch (all-traces): falsified - found trace (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
+
+  output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
+  processing time: 0.2226811s
+  executable (exists-trace): verified (8 steps)
+  sessionsmatch (all-traces): falsified - found trace (4 steps)
+
+==============================================================================
+*/
