@@ -80,8 +80,8 @@ import           Safe
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX*|LEMMANAME"
-      "Attempt to prove all lemmas that start with LEMMAPREFIX or the lemma which name is LEMMANAME"
+  [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX"
+      "Attempt to prove a lemma "
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
@@ -89,28 +89,27 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt (prettyGoalRanking $ head $ defaultRankings False)
-      ["heuristic"] (updateArg "heuristic") ("(" ++ intersperse '|' (keys goalRankingIdentifiers) ++ ")+")
-      ("Sequence of goal rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") ("(" ++ (intersperse '|' $ keys goalRankingIdentifiers) ++ ")+")
+      "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
       "SUMMARY|VERBOSE"
       "Partially evaluate multiset rewriting system"
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
-      "Define flags for pseudo-preprocessor"
+      "Define flags for pseudo-preprocessor."
 
   , flagNone ["diff"] (addEmptyArg "diff")
-      "Turn on observational equivalence mode using diff terms"
+      "Turn on observational equivalence mode using diff terms."
 
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
-      "Strict mode that quits on any warning that is emitted"
+      "Strict mode that quits on any warning that is emitted."
 
-  , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
-      "Try to auto-generate sources lemmas"
+  , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
+      "Path to the oracle heuristic (default './oracle')."
 
-  , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
-      ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
+  , flagOpt (tacticPath defaultTactic) ["tacticname"] (updateArg "tacticname") "FILE"
+      ("Path to the tactic heuristic (default '" ++ tacticPath defaultTactic ++ "')")
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -370,7 +369,7 @@ constructAutoProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings
+                                       $ map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as))) (map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings)
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
 
@@ -394,10 +393,10 @@ constructAutoDiffProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
+                                       $ map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as))) (map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings)
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
-
+        -- map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as)))
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS
       Just "dfs"    -> CutDFS

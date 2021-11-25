@@ -3,6 +3,7 @@
 {-# LANGUAGE ViewPatterns    #-}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+--{-# LANGUAGE QuasiQuotes     #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -37,7 +38,7 @@ import           Data.Binary
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
-import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf)
+import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,(\\))
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
 -- import           Data.Monoid
@@ -65,6 +66,8 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
+import           Data.List.Split
+import           Text.Regex.Posix
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -421,7 +424,9 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
-    OracleRanking oracle -> oracleRanking oracle ctxt
+    TacticRanking tactic -> tacticRanking tactic ctxt
+    TacticSmartRanking tacticName -> tacticSmartRanking tacticName ctxt
+    OracleRanking oracleName -> oracleRanking oracleName ctxt
     OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
@@ -565,6 +570,127 @@ oracleRanking oracle ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
+tacticRanking :: Tactic
+              -> ProofContext
+              -> System
+              -> [AnnotatedGoal] -> [AnnotatedGoal]
+tacticRanking tactic ctxt _sys ags0 =
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+--  | otherwise =
+    unsafePerformIO $ do
+      let ags = goalNrRanking ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] ags))
+      -- let showctxt = show ctxt
+      -- let showsys = show _sys
+      let outp = newRanking tactic ctxt ags
+      let prettyOut = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] outp))
+      let indices = catMaybes . map readMay . lines $ show outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ prettyOut
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      return (outp)
+  where
+    pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
+isFactName :: String -> AnnotatedGoal -> Bool
+isFactName s ((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)) = test == s
+-- Ligne pas forcément utile
+isFactName s (ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ) = show test == s
+isFactName _ _ = False
+
+isInFactTerms :: String -> AnnotatedGoal -> Bool
+isInFactTerms s (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ) = show test =~ s
+isInFactTerms _ _ = False
+
+regexAmoi :: String -> AnnotatedGoal -> Bool
+regexAmoi s agoal = pg =~ s
+    where
+        pgoal (g,(_nr,_usefulness)) = prettyGoal g
+        pg = concat . lines . render $ pgoal agoal
+
+nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
+nameToFunction ("regex", param) = regexAmoi param
+nameToFunction ("isFactName", param) = isFactName param
+nameToFunction ("isInFactTerms", param) = isInFactTerms param
+nameToFunction (_,_) = (\ _ -> False)
+
+detectLine :: String -> (String, String)
+detectLine s
+    | s =~ "#" = ("","")
+    | s =~ "lemma:"  = ("tactic", (mrAfter $ s =~ "tactic: "))
+    | s =~ "conditions" = ("condition","")
+    | s =~ "prio" = ("prio","")
+    | s =~ "regex" = ("regex", (mrAfter $ s =~"regex "))
+    | s =~ "isFactName" = ("isFactName", (mrAfter $ s =~ "isFactName "))
+    | s =~ "isInFactTerms" = ("isInFactTerms", (mrAfter $ s =~ "isInFactTerms "))
+    | otherwise = ("","")
+
+isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
+isPrio list agoal = or $ (sequenceA list) agoal
+
+applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
+applyIsPrio [] _ = []
+applyIsPrio [xs] agoal = isPrio xs agoal:[]
+applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
+
+newRanking :: Tactic -> ProofContext -> [AnnotatedGoal] -> [AnnotatedGoal]
+newRanking tactic ctxt ags = 
+	unsafePerformIO $ do
+	    content <- readFile (tacticPath tactic)
+	    -- en vrai tous les noms à changer
+	    let conditions = lines content
+	        functions = map detectLine conditions
+	    -- Techniquement pas un bon nom contient la liste de liste de paires
+	        res = filter (/= []) $ splitWhen (== ("prio","")) $ filter (/= ("","")) functions
+	        tab2tab = map (map nameToFunction) res
+	        resderes = map (findIndex (==True)) $ map (applyIsPrio tab2tab) ags
+	        zippanceOrdonnee = sortOn fst $ zip resderes ags 
+	        unpeuLaFin = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) zippanceOrdonnee
+	        alleluia = snd $ unzip $ concat $ (tail unpeuLaFin) ++ [head unpeuLaFin]
+
+	    return (alleluia)
+
+tacticSmartRanking :: Tactic
+                   -> ProofContext
+                   -> System
+                   -> [AnnotatedGoal] -> [AnnotatedGoal]
+tacticSmartRanking tactic ctxt _sys ags0 =
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+--  | otherwise =
+    unsafePerformIO $ do
+      guard $ trace (tacticPath tactic) True
+      let ags = smartRanking ctxt False _sys ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] ags))
+      -- let showctxt = show ctxt
+      -- let showsys = show _sys
+      let outp = newRanking tactic ctxt ags
+      let prettyOut = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] outp))
+      let indices = catMaybes . map readMay . lines $ show outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ prettyOut
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      return (outp)
+  where
+    pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
 --   as the baseline.
@@ -584,14 +710,14 @@ oracleSmartRanking oracle ctxt _sys ags0
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT Petite\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
-      -- guard $ trace sd True
+      -- guard $ trace indices True
 
       return (ranked ++ remaining)
   where
