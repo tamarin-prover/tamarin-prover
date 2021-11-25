@@ -1,0 +1,30 @@
+theory SourceOfUniqueness begin
+
+builtins: symmetric-encryption
+
+rule generatecomplicated:
+ [ In(x), Fr(~key)  ]
+ --[ Complicated(x) ]->
+ [ Out(senc(x,~key)), ReceiverKeyComplicated(~key) ]
+
+rule generatesimple:
+ [ Fr(~xsimple), Fr(~key)  ]
+ --[ Simpleunique(~xsimple) ]->
+ [ Out(senc(~xsimple,~key)), ReceiverKeySimple(~key) ]
+
+rule receive:
+ [ ReceiverKeyComplicated(keycomplicated), In(senc(xcomplicated,keycomplicated))
+ , ReceiverKeySimple(keysimple), In(senc(xsimple,keysimple))
+ ]
+ --[ Unique(<xcomplicated,xsimple>) ]->
+ [  ]
+ 
+//this restriction artificially complicates an occurrence of an event Complicated(x)
+restriction complicate:
+ "All x #i. Complicated(x)@i
+   ==> (Ex y #j. Complicated(y)@j & #j < #i) | (Ex y #j. Simpleunique(y)@j & #j < #i)"
+ 
+lemma uniqueness:
+ "All #i #j x. Unique(x)@i & Unique(x)@j ==> #i=#j"
+
+end
