@@ -10,6 +10,9 @@ rule (modulo AC) c_inv:
 rule (modulo AC) c_one:
    [ ] --[ !KU( one ) ]-> [ !KU( one ) ]
 
+rule (modulo AC) c_grpid:
+   [ ] --[ !KU( grpid ) ]-> [ !KU( grpid ) ]
+
 rule (modulo AC) c_mult:
    [ !KU( x ), !KU( x.1 ) ] --[ !KU( (x*x.1) ) ]-> [ !KU( (x*x.1) ) ]
 

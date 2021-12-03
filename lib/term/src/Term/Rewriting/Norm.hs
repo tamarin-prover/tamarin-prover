@@ -65,6 +65,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FPair t1 t2                                     -> go t1 && go t2
             FDiff t1 t2                                     -> go t1 && go t2
             One                                             -> True
+            Grp_id                                          -> True
             Zero                                            -> True
             Lit2 _                                          -> True
             -- subterm rules
@@ -72,12 +73,13 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             -- exponentiation
             FExp (viewTerm2 -> FExp _ _) _                  -> False
             FExp _                       (viewTerm2 -> One) -> False
+            FExp (viewTerm2 -> Grp_id) _                    -> False
             -- inverses
             FInv (viewTerm2 -> FInv _)                      -> False
             FInv (viewTerm2 -> FMult ts) | any isInverse ts -> False
             FInv (viewTerm2 -> One)                         -> False
             -- multiplication
-            FMult ts | fAppOne `elem` ts  || any isProduct ts || invalidMult ts   -> False
+            FMult ts | fAppOne `elem` ts || fAppGrpId `elem` ts  || any isProduct ts || invalidMult ts   -> False
             -- xor
             FXor ts | fAppZero `elem` ts  || any isXor ts || invalidXor ts   -> False
             -- point multiplication

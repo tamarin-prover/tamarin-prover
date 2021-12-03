@@ -196,6 +196,7 @@ term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm plit)
     , symbol "1" *> pure fAppOne
+    , symbol "grpid" *> pure fAppGrpId
     , application <?> "function application"
     , nullaryApp
     , plit

@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Builtin rewriting rules.
@@ -39,7 +39,7 @@ dhRules :: Set (RRule LNTerm)
 dhRules = S.fromList
     [ expo(x1,one) `RRule` x1
     , expo(expo(x1,x2),x3) `RRule` expo(x1,(x2 *: x3))
-
+    , expo(grpid,x1) `RRule` grpid
     , x1 *: one `RRule` x1
     , inv (inv x1) `RRule` x1
     , inv one `RRule` one
@@ -54,6 +54,7 @@ dhRules = S.fromList
   where
     expo = fAppExp
     inv  = fAppInv
+    grpid   = fAppGrpId
     one  = fAppOne
 
 -- | The rewriting rules for bilinear pairing. These rules extend the

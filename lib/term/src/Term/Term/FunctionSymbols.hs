@@ -7,7 +7,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Function Symbols and Signatures.
@@ -27,6 +27,7 @@ module Term.Term.FunctionSymbols (
     , diffSymString
     , expSymString
     , invSymString
+    , grpidSymString
     , pmultSymString
     , emapSymString
     , unionSymString
@@ -40,6 +41,7 @@ module Term.Term.FunctionSymbols (
     , expSym
     , pmultSym
     , oneSym
+    , grpidSym
     , invSym
     , pairSym
     , fstSym
@@ -109,11 +111,12 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, grpidSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
+grpidSymString = "grpid"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
@@ -125,7 +128,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, grpidSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -136,6 +139,8 @@ expSym   = (expSymString,(2,Public))
 invSym   = (invSymString,(1,Public))
 -- | The one in the group of exponents.
 oneSym   = (oneSymString,(0,Public))
+-- | The groupd identity
+grpidSym = (grpidSymString,(0,Public))
 -- | Projection of first component of pair.
 fstSym   = ("fst",(1,Public))
 -- | Projection of second component of pair.
@@ -151,7 +156,7 @@ zeroSym  = (zeroSymString,(0,Public))
 
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
-dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
+dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym, NoEq grpidSym ]
 
 -- | The signature for Xor function symbols.
 xorFunSig :: FunSig

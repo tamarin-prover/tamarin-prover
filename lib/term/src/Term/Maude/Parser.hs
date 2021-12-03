@@ -164,6 +164,7 @@ ppTheory msig = BC.unlines $
     (if enableDH msig
        then
        [ theoryOp "one : -> Msg"
+       , theoryOp "grpid  : -> Msg"
        , theoryOp "exp : Msg Msg -> Msg"
        , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
        , theoryOp "inv : Msg -> Msg" ]

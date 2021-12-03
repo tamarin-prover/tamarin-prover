@@ -213,6 +213,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     -- The constructors for one and mult are only necessary in diff mode.
     -- They are never applied in trace mode as all corresponding goals are solved directly,
     -- but they  will show up in the message theory, which is reassuring for users.
+    , grpidRule   (ConstrRule (append (pack "_") grpidSymString))   kuFact return
     , oneRule  (ConstrRule (append (pack "_") oneSymString))  kuFact return
     , multRule (ConstrRule (append (pack "_") multSymString)) kuFact return
     ] ++
@@ -251,6 +252,12 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
         Rule mkInfo [] [concfact] (mkAction concfact) []
       where
         conc     = fAppNoEq oneSym []
+        concfact = kudFact conc
+
+    grpidRule mkInfo kudFact mkAction =
+        Rule mkInfo [] [concfact] (mkAction concfact) []
+      where
+        conc     = fAppNoEq grpidSym []
         concfact = kudFact conc
 
 
