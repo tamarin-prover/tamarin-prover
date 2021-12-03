@@ -110,7 +110,8 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,gI,rAD_3>,K_3m) in
        if MAC_3 = mac3 then
-          event AcceptR(gI,gR,PRK_4x3m)
+          event AcceptR(gI,gR,PRK_4x3m);
+          event AcceptR1(gI,gR,PRK_4x3m)
        )
     else
        // signature auth used
@@ -131,7 +132,8 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
        if verify(Signed3, <pkI,TH_3,rAD_3,MAC_3 > , pkI) = true then
-          event AcceptR(pkI,pk(~skR),PRK_4x3m)
+          event AcceptR(pkI,pk(~skR),PRK_4x3m);
+          event AcceptR2(pkI,pk(~skR),PRK_4x3m)
 
 
 let compromise(sk:skey) =
@@ -153,10 +155,13 @@ process:
 )
 
 
-lemma executableR: // sanity check
+lemma executableR1: // sanity check
   exists-trace
-  "Ex pkI pkR k3 #i. AcceptR(pkI,pkR,k3)@i"
+  "Ex pkI pkR k3 #i. AcceptR1(pkI,pkR,k3)@i"
 
+lemma executableR2: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 #i. AcceptR2(pkI,pkR,k3)@i"
 
 lemma false_executableI: // sanity check
   exists-trace
