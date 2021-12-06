@@ -106,14 +106,14 @@ lemma one_count_foreach_login[reuse,use_induction]:
 
 /* // It is not possible to have to distinct logins with the same counter */
 /* // value */
-lemma no_replay[reuse]:
+lemma no_replay:
         "not (Ex #i #j pid k x .
          Login(pid,k,x)@i &  Login(pid,k,x)@j 
          & not(#i=#j))"
 
 
 
-lemma injective_correspondance[reuse, use_induction]:
+lemma injective_correspondance[use_induction]:
     "All pid k x #t2 . Login(pid,k,x)@t2 ==>
          ( Ex #t1 sid . YubiPress(pid,sid,k,x)@#t1 & #t1<#t2 )
         & All #t3 . Login(pid,k,x)@t3 ==> #t3=#t2
