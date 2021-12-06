@@ -197,14 +197,6 @@ restriction onetime:
 //  exists-trace
 //  "Ex #i pid sid x otp1. Login(pid,sid, x, otp1)@i"
 
-/* Every counter produced by a Yubikey could be computed by the adversary
- * anyway. (This saves a lot of steps in the backwards induction of the
- * following lemmas).
-*/
-lemma adv_can_guess_counter[reuse,use_induction]:
-    "All pid sc #t2 . YubiPress(pid,sc)@t2
-    ==> (Ex #t1 . K(sc)@#t1 & #t1<#t2)"
-
 /* Everything that can be learned by using OtpDecode is the counter of a
  * Yubikey, which can be computed according to the previous lemma.
 */
@@ -212,29 +204,12 @@ lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]:
     "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3
     ==> Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3"
 
-/* All keys shared between the YubiHSM and the Authentication Server are
- * either not known to the adversary, or the adversary learned the key used
- * to encrypt said keys in form of AEADs.
- */
-lemma k2_is_secret_use_induction[use_induction,reuse]:
-    "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2
-    ==>
-     (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
-
 /* Neither of those kinds of keys are ever learned by the adversary */
 lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
     " 
 not( Ex #t1 #t2 k . MasterKey(k)@t1 & KU(k)@t2 )
 & not (Ex  #t5 #t6 k6 pid . Init(pid,k6)@t5 & KU(k6)@t6 )
     "
-
-// Each succesful login with counter value x was preceeded by a PressButton
-// event with the same counter value
-// This lemma cannot be proven at the moment, but it would be a first step
-// to reach the no_replay result present in Yubikey.spthy
-lemma one_count_foreach_login[reuse,use_induction]:
-        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
-         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
 
 // If a successful Login happens before a second successful Login, the
 // counter value of the first is smaller than the counter value of the
