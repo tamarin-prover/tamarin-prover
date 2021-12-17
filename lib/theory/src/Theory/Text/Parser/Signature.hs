@@ -26,10 +26,12 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import           Data.Char
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
+import           Text.Regex.Posix
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
@@ -173,6 +175,38 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     foldM liftedAddPredicate thy predicates
                     <?> "predicates"
+
+{-tactic :: Parser [String]
+tactic = symbol "tactics" *> char ':' *> skipMany (char ' ') *> many $ noneOf "\n" <* lexeme spaces
+
+prioReading :: Parser Prio
+prioReading = symbol "prio" *> char ':' *> skipMany (char ' ') *> many $ noneOf "prio" <* lexeme spaces
+
+deprioReading :: Parser Deprio
+deprioReading = symbol "deprio" *> char ':' *> skipMany (char ' ') *> many $ noneOf "deprio" <* lexeme spaces
+
+tacticReading :: Parser TacticI
+tacticReading = do 
+        name <- symbol "tactic" *> char ':' *> skipMany (char ' ') *> identifier <* lexeme spaces --quelque chose pour le passage de ligne?
+        prio <- prioReading
+        depri <- deprioReading
+        return ( TacticI name (Prio prio) (Deprio deprios))
+
+
+detectLine :: String -> (String, String)
+detectLine s
+    | s =~ "tactic:"  = ("tactic", (mrAfter $ s =~ "tactic: "))
+    | s =~ "conditions" = ("condition","")
+    | s =~ "deprio" = ("deprio","")
+    | s =~ "prio" = ("prio","")
+    | s =~ "OR" = ("OR", dropWhile isSpace s)
+    | s =~ "&&" = ("&&", dropWhile isSpace s)
+    | s =~ "regex" = ("regex", (mrAfter $ s =~"regex "))
+    | s =~ "isFactName" = ("isFactName", (mrAfter $ s =~ "isFactName "))
+    | s =~ "isInFactTerms" = ("isInFactTerms", (mrAfter $ s =~ "isInFactTerms "))
+    | s =~ "#" = ("","")
+    | otherwise = ("","")-}
+
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
