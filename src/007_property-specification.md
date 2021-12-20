@@ -78,7 +78,9 @@ pairing. This excludes function symbols that appear in any of the equations.
 Moreover, all variables must be 
 guarded. If they are not guarded, Tamarin will produce an error.
 
-**Predicates.** Are defined using the `predicates` construct, and substituted
+### Predicates {#sec:predicates}
+
+Predicates are defined using the `predicates` construct, and substituted
 while parsing trace properties, whether they are part of lemmas, restrictions or embedded restrictions:
 
 ```
@@ -91,7 +93,7 @@ lemma one_smaller_two:
     "All x y #i. B(x,y)@i ==> Smaller(x,y)"
 ```
 
-**Guardedness. **
+### Guardedness
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
 the outermost logical operator inside the quantifier is an implication.
