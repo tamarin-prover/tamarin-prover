@@ -23,6 +23,7 @@ tmp/%.md: src/%.md ./filter.py
 
 book/%.html: tmp/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
+	  --metadata title="Tamarin Manual" \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
 	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
