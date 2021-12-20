@@ -20,7 +20,13 @@ The following outputs are supported:
 
 ## Lemma selection
 
-TODO
+The same spthy file may be used with multiple tools as backend. To list the
+tools that a lemma should be exported to, use the `output` attribute:
+```
+lemma secrecy[reuse, output=[proverif,msr]]:
+```
+Lemmas are omitted when the currently selected output module is not in that
+list.
 
 ## Exporting queries
 
