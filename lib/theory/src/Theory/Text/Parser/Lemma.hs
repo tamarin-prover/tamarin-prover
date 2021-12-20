@@ -37,11 +37,6 @@ constructorp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
   where
     constructorList = enumFrom minBound
 
--- modulep :: Parser Section
--- modulep = asum $ map (\x -> symbol_ (show x) $> x) modules
---   where
---     modules = enumFrom minBound :: [Section]
-
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Bool -> Maybe FilePath -> Parser LemmaAttribute
 lemmaAttribute diff workDir = asum
