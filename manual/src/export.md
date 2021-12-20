@@ -37,6 +37,7 @@ export IDENTIFIER:
 where IDENTIFIER is one of the following:
 
 - `requests`: is included in the requests the target solver tries to prove. E.g.:
+
     ```
     export requests:
     "
@@ -47,4 +48,9 @@ where IDENTIFIER is one of the following:
     query session_equiv(sys1,sys2).
     "
     ```
+
+## Smart export features
+
+- Some predicates / conditions appear in `if .. ` processes have [dedicates
+      translations](007_property-specification.html#sec:predicates-special).
 

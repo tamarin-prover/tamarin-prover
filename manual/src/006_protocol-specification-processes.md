@@ -78,8 +78,7 @@ Processes can also branch:
 Most frequently, this is the equality check of
 form `t1 = t2`, but you can also define 
 [a predicate](007_property-specification.html#sec:predicates) using Tamarin's
-security property syntax.
-
+security property syntax. 
 
 `Let`-bindings are allowed to faciliate writing processes
 where a term occur several times (possibly as a subterm) within the process
