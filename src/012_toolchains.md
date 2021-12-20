@@ -2,9 +2,7 @@
 Toolchains {#sec:tool-chains}
 ==========
 
-There are multiple tools that use Tamarin as a backend, notably SAPIC which 
-translates Applied Pi Calculus specifications to Tamarin, and another tool 
-translating Alice&Bob-specifications to Tamarin.
+There are multiple tools that use Tamarin as a backend.
 
 Alice&Bob input 
 ---------------
