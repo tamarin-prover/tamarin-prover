@@ -105,9 +105,12 @@ deconstructing messages. E.g.:
 ```
 in(x); let <'pair',y,z> = x in out(z); out(z)
 ```
-(Note: previous version of Tamarin/SAPIC considered let-bindings as syntactic
+To avoid user errors, pattern matchings are explicit in which variables they
+bind and which they compare for equality, e.g.,
+`let <y,=z>=x in ..` compares with y and binds to x.
+(Note: previous versions of Tamarin/SAPIC considered let-bindings as syntactic
 sugar adhering to the same rules as [let-bindings in rules](#sec:let-rules).
-Now `let` is a first-class primitive.)
+Now `let` is a first-class primitive. )
 
 The types of processes so far consists of actions that are separated with a semicolon `;` and are terminated with
 `0`, which is called the terminal process or null process. This is a process that does nothing.
@@ -281,32 +284,43 @@ It is advisable to structure processes around the protocol roles they
 represent. These can be declared using the let construct:
 
 ```
-let Webserver = in(<'Get',identity..>); ..
+let Webserver (identity) = in(<'Get',identity..>); ..
 
-let Webbrowser = ..
+let Webbrowser () = ..
 
-(! new identity !Webserver) | ! Webbroser
+(! new identity !Webserver(identity)) | ! Webbroser
 ```
 
 These can be nested, i.e., this is valid:
 
 ```
-let A = ..
-let B = A | A
-!B
+let A() = ..
+let B() = A() | A()
+!B()
 ```
-
-Other process calculi, e.g., ProVerif's dialect of the applied-pi calculus,
-only allow variables in inputs. While it is sometimes clearer to write
-a pattern in a letblock, it may confuse users that expect the `in` construct to bind a variable:
-```
-let pat_m1 = <x,y> in
-in(pat_m1)
-```
-To avoid unexpected behaviour, we allow a let-expression to apply to
-a single-variable term in an `in` only if the variable is prefixed with `pat_`,
-as in the above example.
 
 ## Typing
 
-TODO 
+It is possible to declare types to avoid potential user errors. This does
+not affect the attacker, as these types are disregarded after translation into
+multiset-rewrite rues. 
+
+Types can be declared for function symbols:
+```spthy
+functions: f(bitstring):bitstring, g(lol):lol,
+            h/1 // will implicitely typed later.
+```
+for processes:
+```
+new x:lol;                             // x is of type lol now
+new y;                                 // y's type will be inferred
+out(f(y));                             // now y must be type bitstring ...
+// out(f(x));                          // fails: f expects bitstring
+out(<x,y>); out(x + y); out(f(<x,y>)); // lists and AC operators are type-transparent
+out(h(h(x)));                          // implictely types h as lol->lol
+// out(f(h(x)));                       // fails: as h goes to lol and f wants bitstring
+```
+and subprocesses:
+```
+let P(a:lol) =
+```
