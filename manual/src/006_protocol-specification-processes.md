@@ -13,7 +13,7 @@ PI-Calculus" (plus) and is described in the following papers:
 
 - [@jacomme2017symbolic] added support for [isolated execution environments](#sec:iee).
 
-- **not yet published** extended SAPIC to SAPIC+, introducing the new syntax
+- [@sapicplus] extended SAPIC to SAPIC+, introducing the new syntax
   that we will introduce in the followup and [translations to various tools](#sec:translation).
 
 A Protocol can be modelled in terms of rules or as a (single) process. The
