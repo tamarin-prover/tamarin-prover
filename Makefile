@@ -25,6 +25,7 @@ book/%.html: tmp/%.md $(TEMPLATE_HTML) latex_macros
 	$(PANDOC) -c $(STYLE) \
 	  --metadata title="Tamarin Manual" \
 	  --template $(TEMPLATE_HTML) -s -f $(IFORMAT) \
+	  --citeproc \
 	  --bibliography=src/manual.bib \
 	  -t html $(FLAGS) -o $@ $<
 
