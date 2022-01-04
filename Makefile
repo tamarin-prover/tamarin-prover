@@ -35,6 +35,7 @@ pdf:	$(TMP) $(TEMPLATE_LATEX) latex_macros
 	echo "\n# References\n\n" >> tex/all.md
 	$(PANDOC) -f $(IFORMAT) \
 	  --template $(TEMPLATE_TEX) --pdf-engine=xelatex $(FLAGS) \
+	  --citeproc \
 	  --bibliography=src/manual.bib \
 	  -o tex/tamarin-manual.tex tex/all.md
 	make -C tex
