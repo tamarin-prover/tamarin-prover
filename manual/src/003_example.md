@@ -482,6 +482,10 @@ attached (dis)proofs:
       Client_auth_injective (all-traces): verified (15 steps)
       Client_session_key_honest_setup (exists-trace): verified (5 steps)
 
+It is possible to select lemmas by having multiple `--prove` flags and by
+specifying a common prefix followed by a wildcard, e.g.,
+`--prove=Client_auth*`. **Note:** In most shells, the `*` needs to be escaped
+to `\*`.
 
 ### Quit on Warning
 
