@@ -46,24 +46,31 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
                     | 'multiset' | 'revealing-signing'
 
 A global heuristic sets the default heuristic that will be used when autoproving
-lemmas in the file. The specified heuristic can be any of those discussed in
-Section [Heuristics](009_advanced-features.html#sec:heuristics).
+lemmas in the file. The specified goal ranking can be any of those discussed in
+Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
-    global_heuristic := 'heuristic' ':' heuristic
-    heuristic        := alpha+
+    global_heuristic      := 'heuristic' ':' goal_ranking+
+    goal_ranking          := standard_goal_ranking | oracle_goal_ganking
+    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
+    oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
-specified in the body of the theory.
+specified in the body of the theory. Rule variants can be explicitly given, as
+well as the left and right instances of a rule in diff-mode.
+(When called with `--diff`, Tamarin will parse `diff_rule` instead of `rule`).
 
-    rule := 'rule' [modulo] ident [rule_attrs] ':'
+    rule        := simple_rule [variants]
+    diff_rule   := simple_rule ['left' rule 'right' rule]
+    simple_rule := 'rule' [modulo] ident [rule_attrs] ':'
             [let_block]
             '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
-    modulo     := '(' 'modulo' ('E' | 'AC') ')'
-    rule_attrs := '[' rule_attr (',' rule_attr)* [','] ']'
-    rule_attr  := ('color=' | 'colour=') hexcolor
-    let_block  := 'let' (msg_var '=' msetterm)+ 'in'
-    msg_var    := ident ['.' natural] [':' 'msg']
+    variants    := 'variants' simple_rule (',' simple_rule)*
+    modulo      := '(' 'modulo' ('E' | 'AC') ')'
+    rule_attrs  := '[' rule_attr (',' rule_attr)* [','] ']'
+    rule_attr   := ('color=' | 'colour=') hexcolor
+    let_block   := 'let' (msg_var '=' msetterm)+ 'in'
+    msg_var     := ident ['.' natural] [':' 'msg']
 
 Rule annotations do not influence the rule's semantics. A color is represented
 as a triplet of 8 bit hexadecimal values optionally
@@ -103,14 +110,14 @@ quantifier.
              proof_skeleton
     lemma_attrs      := '[' lemma_attr (',' lemma_attr)* [','] ']'
     lemma_attr       := 'sources' | 'reuse' | 'use_induction' |
-                             'hide_lemma=' ident | 'heuristic=' heuristic
+                             'hide_lemma=' ident | 'heuristic=' goalRanking+
     trace_quantifier := 'all-traces' | 'exists-trace'
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attr      := 'sources' | 'reuse' | 'use_induction' | 
+    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' | 
                             'hide_lemma=' ident | 'heuristic=' heuristic |
-                            'left' | 'right' 
+                            'left' | 'right') ']'
 
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
@@ -194,7 +201,7 @@ information.
 Fact annotations can be used to adjust the priority of corresponding
 goals in the heuristics, or influence the precomputation step performed by
 Tamarin, as described in
-Section [Advanced Features](009_advanced-features.html#sec:fact-annotations).
+Section [Advanced Features](010_advanced-features.html#sec:fact-annotations).
 
 Formulas are trace formulas as described previously. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
@@ -223,4 +230,3 @@ reserved keywords `let`, `in`, or `rule`. Although identifiers beginning with
 a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
     ident := alphaNum (alphaNum | '_')*
-
