@@ -93,7 +93,10 @@ mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)
 mergeWithStateRule r' = map (mergeWithStateRule' r')
 
 baseTransAction :: Bool -> Bool -> TransFAct TranslationResultAct
-baseTransAction asyncChannels needsInEvRes ac an p tildex
+baseTransAction
+  asyncChannels -- true if private channels ought to be asnchronous
+  needsInEvRes  -- produce actions that axiom AssImmediate requires
+  ac an p tildex -- current action, its annotation, position in the process tree, and variables bound so far
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -117,7 +120,7 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
                            ([ ([def_state, In t], [ ], [def_state' tx2'], []) ], tx2')
             Just tc' -> let tc = toLNTerm tc' in
                         let ts = fAppPair (tc,varTerm x) in
-                        let ack = if asyncChannels then [] else [Ack tc xt] in
+                        let ack = [Ack tc xt | not asyncChannels] in
                           (mergeWithStateRule ([Message tc xt], [], ack) rules
                             ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
                                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
