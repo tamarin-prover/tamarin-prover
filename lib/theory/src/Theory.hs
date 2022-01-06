@@ -29,6 +29,7 @@ module Theory (
   , addProcess
   , findProcess
   , mapMProcesses
+  , mapMProcessesDef
   , addProcessDef
   , lookupProcessDef
   , lookupFunctionTypingInfo
@@ -942,7 +943,24 @@ mapMProcesses f thy = do
     where
         itms =  L.get thyItems thy
         f' (SapicItem (ProcessItem p)) = SapicItem . ProcessItem <$> f p
+        f' (SapicItem (DiffEquivLemma p)) = SapicItem . DiffEquivLemma <$> f p
+        f' (SapicItem (EquivLemma p1 p2)) = do
+          fp1 <- f p1
+          fp2 <- f p2
+          return $ SapicItem (EquivLemma fp1 fp2)
         f' other                       = return other
+
+
+-- | Map a process definition
+mapMProcessesDef :: Monad m => (ProcessDef -> m(ProcessDef)) -> Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+mapMProcessesDef f thy = do
+        itms' <- mapM f' itms
+        return $ L.set thyItems itms' thy
+    where
+        itms =  L.get thyItems thy
+        f' (SapicItem (ProcessDefItem p)) = SapicItem . ProcessDefItem <$> f p
+        f' other                       = return other
+
 
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p s -> [r]

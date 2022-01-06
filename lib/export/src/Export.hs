@@ -16,6 +16,7 @@
 
 module Export (
     prettyProVerifTheory,
+    prettyProVerifEquivTheory,
     prettyDeepSecTheory
 
 ) where
@@ -46,6 +47,35 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Data.Functor.Identity
 import Data.Char
 import Data.Data
+
+
+
+
+data Translation =
+   ProVerif
+   | DeepSec
+  deriving( Ord, Eq, Typeable, Data )
+
+
+exportModule :: Translation -> ModuleType
+exportModule ProVerif = ModuleProVerif
+exportModule DeepSec = ModuleDeepSec
+
+data TranslationContext = TranslationContext
+  { trans :: Translation,
+    attackerChannel :: Maybe LVar,
+    hasBoundStates :: Bool,
+    hasUnboundStates :: Bool,
+    predicates :: [Predicate]}
+    deriving (Eq, Ord)
+
+
+emptyTC :: TranslationContext
+emptyTC = TranslationContext{trans = ProVerif,
+                              attackerChannel = Nothing,
+                              hasBoundStates = False,
+                              hasUnboundStates = False,
+                              predicates = []}
 
 ------------------------------------------------------------------------------
 -- Core Proverif Export
@@ -82,31 +112,6 @@ prettyProVerifTheory (thy, typEnv) = do
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
 
-data Translation =
-   ProVerif
-   | DeepSec
-  deriving( Ord, Eq, Typeable, Data )
-
-
-exportModule :: Translation -> ModuleType
-exportModule ProVerif = ModuleProVerif
-exportModule DeepSec = ModuleDeepSec
-
-data TranslationContext = TranslationContext
-  { trans :: Translation,
-    attackerChannel :: Maybe LVar,
-    hasBoundStates :: Bool,
-    hasUnboundStates :: Bool,
-    predicates :: [Predicate]}
-    deriving (Eq, Ord)
-
-
-emptyTC :: TranslationContext
-emptyTC = TranslationContext{trans = ProVerif,
-                              attackerChannel = Nothing,
-                              hasBoundStates = False,
-                              hasUnboundStates = False,
-                              predicates = []}
 
 -- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProVerifHeader =
@@ -159,6 +164,80 @@ ppPubName (NameId t) = text t
 ------------------------------------------------------------------------------
 loadQueries :: Theory sig c b p SapicElement -> [Doc]
 loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
+  where get_text Nothing = ""
+        get_text (Just m) = L.get eText m
+
+
+------------------------------------------------------------------------------
+-- Core Proverif Equivalence Export
+------------------------------------------------------------------------------
+
+
+proverifEquivTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> d
+proverifEquivTemplate headers queries equivlemmas macroproc =
+  vcat headers
+  $$
+  vcat queries
+  $$
+  vcat macroproc
+  $$
+  vcat equivlemmas
+
+
+prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifEquivTheory (thy, typEnv) = do
+  headers <- loadHeaders tc thy typEnv
+  let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
+                                          `S.union` equivhd `S.union` macroprochd)
+  return $ proverifEquivTemplate hd queries equivlemmas macroproc
+  where
+    tc = emptyTC{predicates = theoryPredicates thy }
+    (equivlemmas, equivhd, hasBoundState) =  loadEquivProc tc thy
+    base_headers = if hasBoundState then state_headers else S.empty
+    queries = loadQueries thy
+    (macroproc, macroprochd) =
+      -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
+      if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
+
+
+------------------------------------------------------------------------------
+-- Core DeepSec Export
+------------------------------------------------------------------------------
+
+deepsecTemplate :: Document d => [d] -> [d] -> [d]-> [d] -> d
+deepsecTemplate headers macroproc requests equivlemmas =
+  vcat headers
+  $$
+  vcat macroproc
+  $$
+  vcat requests
+  $$
+  vcat equivlemmas
+
+emptyTypeEnv :: TypingEnvironment
+emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
+
+
+prettyDeepSecTheory :: OpenTheory -> IO (Doc)
+prettyDeepSecTheory thy = do
+  headers <- loadHeaders tc thy emptyTypeEnv
+  let hd = attribHeaders tc $ S.toList (headers
+                                       `S.union` macroprochd
+                                       `S.union` equivhd)
+  return $ deepsecTemplate hd macroproc requests equivlemmas
+  where
+        tc = emptyTC{trans = DeepSec}
+        requests = loadRequests thy
+        (macroproc, macroprochd) = loadMacroProc tc thy
+        (equivlemmas, equivhd, _) =  loadEquivProc tc thy
+
+
+
+-- Loader of the export functions
+------------------------------------------------------------------------------
+loadRequests :: Theory sig c b p SapicElement -> [Doc]
+loadRequests thy =
+  [text $ get_text (lookupExportInfo "requests" thy)]
   where get_text Nothing = ""
         get_text (Just m) = L.get eText m
 
@@ -545,6 +624,11 @@ addAttackerReportProc tc thy p =
                      Nothing -> ([], (text "Translation Error, no Report predicate provided", M.empty))
                      Just (Predicate _ form) -> Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form)
 
+
+------------------------------------------------------------------------------
+-- Main printer for processes
+------------------------------------------------------------------------------
+
 loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProVerifHeader, Bool)
 loadProc tc thy = case theoryProcesses thy of
   []  -> (text "", S.empty, False)
@@ -586,6 +670,41 @@ loadMacroProcs tc thy (p:q) =
           Nothing -> mkAttackerContext tc mainProc
           Just _ -> (tc, S.empty)
     tc3 = tc2{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates}
+
+
+
+loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
+loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
+
+loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader, Bool)
+loadEquivProcs _ _ [] = ([text ""], S.empty, False)
+loadEquivProcs tc thy ((p1,p2):q) =
+      let (docs,  heads, hadBoundStates) = loadEquivProcs tc3 thy q in
+      let (new_text1, new_heads1) = ppSapic tc3 mainProc1 in
+      let (new_text2, new_heads2) = ppSapic tc3 mainProc2 in
+      let macro_def =
+            case trans tc of
+              ProVerif -> text "equivalence" $$
+                          (nest 4 new_text1) $$
+                          (nest 4 new_text2)
+              DeepSec ->  text "query session_equiv(" $$
+                      (nest 4 new_text1) <> text "," $$
+                      (nest 4 new_text2) <> text ")."
+
+      in
+        (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads, hasBoundSt && hadBoundStates)
+  where
+    mainProc1 = makeAnnotations thy p1
+    mainProc2 = makeAnnotations thy p2
+    hasStates1 = hasBoundUnboundStates mainProc1
+    hasStates2 =  hasBoundUnboundStates mainProc2
+    hasBoundSt = fst hasStates1 || fst hasStates2
+    (tc2,hd) = case attackerChannel tc of
+          -- we set up the attacker channel if it does not already exists
+          Nothing -> mkAttackerContext tc mainProc2
+          Just _ -> (tc, S.empty)
+    tc3 = tc2{hasBoundStates = hasBoundSt, hasUnboundStates = snd hasStates1 || snd hasStates2}
+
 
 ------------------------------------------------------------------------------
 -- Printer for Lemmas
@@ -974,67 +1093,3 @@ makeAnnotations thy p = res
                      pr
                    else
                      translateTermsReport pr
-------------------------------------------------------------------------------
--- Core DeepSec Export
-------------------------------------------------------------------------------
-
-deepsecTemplate :: Document d => [d] -> [d] -> [d]-> [d] -> d
-deepsecTemplate headers macroproc requests equivlemmas =
-  vcat headers
-  $$
-  vcat macroproc
-  $$
-  vcat requests
-  $$
-  vcat equivlemmas
-
-emptyTypeEnv :: TypingEnvironment
-emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
-
-
-prettyDeepSecTheory :: OpenTheory -> IO (Doc)
-prettyDeepSecTheory thy = do
-  headers <- loadHeaders tc thy emptyTypeEnv
-  let hd = attribHeaders tc $ S.toList (headers
-                                       `S.union` macroprochd
-                                       `S.union` equivhd)
-  return $ deepsecTemplate hd macroproc requests equivlemmas
-  where
-        tc = emptyTC{trans = DeepSec}
-        requests = loadRequests thy
-        (macroproc, macroprochd) = loadMacroProc tc thy
-        (equivlemmas, equivhd) =  loadEquivProc tc thy
-
-loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader)
-loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
-
-loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader)
-loadEquivProcs _ _ [] = ([text ""], S.empty)
-loadEquivProcs tc thy ((p1,p2):q) =
-      let (docs,  heads) = loadEquivProcs tc3 thy q in
-      let (new_text1, new_heads1) = ppSapic tc3 mainProc1 in
-      let (new_text2, new_heads2) = ppSapic tc3 mainProc2 in
-      let macro_def = text "query session_equiv(" $$
-                      (nest 4 new_text1) <> text "," $$
-                      (nest 4 new_text2) <> text ")."
-      in
-        (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads)
-  where
-    mainProc1 = makeAnnotations thy p1
-    mainProc2 = makeAnnotations thy p2
-    hasStates1 = hasBoundUnboundStates mainProc1
-    hasStates2 =  hasBoundUnboundStates mainProc2
-    (tc2,hd) = case attackerChannel tc of
-          -- we set up the attacker channel if it does not already exists
-          Nothing -> mkAttackerContext tc mainProc2
-          Just _ -> (tc, S.empty)
-    tc3 = tc2{hasBoundStates = fst hasStates1 || fst hasStates2, hasUnboundStates = snd hasStates1 || snd hasStates2}
-
-
-        -- Loader of the export functions
-------------------------------------------------------------------------------
-loadRequests :: Theory sig c b p SapicElement -> [Doc]
-loadRequests thy =
-  [text $ get_text (lookupExportInfo "requests" thy)]
-  where get_text Nothing = ""
-        get_text (Just m) = L.get eText m

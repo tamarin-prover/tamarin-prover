@@ -1,5 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
 module Sapic.Typing (
       typeTheory
     , typeTheoryEnv
@@ -13,6 +14,8 @@ import qualified Data.Foldable as F
 import qualified Data.Set as S
 import Data.Maybe
 import Data.Tuple
+
+import qualified Extension.Data.Label                as L
 
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Catch
@@ -159,7 +162,8 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
 typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
 -- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheoryEnv th = do
-    (th', fte) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
+    (thaux, fteaux) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
+    (th', fte) <- runStateT (mapMProcessesDef typeAndRenameProcessDef thaux) fteaux
     let th'' = Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
     return (th'', fte)
     where
@@ -171,7 +175,17 @@ typeTheoryEnv th = do
                  }
         typeAndRenameProcess p = do
                 pUnique <- renameUnique p
+                modify' (\s -> s { vars = Map.empty})
                 typeProcess pUnique
+        typeAndRenameProcessDef p = do
+                let pr = L.get pBody p
+                let pvars = L.get pVars p
+                let aux_pr = ProcessAction (ChIn Nothing (fAppList (map varTerm pvars)) S.empty) mempty pr
+                renamedP <- typeAndRenameProcess aux_pr
+                case renamedP of
+                  ProcessAction (ChIn _ (viewTerm2 -> FList tVars) _) _ prf ->
+                    return $ p { _pBody = prf, _pVars = map termVar' tVars}
+                  _ -> return p -- should not be taken
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
 typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)

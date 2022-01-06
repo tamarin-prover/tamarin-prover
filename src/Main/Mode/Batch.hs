@@ -162,8 +162,9 @@ run thisMode as
           ModuleSpthy      -> return . prettyOpenTheory  -- output as is, including SAPIC elements
           ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
           ModuleMsr        -> return . prettyOpenTranslatedTheory <=< Sapic.translate <=< Sapic.typeTheory
-          ModuleProVerif   -> prettyProVerifTheory <=< Sapic.typeTheoryEnv
-          ModuleDeepSec    -> prettyDeepSecTheory <=< Sapic.typeTheory
+          ModuleProVerif              -> prettyProVerifTheory <=< Sapic.typeTheoryEnv
+          ModuleProVerifEquivalence   -> prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
+          ModuleDeepSec               -> prettyDeepSecTheory <=< Sapic.typeTheory
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
