@@ -6,11 +6,11 @@
    We verify both reachability and equivalence properties.
 
    Proverif: everything in a second
-    tamarin-prover privacypass.spthy -D=REACH -m=proverif > pp-reach.pv; proverif pp-reach.pv
-    tamarin-prover privacypass.spthy -D=EQUIV -m=proverif --diff > pp-ind.pv; proverif pp-ind.pv
+    tamarin-prover privacypass.spthy -m=proverif > pp-reach.pv; proverif pp-reach.pv
+    tamarin-prover privacypass.spthy -m=proverifequiv > pp-ind.pv; proverif pp-ind.pv
 
    Tamarin : everything in a few seconds
-    tamarin-prover privacypass.spthy -D=REACH --prove
+    tamarin-prover privacypass.spthy --prove
 
 
 We rely on a an abstract VOPRF, has described in
@@ -78,7 +78,7 @@ let ServerRedemp(~sk) =
    if redeem =  H2( < H2(<x,F(~sk,x)>) , aux>) then
       event Accept(x)
 
-#ifdef REACH
+
 
 process:
 !(new ~sk;
@@ -106,10 +106,8 @@ lemma false_exec:  // should be false
 
 // "
 
-#endif
 
 
-#ifdef PROVERIFEQUIV
 
 
 let ClientNoRed(pkS,x) =
@@ -119,8 +117,7 @@ let ClientNoRed(pkS,x) =
    out(Btok)
 
 
-process:
-
+diffEquivLemma:
 // Adding a top-level ! makes Proverif not answer back
 (new ~sk;
  out(pkV(~sk)); new y; (ServerRedemp(~sk) |
@@ -129,7 +126,5 @@ process:
 )
 
 
-
-#endif
 
 end

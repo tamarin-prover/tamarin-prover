@@ -188,12 +188,17 @@ prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifEquivTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
-                                          `S.union` equivhd `S.union` macroprochd)
-  return $ proverifEquivTemplate hd queries equivlemmas macroproc
+                                          `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd)
+  return $ proverifEquivTemplate hd queries finalproc macroproc
   where
     tc = emptyTC{predicates = theoryPredicates thy }
     (equivlemmas, equivhd, hasBoundState) =  loadEquivProc tc thy
-    base_headers = if hasBoundState then state_headers else S.empty
+    (diffEquivlemmas, diffEquivhd, diffHasBoundState) =  loadDiffProc tc thy
+    base_headers = if hasBoundState || diffHasBoundState then state_headers else S.empty
+    finalproc = if length equivlemmas + length diffEquivlemmas > 1 then
+                  [text "Error: Proverif can only support at most one equivalence or diff equivalence query."]
+                else
+                  equivlemmas ++ diffEquivlemmas
     queries = loadQueries thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
@@ -464,7 +469,7 @@ ppAction _  _ _  = (text "Action not supported for translation", S.empty, True)
 
 ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProVerifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
-ppSapic tc (ProcessComb Parallel _ pl pr)  = ( (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
+ppSapic tc (ProcessComb Parallel _ pl pr)  = ( parens $ (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
                                      where (ppl, pshl) = ppSapic tc pl
                                            (ppr, pshr) = ppSapic tc pr
 ppSapic tc (ProcessComb NDC _ pl pr)  = ( (nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
@@ -602,7 +607,7 @@ ppSapic tc@TranslationContext{trans=ProVerif} (ProcessAction Rep _ p)  = (text "
                                    where (pp, psh) = ppSapic tc p
 
 -- TODO: have some parameter in the tc for replication numbers
-ppSapic tc@TranslationContext{trans=DeepSec} (ProcessAction Rep _ p)  = (text "" <> parens pp, psh)
+ppSapic tc@TranslationContext{trans=DeepSec} (ProcessAction Rep _ p)  = (text "!^3" <> parens pp, psh)
                                    where (pp, psh) = ppSapic tc p
 
 
@@ -672,12 +677,24 @@ loadMacroProcs tc thy (p:q) =
     tc3 = tc2{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates}
 
 
+loadDiffProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
+loadDiffProc tc thy = case theoryDiffEquivLemmas thy of
+  []  -> ([], S.empty, False)
+  [pr] -> let (d,headers) = ppSapic tc2 p in
+           ([text "process" $$ (nest 4 d)], S.union hd headers, fst hasStates)
+
+   where p = makeAnnotations thy pr
+         hasStates =  hasBoundUnboundStates p
+         (tc2, hd) = mkAttackerContext tc{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
+  _  -> ([text "Multiple sapic processes detected, error"], S.empty, False)
+
+
 
 loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
 loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
 
 loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader, Bool)
-loadEquivProcs _ _ [] = ([text ""], S.empty, False)
+loadEquivProcs _ _ [] = ([], S.empty, False)
 loadEquivProcs tc thy ((p1,p2):q) =
       let (docs,  heads, hadBoundStates) = loadEquivProcs tc3 thy q in
       let (new_text1, new_heads1) = ppSapic tc3 mainProc1 in

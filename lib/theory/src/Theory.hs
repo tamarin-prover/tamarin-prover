@@ -116,6 +116,7 @@ module Theory (
   , theoryFunctionTypingInfos
   , theoryBuiltins
   , theoryEquivLemmas
+  , theoryDiffEquivLemmas
   , theoryPredicates
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
@@ -1029,6 +1030,9 @@ theoryBuiltins t = [ i | SignatureBuiltin i <- sapicElements t]
 theoryEquivLemmas :: Theory sig c r p SapicElement -> [(PlainProcess, PlainProcess)]
 theoryEquivLemmas t =  [ (p1,p2) | EquivLemma p1 p2 <- sapicElements t]
 
+-- | All Equivalence queries of a theory
+theoryDiffEquivLemmas :: Theory sig c r p SapicElement -> [PlainProcess]
+theoryDiffEquivLemmas t =  [ p | DiffEquivLemma p <- sapicElements t]
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
