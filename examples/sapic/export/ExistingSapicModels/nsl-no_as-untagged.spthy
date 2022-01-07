@@ -7,13 +7,15 @@ theory NeedhamSchroeder
  * Tamarin status : sanity1 and sanity2, < 1 sec
  *                  source lemma, < 2 sec on cluster
  *                  secrecy, 1 min on cluster
+ *  tamarin-prover nsl-no_as-untagged.spthy --prove
  * Proverif status : < 1 sec
-    tamarin-prover nsl-no_as-untagged.spthy -D=REACH -m=proverif > nsl-reach.pv; proverif nsl-reach.pv
+    tamarin-prover nsl-no_as-untagged.spthy -m=proverif > nsl-reach.pv; proverif nsl-reach.pv
   Proverif cannot be proved on:
-    tamarin-prover nsl-no_as-untagged.spthy -D=PROVERIFEQUIV -m=proverif --diff > nsl-ind.pv; proverif nsl-ind.pv
+    tamarin-prover nsl-no_as-untagged.spthy -m=proverifequiv > nsl-ind.pv; proverif nsl-ind.pv
 
 
   DeepSec proves strong secrecy in a second
+    tamarin-prover nsl-no_as-untagged.spthy -m=deepsec > nsl-ind.dps; deepsec nsl-ind.dps
 
  */
 
@@ -66,7 +68,7 @@ let Qleak(skB,Nb,token,pkA) =
 
 
 
-#ifdef REACH
+
 
 process:
 ! ( new skA; P(skA)
@@ -113,28 +115,6 @@ lemma sanity2:
   "Ex pka pkb k #t1 . SessionB(pka,pkb,k)@t1"
 
 
-#endif
-
-#ifdef PROVERIFEQUIV
-
-process:
- ( new skA; (P(skA)
-
-||
- ( new skB;       event HonestB(pk(skB));( Q(skB) |
-        out(pk(skB));   new Nb; new test; Qleak(skB,Nb,diff(test,Nb),pk(skA))) ))
-)
-#endif
-
-
-
-diffEquivLemma:
-
-( new skA; ( !( P(skA))
-|
- ( new skB;
-        out(att,pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,diff(test,Nb),pk(skA))) )
-))
 
 equivLemma:
 

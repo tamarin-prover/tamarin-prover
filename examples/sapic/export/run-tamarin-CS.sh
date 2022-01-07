@@ -30,7 +30,7 @@ TIMEOUT='100m'
 
 exec_runner(){
     START=$(date +%s.%N)
-    res=$(timeout $TIMEOUT $runner $filename -D=REACH --prove)
+    res=$(timeout $TIMEOUT $runner $filename --prove)
     END=$(date +%s.%N)
     DIFF=$(echo "$END - $START" | bc)
     echo -n $res | grep "verified\|falsified"  | tr '\n' ' '  >> "$outfilename"

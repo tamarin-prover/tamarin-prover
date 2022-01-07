@@ -8,11 +8,11 @@ theory KEMTLS
    Client authentication version -> the client only authenticates with a server that he knows.
 
    Proverif : few seconds
-    tamarin-prover kemtls-clientauth.spthy -D=REACH -m=proverif > kem-reach.pv; proverif kem-reach.pv
-    tamarin-prover kemtls-clientauth.spthy -D=PROVERIFEQUIV -m=proverif --diff > kem-ind.pv; proverif kem-ind.pv
+    tamarin-prover kemtls-clientauth.spthy -m=proverif > kem-reach.pv; proverif kem-reach.pv
+    tamarin-prover kemtls-clientauth.spthy -m=proverifequiv > kem-ind.pv; proverif kem-ind.pv
 
    Tamarin : 20 minutes on 64 core server
-    tamarin-prover kemtls-clientauth.spthy -D=REACH --prove
+    tamarin-prover kemtls-clientauth.spthy --prove
 
 
    Unlinkability proved:
@@ -164,7 +164,6 @@ let S(~skS) =
       )
 
     )
-#ifdef REACH
 
 process:
 ! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
@@ -208,11 +207,8 @@ lemma authSP: // should be true
      ==> Ex #s. (DerivedP(pkS,pkP,key)@s & s<t)"
 
 
-#endif
 
-#ifdef PROVERIFEQUIV
-
-process:
+diffEquivLemma:
 ! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
     new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
     new ~skPDiff;  out(kempk(~skPDiff));
@@ -225,8 +221,6 @@ process:
   )
 
 
-#endif
-
 // The queries for Deepsec are as follows.
 export requests:
 "
@@ -237,13 +231,6 @@ let sys2 = new sk; ( ( new skP; !^3 P(sk,skP)) | !^3 S(sk)).
 query session_equiv(sys1,sys2).
 "
 
-
-
-// lemma secserv: // should be false (non mutual authentication)
-// "not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
-
-// lemma secclient : // should be true
-// "All #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2 ==> Ex #t3. Compromise()@t3 & t3<t1"
 
 
 end

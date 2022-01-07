@@ -3,17 +3,15 @@
 /*
 
 Reachability query verified with
- $ tamarin-prover -D=REACH toy-example.spthy --prove
- $ tamarin-prover -D=REACH toy-example.spthy -m=proverif > te-reach.pv; proverif te-reach.pv
+ $ tamarin-prover toy-example.spthy --prove
+ $ tamarin-prover toy-example.spthy -m=proverif > te-reach.pv; proverif te-reach.pv
 
 Unlinkability query "cannot be proved" with
- $ tamarin-prover -D=EQUIV toy-example.spthy --diff -m=proverif > te-un.pv; proverif te-un.pv
+ $ tamarin-prover toy-example.spthy -m=proverifequiv > te-un.pv; proverif te-un.pv
 
 Unlinkability disproved with:
- $ tamarin-prover -D=REACH toy-example.spthy -m=deepsec > te-un.ds; deepsec te-un.ds
+ $ tamarin-prover toy-example.spthy -m=deepsec > te-un.ds; deepsec te-un.ds
 
-Strong secrecy query verified with:
- $ tamarin-prover -D=PROVERIFEQUIV --diff toy-example.spthy -m=proverif > te-sec.pv; proverif te-sec.pv
 
 */
 
@@ -50,12 +48,20 @@ equivLemma:
    ! (new sk;  (new key; P(sk,key) | Q(sk) ))
 
 
-#ifdef PROVERIFEQUIV
+
+
+/*
+
+
+Strong secrecy query verified with:
+ $ tamarin-prover  toy-example.spthy -m=proverifequiv > te-sec.pv; proverif te-sec.pv
+
+// when the file only contains the following equiv query:
 
 diffequivLemma:
   in(k1); in(k2); ! new sk; ( ( ! P(sk,diff(k1,k2)) ) | (! Q(sk) ) )
 
-#endif
 
+*/
 
 end

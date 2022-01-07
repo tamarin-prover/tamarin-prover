@@ -51,14 +51,4 @@ From the docker image, one can execute either `run-tamarin-CS.sh` or `run-prover
 
 To see all the features on a single file, one can check out `toy-example.spthy`.
 
-Its header shows the full process that allows to export to the multiple tools. We use a single file to export to ProVerif for a reachability query and two distinct diff-equivalence queries. The `#ifdef` flags exploit the pre-processing of Tamarin to instantiate mutliple versions of the file, based on some command line arguments. Remark that it may be simpler for new users to at first simply create multiple `.spthy` files.
-
-The convienence scripts above and thus our more complex example files use:
-
-    REACH .. for output to ProVerif / GSVerif / tamarin-prover
-    PROVERIFEQUIV .. for output only to ProVerif
-    DEEPSECEQUIV  .. for output only to  DeepSec
-
-If tamarin is used directly, the `-D` flag needs to be used to set the  macros accordingly, see above. Those are of course arbitrarily chosen.
-
-See e.g., KEMTLS-CA, NSL and Privacy-Pass for the more complex examples using diff.
+Its header shows the full process that allows to export to the multiple tools. We use a single file to export to ProVerif for a reachability query and diff-equivalence queries.
