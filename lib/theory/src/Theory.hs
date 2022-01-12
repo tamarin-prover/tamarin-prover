@@ -50,11 +50,6 @@ module Theory (
   , pFact
   , addPredicate
 
-  -- * Tactics
-  , TacticI(..)
-  , Prio(..)
-  , Deprio(..)
-
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
@@ -106,6 +101,7 @@ module Theory (
   , theoryProcesses
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
+  , addTacticI
   , addRestriction
   , addLemma
   , addRestrictionDiff
@@ -113,6 +109,7 @@ module Theory (
   , addDiffLemma
   , addHeuristic
   , addDiffHeuristic
+  , addDiffTacticI
   , removeLemma
   , removeLemmaDiff
   , removeDiffLemma
@@ -463,7 +460,7 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
@@ -560,28 +557,6 @@ data Option = Option
 $(mkLabels [''Option])
 
 ------------------------------------------------------------------------------
--- Tactics internal
-------------------------------------------------------------------------------
-
-data Prio = Prio {
-      functionsPrio :: [(String,String)]  
-    }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-data Deprio = Deprio {
-      functionsDeprio :: [(String,String)]
-    }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
--- | New type for Tactis inside the theory file
-data TacticI = TacticI{
-      name :: String,
-      prios :: [Prio],
-      deprios :: [Deprio]
-    }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-------------------------------------------------------------------------------
 -- Lemmas
 ------------------------------------------------------------------------------
 
@@ -595,6 +570,7 @@ data LemmaAttribute =
        | LHSLemma
        | RHSLemma
        | LemmaHeuristic [GoalRanking]
+       | LemmaTacticI
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -857,6 +833,7 @@ removeSapicItems :: OpenTheory -> OpenTranslatedTheory
 removeSapicItems thy =
   Theory {_thyName=(L.get thyName thy)
           ,_thyHeuristic=(L.get thyHeuristic thy)
+          ,_thyTacticI=(L.get thyTacticI thy)
           ,_thySignature=(L.get thySignature thy)
           ,_thyCache=(L.get thyCache thy)
           ,_thyItems = newThyItems
@@ -879,6 +856,7 @@ openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory
 openTranslatedTheory thy =
   Theory {_thyName=(L.get thyName thy)
           ,_thyHeuristic=(L.get thyHeuristic thy)
+          ,_thyTacticI=(L.get thyTacticI thy)
           ,_thySignature=(L.get thySignature thy)
           ,_thyCache=(L.get thyCache thy)
           ,_thyItems = newThyItems
@@ -1434,6 +1412,14 @@ addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTh
 addDiffHeuristic h (DiffTheory n [] t sig cl cr dcl dcr i) = Just (DiffTheory n h t sig cl cr dcl dcr i)
 addDiffHeuristic _ _ = Nothing
 
+addTacticI :: TacticI -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addTacticI t (Theory n h [] sig c i o) = Just (Theory n h [t] sig c i o)
+addTacticI _ _ = Nothing
+
+addDiffTacticI :: TacticI -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i) = Just (DiffTheory n h [t] sig cl cr dcl dcr i)
+addDiffTacticI _ _ = Nothing
+
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 removeLemma lemmaName thy = do
@@ -1864,6 +1850,7 @@ getProofContext l thy = ProofContext
     ( L.get (cases . thyCache)                 thy)
     inductionHint
     specifiedHeuristic
+    specifiedTacticI
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
@@ -1888,6 +1875,10 @@ getProofContext l thy = ProofContext
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
 
+    -- Tactic specified for the lemma
+    -- Ne prends pas du tout en compte le 
+    specifiedTacticI = headMay $ L.get thyTacticI thy
+
 -- | Get the proof context for a lemma of the closed theory.
 getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
 getProofContextDiff s l thy = case s of
@@ -1899,6 +1890,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheLeft)                 thy)
             inductionHint
             specifiedHeuristic
+            specifiedTacticI
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1913,6 +1905,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
             specifiedHeuristic
+            specifiedTacticI
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -1935,6 +1928,8 @@ getProofContextDiff s l thy = case s of
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
+    
+    specifiedTacticI = headMay $ L.get diffThyTacticI thy
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
@@ -1963,6 +1958,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
             specifiedHeuristic
+            specifiedTacticI
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1977,6 +1973,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
             specifiedHeuristic
+            specifiedTacticI
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -1992,6 +1989,8 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
+
+    specifiedTacticI = headMay $ L.get diffThyTacticI thy
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag

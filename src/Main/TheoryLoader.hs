@@ -361,7 +361,7 @@ closeDiffThyWithMaude sig as thy0 = do
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
 constructAutoProver as =
-    AutoProver heuristic proofBound stopOnTrace
+    AutoProver heuristic Nothing proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------
@@ -385,7 +385,7 @@ constructAutoProver as =
 -- --stop-on-trace).
 constructAutoDiffProver :: Arguments -> AutoProver
 constructAutoDiffProver as =
-    AutoProver heuristic proofBound stopOnTrace
+    AutoProver heuristic Nothing proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------

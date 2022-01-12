@@ -2,6 +2,20 @@ theory SourceOfUniqueness begin
 
 builtins: symmetric-encryption
 
+tactic: uniqueness
+prio:
+    isFactName ReceiverKeySimple
+prio:
+    isInFactTerms xsimple
+prio:
+    regex KU\( ~key
+prio:  
+    mimou ahu
+deprio:
+    mimuf fumim
+deprio:
+    mimuf gloubougloboul
+
 rule generatecomplicated:
  [ In(x), Fr(~key)  ]
  --[ Complicated(x) ]->

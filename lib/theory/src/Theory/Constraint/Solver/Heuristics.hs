@@ -34,6 +34,11 @@ module Theory.Constraint.Solver.Heuristics (
   , maybeSetTacticRelPath
   , mapTacticRanking
 
+  , TacticI(..)
+  , Prio(..)
+  , Deprio(..)
+  , defaultTacticI
+
   , goalRankingIdentifiers
   , goalRankingIdentifiersDiff
 
@@ -60,6 +65,10 @@ import           System.FilePath
 
 import           Theory.Text.Pretty
 
+------------------------------------------------------------------------------
+-- Tactics external
+------------------------------------------------------------------------------
+
 data Oracle = Oracle {
     oracleWorkDir :: !FilePath
   , oracleRelPath :: !FilePath
@@ -71,6 +80,28 @@ data Tactic = Tactic {
   , tacticRelPath :: !FilePath
   }
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+------------------------------------------------------------------------------
+-- Tactics internal
+------------------------------------------------------------------------------
+
+data Prio = Prio {
+      functionsPrio :: [(String,String)]  
+    }
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+data Deprio = Deprio {
+      functionsDeprio :: [(String,String)]
+    }
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- | New type for Tactis inside the theory file
+data TacticI = TacticI{
+      _name :: String,
+      _prios :: [Prio],
+      _deprios :: [Deprio]
+    }
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | The different available functions to rank goals with respect to their
 -- order of solving in a constraint system.
@@ -99,6 +130,9 @@ defaultRankings True = [SmartDiffRanking]
 -- Default heuristic for normal and diff mode.
 defaultHeuristic :: Bool -> Heuristic
 defaultHeuristic = Heuristic . defaultRankings
+
+defaultTacticI :: TacticI
+defaultTacticI = TacticI "default" [] []
 
 
 -- Default to "./oracle" in the current working directory.

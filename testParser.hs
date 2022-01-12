@@ -3,99 +3,85 @@ import Text.Parsec.String (Parser)
 import Debug.Trace
 
 data Prio = Prio {
-      functionsPrio :: [String]  
+      functionsPrio :: [(String,String)]  
     }
     deriving( Eq, Ord, Show )
 
 data Deprio = Deprio {
-      functionsDeprio :: [String]
+      functionsDeprio :: [(String,String)]
     }
     deriving( Eq, Ord, Show )
 
+{-
+data PrioDeprio = Prio [(String,String)] | Deprio [(String,String)]
+-}
 -- | New type for Tactis inside the theory file
 data TacticI = TacticI{
       name :: String,
-      prios :: Prio,
-      deprios :: Deprio
+      prios :: [Prio],
+      deprios :: [Deprio]
     }
     deriving( Eq, Ord, Show )
 
-parserDesktop :: SourceName -> String -> Either ParseError [String]
-parserDesktop = parse fichier
+parserDesktop :: SourceName -> String -> Either ParseError TacticI
+parserDesktop = parse tactic
 
-parserDesktopF :: FilePath -> IO (Either ParseError [String])
+parserDesktopF :: FilePath -> IO (Either ParseError TacticI)
 parserDesktopF chemin = fmap (parserDesktop chemin) $ readFile chemin
 
-fichier :: Parser [String]
-fichier = line `endBy` many1 newline
 
-line :: Parser String
-line = tactic <|> try function <|> indent 
+tactic :: Parser TacticI
+tactic = do
+    tName <- tacticName
+    prios <- many1 prio
+    deprios <- many1 deprio
+    return $ TacticI tName prios deprios
+    -- <?> "mimou"
+
 
 --Tactic
-tactic :: Parser String
-tactic = do 
+tacticName :: Parser String
+tacticName = do 
     string "tactic:"
     skipMany (char ' ')
     tacticName <- many (alphaNum <|> oneOf "[]_-@")
+    newline
     return $ tacticName
 
---Prio or deprio
-indent :: Parser String
-indent = do 
-    many (char ' ')
-    p <- prio <|> deprio
-    return p
-
 --Prio
-prio :: Parser String
-prio = do 
-    --lookAhead (string "   prio")
-    --many1 $ char ' '
+prio :: Parser Prio
+prio = do
     string "prio:"
-    return $ "prio"
-
+    skipMany (char ' ')
+    newline
+    fs <- many1 function 
+    newline
+    return $ Prio fs
 
 --Deprio
-deprio :: Parser String
-deprio = do
+deprio :: Parser Deprio
+deprio = do 
     string "deprio:"
-    return $ "deprio"
+    skipMany (char ' ')
+    newline
+    fs <- many1 function 
+    newline
+    return $ Deprio fs
 
 --Function name
 functionName :: Parser String
 functionName = many (char ' ') *> many (alphaNum <|> oneOf "[]_-@")
+-- functionName = many (char ' ') *> many (alphaNum <|> oneOf "[]_-@")
 
 --Function value
 functionValue :: Parser String
 functionValue = many $ noneOf "\n"
 
 --Fonction
-function :: Parser String
+function :: Parser (String,String)
 function = do
     f <- functionName
     char ' '
     v <- functionValue
-    return $ f ++ " takes " ++ v
+    return (f,v)
 
-
-{--
---Tactic
-tactic :: Parser TacticI
-tactic = liftA3 TacticI tacticName prio deprio
-
-tacticName :: Parser String
-tacticName = string "tactic:" *> skipMany (char ' ') *> many (alphaNum <|> oneOf "[]_-@") <* newline 
-
---Prio
-prio :: Parser Prio
-prio = string "prio:" <* newline >> liftA Prio (many function)
-
---Deprio
-deprio :: Parser Deprio
-deprio = string "deprio:" <* newline >> liftA Deprio (many function)
-
---Fonction
-function :: Parser String
-function = many $ noneOf "\n"
---}

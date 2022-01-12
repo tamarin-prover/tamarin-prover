@@ -168,6 +168,8 @@ theory flags0 inFile = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems flags thy'
+      , do thy' <- liftedAddTacticI thy =<< tactic
+           addItems flags thy'
       , do thy' <- builtins thy
            msig <- getState
            addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
@@ -234,6 +236,10 @@ theory flags0 inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
+    liftedAddTacticI thy t = case addTacticI t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
+
 -- | Parse a diff theory.
 diffTheory :: [String]   -- ^ Defined flags.
        -> Maybe FilePath
@@ -250,6 +256,8 @@ diffTheory flags0 inFile = do
     addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
+           addItems flags thy'
+      , do thy' <- liftedAddTacticI thy =<< tactic
            addItems flags thy'
       , do
            diffbuiltins
@@ -305,6 +313,10 @@ diffTheory flags0 inFile = do
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
+
+    liftedAddTacticI thy t = case addDiffTacticI t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
 
     liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'

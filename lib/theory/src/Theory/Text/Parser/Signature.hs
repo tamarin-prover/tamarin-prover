@@ -16,6 +16,7 @@ module Theory.Text.Parser.Signature (
     , functions
     , equations
     , preddeclaration
+    , tactic
     , goalRanking
     , diffbuiltins
 )
@@ -176,36 +177,54 @@ preddeclaration thy = do
                     foldM liftedAddPredicate thy predicates
                     <?> "predicates"
 
-{-tactic :: Parser [String]
-tactic = symbol "tactics" *> char ':' *> skipMany (char ' ') *> many $ noneOf "\n" <* lexeme spaces
-
-prioReading :: Parser Prio
-prioReading = symbol "prio" *> char ':' *> skipMany (char ' ') *> many $ noneOf "prio" <* lexeme spaces
-
-deprioReading :: Parser Deprio
-deprioReading = symbol "deprio" *> char ':' *> skipMany (char ' ') *> many $ noneOf "deprio" <* lexeme spaces
-
-tacticReading :: Parser TacticI
-tacticReading = do 
-        name <- symbol "tactic" *> char ':' *> skipMany (char ' ') *> identifier <* lexeme spaces --quelque chose pour le passage de ligne?
-        prio <- prioReading
-        depri <- deprioReading
-        return ( TacticI name (Prio prio) (Deprio deprios))
-
-
-detectLine :: String -> (String, String)
-detectLine s
-    | s =~ "tactic:"  = ("tactic", (mrAfter $ s =~ "tactic: "))
-    | s =~ "conditions" = ("condition","")
-    | s =~ "deprio" = ("deprio","")
-    | s =~ "prio" = ("prio","")
-    | s =~ "OR" = ("OR", dropWhile isSpace s)
-    | s =~ "&&" = ("&&", dropWhile isSpace s)
-    | s =~ "regex" = ("regex", (mrAfter $ s =~"regex "))
-    | s =~ "isFactName" = ("isFactName", (mrAfter $ s =~ "isFactName "))
-    | s =~ "isInFactTerms" = ("isInFactTerms", (mrAfter $ s =~ "isInFactTerms "))
-    | s =~ "#" = ("","")
-    | otherwise = ("","")-}
+tactic :: Parser TacticI
+tactic = do
+    tName <- tacticName
+    prios <- many1 prio
+    deprios <- many1 deprio
+    newline
+    return $ TacticI tName prios deprios
+    
+    where
+      --Tactic
+      tacticName :: Parser String
+      tacticName = do 
+          string "tactic:"
+          skipMany (char ' ')
+          tacticName <- many (alphaNum <|> oneOf "[]_-@")
+          newline
+          return $ tacticName
+      --Prio
+      prio :: Parser Prio
+      prio = do
+          string "prio:"
+          skipMany (char ' ')
+          newline
+          fs <- many1 function 
+          newline
+          return $ Prio fs
+      --Deprio
+      deprio :: Parser Deprio
+      deprio = do 
+          string "deprio:"
+          skipMany (char ' ')
+          newline
+          fs <- many1 function 
+          newline
+          return $ Deprio fs
+      --Function name
+      functionName :: Parser String
+      functionName = many (char ' ') *> many (alphaNum <|> oneOf "[]_-@")
+      --Function value
+      functionValue :: Parser String
+      functionValue = many $ noneOf "\n"
+      --Fonction
+      function :: Parser (String,String)
+      function = do
+          f <- functionName
+          char ' '
+          v <- functionValue
+          return (f,v)
 
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]

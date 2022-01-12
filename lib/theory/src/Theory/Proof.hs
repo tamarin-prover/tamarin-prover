@@ -120,6 +120,7 @@ import           Theory.Model
 import           Theory.Text.Pretty
 
 
+
 ------------------------------------------------------------------------------
 -- Utility: Trees with uniquely labelled edges.
 ------------------------------------------------------------------------------
@@ -740,6 +741,7 @@ data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
 
 data AutoProver = AutoProver
     { apDefaultHeuristic :: Maybe Heuristic
+    , apDefaultTacticI   :: Maybe TacticI
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
     }
@@ -753,8 +755,16 @@ selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
                                  (apDefaultHeuristic prover <|> L.get pcHeuristic (L.get dpcPCLeft ctx))
 
+selectTacticI :: AutoProver -> ProofContext -> TacticI
+selectTacticI prover ctx = fromMaybe (defaultTacticI)
+                             (apDefaultTacticI prover <|> L.get pcTacticI ctx)
+
+selectDiffTacticI :: AutoProver -> DiffProofContext -> TacticI
+selectDiffTacticI prover ctx = fromMaybe (defaultTacticI)
+                                 (apDefaultTacticI prover <|> L.get pcTacticI (L.get dpcPCLeft ctx))
+
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ bound cut) =
+runAutoProver aut@(AutoProver _ _  bound cut) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
@@ -777,7 +787,7 @@ runAutoProver aut@(AutoProver _ bound cut) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ bound cut) =
+runAutoDiffProver aut@(AutoProver _ _ bound cut) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of

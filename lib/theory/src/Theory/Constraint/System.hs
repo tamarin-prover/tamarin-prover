@@ -37,6 +37,7 @@ module Theory.Constraint.System (
   , pcSourceKind
   , pcUseInduction
   , pcHeuristic
+  , pcTacticI
   , pcTraceQuantifier
   , pcLemmaName
   , pcHiddenLemmas
@@ -377,6 +378,7 @@ data ProofContext = ProofContext
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcHeuristic          :: Maybe Heuristic
+       , _pcTacticI            :: Maybe TacticI
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
