@@ -38,6 +38,11 @@ module Theory.Constraint.Solver.Heuristics (
   , Prio(..)
   , Deprio(..)
   , defaultTacticI
+  , tacticiName
+  , tacticiPrio
+  , tacticiDeprio
+  , prioFunctions
+  , deprioFunctions
 
   , goalRankingIdentifiers
   , goalRankingIdentifiersDiff
@@ -111,6 +116,7 @@ data GoalRanking =
   | OracleSmartRanking Oracle
   | TacticRanking Tactic
   | TacticSmartRanking Tactic
+  | InternalTactic
   | SapicRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
@@ -171,6 +177,21 @@ mapTacticRanking _ r = r
 tacticPath :: Tactic -> FilePath
 tacticPath Tactic{..} = tacticWorkDir </> normalise tacticRelPath
 
+tacticiName :: TacticI -> String
+tacticiName TacticI{..} = _name
+
+tacticiPrio :: TacticI -> [Prio]
+tacticiPrio TacticI{..} = _prios
+
+prioFunctions :: Prio -> [(String,String)] 
+prioFunctions Prio{..} = functionsPrio
+
+deprioFunctions :: Deprio -> [(String,String)] 
+deprioFunctions Deprio{..} = functionsDeprio
+
+tacticiDeprio :: TacticI -> [Deprio]
+tacticiDeprio TacticI{..} = _deprios
+
 goalRankingIdentifiers :: M.Map Char GoalRanking
 goalRankingIdentifiers = M.fromList
                         [ ('s', SmartRanking False)
@@ -185,6 +206,7 @@ goalRankingIdentifiers = M.fromList
                         , ('C', GoalNrRanking)
                         , ('i', InjRanking False)
                         , ('I', InjRanking True)
+                        , ('k', InternalTactic)
                         ]
 
 goalRankingIdentifiersDiff :: M.Map Char GoalRanking
@@ -196,6 +218,7 @@ goalRankingIdentifiersDiff  = M.fromList
                             , ('T', TacticSmartRanking defaultTactic)
                             , ('c', UsefulGoalNrRanking)
                             , ('C', GoalNrRanking)
+                            , ('k', InternalTactic)
                             ]
 
 charToGoalRankingMay :: Char -> Maybe GoalRanking
@@ -239,6 +262,7 @@ goalRankingName ranking =
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
+        InternalTactic                -> "the tactic written in the theory file"
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
 

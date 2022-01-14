@@ -182,35 +182,36 @@ tactic = do
     tName <- tacticName
     prios <- many1 prio
     deprios <- many1 deprio
-    newline
+    _ <- newline
     return $ TacticI tName prios deprios
     
     where
       --Tactic
       tacticName :: Parser String
       tacticName = do 
-          string "tactic:"
-          skipMany (char ' ')
+          _ <- string "tactic"
+          _ <- char ':'
+          _ <- skipMany (char ' ')
           tacticName <- many (alphaNum <|> oneOf "[]_-@")
-          newline
+          _ <- newline
           return $ tacticName
       --Prio
       prio :: Parser Prio
       prio = do
-          string "prio:"
-          skipMany (char ' ')
-          newline
+          _ <- string "prio:"
+          _ <- skipMany (char ' ')
+          _ <- newline
           fs <- many1 function 
-          newline
+          _ <- newline
           return $ Prio fs
       --Deprio
       deprio :: Parser Deprio
       deprio = do 
-          string "deprio:"
-          skipMany (char ' ')
-          newline
+          _ <- string "deprio:"
+          _ <- skipMany (char ' ')
+          _ <- newline
           fs <- many1 function 
-          newline
+          _ <- newline
           return $ Deprio fs
       --Function name
       functionName :: Parser String
@@ -222,7 +223,7 @@ tactic = do
       function :: Parser (String,String)
       function = do
           f <- functionName
-          char ' '
+          _ <- char ' '
           v <- functionValue
           return (f,v)
 

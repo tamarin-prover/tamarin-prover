@@ -99,7 +99,8 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tacticI = selectTacticI prover ctxt
+    methods <- (map fst . rankProofMethods ranking tacticI ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
       (oneStepProver method                        `mappend`
@@ -119,7 +120,8 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tacticI = selectTacticI prover ctxt
+    methods <- (map fst . rankProofMethods ranking tacticI ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
       (oneStepProver method                        `mappend`
@@ -139,7 +141,8 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
         sys   = dpsInfo (root subProof)
         heuristic = selectDiffHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
+        tacticI = selectDiffTacticI prover ctxt
+    methods <- (map fst . rankDiffProofMethods ranking tacticI ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
       (oneStepDiffProver method                        `mappend`
@@ -573,7 +576,8 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (tiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tacticI                 = selectTacticI (tiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tacticI ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -665,7 +669,8 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tacticI                 = selectTacticI (dtiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tacticI ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -770,7 +775,8 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectDiffHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    diffProofMethods        = rankDiffProofMethods ranking ctxt
+    tacticI                 = selectDiffTacticI (dtiAutoProver ti) ctxt
+    diffProofMethods        = rankDiffProofMethods ranking tacticI ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -1390,7 +1396,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
             side <- get dsSide diffSequent
-            let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+            let isSolved s sys' = (rankProofMethods GoalNrRanking defaultTacticI (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
             let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
