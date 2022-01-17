@@ -14,25 +14,42 @@ TAMARIN_COMMAND = "tamarin-prover-proverif-output"
 TOOL_TO_FILE_TYPE = { "spthy": ".spthy", "proverif": ".pv", "deepsec": ".dps" }
 
 
-def generate_deepsec_proverif_files(input_file, flags, lemmas, argdict):
+def generate_files(input_file, flags, lemmas, argdict, diff):
+    """
+        This function generates files for all tools in argdict except
+        for Tamarin. For Tamarin, we do not need to generate intermediate
+        files, but can use the original input file.
+    """
+    # Format flags in the way the Tamarin CLI wants them
+    flags = [ '-D=' + flag for flag in flags ] if flags else []
+
+    # Diff mode?
+    diffstring = " --diff" if diff else ""
+
+    # Get input_file without '.spthy'
+    file_name, _, _ = input_file.partition('.')
+
     for key in argdict.keys():
-        # TODO: Charlie says that this translation does not need
-        # to happen for -m=spthy. There we directly call Tamarin on the input
-        # file via `tamarin-prover input.spthy --prove`
         if key == SPTHY:
-            # Skip spthy.
+            # Skip Tamarin/spthy.
             continue
 
         # For each tool generate a file using Tamarin -m
-        # TODO: In the future, we want to do this for every lemmas too.
-        # However, currently Tamarin does not support this yet.
+        # TODO: In the future, we want to do this for every lemma.
+        # However, currently Tamarin does not support this.
 
-        # Format flags in the way the Tamarin CLI wants them
-        flags = [ '-D=' + flag for flag in flags ] if flags else []
-        # And convert them into a string
+        # Charlie, Robert, and Niklas discussed this via Mattermost.
+        # They plan to add a --lemma parameter to Tamarin which
+        # makes Tamarin only export the specified lemma.
+        # For now, we can only prove files that contain a single lemma?!
+        # Once --lemma has been changed, we need to change the call to Tamarin
+        # to include this parameter!
+
+        # Build command
         cmd = " ".join([TAMARIN_COMMAND, '-m='+key] + flags + [input_file])
-        # Get input_file without '.spthy'
-        file_name, _, _ = input_file.partition('.')
+        # Add diff flag
+        cmd = cmd + diffstring
+        print(cmd)
         # Change file type according to current tool
         destination = " > " + file_name + "_" + key + TOOL_TO_FILE_TYPE[key]
         # Concatenate the cmd and destination, and run it
@@ -63,6 +80,10 @@ if __name__ == '__main__':
     # Args for Deepsec
     parser.add_argument('-d', '--deepsec', action='append',
                         nargs='+', type=str, help='arguments for Deepsec')
+    # Arg for Tamarin diff mode
+    parser.add_argument('--diff', action='store_true',
+                        help="Flag to use Tamarin's diff mode\
+                        for file generation")
 
     args = parser.parse_args()
     # Extract the list of lemmas
@@ -79,13 +100,17 @@ if __name__ == '__main__':
     if args.tamarin:
         argdict[SPTHY] = args.tamarin
     if args.heuristic:
-        if argdict[SPTHY]:
+        if SPTHY in argdict:
             argdict[SPTHY].append(args.heuristic)
         else:
             argdict[SPTHY] = args.heuristic
 
     # Generate desired model files from the input file
-    generate_deepsec_proverif_files(args.input_file, flags, lemmas, argdict)
+    generate_files(args.input_file, flags, lemmas, argdict, args.diff)
+    print(lemmas)
+    print(flags)
+    print(args.diff)
+    print(argdict)
 
     # Concurrently execute the cross-product of the given args
     # on the generate model files
