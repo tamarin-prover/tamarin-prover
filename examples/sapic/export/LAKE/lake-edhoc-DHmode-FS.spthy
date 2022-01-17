@@ -13,7 +13,7 @@
 
    Proverif : 16 seconds
 
-   Tamarin : 4 minutes on 64 core server
+   Tamarin : 2 minutes with 10 cores
 */
 
 theory edhoc
@@ -25,13 +25,13 @@ builtins: diffie-hellman,signing, symmetric-encryption
 functions: hash/1,hkdfextract/2, hkdfexpand(bitstring,bitstring):skey
 
 let I2(~skI:skey) =         // Initiator using signatures
-    new ~x;
-    event Share(~x);
-    let gX = 'g'^~x in
+    new ~x2;
+    event Share(~x2);
+    let gX = 'g'^~x2 in
     out(<'m2',gX, 'C_I','AD'>);
     in(<'C_I',gY,rC_R,cypher_2>);
     let TH_2 = hash(<'m2',gX,'C_I','AD','C_I',gY,rC_R>) in
-    let PRK_2e = hkdfextract('null', gY^~x) in
+    let PRK_2e = hkdfextract('null', gY^~x2) in
     let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
     let PRK_3e2m = PRK_2e in
     let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
@@ -50,19 +50,19 @@ let I2(~skI:skey) =         // Initiator using signatures
         out(<rC_R,senc(< pk(~skI), Signed3, 'AD_3'>, K_3ae ),'AD_3'>)
 
 let I1(~kI) =         // Initiator using DH long term key
-    new ~x;
-    event Share(~x);
-    let gX = 'g'^~x in
+    new ~x1;
+    event Share(~x1);
+    let gX = 'g'^~x1 in
     let gI = 'g'^~kI in
     out(<'m1',gX, 'C_I','AD'>);
     in(<'C_I',gY,rC_R,cypher_2>);
     let TH_2 = hash(<'m1',gX,'C_I','AD','C_I',gY,rC_R>) in
-    let PRK_2e = hkdfextract('null', gY^~x) in
+    let PRK_2e = hkdfextract('null', gY^~x1) in
     let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
     let plaintext_2 = sdec(cypher_2,K_2e) in
     let <gR,mac,rAD_2> = plaintext_2 in
 
-    let PRK_3e2m = hkdfextract(PRK_2e, gR^~x) in
+    let PRK_3e2m = hkdfextract(PRK_2e, gR^~x1) in
 
     let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
     let MAC2 = senc(<TH_2,gR,rAD_2>,K_2m) in
@@ -110,7 +110,8 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,gI,rAD_3>,K_3m) in
        if MAC_3 = mac3 then
-          event AcceptR(gI,gR,PRK_4x3m)
+          event AcceptR(gI,gR,PRK_4x3m);
+          event AcceptR1(gI,gR,PRK_4x3m)
        )
     else
        // signature auth used
@@ -131,7 +132,8 @@ let R(~skR:skey,~kR) =
        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
        let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
        if verify(Signed3, <pkI,TH_3,rAD_3,MAC_3 > , pkI) = true then
-          event AcceptR(pkI,pk(~skR),PRK_4x3m)
+          event AcceptR(pkI,pk(~skR),PRK_4x3m);
+          event AcceptR2(pkI,pk(~skR),PRK_4x3m)
 
 
 let compromise(sk:skey) =
@@ -153,10 +155,13 @@ process:
 )
 
 
-lemma executableR: // sanity check
+lemma executableR1: // sanity check
   exists-trace
-  "Ex pkI pkR k3 #i. AcceptR(pkI,pkR,k3)@i"
+  "Ex pkI pkR k3 #i. AcceptR1(pkI,pkR,k3)@i"
 
+lemma executableR2: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 #i. AcceptR2(pkI,pkR,k3)@i"
 
 lemma false_executableI: // sanity check
   exists-trace
@@ -165,23 +170,23 @@ lemma false_executableI: // sanity check
 
 lemma secretR[reuse]: //secrecy of the key
    "All pkI pkR k4 #i #j #l. (AcceptR(pkI,pkR,k4)@i & KU(k4)@j & Honnest(pkI, 'Init')@l )
-       ==> Ex #t. Compromise(pkI, 'Comp')@t"
+       ==> Ex #t. Compromise(pkI, 'Comp')@t & t<i"
 
 
 lemma secretI[reuse]: //secrecy of the key
    "All pkI pkR k3 k4 #i #j #l. (AcceptI(pkI,pkR,k3,k4)@i & KU(k4)@j & Honnest(pkR, 'Resp')@l )
-    ==> Ex #t. Compromise(pkR, 'Comp')@t
+    ==> Ex #t. Compromise(pkR, 'Comp')@t & t<i
 "
 
 lemma true_honnestauthRI:  // should be true
  "All pkI pkR k4 #i #l. AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ==>
     (Ex #j k3. (j<i & AcceptI(pkI,pkR,k3,k4)@j))
- |  (Ex #t.  Compromise(pkI, 'Comp')@t)"
+ |  (Ex #t.  Compromise(pkI, 'Comp')@t & t<i)"
 
 lemma true_honnestauthIR:  // should be true
  "All pkI pkR k3 k4 #i #l. AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l ==>
     (Ex #j.( j<i & DerivedR(pkR,k3)@j))
-     |  (Ex #t. Compromise(pkR, 'Comp')@t)"
+     |  (Ex #t. Compromise(pkR, 'Comp')@t & t<i)"
 
 
 end

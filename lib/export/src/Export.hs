@@ -136,6 +136,10 @@ builtins = map (\(x,y) -> (x, S.fromList y)) [
     ("locations-report", [
       Fun "fun" "rep" 2 "(bitstring,bitstring):bitstring" ["private"]
       ]
+  ),
+    ("xor", [
+      Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" []
+      ]
   )
   ]
 
@@ -189,6 +193,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
         Lit  v                                    -> ppLit v
+        FApp (AC Xor) ts                          -> ppXor ts
         FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (NoEq s)      [t1,t2] | s == expSym  -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)      [t1,t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
@@ -201,6 +206,10 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
     ppACOp Mult  = "*"
     ppACOp Union = "+"
     ppACOp Xor   = "⊕"
+
+    ppXor [] = text "one"
+    ppXor [t1,t2] = text "xor(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+    ppXor (t1:ts) = text "xor(" <> ppTerm t1 <> text ", " <> ppXor ts <> text ")"
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts
