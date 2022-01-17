@@ -279,6 +279,7 @@ import           Theory.Tools.IntruderRules
 import           Term.Positions
 
 import           Utils.Misc
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -570,7 +571,7 @@ data LemmaAttribute =
        | LHSLemma
        | RHSLemma
        | LemmaHeuristic [GoalRanking]
-       | LemmaTacticI
+       | LemmaTacticI String
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1872,12 +1873,46 @@ getProofContext l thy = ProofContext
                     [] -> Nothing
                     gh -> Just (Heuristic gh)
       where
-        lattr = (headMay [Heuristic gr
-                    | LemmaHeuristic gr <- L.get lAttributes l])
+        lattr = headMay [Heuristic gr
+                    | LemmaHeuristic gr <- L.get lAttributes l]
 
     -- Tactic specified for the lemma
-    -- Ne prends pas du tout en compte le 
-    specifiedTacticI = headMay $ L.get thyTacticI thy
+    specifiedTacticI = case lattr of
+        Just lh -> Just lh
+        Nothing  -> case L.get thyTacticI thy of
+                    [] -> Nothing
+                    _ -> Just (head $ L.get thyTacticI thy)
+      where
+        lattr = headMay [getTacticFromName tname (L.get thyTacticI thy)
+                        | LemmaTacticI tname <- L.get lAttributes l]
+
+        getTacticFromName tname [] = defaultTacticI
+        getTacticFromName tname [TacticI name prio deprio] = checkName tname (TacticI name prio deprio) []
+        getTacticFromName tname ((TacticI name prio deprio):t) = checkName tname (TacticI name prio deprio) t
+
+        checkName tname (TacticI name prio deprio) t
+            | tname == name = (TacticI name prio deprio)
+            | t == [] = defaultTacticI
+            | otherwise = checkName tname (head t) (tail t)
+
+
+
+
+
+        {-case trace (show $ L.get lAttributes l) (getTacticFromName (L.get thyTacticI thy)) of
+        Just lh -> Just lh
+        Nothing  -> case L.get thyTacticI thy of
+                    [] -> Nothing
+                    _ -> Nothing --Just (head $ L.get thyTacticI thy)
+      where
+        name = getLemmaTacticName $ L.get lAttributes l
+
+        getTacticFromName [] = Nothing
+        getTacticFromName [TacticI name prio deprio] = Just(TacticI name prio deprio)
+        getTacticFromName ((TacticI name prio deprio):t) = Just(TacticI name prio deprio)
+        getTacticFromName (_:t) = getTacticFromName t-}
+
+
 
 -- | Get the proof context for a lemma of the closed theory.
 getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
@@ -2635,6 +2670,7 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute InvariantLemma     = text "use_induction"
     prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
     prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+    prettyLemmaAttribute (LemmaTacticI s)   = text ("tactic=" ++ s)
     prettyLemmaAttribute LHSLemma           = text "left"
     prettyLemmaAttribute RHSLemma           = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"

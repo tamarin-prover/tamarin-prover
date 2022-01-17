@@ -39,6 +39,7 @@ lemmaAttribute diff workDir = asum
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma="   *> (HideLemma <$> identifier)
   , symbol "heuristic="    *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "tactic="       *> (LemmaTacticI <$> identifier)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma

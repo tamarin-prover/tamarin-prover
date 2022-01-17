@@ -72,6 +72,7 @@ import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 
 
+
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
@@ -110,6 +111,9 @@ theoryLoadFlags =
 
   , flagOpt (tacticPath defaultTactic) ["tacticname"] (updateArg "tacticname") "FILE"
       ("Path to the tactic heuristic (default '" ++ tacticPath defaultTactic ++ "')")
+
+  , flagOpt "" ["interntacticname"] (updateArg "interntacticname") "STRING"
+      ("Chosen tactic among the tactics written in the theory file")
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."

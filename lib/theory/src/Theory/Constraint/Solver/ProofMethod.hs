@@ -435,7 +435,7 @@ rankGoals ctxt ranking tacticI = case ranking of
     SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
     InjRanking useLoopBreakers -> injRanking ctxt useLoopBreakers
-    InternalTactic -> interalTacticRanking tacticI ctxt
+    InternalTactic -> internalTacticRanking tacticI ctxt
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -723,8 +723,8 @@ oracleSmartRanking oracle ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
-internalTacticRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
-internalTacticRanking tactic ags = trace ("Skibilidibapa" ++ show (head groupedDeprio)) result
+itRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
+itRanking tactic ags = result
     where
       -- Getting the functions from prio
       prio = tacticiPrio tactic
@@ -749,16 +749,14 @@ internalTacticRanking tactic ags = trace ("Skibilidibapa" ++ show (head groupedD
       result = rankedPrioGoals ++ nonRanked ++ rankedDeprioGoals
 
 
-interalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
-interalTacticRanking tactic ctxt _sys ags0 = 
+internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
       let ags = goalNrRanking ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      -- let showctxt = show ctxt
-      -- let showsys = show _sys
-      let outp = internalTacticRanking tactic ags
+      let outp = itRanking tactic ags
       let prettyOut = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] outp))
