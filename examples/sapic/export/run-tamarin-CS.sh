@@ -1,6 +1,7 @@
 #!/bin/bash
 
 filenames=(
+"5G_AKA/5G_AKA.spthy"
 "SSH/ssh-with-one-forwarding.spthy"
 "SSH/ssh-without-forwarding.spthy"
 # "SSH/ssh-with-forwarding-bounded.spthy"  # this one has too many partial deconstructions
