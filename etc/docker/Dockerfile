@@ -6,7 +6,7 @@ RUN opam install -y ocamlfind ocamlbuild
 WORKDIR /opt/build
 ENV RES="etc/docker/res"
 ENV CONFIG="etc/docker/config"
-ENV PROVERIF_URL="https://prosecco.gforge.inria.fr/personal/bblanche/proverif/proverif2.04"
+ENV PROVERIF_URL="https://prosecco.gforge.inria.fr/personal/bblanche/proverif/proverif2.04.tar.gz"
 ENV PROVERIF_DIR_NAME="proverif2.04"
 ENV GSVERIF_TGZ="gsverif2.0.zip"
 ENV GSVERIF_DIR_NAME="gsverif"
