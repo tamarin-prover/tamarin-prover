@@ -22,7 +22,7 @@ def intermediate_file_name(input_file, tool, lemma):
         include the name of the lemma in the file name as well.
     """
     # Get input_file without '.spthy'
-    file_name, _, _ = input_file.partition('.')
+    file_name, _ = os.path.splitext(input_file)
     return file_name + "_" + tool + TOOL_TO_FILE_TYPE[tool]
 
 def generate_files(input_file, flags, lemmas, argdict, diff):
@@ -64,7 +64,7 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
         # Concatenate the cmd and destination, and run it
         subprocess.run(cmd + destination, shell=True, check=True)
 
-def generate_jobs(input_file, lemmas, argdict):
+def generate_jobs(input_file, lemmas, argdict, flags):
     """
         This function generates the jobs that we want to concurrently execute.
         A job is a list of arguments that, when used by a Popen call,
@@ -85,12 +85,13 @@ def generate_jobs(input_file, lemmas, argdict):
             # for Tamarin. Instead, we need to use its CLI/lemma selector.
             # Thus, generating jobs for Tamarin is different than generating
             # jobs for ProVerif/Deepsec.
-            jobs += generate_tamarin_jobs()
-
+            jobs += list(generate_tamarin_jobs(tool, input_file, lemmas,
+                                               argdict, flags))
         # TODO: For debugging/simplification we convert the iterable object
         # other_jobs into a list here. This might not be the most efficient
         # way. Revisit this at a later point.
-        jobs += list(generate_non_tamarin_jobs(tool,
+        else:
+            jobs += list(generate_non_tamarin_jobs(tool,
                                                input_file, lemmas, argdict))
     return jobs
 
@@ -100,10 +101,10 @@ def generate_non_tamarin_jobs(tool, input_file, lemmas, argdict):
     """
     jobs = []
     for lemma in lemmas:
-        print(tool, input_file, lemma, argdict[tool])
-        # Build the crossproduct of tool, input_file, CLI parameters
-        # * is the unpack operator. It extracts all items in the list
-        # argdict[tool] and adds them to the function call.
+        # Build the crossproduct of tool, input_file, lemma name, and
+        # CLI parameters
+        # TODO: Once Tamarin can export a single lemma per file, add the
+        # TODO: lemma name to 'intermediate_file_name'
         if not argdict[tool][0]:
             # If there were no CLI params specified.
             jobs += list(itertools.product([tool]
@@ -115,6 +116,18 @@ def generate_non_tamarin_jobs(tool, input_file, lemmas, argdict):
                    ,*argdict[tool]))
     return jobs
 
+def generate_tamarin_jobs(tool, input_file, lemmas, argdict, flags):
+    lemmacli = [ '--prove=' + lemma for lemma in lemmas ] if lemmas \
+               else ["--prove"]
+    jobs = []
+    flags = flags if flags else []
+    if not argdict[tool][0]:
+        jobs = [[tool, input_file] + lemmacli + flags]
+    else:
+        jobs = [[tool, input_file] + lemmacli + flags + list(tuple) for \
+               tuple in itertools.product(*argdict[tool])]
+
+    return jobs
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -142,6 +155,13 @@ if __name__ == '__main__':
     parser.add_argument('--diff', action='store_true',
                         help="Flag to use Tamarin's diff mode\
                         for file generation")
+    # TODO: Add CLI options that allow to set the commands for Tamarin
+    # TODO: Deepsec, and ProVerif. i.e. -tname MyTamarinCommand
+    # TODO: Useful since many users probably have different versions of
+    # TODO: the tools installed.
+
+    # TODO: Think about whether we want to take CLI params with a leading -
+    # TOOD: or --, or whether we want to add that ourselfs.
 
     args = parser.parse_args()
     # Extract the list of lemmas
@@ -171,5 +191,5 @@ if __name__ == '__main__':
     # print(argdict)
 
     # Generate the jobs that we want to concurrently execute
-    jobs = generate_jobs(args.input_file, lemmas, argdict)
+    jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
     print(jobs)
