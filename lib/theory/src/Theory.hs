@@ -1415,6 +1415,7 @@ addDiffHeuristic _ _ = Nothing
 
 addTacticI :: TacticI -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addTacticI t (Theory n h [] sig c i o) = Just (Theory n h [t] sig c i o)
+addTacticI t (Theory n h l sig c i o) = Just (Theory n h (l++[t]) sig c i o)
 addTacticI _ _ = Nothing
 
 addDiffTacticI :: TacticI -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
@@ -1878,39 +1879,22 @@ getProofContext l thy = ProofContext
 
     -- Tactic specified for the lemma
     specifiedTacticI = case lattr of
-        Just lh -> Just lh
-        Nothing  -> case L.get thyTacticI thy of
-                    [] -> Nothing
-                    _ -> Just (head $ L.get thyTacticI thy)
+        [] -> Nothing
+        _  -> Just lattr
       where
-        lattr = headMay [getTacticFromName tname (L.get thyTacticI thy)
-                        | LemmaTacticI tname <- L.get lAttributes l]
+        lattr = L.get thyTacticI thy
+
+        {-trace (show $ L.get lAttributes l) (headMay [getTacticFromName tname (L.get thyTacticI thy)
+                        | LemmaTacticI tname <- L.get lAttributes l])
 
         getTacticFromName tname [] = defaultTacticI
-        getTacticFromName tname [TacticI name prio deprio] = checkName tname (TacticI name prio deprio) []
-        getTacticFromName tname ((TacticI name prio deprio):t) = checkName tname (TacticI name prio deprio) t
+        getTacticFromName tname [TacticI name h prio deprio] = checkName tname (TacticI name h prio deprio) []
+        getTacticFromName tname ((TacticI name h prio deprio):t) = checkName tname (TacticI name h prio deprio) t
 
-        checkName tname (TacticI name prio deprio) t
-            | tname == name = (TacticI name prio deprio)
+        checkName tname (TacticI name h prio deprio) t
+            | tname == name = (TacticI name h prio deprio)
             | t == [] = defaultTacticI
-            | otherwise = checkName tname (head t) (tail t)
-
-
-
-
-
-        {-case trace (show $ L.get lAttributes l) (getTacticFromName (L.get thyTacticI thy)) of
-        Just lh -> Just lh
-        Nothing  -> case L.get thyTacticI thy of
-                    [] -> Nothing
-                    _ -> Nothing --Just (head $ L.get thyTacticI thy)
-      where
-        name = getLemmaTacticName $ L.get lAttributes l
-
-        getTacticFromName [] = Nothing
-        getTacticFromName [TacticI name prio deprio] = Just(TacticI name prio deprio)
-        getTacticFromName ((TacticI name prio deprio):t) = Just(TacticI name prio deprio)
-        getTacticFromName (_:t) = getTacticFromName t-}
+            | otherwise = checkName tname (head t) (tail t)-}
 
 
 
@@ -1964,7 +1948,11 @@ getProofContextDiff s l thy = case s of
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
     
-    specifiedTacticI = headMay $ L.get diffThyTacticI thy
+    specifiedTacticI = case lattr of
+        [] -> Nothing
+        _  -> Just lattr
+      where
+        lattr = L.get diffThyTacticI thy
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
@@ -2025,7 +2013,11 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
 
-    specifiedTacticI = headMay $ L.get diffThyTacticI thy
+    specifiedTacticI = case lattr of
+        [] -> Nothing
+        _  -> Just lattr
+      where
+        lattr = L.get diffThyTacticI thy
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag

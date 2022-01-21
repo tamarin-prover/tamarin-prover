@@ -1396,7 +1396,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
             side <- get dsSide diffSequent
-            let isSolved s sys' = (rankProofMethods GoalNrRanking defaultTacticI (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+            let isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTacticI] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
             let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)

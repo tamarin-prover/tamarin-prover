@@ -743,7 +743,7 @@ data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
 
 data AutoProver = AutoProver
     { apDefaultHeuristic :: Maybe Heuristic
-    , apDefaultTacticI   :: Maybe TacticI
+    , apDefaultTacticI   :: Maybe [TacticI]
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
     }
@@ -757,12 +757,12 @@ selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
                                  (apDefaultHeuristic prover <|> L.get pcHeuristic (L.get dpcPCLeft ctx))
 
-selectTacticI :: AutoProver -> ProofContext -> TacticI
-selectTacticI prover ctx = fromMaybe (defaultTacticI)
+selectTacticI :: AutoProver -> ProofContext -> [TacticI]
+selectTacticI prover ctx = fromMaybe [defaultTacticI]
                              (apDefaultTacticI prover <|> L.get pcTacticI ctx)
 
-selectDiffTacticI :: AutoProver -> DiffProofContext -> TacticI
-selectDiffTacticI prover ctx = fromMaybe (defaultTacticI)
+selectDiffTacticI :: AutoProver -> DiffProofContext -> [TacticI]
+selectDiffTacticI prover ctx = fromMaybe [defaultTacticI]
                                  (apDefaultTacticI prover <|> L.get pcTacticI (L.get dpcPCLeft ctx))
 
 runAutoProver :: AutoProver -> Prover
@@ -1029,12 +1029,12 @@ cutOnSolvedBFSDiff =
 --
 -- Use 'annotateWithSystems' to annotate the proof tree with the constraint
 -- systems.
-proveSystemDFS :: Heuristic -> TacticI -> ProofContext -> Int -> System -> Proof ()
-proveSystemDFS heuristic tacticI ctxt d0 sys0 =
+proveSystemDFS :: Heuristic -> [TacticI] -> ProofContext -> Int -> System -> Proof ()
+proveSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where
     prove !depth sys =
-        case rankProofMethods (useHeuristic heuristic depth) tacticI ctxt sys of
+        case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
           []                         -> node Solved M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
@@ -1048,12 +1048,12 @@ proveSystemDFS heuristic tacticI ctxt d0 sys0 =
 --
 -- Use 'annotateWithSystems' to annotate the proof tree with the constraint
 -- systems.
-proveDiffSystemDFS :: Heuristic -> TacticI -> DiffProofContext -> Int -> DiffSystem -> DiffProof ()
-proveDiffSystemDFS heuristic tacticI ctxt d0 sys0 =
+proveDiffSystemDFS :: Heuristic -> [TacticI] -> DiffProofContext -> Int -> DiffSystem -> DiffProof ()
+proveDiffSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where
     prove !depth sys =
-        case rankDiffProofMethods (useHeuristic heuristic depth) tacticI ctxt sys of
+        case rankDiffProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
           []                         -> node (DiffSorry (Just "Cannot prove")) M.empty
           (method, (cases, _expl)):_ -> node method cases
       where

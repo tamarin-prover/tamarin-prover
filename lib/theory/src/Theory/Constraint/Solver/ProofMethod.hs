@@ -38,7 +38,7 @@ import           Data.Binary
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
-import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,(\\))
+import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,(\\),intercalate)
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
 -- import           Data.Monoid
@@ -413,7 +413,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
 
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = (rankProofMethods GoalNrRanking defaultTacticI (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+    isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTacticI] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
 
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -421,8 +421,8 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: ProofContext -> GoalRanking -> TacticI -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
-rankGoals ctxt ranking tacticI = case ranking of
+rankGoals :: ProofContext -> GoalRanking -> [TacticI] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals ctxt ranking tacticsList = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     TacticRanking tactic -> tacticRanking tactic ctxt
     TacticSmartRanking tacticName -> tacticSmartRanking tacticName ctxt
@@ -435,22 +435,36 @@ rankGoals ctxt ranking tacticI = case ranking of
     SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
     InjRanking useLoopBreakers -> injRanking ctxt useLoopBreakers
-    InternalTactic -> internalTacticRanking tacticI ctxt
+    InternalTacticRanking tactic-> internalTacticRanking (chosenTactic tacticsList tactic) ctxt
+
+    where 
+      chosenTactic :: [TacticI] -> TacticI -> TacticI
+      chosenTactic   []  t = chooseError tacticsList t
+      chosenTactic (h:q) t = case (checkName h t) of 
+        True  -> h
+        False -> chosenTactic q t 
+
+      definedHeuristic list = intercalate [','] (foldl (\acc x -> (tacticiName x):acc ) [] tacticsList)
+
+      checkName t1 t2 = (tacticiName t1) == (tacticiName t2)
+
+      chooseError [] t = error $ "No tactic has been written in the theory file"
+      chooseError l  t = error $ "The tactic specified ( "++(show $ tacticiName t)++" ) is not written in the theory file, please chose among the following: "++(show $ definedHeuristic l)
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
 -- for this 'System'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankProofMethods :: GoalRanking -> TacticI -> ProofContext -> System
+rankProofMethods :: GoalRanking -> [TacticI] -> ProofContext -> System
                  -> [(ProofMethod, (M.Map CaseName System, String))]
-rankProofMethods ranking tacticI ctxt sys = do
+rankProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
             (contradiction <$> contradictions ctxt sys)
         <|> (case L.get pcUseInduction ctxt of
                AvoidInduction -> [(Simplify, ""), (Induction, "")]
                UseInduction   -> [(Induction, ""), (Simplify, "")]
             )
-        <|> (solveGoalMethod <$> (rankGoals ctxt ranking tacticI sys $ openGoals sys))
+        <|> (solveGoalMethod <$> (rankGoals ctxt ranking tactics sys $ openGoals sys))
     case execProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
@@ -474,9 +488,9 @@ rankProofMethods ranking tacticI ctxt sys = do
 -- 'ProofMethod's and their corresponding results in this 'DiffProofContext' and
 -- for this 'DiffSystem'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankDiffProofMethods :: GoalRanking -> TacticI -> DiffProofContext -> DiffSystem
+rankDiffProofMethods :: GoalRanking -> [TacticI] -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
-rankDiffProofMethods ranking tacticI ctxt sys = do
+rankDiffProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
         <|> [(DiffMirrored, "Backward search completed")]
@@ -485,7 +499,7 @@ rankDiffProofMethods ranking tacticI ctxt sys = do
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step"))
                                           $ filter (\x -> not $ fst x == Induction)
-                                          $ rankProofMethods ranking tacticI (eitherProofContext ctxt s) sys'
+                                          $ rankProofMethods ranking tactics (eitherProofContext ctxt s) sys'
                   (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
@@ -752,6 +766,7 @@ itRanking tactic ags = result
 internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
+      let defaultMethod = tacticiHeuristic tactic
       let ags = goalNrRanking ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))

@@ -41,7 +41,7 @@ import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
-
+import Debug.Trace
 
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
@@ -180,10 +180,11 @@ preddeclaration thy = do
 tactic :: Parser TacticI
 tactic = do
     tName <- tacticName
+    heuristic <- selectedHeuristic
     prios <- many1 prio
     deprios <- many1 deprio
     _ <- newline
-    return $ TacticI tName prios deprios
+    return $ TacticI tName heuristic prios deprios
     
     where
       --Tactic
@@ -195,14 +196,17 @@ tactic = do
           tacticName <- many (alphaNum <|> oneOf "[]_-@")
           _ <- newline
           return $ tacticName
+      -- Default heuristic
+      selectedHeuristic :: Parser String
+      selectedHeuristic = string "heuristic" *> char ':' *> skipMany (char ' ') *> many (alphaNum <|> oneOf "[]_-@") <* newline
       --Prio
       prio :: Parser Prio
       prio = do
           _ <- string "prio:"
           _ <- skipMany (char ' ')
           _ <- newline
-          fs <- many1 function 
-          _ <- newline
+          fs <- many1 function
+          -- _ <- newline
           return $ Prio fs
       --Deprio
       deprio :: Parser Deprio
@@ -211,7 +215,7 @@ tactic = do
           _ <- skipMany (char ' ')
           _ <- newline
           fs <- many1 function 
-          _ <- newline
+          -- _ <- newline
           return $ Deprio fs
       --Function name
       functionName :: Parser String
@@ -222,9 +226,11 @@ tactic = do
       --Fonction
       function :: Parser (String,String)
       function = do
-          f <- functionName
+          -- f <- functionName
+          f <- lookAhead (noneOf $ "prio:" <|> "deprio:") *> functionName
           _ <- char ' '
           v <- functionValue
+          _ <- newline
           return (f,v)
 
 
@@ -232,9 +238,15 @@ heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
 
 goalRanking :: Bool -> Maybe FilePath -> Parser GoalRanking
-goalRanking diff workDir = try oracleRanking <|> regularRanking <?> "goal ranking"
+goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
    where
        regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
+
+       internalTacticRanking = do 
+            goal <- toGoalRanking <$> char '#' <* skipMany (char ' ')
+            tacticName <- optionMaybe (many1 (noneOf "\"\n\r#") <* char '#' <* skipMany (char ' '))
+
+            return $ mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal
 
        oracleRanking = do
            goal <- toGoalRanking <$> oneOf "oO" <* skipMany (char ' ')

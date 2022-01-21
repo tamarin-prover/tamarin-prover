@@ -3,10 +3,12 @@ theory SourceOfUniqueness begin
 builtins: symmetric-encryption
 
 tactic: uniqueness
+heuristic: s
 prio:
     isFactName ReceiverKeySimple
 prio:
     isInFactTerms xsimple
+    isInFactTerms ~xsimple
 prio:
     regex KU\( ~key
 prio:  
@@ -15,6 +17,13 @@ deprio:
     isInFactTerms ~key
 deprio:
     mimuf gloubougloboul
+
+tactic: huhu
+heuristic: s
+prio:
+    regex KU\( ~key
+deprio:
+    isFactName ReceiverKeySimple
 
 rule generatecomplicated:
  [ In(x), Fr(~key)  ]
@@ -38,7 +47,7 @@ restriction complicate:
  "All x #i. Complicated(x)@i
    ==> (Ex y #j. Complicated(y)@j & #j < #i) | (Ex y #j. Simpleunique(y)@j & #j < #i)"
  
-lemma uniqueness [heuristic=k]:
+lemma uniqueness[heuristic=#uniqueness#]:
  "All #i #j x. Unique(x)@i & Unique(x)@j ==> #i=#j"
 
 end

@@ -71,6 +71,7 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 
+import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -179,7 +180,7 @@ loadClosedDiffThy as inFile = do
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= closeThy as
+loadClosedThy as inFile = (loadOpenThy as inFile >>= closeThy as)
 
 -- | Load a closed theory and report on well-formedness errors.
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
@@ -365,7 +366,7 @@ closeDiffThyWithMaude sig as thy0 = do
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
 constructAutoProver as =
-    AutoProver heuristic Nothing proofBound stopOnTrace
+    trace (show "mimou") AutoProver heuristic Nothing proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------
@@ -373,7 +374,7 @@ constructAutoProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as))) (map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings)
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic rawRankings)
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
 
@@ -397,7 +398,7 @@ constructAutoDiffProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as))) (map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings)
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
         -- map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as)))
