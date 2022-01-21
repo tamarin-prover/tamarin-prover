@@ -1,0 +1,150 @@
+theory Chaum_Unforgeability begin
+
+// Function signature and definition of the equational theory E
+
+functions: blind/2, checksign/2, fst/1, pair/2, pk/1, sign/2, snd/1,
+           unblind/2
+equations:
+    checksign(sign(m, k), pk(k)) = m,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unblind(blind(m, r), r) = m,
+    unblind(sign(blind(m, r), k), r) = sign(m, k)
+
+
+
+rule (modulo E) Register_pk_Bank:
+   [ Fr( ~ltkB ) ]
+  -->
+   [ !Bank_Ltk( $B, ~ltkB ), !Bank_Pk( $B, pk(~ltkB) ), Out( pk(~ltkB) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_1:
+   [ In( blind(~x, r) ), !Bank_Ltk( $B, ~ltkB ) ]
+  --[ Withdraw( ~x ) ]->
+   [ Out( sign(blind(~x, r), ~ltkB) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S_1:
+   [ In( <~x, sign(~x, ~ltkB)> ), !Bank_Pk( $B, pk(~ltkB) ) ]
+  -->
+   [ Out( <~x, sign(~x, ~ltkB)> ), St_S_1( $B, ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_2:
+   [ In( <x, sign(x, ~ltkB)> ), !Bank_Ltk( $B, ~ltkB ) ]
+  --[ Deposited( x ) ]->
+   [ Private_Ch( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S_2:
+   [ Private_Ch( x ), St_S_1( $B, x ) ] --[ Spend( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction BankOnlyAcceptsOnce:
+  "∀ x #j #k. ((Deposited( x ) @ #j) ∧ (Deposited( x ) @ #k)) ⇒ (#j = #k)"
+  // safety formula
+
+lemma exec:
+  exists-trace "∃ x #i. Spend( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Spend( x ) @ #i)"
+*/
+simplify
+solve( Private_Ch( x ) ▶₀ #i )
+  case B_2
+  solve( St_S_1( $B, x ) ▶₁ #i )
+    case S_1
+    solve( !KU( sign(~x, ~ltkB) ) @ #vk.3 )
+      case B_1
+      solve( !KU( sign(~x, ~ltkB.1) ) @ #vk.5 )
+        case B_1
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+lemma unforgeability:
+  all-traces
+  "∀ x #j.
+    (Spend( x ) @ #j) ⇒
+    (∃ #i.
+      ((Withdraw( x ) @ #i) ∧ (#i < #j)) ∧
+      (¬(∃ #l. (Spend( x ) @ #l) ∧ (¬(#l = #j)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #j.
+  (Spend( x ) @ #j)
+ ∧
+  ∀ #i.
+   (Withdraw( x ) @ #i)
+  ⇒
+   ((¬(#i < #j)) ∨ (∃ #l. (Spend( x ) @ #l) ∧ ¬(#l = #j)))"
+*/
+simplify
+solve( Private_Ch( x ) ▶₀ #j )
+  case B_2
+  solve( St_S_1( $B, x ) ▶₁ #j )
+    case S_1
+    solve( !KU( sign(~x, ~ltkB) ) @ #vk.3 )
+      case B_1
+      solve( (#l < #j)  ∥ (#j < #l) )
+        case case_1
+        solve( Private_Ch( ~x ) ▶₀ #l )
+          case B_2
+          by contradiction /* cyclic */
+        qed
+      next
+        case case_2
+        solve( Private_Ch( ~x ) ▶₀ #l )
+          case B_2
+          by contradiction /* cyclic */
+        qed
+      qed
+    next
+      case c_sign
+      by solve( !KU( ~ltkB ) @ #vk.5 )
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/post17/chaum_unforgeability.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/post17/chaum_unforgeability.spthy
+
+  output:          examples/post17/chaum_unforgeability.spthy.tmp
+  processing time: 0.126732778s
+  exec (exists-trace): verified (6 steps)
+  unforgeability (all-traces): verified (10 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/post17/chaum_unforgeability.spthy
+
+  output:          examples/post17/chaum_unforgeability.spthy.tmp
+  processing time: 0.126732778s
+  exec (exists-trace): verified (6 steps)
+  unforgeability (all-traces): verified (10 steps)
+
+==============================================================================
+*/

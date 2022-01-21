@@ -1,0 +1,441 @@
+theory STS_MAC_fix2 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: KDF/1, fst/1, h/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
+           verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+section{* The Station-To-Station Protocol (MAC version, fixed with names and tags) *}
+
+rule (modulo E) Register_pk_clone:
+   [ Fr( ~ltk ) ]
+  --[ LtkSet( $A, ~ltk ), Corrupt( $E ) ]->
+   [
+   !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ), !Pk( $E, pk(~ltk) ),
+   Out( pk(~ltk) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ~ltkI ) ]
+  -->
+   [ Init_1( $I, $R, ~ltkI, ~ekI ), Out( <$I, $R, 'g'^~ekI> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [
+   Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
+   In( <$R, $I, Y, sign(<'1', $I, $R, Y, 'g'^~ekI>, ~ltkR), 
+        mac(Y^~ekI, sign(<'1', $I, $R, Y, 'g'^~ekI>, ~ltkR))>
+   )
+   ]
+  --[ AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y, KDF(Y^~ekI) ) ]->
+   [
+   Out( <$I, $R, sign(<'2', $I, $R, 'g'^~ekI, Y>, ~ltkI), 
+         mac(Y^~ekI, sign(<'2', $I, $R, 'g'^~ekI, Y>, ~ltkI))>
+   ),
+   !SessionKey( ~ekI, $I, $R, KDF(Y^~ekI) )
+   ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
+     In( <$R, $I, Y, sign(<'1', $I, $R, Y, 'g'^~ekI>, ~ltkR), 
+          mac(z, sign(<'1', $I, $R, Y, 'g'^~ekI>, ~ltkR))>
+     )
+     ]
+    --[ AcceptedI( ~ekI, $I, $R, 'g'^~ekI, Y, KDF(z) ) ]->
+     [
+     Out( <$I, $R, sign(<'2', $I, $R, 'g'^~ekI, Y>, ~ltkI), 
+           mac(z, sign(<'2', $I, $R, 'g'^~ekI, Y>, ~ltkI))>
+     ),
+     !SessionKey( ~ekI, $I, $R, KDF(z) )
+     ]
+    variants (modulo AC)
+    1. ~ekI  = ~ekI.14
+       Y     = Y.17
+       z     = Y.17^~ekI.14
+    
+    2. ~ekI  = ~ekI.17
+       Y     = z.23^inv(~ekI.17)
+       z     = z.23
+    
+    3. ~ekI  = ~ekI.63
+       Y     = x.121^x.122
+       z     = x.121^(~ekI.63*x.122)
+    
+    4. ~ekI  = ~ekI.66
+       Y     = x.127^inv((~ekI.66*x.128))
+       z     = x.127^inv(x.128)
+    
+    5. ~ekI  = ~ekI.66
+       Y     = x.127^(x.128*inv(~ekI.66))
+       z     = x.127^x.128
+    
+    6. ~ekI  = ~ekI.67
+       Y     = x.128^(x.129*inv((~ekI.67*x.130)))
+       z     = x.128^(x.129*inv(x.130))
+  */
+
+rule (modulo E) Resp_1:
+   [ !Ltk( $R, ~ltkR ), Fr( ~ekR ), In( <$I, $R, X> ) ]
+  -->
+   [
+   Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+   Out( <$R, $I, 'g'^~ekR, sign(<'1', $I, $R, 'g'^~ekR, X>, ~ltkR), 
+         mac(X^~ekR, sign(<'1', $I, $R, 'g'^~ekR, X>, ~ltkR))>
+   )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ !Ltk( $R, ~ltkR ), Fr( ~ekR ), In( <$I, $R, X> ) ]
+    -->
+     [
+     Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+     Out( <$R, $I, 'g'^~ekR, sign(<'1', $I, $R, 'g'^~ekR, X>, ~ltkR), 
+           mac(z, sign(<'1', $I, $R, 'g'^~ekR, X>, ~ltkR))>
+     )
+     ]
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.12
+       X     = X.14
+       z     = X.14^~ekR.12
+    
+    2. ~ekR  = ~ekR.15
+       X     = z.20^inv(~ekR.15)
+       z     = z.20
+    
+    3. ~ekR  = ~ekR.45
+       X     = x.85^x.86
+       z     = x.85^(~ekR.45*x.86)
+    
+    4. ~ekR  = ~ekR.47
+       X     = x.89^inv((~ekR.47*x.90))
+       z     = x.89^inv(x.90)
+    
+    5. ~ekR  = ~ekR.47
+       X     = x.89^(x.90*inv(~ekR.47))
+       z     = x.89^x.90
+    
+    6. ~ekR  = ~ekR.48
+       X     = x.90^(x.91*inv((~ekR.48*x.92)))
+       z     = x.90^(x.91*inv(x.92))
+  */
+
+rule (modulo E) Resp_2:
+   [
+   !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+   In( <$I, $R, sign(<'2', $I, $R, X, 'g'^~ekR>, ~ltkI), 
+        mac(X^~ekR, sign(<'2', $I, $R, X, 'g'^~ekR>, ~ltkI))>
+   )
+   ]
+  --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, KDF(X^~ekR) ) ]->
+   [ !SessionKey( ~ekR, $I, $R, KDF(X^~ekR) ) ]
+
+  /*
+  rule (modulo AC) Resp_2:
+     [
+     !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
+     In( <$I, $R, sign(<'2', $I, $R, X, 'g'^~ekR>, ~ltkI), 
+          mac(z, sign(<'2', $I, $R, X, 'g'^~ekR>, ~ltkI))>
+     )
+     ]
+    --[ AcceptedR( ~ekR, $I, $R, X, 'g'^~ekR, KDF(z) ) ]->
+     [ !SessionKey( ~ekR, $I, $R, KDF(z) ) ]
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.14
+       X     = X.17
+       z     = X.17^~ekR.14
+    
+    2. ~ekR  = ~ekR.17
+       X     = z.23^inv(~ekR.17)
+       z     = z.23
+    
+    3. ~ekR  = ~ekR.50
+       X     = x.95^x.96
+       z     = x.95^(~ekR.50*x.96)
+    
+    4. ~ekR  = ~ekR.53
+       X     = x.101^inv((~ekR.53*x.102))
+       z     = x.101^inv(x.102)
+    
+    5. ~ekR  = ~ekR.53
+       X     = x.101^(x.102*inv(~ekR.53))
+       z     = x.101^x.102
+    
+    6. ~ekR  = ~ekR.54
+       X     = x.102^(x.103*inv((~ekR.54*x.104)))
+       z     = x.102^(x.103*inv(x.104))
+  */
+
+rule (modulo E) Sessionkey_Reveal:
+   [ !SessionKey( ~tid, $I, $R, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma KI_Perfect_Forward_Secrecy_I:
+  all-traces
+  "¬(∃ ttest I R sessKey #i1 #k hki hkr.
+      (((((AcceptedI( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
+          (¬(∃ #r. Corrupt( I ) @ #r))) ∧
+         (¬(∃ #r. Corrupt( R ) @ #r))) ∧
+        (K( sessKey ) @ #k)) ∧
+       (¬(∃ #i3. SesskRev( ttest ) @ #i3))) ∧
+      (¬(∃ #i3 #i4 tpartner kpartner.
+          (SesskRev( tpartner ) @ #i3) ∧
+          (AcceptedR( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ ttest I R sessKey #i1 #k hki hkr.
+  (AcceptedI( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (Corrupt( I ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Corrupt( R ) @ #r) ⇒ ⊥) ∧
+  (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+  (∀ #i3 #i4 tpartner kpartner.
+    (SesskRev( tpartner ) @ #i3) ∧
+    (AcceptedR( tpartner, I, R, hki, hkr, kpartner ) @ #i4)
+   ⇒
+    ⊥)"
+*/
+simplify
+solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
+  case Init_1
+  solve( !Pk( $R, pk(~ltkR) ) ▶₁ #i1 )
+    case Register_pk_clone_case_1
+    solve( !KU( sign(<'1', $I, $R, hkr, 'g'^~ekI>, ~ltkR) ) @ #vk.7 )
+      case Resp_1
+      solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.11 )
+        case Sessionkey_Reveal_case_1
+        solve( splitEqs(1) )
+          case split_case_1
+          by contradiction /* from formulas */
+        next
+          case split_case_2
+          solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                           ~ltkR.1)
+                 ) @ #vk.20 )
+            case c_sign
+            by solve( !KU( ~ltkR.1 ) @ #vk.26 )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_2
+        solve( splitEqs(1) )
+          case split
+          solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                           ~ltkR.1)
+                 ) @ #vk.20 )
+            case c_sign
+            by solve( !KU( ~ltkR.1 ) @ #vk.26 )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_3
+        solve( splitEqs(2) )
+          case split_case_1
+          by contradiction /* from formulas */
+        next
+          case split_case_2
+          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                           ~ltkI.1)
+                 ) @ #vk.20 )
+            case c_sign
+            by solve( !KU( ~ltkI.1 ) @ #vk.27 )
+          qed
+        qed
+      next
+        case Sessionkey_Reveal_case_4
+        solve( splitEqs(2) )
+          case split_case_1
+          by contradiction /* from formulas */
+        next
+          case split_case_2
+          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                           ~ltkI.1)
+                 ) @ #vk.20 )
+            case c_sign
+            by solve( !KU( ~ltkI.1 ) @ #vk.27 )
+          qed
+        qed
+      next
+        case c_KDF
+        solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.13 )
+          case Init_1
+          by solve( !KU( ~ekR ) @ #vk.14 )
+        next
+          case Resp_1
+          by solve( !KU( ~ekI ) @ #vk.14 )
+        next
+          case c_exp
+          by solve( !KU( ~ekI ) @ #vk.16 )
+        qed
+      qed
+    next
+      case c_sign
+      by solve( !KU( ~ltkR ) @ #vk.14 )
+    qed
+  next
+    case Register_pk_clone_case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma KI_Perfect_Forward_Secrecy_R:
+  all-traces
+  "¬(∃ ttest I R sessKey #i1 #k hki hkr.
+      (((((AcceptedR( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧
+          (¬(∃ #r. Corrupt( I ) @ #r))) ∧
+         (¬(∃ #r. Corrupt( R ) @ #r))) ∧
+        (K( sessKey ) @ #k)) ∧
+       (¬(∃ #i3. SesskRev( ttest ) @ #i3))) ∧
+      (¬(∃ #i3 #i4 tpartner kpartner.
+          (SesskRev( tpartner ) @ #i3) ∧
+          (AcceptedI( tpartner, I, R, hki, hkr, kpartner ) @ #i4))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ ttest I R sessKey #i1 #k hki hkr.
+  (AcceptedR( ttest, I, R, hki, hkr, sessKey ) @ #i1) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (Corrupt( I ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Corrupt( R ) @ #r) ⇒ ⊥) ∧
+  (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+  (∀ #i3 #i4 tpartner kpartner.
+    (SesskRev( tpartner ) @ #i3) ∧
+    (AcceptedI( tpartner, I, R, hki, hkr, kpartner ) @ #i4)
+   ⇒
+    ⊥)"
+*/
+simplify
+solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
+  case Register_pk_clone_case_1
+  solve( Resp_1( $I, $R, ~ltkR, ~ekR, hki ) ▶₁ #i1 )
+    case Resp_1
+    solve( !KU( sign(<'2', $I, $R, hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
+      case Init_2_case_1
+      solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
+        case Resp_1
+        solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.12 )
+          case Sessionkey_Reveal_case_1
+          solve( splitEqs(2) )
+            case split_case_1
+            by contradiction /* from formulas */
+          next
+            case split_case_2
+            solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                             ~ltkR.1)
+                   ) @ #vk.25 )
+              case c_sign
+              by solve( !KU( ~ltkR.1 ) @ #vk.31 )
+            qed
+          qed
+        next
+          case Sessionkey_Reveal_case_2
+          solve( splitEqs(2) )
+            case split
+            solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                             ~ltkR.1)
+                   ) @ #vk.25 )
+              case c_sign
+              by solve( !KU( ~ltkR.1 ) @ #vk.31 )
+            qed
+          qed
+        next
+          case Sessionkey_Reveal_case_3
+          solve( splitEqs(3) )
+            case split_case_1
+            by contradiction /* from formulas */
+          next
+            case split_case_2
+            solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                             ~ltkI.1)
+                   ) @ #vk.25 )
+              case c_sign
+              by solve( !KU( ~ltkI.1 ) @ #vk.32 )
+            qed
+          qed
+        next
+          case Sessionkey_Reveal_case_4
+          solve( splitEqs(3) )
+            case split
+            solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                             ~ltkI.1)
+                   ) @ #vk.25 )
+              case c_sign
+              by solve( !KU( ~ltkI.1 ) @ #vk.32 )
+            qed
+          qed
+        next
+          case c_KDF
+          solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.18 )
+            case Init_1
+            by solve( !KU( ~ekR ) @ #vk.19 )
+          next
+            case Resp_1
+            by solve( !KU( ~ekI ) @ #vk.19 )
+          next
+            case c_exp
+            by solve( !KU( ~ekI ) @ #vk.21 )
+          qed
+        qed
+      next
+        case c_sign
+        by solve( !KU( ~ltkR.1 ) @ #vk.22 )
+      qed
+    next
+      case Init_2_case_2
+      by contradiction /* from formulas */
+    next
+      case c_sign
+      by solve( !KU( ~ltkI ) @ #vk.15 )
+    qed
+  qed
+next
+  case Register_pk_clone_case_2
+  by contradiction /* from formulas */
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/STS_MAC_fix2.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/STS_MAC_fix2.spthy
+
+  output:          examples/csf12/STS_MAC_fix2.spthy.tmp
+  processing time: 1.361802962s
+  KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
+  KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/STS_MAC_fix2.spthy
+
+  output:          examples/csf12/STS_MAC_fix2.spthy.tmp
+  processing time: 1.361802962s
+  KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
+  KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
+
+==============================================================================
+*/

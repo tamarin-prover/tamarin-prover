@@ -1,0 +1,192 @@
+theory Minimal_Loop_Example begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: A/1 */
+
+rule (modulo E) Start:
+   [ Fr( x ) ] --[ Start( x ) ]-> [ A( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Loop:
+   [ A( x ) ] --[ Loop( x ) ]-> [ A( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Stop:
+   [ A( x ) ] --[ Stop( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Start_before_Loop [reuse, use_induction]:
+  all-traces
+  "∀ x #j. (Loop( x ) @ #j) ⇒ (∃ #i. (Start( x ) @ #i) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #j. (Loop( x ) @ #j) ∧ ∀ #i. (Start( x ) @ #i) ⇒ ¬(#i < #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#j))  ∥
+         (∃ #i. (Start( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) )
+    case case_1
+    solve( A( x ) ▶₀ #j )
+      case Loop
+      by contradiction /* from formulas */
+    next
+      case Start
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Start_before_Stop:
+  all-traces
+  "∀ x #j. (Stop( x ) @ #j) ⇒ (∃ #i. (Start( x ) @ #i) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #j. (Stop( x ) @ #j) ∧ ∀ #i. (Start( x ) @ #i) ⇒ ¬(#i < #j)"
+*/
+simplify
+solve( A( x ) ▶₀ #j )
+  case Loop
+  by contradiction /* from formulas */
+next
+  case Start
+  by contradiction /* from formulas */
+qed
+
+lemma Loop_before_Stop [reuse, use_induction]:
+  all-traces "∀ x #i #j. ((Stop( x ) @ #j) ∧ (Loop( x ) @ #i)) ⇒ (#i < #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i #j. (Stop( x ) @ #j) ∧ (Loop( x ) @ #i) ∧ ¬(#i < #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( A( ~n ) ▶₀ #j )
+    case Loop
+    solve( A( ~n ) ▶₀ #i )
+      case Loop
+      by contradiction /* non-injective facts (#vr.1,#j,#i) */
+    next
+      case Start
+      by contradiction /* non-injective facts (#i.1,#j,#i) */
+    qed
+  next
+    case Start
+    solve( A( ~n ) ▶₀ #i )
+      case Loop
+      by contradiction /* non-injective facts (#vr,#j,#i) */
+    qed
+  qed
+qed
+
+lemma Stop_unique [reuse]:
+  all-traces "∀ x #i #j. ((Stop( x ) @ #j) ∧ (Stop( x ) @ #i)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i #j. (Stop( x ) @ #j) ∧ (Stop( x ) @ #i) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( A( x ) ▶₀ #i )
+    case Loop
+    solve( A( ~n ) ▶₀ #j )
+      case Loop
+      by contradiction /* non-injective facts (#vr.1,#i,#j) */
+    next
+      case Start
+      by contradiction /* non-injective facts (#i.1,#i,#j) */
+    qed
+  next
+    case Start
+    solve( A( ~n ) ▶₀ #j )
+      case Loop
+      by contradiction /* non-injective facts (#vr,#vr.1,#i) */
+    next
+      case Start
+      by contradiction /* cyclic */
+    qed
+  qed
+next
+  case case_2
+  solve( A( x ) ▶₀ #i )
+    case Loop
+    by contradiction /* non-injective facts (#vr,#j,#i) */
+  next
+    case Start
+    by contradiction /* non-injective facts (#vr,#j,#i) */
+  qed
+qed
+
+lemma Satisfied_by_empty_trace_only [use_induction]:
+  exists-trace "∀ x #j. (Loop( x ) @ #j) ⇒ (⊥)"
+/*
+guarded formula characterizing all satisfying traces:
+"∀ x #j. (Loop( x ) @ #j) ⇒ ⊥"
+*/
+induction
+  case empty_trace
+  simplify
+  SOLVED // trace found
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/Minimal_Loop_Example.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/Minimal_Loop_Example.spthy
+
+  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
+  processing time: 0.074274887s
+  Start_before_Loop (all-traces): verified (8 steps)
+  Start_before_Stop (all-traces): verified (4 steps)
+  Loop_before_Stop (all-traces): verified (9 steps)
+  Stop_unique (all-traces): verified (12 steps)
+  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/Minimal_Loop_Example.spthy
+
+  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
+  processing time: 0.074274887s
+  Start_before_Loop (all-traces): verified (8 steps)
+  Start_before_Stop (all-traces): verified (4 steps)
+  Loop_before_Stop (all-traces): verified (9 steps)
+  Stop_unique (all-traces): verified (12 steps)
+  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

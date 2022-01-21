@@ -1,3 +1,34 @@
+* 1.6.1
+  - Further SAPIC integration
+
+  - Improved auto sources - compute sources lemmas automatically
+  
+  - Allow specifying the oracle to use in an oracle ranking within the Tamarin file, either globally or per lemma
+
+  - Add a shortcut to prove all lemmas ('s' and 'S')
+  
+  - Export and import rule variants
+  
+  - Docker files for Tamarin
+
+  - Allow Maude 3.1 and fixed parser accordingly
+  
+  - Add check for PNG support in GraphViz
+
+  - Numerous bug fixes
+  
+  - Added script for automated tests, even on Travis
+  
+  - Refactoring and fixing the parser
+  
+  - Fixed SAPIC for OCaml 4.12
+  
+  - Fixed compatibility with GHC 9, removed monad-unlift
+  
+  - Multiple new case studies
+
+  - Using stack LTS resolver 18.5 and GHC 8.10.4 now [stack update, stack upgrade may be needed]
+
 * 1.6.0
   - SAPIC integration
 

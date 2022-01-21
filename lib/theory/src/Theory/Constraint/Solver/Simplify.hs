@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE TupleSections      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -32,17 +33,17 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets)
+import           Control.Monad.State                (gets, modify)
 
-import           Safe                           (headMay)
 
-import           Extension.Data.Label
+import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
@@ -67,9 +68,7 @@ simplifySystem = do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals
-        -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances
+        removeSolvedSplitGoals    
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -92,6 +91,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -103,6 +103,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -122,6 +123,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -133,6 +135,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -227,7 +230,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-
+                    
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -398,66 +401,44 @@ insertImpliedFormulas = do
           then return (insertFormula implied)
           else []
 
--- | Compute all less relations implied by injective fact instances.
+-- | CR-rule *S_fresh-order*:
 --
--- Formally, they are computed as follows. Let 'f' be a fact symbol with
--- injective instances. Let i and k be temporal variables ordered
--- according to
---
---   i < k
---
--- and let there be an edge from (i,u) to (k,w) for some indices u and w
--- corresponding to fact f(t,...).
--- If:
---    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
---    -  i<j & f(t,...) occurs at j concs, then k<j.
-nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
-nonInjectiveFactInstances ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
-    let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
-        kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+-- `i:f`, `j:g`
+-- -- insert --
+-- `i<j`
+-- *with `prems(f)u = Fr(~s)` and `prems(g)v = Fact(t))`*
+-- *if `s` is syntactically in `t` and not below a reducible operator*
+freshOrdering :: Reduction ChangeIndicator
+freshOrdering = do
+  nodes <- M.assocs <$> getM sNodes
+  reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let origins = concatMap getFreshFactVars nodes
+  let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
+  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
-    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
---    j <- S.toList $ D.reachableSet [i] less
-    (j, _) <- M.toList $ get sNodes se
-    -- check that j<k
-    guard  (k `S.member` D.reachableSet [j] less)
-    let isCounterExample checkRule = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ get sNodes se)
-        checkRuleJK jRu    = (
-                           -- check that f(t,...) occurs at j in prems and j<k
-                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
-                           (k `S.member` D.reachableSet [j] less) &&
-                            nonUnifiableNodes j i
-                           )
-        checkRuleIJ jRu    = (
-                           -- check that f(t,...) occurs at j in concs and i<j
-                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
-                           (j `S.member` D.reachableSet [i] less) &&
-                            nonUnifiableNodes k j
-                           )
-    if (isCounterExample checkRuleJK) then return (j,i)
-      else do
-         guard (isCounterExample checkRuleIJ)
-         return (k,j)
-    -- (guard (isCounterExample checkRuleConcs)
-    --  return (k,j))
---    insertLess k i
---    return (i, j, k) -- counter-example to unique fact instances
-  where
-    less      = rawLessRel se
-    firstTerm = headMay . factTerms
-    runMaude   = (`runReader` get pcMaudeHandle ctxt)
-    nonUnifiableNodes :: NodeId -> NodeId -> Bool
-    nonUnifiableNodes i j = maybe False (not . runMaude) $
-        (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
-                               <*> M.lookup j (get sNodes se)
+  oldLesses <- gets (get sLessAtoms)
+  mapM_ (uncurry insertLess) newLesses
+  modifiedLesses <- gets (get sLessAtoms)
+  return $ if oldLesses == modifiedLesses
+    then Unchanged
+    else Changed
 
-addNonInjectiveFactInstances :: Reduction ()
-addNonInjectiveFactInstances = do
-  se <- gets id
-  ctxt <- ask
-  let list = nonInjectiveFactInstances ctxt se
-  mapM_ (uncurry insertLess) list
+    where
+      getFreshFactVars :: (NodeId, RuleACInst) -> [(LNTerm, NodeId)]
+      getFreshFactVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (head $ factTerms prem, idx)
+          _         -> Nothing
+        ) prems
+      
+      getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
+      getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
+          FreshFact -> []
+          _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
+        ) prems
+      
+      extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
+      extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
+                                      = concatMap (extractFreshNotBelowReducible reducible) as
+      extractFreshNotBelowReducible _ t | isFreshVar t = [t]
+      extractFreshNotBelowReducible _ _                = []
+      

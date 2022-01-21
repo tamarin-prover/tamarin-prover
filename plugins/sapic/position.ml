@@ -6,7 +6,7 @@ let pos2string  = List.fold_left (fun s i -> string_of_int(i)^s) ""
 
 type t = position
 let compare (s1:position) (s2:position) = match (s1,s2) with
-    (a::ar,b::br) -> if compare a b = 0 then compare ar br else compare a b
+    (a::ar,b::br) -> if Stdlib.compare a b = 0 then Stdlib.compare ar br else Stdlib.compare a b
   |(a::ar,[]) -> 1
   |([],b::br)-> -1
   |([],[]) -> 0

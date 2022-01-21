@@ -46,9 +46,10 @@ dotPath = fromMaybe "dot" . findArg "withDot"
 
 -- | Path to dot or json tool
 graphPath :: Arguments -> (String, FilePath)
-graphPath as = 
-  if (argExists "withJson" as) then ("json", (fromMaybe "json" . findArg "withJson") as)
-                               else ("dot", (fromMaybe "dot" . findArg "withDot") as)
+graphPath as =
+  if argExists "withJson" as
+     then ("json", (fromMaybe "json" . findArg "withJson") as)
+     else ("dot", (fromMaybe "dot" . findArg "withDot") as)
 
 
 ------------------------------------------------------------------------------
@@ -59,7 +60,7 @@ graphPath as =
 getCommandLine :: IO String
 getCommandLine = do
   arguments <- getArgs
-  return . concat . intersperse " " $ programName : arguments
+  return . unwords $ programName : arguments
 
 -- | Read the cpu info using a call to cat /proc/cpuinfo
 getCpuModel :: IO String
@@ -76,7 +77,7 @@ getCpuModel =
 
 -- | Build the command line corresponding to a program arguments tuple.
 commandLine :: String -> [String] -> String
-commandLine prog args = concat $ intersperse " " $ prog : args
+commandLine prog args = unwords $ prog : args
 
 -- | Test if a process is executable and check its response. This is used to
 -- determine the versions and capabilities of tools that we depend on.
@@ -88,9 +89,10 @@ testProcess
   -> FilePath       -- ^ Process to start
   -> [String]       -- ^ Arguments
   -> String         -- ^ Stdin
+  -> Bool           -- ^ Whether to ignore ExitFailure
   -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
   -> IO Bool        -- ^ True, if test was successful
-testProcess check defaultMsg testName prog args inp maudeTest = do
+testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = do
     putStr testName
     hFlush stdout
     handle handler $ do
@@ -104,14 +106,18 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
                 putStrLn $ " stderr:  " ++ err
                 return False
 
-        case exitCode of
-            ExitFailure code -> errMsg $
-              "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
-            ExitSuccess      ->
-              case check out err of
-                Left msg     -> errMsg msg
-                Right msg    -> do putStrLn msg
-                                   return True
+        let check' = case check out err of
+                      Left msg     -> errMsg msg
+                      Right msg    -> do putStrLn msg
+                                         return True
+
+        if not ignoreExitCode
+           then case exitCode of
+                  ExitFailure code -> errMsg $
+                    "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
+                  ExitSuccess      -> check'
+           else check'
+
   where
     handler :: IOException -> IO Bool
     handler _ = do putStrLn "caught exception while executing:"
@@ -126,13 +132,20 @@ testProcess check defaultMsg testName prog args inp maudeTest = do
 ensureGraphVizDot :: Arguments -> IO Bool
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
-    testProcess check errMsg " checking version: " dot ["-V"] "" False
+    dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
+    if dotExists 
+       then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
+       else return dotExists
   where
     dot = dotPath as
-    check _ err
-      | "graphviz" `isInfixOf` map toLower err = Right $ init err ++ ". OK."
-      | otherwise                              = Left  $ errMsg
-    errMsg = unlines
+    check str okMsg _ err
+      | str `isInfixOf` err' = Right msg
+      | otherwise = Left "Error."
+      where err' = map toLower err
+            msg  = if null okMsg
+                      then init err' ++ ". OK."
+                      else okMsg
+    errMsg1 = unlines
       [ "WARNING:"
       , ""
       , " The dot tool seems not to be provided by Graphviz."
@@ -140,12 +153,18 @@ ensureGraphVizDot as = do
       , " Please download an official version from:"
       , "         http://www.graphviz.org/"
       ]
+    errMsg2 = unlines
+      [ "WARNING:"
+      , ""
+      , " The dot tool does not seem to support PNG."
+      , " Graph generation might not work."
+      ]
 
 -- | Check whether a the graph rendering command supplied is pointing to an existing file
 ensureGraphCommand :: Arguments -> IO Bool
 ensureGraphCommand as = do
     putStrLn $ "Graph rendering command: " ++ cmd
-    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False
+    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
     cmd = snd $ graphPath as
     check _ err
@@ -153,13 +172,13 @@ ensureGraphCommand as = do
       | otherwise  = Left  $ errMsg
     errMsg = unlines
       [ "Command not found" ]
-      
+
 -- | Ensure a suitable version of Maude is installed.
 ensureMaude :: Arguments -> IO Bool
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
-    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" True
-    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" True
+    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
+    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
     return (t1 && t2)
   where
     maude = maudePath as
