@@ -21,6 +21,7 @@ COPY lib/sapic/tamarin-prover-sapic.cabal lib/sapic/
 COPY lib/term/tamarin-prover-term.cabal lib/term/
 COPY lib/theory/tamarin-prover-theory.cabal lib/theory/
 COPY lib/utils/tamarin-prover-utils.cabal lib/utils/
+COPY lib/export/tamarin-prover-export.cabal lib/export/
 # cache stack package index
 RUN stack update
 # > Compiling language-javascript requires a UTF-8 locale.
