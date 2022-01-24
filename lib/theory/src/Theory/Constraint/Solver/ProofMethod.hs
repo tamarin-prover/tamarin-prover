@@ -67,6 +67,7 @@ import           Theory.Model
 import           Theory.Text.Pretty
 
 import           Data.List.Split
+import           Data.String
 import           Text.Regex.Posix
 
 ------------------------------------------------------------------------------
@@ -766,8 +767,8 @@ itRanking tactic ags = result
 internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
-      let defaultMethod = tacticiHeuristic tactic
-      let ags = goalNrRanking ags0
+      let defaultMethod =  charToGoalRanking "noOracle" (tacticiHeuristic tactic)
+      let ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))

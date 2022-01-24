@@ -107,7 +107,7 @@ data Deprio = Deprio {
 -- | New type for Tactis inside the theory file
 data TacticI = TacticI{
       _name :: String,
-      _heuristic :: String,
+      _heuristic :: Char,
       _prios :: [Prio],
       _deprios :: [Deprio]
     }
@@ -143,7 +143,7 @@ defaultHeuristic :: Bool -> Heuristic
 defaultHeuristic = Heuristic . defaultRankings
 
 defaultTacticI :: TacticI
-defaultTacticI = TacticI "default" "s" [] []
+defaultTacticI = TacticI "default" 's' [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -187,7 +187,7 @@ tacticPath Tactic{..} = tacticWorkDir </> normalise tacticRelPath
 tacticiName :: TacticI -> String
 tacticiName TacticI{..} = _name
 
-tacticiHeuristic :: TacticI -> String
+tacticiHeuristic :: TacticI -> Char
 tacticiHeuristic TacticI{..} = _heuristic
 
 tacticiPrio :: TacticI -> [Prio]
@@ -219,6 +219,19 @@ goalRankingIdentifiers = M.fromList
                         , ('#', InternalTacticRanking defaultTacticI)
                         ]
 
+goalRankingIdentifiersNoOracle :: M.Map Char GoalRanking
+goalRankingIdentifiersNoOracle = M.fromList
+                        [ ('s', SmartRanking False)
+                        , ('S', SmartRanking True)
+                        , ('p', SapicRanking)
+                        , ('P', SapicPKCS11Ranking)
+                        , ('c', UsefulGoalNrRanking)
+                        , ('C', GoalNrRanking)
+                        , ('i', InjRanking False)
+                        , ('I', InjRanking True)
+                        , ('#', InternalTacticRanking defaultTacticI)
+                        ]
+
 goalRankingIdentifiersDiff :: M.Map Char GoalRanking
 goalRankingIdentifiersDiff  = M.fromList
                             [ ('s', SmartDiffRanking)
@@ -228,17 +241,21 @@ goalRankingIdentifiersDiff  = M.fromList
                             , ('T', TacticSmartRanking defaultTactic)
                             , ('c', UsefulGoalNrRanking)
                             , ('C', GoalNrRanking)
-                            , ('#', InternalTacticRanking defaultTacticI)
                             ]
 
-charToGoalRankingMay :: Char -> Maybe GoalRanking
-charToGoalRankingMay c = M.lookup c goalRankingIdentifiers
+charToGoalRankingMay :: String -> Char -> Maybe GoalRanking
+charToGoalRankingMay "noOracle" c = M.lookup c goalRankingIdentifiersNoOracle
+charToGoalRankingMay      _     c = M.lookup c goalRankingIdentifiers
 
-charToGoalRanking :: Char -> GoalRanking
-charToGoalRanking c = fromMaybe
+charToGoalRanking :: String -> Char -> GoalRanking
+charToGoalRanking "noOracle" c = fromMaybe
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ [c]
+        ++ "'. Use one of the following:\n" ++ listGoalRankingsNoOracle)
+    $ charToGoalRankingMay "noOracle" c
+charToGoalRanking    _     c = fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ [c]
         ++ "'. Use one of the following:\n" ++ listGoalRankings)
-    $ charToGoalRankingMay c
+    $ charToGoalRankingMay "" c
 
 charToGoalRankingDiffMay :: Char -> Maybe GoalRanking
 charToGoalRankingDiffMay c = M.lookup c goalRankingIdentifiersDiff
@@ -253,13 +270,17 @@ listGoalRankings :: String
 listGoalRankings = M.foldMapWithKey
     (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiers
 
+listGoalRankingsNoOracle :: String
+listGoalRankingsNoOracle = M.foldMapWithKey
+    (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersNoOracle
+
 listGoalRankingsDiff :: String
 listGoalRankingsDiff = M.foldMapWithKey
     (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiff
 
 filterHeuristic :: String -> [GoalRanking]
-filterHeuristic ('#':t) = trace (show $ tail $ dropWhile (/= '#') t) (InternalTacticRanking (TacticI (takeWhile (/= '#') t) "" [] [])):(filterHeuristic $ tail $ dropWhile (/= '#') t)
-filterHeuristic (c:t)   = (charToGoalRanking c):(filterHeuristic t)
+filterHeuristic ('#':t) = trace (show $ tail $ dropWhile (/= '#') t) (InternalTacticRanking (TacticI (takeWhile (/= '#') t) ' ' [] [])):(filterHeuristic $ tail $ dropWhile (/= '#') t)
+filterHeuristic (c:t)   = (charToGoalRanking "" c):(filterHeuristic t)
 filterHeuristic ("")    = []
 
 -- | The name/explanation of a 'GoalRanking'.

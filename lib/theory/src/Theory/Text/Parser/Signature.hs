@@ -197,8 +197,8 @@ tactic = do
           _ <- newline
           return $ tacticName
       -- Default heuristic
-      selectedHeuristic :: Parser String
-      selectedHeuristic = string "heuristic" *> char ':' *> skipMany (char ' ') *> many (alphaNum <|> oneOf "[]_-@") <* newline
+      selectedHeuristic :: Parser Char
+      selectedHeuristic = string "heuristic" *> char ':' *> skipMany (char ' ') *> letter <* newline
       --Prio
       prio :: Parser Prio
       prio = do
@@ -254,7 +254,7 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
 
            return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
 
-       toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking
+       toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking ""
 
 
 liftedAddPredicate :: Catch.MonadThrow m =>
