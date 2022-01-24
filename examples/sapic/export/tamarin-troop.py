@@ -11,8 +11,19 @@ DEEPSEC = "deepsec"
 SPTHY = "spthy"
 PROVERIF = "proverif"
 TAMARIN_COMMAND = "tamarin-prover-proverif-output"
+PROVERIF_COMMAND = "proverif"
+DEEPSEC_COMMAND = "deepsec"
 # Dict mapping tool to file type
-TOOL_TO_FILE_TYPE = { "spthy": ".spthy", "proverif": ".pv", "deepsec": ".dps" }
+TOOL_TO_FILE_TYPE = { SPTHY: ".spthy", PROVERIF: ".pv", DEEPSEC: ".dps" }
+
+def add_double_dashes_to_arguments(cliarguments):
+    return [['--' + argument for argument in argumentlist] for argumentlist \
+           in cliarguments ]
+
+def add_dashes_to_arguments(cliarguments):
+    return [['-' + argument for argument in argumentlist] for argumentlist \
+           in cliarguments ]
+
 
 def intermediate_file_name(input_file, tool, lemma):
     """
@@ -23,7 +34,8 @@ def intermediate_file_name(input_file, tool, lemma):
     """
     # Get input_file without '.spthy'
     file_name, _ = os.path.splitext(input_file)
-    return file_name + "_" + tool + TOOL_TO_FILE_TYPE[tool]
+    lemmastring = lemma + "_" if lemma else ""
+    return file_name + "_" + lemmastring + tool + TOOL_TO_FILE_TYPE[tool]
 
 def generate_files(input_file, flags, lemmas, argdict, diff):
     """
@@ -46,6 +58,8 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
         # For each tool generate a file using Tamarin -m
         # TODO: In the future, we want to do this for every lemma.
         # However, currently Tamarin does not support this.
+        # If no lemmas are specified, use the empty string whenever
+        # a lemma name is needed.
 
         # Charlie, Robert, and Niklas discussed this via Mattermost.
         # They plan to add a --lemma parameter to Tamarin which
@@ -57,7 +71,6 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
         cmd = " ".join([TAMARIN_COMMAND, '-m='+tool] + flags + [input_file])
         # Add diff flag
         cmd = cmd + diffstring
-        print(cmd)
         # Change file type according to current tool
         # TODO: Add lemma parameter to file name
         destination = " > " + intermediate_file_name(input_file, tool, "")
@@ -100,6 +113,11 @@ def generate_non_tamarin_jobs(tool, input_file, lemmas, argdict):
         Returns a list of jobs (list of lists).
     """
     jobs = []
+    toolcmd = TOOL_TO_COMMAND[tool]
+    if not lemmas:
+        # Hack to make the loop work even if not lemmas were specified
+        lemmas = [""]
+
     for lemma in lemmas:
         # Build the crossproduct of tool, input_file, lemma name, and
         # CLI parameters
@@ -107,27 +125,30 @@ def generate_non_tamarin_jobs(tool, input_file, lemmas, argdict):
         # TODO: lemma name to 'intermediate_file_name'
         if not argdict[tool][0]:
             # If there were no CLI params specified.
-            jobs += list(itertools.product([tool]
-                   ,[intermediate_file_name(input_file, tool, lemma)]))
+            jobs += [[toolcmd], [intermediate_file_name(input_file, tool, "")]]
         else:
             # If CLI params were specified, we use them.
-            jobs += list(itertools.product([tool]
-                   ,[intermediate_file_name(input_file, tool, lemma)]
-                   ,*argdict[tool]))
+            jobs += [[toolcmd, intermediate_file_name(input_file, tool, "")]
+                   + list(tuple) for tuple in itertools.product(*argdict[tool])]
+
     return jobs
 
 def generate_tamarin_jobs(tool, input_file, lemmas, argdict, flags):
+    # TODO: Might need to revisit this once the Tamarin CLI has changed
     lemmacli = [ '--prove=' + lemma for lemma in lemmas ] if lemmas \
                else ["--prove"]
-    jobs = []
     flags = flags if flags else []
+    toolcmd = TOOL_TO_COMMAND[tool]
+    jobs = []
     if not argdict[tool][0]:
-        jobs = [[tool, input_file] + lemmacli + flags]
+        jobs = [[toolcmd, input_file] + lemmacli + flags]
     else:
-        jobs = [[tool, input_file] + lemmacli + flags + list(tuple) for \
+        jobs = [[toolcmd, input_file] + lemmacli + flags + list(tuple) for \
                tuple in itertools.product(*argdict[tool])]
 
     return jobs
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -153,8 +174,19 @@ if __name__ == '__main__':
                         nargs='*', type=str, help='arguments for Deepsec')
     # Arg for Tamarin diff mode
     parser.add_argument('--diff', action='store_true',
-                        help="Flag to use Tamarin's diff mode\
-                        for file generation")
+                        help="use Tamarin's diff mode for file generation")
+    # Custom Tamarin command
+    parser.add_argument('-tname', '--tname', action='store', type=str,
+                        help='customize how Tamarin is called; defaults to \
+                              "tamarin-prover"')
+
+    parser.add_argument('-pname', '--pname', action='store', type=str,
+                        help='customize how ProVerif is called; defaults to \
+                              "proverif"')
+
+    parser.add_argument('-dname', '--dname', action='store', type=str,
+                        help='customize how Deepsec is called; defaults to \
+                              "deepsec"')
     # TODO: Add CLI options that allow to set the commands for Tamarin
     # TODO: Deepsec, and ProVerif. i.e. -tname MyTamarinCommand
     # TODO: Useful since many users probably have different versions of
@@ -164,24 +196,42 @@ if __name__ == '__main__':
     # TOOD: or --, or whether we want to add that ourselfs.
 
     args = parser.parse_args()
+    # Changes tool commands if specified
+    if args.tname:
+        TAMARIN_COMMAND = args.tname
+
+    if args.dname:
+        DEEPSEC_COMMAND = args.dname
+
+    if args.pname:
+        PROVERIF_COMMAND = args.pname
+
+    # Map tools to their command
+    TOOL_TO_COMMAND = { SPTHY: TAMARIN_COMMAND, PROVERIF: PROVERIF_COMMAND,
+                       DEEPSEC: DEEPSEC_COMMAND }
+
     # Extract the list of lemmas
-    lemmas = args.lemma
+    # If no lemmas are specified
+    lemmas = args.lemma if args.lemma else []
     # Extract the list of preprocessor Flags
-    flags = args.defines
+    flags = args.defines if args.defines else []
     # Create a dict that maps tool (Tamarin=spthy, ProVerif=proverif,
     # and Deepsec=deepsec) to the parsed args
     argdict = dict()
     if args.deepsec:
-        argdict[DEEPSEC] = args.deepsec
+        argdict[DEEPSEC] = add_double_dashes_to_arguments(args.deepsec)
     if args.proverif:
-        argdict[PROVERIF] = args.proverif
+        argdict[PROVERIF] = add_dashes_to_arguments(args.proverif)
     if args.tamarin:
-        argdict[SPTHY] = args.tamarin
+        argdict[SPTHY] = add_double_dashes_to_arguments(args.tamarin)
     if args.heuristic:
+        # Add '--heuristic' prefix to the heuristics
+        heuristics = [ '--heuristic ' + heuristic for heuristic in \
+                     args.heuristic ]
         if SPTHY in argdict:
-            argdict[SPTHY].append(args.heuristic)
+            argdict[SPTHY].append(heuristics)
         else:
-            argdict[SPTHY] = args.heuristic
+            argdict[SPTHY] = heuristics
 
     # Generate desired model files from the input file
     # generate_files(args.input_file, flags, lemmas, argdict, args.diff)
