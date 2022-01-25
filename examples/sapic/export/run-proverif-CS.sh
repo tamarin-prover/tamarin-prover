@@ -11,9 +11,9 @@ IFS='' # required to keep the tabs and spaces
 TIMEOUT='30m'
 
 exec_runner(){
-    START=$(date +%s.%N)
+    START=$(date +%s)
     res=$(timeout $TIMEOUT $runner $filename)
-    END=$(date +%s.%N)
+    END=$(date +%s)
     DIFF=$(echo "$END - $START" | bc)
     echo -n $res | grep "RESULT" | tr '\n' ' '  >> "$outfilename"
     echo -n ";$DIFF;" >> "$outfilename"
