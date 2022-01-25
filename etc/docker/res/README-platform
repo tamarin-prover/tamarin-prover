@@ -61,4 +61,3 @@ alias pp='docker run -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" protocolplatform/prot
   on all interfaces, as the docker host is not localhost to the guest:
 
   pp tamarin-prover interactive . -i='*4'
-||||||| merged common ancestors
