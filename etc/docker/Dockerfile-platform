@@ -6,8 +6,8 @@ RUN opam install -y ocamlfind ocamlbuild
 WORKDIR /opt/build
 ENV RES="etc/docker/res"
 ENV CONFIG="etc/docker/config"
-ENV PROVERIF_URL="https://prosecco.gforge.inria.fr/personal/bblanche/proverif/proverif2.02pl1.tar.gz"
-ENV PROVERIF_DIR_NAME="proverif2.02pl1"
+ENV PROVERIF_URL="https://prosecco.gforge.inria.fr/personal/bblanche/proverif/proverif2.04.tar.gz"
+ENV PROVERIF_DIR_NAME="proverif2.04"
 ENV GSVERIF_TGZ="gsverif2.0.zip"
 ENV GSVERIF_DIR_NAME="gsverif"
 ENV DEEPSEC_URL="https://github.com/DeepSec-prover/deepsec.git"
@@ -52,7 +52,7 @@ ENV LC_ALL en_US.UTF-8
 
 # TODO turn variables above into ARGS ..
 # https://stackoverflow.com/questions/52904847/how-do-i-copy-variables-between-stages-of-multi-stage-docker-build
-ENV PROVERIF_DIR_NAME="proverif2.02pl1"
+ENV PROVERIF_DIR_NAME="proverif2.04"
 ENV GSVERIF_DIR_NAME="gsverif"
 ENV DEEPSEC_DIR_NAME="deepsec"
 ENV RES="etc/docker/res"
