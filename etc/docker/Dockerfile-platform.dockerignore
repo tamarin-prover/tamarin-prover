@@ -3,3 +3,4 @@
 .worktree
 lib/*/.stack-work
 examples
+!examples/sapic/export

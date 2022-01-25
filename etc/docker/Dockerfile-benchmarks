@@ -6,4 +6,3 @@ WORKDIR /opt/protocolplatform/examples
 RUN ./run-tamarin-CS.sh
 RUN ./run-proverif-CS.sh
 
-CMD ["cat", "/opt/protocolplatform/README"]

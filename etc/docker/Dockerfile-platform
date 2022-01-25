@@ -31,7 +31,8 @@ RUN cd ${GSVERIF_DIR_NAME} &&  eval `opam config env` && ./build
 
 # Base image for stack build so compiled artifact from previous
 # stage should run
-FROM tamarin-prover/tamarin
+FROM protocolplatform/tamarin
+USER root
 RUN mkdir -p /opt/protocolplatform
 WORKDIR /opt/protocolplatform
 
@@ -42,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     && rm -rf /var/lib/apt/lists/*
 
-# set locales so haskell can do it's thing
+# set locales so haskell can do its thing
 # https://stackoverflow.com/questions/28405902/how-to-set-the-locale-inside-a-debian-ubuntu-docker-container
 # The following does NOT work -> locale-gen --no-purge en_US.UTF-8
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -87,4 +88,5 @@ ENV PATH=${PATH}:/opt/build/bin:/opt/protocolplatform
 # ENV DEEPSEC_DIR=$DEEPSEC_DIR_IMAGE/deepsec
 
 EXPOSE 3001
+ENTRYPOINT [] # remove entrypoint from parent image 
 CMD ["cat", "/opt/protocolplatform/README-platform"]
