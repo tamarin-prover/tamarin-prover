@@ -26,6 +26,8 @@ sys	1m51.189s
 c01chja@Colossus02 $ time tamarin-prover 5G_AKAproverif.sapic --heuristic=O --oraclename=5G_AKA.oracle --prove=true_* +RTS -N10 -RTS
 
 
+
+
 ==============================================================================
 summary of summaries:
 
@@ -819,27 +821,6 @@ lemma true_sqn_ue_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]
 			==> #i = #j "
 
 
-lemma gsverif_sqn_hss_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]:
-	" (All supi  Sqni Sqnj #i #j.
-			 (Sqn_HSS_Change(supi, Sqnj)@j &
-		 Sqn_HSS_Change(supi, Sqni)@i &
-		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) "
-
-
-lemma gsverif_intermediate [use_induction, reuse,hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
-	" (All supi  Sqni Sqnj #i #j.
-			 (Sqn_HSS_Change(supi, Sqnj)@j &
-		 Sqn_HSS_Change(supi, Sqni)@i)
-			==> (#i = #j) | (not (Sqnj = Sqni)) ) "
-
-
-
-
-
- lemma gsverif_lemma  [reuse, hide_lemma=gsverif_sqn_hss_nodecrease, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
-	" All x y #i #j.
-		CounterGS(x,y)@i & CounterGS(x,y)@j
-			==> #i = #j "
 
 
 // /************************************/
@@ -988,5 +969,28 @@ lemma true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev [hide_lem
              		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
                             | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
+
+
+lemma gsverif_sqn_hss_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]:
+	" (All supi  Sqni Sqnj #i #j.
+			 (Sqn_HSS_Change(supi, Sqnj)@j &
+		 Sqn_HSS_Change(supi, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) "
+
+
+lemma gsverif_intermediate [use_induction, reuse,hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
+	" (All supi  Sqni Sqnj #i #j.
+			 (Sqn_HSS_Change(supi, Sqnj)@j &
+		 Sqn_HSS_Change(supi, Sqni)@i)
+			==> (#i = #j) | (not (Sqnj = Sqni)) ) "
+
+
+
+
+
+ lemma gsverif_lemma  [reuse, hide_lemma=gsverif_sqn_hss_nodecrease, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
+	" All x y #i #j.
+		CounterGS(x,y)@i & CounterGS(x,y)@j
+			==> #i = #j "
 
 end
