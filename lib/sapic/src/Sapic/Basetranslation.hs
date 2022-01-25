@@ -73,8 +73,8 @@ baseTrans :: MonadThrow m => Bool -> Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans asyncChannels needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction asyncChannels needsInEvRes ac an p tx,
+baseTrans asyncChannels needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction asyncChannels needsAssImmediate ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -93,7 +93,10 @@ mergeWithStateRule :: ([TransFact], [a1], [a2]) -> [([TransFact], [a1], [a2], d)
 mergeWithStateRule r' = map (mergeWithStateRule' r')
 
 baseTransAction :: Bool -> Bool -> TransFAct TranslationResultAct
-baseTransAction asyncChannels needsInEvRes ac an p tildex
+baseTransAction
+  asyncChannels -- true if private channels ought to be asnchronous
+  needsAssImmediate  -- produce actions that axiom AssImmediate requires
+  ac an p tildex -- current action, its annotation, position in the process tree, and variables bound so far
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -110,14 +113,14 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
           -- the process was ground before introducing x freshly
           in
           case channel of
-            Nothing -> if needsInEvRes then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
+            Nothing -> if needsAssImmediate then  -- delay matching, as in(pat) behaves like in(x); let pat = x in ..
                          (mergeWithStateRule ([In (varTerm x)], channelIn (varTerm x), []) rules, tx')
                        else
                          let tx2' = freeset t `union` tildex in
                            ([ ([def_state, In t], [ ], [def_state' tx2'], []) ], tx2')
             Just tc' -> let tc = toLNTerm tc' in
                         let ts = fAppPair (tc,varTerm x) in
-                        let ack = if asyncChannels then [] else [Ack tc xt] in
+                        let ack = [Ack tc xt | not asyncChannels] in
                           (mergeWithStateRule ([Message tc xt], [], ack) rules
                             ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
                                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
@@ -194,16 +197,16 @@ baseTransAction asyncChannels needsInEvRes ac an p tildex
 -- CHARLIE : still add locks and unlocks in the pure state thing, but with weaker formula only used to contradict injectivity, e.g    Lock(x,s)@i & Unlock(x,s)@j ==> not(Ex k s2. Lock(x,s2)@k & i<k<j) & not(Ex k s2. UnLock(x,s2)@k & i<k<j)
     | (Event f' ) <- ac
       , f <- toLNFact f' =
-          ([([def_state], TamarinAct f : [EventEmpty | needsInEvRes], [def_state' tildex], [])], tildex)
+          ([([def_state], TamarinAct f : [EventEmpty | needsAssImmediate], [def_state' tildex], [])], tildex)
     | (MSR l' a' r' res' _) <- ac
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
           let tx' = freeset' l `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsInEvRes ], def_state' tx':map TamarinFact r, res)], tx')
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsAssImmediate ], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
         def_state' tx = State LState (p++[1]) tx -- default follow upstate, possibly with new bound variables
-        channelIn ts = [ChannelIn ts | needsInEvRes]
+        channelIn ts = [ChannelIn ts | needsAssImmediate]
         freeset = fromList . frees
         freeset' = fromList . concatMap getFactVariables
 
@@ -447,8 +450,8 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 |]
 
 
-resInEv :: String
-resInEv = [QQ.r|restriction in_event:
+resImmediate :: String
+resImmediate = [QQ.r|restriction ass_immedeate:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
                                 & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
@@ -458,7 +461,7 @@ resInEv = [QQ.r|restriction in_event:
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
 baseRestr :: MonadThrow m => Process (ProcessAnnotation LVar) v -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
+baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -471,7 +474,7 @@ baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++
-        addIf needsInEvRes [resInEv]
+        addIf needsAssImmediate [resImmediate]
     in
     do
         hardcoded <- mapM toEx hardcoded_l

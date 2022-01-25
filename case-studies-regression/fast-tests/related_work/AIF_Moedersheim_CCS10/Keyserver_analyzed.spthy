@@ -1,0 +1,164 @@
+theory Keyserver begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+rule (modulo E) SetupServerKey:
+   [ Fr( ~sk ) ]
+  -->
+   [ !ServerSK( ~sk ), !ServerPK( pk(~sk) ), Out( pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SetupHonestKey:
+   [ Fr( ~sk ) ]
+  --[ HonestKey( ~sk ) ]->
+   [ Out( pk(~sk) ), ClientKey( $A, ~sk ), ServerDB( $A, pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SetupDishonestKey:
+   [ In( sk ) ] --> [ ServerDB( $A, pk(sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_RenewKey:
+   [ ClientKey( $A, ~sk ), Fr( ~skNew ) ]
+  --[ HonestKey( ~skNew ) ]->
+   [
+   Out( <<'renew', $A, pk(~skNew)>, sign(<'renew', $A, pk(~skNew)>, ~sk)> ),
+   ClientKey( $A, ~skNew ),
+   AwaitConfirmation( sign(<'renew', $A, pk(~skNew)>, ~sk), ~sk )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_LeakKey:
+   [ AwaitConfirmation( request, sk ), !ServerPK( pkServer ), In( sig ) ]
+  --[
+  Eq( verify(sig, <'confirm', request>, pkServer), true ), Revoked( sk )
+  ]->
+   [ Out( sk ) ]
+
+  /*
+  rule (modulo AC) Client_LeakKey:
+     [ AwaitConfirmation( request, sk ), !ServerPK( pkServer ), In( sig ) ]
+    --[ Eq( z, true ), Revoked( sk ) ]->
+     [ Out( sk ) ]
+    variants (modulo AC)
+    1. pkServer
+             = pkServer.6
+       request
+             = request.6
+       sig   = sig.6
+       z     = verify(sig.6, <'confirm', request.6>, pkServer.6)
+    
+    2. pkServer
+             = pk(x.6)
+       request
+             = x.7
+       sig   = sign(<'confirm', x.7>, x.6)
+       z     = true
+  */
+
+rule (modulo E) Server_RenewKey:
+   [
+   In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
+   !ServerSK( skServer )
+   ]
+  --[ Eq( verify(requestSig, <'renew', A, pkNew>, pk(sk)), true ) ]->
+   [ ServerDB( A, pkNew ), Out( sign(<'confirm', requestSig>, skServer) ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) Server_RenewKey:
+     [
+     In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
+     !ServerSK( skServer )
+     ]
+    --[ Eq( z, true ) ]->
+     [ ServerDB( A, pkNew ), Out( sign(<'confirm', requestSig>, skServer) ) ]
+    variants (modulo AC)
+    1. A     = A.13
+       pkNew = pkNew.14
+       requestSig
+             = requestSig.15
+       sk    = sk.16
+       z     = verify(requestSig.15, <'renew', A.13, pkNew.14>, pk(sk.16))
+    
+    2. A     = A.13
+       pkNew = pkNew.14
+       requestSig
+             = sign(<'renew', A.13, pkNew.14>, sk.16)
+       sk    = sk.16
+       z     = true
+    // loop breaker: [1]
+  */
+
+restriction Eq_checks_succeed:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+lemma Knows_Honest_Key_imp_Revoked:
+  all-traces
+  "∀ sk #i #d.
+    ((HonestKey( sk ) @ #i) ∧ (K( sk ) @ #d)) ⇒ (∃ #r. Revoked( sk ) @ #r)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sk #i #d.
+  (HonestKey( sk ) @ #i) ∧ (K( sk ) @ #d) ∧ ∀ #r. (Revoked( sk ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( HonestKey( sk ) @ #i )
+  case Client_RenewKey
+  solve( !KU( ~skNew ) @ #vk )
+    case Client_LeakKey
+    by contradiction /* from formulas */
+  qed
+next
+  case SetupHonestKey
+  solve( !KU( ~sk ) @ #vk )
+    case Client_LeakKey
+    by contradiction /* from formulas */
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+
+  output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
+  processing time: 0.094431697s
+  Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
+
+  output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
+  processing time: 0.094431697s
+  Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
+
+==============================================================================
+*/

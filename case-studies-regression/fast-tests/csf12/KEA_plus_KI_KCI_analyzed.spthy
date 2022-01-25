@@ -1,0 +1,308 @@
+theory KEA_plus_KI_KCI begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* KEA+ *}
+
+rule (modulo E) generate_ltk:
+   [ Fr( ~lkA ) ]
+  --[ RegKey( $A ) ]->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+  --[ SidI_1( ~ekI, $I, $R, 'g'^~ekI ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, 'g'^~ekI ), !Ephk( ~ekI ), Out( 'g'^~ekI )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
+  --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) )
+  ]->
+   [ !Sessk( ~ekI, h(<Y^~lkI, 'g'^~lkR^~ekI, $I, $R>) ) ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
+    --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]->
+     [ !Sessk( ~ekI, h(<z, 'g'^(~ekI*~x), $I, $R>) ) ]
+    variants (modulo AC)
+    1. ~lkI  = ~lkI.30
+       Y     = Y.32
+       z     = Y.32^~lkI.30
+    
+    2. ~lkI  = ~lkI.30
+       Y     = z.35^inv(~lkI.30)
+       z     = z.35
+    
+    3. ~lkI  = ~lkI.141
+       Y     = x.276^x.277
+       z     = x.276^(~lkI.141*x.277)
+    
+    4. ~lkI  = ~lkI.143
+       Y     = x.280^inv((~lkI.143*x.281))
+       z     = x.280^inv(x.281)
+    
+    5. ~lkI  = ~lkI.143
+       Y     = x.280^(x.281*inv(~lkI.143))
+       z     = x.280^x.281
+    
+    6. ~lkI  = ~lkI.144
+       Y     = x.281^(x.282*inv((~lkI.144*x.283)))
+       z     = x.281^(x.282*inv(x.283))
+  */
+
+rule (modulo E) Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
+  --[
+  SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
+  ]->
+   [
+   Out( 'g'^~ekR ), !Ephk( ~ekR ),
+   !Sessk( ~ekR, h(<'g'^~lkI^~ekR, X^~lkR, $I, $R>) )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
+    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
+    ]->
+     [
+     Out( 'g'^~ekR ), !Ephk( ~ekR ),
+     !Sessk( ~ekR, h(<'g'^(~ekR*~x), z, $I, $R>) )
+     ]
+    variants (modulo AC)
+    1. ~lkR  = ~lkR.32
+       X     = X.33
+       z     = X.33^~lkR.32
+    
+    2. ~lkR  = ~lkR.32
+       X     = z.37^inv(~lkR.32)
+       z     = z.37
+    
+    3. ~lkR  = ~lkR.214
+       X     = x.421^x.422
+       z     = x.421^(~lkR.214*x.422)
+    
+    4. ~lkR  = ~lkR.215
+       X     = x.423^inv((~lkR.215*x.424))
+       z     = x.423^inv(x.424)
+    
+    5. ~lkR  = ~lkR.215
+       X     = x.423^(x.424*inv(~lkR.215))
+       z     = x.423^x.424
+    
+    6. ~lkR  = ~lkR.216
+       X     = x.424^(x.425*inv((~lkR.216*x.426)))
+       z     = x.424^(x.425*inv(x.426))
+  */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, k ) ] --[ LtkRev( $A ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma keaplus_initiator_key:
+  all-traces
+  "(∀ A #i #j. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       ((((((SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+           (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+          (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+         (∀ #i3 #i4 tpartner kpartner.
+           ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+            (EphkRev( tpartner ) @ #i4)) ⇒
+           (⊥))) ∧
+        (∀ #i3 #i4 tpartner kpartner.
+          ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+           (SesskRev( tpartner ) @ #i4)) ⇒
+          (⊥))) ∧
+       (∀ #i3. (LtkRev( R ) @ #i3) ⇒ (⊥))))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ A #i #j. (RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j) ⇒ #i = #j) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3. (LtkRev( R ) @ #i3) ⇒ ⊥))"
+*/
+simplify
+solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
+  case Init_1
+  solve( !Pk( $R, 'g'^~x ) ▶₂ #i1 )
+    case generate_ltk
+    solve( !KU( h(<z, 'g'^(~ekI*~x), $I, $R>) ) @ #vk.1 )
+      case Sessk_reveal_case_1
+      by contradiction /* from formulas */
+    next
+      case Sessk_reveal_case_2
+      by contradiction /* from formulas */
+    next
+      case c_h
+      solve( !KU( 'g'^(~ekI*~x) ) @ #vk.5 )
+        case Init_1
+        solve( !KU( ~x ) @ #vk.9 )
+          case Ltk_reveal
+          by contradiction /* from formulas */
+        qed
+      next
+        case c_exp
+        solve( !KU( ~ekI ) @ #vk.11 )
+          case Ephk_reveal
+          by contradiction /* from formulas */
+        qed
+      next
+        case generate_ltk
+        solve( !KU( ~ekI ) @ #vk.9 )
+          case Ephk_reveal
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma keaplus_responder_key:
+  all-traces
+  "(∀ A #i #j. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       (((((((SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+            (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+           (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+          (∀ #i3 #i4 tpartner lki.
+            ((SidI_1( tpartner, I, R, lki ) @ #i3) ∧ (EphkRev( tpartner ) @ #i4)) ⇒
+            (⊥))) ∧
+         (∀ #i3 #i4 tpartner kpartner.
+           ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+            (EphkRev( tpartner ) @ #i4)) ⇒
+           (⊥))) ∧
+        (∀ #i3 #i4 tpartner kpartner.
+          ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+           (SesskRev( tpartner ) @ #i4)) ⇒
+          (⊥))) ∧
+       (∀ #i3. (LtkRev( I ) @ #i3) ⇒ (⊥))))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ A #i #j. (RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j) ⇒ #i = #j) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3. (EphkRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner lki.
+     (SidI_1( tpartner, I, R, lki ) @ #i3) ∧ (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (EphkRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥) ∧
+   (∀ #i3. (LtkRev( I ) @ #i3) ⇒ ⊥))"
+*/
+simplify
+solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
+  case generate_ltk
+  solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
+    case generate_ltk
+    solve( !KU( h(<'g'^(~ekR*~x), z, $I, $R>) ) @ #vk.1 )
+      case Sessk_reveal_case_1
+      by contradiction /* from formulas */
+    next
+      case Sessk_reveal_case_2
+      by contradiction /* from formulas */
+    next
+      case c_h
+      solve( !KU( 'g'^(~ekR*~x) ) @ #vk.3 )
+        case Resp_1
+        solve( !KU( ~x ) @ #vk.9 )
+          case Ltk_reveal
+          by contradiction /* from formulas */
+        qed
+      next
+        case c_exp
+        solve( !KU( ~ekR ) @ #vk.11 )
+          case Ephk_reveal
+          by contradiction /* from formulas */
+        qed
+      next
+        case generate_ltk
+        solve( !KU( ~ekR ) @ #vk.9 )
+          case Ephk_reveal
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
+
+  output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
+  processing time: 0.383064961s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
+
+  output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
+  processing time: 0.383064961s
+  keaplus_initiator_key (all-traces): verified (13 steps)
+  keaplus_responder_key (all-traces): verified (13 steps)
+
+==============================================================================
+*/

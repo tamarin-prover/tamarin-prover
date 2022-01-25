@@ -33,6 +33,9 @@ module Web.Handler
   , getAutoProverR
   , getAutoDiffProverR
   , getAutoProverDiffR
+  , getAutoProverAllR
+  , getProverDiffAllR
+  , getAutoProverAllDiffR
   , getDeleteStepR
   , getDeleteStepDiffR
   , getKillThreadR
@@ -64,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
@@ -654,6 +657,22 @@ getProverR (name, mkProver) idx path = do
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
+getProverAllR :: (T.Text, AutoProver -> Prover)
+           -> TheoryIdx -> Handler RepJson
+getProverAllR (name, mkProver) idx = do
+    jsonValue <- withTheory idx go
+    return $ RepJson $ toContent jsonValue
+  where
+    go ti = modifyTheory ti
+        proveAll
+        (\thy -> nextSmartThyPath thy (TheoryProof (last $ names thy) []))
+        (JsonAlert $ "Sorry, but " <> name <> " failed!")
+      where
+        names thy = map (get lName) $ getLemmas thy
+        autoProver = mkProver (tiAutoProver ti)
+        proveAll thy = return $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
+
+-- | Run the some prover on a given proof path.
 getProverDiffR :: (T.Text, AutoProver -> Prover)
                -> TheoryIdx -> Side -> DiffTheoryPath -> Handler RepJson
 getProverDiffR (name, mkProver) idx s path = do
@@ -695,6 +714,24 @@ getDiffProverR (name, mkProver) idx path = do
     goDiff _ _ = return $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
+-- | Run the some prover on a given proof path.
+getProverDiffAllR :: (T.Text, AutoProver -> Prover ,AutoProver -> DiffProver)
+           -> TheoryIdx -> Handler RepJson
+getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
+    jsonValue <- withDiffTheory idx goDiff
+    return $ RepJson $ toContent jsonValue
+  where
+    goDiff ti = modifyDiffTheory ti
+        proveAllDiff
+        (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ namesDiff thy) []))
+        (JsonAlert $ "Sorry, but " <> name <> " failed!")
+      where
+        namesDiff thy = map (get lDiffName) $ getDiffLemmas thy
+        autoDiffProver = mkDiffProver (dtiAutoProver ti)
+        names thy = map (\(x, y) -> (x, get lName y)) $ getEitherLemmas thy
+        autoProver = mkProver (dtiAutoProver ti)
+        proveDiff thy = foldM (\tha lemma -> applyDiffProverAtPath tha lemma [] autoDiffProver) thy $ namesDiff thy
+        proveAllDiff thy = return $ (proveDiff thy) >>= (\thb -> foldM (\tha (s, lemma) -> applyProverAtPathDiff tha s lemma [] autoProver) thb $ names thb)
 
 -- | Run an autoprover on a given proof path.
 getAutoProverR :: TheoryIdx
@@ -721,6 +758,31 @@ getAutoProverR idx extractor bound =
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
 
 -- | Run an autoprover on a given proof path.
+getAutoProverAllR :: TheoryIdx
+               -> SolutionExtractor
+               -> Int                             -- autoprover bound to use
+               -> TheoryPath -> Handler RepJson
+getAutoProverAllR idx extractor bound _ =
+    getProverAllR (fullName, runAutoProver . adapt) idx
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing         -> ("characterization", ["dfs"]   )
+        CutDFS             -> ("the autoprover",   []        )
+        CutBFS             -> ("the autoprover",   ["bfs"]   )
+        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
+
+-- | Run an autoprover on a given proof path.
 getAutoProverDiffR :: TheoryIdx
                    -> SolutionExtractor
                    -> Int                             -- autoprover bound to use
@@ -743,6 +805,32 @@ getAutoProverDiffR idx extractor bound s =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
+        
+-- | Run an autoprover on a given proof path.
+getAutoProverAllDiffR :: TheoryIdx
+               -> SolutionExtractor
+               -> Int                             -- autoprover bound to use
+               -> Handler RepJson
+getAutoProverAllDiffR idx extractor bound =
+    getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
+  where
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+
+    withCommas = intersperse ", "
+    fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
+    qualifiers = extractorQualfier ++ boundQualifier
+
+    (actualBound, boundQualifier)
+        | bound > 0 = (Just bound, ["bound " <> T.pack (show bound)])
+        | otherwise = (Nothing,    []                               )
+
+    (proverName, extractorQualfier) = case extractor of
+        CutNothing         -> ("characterization", ["dfs"]   )
+        CutDFS             -> ("the autoprover",   []        )
+        CutBFS             -> ("the autoprover",   ["bfs"]   )
+        CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+
 
 -- | Run an autoprover on a given proof path.
 getAutoDiffProverR :: TheoryIdx
@@ -1111,7 +1199,7 @@ getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
               -- Return message
               jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
-    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti 
+    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti
     prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti
     same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
     same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)

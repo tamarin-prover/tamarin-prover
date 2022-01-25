@@ -1,0 +1,543 @@
+theory RFID_Simple begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Device_Alice/1 */
+
+rule (modulo E) GenKey:
+   [ Fr( ~sk ) ]
+  --[ Device_Key( ~sk ) ]->
+   [ Device_Init( ~sk ), Device_Alice( ~sk ), Out( pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Alice:
+   [ Device_Alice( sk ), Fr( ~x ), Fr( ~y ) ]
+  --[ Exclusive( ~x, ~y ), Device_Use( sk ) ]->
+   [ Device_Alice( sk ), Out( aenc(<~x, ~y>, pk(sk)) ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) DeviceToBob:
+   [ Device_Init( sk ), Device_Alice( sk ) ]
+  --[ ToBob( sk ) ]->
+   [ Device_Select( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Select_Left:
+   [ Device_Select( sk ) ] --> [ !Device_Left( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Select_Right:
+   [ Device_Select( sk ) ] --> [ !Device_Right( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Decrypt_Left:
+   [ !Device_Left( sk ), In( aenc(<x, y>, pk(sk)) ) ]
+  --[ Access( x ) ]->
+   [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Decrypt_Right:
+   [ !Device_Right( sk ), In( aenc(<x, y>, pk(sk)) ) ]
+  --[ Access( y ) ]->
+   [ Out( y ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma types [sources]:
+  all-traces
+  "∀ m #i.
+    (Access( m ) @ #i) ⇒
+    (((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨
+      (∃ x #j. Exclusive( x, m ) @ #j)) ∨
+     (∃ y #j. Exclusive( m, y ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m #i.
+  (Access( m ) @ #i)
+ ∧
+  (∀ #j. (!KU( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ x #j. (Exclusive( x, m ) @ #j) ⇒ ⊥) ∧
+  (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ y #j. (Exclusive( m, y ) @ #j) ∧ ¬(last(#j))) )
+    case case_1
+    solve( Access( m ) @ #i )
+      case Decrypt_Left
+      solve( !Device_Left( sk ) ▶₀ #i )
+        case Select_Left_case_1
+        solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case Decrypt_Left_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Left_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      next
+        case Select_Left_case_2
+        solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case Decrypt_Left_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Left_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case Decrypt_Right
+      solve( !Device_Right( sk ) ▶₀ #i )
+        case Select_Right_case_1
+        solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case Decrypt_Left_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Left_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.3))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      next
+        case Select_Right_case_2
+        solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case Decrypt_Left_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Left_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_1
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case Decrypt_Right_case_2
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  next
+    case case_4
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Device_ToBob [use_induction]:
+  all-traces
+  "∀ sk #i.
+    (Device_Use( sk ) @ #i) ⇒ (∀ #j. (ToBob( sk ) @ #j) ⇒ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sk #i.
+  (Device_Use( sk ) @ #i) ∧ ∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) )
+    case case_1
+    solve( Device_Init( sk ) ▶₀ #j )
+      case GenKey
+      solve( Device_Alice( ~sk ) ▶₁ #j )
+        case Alice
+        solve( Device_Alice( ~sk ) ▶₀ #i )
+          case Alice
+          by contradiction /* non-injective facts (#vr.2,#j,#i) */
+        next
+          case GenKey
+          by contradiction /* non-injective facts (#vr,#j,#i) */
+        qed
+      next
+        case GenKey
+        solve( Device_Alice( ~sk ) ▶₀ #i )
+          case Alice
+          by contradiction /* non-injective facts (#vr,#vr.1,#j) */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Device_Init_Use_Set [reuse, use_induction]:
+  all-traces
+  "∀ sk #i.
+    (Device_Use( sk ) @ #i) ⇒
+    ((∀ #j. (ToBob( sk ) @ #j) ⇒ (#i < #j)) ∧
+     (∃ #j. (Device_Key( sk ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sk #i.
+  (Device_Use( sk ) @ #i)
+ ∧
+  ((∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j)) ∨
+   (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ #j. (ToBob( sk ) @ #j) ∧ ¬(#i < #j))  ∥
+         (∀ #j. (Device_Key( sk ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (last(#i))  ∥
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) ∧
+            (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
+      case case_1
+      solve( Device_Init( sk ) ▶₀ #j )
+        case GenKey
+        solve( Device_Alice( ~sk ) ▶₁ #j )
+          case Alice
+          solve( Device_Alice( ~sk ) ▶₀ #i )
+            case Alice
+            by contradiction /* non-injective facts (#vr.2,#j,#i) */
+          next
+            case GenKey
+            by contradiction /* non-injective facts (#vr,#j,#i) */
+          qed
+        next
+          case GenKey
+          solve( Device_Alice( ~sk ) ▶₀ #i )
+            case Alice
+            by contradiction /* non-injective facts (#vr,#vr.1,#j) */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           ((∀ #j. (ToBob( sk ) @ #j) ⇒ ((last(#j)) ∨ (#i < #j))) ∧
+            (∃ #j. (Device_Key( sk ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
+      case case_1
+      solve( Device_Alice( sk ) ▶₀ #i )
+        case Alice
+        by contradiction /* from formulas */
+      next
+        case GenKey
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma reachability_left:
+  exists-trace "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
+*/
+simplify
+solve( !KU( ~x ) @ #vk )
+  case Decrypt_Left_case_2
+  solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.1 )
+    case Alice
+    solve( Device_Alice( ~sk ) ▶₀ #i )
+      case Alice
+      solve( Device_Alice( ~sk ) ▶₀ #vr.3 )
+        case Alice
+        solve( Device_Alice( ~sk ) ▶₀ #vr.4 )
+          case GenKey
+          solve( Device_Alice( ~sk ) ▶₀ #vr.5 )
+            case GenKey
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/RFID_Simple.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/RFID_Simple.spthy
+
+  output:          examples/loops/RFID_Simple.spthy.tmp
+  processing time: 0.373321632s
+  types (all-traces): verified (86 steps)
+  Device_ToBob (all-traces): verified (12 steps)
+  Device_Init_Use_Set (all-traces): verified (18 steps)
+  reachability_left (exists-trace): verified (8 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/RFID_Simple.spthy
+
+  output:          examples/loops/RFID_Simple.spthy.tmp
+  processing time: 0.373321632s
+  types (all-traces): verified (86 steps)
+  Device_ToBob (all-traces): verified (12 steps)
+  Device_Init_Use_Set (all-traces): verified (18 steps)
+  reachability_left (exists-trace): verified (8 steps)
+
+==============================================================================
+*/

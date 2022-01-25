@@ -1,0 +1,57 @@
+theory AxiomDiffTest3 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Test:
+   [ Fr( ~f ) ] --[ Never( ~f ) ]-> [ Out( ~f ) ]
+
+restriction blockLeft [left]:
+  "∀ #i f. (Never( f ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Test
+  backward-search
+    case RHS
+    step( simplify )
+    by ATTACK // trace found
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/features/equivalence/AxiomDiffTest3.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
+
+  output:          examples/features/equivalence/AxiomDiffTest3.spthy.tmp
+  processing time: 0.068876538s
+  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
+
+  output:          examples/features/equivalence/AxiomDiffTest3.spthy.tmp
+  processing time: 0.068876538s
+  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,235 @@
+theory SignedDH_PFS begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+section{* The Signed Diffie-Hellman Protocol *}
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pk ) ] --> [ Out( pk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ltkI ) ]
+  -->
+   [
+   Init_1( $I, $R, ~ekI ),
+   Out( <$I, $R, 'g'^~ekI, sign(<'1', $I, $R, 'g'^~ekI>, ltkI)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [
+   Init_1( $I, $R, ~ekI ), !Pk( $R, pk(ltkR) ),
+   In( <$R, $I, Y, sign(<'2', $R, $I, Y>, ltkR)> )
+   ]
+  --[ SessionKey( $I, $R, Y^~ekI ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( $I, $R, ~ekI ), !Pk( $R, pk(ltkR) ),
+     In( <$R, $I, Y, sign(<'2', $R, $I, Y>, ltkR)> )
+     ]
+    --[ SessionKey( $I, $R, z ) ]->
+     [ ]
+    variants (modulo AC)
+    1. ~ekI  = ~ekI.9
+       Y     = Y.10
+       z     = Y.10^~ekI.9
+    
+    2. ~ekI  = ~ekI.10
+       Y     = z.14^inv(~ekI.10)
+       z     = z.14
+    
+    3. ~ekI  = ~ekI.11
+       Y     = x.16^x.17
+       z     = x.16^(~ekI.11*x.17)
+    
+    4. ~ekI  = ~ekI.11
+       Y     = x.17^inv((~ekI.11*x.18))
+       z     = x.17^inv(x.18)
+    
+    5. ~ekI  = ~ekI.11
+       Y     = x.17^(x.18*inv(~ekI.11))
+       z     = x.17^x.18
+    
+    6. ~ekI  = ~ekI.12
+       Y     = x.18^(x.19*inv((~ekI.12*x.20)))
+       z     = x.18^(x.19*inv(x.20))
+  */
+
+rule (modulo E) Resp:
+   [
+   !Pk( $I, pk(ltkI) ), !Ltk( $R, ltkR ), Fr( ~ekR ),
+   In( <$I, $R, X, sign(<'1', $I, $R, X>, ltkI)> )
+   ]
+  --[ SessionKey( $I, $R, X^~ekR ) ]->
+   [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
+
+  /*
+  rule (modulo AC) Resp:
+     [
+     !Pk( $I, pk(ltkI) ), !Ltk( $R, ltkR ), Fr( ~ekR ),
+     In( <$I, $R, X, sign(<'1', $I, $R, X>, ltkI)> )
+     ]
+    --[ SessionKey( $I, $R, z ) ]->
+     [ Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ltkR)> ) ]
+    variants (modulo AC)
+    1. ~ekR  = ~ekR.13
+       X     = X.14
+       z     = X.14^~ekR.13
+    
+    2. ~ekR  = ~ekR.19
+       X     = z.26^inv(~ekR.19)
+       z     = z.26
+    
+    3. ~ekR  = ~ekR.64
+       X     = x.123^x.124
+       z     = x.123^(~ekR.64*x.124)
+    
+    4. ~ekR  = ~ekR.65
+       X     = x.125^inv((~ekR.65*x.126))
+       z     = x.125^inv(x.126)
+    
+    5. ~ekR  = ~ekR.65
+       X     = x.125^(x.126*inv(~ekR.65))
+       z     = x.125^x.126
+    
+    6. ~ekR  = ~ekR.66
+       X     = x.126^(x.127*inv((~ekR.66*x.128)))
+       z     = x.126^(x.127*inv(x.128))
+  */
+
+lemma Perfect_Forward_Secrecy:
+  all-traces
+  "∀ I R sessKey #i #k.
+    ((SessionKey( I, R, sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
+    ((∃ #r. (LtkReveal( I ) @ #r) ∧ (#r < #i)) ∨
+     (∃ #r. (LtkReveal( R ) @ #r) ∧ (#r < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ I R sessKey #i #k.
+  (SessionKey( I, R, sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #r. (LtkReveal( I ) @ #r) ⇒ ¬(#r < #i)) ∧
+  (∀ #r. (LtkReveal( R ) @ #r) ⇒ ¬(#r < #i))"
+*/
+simplify
+solve( SessionKey( I, R, sessKey ) @ #i )
+  case Init_2
+  solve( Init_1( $I, $R, ~ekI ) ▶₀ #i )
+    case Init_1
+    solve( !Pk( $R, pk(ltkR) ) ▶₁ #i )
+      case Register_pk
+      solve( !KU( sign(<'2', $R, $I, Y>, ~ltk) ) @ #vk.7 )
+        case Resp
+        solve( !KU( sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.12 )
+          case Init_1
+          solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.4 )
+            case Init_1
+            by solve( !KU( ~ekR ) @ #vk.13 )
+          next
+            case Resp
+            by solve( !KU( ~ekI ) @ #vk.13 )
+          next
+            case c_exp
+            by solve( !KU( ~ekI ) @ #vk.15 )
+          qed
+        next
+          case c_sign
+          solve( !KU( ~ltk.2 ) @ #vk.16 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case c_sign
+        solve( !KU( ~ltk ) @ #vk.11 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case Resp
+  solve( !Pk( $I, pk(ltkI) ) ▶₀ #i )
+    case Register_pk
+    solve( !Ltk( $R, ltkR ) ▶₁ #i )
+      case Register_pk
+      solve( !KU( sign(<'1', $I, $R, X>, ~ltk) ) @ #vk.7 )
+        case Init_1
+        solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.1 )
+          case Init_1
+          by solve( !KU( ~ekR ) @ #vk.8 )
+        next
+          case Resp
+          by solve( !KU( ~ekI ) @ #vk.8 )
+        next
+          case c_exp
+          by solve( !KU( ~ekI ) @ #vk.10 )
+        qed
+      next
+        case c_sign
+        solve( !KU( ~ltk ) @ #vk.11 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/SignedDH_PFS.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/SignedDH_PFS.spthy
+
+  output:          examples/csf12/SignedDH_PFS.spthy.tmp
+  processing time: 0.335212598s
+  Perfect_Forward_Secrecy (all-traces): verified (23 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/SignedDH_PFS.spthy
+
+  output:          examples/csf12/SignedDH_PFS.spthy.tmp
+  processing time: 0.335212598s
+  Perfect_Forward_Secrecy (all-traces): verified (23 steps)
+
+==============================================================================
+*/
