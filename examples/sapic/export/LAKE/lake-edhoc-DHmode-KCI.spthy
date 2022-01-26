@@ -50,18 +50,18 @@ let I2(~skI:skey) =         // Initiator using signatures
         out(<rC_R,senc(< pk(~skI), Signed3, 'AD_3'>, K_3ae ),'AD_3'>)
 
 let I1(~kI) =         // Initiator using DH long term key
-    new ~x;
-    let gX = 'g'^~x in
+    new ~x2;
+    let gX = 'g'^~x2 in
     let gI = 'g'^~kI in
     out(<'m1',gX, 'C_I','AD'>);
     in(<'C_I',gY,rC_R,cypher_2>);
     let TH_2 = hash(<'m1',gX,'C_I','AD','C_I',gY,rC_R>) in
-    let PRK_2e = hkdfextract('null', gY^~x) in
+    let PRK_2e = hkdfextract('null', gY^~x2) in
     let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
     let plaintext_2 = sdec(cypher_2,K_2e) in
     let <gR,mac,rAD_2> = plaintext_2 in
 
-    let PRK_3e2m = hkdfextract(PRK_2e, gR^~x) in
+    let PRK_3e2m = hkdfextract(PRK_2e, gR^~x2) in
 
     let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
     let MAC2 = senc(<TH_2,gR,rAD_2>,K_2m) in
