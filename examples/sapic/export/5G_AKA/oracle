@@ -64,7 +64,7 @@ if lemma == "true_sqn_ue_nodecrease":
     # elif re.match('.*L_PureState\(.*Sqni.*#vr.11', line): rank[70].append(num) # added for the proverif version
     # elif re.match('.*State_121111111111111111211\(.*', line): rank[101].append(num)
     # elif re.match('.*L_PureState\(.*count.*#vr', line): rank[50].append(num)
-    # elif re.match('.* State_12111111111111111211111111111111111\(.*#j.1', line): rank[101].append(num)
+    # elif re.match('.* State_121111111111111111211111111111111111\(.*#j.1', line): rank[101].append(num)
     # elif re.match('.* State_12111111111111111211111111111111111\(.*#i', line): rank[101].append(num)
 
 
@@ -121,13 +121,13 @@ elif lemma == "true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev"
     elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
     elif re.match('.*!KU\( f1\(KDF\(KDF\(<f3\(~k.*', line): rank[87].append(num)
     elif re.match('.*!KU\( f3\(~k,.*', line) : rank[87].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*secureChan,.*~cid\).*vr.20.*', line): rank[75].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*secureChan,.*~cid\).*vr.24.*', line): rank[75].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*secureChan,.*~cid.1\)', line): rank[75].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*secureChan,.*~cid.2\)', line): rank[75].append(num)
-    elif re.match('.*State_12111111111111111211111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid\).*vr.20.*', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid\).*vr.24.*', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid.1\)', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid.2\)', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111211111111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
 
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.22.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.22.*', line): rank[94].append(num)
 
 
     elif re.match('.*Message\( ~secureChan,.*<~k, .*\'ac\'.*', line): rank[74].append(num)
@@ -225,7 +225,8 @@ elif lemma == "true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev":
 #    elif re.match('.*!KU\( f5\(.*', line) or \
 #	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
 #    elif re.match('.*!KU\( ~sqn_root.*', line): rank[89].append(num)
-    elif re.match('.*State_112111111111111111111111\(.*', line): rank[94].append(num)
+           
+    elif re.match('.*State_11211111111111111111111111\(.*', line): rank[94].append(num)
 
     elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[80].append(num)
     elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
@@ -235,11 +236,11 @@ elif lemma == "true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev":
     elif re.match('.*Message\( ~secureChan,.*<~k, .*\'air\'.*', line): rank[80].append(num)
     elif re.match('.*Message\(.*\'aia\'.*SHA.*', line): rank[80].append(num)
 
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.40.*', line): rank[94].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.57.*', line): rank[94].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.48.*', line): rank[94].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.53.*', line): rank[94].append(num)
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.34.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.40.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.57.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.48.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.53.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.34.*', line): rank[94].append(num)
     elif re.match('.*Message\( ~secureChan,.*<~k, .*\'ac\'.*', line): rank[74].append(num)
     elif re.match('.*cid,.*\'ac\'.*', line): rank[73].append(num)
     elif re.match('.*cid,.*\'aia\'.*vr.20.*', line): rank[72].append(num)
@@ -270,9 +271,9 @@ elif lemma == "true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev"
     elif re.match('.*!KU\( f1\(~k,.*', line) : rank[70].append(num) # need ac/air > f1
     elif re.match('.*Message\( ~secureChan,.*<~k, .*\'air\'.*', line): rank[80].append(num)
     elif re.match('.*Message\(.*\'aia\'.*SHA.*', line): rank[80].append(num)
-    elif re.match('.*State_1121111111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
+    elif re.match('.*State_1121111111111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
 
-    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*', line): rank[94].append(num)
     elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.57.*', line): rank[94].append(num)
     elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.48.*', line): rank[94].append(num)
     elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.53.*', line): rank[94].append(num)

@@ -1,47 +1,17 @@
 theory 5G_aka
 /*
 
-
 ==============================================================================
 summary of summaries:
 
-analyzed: 5G_AKAproverif.sapic
+analyzed: 5G_AKA.spthy
 
-  dummy (all-traces): analysis incomplete (1 steps)
+  dummy (all-traces): verified (1 steps)
   true_rand_autn_src (all-traces): verified (13 steps)
   true_sqn_ue_src (all-traces): verified (15 steps)
   true_sqn_hss_src (all-traces): verified (8 steps)
   true_sqn_ue_nodecrease (all-traces): verified (348 steps)
   true_sqn_ue_unique (all-traces): verified (8 steps)
-  true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (83 steps)
-  true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev (all-traces): verified (95 steps)
-  true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (101 steps)
-
-==============================================================================
-
-real	1m16.270s
-user	5m58.431s
-sys	1m51.189s
-─( 16:50:31 )─< ~ >────────────────────────────────────────────────────────────────────────────[ 0 ]─
-c01chja@Colossus02 $ time tamarin-prover 5G_AKAproverif.sapic --heuristic=O --oraclename=5G_AKA.oracle --prove=true_* +RTS -N10 -RTS
-
-
-
-
-==============================================================================
-summary of summaries:
-
-analyzed: 5G_AKAproverif_gsverifaxiom.sapic
-
-  dummy (all-traces): analysis incomplete (1 steps)
-  true_rand_autn_src (all-traces): analysis incomplete (1 steps)
-  true_sqn_ue_src (all-traces): analysis incomplete (1 steps)
-  true_sqn_hss_src (all-traces): analysis incomplete (1 steps)
-  true_sqn_ue_nodecrease (all-traces): analysis incomplete (1 steps)
-  true_sqn_ue_unique (all-traces): analysis incomplete (1 steps)
-  gsverif_sqn_hss_nodecrease (all-traces): verified (255 steps)
-  gsverif_intermediate (all-traces): verified (4 steps)
-  gsverif_lemma (all-traces): verified (364 steps)
   false_executability_honest (all-traces): analysis incomplete (1 steps)
   false_executability_keyConf_honest (all-traces): analysis incomplete (1 steps)
   false_executability_desync (all-traces): analysis incomplete (1 steps)
@@ -49,21 +19,26 @@ analyzed: 5G_AKAproverif_gsverifaxiom.sapic
   false_weakagreement_ue_seaf_noRev (all-traces): analysis incomplete (1 steps)
   false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev (all-traces): analysis incomplete (1 steps)
   false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev (all-traces): analysis incomplete (1 steps)
-  true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (83 steps)
   false_weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
   false_weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev (all-traces): analysis incomplete (1 steps)
-  true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev (all-traces): verified (95 steps)
   false_weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
   false_weakagreement_seaf_ue_KeyConf_noChanRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
-  true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (101 steps)
+  gsverif_sqn_hss_nodecrease (all-traces): verified (255 steps)
+  gsverif_intermediate (all-traces): verified (4 steps)
+  gsverif_lemma (all-traces): verified (364 steps)
 
 ==============================================================================
 
-real    1m15.202s
-user    5m7.619s
-sys     1m44.123s
-─( 21:58:16 )─< ~ >──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[ 0 ]─
-c01chja@Colossus02 $ time tamarin-prover 5G_AKAproverif_gsverifaxiom.sapic --heuristic=O --oraclename=5G_AKA.oracle  +RTS -N10 -RTS --prove=gsverif_lemma
+real	1m41.666s
+user	8m58.637s
+sys	2m5.626s
+─( 11:44:18 )─< ~ >────────────────────────────────────────────────────────────────────────────[ 0 ]─
+c01chja@Colossus05 $ time tamarin-prover 5G_AKA.spthy --prove +RTS -N8 -RTS
+
+
 
 With set nounifIgnoreNtimes = 4.
 
