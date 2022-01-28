@@ -103,8 +103,7 @@ let P(~skP,desiredpkS) =
      )
 
 let S(~skS) =
-    let pkS = kempk(~skS) in
-    !(
+    let pkS = kempk(~skS) in    
     in('TCPSYN');
     out('TCPACK');
     in(<'CLIENTHello',pke,rc>);
@@ -163,12 +162,12 @@ let S(~skS) =
       out(senc(<'ServerFinished',SF>,SAHTS))
       )
 
-    )
+    
 
 process:
 ! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
     new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
-	  (S(~skS) ||
+	  ( ! S(~skS) ||
 	  ( !(new ~skP;  out(kempk(~skP)); event Honnest(kempk(~skP),'Client');
 	     ! P(~skP, kempk(~skS))
 	     )
