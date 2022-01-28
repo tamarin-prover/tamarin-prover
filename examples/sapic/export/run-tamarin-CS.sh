@@ -13,8 +13,7 @@ filenames=(
 "States/secure-device.spthy"
 # "States/canauth.spthy" # not working on tamarin
 "LAKE/lake-edhoc.spthy"
-"LAKE/lake-edhoc-DHmode-KCI.spthy"
-"LAKE/lake-edhoc-DHmode-FS.spthy"
+"LAKE/lake-edhoc-DHmode-FS-KCI.spthy"
 "KEMTLS/kemtls.spthy"
 "KEMTLS/kemtls-noaead.spthy"
 "KEMTLS/kemtls-clientauth.spthy"
