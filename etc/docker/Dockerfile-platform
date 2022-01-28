@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libncurses5 \
     bc \
     locales \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # set locales so haskell can do its thing
