@@ -38,7 +38,7 @@ import           Data.Binary
 import           Data.Function                             (on)
 import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
-import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,(\\),intercalate)
+import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,intercalate)
 import qualified Data.Map                                  as M
 import           Data.Maybe                                (catMaybes)
 -- import           Data.Monoid
@@ -66,8 +66,6 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
-import           Data.List.Split
-import           Data.String
 import           Text.Regex.Posix
 
 ------------------------------------------------------------------------------
@@ -425,8 +423,6 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 rankGoals :: ProofContext -> GoalRanking -> [TacticI] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking tacticsList = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
-    TacticRanking tactic -> tacticRanking tactic ctxt
-    TacticSmartRanking tacticName -> tacticSmartRanking tacticName ctxt
     OracleRanking oracleName -> oracleRanking oracleName ctxt
     OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
     UsefulGoalNrRanking ->
@@ -445,12 +441,12 @@ rankGoals ctxt ranking tacticsList = case ranking of
         True  -> h
         False -> chosenTactic q t 
 
-      definedHeuristic list = intercalate [','] (foldl (\acc x -> (tacticiName x):acc ) [] tacticsList)
+      definedHeuristic = intercalate [','] (foldl (\acc x -> (tacticiName x):acc ) [] tacticsList)
 
       checkName t1 t2 = (tacticiName t1) == (tacticiName t2)
 
       chooseError [] t = error $ "No tactic has been written in the theory file"
-      chooseError l  t = error $ "The tactic specified ( "++(show $ tacticiName t)++" ) is not written in the theory file, please chose among the following: "++(show $ definedHeuristic l)
+      chooseError l  t = error $ "The tactic specified ( "++(show $ tacticiName t)++" ) is not written in the theory file, please chose among the following: "++(show definedHeuristic)
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -578,41 +574,11 @@ oracleRanking oracle ctxt _sys ags0
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
+      -- _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
       -- guard $ trace sd True
 
       return (ranked ++ remaining)
-  where
-    pgoal (g,(_nr,_usefulness)) = prettyGoal g
-
-tacticRanking :: Tactic
-              -> ProofContext
-              -> System
-              -> [AnnotatedGoal] -> [AnnotatedGoal]
-tacticRanking tactic ctxt _sys ags0 =
---  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
---  | otherwise =
-    unsafePerformIO $ do
-      let ags = goalNrRanking ags0
-      let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] ags))
-      -- let showctxt = show ctxt
-      -- let showsys = show _sys
-      let outp = newRanking tactic ctxt ags
-      let prettyOut = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] outp))
-      let indices = catMaybes . map readMay . lines $ show outp
-          ranked = catMaybes . map (atMay ags) $ indices
-          remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                   ++ inp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace logMsg True
-      return (outp)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
@@ -632,22 +598,29 @@ regexAmoi s agoal = pg =~ s
         pgoal (g,(_nr,_usefulness)) = prettyGoal g
         pg = concat . lines . render $ pgoal agoal
 
-nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
-nameToFunction ("regex", param) = regexAmoi param
-nameToFunction ("isFactName", param) = isFactName param
-nameToFunction ("isInFactTerms", param) = isInFactTerms param
-nameToFunction (_,_) = (\ _ -> False)
+tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
+tacticFunctions = M.fromList
+                        [ ("regex", regexAmoi)
+                        , ("isFactName", isFactName)
+                        , ("isInFactTerms", isInFactTerms)
+                        ]
 
-detectLine :: String -> (String, String)
-detectLine s
-    | s =~ "#" = ("","")
-    | s =~ "lemma:"  = ("tactic", (mrAfter $ s =~ "tactic: "))
-    | s =~ "conditions" = ("condition","")
-    | s =~ "prio" = ("prio","")
-    | s =~ "regex" = ("regex", (mrAfter $ s =~"regex "))
-    | s =~ "isFactName" = ("isFactName", (mrAfter $ s =~ "isFactName "))
-    | s =~ "isInFactTerms" = ("isInFactTerms", (mrAfter $ s =~ "isInFactTerms "))
-    | otherwise = ("","")
+nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
+nameToFunction ("regex",param) = regexAmoi param
+nameToFunction ("isFactName",param) = isFactName param
+nameToFunction ("isInFactTerms",param) = isInFactTerms param
+nameToFunction (f,_) = error $ "\nThe function "++f
+              ++" is not defined.\nUse one of the following:\n"++listTacticFunction
+
+tacticFunctionName :: (String -> AnnotatedGoal -> Bool) -> String
+tacticFunctionName function = case function of
+        regexAmoi           -> "match between the pretty goal and the given regex"
+        isFactName          -> "match against the fact name"
+        isInFactTerms       -> "match against the fact terms"
+
+listTacticFunction:: String
+listTacticFunction = M.foldMapWithKey
+    (\k v -> "'"++k++"': " ++ tacticFunctionName v ++ "\n") tacticFunctions
 
 isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
 isPrio list agoal = or $ (sequenceA list) agoal
@@ -656,55 +629,6 @@ applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
 applyIsPrio [] _ = []
 applyIsPrio [xs] agoal = isPrio xs agoal:[]
 applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
-
-newRanking :: Tactic -> ProofContext -> [AnnotatedGoal] -> [AnnotatedGoal]
-newRanking tactic ctxt ags = 
-	unsafePerformIO $ do
-	    content <- readFile (tacticPath tactic)
-	    -- en vrai tous les noms à changer
-	    let conditions = lines content
-	        functions = map detectLine conditions
-	    -- Techniquement pas un bon nom contient la liste de liste de paires
-	        res = filter (/= []) $ splitWhen (== ("prio","")) $ filter (/= ("","")) functions
-	        tab2tab = map (map nameToFunction) res
-	        resderes = map (findIndex (==True)) $ map (applyIsPrio tab2tab) ags
-	        zippanceOrdonnee = sortOn fst $ zip resderes ags 
-	        unpeuLaFin = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) zippanceOrdonnee
-	        alleluia = snd $ unzip $ concat $ (tail unpeuLaFin) ++ [head unpeuLaFin]
-
-	    return (alleluia)
-
-tacticSmartRanking :: Tactic
-                   -> ProofContext
-                   -> System
-                   -> [AnnotatedGoal] -> [AnnotatedGoal]
-tacticSmartRanking tactic ctxt _sys ags0 =
---  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
---  | otherwise =
-    unsafePerformIO $ do
-      guard $ trace (tacticPath tactic) True
-      let ags = smartRanking ctxt False _sys ags0
-      let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] ags))
-      -- let showctxt = show ctxt
-      -- let showsys = show _sys
-      let outp = newRanking tactic ctxt ags
-      let prettyOut = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] outp))
-      let indices = catMaybes . map readMay . lines $ show outp
-          ranked = catMaybes . map (atMay ags) $ indices
-          remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                   ++ inp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace logMsg True
-      return (outp)
-  where
-    pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
@@ -728,7 +652,7 @@ oracleSmartRanking oracle ctxt _sys ags0
           logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT Petite\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ outp
+                   -- ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
@@ -739,6 +663,7 @@ oracleSmartRanking oracle ctxt _sys ags0
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 itRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
+itRanking _ [] = []
 itRanking tactic ags = result
     where
       -- Getting the functions from prio
@@ -772,22 +697,30 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      let outp = itRanking tactic ags
-      let prettyOut = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] outp))
-      let indices = catMaybes . map readMay . lines $ show outp
-          ranked = catMaybes . map (atMay ags) $ indices
-          remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+      let res = itRanking tactic ags
+      let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
+          index = map fst (zip [(0::Int)..] ags)
+          out = map (show . snd) (sortOn fst (zip orderIndex index))
+      let oui = unlines
+                  (map (\(i,ag) -> i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip out res))
+      let logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut
+                   ++ show out
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      return (outp)
+      -- _ <- getLine
+      return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
+    orderList [] _ res        = res
+    orderList _ [] res        = res
+    orderList (h1:l) (h2:ref) res = if (snd h1 == snd h2) then orderList l ref (h1:res) else orderList (l++[h1]) (h2:ref) res
+
+    
+
 
 -- | Utilities for SAPiC translations specifically 
 

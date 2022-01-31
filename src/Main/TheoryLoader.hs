@@ -71,7 +71,6 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 
-import           Debug.Trace
 
 
 ------------------------------------------------------------------------------
@@ -109,9 +108,6 @@ theoryLoadFlags =
 
   , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
       "Path to the oracle heuristic (default './oracle')."
-
-  , flagOpt (tacticPath defaultTactic) ["tacticname"] (updateArg "tacticname") "FILE"
-      ("Path to the tactic heuristic (default '" ++ tacticPath defaultTactic ++ "')")
 
   , flagOpt "" ["interntacticname"] (updateArg "interntacticname") "STRING"
       ("Chosen tactic among the tactics written in the theory file")
@@ -366,7 +362,7 @@ closeDiffThyWithMaude sig as thy0 = do
 -- --stop-on-trace).
 constructAutoProver :: Arguments -> AutoProver
 constructAutoProver as =
-    trace (show "mimou") AutoProver heuristic Nothing proofBound stopOnTrace
+    AutoProver heuristic Nothing proofBound stopOnTrace
   where
     -- handles to relevant arguments
     --------------------------------

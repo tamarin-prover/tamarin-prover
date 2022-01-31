@@ -27,12 +27,6 @@ module Theory.Constraint.Solver.Heuristics (
   , maybeSetOracleRelPath
   , mapOracleRanking
 
-  , Tactic(..)
-  , defaultTactic
-  , tacticPath
-  , maybeSetTacticWorkDir
-  , maybeSetTacticRelPath
-
   , TacticI(..)
   , Prio(..)
   , Deprio(..)
@@ -84,12 +78,6 @@ data Oracle = Oracle {
   }
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-data Tactic = Tactic {
-    tacticWorkDir :: !FilePath
-  , tacticRelPath :: !FilePath
-  }
-  deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
 ------------------------------------------------------------------------------
 -- Tactics internal
 ------------------------------------------------------------------------------
@@ -119,8 +107,6 @@ data GoalRanking =
     GoalNrRanking
   | OracleRanking Oracle
   | OracleSmartRanking Oracle
-  | TacticRanking Tactic
-  | TacticSmartRanking Tactic
   | InternalTacticRanking TacticI
   | SapicRanking
   | SapicPKCS11Ranking
@@ -164,16 +150,6 @@ mapOracleRanking _ r = r
 oraclePath :: Oracle -> FilePath
 oraclePath Oracle{..} = oracleWorkDir </> normalise oracleRelPath
 
--- Default to "./oracle" in the current working directory.
-defaultTactic :: Tactic
-defaultTactic = Tactic "." "tactic"
-
-maybeSetTacticWorkDir :: Maybe FilePath -> Tactic -> Tactic
-maybeSetTacticWorkDir p t = maybe t (\x -> t{ tacticWorkDir = x }) p
-
-maybeSetTacticRelPath :: Maybe FilePath -> Tactic -> Tactic
-maybeSetTacticRelPath p t = maybe t (\x -> t{ tacticRelPath = x }) p
-
 maybeSetInternalTacticName :: Maybe String -> TacticI -> TacticI
 maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
 
@@ -181,8 +157,6 @@ mapInternalTacticRanking :: (TacticI -> TacticI) -> GoalRanking -> GoalRanking
 mapInternalTacticRanking f (InternalTacticRanking t) = InternalTacticRanking (f t)
 mapInternalTacticRanking _ r = r
 
-tacticPath :: Tactic -> FilePath
-tacticPath Tactic{..} = tacticWorkDir </> normalise tacticRelPath
 
 tacticiName :: TacticI -> String
 tacticiName TacticI{..} = _name
@@ -208,15 +182,13 @@ goalRankingIdentifiers = M.fromList
                         , ('S', SmartRanking True)
                         , ('o', OracleRanking defaultOracle)
                         , ('O', OracleSmartRanking defaultOracle)
-                        , ('t', TacticRanking defaultTactic)
-                        , ('T', TacticSmartRanking defaultTactic)
                         , ('p', SapicRanking)
                         , ('P', SapicPKCS11Ranking)
                         , ('c', UsefulGoalNrRanking)
                         , ('C', GoalNrRanking)
                         , ('i', InjRanking False)
                         , ('I', InjRanking True)
-                        , ('#', InternalTacticRanking defaultTacticI)
+                        , ('{', InternalTacticRanking defaultTacticI)
                         ]
 
 goalRankingIdentifiersNoOracle :: M.Map Char GoalRanking
@@ -229,7 +201,6 @@ goalRankingIdentifiersNoOracle = M.fromList
                         , ('C', GoalNrRanking)
                         , ('i', InjRanking False)
                         , ('I', InjRanking True)
-                        , ('#', InternalTacticRanking defaultTacticI)
                         ]
 
 goalRankingIdentifiersDiff :: M.Map Char GoalRanking
@@ -237,8 +208,6 @@ goalRankingIdentifiersDiff  = M.fromList
                             [ ('s', SmartDiffRanking)
                             , ('o', OracleRanking defaultOracle)
                             , ('O', OracleSmartRanking defaultOracle)
-                            , ('t', TacticRanking defaultTactic)
-                            , ('T', TacticSmartRanking defaultTactic)
                             , ('c', UsefulGoalNrRanking)
                             , ('C', GoalNrRanking)
                             ]
@@ -279,7 +248,7 @@ listGoalRankingsDiff = M.foldMapWithKey
     (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiff
 
 filterHeuristic :: String -> [GoalRanking]
-filterHeuristic ('#':t) = trace (show $ tail $ dropWhile (/= '#') t) (InternalTacticRanking (TacticI (takeWhile (/= '#') t) ' ' [] [])):(filterHeuristic $ tail $ dropWhile (/= '#') t)
+filterHeuristic ('{':t) = trace (show $ tail $ dropWhile (/= '}') t) (InternalTacticRanking (TacticI (takeWhile (/= '}') t) ' ' [] [])):(filterHeuristic $ tail $ dropWhile (/= '}') t)
 filterHeuristic (c:t)   = (charToGoalRanking "" c):(filterHeuristic t)
 filterHeuristic ("")    = []
 
@@ -290,15 +259,13 @@ goalRankingName ranking =
         GoalNrRanking                 -> "their order of creation"
         OracleRanking oracle          -> "an oracle for ranking, located at " ++ oraclePath oracle
         OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oraclePath oracle
-        TacticRanking tactic          -> "an tactic for ranking, located at " ++ tacticPath tactic
-        TacticSmartRanking tactic     -> "an tactic for ranking based on 'smart' heuristic, located at " ++ tacticPath tactic
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
         SapicRanking                  -> "heuristics adapted for processes"
         SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
-        InternalTacticRanking tacticI        -> "the tactic written in the theory file, written between #"
+        InternalTacticRanking _       -> "the tactic written in the theory file, written between {}"
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
 
@@ -309,9 +276,6 @@ prettyGoalRanking :: GoalRanking -> String
 prettyGoalRanking ranking = case ranking of
     OracleRanking oracle            -> findIdentifier ranking : " \"" ++ oracleRelPath oracle ++ "\""
     OracleSmartRanking oracle       -> findIdentifier ranking : " \"" ++ oracleRelPath oracle ++ "\""
-    TacticRanking tactic            -> findIdentifier ranking : " \"" ++ tacticRelPath tactic ++ "\""
-    TacticSmartRanking tactic       -> findIdentifier ranking : " \"" ++ tacticRelPath tactic ++ "\""
-    -- InternalTacticRanking tactic    -> 
     _                         -> [findIdentifier ranking]
   where
     findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of

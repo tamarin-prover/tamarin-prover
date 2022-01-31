@@ -27,12 +27,11 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
-import           Data.Char
+--import           Data.Char
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
-import           Text.Regex.Posix
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
@@ -41,7 +40,7 @@ import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
-import Debug.Trace
+
 
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
@@ -180,11 +179,11 @@ preddeclaration thy = do
 tactic :: Parser TacticI
 tactic = do
     tName <- tacticName
-    heuristic <- selectedHeuristic
-    prios <- many1 prio
-    deprios <- many1 deprio
-    _ <- newline
-    return $ TacticI tName heuristic prios deprios
+    heuristicDef <- option 's' selectedPreSort
+    prios <- option [] $ many1 prio
+    deprios <- option [] $ many1 deprio
+    _ <- many1 newline
+    return $ TacticI tName heuristicDef prios deprios
     
     where
       --Tactic
@@ -193,13 +192,14 @@ tactic = do
           _ <- string "tactic"
           _ <- char ':'
           _ <- skipMany (char ' ')
-          tacticName <- many (alphaNum <|> oneOf "[]_-@")
+          tName <- many (alphaNum <|> oneOf "_-@")
           _ <- newline
-          return $ tacticName
+          return $ tName
       -- Default heuristic
-      selectedHeuristic :: Parser Char
-      selectedHeuristic = string "heuristic" *> char ':' *> skipMany (char ' ') *> letter <* newline
-      --Prio
+      selectedPreSort :: Parser Char
+      selectedPreSort = string "heuristic" *> char ':' *> skipMany (char ' ') *> letter <* newline
+
+      --Parsing prio
       prio :: Parser Prio
       prio = do
           _ <- string "prio:"
@@ -208,7 +208,7 @@ tactic = do
           fs <- many1 function
           -- _ <- newline
           return $ Prio fs
-      --Deprio
+      --Parsing deprio
       deprio :: Parser Deprio
       deprio = do 
           _ <- string "deprio:"
@@ -219,7 +219,7 @@ tactic = do
           return $ Deprio fs
       --Function name
       functionName :: Parser String
-      functionName = many (char ' ') *> many (alphaNum <|> oneOf "[]_-@")
+      functionName = many (char ' ' <|> char '\t') *> many (alphaNum <|> oneOf "[]_-@")
       --Function value
       functionValue :: Parser String
       functionValue = many $ noneOf "\n"
@@ -243,8 +243,8 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
        regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
 
        internalTacticRanking = do 
-            goal <- toGoalRanking <$> char '#' <* skipMany (char ' ')
-            tacticName <- optionMaybe (many1 (noneOf "\"\n\r#") <* char '#' <* skipMany (char ' '))
+            goal <- toGoalRanking <$> char '{' <* skipMany (char ' ')
+            tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}}") <* char '}' <* skipMany (char ' '))
 
             return $ mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal
 

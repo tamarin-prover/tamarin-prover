@@ -279,7 +279,7 @@ import           Theory.Tools.IntruderRules
 import           Term.Positions
 
 import           Utils.Misc
-import           Debug.Trace
+--import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -1416,7 +1416,7 @@ addDiffHeuristic _ _ = Nothing
 addTacticI :: TacticI -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addTacticI t (Theory n h [] sig c i o) = Just (Theory n h [t] sig c i o)
 addTacticI t (Theory n h l sig c i o) = Just (Theory n h (l++[t]) sig c i o)
-addTacticI _ _ = Nothing
+-- addTacticI _ _ = Nothing
 
 addDiffTacticI :: TacticI -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i) = Just (DiffTheory n h [t] sig cl cr dcl dcr i)
@@ -2921,6 +2921,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
     thy' = Theory {_thyName=(L.get thyName thy)
             ,_thyHeuristic=(L.get thyHeuristic thy)
+            ,_thyTacticI=(L.get thyTacticI thy)
             ,_thySignature=(L.get thySignature thy)
             ,_thyCache=(L.get thyCache thy)
             ,_thyItems = mergedRules
@@ -2958,6 +2959,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
     thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
     thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
             ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
+            ,_diffThyTacticI=(L.get diffThyTacticI thy)
             ,_diffThySignature=(L.get diffThySignature thy)
             ,_diffThyCacheLeft=(L.get diffThyCacheLeft thy)
             ,_diffThyCacheRight=(L.get diffThyCacheRight thy)
