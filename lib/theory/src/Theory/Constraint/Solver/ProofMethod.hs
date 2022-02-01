@@ -32,6 +32,9 @@ module Theory.Constraint.Solver.ProofMethod (
   , prettyProofMethod
   , prettyDiffProofMethod
 
+  , nameToFunction
+  , tacticFunctions
+
 ) where
 import           GHC.Generics                              (Generic)
 import           Data.Binary
@@ -582,54 +585,6 @@ oracleRanking oracle ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
-isFactName :: String -> AnnotatedGoal -> Bool
-isFactName s ((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)) = test == s
--- Ligne pas forcément utile
-isFactName s (ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ) = show test == s
-isFactName _ _ = False
-
-isInFactTerms :: String -> AnnotatedGoal -> Bool
-isInFactTerms s (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ) = show test =~ s
-isInFactTerms _ _ = False
-
-regexAmoi :: String -> AnnotatedGoal -> Bool
-regexAmoi s agoal = pg =~ s
-    where
-        pgoal (g,(_nr,_usefulness)) = prettyGoal g
-        pg = concat . lines . render $ pgoal agoal
-
-tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
-tacticFunctions = M.fromList
-                        [ ("regex", regexAmoi)
-                        , ("isFactName", isFactName)
-                        , ("isInFactTerms", isInFactTerms)
-                        ]
-
-nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
-nameToFunction ("regex",param) = regexAmoi param
-nameToFunction ("isFactName",param) = isFactName param
-nameToFunction ("isInFactTerms",param) = isInFactTerms param
-nameToFunction (f,_) = error $ "\nThe function "++f
-              ++" is not defined.\nUse one of the following:\n"++listTacticFunction
-
-tacticFunctionName :: (String -> AnnotatedGoal -> Bool) -> String
-tacticFunctionName function = case function of
-        regexAmoi           -> "match between the pretty goal and the given regex"
-        isFactName          -> "match against the fact name"
-        isInFactTerms       -> "match against the fact terms"
-
-listTacticFunction:: String
-listTacticFunction = M.foldMapWithKey
-    (\k v -> "'"++k++"': " ++ tacticFunctionName v ++ "\n") tacticFunctions
-
-isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
-isPrio list agoal = or $ (sequenceA list) agoal
-
-applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
-applyIsPrio [] _ = []
-applyIsPrio [xs] agoal = isPrio xs agoal:[]
-applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
-
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
 --   as the baseline.
@@ -652,7 +607,7 @@ oracleSmartRanking oracle ctxt _sys ags0
           logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT Petite\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   -- ++ outp
+                   ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
@@ -661,6 +616,55 @@ oracleSmartRanking oracle ctxt _sys ags0
       return (ranked ++ remaining)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
+tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
+tacticFunctions = M.fromList
+                        [ ("regex", regex')
+                        , ("isFactName", isFactName)
+                        , ("isInFactTerms", isInFactTerms)
+                        ]
+    where 
+      regex' :: String -> AnnotatedGoal -> Bool
+      regex' s agoal = pg =~ s
+          where
+              pgoal (g,(_nr,_usefulness)) = prettyGoal g
+              pg = concat . lines . render $ pgoal agoal
+
+      isFactName :: String -> AnnotatedGoal -> Bool
+      isFactName s ((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)) = test == s
+      -- Ligne pas forcément utile
+      isFactName s (ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ) = show test == s
+      isFactName _ _ = False
+
+      isInFactTerms :: String -> AnnotatedGoal -> Bool
+      isInFactTerms s (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ) = show test =~ s
+      isInFactTerms _ _ = False
+
+nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
+nameToFunction (s,param) = case M.lookup s tacticFunctions of 
+    Just f  -> f param
+    Nothing ->  error $ "\nThe function "++ s
+              ++" is not defined.\nUse one of the following:\n"++listTacticFunction
+
+    where
+      tacticFunctionName :: String -> String
+      tacticFunctionName function = case function of
+              "regex"            -> "match between the pretty goal and the given regex"
+              "isFactName"       -> "match against the fact name"
+              "isInFactTerms"    -> "match against the fact terms"
+              _                  -> ""
+
+      listTacticFunction:: String
+      listTacticFunction = M.foldMapWithKey
+          (\k _ -> "'"++k++"': " ++ tacticFunctionName k ++ "\n") tacticFunctions
+
+isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
+isPrio list agoal = or $ (sequenceA list) agoal
+
+applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
+applyIsPrio [] _ = []
+applyIsPrio [xs] agoal = isPrio xs agoal:[]
+applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
 
 itRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
 itRanking _ [] = []
@@ -701,13 +705,13 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
           index = map fst (zip [(0::Int)..] ags)
           out = map (show . snd) (sortOn fst (zip orderIndex index))
-      let oui = unlines
+      let prettyOut = unlines
                   (map (\(i,ag) -> i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip out res))
       let logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ show out
+                   ++ prettyOut
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       -- _ <- getLine

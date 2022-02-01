@@ -41,7 +41,6 @@ import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
 
-
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
 builtins thy0 =do

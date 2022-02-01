@@ -65,7 +65,7 @@ functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3, QPub/2, QName/2, certD
 			 PkX/2, PkY/2, verifyCre1/4, verifyCre2/5,verifyCre3/4,verifyCre4/5,
 			 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, Message/1, Q_K/1, certify/1, publicData/1
 			 
-
+ 
 equations:  
 			
 			calcE( 
@@ -187,8 +187,245 @@ equations:
 				PkX(x,P2),				//X
 				multp(l,plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),multp(f,P1)))), //T=lC=l(xA+rxyQ)=l(xrP1+rxyfP1)
 				P2)=accept
-			
-// Protocol Restrictions (Axioms)
+
+tactic: oracle_corr
+heuristic: C
+prio:
+    regex Host_
+    regex !SignatureVerified
+prio:
+    regex Issuer_
+prio:
+    regex !TPM_
+    regex TPM_tkt
+    regex TPM_CV_E
+    regex TPM_Commit_RCV1
+prio:
+    regex createPrimary
+prio:
+    regex returnEK'>
+prio:
+    regex createDAAKey
+prio:
+    regex returnDAAKey'>
+prio:
+    regex TPM2_ActivateCredentials'>
+prio:
+    regex ret_TPM2_ActivateCredentials'>
+prio:
+    regex TPM2_Commit'>
+prio:
+    regex retTPM2_commit'>
+prio:
+    regex TPM2_Hash'>
+prio:
+    regex ret_TPM2_Hash'>
+prio:
+    regex 'TPM2_Sign'>
+prio:
+    regex ret_TPM2_Sign'>
+prio:
+    regex 'TPM2_ActivateCredentials_2'
+prio:
+    regex ret_TPM2_ActivateCredentials_2'>
+prio:
+    regex TPM2_Commit_rand'>
+prio:
+    regex ret_TPM2_Commit_rand'>
+prio:
+    regex TPM2_Hash_2'>
+prio:
+    regex ret_TPM2_Hash_2'>
+prio:
+    regex 'TPM2_Sign_2'>
+prio:
+    regex ret_TPM2_Sign_2'>
+prio:
+    regex !KU\( pk\(KDF_EK\(~TPM_EK_Seed\)
+    regex !KU\( multp\(f.*, 'P1'
+prio:
+    regex !KU\(.*<'1'
+prio:
+    regex !KU\( KDF_EK\(~TPM_EK_Seed\)
+
+tactic: oracle_SP3_Unfo
+heuristic: c
+prio:
+    regex !Pk\(
+    regex !TPM_
+prio:
+    regex !KU\( ~y \)
+    regex !KU\( ~x \)
+    regex !KU\( ~r \)
+    regex !KU\( ~f \)
+    regex !KU\( ~l \)
+    regex !KU\( ~r_cv.
+prio:
+    regex !KU\( plus\(~r_cv
+prio:
+    regex !KU\( senc\(.*~r.*~.*~.*~.*~.*~.*~.*.~.*~.*
+    regex !KU\( senc\(.*~f.*~.*~.*~.*~.*~.*~.*.~.*~.*
+prio:
+    regex !KU\( multp\(~l,
+prio:
+    regex !KU\( H_n_2\(Nonce.*certData
+prio:
+    regex !KU\( E_S
+prio:
+    regex createPrimary
+prio:
+    regex returnEK'>
+prio:
+    regex createDAAKey
+prio:
+    regex returnDAAKey'>
+prio:
+    regex !KU\(.*<'1'
+prio:
+    regex In_S\( \$AS, 
+    regex In_S\( \$PS, 
+prio:
+    regex TPM2_ActivateCredentials'>
+prio:
+    regex ret_TPM2_ActivateCredentials'>
+prio:
+    regex TPM2_Commit'>
+prio:
+    regex TPM2_Hash'>
+prio:
+    regex ret_TPM2_Hash'>
+prio:
+    regex TPM2_Hash'>
+prio:
+    regex ret_TPM2_Hash'>
+prio:
+    regex 'TPM2_Sign'>
+prio:
+    regex ret_TPM2_Sign'>
+prio:
+    regex 'TPM2_ActivateCredentials_2'
+prio:
+    regex ret_TPM2_ActivateCredentials_2'>
+prio:
+    regex TPM2_Commit_rand'>
+prio:
+    regex ret_TPM2_Commit_rand'>
+prio:
+    regex TPM2_Quote'>
+prio:
+    regex ret_TPM2_Quote
+prio:
+    regex !KU\( plus\(r_cv
+prio:
+    regex !KU\(.*H_n_2\(Nonce\(rnd
+    regex !KU\( multp\(~y
+prio:
+    regex !KU\( multp\(multp\(~r
+    regex !KU\( KDF_EK\(~TPM_EK_Seed
+    regex !KU\( multp\(multp\(~r
+prio:
+    regex !KU\( KDF_AES\(~TPM
+
+tactic: oracle_auth_alive
+heuristic: c
+prio:
+    regex Host_
+prio:
+    regex Issuer_
+prio:
+    regex In_S\(
+
+tactic: oracle_auth_many
+heuristic: c
+prio:
+    regex In_S\( $B
+    regex In_S\( $A
+    regex In_S\( $AS
+    regex In_S\( $PS
+    regex _State_
+    regex !Pk\(
+prio:
+    regex createDAAKey'>
+    regex createPrimary'\)
+    regex returnEK'>
+    regex returnDAAKey'>
+    regex !KU\( KDF_EK\(~TPM
+    regex !KU\( KDF_AES\(~TPM
+prio:
+    regex In_S\(.
+    regex !KU\( curlyK\(~K_1\)
+    regex !KU\( curlyK\(~K_1_1\)
+    regex !KU\( multp\(~y,
+    regex !KU\( ~y \)
+prio:
+    regex !KU\(.*curlyK\(~K_1_1\)
+    regex !KU\( plus\(r_cv.*multp\(H_n_2.*~f\)
+    regex !KU\( plus\(r_cv.*multp\(H_n_2.*~f.1\)
+    regex !KU\( plus\(multp\(~x,
+    regex !KU\( multp\(~x,
+    regex !KU\( multp\(H_n_2.*~f\)
+    regex !KU\( multp\(H_n_2.*~f.1\)
+    regex !KU\( ~f \)
+    regex !KU\( ~f.1 \)
+    regex !KU\( ~x \)
+prio:
+    regex !KU\(.*<'1'.*~.*~.*
+prio:
+    regex !KU\( senc.*~.*~.*
+    regex !KU\( ~TPM_EK
+prio:
+    regex KU\( Nonce\(~n_J\)
+    regex splitEqs\(0\)
+
+tactic: oracle_auth_secrecy
+heuristic: c
+prio:
+    regex In_S\( \$B,
+    regex In_S\( \$A,
+    regex In_S\( \$AS,
+    regex In_S\( \$PS,
+    regex _State_
+    regex !Pk\(
+prio:
+    regex createDAAKey\'>
+    regex createPrimary\'\)
+    regex returnEK\'>
+    regex returnDAAKey\'>
+prio:
+    regex In_S\(
+prio:
+    regex \!KU\( ~f \)
+    regex \!KU\( ~f.1 \)
+    regex \!KU\( ~x \)
+    regex \!KU\( ~y \)
+    regex \!KU\( ~s_2 \)
+    regex \!KU\( ~s \)
+    regex \!KU\( ~TPM_EK
+prio:
+    regex \!KU\( pk\( KDF_EK\(~TPM_EK
+    regex \!KU\( KDF_EK\(~TPM_EK
+prio:
+    regex \!KU\( curlyK\(~K_2\) \)
+    regex \!KU\( ~K_2 \)
+prio:
+    regex \!KU\( curlyK\(~K_1\) \)
+    regex \!KU\( ~K_1 \)
+    regex \!KU\( ~K \)
+    regex \!KU\( multp\(~y,
+prio:
+    regex \!KU\( multp\(~x,
+prio:
+    regex \!KU\( plus\(r_cv.*multp\(H_n_2.*~f\)
+    regex \!KU\( plus\(r_cv.*multp\(H_n_2.*~f.1\)
+prio:
+    regex \!KU\( plus\(multp\(~x,
+    regex \!KU\( multp\(H_n_2.*~f\)
+    regex \!KU\( multp\(H_n_2.*~f.1\)
+prio:
+    regex \!KU\( senc.*~.*~.*
+
+
+
 
 restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
 
