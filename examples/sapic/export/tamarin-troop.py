@@ -13,6 +13,8 @@ import shutil
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+# Timeout for the jobs in seconds
+JOB_TIMEOUT = 5
 
 # Tamarins heustics
 HEURISTICS = [ 's', 'S', 'c', 'C', 'i', 'I' ]
@@ -32,17 +34,21 @@ FINISHED = 'finished'
 TIMEOUT = 'timeout'
 ERROR = 'error'
 
+# Colors
+GREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
 
 # These job classes only exists to dynamically decide how we execute a job
 # The arguments are fixed in the 'generate_tamarin/non_tamarin_jobs' functions
 class Job():
-    def __init__(self, arguments, lemmas):
+    def __init__(self, arguments, lemma):
         # Arguments to execute the job
         self.arguments = arguments
         # Lemmas the proofs
         # For a Deepsec/ProVerif job, this will be a singleton list
-        # For a Tamarin job, this is list of lemma names
-        self.lemmas = lemmas
+        self.lemma = lemma
         # A dict mapping lemma names to results
         # Results are a tuple (status, time)
         # i.e. (proof, 1second) or (counterexample, 34seconds)
@@ -60,16 +66,16 @@ class Job():
 
     def execute(self):
         self.status = STARTED
-        print("Executing " + str(self.arguments) + "\n")
+        call =  "'" + " ".join(self.arguments) + "'"
+        print("Executing " + call + "\n")
         try:
             finishedjob = subprocess.run([TIME_COMMAND] + self.arguments,
                                     capture_output=True,
                                     universal_newlines=True,
-                                    timeout=1)
+                                    timeout=JOB_TIMEOUT)
             if finishedjob.returncode != 0:
                 # Check if job completed correctly
                 # Save returncode to later report it
-                # TODO: Maybe report error here?
                 self.returncode = finishedjob.returncode
                 self.status = ERROR
                 return
@@ -81,18 +87,37 @@ class Job():
 
 class TamarinJob(Job):
 
-    def parse_results(self, stdout):
-        pass
+    def parse_results(self, finishedjob):
+        # Parse the results for the self.lemma from the output
+        # and save them in self.results
+        # If no lemmas was specified, we assume that there is
+        # only one lemma in a .spthy file
+        # Search for the time Tamarin took
+        time = get_elapsed_time(finishedjob.stderr)
+        stdout = finishedjob.stdout
+        basepattern = self.lemma + " .*: "
+        verpattern = re.compile(basepattern + "verified")
+        falsepattern =  re.compile(basepattern + "falsified")
+        incpattern = re.compile(basepattern + "analysis incomplete")
+        result = ""
+        if verpattern.search(stdout):
+            result = PROOF
+        elif falsepattern.search(stdout):
+            result = COUNTEREXAMPLE
+        elif incpattern.search(stdout):
+            result = INCONCLUSIVE
+        else:
+            raise RuntimeError("Job " + str(self) +
+                  " did not complete with a valid result.")
+        self.results[self.lemma] = (result, time)
 
 
 class ProverifJob(Job):
 
     def parse_results(self, finishedjob):
-        # Parse the results for the self.lemmas from the output
+        # Parse the results for the self.lemma from the output
         # and save them in self.results
         # We assume that there is only one query in a .pv file
-        assert len(self.lemmas) == 1
-        lemma = self.lemmas[0]
         # Search for the time ProVerif took
         time = get_elapsed_time(finishedjob.stderr)
         # Search for the result in ProVerif stdout
@@ -100,15 +125,15 @@ class ProverifJob(Job):
         result = ""
         if re.search(r"RESULT .* is true", stdout):
             result = PROOF
-        elif re.match(r"RESULT .* is false", stdout):
+        elif re.search(r"RESULT .* is false", stdout):
             result = COUNTEREXAMPLE
-        elif re.match(r"RESULT .* cannot be proved", stdout):
+        elif re.search(r"RESULT .* cannot be proved", stdout):
             result = INCONCLUSIVE
         else:
             raise RuntimeError("Job " + str(self) + " did not complete\
                   with a valid result.")
         # Update dict
-        self.results[lemma] = (result, time)
+        self.results[self.lemma] = (result, time)
 
 class DeepsecJob(Job):
 
@@ -134,38 +159,56 @@ def get_elapsed_time(stderr):
     match = re.search(r'(\d+:\d+\.\d+)elapsed', stderr)
     return match.group(1)
 
+def report_results(results):
+    for lemma in results:
+        call = results[lemma][1]
+        outcome = results[lemma][0][0]
+        time = results[lemma][0][1]
+        lemmastring = " for " + lemma if lemma else ""
+        color = GREEN if outcome == PROOF else \
+                (FAIL if outcome == COUNTEREXAMPLE else INCONCLUSIVE)
+        print("=" * 80)
+        print("Reporting results" + lemmastring + ":\n")
+        print(" ".join(call) + " finished in " + time + " seconds\n")
+        print("Result: " +  color + outcome + ENDC + '\n')
+
 def collect_results(joblist):
     results = dict()
     for joblist in jobs:
         for job in joblist:
+            # String for error reporting
+            call = " ".join(job.arguments)
             # Make sure every job ran
             assert job.status == FINISHED or job.status == TIMEOUT or \
                    job.status == ERROR
-            # TODO: Tools disagree on the lemmas result
-            # TODO: i.e. Tamarin = proof, pv = ce
             if job.returncode != 0:
-                # TODO: notify user?
-                eprint("Job " + str(job) + " returned a non zero returncode!")
+                eprint(FAIL + "ERROR: " + ENDC + \
+                       "'" + call + "'" + " returned returncode " + \
+                       str(job.returncode))
             if job.status == TIMEOUT:
-                # TODO: notify user?
-                pass
+                eprint(WARNING + "WARNING: " + ENDC + \
+                       "'" + call + "'" + " timed out after " + \
+                       str(JOB_TIMEOUT) + " seconds")
             # Job finished with zero returncode
-            for lemma, result in job.results.items():
+            for lemma, (result, time) in job.results.items():
                 if lemma not in results:
                     # New entry
-                    results[lemma] = result
+                    results[lemma] = (result, time), job.arguments
                 else:
-                    currentresult = results[lemma]
-                    if currentresult[0] != result[0]:
-                        # the current result is different from the new result
+                    (oldresult, oldtime), oldjob = results[lemma]
+                    if oldresult != result:
+                        # the old result is different from the new result
                         # i.e. the tool(s) disagree. Tamarin proofs. Pv gives ce.
-                        # TODO: notify user?
-                        pass
+                        oldcall = " ".join(oldjob)
+                        eprint(ERROR + "ERROR: " + "'" + oldcall + "'" + \
+                               "had result: " + oldresult)
+                        eprint(ERROR + "ERROR: " + "'" + call + "'" + \
+                               "had result: " + result)
                     else:
                         # Results agree
-                        if currentresult[1] > result[1]:
+                        if oldtime > time:
                             # new result is faster; update results
-                            results[lemma] = result
+                            results[lemma] = (result, time), job.arguments
     return results
 
 
@@ -197,14 +240,11 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
 
     for tool in argdict.keys():
         if tool == SPTHY:
-            # Skip Tamarin/spthy.
+            # Skip Tamarin/spthy. Tamarin does not need intermediate files.
+            # It works on the sapic file itself.
             continue
 
         # For each tool generate a file using Tamarin -m
-        # TODO: In the future, we want to do this for every lemma.
-        # However, currently Tamarin does not support this.
-        # If no lemmas are specified, use the empty string whenever
-        # a lemma name is needed.
 
         # Charlie, Robert, and Niklas discussed this via Mattermost.
         # They plan to add a --lemma parameter to Tamarin which
@@ -213,14 +253,20 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
         # Once --lemma has been changed, we need to change the call to Tamarin
         # to include this parameter!
         # Build command
-        cmd = " ".join([TAMARIN_COMMAND, '-m='+tool] + flags + [input_file])
-        # Add diff flag
-        cmd = cmd + diffstring
-        # Change file type according to current tool
-        # TODO: Add lemma parameter to file name
-        destination = " > " + intermediate_file_name(input_file, tool, "")
-        # Concatenate the cmd and destination, and run it
-        subprocess.run(cmd + destination, shell=True, check=True)
+
+        # Hack to make the loop work if not lemmas are specified
+        lemmas = lemmas if lemmas else [""]
+
+        for lemma in lemmas:
+            # TODO: Once Tamarin can export a single lemma, change the call
+            # to do it!
+            cmd = " ".join([TAMARIN_COMMAND, '-m='+tool] + flags + [input_file])
+            # Add diff flag
+            cmd = cmd + diffstring
+            # Change file type according to current tool
+            destination = " > " + intermediate_file_name(input_file, tool, lemma)
+            # Concatenate the cmd and destination, and run it
+            subprocess.run(cmd + destination, shell=True, check=True)
 
 def generate_jobs(input_file, lemmas, argdict, flags):
     """
@@ -236,22 +282,21 @@ def generate_jobs(input_file, lemmas, argdict, flags):
         is also a valid job.
     """
     jobs = []
-    # First list of jobs are the Tamarin jobs
-    if SPTHY in argdict.keys():
-        jobs.append(generate_tamarin_jobs(input_file, lemmas, argdict, flags))
-    # Now we create a job list for each lemma
-    if not lemmas:
-        # Hack to make the loop work even if not lemmas were specified
-        lemmas = [""]
+    # Hack to make the loop work even if not lemmas were specified
+    lemmas = lemmas if lemmas else [""]
 
     for lemma in lemmas:
-        # For ever lemma create the jobs for the other tools
+        jobs_for_lemma = []
+        # For every lemma create the jobs for each tool
         for tool in argdict.keys():
             if tool == SPTHY:
-                continue
+                jobs_for_lemma += generate_tamarin_jobs(
+                            input_file, lemma, argdict, flags)
             else:
-                jobs.append(generate_non_tamarin_jobs(
-                            tool, input_file, lemma, argdict))
+                jobs_for_lemma += generate_non_tamarin_jobs(
+                            tool, input_file, lemma, argdict)
+
+        jobs.append(jobs_for_lemma)
     return jobs
 
 
@@ -265,27 +310,26 @@ def generate_non_tamarin_jobs(tool, input_file, lemma, argdict):
     if not argdict[tool][0]:
         # If there were no CLI params specified.
         jobs += [toolclass([toolcmd,  \
-                 intermediate_file_name(input_file, tool, lemma)], [lemma])]
+                 intermediate_file_name(input_file, tool, lemma)], lemma)]
     else:
         # If CLI params were specified, we use them.
         jobs += [toolclass([toolcmd, intermediate_file_name(input_file, \
-                 tool, lemma)] + list(tuple), [lemma]) \
+                 tool, lemma)] + list(tuple), lemma) \
                  for tuple in itertools.product(*argdict[tool])]
 
     return jobs
 
-def generate_tamarin_jobs(input_file, lemmas, argdict, flags):
+def generate_tamarin_jobs(input_file, lemma, argdict, flags):
     # TODO: Might need to revisit this once the Tamarin CLI has changed
-    lemmacli = [ '--prove=' + lemma for lemma in lemmas ] if lemmas \
-               else ["--prove"]
-    flags = flags if flags else []
+    lemmacli = [ '--prove=' + lemma ] if lemma else ["--prove"]
+    flags = [ '-D=' + flag for flag in flags ] if flags else []
     toolcmd = TOOL_TO_COMMAND[SPTHY]
     jobs = []
     if not argdict[SPTHY][0]:
-        jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags, lemmas)]
+        jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags, lemma)]
     else:
         jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags + \
-                list(tuple), lemmas) for tuple in itertools.product(*argdict[SPTHY])]
+                list(tuple), lemma) for tuple in itertools.product(*argdict[SPTHY])]
 
     return jobs
 
@@ -294,7 +338,9 @@ def generate_tamarin_jobs(input_file, lemmas, argdict, flags):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--lemma', action='extend', nargs='+', type=str,
-                        help='prove the given lemmas')
+                        help='prove the given lemmas. If no lemmas are \
+                        specified, the tool assumes that there is only one \
+                        lemma in the given .spthy')
     # Flags for Tamarin's preprocessor. Used during file/model generation
     parser.add_argument('-D', '--defines', action='extend', nargs='+', type=str,
                         help="flags for Tamarin's preprocessor")
@@ -320,27 +366,36 @@ if __name__ == '__main__':
     parser.add_argument('-tname', '--tname', action='store', type=str,
                         help='customize how Tamarin is called; defaults to \
                               "tamarin-prover"')
-
+    # Custom ProVerif command
     parser.add_argument('-pname', '--pname', action='store', type=str,
                         help='customize how ProVerif is called; defaults to \
                               "proverif"')
-
+    # Custom Deepsec command
     parser.add_argument('-dname', '--dname', action='store', type=str,
                         help='customize how Deepsec is called; defaults to \
                               "deepsec"')
-
+    # Custom Time command
     parser.add_argument('-time', '--time', action='store', type=str,
                         help='customize how "time" is called; defaults to \
                               "/usr/bin/time"')
+    # Custom timeout
+    parser.add_argument('-to', '--timeout', action='store',
+                        type=int, help='timeout for the jobs')
 
     args = parser.parse_args()
-    # Check whether 'usr/bin/time' is available
-    if find_executable("/usr/bin/time") is None:
-        eprint("usr/bin/time executable was not found!")
-        sys.exit(1)
     # Error handling
     if args.deepsec is None and args.tamarin is None and args.proverif is None:
         eprint("Provide command line arguments for at least one tool!")
+        sys.exit(1)
+
+
+    # Update time command
+    if args.time:
+        TIME_COMMAND = args.time
+
+    # Check whether 'usr/bin/time' is available
+    if find_executable(TIME_COMMAND) is None:
+        eprint(TIME_COMMAND + " executable was not found!")
         sys.exit(1)
 
     # Change tool commands if specified
@@ -353,9 +408,8 @@ if __name__ == '__main__':
     if args.pname:
         PROVERIF_COMMAND = args.pname
 
-    if args.time:
-        TIME_COMMAND = args.time
-
+    if args.timeout:
+        JOB_TIMEOUT = args.timeout
 
     # Map tools to their command
     TOOL_TO_COMMAND = { SPTHY: TAMARIN_COMMAND, PROVERIF: PROVERIF_COMMAND,
@@ -385,18 +439,17 @@ if __name__ == '__main__':
 
     # Generate desired model files from the input file
     generate_files(args.input_file, flags, lemmas, argdict, args.diff)
-    # print(lemmas)
-    # print(flags)
-    # print(args.diff)
-    # print(argdict)
 
     # Generate the jobs that we want to concurrently execute
     jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
     # TODO: Concurrent execution!
     for joblist in jobs:
+        print(joblist)
+        print("\n")
         for job in joblist:
             job.execute()
     # Go through the jobs and collect the results
     results = collect_results(joblist)
     # TODO: pretty print results
-    print(results)
+    report_results(results)
+    sys.exit(0)
