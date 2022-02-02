@@ -213,18 +213,13 @@ diffEquivLemma :: OpenTheory -> Parser SapicElement
 diffEquivLemma thy = do
                _ <- try $ symbol "diffEquivLemma"
                _ <- colon
-               msig <- getState
-               putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+               modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
                p <- process thy
                return $ DiffEquivLemma p
 
 
 elseprocess :: OpenTheory
-    -> ParsecT
-     String
-     MaudeSig
-     Data.Functor.Identity.Identity
-     (Process ProcessParsedAnnotation SapicLVar)
+    -> Parser PlainProcess
 elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
 
 actionprocess :: OpenTheory -> Parser PlainProcess

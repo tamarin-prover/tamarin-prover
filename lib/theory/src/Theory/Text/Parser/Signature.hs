@@ -52,6 +52,7 @@ builtinsDiffNames :: [(String,
 builtinsDiffNames = [
   ("diffie-hellman", dhMaudeSig),
   ("bilinear-pairing", bpMaudeSig),
+
   ("multiset", msetMaudeSig),
   ("xor", xorMaudeSig),
   ("symmetric-encryption", symEncMaudeSig),
@@ -85,13 +86,12 @@ builtins thy0 =do
     setOption' thy (Just l, name) = setOption l (setName thy name)
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
-        modifyState (`mappend` msig)
+        modifyStateSig (`mappend` msig)
         return (opt, name)
     extendSig (name, Nothing, opt) = do
         _ <- symbol name
         return (opt, name)
     builtinTheory = asum $ map (try . extendSig) builtinsNames
-
 
 diffbuiltins :: Parser ()
 diffbuiltins =
@@ -99,7 +99,7 @@ diffbuiltins =
   where
     extendSig (name, msig) =
         symbol name *>
-        modifyState (`mappend` msig)
+        modifyStateSig (`mappend` msig)
     builtinTheory = asum $ map (try . extendSig) builtinsDiffNames
 
 
@@ -129,7 +129,7 @@ function =  do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
-        sig <- getState
+        sig <- sig <$> getState
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
@@ -139,13 +139,14 @@ function =  do
                    show kp' ++ " and " ++ show (k,priv,destr) ++
                    " for `" ++ BC.unpack f
           _ -> do
-                setState (addFunSym (f,(k,priv,destr)) sig)
+                modifyStateSig $ addFunSym (f,(k,priv,destr))
                 return ((f,(k,priv,destr)),argTypes,outType)
 
 
 functions :: Parser [SapicFunSym]
 functions =
     (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function
+
 
 equations :: Parser ()
 equations =
@@ -155,7 +156,7 @@ equations =
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addCtxtStRule str)
+              modifyStateSig (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 

@@ -48,8 +48,8 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 -- if the operator is not known.
 lookupArity :: String -> Parser (Int, Privacy,Constructability)
 lookupArity op = do
-    maudeSig <- getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
+    maudeSig <- sig <$> getState
+    case lookup (BC.pack op) (S.toList (noEqFunSyms $ maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,priv,cnstr) -> return (k,priv,cnstr)
 
@@ -102,7 +102,7 @@ diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
-  diff <- enableDiff <$> getState
+  diff <- enableDiff . sig <$> getState
   when eqn $ fail
     "diff operator not allowed in equations"
   unless diff $ fail
@@ -126,10 +126,10 @@ term plit eqn = asum
     application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm eqn plit)
     nullaryApp = do
-      maudeSig <- getState
+      maudeSig <- sig <$> getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) *> pure (fApp fs [])
-           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
+           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms $ maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -138,7 +138,7 @@ expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 multterm eqn plit = do
-    dh <- enableDH <$> getState
+    dh <- enableDH . sig  <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit eqn
@@ -146,7 +146,7 @@ multterm eqn plit = do
 -- | A left-associative sequence of xors.
 xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 xorterm eqn plit = do
-    xor <- enableXor <$> getState
+    xor <- enableXor . sig <$> getState
     if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
         then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else multterm eqn plit
@@ -154,7 +154,7 @@ xorterm eqn plit = do
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 msetterm eqn plit = do
-    mset <- enableMSet <$> getState
+    mset <- enableMSet . sig <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
         then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
         else xorterm eqn plit

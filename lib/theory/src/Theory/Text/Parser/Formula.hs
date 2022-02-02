@@ -31,7 +31,7 @@ import Control.Basics
 
 smallerp :: Ord v => Parser v -> Parser (ProtoAtom SyntacticSugar (Term (Lit Name v)))
 smallerp varp = do
-    mset <- enableMSet <$> getState
+    mset <- enableMSet . sig <$> getState
     unless mset (fail "Need builtins: multiset to use multiset comparisson operator.")
     a <- try (termp <* opLessTerm)
     b <- termp
