@@ -33,6 +33,7 @@ STARTED = 'started'
 FINISHED = 'finished'
 TIMEOUT = 'timeout'
 ERROR = 'error'
+PARSE_ERROR = "parse_error"
 
 # Colors
 GREEN = '\033[92m'
@@ -66,7 +67,7 @@ class Job():
 
     def execute(self):
         self.status = STARTED
-        call =  "'" + " ".join(self.arguments) + "'"
+        call =  str(self)
         print("Executing " + call + "\n")
         try:
             finishedjob = subprocess.run([TIME_COMMAND] + self.arguments,
@@ -81,6 +82,9 @@ class Job():
                 return
             # Get the results
             self.parse_results(finishedjob)
+            if self.status == PARSE_ERROR:
+                return
+
             self.status = FINISHED
         except subprocess.TimeoutExpired:
             self.status = TIMEOUT
@@ -107,8 +111,9 @@ class TamarinJob(Job):
         elif incpattern.search(stdout):
             result = INCONCLUSIVE
         else:
-            raise RuntimeError("Job " + str(self) +
-                  " did not complete with a valid result.")
+            self.status = PARSE_ERROR
+            return
+
         self.results[self.lemma] = (result, time)
 
 
@@ -130,15 +135,30 @@ class ProverifJob(Job):
         elif re.search(r"RESULT .* cannot be proved", stdout):
             result = INCONCLUSIVE
         else:
-            raise RuntimeError("Job " + str(self) + " did not complete\
-                  with a valid result.")
+            self.status = PARSE_ERROR
+            return
         # Update dict
         self.results[self.lemma] = (result, time)
 
 class DeepsecJob(Job):
 
-    def parse_results(self, stdout):
-        pass
+    def parse_results(self, finishedjob):
+        # Parse the results for the self.lemma from the output
+        # and save them in self.results
+        # We assume that there is only one query in a .dps file
+        # Search for the time Deepsec took
+        time = get_elapsed_time(finishedjob.stderr)
+        stdout = finishedjob.stdout
+        result = ""
+        if re.search(r"not session equivalent", stdout):
+            result = COUNTEREXAMPLE
+        elif re.search(r"session equivalent", stdout):
+            result = PROOF
+        else:
+            self.status = PARSE_ERROR
+            return
+
+        self.results[self.lemma] = (result, time)
 
 
 
@@ -180,15 +200,21 @@ def collect_results(joblist):
             call = " ".join(job.arguments)
             # Make sure every job ran
             assert job.status == FINISHED or job.status == TIMEOUT or \
-                   job.status == ERROR
+                   job.status == ERROR or job.status == PARSE_ERROR
             if job.returncode != 0:
                 eprint(FAIL + "ERROR: " + ENDC + \
                        "'" + call + "'" + " returned returncode " + \
                        str(job.returncode))
+                continue
             if job.status == TIMEOUT:
                 eprint(WARNING + "WARNING: " + ENDC + \
                        "'" + call + "'" + " timed out after " + \
                        str(JOB_TIMEOUT) + " seconds")
+                continue
+            if job.status == PARSE_ERROR:
+                eprint(FAIL + "ERROR: " + ENDC + "The result from "\
+                       "'" + call + "'" + " could not be parsed.")
+                continue
             # Job finished with zero returncode
             for lemma, (result, time) in job.results.items():
                 if lemma not in results:
@@ -200,10 +226,11 @@ def collect_results(joblist):
                         # the old result is different from the new result
                         # i.e. the tool(s) disagree. Tamarin proofs. Pv gives ce.
                         oldcall = " ".join(oldjob)
-                        eprint(ERROR + "ERROR: " + "'" + oldcall + "'" + \
-                               "had result: " + oldresult)
-                        eprint(ERROR + "ERROR: " + "'" + call + "'" + \
-                               "had result: " + result)
+                        eprint(FAIL + "ERROR: " + ENDC + "'" + oldcall + "'" + \
+                               " had result: " + oldresult)
+                        eprint(FAIL + "ERROR: " + ENDC + "'" + call + "'" + \
+                               " had result: " + result)
+                        eprint("\n")
                     else:
                         # Results agree
                         if oldtime > time:
@@ -322,10 +349,11 @@ def generate_non_tamarin_jobs(tool, input_file, lemma, argdict):
 def generate_tamarin_jobs(input_file, lemma, argdict, flags):
     # TODO: Might need to revisit this once the Tamarin CLI has changed
     lemmacli = [ '--prove=' + lemma ] if lemma else ["--prove"]
+    # heuristics = [] if argdict.
     flags = [ '-D=' + flag for flag in flags ] if flags else []
     toolcmd = TOOL_TO_COMMAND[SPTHY]
     jobs = []
-    if not argdict[SPTHY][0]:
+    if not argdict[SPTHY]:
         jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags, lemma)]
     else:
         jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags + \
@@ -427,15 +455,18 @@ if __name__ == '__main__':
     if args.proverif:
         argdict[PROVERIF] = add_dashes_to_arguments(args.proverif)
     if args.tamarin:
-        argdict[SPTHY] = add_double_dashes_to_arguments(args.tamarin)
-    if args.heuristic:
-        # Add '--heuristic' prefix to the heuristics
-        heuristics = [ '--heuristic ' + heuristic for heuristic in \
-                     args.heuristic ]
-        if SPTHY in argdict:
-            argdict[SPTHY].append(heuristics)
+        if args.tamarin[0]:
+            # Actual arguments, not only -t
+            tamarinargs = add_double_dashes_to_arguments(args.tamarin)
+            argdict[SPTHY] = tamarinargs
         else:
-            argdict[SPTHY] = heuristics
+            tamarinargs = []
+        if args.heuristic:
+            heuristics = [ '--heuristic=' + heuristic for heuristic in \
+                         args.heuristic ]
+            tamarinargs.append(heuristics)
+        argdict[SPTHY] = tamarinargs
+
 
     # Generate desired model files from the input file
     generate_files(args.input_file, flags, lemmas, argdict, args.diff)
@@ -444,8 +475,6 @@ if __name__ == '__main__':
     jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
     # TODO: Concurrent execution!
     for joblist in jobs:
-        print(joblist)
-        print("\n")
         for job in joblist:
             job.execute()
     # Go through the jobs and collect the results
