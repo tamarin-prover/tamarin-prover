@@ -43,7 +43,7 @@ import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
 import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,intercalate)
 import qualified Data.Map                                  as M
-import           Data.Maybe                                (catMaybes)
+import           Data.Maybe                                (catMaybes, fromMaybe)
 -- import           Data.Monoid
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
@@ -658,37 +658,40 @@ nameToFunction (s,param) = case M.lookup s tacticFunctions of
       listTacticFunction = M.foldMapWithKey
           (\k _ -> "'"++k++"': " ++ tacticFunctionName k ++ "\n") tacticFunctions
 
+-- Check whether a goal match a prio
 isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
 isPrio list agoal = or $ (sequenceA list) agoal
 
+-- Try to match all prio with all goals
 applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
 applyIsPrio [] _ = []
 applyIsPrio [xs] agoal = isPrio xs agoal:[]
 applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
 
+
 itRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
 itRanking _ [] = []
 itRanking tactic ags = result
     where
-      -- Getting the functions from prio
-      prio = tacticiPrio tactic
-      prioTab = map prioFunctions prio
+      -- Getting the functions from priorities
+      prioName = tacticiPrio tactic
+      prioTab = map prioFunctions prioName
       prioToFunctions = map (map nameToFunction) prioTab
-      indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions) ags
-      indexedPrio = sortOn fst $ zip indexPrio ags 
-      groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio
-      rankedPrioGoals = snd $ unzip $ concat $ (tail groupedPrio)
+      indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions) ags -- find the first prio that match every goal
+      indexedPrio = sortOn fst $ zip indexPrio ags                                 -- ordening of goals given the fisrt prio they meet 
+      groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio  -- grouping goals by prio
+      rankedPrioGoals = snd $ unzip $ concat $ (tail groupedPrio)                         -- recovering ranked goals only (no prio = Nothing = fst)
 
-      -- Getting the functions from prio
-      deprio = tacticiDeprio tactic
-      deprioTab = map deprioFunctions deprio
+      -- Getting the functions from depriorities
+      deprioName = tacticiDeprio tactic
+      deprioTab = map deprioFunctions deprioName
       deprioToFunctions = map (map nameToFunction) deprioTab
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
       groupedDeprio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedDeprio
       rankedDeprioGoals = snd $ unzip $ concat (tail groupedDeprio)
 
-      --Concaténation des résultats
+      --Concatenation of results
       nonRanked = filter (`notElem` rankedPrioGoals++rankedDeprioGoals) ags
       result = rankedPrioGoals ++ nonRanked ++ rankedDeprioGoals
 
@@ -702,22 +705,29 @@ internalTacticRanking tactic ctxt _sys ags0 =
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
       let res = itRanking tactic ags
-      let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
-          index = map fst (zip [(0::Int)..] ags)
-          out = map (show . snd) (sortOn fst (zip orderIndex index))
+      -- let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
+          -- index = map fst (zip [(0::Int)..] ags)
+          -- out = map (show . snd) (sortOn fst (zip orderIndex index))
+      let dict = M.fromList (zip ags [(0::Int)..])
+          outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
       let prettyOut = unlines
-                  (map (\(i,ag) -> i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip out res))
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip outp res))
       let logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut
+                   ++ prettyOut 
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       -- _ <- getLine
       return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
+
+    {-rankPretty :: [M.Map AnnotatedGoal Int] -> [AnnotatedGoal] -> [Int]
+    rankPretty dict ref =
+        let indexToLookForFonction = map (flip M.lookup dict) res
+        -- let retrievedIndex = -}
 
     orderList [] _ res        = res
     orderList _ [] res        = res
