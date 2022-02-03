@@ -17,9 +17,8 @@
 -- "Theory.Constraint.Solver.ProofMethod" for the public interface to solving
 -- goals and the implementation of heuristics.
 module Theory.Constraint.Solver.Goals (
-    Usefulness(..)
-  , AnnotatedGoal
-  , openGoals
+    
+  openGoals
   , solveGoal
   , plainOpenGoals
   ) where
@@ -45,11 +44,13 @@ import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hidin
 
 import           Extension.Data.Label                    as L
 
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
+
 
 import           Utils.Misc                              (twoPartitions)
 
@@ -57,19 +58,7 @@ import           Utils.Misc                              (twoPartitions)
 -- Extracting Goals
 ------------------------------------------------------------------------------
 
-data Usefulness =
-    Useful
-  -- ^ A goal that is likely to result in progress.
-  | LoopBreaker
-  -- ^ A goal that is delayed to avoid immediate termination.
-  | ProbablyConstructible
-  -- ^ A goal that is likely to be constructible by the adversary.
-  | CurrentlyDeducible
-  -- ^ A message that is deducible for the current solution.
-  deriving (Show, Eq, Ord)
-
--- | Goals annotated with their number and usefulness.
-type AnnotatedGoal = (Goal, (Integer, Usefulness))
+-- Usefullness and AnnotatedGoal moved to AnnotatedGoals.hs to allow exportation
 
 
 -- Instances

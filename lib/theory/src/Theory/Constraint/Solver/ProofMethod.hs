@@ -32,10 +32,8 @@ module Theory.Constraint.Solver.ProofMethod (
   , prettyProofMethod
   , prettyDiffProofMethod
 
-  , nameToFunction
-  , tacticFunctions
-
 ) where
+  
 import           GHC.Generics                              (Generic)
 import           Data.Binary
 import           Data.Function                             (on)
@@ -62,6 +60,7 @@ import           System.Process
 import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
 import           Theory.Constraint.Solver.Heuristics
@@ -617,46 +616,6 @@ oracleSmartRanking oracle ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
-tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
-tacticFunctions = M.fromList
-                        [ ("regex", regex')
-                        , ("isFactName", isFactName)
-                        , ("isInFactTerms", isInFactTerms)
-                        ]
-    where 
-      regex' :: String -> AnnotatedGoal -> Bool
-      regex' s agoal = pg =~ s
-          where
-              pgoal (g,(_nr,_usefulness)) = prettyGoal g
-              pg = concat . lines . render $ pgoal agoal
-
-      isFactName :: String -> AnnotatedGoal -> Bool
-      isFactName s ((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)) = test == s
-      -- Ligne pas forcément utile
-      isFactName s (ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ) = show test == s
-      isFactName _ _ = False
-
-      isInFactTerms :: String -> AnnotatedGoal -> Bool
-      isInFactTerms s (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ) = show test =~ s
-      isInFactTerms _ _ = False
-
-nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
-nameToFunction (s,param) = case M.lookup s tacticFunctions of 
-    Just f  -> f param
-    Nothing ->  error $ "\nThe function "++ s
-              ++" is not defined.\nUse one of the following:\n"++listTacticFunction
-
-    where
-      tacticFunctionName :: String -> String
-      tacticFunctionName function = case function of
-              "regex"            -> "match between the pretty goal and the given regex"
-              "isFactName"       -> "match against the fact name"
-              "isInFactTerms"    -> "match against the fact terms"
-              _                  -> ""
-
-      listTacticFunction:: String
-      listTacticFunction = M.foldMapWithKey
-          (\k _ -> "'"++k++"': " ++ tacticFunctionName k ++ "\n") tacticFunctions
 
 -- Check whether a goal match a prio
 isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
@@ -674,18 +633,18 @@ itRanking _ [] = []
 itRanking tactic ags = result
     where
       -- Getting the functions from priorities
-      prioName = tacticiPrio tactic
-      prioTab = map prioFunctions prioName
-      prioToFunctions = map (map nameToFunction) prioTab
+      --prioName = tacticiPrio tactic
+      --prioTab = map prioFunctions prioName
+      prioToFunctions = map prioFunctions (tacticiPrio tactic)
       indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions) ags -- find the first prio that match every goal
       indexedPrio = sortOn fst $ zip indexPrio ags                                 -- ordening of goals given the fisrt prio they meet 
       groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio  -- grouping goals by prio
       rankedPrioGoals = snd $ unzip $ concat $ (tail groupedPrio)                         -- recovering ranked goals only (no prio = Nothing = fst)
 
       -- Getting the functions from depriorities
-      deprioName = tacticiDeprio tactic
-      deprioTab = map deprioFunctions deprioName
-      deprioToFunctions = map (map nameToFunction) deprioTab
+      -- deprioName = tacticiDeprio tactic
+      -- deprioTab = map deprioFunctions deprioName
+      deprioToFunctions = map deprioFunctions (tacticiDeprio tactic)
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
       groupedDeprio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedDeprio
@@ -723,11 +682,6 @@ internalTacticRanking tactic ctxt _sys ags0 =
       return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
-
-    {-rankPretty :: [M.Map AnnotatedGoal Int] -> [AnnotatedGoal] -> [Int]
-    rankPretty dict ref =
-        let indexToLookForFonction = map (flip M.lookup dict) res
-        -- let retrievedIndex = -}
 
     orderList [] _ res        = res
     orderList _ [] res        = res

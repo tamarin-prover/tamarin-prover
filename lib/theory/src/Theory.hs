@@ -716,6 +716,25 @@ addRightLemma lem =
      L.set lAttributes (RHSLemma:(L.get lAttributes lem)) lem
 
 ------------------------------------------------------------------------------
+-- GoalRanking
+------------------------------------------------------------------------------
+-- | The different available functions to rank goals with respect to their
+-- order of solving in a constraint system.
+data Usefulness =
+    Useful
+  -- ^ A goal that is likely to result in progress.
+  | LoopBreaker
+  -- ^ A goal that is delayed to avoid immediate termination.
+  | ProbablyConstructible
+  -- ^ A goal that is likely to be constructible by the adversary.
+  | CurrentlyDeducible
+  -- ^ A message that is deducible for the current solution.
+  deriving (Show, Eq, Ord)
+
+-- | Goals annotated with their number and usefulness.
+type AnnotatedGoal = (Goal, (Integer, Usefulness))
+
+------------------------------------------------------------------------------
 -- Theories
 ------------------------------------------------------------------------------
 

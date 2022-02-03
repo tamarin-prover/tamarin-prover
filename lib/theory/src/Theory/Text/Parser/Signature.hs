@@ -16,7 +16,6 @@ module Theory.Text.Parser.Signature (
     , functions
     , equations
     , preddeclaration
-    , tactic
     , goalRanking
     , diffbuiltins
 )
@@ -28,10 +27,12 @@ import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 --import           Data.Char
+import qualified Data.Map                   as M
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
 import           Text.Parsec                hiding ((<|>))
+
 import           Term.Substitution
 import           Term.SubtermRule
 import           Theory
@@ -174,63 +175,6 @@ preddeclaration thy = do
                     predicates <- commaSep1 predicate
                     foldM liftedAddPredicate thy predicates
                     <?> "predicates"
-
-tactic :: Parser TacticI
-tactic = do
-    tName <- tacticName
-    heuristicDef <- option 's' selectedPreSort
-    prios <- option [] $ many1 prio
-    deprios <- option [] $ many1 deprio
-    _ <- many1 newline
-    return $ TacticI tName heuristicDef prios deprios
-    
-    where
-      --Tactic
-      tacticName :: Parser String
-      tacticName = do 
-          _ <- string "tactic"
-          _ <- char ':'
-          _ <- skipMany (char ' ')
-          tName <- many (alphaNum <|> oneOf "_-@")
-          _ <- newline
-          return $ tName
-      -- Default heuristic
-      selectedPreSort :: Parser Char
-      selectedPreSort = string "heuristic" *> char ':' *> skipMany (char ' ') *> letter <* newline
-
-      --Parsing prio
-      prio :: Parser Prio
-      prio = do
-          _ <- string "prio:"
-          _ <- skipMany (char ' ')
-          _ <- newline
-          fs <- many1 function
-          -- _ <- newline
-          return $ Prio fs
-      --Parsing deprio
-      deprio :: Parser Deprio
-      deprio = do 
-          _ <- string "deprio:"
-          _ <- skipMany (char ' ')
-          _ <- newline
-          fs <- many1 function 
-          -- _ <- newline
-          return $ Deprio fs
-      --Function name
-      functionName :: Parser String
-      functionName = many (char ' ' <|> char '\t') *> many (alphaNum <|> oneOf "[]_-@")
-      --Function value
-      functionValue :: Parser String
-      functionValue = many $ noneOf "\n"
-      --Fonction
-      function :: Parser (String,String)
-      function = do
-          -- f <- functionName
-          f <- lookAhead (noneOf $ "prio:" <|> "deprio:") *> functionName
-          _ <- char ' '
-          v <- functionValue
-          _ <- newline
-          return (f,v)
 
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]

@@ -43,6 +43,7 @@ library
     build-depends:
         aeson
       , aeson-pretty
+      , attoparsec
       , base
       , binary
       , bytestring
@@ -54,6 +55,7 @@ library
       , mtl
       , parallel
       , parsec
+      , pretty
       , process
       , regex-posix
       , safe
@@ -76,6 +78,7 @@ library
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
       Theory.Constraint.Solver.Contradictions
+      Theory.Constraint.Solver.AnnotatedGoals
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.ProofMethod
       Theory.Constraint.Solver.Reduction
@@ -122,4 +125,5 @@ library
       Theory.Text.Parser.Rule
       Theory.Text.Parser.Sapic
       Theory.Text.Parser.Signature
+      Theory.Text.Parser.Tactics
       Theory.Text.Parser.Term

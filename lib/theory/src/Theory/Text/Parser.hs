@@ -42,6 +42,7 @@ import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Exceptions
 import Theory.Text.Parser.Signature
+import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
 

@@ -64,8 +64,10 @@ import           Data.Maybe         (fromMaybe)
 import qualified Data.Map as M
 import           Data.List          (find)
 import           System.FilePath
+import           Text.Show.Functions()
 
 import           Theory.Text.Pretty
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Debug.Trace
 
 ------------------------------------------------------------------------------
@@ -83,14 +85,44 @@ data Oracle = Oracle {
 ------------------------------------------------------------------------------
 
 data Prio = Prio {
-      functionsPrio :: [(String,String)]  
+      functionsPrio :: [AnnotatedGoal -> Bool]  
     }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    --deriving Show
+    deriving( Show, Generic )
+
+instance Eq Prio where
+    (==) _ _ = True
+
+instance Ord Prio where
+    compare _ _ = EQ
+    (<=) _ _ = True
+
+instance NFData Prio where
+    rnf _ = ()
+
+instance Binary Prio where
+    put p = put $ show p
+    get = return Prio{..}
 
 data Deprio = Deprio {
-      functionsDeprio :: [(String,String)]
+      functionsDeprio :: [AnnotatedGoal -> Bool]
     }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    deriving ( Show, Generic )
+    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+instance Eq Deprio where
+    (==) _ _ = True
+
+instance Ord Deprio where
+    compare _ _ = EQ
+    (<=) _ _ = True
+
+instance NFData Deprio where
+    rnf _ = ()
+
+instance Binary Deprio where
+    put d = put $ show d
+    get = return Deprio{..}
 
 -- | New type for Tactis inside the theory file
 data TacticI = TacticI{
@@ -99,7 +131,9 @@ data TacticI = TacticI{
       _prios :: [Prio],
       _deprios :: [Deprio]
     }
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    deriving (Eq, Ord, Show, Generic, NFData, Binary )
+    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
 
 -- | The different available functions to rank goals with respect to their
 -- order of solving in a constraint system.
@@ -114,10 +148,12 @@ data GoalRanking =
   | SmartRanking Bool
   | SmartDiffRanking
   | InjRanking Bool
-  deriving( Eq, Ord, Show, Generic, NFData, Binary )
+  deriving (Eq, Ord, Show, Generic, NFData, Binary  )
+  --deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 newtype Heuristic = Heuristic [GoalRanking]
-    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    deriving (Eq, Ord, Show, Generic, NFData, Binary  )
+    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- Default rankings for normal and diff mode.
 defaultRankings :: Bool -> [GoalRanking]
@@ -167,10 +203,10 @@ tacticiHeuristic TacticI{..} = _heuristic
 tacticiPrio :: TacticI -> [Prio]
 tacticiPrio TacticI{..} = _prios
 
-prioFunctions :: Prio -> [(String,String)] 
+prioFunctions :: Prio -> [AnnotatedGoal -> Bool] 
 prioFunctions Prio{..} = functionsPrio
 
-deprioFunctions :: Deprio -> [(String,String)] 
+deprioFunctions :: Deprio -> [AnnotatedGoal -> Bool] 
 deprioFunctions Deprio{..} = functionsDeprio
 
 tacticiDeprio :: TacticI -> [Deprio]
@@ -289,4 +325,5 @@ prettyGoalRanking ranking = case ranking of
     compareRankings (OracleRanking _) (OracleRanking _) = True
     compareRankings (OracleSmartRanking _) (OracleSmartRanking _) = True
     compareRankings (InternalTacticRanking _ ) (InternalTacticRanking _ ) = True
-    compareRankings r1 r2 = r1 == r2
+    -- compareRankings r1 r2 = r1 == r2
+    compareRankings _ _ = True
