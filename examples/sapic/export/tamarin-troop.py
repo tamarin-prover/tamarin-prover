@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from distutils.spawn import find_executable
+import concurrent.futures
 import re
 import argparse
 import subprocess
@@ -79,15 +80,18 @@ class Job():
                 # Save returncode to later report it
                 self.returncode = finishedjob.returncode
                 self.status = ERROR
-                return
+                return self
             # Get the results
             self.parse_results(finishedjob)
             if self.status == PARSE_ERROR:
-                return
+                return self
 
             self.status = FINISHED
         except subprocess.TimeoutExpired:
             self.status = TIMEOUT
+        finally:
+            print("Finished " + call + "\n")
+            return self
 
 class TamarinJob(Job):
 
@@ -179,6 +183,16 @@ def get_elapsed_time(stderr):
     match = re.search(r'(\d+:\d+\.\d+)elapsed', stderr)
     return match.group(1)
 
+def execute_joblist(joblist):
+    # Concurrently execute the jobs in the joblist.
+    # TODO: Early return once one job has finished
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [ executor.submit(job.execute) for job in joblist ]
+        # Wait for the jobs
+        result = concurrent.futures.wait(futures,
+                                    return_when=concurrent.futures.ALL_COMPLETED)
+        return [ finishedjob.result() for finishedjob in result.done ]
+
 def report_results(results):
     for lemma in results:
         call = results[lemma][1]
@@ -187,12 +201,12 @@ def report_results(results):
         lemmastring = " for " + lemma if lemma else ""
         color = GREEN if outcome == PROOF else \
                 (FAIL if outcome == COUNTEREXAMPLE else INCONCLUSIVE)
-        print("=" * 80)
+        print("=" * 90)
         print("Reporting results" + lemmastring + ":\n")
         print(" ".join(call) + " finished in " + time + " seconds\n")
         print("Result: " +  color + outcome + ENDC + '\n')
 
-def collect_results(joblist):
+def collect_results(jobs):
     results = dict()
     for joblist in jobs:
         for job in joblist:
@@ -473,12 +487,17 @@ if __name__ == '__main__':
 
     # Generate the jobs that we want to concurrently execute
     jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
-    # TODO: Concurrent execution!
-    for joblist in jobs:
-        for job in joblist:
-            job.execute()
-    # Go through the jobs and collect the results
-    results = collect_results(joblist)
-    # TODO: pretty print results
-    report_results(results)
+    # For every lemma/joblist start a concurrent execution of its jobs.
+    # This first layer of concurrency uses a worker per lemma/joblist
+    with concurrent.futures.ProcessPoolExecutor(max_workers=len(jobs)) as executor:
+        # Execute and evaluate every lemma/joblist
+        futures = [ executor.submit(execute_joblist, joblist) for joblist in jobs ]
+        # Wait for all jobs
+        results = concurrent.futures.wait(futures)
+        # Unwrap results
+        results = [ r.result() for r in results.done ]
+        # Go through the jobs and collect the results
+        results = collect_results(results)
+        report_results(results)
+
     sys.exit(0)
