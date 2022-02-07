@@ -212,6 +212,8 @@ deprioFunctions Deprio{..} = functionsDeprio
 tacticiDeprio :: TacticI -> [Deprio]
 tacticiDeprio TacticI{..} = _deprios
 
+--setTact
+
 goalRankingIdentifiers :: M.Map Char GoalRanking
 goalRankingIdentifiers = M.fromList
                         [ ('s', SmartRanking False)

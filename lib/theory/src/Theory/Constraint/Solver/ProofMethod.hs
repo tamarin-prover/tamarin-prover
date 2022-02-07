@@ -576,7 +576,7 @@ oracleRanking oracle ctxt _sys ags0
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      -- _ <- getLine
+      _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
       -- guard $ trace sd True
 
@@ -655,6 +655,7 @@ itRanking tactic ags = result
       result = rankedPrioGoals ++ nonRanked ++ rankedDeprioGoals
 
 
+
 internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
@@ -678,7 +679,7 @@ internalTacticRanking tactic ctxt _sys ags0 =
                    ++ prettyOut 
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      -- _ <- getLine
+      _ <- getLine
       return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g

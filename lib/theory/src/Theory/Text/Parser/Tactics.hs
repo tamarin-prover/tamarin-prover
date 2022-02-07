@@ -11,11 +11,13 @@
 
 module Theory.Text.Parser.Tactics (
     tactic
+    -- , aledTactic
 )
 where
 
 import           Prelude                    hiding (id)
 import           Control.Applicative        hiding (empty, many, optional)
+import           Data.Foldable              (asum,msum)
 import qualified Data.Map                   as M
 
 import           Theory
@@ -32,15 +34,19 @@ import           Debug.Trace
 --Tactic
 tacticName :: Parser String
 tacticName = do 
-    _ <- string "tactic"
+    _ <- symbol "tactic"
     _ <- char ':'
     _ <- skipMany (char ' ')
     tName <- many (alphaNum <|> oneOf "_-@")
     _ <- newline
-    return $ tName
+    return $ trace (show tName) tName
+
 -- Default heuristic
 selectedPreSort :: Parser Char
-selectedPreSort = string "heuristic" *> char ':' *> skipMany (char ' ') *> letter <* newline
+selectedPreSort = do 
+    _ <- string "heuristic" *> char ':' *> skipMany (char ' ') 
+    oui <- letter <* newline
+    return $ trace (show oui) oui 
 
 --Function name
 functionName :: Parser String
@@ -48,16 +54,24 @@ functionName = many (char ' ' <|> char '\t') *> many (alphaNum <|> oneOf "[]_-@"
 
 --Function value
 functionValue :: Parser String
-functionValue = many $ noneOf "\n"
+functionValue = many $ noneOf "\n|&\""
+    {-liftA concat (manyTill (many (noneOf "\n)\\") <|> char '\\' *> escaped) eof )
+    where 
+        escaped = do 
+            c <- anyChar
+            return $ '\\':[c] -}
 
 --Fonction
 function :: Parser (AnnotatedGoal -> Bool)
 function = do
+    _ <- skipMany (char ' ')
     f <- functionName
-    _ <- char ' '
+    _ <- skipMany $ char ' '
+    _ <- char '"'
     v <- functionValue
-    _ <- newline
-    return $ trace (show (f,v)) nameToFunction (f,v)
+    _ <- char '"'
+    _ <- skipMany (char ' ')
+    return $ trace (show $ (f,v)) nameToFunction (f,v)
 
 functionNot :: (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool)
 functionNot f = not . f
@@ -71,6 +85,7 @@ functionOr f g = (\x -> or [f x, g x])
 -- | Parse a negation.
 negation :: Parser (AnnotatedGoal -> Bool)
 negation = opLNot *> (functionNot <$> function) <|> function
+-- opLNot *> (functionNot <$> between (char '(') (char ')') function) <|> between (char '(') (char ')') function
 
 -- | Parse a left-associative sequence of conjunctions.
 conjuncts :: Parser (AnnotatedGoal -> Bool)
@@ -78,7 +93,7 @@ conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
 disjuncts :: Parser (AnnotatedGoal -> Bool)
-disjuncts = lookAhead (noneOf $ "prio:" <|> "deprio:") *> skipMany (char ' ') *> chainl1 conjuncts (functionOr <$ opLOr)
+disjuncts = lookAhead (noneOf $ "prio:" <|> "deprio:") *> skipMany (char ' ') *> chainl1 conjuncts (functionOr <$ opLOr) <* newline
 
 --Parsing prio
 prio :: Parser Prio
@@ -99,6 +114,41 @@ deprio = do
     fs <- many1 negation
     -- _ <- newline
     return $ Deprio fs
+
+
+tactic :: Parser TacticI
+tactic = do
+    tName <- tacticName
+    heuristicDef <- option 's' selectedPreSort -- type String
+    prios <- option [] $ many1 prio            -- type [Prio]
+    deprios <- option [] $ many1 deprio
+    _ <- many1 newline
+    return $ TacticI tName heuristicDef prios deprios
+
+{-setTacticName :: TacticI -> String -> TacticI
+setTacticName tactic name = TacticI name (tacticiHeuristic tactic) (tacticiPrio tactic) (tacticiDeprio tactic) 
+
+setTacticPresort :: TacticI -> Char -> TacticI
+setTacticPresort tactic presort = TacticI (tacticiName tactic) presort (tacticiPrio tactic) (tacticiDeprio tactic) 
+
+setTacticPrios :: TacticI -> [Prio] -> TacticI
+setTacticPrios tactic prios = TacticI (tacticiName tactic) (tacticiHeuristic tactic) prios (tacticiDeprio tactic) 
+
+setTacticDeprios :: TacticI -> [Deprio] -> TacticI
+setTacticDeprios tactic deprios = TacticI (tacticiName tactic) (tacticiHeuristic tactic) (tacticiPrio tactic) deprios
+
+aledTactic :: TacticI -> Parser TacticI
+aledTactic tactic = asum 
+    [ do tName <- tacticName
+         return $ setTacticName tactic tName
+    , do presort <- option 's' selectedPreSort
+         return $ setTacticPresort tactic presort
+    , do prios <- option [] $ many1 prio
+         return $ setTacticPrios tactic prios
+    , do deprios <- option [] $ many1 deprio
+         _ <- many1 newline
+         return $ setTacticDeprios tactic deprios
+    ] -}
 
 tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
 tacticFunctions = M.fromList
@@ -140,14 +190,3 @@ nameToFunction (s,param) = case M.lookup s tacticFunctions of
     listTacticFunction:: String
     listTacticFunction = M.foldMapWithKey
         (\k _ -> "'"++k++"': " ++ tacticFunctionName k ++ "\n") tacticFunctions
-
-
-tactic :: Parser TacticI
-tactic = do
-    tName <- tacticName
-    heuristicDef <- option 's' selectedPreSort
-    prios <- option [] $ many1 prio
-    deprios <- option [] $ many1 deprio
-    _ <- many1 newline
-    return $ TacticI tName heuristicDef prios deprios
- 
