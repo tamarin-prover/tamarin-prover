@@ -63,7 +63,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 
 -- | Parse a lemma for an open theory from a string.
 parseRestriction :: String -> Either ParseError SyntacticRestriction
-parseRestriction = parseString "<unknown source>" restriction
+parseRestriction = parseString [] "<unknown source>" restriction
 
 -- | Parse a 'RestrictionAttribute'.
 restrictionAttribute :: Parser RestrictionAttribute
