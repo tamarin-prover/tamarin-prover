@@ -442,6 +442,6 @@ solveSubterm st = do
                                       insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
                                     else modM sSubtermStore (addSubterm st1)
         EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
-        ACNewVarD (smallPlus, big, newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
+        ACNewVarD ((smallPlus, big), newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
         
       return $ "SubtermSplit" ++ show i

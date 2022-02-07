@@ -343,7 +343,8 @@ partialAtomValuation ctxt sys =
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
-    redElem    = elemNotBelowReducible (reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt)
+    reducible  = reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt
+    sst        = get sSubtermStore sys
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -382,10 +383,7 @@ partialAtomValuation ctxt sys =
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
                   
-          Subterm small big
-             | big `redElem` small                  -> Just False  -- includes equality
-             | small `redElem` big                  -> Just True -- small /= big because of the previous condition
-             | otherwise                            -> Nothing
+          Subterm small big                      -> isTrueFalse reducible (Just sst) (small, big)
 
           Last (ltermNodeId' -> i)
             | isLast sys i                       -> Just True

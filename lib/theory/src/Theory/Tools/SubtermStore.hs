@@ -36,6 +36,7 @@ module Theory.Tools.SubtermStore (
   , hasSubtermCycle
   , SubtermSplit(..)
   , splitSubterm
+  , isTrueFalse
 
   -- ** Pretty printing
   , prettySubtermStore
@@ -176,7 +177,7 @@ simpSplitNegSt reducible sst = do
     let splitSubterms = S.fromList $ [st | SubtermD st <- splits] ++ [st | NatSubtermD st <- splits]
     let flippedNatSubterms = S.fromList [(t, s ++: fAppNatOne) | NatSubtermD (s, t) <- splits, isNatSubterm (s,t)]  -- isNatSubterm is necessary to exclude that s is a msgVar!!!
     let eqFormulas = S.toList $ S.fromList [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | EqualD (x,y) <- splits]  -- ¬ x=y
-    let acFormulas = S.toList $ S.fromList [closeGuarded All [newVar] [EqE smallPlus big] gfalse | ACNewVarD (smallPlus, big, newVar) <- splits] -- ∀ newVar. x+newVar=y ⇒ ⊥
+    let acFormulas = S.toList $ S.fromList [closeGuarded All [newVar] [EqE smallPlus big] gfalse | ACNewVarD ((smallPlus, big), newVar) <- splits] -- ∀ newVar. x+newVar=y ⇒ ⊥
     zippedIsFalse <- zip changedNegSubterms <$> mapM (liftM null . splitSubterm reducible False) changedNegSubterms
     let alreadyFalseNegSt = S.fromList [st | (st, True) <- zippedIsFalse]
 
@@ -235,7 +236,7 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
 data SubtermSplit = SubtermD    (LNTerm, LNTerm)
                   | NatSubtermD (LNTerm, LNTerm)
                   | EqualD      (LNTerm, LNTerm)
-                  | ACNewVarD   (LNTerm, LNTerm, LVar)  -- small+newVar, big, newVar
+                  | ACNewVarD   ((LNTerm, LNTerm), LVar)  -- small+newVar, big, newVar
                   | TrueD
   deriving (Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary)
 
@@ -262,38 +263,23 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
     -- Otherwise, it returns @Just list@ if @small ⊏ big@ can be replaced by the disjunction of the list.
     -- It especially returns @Just []@ if @small ⊏ big@ is trivially false.
     step :: MonadFresh m => (LNTerm, LNTerm) -> m (Maybe (S.Set SubtermSplit))
+    step (isTrueFalse reducible Nothing -> Just True) = return $ Just $ S.singleton TrueD
+    step (isTrueFalse reducible Nothing -> Just False) = return $ Just S.empty
     step (small, big)
-      | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat =  -- terms like 1+1 < x+y+z
-        return $ Just $ S.singleton TrueD  -- true
       | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
-        ac <- processAC NatPlus (small, big)
-        return $ case ac of
-          Right False -> Just S.empty  -- false
-          Right True -> Just $ S.singleton TrueD  -- true
-          Left (s, t, _) -> Just $ S.singleton $ NatSubtermD (s, t)
-      | big `redElem` small =  -- trivially false (big == small included)
-        return $ Just S.empty  -- false
-      | small `redElem` big =  -- trivially true
-        return $ Just $ S.singleton TrueD  -- true
-          where
-            onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
-            l t = length $ flattenedACTerms NatPlus t
-    step (_, viewTerm -> Lit (Con _)) =  -- nothing can be a strict subterm of a constant
-        return $ Just S.empty  -- false
-    step (small, big@(viewTerm -> Lit (Var _)))
-      | isPubVar big || isFreshVar big || (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat) =  -- CR-rule S_invalid
-        return $ Just S.empty  -- false
+        return $ case processACSubterm NatPlus (small, big) of
+          Right _ -> error "somehow, isTrueFalse did not catch this case 1"
+          Left (s, t) -> Just $ S.singleton $ NatSubtermD (s, t)
     step (_, viewTerm -> Lit (Var _)) =  -- variable: do not recurse further
         return Nothing
     step (small, big@(viewTerm -> FApp (AC f) _))  -- apply CR-rule S_subterm-ac-recurse
       | AC f `S.notMember` reducible = do
-        ac <- processAC f (small, fAppAC f $ flattenedACTerms f big)
-        return $ case ac of
-          Right False -> Just S.empty
-          Right True -> Just $ S.singleton TrueD
-          Left (nSmall, nBig, newVar) ->
-            let acSpecial = ACNewVarD (fAppAC f [nSmall, varTerm newVar], nBig, newVar)
-            in Just $ acSpecial `S.insert` S.fromList (map (curry SubtermD small) (flattenedACTerms f big))
+        case processACSubterm f (small, fAppAC f $ flattenedACTerms f big) of
+          Right _ -> error "somehow, isTrueFalse did not catch this case 2"
+          Left (nSmall, nBig) -> do
+            newVar <- freshLVar "newVar" (sortOfLNTerm big)  -- generate a new variable
+            let acSpecial = ACNewVarD ((fAppAC f [nSmall, varTerm newVar], nBig), newVar)
+            return $ Just $ acSpecial `S.insert` S.fromList (map (curry SubtermD small) (flattenedACTerms f big))
     step (small, viewTerm -> FApp (NoEq f) ts)  -- apply CR-rule S_subterm-recurse
       | NoEq f `S.notMember` reducible = do
         return $ Just $ S.unions (map (eqOrSubterm small) ts)
@@ -304,31 +290,65 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
     step _ =  -- reducible function symbol observed (when applying subterm-[ac-]recurse)
         return Nothing
 
-    redElem = elemNotBelowReducible reducible
     eqOrSubterm :: LNTerm -> LNTerm -> S.Set SubtermSplit
     eqOrSubterm s t = S.fromList [SubtermD (s, t), EqualD (s, t)]  -- the unifiers for the equation
 
-    -- returns the triple @(nSmall, nBig, newVar)@
-    -- @nSmall@, @nBig@ are @small@, @big@ where terms are removed that were on both sides
-    -- @newVar@ is for the CR-rule S_neg-ac-recurse
-    -- If the subterm is trivially true or false, a corresponding boolean is returned
-    processAC :: MonadFresh m => ACSym -> (LNTerm, LNTerm) -> m (Either (LNTerm, LNTerm, LVar) Bool)
-    processAC f (small, big) = do
-        newVar <- freshLVar "newVar" (sortOfLNTerm big)  -- generate a new variable
-        return $ case lists of
-          (_, []) -> Right False
-          ([], _) -> Right True
-          (lSmall, lBig) -> Left (fAppAC f lSmall, fAppAC f lBig, newVar)
-        --let term = fAppAC f [nSmall, varTerm newVar]  -- build the term = small + newVar
-      where
-        -- removes terms that are on both sides of the subterm
-        -- lists have to be sorted before removeSame works
-        removeSame (a:as, b:bs) | a == b = removeSame (as, bs)
-        removeSame (a:as, b:bs) | a < b  = first (a:) $ removeSame (as, b:bs)
-        removeSame (a:as, b:bs) | a > b  = second (b:) $ removeSame (a:as, bs)
-        removeSame x = x  -- one of the lists is empty
+-- | returns the triple @(nSmall, nBig, newVar)@
+-- @nSmall@, @nBig@ are @small@, @big@ where terms are removed that were on both sides
+-- @newVar@ is for the CR-rule S_neg-ac-recurse
+-- If the subterm is trivially true or false, a corresponding boolean is returned
+processACSubterm :: ACSym -> (LNTerm, LNTerm) -> Either (LNTerm, LNTerm) Bool
+processACSubterm f (small, big) =
+    case lists of
+      (_, []) -> Right False
+      ([], _) -> Right True
+      (lSmall, lBig) -> Left (fAppAC f lSmall, fAppAC f lBig)
+    --let term = fAppAC f [nSmall, varTerm newVar]  -- build the term = small + newVar
+  where
+    -- removes terms that are on both sides of the subterm
+    -- lists have to be sorted before removeSame works
+    removeSame (a:as, b:bs) | a == b = removeSame (as, bs)
+    removeSame (a:as, b:bs) | a < b  = first (a:) $ removeSame (as, b:bs)
+    removeSame (a:as, b:bs) | a > b  = second (b:) $ removeSame (a:as, bs)
+    removeSame x = x  -- one of the lists is empty
 
-        lists = removeSame (sort $ flattenedACTerms f small, sort $ flattenedACTerms f big)
+    lists = removeSame (sort $ flattenedACTerms f small, sort $ flattenedACTerms f big)
+
+
+-- | evaluates wether the the subterm reduces to True/False under all substitutions
+-- If the correctness of the subterm depends on the substitutions, "Nothing" is returned
+-- If a subtermStore is given, possible cycles are checked as well (more computation time)
+isTrueFalse :: FunSig -> Maybe SubtermStore -> (LNTerm, LNTerm) -> Maybe Bool
+isTrueFalse reducible Nothing (small, big)
+      | onlyOnes small && l small < l big && sortOfLNTerm big == LSortNat = Just True -- terms like 1+1 < x+y+z
+      | (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat = do  -- CR-rule S_nat (delayed)
+              case processACSubterm NatPlus (small, big) of
+                Right res -> Just res  -- false or true
+                Left _    -> Nothing
+      | big `redElem` small = Just False -- trivially false (big == small included)
+      | small `redElem` big = Just True -- trivially true (small /= big because of the previous condition)
+          where
+            onlyOnes t = all (fAppNatOne ==) $ flattenedACTerms NatPlus t
+            l t = length $ flattenedACTerms NatPlus t
+            redElem = elemNotBelowReducible reducible
+isTrueFalse _ Nothing (_, viewTerm -> Lit (Con _)) = Just False -- nothing can be a strict subterm of a constant
+isTrueFalse _ Nothing (small, big@(viewTerm -> Lit (Var _)))
+      | isPubVar big || isFreshVar big || (not (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat) = Just False -- CR-rule S_invalid
+isTrueFalse reducible Nothing (small, big@(viewTerm -> FApp (AC f) _))  -- apply CR-rule S_subterm-ac-recurse
+      | AC f `S.notMember` reducible =
+        case processACSubterm f (small, fAppAC f $ flattenedACTerms f big) of
+          Right res -> Just res
+          Left _    -> Nothing
+isTrueFalse _ Nothing _ = Nothing
+isTrueFalse reducible (Just sst) st =
+      case isTrueFalse reducible Nothing st of
+        Just res -> Just res
+        Nothing -> if cyclic || natCyclic then Just False else Nothing
+          where
+            sstInserted = modify posSubterms (S.insert st) sst
+            cyclic = hasSubtermCycle reducible sstInserted
+            natCyclic = isNothing $ natSubtermEqualities $ S.toList $ L.get posSubterms sstInserted
+
 
 
 
@@ -345,9 +365,12 @@ negativeSubtermVars sst = (sst1, equations)
 
 
 
--- This procedure generates some (not all!) equalities that are implied by the natSubterm relation.
+-- | This procedure generates some (not all!) equalities that are implied by the natSubterm relation.
 -- It filters the relation for UTVPI's (≤ 2 vars) and performs the algorithm from the following paper:
 -- "An Efficient Decision Procedure for UTVPI Constraints"
+-- It returns @Nothing@ if the list of UTVPI's leads to a contradiction
+-- Otherwise it returns @Just eqns@ where eqns is the list of equations implied by the UTVPI's
+-- @eqns@ may be empty
 natSubtermEqualities :: [(LNTerm, LNTerm)] -> Maybe [Equal LNTerm]
 natSubtermEqualities relation = {-trace (show (("natSubtermEqualities"
                                       ,"relation", relation
