@@ -40,6 +40,7 @@ module Main.TheoryLoader (
   , bpIntruderVariantsFile
   , addMessageDeductionRuleVariants
 
+  , lemmaSelector
   ) where
 
 -- import           Debug.Trace
@@ -82,6 +83,9 @@ theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
   [ flagOpt "" ["prove"] (updateArg "prove") "LEMMAPREFIX*|LEMMANAME"
       "Attempt to prove all lemmas that start with LEMMAPREFIX or the lemma which name is LEMMANAME (can be repeated)."
+
+  , flagOpt "" ["lemma"] (updateArg "lemma") "LEMMAPREFIX*|LEMMANAME"
+      "Select lemma(s) by name or prefx (can be repeated)"
 
   , flagOpt "dfs" ["stop-on-trace"] (updateArg "stopOnTrace") "DFS|BFS|SEQDFS|NONE"
       "How to search for traces (default DFS)"
@@ -143,7 +147,7 @@ lemmaSelector as lem
   | otherwise = any lemmaMatches lemmaNames
   where
       lemmaNames :: [String]
-      lemmaNames = findArg "prove" as
+      lemmaNames = (findArg "prove" as) ++ (findArg "lemma" as)
 
       lemmaMatches :: String -> Bool
       lemmaMatches pattern
@@ -157,7 +161,7 @@ diffLemmaSelector as lem
   | otherwise = any lemmaMatches lemmaNames
   where
       lemmaNames :: [String]
-      lemmaNames = findArg "prove" as
+      lemmaNames = (findArg "prove" as) ++ (findArg "lemma" as)
 
       lemmaMatches :: String -> Bool
       lemmaMatches pattern

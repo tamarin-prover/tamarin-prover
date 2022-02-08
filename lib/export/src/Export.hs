@@ -96,8 +96,8 @@ proverifTemplate headers queries process macroproc lemmas =
   nest 4 process
 
 
-prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
-prettyProVerifTheory (thy, typEnv) = do
+prettyProVerifTheory :: (Lemma p -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifTheory sel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
                                           `S.union` prochd `S.union` macroprochd)
@@ -107,7 +107,7 @@ prettyProVerifTheory (thy, typEnv) = do
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
-    lemmas = loadLemmas tc typEnv thy
+    lemmas = loadLemmas tc typEnv thy -- TODO use sel to select which lemmas to load.
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
