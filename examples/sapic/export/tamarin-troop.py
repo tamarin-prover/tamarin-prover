@@ -10,6 +10,7 @@ import itertools
 import sys
 import subprocess
 import shutil
+import time
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -25,7 +26,6 @@ PROVERIF = "proverif"
 TAMARIN_COMMAND = "tamarin-prover-proverif-output"
 PROVERIF_COMMAND = "proverif"
 DEEPSEC_COMMAND = "deepsec"
-TIME_COMMAND = '/usr/bin/time'
 PROOF = "proof"
 COUNTEREXAMPLE = 'counterexample'
 INCONCLUSIVE = 'inconclusive'
@@ -60,7 +60,7 @@ class Job():
         # Status of the job
         self.status = NOT_STARTED
         # Time the job took
-        self.time = 0
+        self.time = ""
 
     def __str__(self):
         return str(self.arguments)
@@ -73,10 +73,14 @@ class Job():
         call =  "'" + " ".join(self.arguments) + "'"
         print("Executing " + call )
         try:
-            finishedjob = subprocess.run([TIME_COMMAND] + self.arguments,
+            # Start timer
+            starttime = time.time()
+            finishedjob = subprocess.run(self.arguments,
                                     capture_output=True,
                                     universal_newlines=True,
                                     timeout=JOB_TIMEOUT)
+            # calculate time
+            self.time = format(time.time() - starttime, '.4f')
             if finishedjob.returncode != 0:
                 # Check if job completed correctly
                 # Save returncode to later report it
@@ -94,8 +98,8 @@ class Job():
         finally:
             if self.status == FINISHED:
                 # normal execution
-                result, time = self.results[self.lemma]
-                resultstring = ": " + result + " in " + time
+                result = self.results[self.lemma]
+                resultstring = ": " + result + " in " + str(self.time)
             else:
                 resultstring = ": " + self.status
 
@@ -110,7 +114,6 @@ class TamarinJob(Job):
         # If no lemmas was specified, we assume that there is
         # only one lemma in a .spthy file
         # Search for the time Tamarin took
-        time = get_elapsed_time(finishedjob.stderr)
         stdout = finishedjob.stdout
         basepattern = self.lemma + " .*: "
         verpattern = re.compile(basepattern + "verified")
@@ -127,7 +130,7 @@ class TamarinJob(Job):
             self.status = PARSE_ERROR
             return
 
-        self.results[self.lemma] = (result, time)
+        self.results[self.lemma] = result
 
 
 class ProverifJob(Job):
@@ -137,7 +140,6 @@ class ProverifJob(Job):
         # and save them in self.results
         # We assume that there is only one query in a .pv file
         # Search for the time ProVerif took
-        time = get_elapsed_time(finishedjob.stderr)
         # Search for the result in ProVerif stdout
         stdout = finishedjob.stdout
         result = ""
@@ -151,7 +153,7 @@ class ProverifJob(Job):
             self.status = PARSE_ERROR
             return
         # Update dict
-        self.results[self.lemma] = (result, time)
+        self.results[self.lemma] = result
 
 class DeepsecJob(Job):
 
@@ -160,7 +162,6 @@ class DeepsecJob(Job):
         # and save them in self.results
         # We assume that there is only one query in a .dps file
         # Search for the time Deepsec took
-        time = get_elapsed_time(finishedjob.stderr)
         stdout = finishedjob.stdout
         result = ""
         if re.search(r"not session equivalent", stdout):
@@ -171,7 +172,7 @@ class DeepsecJob(Job):
             self.status = PARSE_ERROR
             return
 
-        self.results[self.lemma] = (result, time)
+        self.results[self.lemma] = result
 
 
 
@@ -187,10 +188,6 @@ def add_double_dashes_to_arguments(cliarguments):
 def add_dashes_to_arguments(cliarguments):
     return [['-' + argument for argument in argumentlist] for argumentlist \
            in cliarguments ]
-
-def get_elapsed_time(stderr):
-    match = re.search(r'(\d+:\d+\.\d+)elapsed', stderr)
-    return match.group(1)
 
 def execute_joblist(joblist):
     # Concurrently execute the jobs in the joblist.
@@ -212,7 +209,7 @@ def report_results(results):
                 (FAIL if outcome == COUNTEREXAMPLE else INCONCLUSIVE)
         print("=" * 90)
         print("Reporting results" + lemmastring + ":\n")
-        print(" ".join(call) + " finished in " + time + " seconds\n")
+        print(" ".join(call) + " finished in " + str(time) + " seconds\n")
         print("Result: " +  color + outcome + ENDC + '\n')
 
 def collect_results(jobs):
@@ -239,7 +236,8 @@ def collect_results(jobs):
                        "'" + call + "'" + " could not be parsed.")
                 continue
             # Job finished with zero returncode
-            for lemma, (result, time) in job.results.items():
+            time = job.time
+            for lemma, result in job.results.items():
                 if lemma not in results:
                     # New entry
                     results[lemma] = (result, time), job.arguments
@@ -425,10 +423,6 @@ if __name__ == '__main__':
     parser.add_argument('-dname', '--dname', action='store', type=str,
                         help='customize how Deepsec is called; defaults to \
                               "deepsec"')
-    # Custom Time command
-    parser.add_argument('-time', '--time', action='store', type=str,
-                        help='customize how "time" is called; defaults to \
-                              "/usr/bin/time"')
     # Custom timeout
     parser.add_argument('-to', '--timeout', action='store',
                         type=int, help='timeout for the jobs')
@@ -439,15 +433,6 @@ if __name__ == '__main__':
         eprint("Provide command line arguments for at least one tool!")
         sys.exit(1)
 
-
-    # Update time command
-    if args.time:
-        TIME_COMMAND = args.time
-
-    # Check whether 'usr/bin/time' is available
-    if find_executable(TIME_COMMAND) is None:
-        eprint(TIME_COMMAND + " executable was not found!")
-        sys.exit(1)
 
     # Change tool commands if specified
     if args.tname:
