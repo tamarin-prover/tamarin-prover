@@ -137,12 +137,13 @@ simpSubtermStore reducible sst = do
     
     return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
 
-
     -- NOT resolve constants (already done by splitting)
     -- split negSubterms (returning equations - and ∀x.x+a=b formulas?)
     -- split level 1 of subterms (Advantage: goals do not need to be updated but only added)
     -- hasSubtermCycle
     -- set isContradictory if needed
+
+
 
 -- | simplifies constants and returns all splitSubterm goals (even if they were present before)
 -- it splits all subterms and does the following:
@@ -343,11 +344,19 @@ isTrueFalse _ Nothing _ = Nothing
 isTrueFalse reducible (Just sst) st =
       case isTrueFalse reducible Nothing st of
         Just res -> Just res
-        Nothing -> if cyclic || natCyclic then Just False else Nothing
+        Nothing -> if cyclic || natCyclic                  then Just False
+                   else if isNegatedInside && not isInside then Just False
+                   else if isInside && not isNegatedInside then Just True
+                   else                                         Nothing
           where
             sstInserted = modify posSubterms (S.insert st) sst
             cyclic = hasSubtermCycle reducible sstInserted
             natCyclic = isNothing $ natSubtermEqualities $ S.toList $ L.get posSubterms sstInserted
+
+            negSt = L.get negSubterms sst
+            posSt = L.get posSubterms sst `S.union` L.get solvedSubterms sst
+            isNegatedInside = st `S.member` negSt
+            isInside = st `S.member` posSt
 
 
 
