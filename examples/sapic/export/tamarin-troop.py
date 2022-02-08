@@ -59,6 +59,8 @@ class Job():
         self.returncode = 0
         # Status of the job
         self.status = NOT_STARTED
+        # Time the job took
+        self.time = 0
 
     def __str__(self):
         return str(self.arguments)
@@ -68,8 +70,8 @@ class Job():
 
     def execute(self):
         self.status = STARTED
-        call =  str(self)
-        print("Executing " + call + "\n")
+        call =  "'" + " ".join(self.arguments) + "'"
+        print("Executing " + call )
         try:
             finishedjob = subprocess.run([TIME_COMMAND] + self.arguments,
                                     capture_output=True,
@@ -90,7 +92,14 @@ class Job():
         except subprocess.TimeoutExpired:
             self.status = TIMEOUT
         finally:
-            print("Finished " + call + "\n")
+            if self.status == FINISHED:
+                # normal execution
+                result, time = self.results[self.lemma]
+                resultstring = ": " + result + " in " + time
+            else:
+                resultstring = ": " + self.status
+
+            print("Finished " + call + resultstring)
             return self
 
 class TamarinJob(Job):
