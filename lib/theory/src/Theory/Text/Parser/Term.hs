@@ -148,7 +148,7 @@ msetterm eqn plit = do
 -- | A left-associative sequence of terms on natural numbers.
 natterm :: Bool -> Parser LNTerm -> Parser LNTerm
 natterm eqn plit = do
-    nats <- enableNat <$> getState
+    nats <- enableNat . sig <$> getState
     if nats -- if nat is not enabled, do not accept 'natterms's
         then try (xorterm eqn plit) <|> sumterm  --TODO-UNCERTAIN: not sure whether the order (mset-nat-xor-mult) matters (Cedric's was nat-mult-mset)
         else xorterm eqn plit
