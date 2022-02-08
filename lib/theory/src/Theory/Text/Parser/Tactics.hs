@@ -17,18 +17,17 @@ where
 
 import           Prelude                    hiding (id)
 import           Control.Applicative        hiding (empty, many, optional)
-import           Data.Foldable              (asum,msum)
 import qualified Data.Map                   as M
 
 import           Theory
 import           Theory.Constraint.Solver.AnnotatedGoals
-import           Theory.Text.Pretty         hiding (char,colon,symbol,opLAnd,opLOr)
+import           Theory.Text.Pretty         hiding (char,colon,symbol,opLAnd,opLOr, space)
 import           Theory.Text.Parser.Token
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.Posix
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 
 --Tactic
@@ -39,18 +38,18 @@ tacticName = do
     _ <- skipMany (char ' ')
     tName <- many (alphaNum <|> oneOf "_-@")
     _ <- newline
-    return $ trace (show tName) tName
+    return $ tName
 
 -- Default heuristic
 selectedPreSort :: Parser Char
 selectedPreSort = do 
-    _ <- string "heuristic" *> char ':' *> skipMany (char ' ') 
-    oui <- letter <* newline
-    return $ trace (show oui) oui 
+    _ <- symbol "presort:" *> skipMany (char ' ') 
+    presort <- letter <* newline
+    return $ presort
 
 --Function name
 functionName :: Parser String
-functionName = many (char ' ' <|> char '\t') *> many (alphaNum <|> oneOf "[]_-@")
+functionName = many space *> many (alphaNum <|> oneOf "[]_-@")
 
 --Function value
 functionValue :: Parser String
@@ -71,7 +70,7 @@ function = do
     v <- functionValue
     _ <- char '"'
     _ <- skipMany (char ' ')
-    return $ trace (show $ (f,v)) nameToFunction (f,v)
+    return $ nameToFunction (f,v)
 
 functionNot :: (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool)
 functionNot f = not . f
@@ -93,17 +92,17 @@ conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
 disjuncts :: Parser (AnnotatedGoal -> Bool)
-disjuncts = lookAhead (noneOf $ "prio:" <|> "deprio:") *> skipMany (char ' ') *> chainl1 conjuncts (functionOr <$ opLOr) <* newline
+disjuncts = try $ (skipMany space *> chainl1 conjuncts (functionOr <$ opLOr) <* newline) -- error here is not triggered when empty prio (appends higher -> function parsing)
 
 --Parsing prio
 prio :: Parser Prio
 prio = do
-    _ <- string "prio:"
-    _ <- skipMany (char ' ')
-    _ <- newline
+    _ <- symbol "prio:"
+    -- _ <- skipMany (char ' ')
+    -- _ <- newline
     fs <- many1 disjuncts
     -- _ <- newline
-    return $ trace (show fs) Prio fs
+    return $ Prio fs
 
 --Parsing deprio
 deprio :: Parser Deprio
@@ -111,7 +110,7 @@ deprio = do
     _ <- string "deprio:"
     _ <- skipMany (char ' ')
     _ <- newline
-    fs <- many1 negation
+    fs <- many1 disjuncts
     -- _ <- newline
     return $ Deprio fs
 
@@ -124,31 +123,6 @@ tactic = do
     deprios <- option [] $ many1 deprio
     _ <- many1 newline
     return $ TacticI tName heuristicDef prios deprios
-
-{-setTacticName :: TacticI -> String -> TacticI
-setTacticName tactic name = TacticI name (tacticiHeuristic tactic) (tacticiPrio tactic) (tacticiDeprio tactic) 
-
-setTacticPresort :: TacticI -> Char -> TacticI
-setTacticPresort tactic presort = TacticI (tacticiName tactic) presort (tacticiPrio tactic) (tacticiDeprio tactic) 
-
-setTacticPrios :: TacticI -> [Prio] -> TacticI
-setTacticPrios tactic prios = TacticI (tacticiName tactic) (tacticiHeuristic tactic) prios (tacticiDeprio tactic) 
-
-setTacticDeprios :: TacticI -> [Deprio] -> TacticI
-setTacticDeprios tactic deprios = TacticI (tacticiName tactic) (tacticiHeuristic tactic) (tacticiPrio tactic) deprios
-
-aledTactic :: TacticI -> Parser TacticI
-aledTactic tactic = asum 
-    [ do tName <- tacticName
-         return $ setTacticName tactic tName
-    , do presort <- option 's' selectedPreSort
-         return $ setTacticPresort tactic presort
-    , do prios <- option [] $ many1 prio
-         return $ setTacticPrios tactic prios
-    , do deprios <- option [] $ many1 deprio
-         _ <- many1 newline
-         return $ setTacticDeprios tactic deprios
-    ] -}
 
 tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
 tacticFunctions = M.fromList
