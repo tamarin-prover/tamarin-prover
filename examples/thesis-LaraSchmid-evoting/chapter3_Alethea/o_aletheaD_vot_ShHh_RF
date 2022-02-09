@@ -1,0 +1,58 @@
+#!/usr/bin/python
+#oracle_RF
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global priorities, plist, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         break
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         break
+
+
+if lemma == "indivVerif_v": 
+  match = False
+  priorities = ["In_S","AgSt","~skS","h(","encp("]
+
+if lemma == "indivVerif_b": 
+  match = False
+  priorities = ["In_S","AgSt","~skS","h(","encp("]
+
+if lemma == "Observational_equivalence": 
+  match = False
+  priorities = ["In_S","~~","!KU( ~skS","!KU( ~sskD","!KU( ~x", "!KU( sg(encp(v","!KU( encp(v","!KU( encp(","!KU( ~r ","~x","AgSt","'zkp'","encp(","!KD","Out_A","In_A"]
+
+#j
+plist = [ [] for i in priorities ]
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+#  if lemma == "secret":
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+print 1

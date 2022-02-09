@@ -6,6 +6,8 @@ builtins: multiset, xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
@@ -105,8 +107,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
@@ -115,7 +115,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 33.716694722s
+  processing time: 62.356128295s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 33.716694722s
+  processing time: 62.356128295s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

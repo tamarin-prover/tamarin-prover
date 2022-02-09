@@ -5,6 +5,8 @@ theory N5N6DiffTest begin
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Test:
    [ Fr( ~f ) ] --> [ Out( diff(h($A), ~f) ) ]
 
@@ -37,8 +39,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/equivalence/N5N6DiffTest.spthy
@@ -47,7 +47,7 @@ analyzing: examples/features/equivalence/N5N6DiffTest.spthy
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.041779846s
+  processing time: 0.072340631s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.041779846s
+  processing time: 0.072340631s
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================

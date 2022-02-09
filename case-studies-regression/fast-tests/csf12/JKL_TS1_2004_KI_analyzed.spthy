@@ -1,0 +1,197 @@
+theory JKL_TS1_2004_KI begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* Jeong, Katz, Lee : TS1 (2004) *}
+
+rule (modulo E) generate_ltk:
+   [ Fr( ~lkA ) ]
+  -->
+   [ !Ltk( $A, ~lkA ), !Pk( $A, 'g'^~lkA ), Out( 'g'^~lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ekI ), !Ltk( $I, ~lkI ) ]
+  --[ SidI_1( ~ekI, $I, $R, ~ekI ), NotEq( $I, $R ) ]->
+   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), !Ephk( ~ekI ), Out( ~ekI ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_2:
+   [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
+  --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]->
+   [ !Sessk( ~ekI, h(<~ekI, Y, 'g'^~lkR^~lkI>) ) ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
+    --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<~ekI, Y, 'g'^(~lkI*~lkR)>) ) ]->
+     [ !Sessk( ~ekI, h(<~ekI, Y, 'g'^(~lkI*~lkR)>) ) ]
+  */
+
+rule (modulo E) Resp_1:
+   [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
+  --[
+  SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) ),
+  NotEq( $I, $R )
+  ]->
+   [ Out( ~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<X, ~ekR, 'g'^~lkI^~lkR>) )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
+    --[
+    SidR_1( ~ekR, $I, $R, X, ~ekR, h(<X, ~ekR, 'g'^(~lkI*~lkR)>) ),
+    NotEq( $I, $R )
+    ]->
+     [
+     Out( ~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<X, ~ekR, 'g'^(~lkI*~lkR)>) )
+     ]
+  */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~ekI ) ] --[ EphkRev( ~ekI ) ]-> [ Out( ~ekI ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, k ) ] --[ LtkRev( $A ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma JKL2008_1_initiator_key:
+  all-traces
+  "(¬(∃ #i x. NotEq( x, x ) @ #i)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       (((((SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+          (∀ #i3 t. (EphkRev( t ) @ #i3) ⇒ (⊥))) ∧
+         (∀ #i3 a. (LtkRev( a ) @ #i3) ⇒ (⊥))) ∧
+        (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+       (∀ #i3 #i4 tpartner kpartner.
+         ((SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+          (SesskRev( tpartner ) @ #i4)) ⇒
+         (⊥))))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #i x. (NotEq( x, x ) @ #i) ⇒ ⊥) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidI_2( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3 t. (EphkRev( t ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 a. (LtkRev( a ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidR_1( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥))"
+*/
+simplify
+solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
+  case Init_1
+  solve( !Pk( $R, 'g'^~lkR ) ▶₂ #i1 )
+    case generate_ltk
+    solve( !KU( h(<~ekI, hkR, 'g'^(~lkI*~lkR)>) ) @ #vk.1 )
+      case Sessk_reveal_case_4
+      solve( !KU( ~ekI ) @ #vk.2 )
+        case Init_1
+        solve( !KU( ~tid ) @ #vk.2 )
+          case Resp_1
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma JKL2008_1_responder_key:
+  all-traces
+  "(¬(∃ #i x. NotEq( x, x ) @ #i)) ⇒
+   (¬(∃ #i1 #i2 ttest I R k hkI hkR.
+       (((((SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+          (∀ #i3 t. (EphkRev( t ) @ #i3) ⇒ (⊥))) ∧
+         (∀ #i3 a. (LtkRev( a ) @ #i3) ⇒ (⊥))) ∧
+        (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ (⊥))) ∧
+       (∀ #i3 #i4 tpartner kpartner.
+         ((SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+          (SesskRev( tpartner ) @ #i4)) ⇒
+         (⊥))))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #i x. (NotEq( x, x ) @ #i) ⇒ ⊥) ∧
+ (∃ #i1 #i2 ttest I R k hkI hkR.
+   (SidR_1( ttest, I, R, hkI, hkR, k ) @ #i1) ∧ (K( k ) @ #i2)
+  ∧
+   (∀ #i3 t. (EphkRev( t ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 a. (LtkRev( a ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3. (SesskRev( ttest ) @ #i3) ⇒ ⊥) ∧
+   (∀ #i3 #i4 tpartner kpartner.
+     (SidI_2( tpartner, I, R, hkI, hkR, kpartner ) @ #i3) ∧
+     (SesskRev( tpartner ) @ #i4)
+    ⇒
+     ⊥))"
+*/
+simplify
+solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
+  case generate_ltk
+  solve( !Pk( $I, 'g'^~lkI ) ▶₃ #i1 )
+    case generate_ltk
+    solve( !KU( h(<hkI, ~ekR, 'g'^(~lkI*~lkR)>) ) @ #vk.1 )
+      case Sessk_reveal_case_2
+      solve( !KU( ~ekR ) @ #vk.2 )
+        case Resp_1
+        solve( !KU( ~tid ) @ #vk.2 )
+          case Init_1
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/JKL_TS1_2004_KI.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
+
+  output:          examples/csf12/JKL_TS1_2004_KI.spthy.tmp
+  processing time: 0.212505955s
+  JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
+  JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
+
+  output:          examples/csf12/JKL_TS1_2004_KI.spthy.tmp
+  processing time: 0.212505955s
+  JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
+  JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)
+
+==============================================================================
+*/

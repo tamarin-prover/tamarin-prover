@@ -32,6 +32,9 @@ import Control.Arrow        ( (***) )
 -- Equalities, matching problems, and rewriting rules
 ----------------------------------------------------------------------
 
+
+
+
 -- | An equality.
 data Equal a = Equal { eqLHS :: a, eqRHS :: a }
     deriving (Eq, Show)

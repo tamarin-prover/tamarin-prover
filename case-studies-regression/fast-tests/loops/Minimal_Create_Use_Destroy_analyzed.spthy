@@ -1,0 +1,206 @@
+theory Minimal_Create_Use_Destroy begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Object/1 */
+
+text{*
+  Author: Simon Meier <simon.meier@inf.ethz.ch>
+  Date:   2011 12 01
+  Status: Working
+
+  One model of the key mechanism for certificate revocation.
+  For every certificate, we create a single fact denoting that
+  it has not yet been revoked. In every use of the certificate,
+  we check that this fact still exists.
+
+*}
+
+rule (modulo E) Create:
+   [ Fr( x ) ] --[ Create( x ) ]-> [ Object( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use:
+   [ Object( x ) ] --[ Use( x ) ]-> [ Object( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Destroy:
+   [ Object( x ) ] --[ Destroy( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Use_charn [reuse, use_induction]:
+  all-traces
+  "∀ x #j. (Use( x ) @ #j) ⇒ (∃ #i. (Create( x ) @ #i) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #j. (Use( x ) @ #j) ∧ ∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#j))  ∥
+         (∃ #i. (Create( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) )
+    case case_1
+    solve( Object( x ) ▶₀ #j )
+      case Create
+      by contradiction /* from formulas */
+    next
+      case Use
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Destroy_charn [reuse, use_induction]:
+  all-traces
+  "∀ x #j.
+    (Destroy( x ) @ #j) ⇒
+    (((∃ #i. (Create( x ) @ #i) ∧ (#i < #j)) ∧
+      (∀ #i. (Use( x ) @ #i) ⇒ (#i < #j))) ∧
+     (∀ #i. (Destroy( x ) @ #i) ⇒ (#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #j.
+  (Destroy( x ) @ #j)
+ ∧
+  ((∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j)) ∨
+   (∃ #i. (Use( x ) @ #i) ∧ ¬(#i < #j)) ∨
+   (∃ #i. (Destroy( x ) @ #i) ∧ ¬(#i = #j)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ #i. (Create( x ) @ #i) ⇒ ¬(#i < #j))  ∥
+         (∃ #i. (Use( x ) @ #i) ∧ ¬(#i < #j))  ∥
+         (∃ #i. (Destroy( x ) @ #i) ∧ ¬(#i = #j)) )
+    case case_1
+    solve( (last(#j))  ∥
+           ((∃ #i. (Create( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) ∧
+            (∀ #i. (Use( x ) @ #i) ⇒ ((last(#i)) ∨ (#i < #j))) ∧
+            (∀ #i. (Destroy( x ) @ #i) ⇒ ((last(#i)) ∨ (#i = #j)))) )
+      case case_1
+      solve( Object( x ) ▶₀ #j )
+        case Create
+        by contradiction /* from formulas */
+      next
+        case Use
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( Object( ~n ) ▶₀ #j )
+      case Create
+      solve( Object( ~n ) ▶₀ #i )
+        case Use
+        by contradiction /* non-injective facts (#vr,#j,#i) */
+      qed
+    next
+      case Use
+      solve( Object( ~n ) ▶₀ #i )
+        case Create
+        by contradiction /* non-injective facts (#i.1,#j,#i) */
+      next
+        case Use
+        by contradiction /* non-injective facts (#vr.1,#j,#i) */
+      qed
+    qed
+  next
+    case case_3
+    solve( (last(#j))  ∥
+           ((∃ #i. (Create( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) ∧
+            (∀ #i. (Use( x ) @ #i) ⇒ ((last(#i)) ∨ (#i < #j))) ∧
+            (∀ #i. (Destroy( x ) @ #i) ⇒ ((last(#i)) ∨ (#i = #j)))) )
+      case case_1
+      solve( Object( ~n ) ▶₀ #j )
+        case Create
+        by contradiction /* non-injective facts (#i.1,#i,#j) */
+      next
+        case Use
+        by contradiction /* non-injective facts (#vr,#i,#j) */
+      qed
+    next
+      case case_2
+      solve( (#i < #j)  ∥ (#j < #i) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        solve( Object( ~n ) ▶₀ #j )
+          case Create
+          solve( Object( ~n ) ▶₀ #i )
+            case Create
+            by contradiction /* cyclic */
+          next
+            case Use
+            by contradiction /* non-injective facts (#vr,#j,#i) */
+          qed
+        next
+          case Use
+          solve( Object( ~n ) ▶₀ #i )
+            case Create
+            by contradiction /* non-injective facts (#i.1,#j,#i) */
+          next
+            case Use
+            by contradiction /* non-injective facts (#vr.1,#j,#i) */
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/Minimal_Create_Use_Destroy.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
+
+  output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
+  processing time: 0.110169201s
+  Use_charn (all-traces): verified (8 steps)
+  Destroy_charn (all-traces): verified (28 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
+
+  output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
+  processing time: 0.110169201s
+  Use_charn (all-traces): verified (8 steps)
+  Destroy_charn (all-traces): verified (28 steps)
+
+==============================================================================
+*/

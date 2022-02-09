@@ -6,6 +6,8 @@ builtins: diffie-hellman, bilinear-pairing, multiset
 functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* The TAK1 Protocol. *}
 
 rule (modulo E) Register_pk:
@@ -518,8 +520,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
@@ -528,7 +528,7 @@ analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 44.575208451s
+  processing time: 68.120556595s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 
@@ -540,7 +540,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 44.575208451s
+  processing time: 68.120556595s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

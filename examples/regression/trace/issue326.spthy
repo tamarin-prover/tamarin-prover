@@ -1,0 +1,25 @@
+theory MINIMAL
+
+begin
+
+/*
+* Author: Cas Cremers
+* Date: October 2020
+* Comment: minimal example for issue 326
+*/
+
+rule X:
+    [ NotProduced() ]
+  --[ Never() ]->
+    []
+
+lemma notrace_ofcourse:
+    exists-trace
+    "Ex #i . Never()@i "
+
+lemma notrace_maybe:
+    exists-trace
+    "Ex #i . Never()@i "
+SOLVED
+
+end

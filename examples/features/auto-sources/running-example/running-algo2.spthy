@@ -1,0 +1,24 @@
+theory runningAlgo2
+begin
+
+/* 
+We formalize the following password-based protocol
+    1. U -> A1: pw 
+    2. A1 -> A2: pw
+The two first exchanges are done on a private channel. This corresponds to the fact the 
+password is sent on a private channel to an authority A1, and then forwarded to another authority A2. 
+We also add a rule to model corruption.
+*/
+
+rule SendPwd: [ Fr(~pw) ] --[ Pwd(~pw) ]-> [ Ch(~pw) ]
+
+rule Auth: [ Ch(x) ] --[ Forward(x) ]-> [ Ch(x) ]
+
+rule Corrupt: [ Ch(x) ] --[ Corrupt(x) ]-> [ Out(x) ]
+
+lemma password_secrecy:
+  "     not(
+        Ex #i x. Pwd(x)@i & (Ex #j. K(x) @ j) & not(Ex #r. Corrupt(x)@r)
+       )"
+
+end

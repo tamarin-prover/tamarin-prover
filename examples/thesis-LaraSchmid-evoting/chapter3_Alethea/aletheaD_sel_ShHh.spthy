@@ -1,0 +1,361 @@
+theory aletheaD_sel_ShHh
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-D's selection phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+=========
+RESULTS: 
+=========
+
+- lemma functional: 	verified w/o oracle and checked		
+- lemma functional2:	verified w/o oracle and checked		
+- lemma functional3: 	verified w/o oracle and checked			
+
+- lemma indivVerif_D_ps: verified w/o oracle
+- lemma indivVerif_D_sel: verified w/o oracle
+- lemma univVerif_sel: 	 verified w/o oracle
+
+
+*/
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: signing, asymmetric-encryption, hashing, symmetric-encryption, multiset
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+//verification equation that returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all public keys). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~lskD1), !Ltk('D2',~lskD2) ] 
+  	--[ 	Setup(), 
+		Voter('H1'), 
+		Voter('H2'),
+		Device('H1','D1'),
+		Device('H2','D2')
+	]-> 
+	[ AgSt_D0('D1',<'H1','S',~lskD1,pk(~skS)> )
+	, AgSt_D0('D2',<'H2','S',~lskD2,pk(~skS)> )
+	
+	, AgSt_S0('S', <'E',~skS, 'H1','D1',pk(~lskD1), 'H2','D2',pk(~lskD2) >) 
+
+	, AgSt_A0('A',<'S','BB','E'>) 
+	, AgSt_BB0('BB',<'S'>) 
+	, Env('E')
+	
+	
+	, AgSt_H0('H1',<'D1','BB'>)
+	, AgSt_H0('H2',<'D2','BB'>)
+
+	]
+	// leave out explicit send of "ev" from S to BB, assume that everyone is measuring the environment at the same moment (which would be the moment specified by "ev")
+
+rule D_1: 
+	[ AgSt_D0($D,<$H,$S,~lskD,pkS> ), Fr(~sskD), Fr(~rPrime)
+	]
+	--[ 	D($D), 
+		Running_DS($D,$S,<pk(~lskD),pkS,pk(~sskD)>),
+		Running_DBB($D,pk(~sskD)),
+	    	Secret($D,~sskD),	
+		PseudonymD($H,pk(~sskD))
+	]->
+	[ AgSt_D1($D,<$H,$S,~lskD,pkS,~sskD,~rPrime > )
+	, Out_S($D,$H,sg(encp(pk(~sskD),~rPrime,pkS),~lskD) )
+	, Out_S($D,$H,<'pseudonym',pk(~sskD)>) //'pseudonym' is shotcut by 'ps' in the thesis
+	]
+
+rule H_2:
+	[ AgSt_H0($H, <$D, $BB>), In_S($D,$H, eps) ]
+	--[		   	
+	]->
+	[ AgSt_H1($H, <$D, $BB, eps>),
+	  Out(eps)
+	]
+
+rule S_1a:
+	[ AgSt_S0($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2) >)
+ 	, In(sg(encp(spkD1,rPrime1,pk(~skS)),~lskD1) )
+	, In(sg(encp(spkD2,rPrime2,pk(~skS)),~lskD2) )		
+	]
+	--[	Pseudonym($H1,spkD1,$H2,spkD2)
+	]->
+	[ AgSt_S1($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2 >)
+	, Pi(spkD1 + spkD2 ) //generate random permutation of the pseudonyms
+	]
+
+rule S_1b:
+	[ AgSt_S1($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2 >), 
+	  Pi(spkDa + spkDb) ] // pseudonyms are sent to BB in a random order
+	--[ 
+  	 ]->
+	[ Out_A($S,<'spkDs',spkDa,spkDb>), //correponds to [pkD] in thesis
+	  AgSt_S1b($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2, spkDa,spkDb >)
+	]
+
+rule BB_1:
+	[ AgSt_BB0($BB,<$S>) 
+	, In_A($S,<'spkDs',spkDa,spkDb >)
+	]
+	--[ 	BB_spkDs($BB,<'spkDs',spkDa,spkDb >), // corresponds to signal BBps in thesis
+		Commit_DBB($BB,spkDa), 	
+		Commit_DBB($BB,spkDb)
+	]->
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, Out_A($BB,<'spkDs',spkDa,spkDb >)
+
+	]
+
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,$E>)
+	, In_A($BB,<'spkDs',spkDa,spkDb >)
+	]
+	--[ 	]->
+	[ AgSt_A1($A,<$S,$BB,$E,'spkDs',spkDa,spkDb > )
+	, PseudonymsPublished() 				// this fact models that only after this rule the event in the environment takes place. auditors would see if this order was not preserved in reality. thus, this fact models that at least one auditor does the check that the event in the environment happens after the voter codes have been published.
+	]
+
+rule H_5: 
+	[ AgSt_H1($H, <$D, $BB, eps>)
+	, In_S($D,$H,<'pseudonym',spkDD>)
+	, In_A($BB,<'spkDs',spkDa,spkDb >)
+	] 
+	--[ 	Verify_spkDD($H,spkDD,spkDa,spkDb)  //corresponds to signal verify_ps(H,pkD \in[pkD]) in thesis
+	]-> 
+	[ AgSt_H2($H,<$D,$BB, eps,spkDD,spkDa,spkDb >)]
+
+//one of the rules environment_1 or environment_2 can be triggered (only once) after the voter codes have been published
+rule environment_1:
+	[ Env($E), PseudonymsPublished()] 
+	--[ 	Env_No($E,'1') ]->
+	[ Out_A($E,'1')] 
+
+rule environment_2:
+	[ Env($E), PseudonymsPublished()]
+	--[ 	Env_No($E,'2') ]->
+	[ Out_A($E,'2')]
+
+
+rule S_2a: 
+	[ AgSt_S1b($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2, spkDa,spkDb >),
+	  In_A($E,'1')
+	]
+ 	--[ 	Commit_DS($D1,$S,<pk(~lskD1),pk(~skS),spkD1>),
+	    	Commit_DS($D2,$S,<pk(~lskD2),pk(~skS),spkD2>),
+		Running_SBB($S,spkDa)
+	]->  
+	[ Out_A($S,<'SG',spkDa>)	// corresponds to [pk_D^SG] in thesis
+	] 
+
+rule S_2b: 
+	[ AgSt_S1b($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2, spkDa,spkDb >),
+	  In_A($E,'2')
+	]
+ 	--[ 	Commit_DS($D1,$S,<pk(~lskD1),pk(~skS),spkD1>),
+	    	Commit_DS($D2,$S,<pk(~lskD2),pk(~skS),spkD2>),
+		Running_SBB($S,spkDb)
+	]->  
+	[ Out_A($S,<'SG',spkDb>)	// corresponds to [pk_D^SG] in thesis
+	] 
+
+rule BB_2:
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, In_A($S,<'SG',spkDsel>)
+	]
+	--[ 	BB_SG($BB,<'SG',spkDsel >),
+		Commit_SBB($BB,$S,spkDsel)
+	]->
+	[ Out_A($BB,<'SG',spkDsel>) // corresponds to [pk_D^SG] in thesis
+	]
+
+rule H_9: 
+	[ AgSt_H2($H,<$D,$BB, eps,spkDD,spkDa,spkDb >),
+	  In_A($BB,<'SG',spkDsel>)
+	]
+	--[     Sel($H, spkDD, spkDsel) // corresponds to signal verify_sel(H,pkD \in[pkD^SG]) in thesis
+	]->
+	[ ]
+
+rule A_2:
+	[ AgSt_A1($A,<$S,$BB,$E,'spkDs',spkDa,spkDb > ),
+	  In_A($BB,<'SG',spkDsel>),
+	  In_A($E,r)
+	]
+	--[ 	Verify_SG($A,spkDsel,r,spkDa,spkDb)
+	]->
+	[ ]
+
+
+/* =========
+RESTRICTIONS
+========== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+lemma functional: exists-trace  //spkD2,spkD1 in list and spkD2 chosen in SG
+	" Ex H1 H2 #i spkD2 spkD1 BB  #j  #k #l  E  #m #n   #o  #p A #q
+	      	.
+		not (H1 = H2)
+		& Pseudonym(H1,spkD1,H2,spkD2) @i 
+		& BB_spkDs(BB,<'spkDs',spkD2,spkD1 >) @j
+		& Verify_spkDD(H1,spkD1,spkD2,spkD1 ) @k
+		& Verify_spkDD(H2,spkD2,spkD2,spkD1 ) @l
+		& Env_No(E,'1')	@m
+		& BB_SG(BB,<'SG',spkD2 >) @n
+		& Sel(H1, spkD1, spkD2) @o
+		& Sel(H2, spkD2, spkD2) @p
+		& Verify_SG(A,spkD2,'1',spkD2,spkD1) @q 
+
+"
+
+lemma functional2: exists-trace //spkD2,spkD1 in list and spkD1 chosen in SG
+	" Ex H1 H2 #i spkD2 spkD1 BB  #j #k #l  E #m #n #o #p A #q
+	      	.
+		not (H1 = H2)
+		& Pseudonym(H1,spkD1,H2,spkD2) @i 
+		& BB_spkDs(BB,<'spkDs',spkD2,spkD1 >) @j
+		& Verify_spkDD(H1,spkD1,spkD2,spkD1 ) @k
+		& Verify_spkDD(H2,spkD2,spkD2,spkD1 ) @l
+		& Env_No(E,'2')	@m
+		& BB_SG(BB,<'SG',spkD1 >) @n
+		& Sel(H1, spkD1, spkD1) @o
+		& Sel(H2, spkD2, spkD1) @p
+		& Verify_SG(A,spkD1,'2',spkD2,spkD1) @q "
+
+lemma functional3: exists-trace //spkD1,spkD2 in list and spkD2 chosen in SG
+	" Ex H1 H2 #i spkD2 spkD1 BB  #j #k #l  E #m #n #o #p A #q
+	      	.
+		not (H1 = H2)
+		& Pseudonym(H1,spkD1,H2,spkD2) @i 
+		& BB_spkDs(BB,<'spkDs',spkD1,spkD2 >) @j
+		& Verify_spkDD(H1,spkD1,spkD1,spkD2 ) @k
+		& Verify_spkDD(H2,spkD2,spkD1,spkD2 ) @l
+		& Env_No(E,'2')	@m
+		& BB_SG(BB,<'SG',spkD2 >) @n
+		& Sel(H1, spkD1, spkD2) @o
+		& Sel(H2, spkD2, spkD2) @p
+		& Verify_SG(A,spkD2,'2',spkD1,spkD2) @q "
+
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_D_ps: // pkD \in [pkD] from thesis is expressed as "either pkD is first or second element of [pkD]"
+	" (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDD,spkDb) @i  
+	==> (Ex BB spkD2 #j #k. 
+		BB_spkDs(BB,<'spkDs',spkDD,spkD2 >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	    |(Ex BB spkD2 #j #k.   
+		BB_spkDs(BB,<'spkDs',spkD2,spkDD >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	 )
+	& (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDb,spkDD) @i  
+	==> (Ex BB spkD2 #j #k.  
+		BB_spkDs(BB,<'spkDs',spkDD,spkD2 >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	    |(Ex BB spkD2 #j #k.   
+		BB_spkDs(BB,<'spkDs',spkD2,spkDD >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	 )	
+	"
+
+lemma indivVerif_D_sel:
+	" All H spkDD #i .
+		Sel(H, spkDD, spkDD) @i
+	==> Ex BB #j #k.   
+		BB_SG(BB,<'SG',spkDD >) @j
+		& PseudonymD(H,spkDD) @k 
+		"
+
+/*================================
+Universal verifiability properties
+================================*/
+// [spkDSG]=select(r,[spkD]) means "no matter what environment chose, selection happened accordingly.
+// we divide this into "either r chose '1' and the first element of [spkD] is correctly chosen to be [spkDSG] or r chose '2' and the second element of [spkD] is correctly chosen to be [spkDSG]".
+//(Formally, we rewrite (A1 or A2 -> B) to (A1 -> B and A2 -> B) which is equivalent
+
+lemma univVerif_sel: 
+	" All A spkD1 spkD2 #a1.
+		Verify_SG(A,spkD1,'1',spkD1,spkD2) @a1
+	  ==> Ex BB #b1 #b2 .  
+		// the same lists [spkD] and [spkDSG] are on BB (with the same relation)
+		BB_spkDs(BB,<'spkDs',spkD1,spkD2 >) @b1
+		& BB_SG(BB,<'SG',spkD1 >) @b2
+	& All A spkD1 spkD2 #a1.
+		Verify_SG(A,spkD2,'2',spkD1,spkD2) @a1
+	  ==> Ex BB #b1 #b2 .  
+		// the same lists [spkD] and [spkDSG] are on BB (with the same relation)
+		BB_spkDs(BB,<'spkDs',spkD1,spkD2 >) @b1
+		& BB_SG(BB,<'SG',spkD2 >) @b2
+		"
+
+
+end
+
+
+
+
+
+

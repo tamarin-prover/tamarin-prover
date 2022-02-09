@@ -5,6 +5,8 @@ theory injectivity begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 /* looping facts with injective instances: Inj/1 */
 
 rule (modulo E) Init:
@@ -56,7 +58,7 @@ next
     case Init
     solve( Inj( ~i.1 ) ▶₀ #k )
       case Copy
-      by contradiction /* non-injective facts (#vr,#j,#k) */
+      by contradiction /* non-injective facts (#i,#vr,#j) */
     qed
   qed
 qed
@@ -68,8 +70,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features//injectivity/injectivity.spthy
@@ -78,7 +78,7 @@ analyzing: examples/features//injectivity/injectivity.spthy
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.040382912s
+  processing time: 0.065398152s
   injectivity_check (all-traces): verified (9 steps)
 
 ------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.040382912s
+  processing time: 0.065398152s
   injectivity_check (all-traces): verified (9 steps)
 
 ==============================================================================

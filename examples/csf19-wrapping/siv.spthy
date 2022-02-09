@@ -1,0 +1,324 @@
+theory PKCS11_siv begin
+
+/*
+ * Protocol:    hierarchical, multi-device key storing infrastructure
+ * Modeler:     ANONYMIZED ANONYMIZED
+ * Date:        Apr 2018
+ * References:  tamarin-prover/examples/loops/Minimal_Crypto_API.spthy
+ *
+ * Status:      WORKING
+ *
+ * Description: models devices and keys as persistent facts
+ *              natural numbers are multisets of '1'
+ *              device counters are natural numbers
+ *              key levels are natural numbers where any key can encrypt messages
+ *              but keys can only be wrapped by keys whose levels are lower
+ *              keys with a level of '1'+'1'+'1'+'1' or lower cannot be shared
+ *              handles of keys are modeled by a non-reducing function
+ *              explicit usage of destructors instead of pattern matching
+ *
+ * Invocation:  tamarin-prover --heuristic=O --prove gcm.spthy
+ */
+
+builtins: multiset
+
+/* FUNCTIONS */
+/* functions: handle/2 /1* of a key *1/ */
+functions: true/0 /* everything else is considered to be false */
+functions: epsilon/0 /* the empty string */
+
+/* deterministic authenticated symmetric encryption with associated data */
+functions: senc/4 /* encryption */
+functions: sdec/4 /* decryption */
+functions: sdecSuc/4 /* validity of ciphertext */
+functions: getIV/1 /* extract initialization vector from encryption */
+functions: getTag/1 /* extract tag from encryption */
+functions: kdf/2 /* key-derivation function */
+
+/* EQUATIONS */
+equations: sdec(    k,iv,t,senc(k,iv,t,m) ) = m
+equations: sdecSuc( k,iv,t,senc(k,iv,t,m) ) = true()
+equations: getIV(          senc(k,iv,t,m) ) = iv
+equations: getTag(         senc(k,iv,t,m) ) = t
+
+/* RESTRICTIONS */
+restriction UniqueInteger:
+"All n #i #j . IsInteger(n)@i & IsInteger(n)@j ==> #i=#j"
+
+/* represents the relation 'less than' for the natural numbers */
+restriction Lesser:
+"All x y #i. LessThan(x,y)@i ==> Ex z. x+z=y"
+
+/* a term is considered to be true if it is equal modulo ET to true() */
+restriction TrueIsTrue:
+"All x #i. IsTrue(x)@i ==> x=true()"
+
+/* two terms are considered equal if they are equal modulo ET */
+restriction Equality:
+"All x y #i. Eq(x,y)@i ==> x=y"
+
+/* two terms are considered unequal if they are not equal modulo ET */
+restriction Inequality:
+"All x #i. Neq(x,x)@i ==> F"
+
+/* RULES */
+rule One[color='#AAAAEE'/*blue*/]:
+  [  
+  ]
+--[  IsInteger('1')
+  ]->
+  [ !Integer( '1' ) 
+  ]
+
+rule Suc[color='#CCCCFF'/*blue*/]:
+  [ !Integer( n )
+  ,  In( n )
+  ]
+--[  IsInteger(n+'1')
+  ]->
+  [ !Integer( n+'1' )
+  ]
+
+rule Device[color='#FFCCFF'/*pink*/]:
+  [  Fr( ~device )
+  , !Integer( '1' )
+  ]
+--[  CreateDevice(~device)
+  ,  DCtrIs(~device,'1')
+  ]->
+  [ !Device( ~device )
+  ,  DCtr( ~device, '1')
+  ,  Out( <~device,'1'> )
+  ]
+
+rule Key[color='#CCFF99'/*green*/]:
+  [ !Device( device )
+  , !Integer( lvl )
+  ,  Fr( ~key )
+  ,  Fr( ~handle)
+  ]
+--[  
+     CreateKey(~key,~handle,lvl)
+  ,  InitKey(device,~key,~handle,lvl)
+  ]->
+  [ !Store( device, ~handle, ~key, lvl )
+  ,  Out( <~handle,lvl> )
+  ]
+
+rule SharedKey[color='#CCFF99'/*green*/]:
+  [ !Integer( lvl )
+  , !Device( ~device )
+  , !Device( ~ecived )
+  ,  Fr( ~key )
+  ,  Fr( ~h )
+  ]
+--[  
+     CreateKey(~key,~h,lvl)
+  ,  ShareKey(~key,lvl)
+  ,  InitKey(~device,~key,~h,lvl)
+  ,  InitKey(~ecived,~key,~h,lvl)
+  // restricted by
+  ,  LessThan('1'+'1'+'1',lvl)
+  ]->
+  [ !Store( ~device,~h, ~key, lvl )
+  , !Store( ~ecived,~h, ~key, lvl )
+  ,  Out( <~h,lvl> )
+  ,  Out( <~h,lvl> )
+  /* ,  DCtr(~device,ctr ) */
+  ]
+
+rule Encrypt[color='#FFCC99'/*orange*/]:
+let
+    nctr = ctr+'1'
+    iv = <'1','none',device,ctr>
+    c = senc( key, iv, epsilon(), msg )
+in
+  [ !Integer( nctr )
+  , !Device( device )
+  , !Store( device,H, key, lvl )
+  ,  DCtr( device, ctr )
+  ,  In( msg )
+  ]
+--[  
+     UseKey(device,key,H,lvl)
+  ,  DCtrIs(device,nctr)
+  ,  IV(iv)
+  ]->
+  [  DCtr( device, nctr )
+  ,  Out( c )
+  ]
+
+rule Wrap[color='#FF9999'/*lax*/]:
+let
+    nctr = ctr+'1'
+    iv = <el,~eh,device,ctr>
+    c = senc( wk, iv, epsilon(), ek )
+in
+  [ !Integer( nctr )
+  , !Device( device )
+  , !Store( device, h, wk, wl )
+  , !Store( device, ~eh, ek, el )
+  ,  DCtr( device, ctr )
+  ]
+--[  
+     UseKey(device,wk,h,wl)
+  /* ,  ExportKey(device,ek,el,~eh) */
+  /* ,  Wrap(device,wk,wl,ek,el,~eh) */
+  ,  DCtrIs(device,nctr)
+  ,  IV(iv)
+  // restricted by
+  ,  LessThan(el,wl)
+  ]->
+  [  DCtr( device, nctr )
+  ,  Out( c )
+  ]
+
+rule Decrypt[color='#FFCC99'/*orange*/]:
+let
+    iv = getIV( c )
+    el = fst(iv)
+    eh = fst(snd(iv))
+    msg = sdec( key, iv, epsilon(), c )
+in
+  [ !Device( device )
+  , !Store( device,H, key, lvl )
+  ,  In( c )
+  ]
+--[  
+     UseKey(device,key,H,lvl)
+  ,  Decrypt(msg)
+  // restricted by
+  ,  IsTrue(sdecSuc(key,iv,epsilon(),c))
+  ,  Eq(el,'1')
+  ,  Eq(eh,'none')
+  ]->
+  [  Out( msg )
+  ]
+
+rule Unwrap[color='#FF9999'/*lax*/]:
+let
+    iv = getIV( c )
+    el = fst(iv)
+    eh  = fst(snd(iv))
+    ek = sdec( wk, iv, epsilon(), c )
+in
+  [ !Integer( el )
+  , !Device( device )
+  , !Store( device,h, wk, wl )
+  ,  In(c) // simplified like in ANONYMIZED's thesis
+  ]
+--[  
+     UseKey(device,wk,h,wl)
+  ,  ImportKey(device,ek,el,eh)
+  ,  InitKey(device,ek,eh,el)
+  // restricted by
+  ,  IsTrue(sdecSuc(wk,iv,epsilon(),c))
+  ,  Neq(el,'1')
+  ]->
+  [ !Store( device,eh,ek,el )
+  /* ,  Out( <device,eh,el> ) */
+  ]
+
+rule Derive[color='#FF9990'/*lax*/]:
+let
+    /* l = '1'+'1'+'1' */
+    l = '1'+'1'
+    nl = '1'+'1'
+    /* nh = kdf(h,r) */
+in
+  [ 
+    !Device( device )
+  , !Store( device,h, k, l)
+  , Fr(r)
+  , Fr(nh)
+  ]
+--[  
+     UseKey(device,k,h,l)
+  ,  InitKey(device,kdf(k,r),nh,nl)
+  ,  CreateKey(kdf(k,r),nh,nl)
+  ]->
+  [ 
+    !Store(device,nh,kdf(k,r),l)
+  ,  Out( nh )
+  ]
+
+lemma origin[sources]:
+" // when a message gets decrypted, it was (encrypted and thus) known before 
+( All m #decrypt . Decrypt(m)@decrypt ==> 
+    ( Ex #mKU . KU(m)@mKU & #mKU<#decrypt ) ) 
+& // when a key is imported, it was either created or known before 
+( All d k l h #keyImport . ImportKey(d,k,l,h)@keyImport ==> 
+    ( Ex #keyCreate . CreateKey(k,h,l)@keyCreate  & #keyCreate<#keyImport ) 
+  | ( Ex #keyKU . KU(k)@keyKU  & #keyKU<#keyImport ) )"
+
+/*
+lemma Sanity_Integer:
+exists-trace // where a fixed level is reached 
+"Ex #i . IsInteger('1'+'1'+'1')@i"
+
+lemma Sanity_CreateKey:
+exists-trace // where a key is created 
+"Ex k l h #i . CreateKey(k,l,h)@i"
+
+lemma Sanity_Decrypt:
+exists-trace // where a cyphertext is decrypted 
+"Ex m #decrypt . Decrypt(m)@decrypt"
+
+lemma Sanity_Import:
+exists-trace // where a key is imported 
+"Ex d k l h #keyImport. ImportKey(d,k,l,h)@keyImport"
+
+lemma Sanity_Migration:
+exists-trace // where a key is imported even if it was not shared 
+"Ex d D k l h #keyCreate #keyImport . 
+    not ShareKey(k,l)@keyCreate & InitKey(d,k,h,l)@keyCreate & 
+    ImportKey(D,k,l,h)@keyImport & not d=D & 
+ // guide the proof to a valid trace 
+    l='1'+'1'+'1'+'1'+'1' & All K L H #i . CreateKey(K,L,H)@i & not k=K ==> ShareKey(K,L)@i"
+    */
+
+// w/ oracle 
+lemma Counter_Monotonicity[use_induction,reuse]:
+"All d c C #before #later . DCtrIs(d,c)@before & DCtrIs(d,C)@later & #before<#later ==>
+    Ex z . C=c+z"
+
+// w/ oracle and using Counter_Monotonicity 
+lemma IV_Uniqueness:
+"All iv #before #later . 
+    IV(iv)@before & IV(iv)@later ==> #later=#before"
+
+lemma Key_UsageImpliesInitialization:
+// whenever a key is used, it was initialized before 
+"All d k l h #keyUse . UseKey(d,k,h,l)@keyUse ==>
+        Ex #keyInit . InitKey(d,k,h,l)@keyInit & #keyInit<#keyUse"
+
+lemma Key_IntegrityAndConfidentiality[use_induction,reuse]:
+" // created keys are never known 
+( not Ex k l h #keyCreate #keyKU . CreateKey(k,h,l)@keyCreate & KU(k)@keyKU )
+& // initialized keys were created (and thus also never known) 
+( All d k l h #keyImport . ImportKey(d,k,l,h)@keyImport ==>
+    Ex #keyCreate . CreateKey(k,h,l)@keyCreate & #keyCreate<#keyImport )"
+
+lemma Key_UniqueLevelandHandle[reuse]:
+// each key is bound to one level 
+"All d D k l L h H #i #j . InitKey(d,k,h,l)@i & InitKey(D,k,H,L)@j ==> l=L & h=H"
+
+/* analyzed: gcm.spthy */
+
+  /* origin (all-traces): verified (1597 steps) */
+  /* Counter_Monotonicity (all-traces): verified (1880 steps) */
+  /* IV_Uniqueness (all-traces): verified (8 steps) */
+  /* Key_UsageImpliesInitialization (all-traces): verified (78 steps) */
+  /* Key_IntegrityAndConfidentiality (all-traces): verified (428 steps) */
+  /* Key_UniqueLevelandHandle (all-traces): verified (170 steps) */
+
+/* analyzed: siv.spthy */
+
+/*   origin (all-traces): verified (2087 steps) */
+/*   Counter_Monotonicity (all-traces): verified (1880 steps) */
+/*   IV_Uniqueness (all-traces): verified (8 steps) */
+/*   Key_UsageImpliesInitialization (all-traces): verified (86 steps) */
+/*   Key_IntegrityAndConfidentiality (all-traces): verified (443 steps) */
+/*   Key_UniqueLevelandHandle (all-traces): verified (170 steps) */
+
+end

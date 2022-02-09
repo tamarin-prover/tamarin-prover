@@ -1,0 +1,149 @@
+theory JCS12_Typing_Example
+begin
+
+/*
+   Protocol:    Typing Assertion Example from our JCS'12 paper [1]
+   Modeler:     Simon Meier
+   Date:        July 2012
+
+   Status:      working
+
+   Notable differences: We do not require a fixed type system. Instead we
+   introduce actions marking sent cryptographic components and actions marking
+   that a participant instantiated a variable, which it received as part of a
+   cryptographic component. The sources assertion is then the trace formula
+   stating that this variable was either known to the adversary before it was
+   instantiated or the cryptographic component stems from the expected origin.
+
+   [1] Efficient Construction of Machine-Checked Symbolic Protocol Security
+   Proofs.  S. Meier, C. Cremers, D. Basin.  Journal of Computer Security.  To
+   appear.
+*/
+
+
+builtins: asymmetric-encryption, hashing
+
+// Public-Key Infrastructure
+rule Register_pk:
+  [ Fr(~ltk) ]
+  -->
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pk) ]
+  -->
+  [ Out(pk) ]
+
+rule Reveal_ltk:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) ]
+
+
+// Protocol
+rule Client_1:
+  let request = aenc{'1', <$C, ~k>}pkS
+  in
+    [ Fr(~k), !Pk($S, pkS)
+    ]
+  --[ Out_Client_1(request)
+    ]->
+    [ Client_1( $C, $S, ~k ), Out( request ) ]
+
+rule Client_2:
+    [ Client_1(C, S, k), In( aenc{'2',k}pk(ltkC) ), !Ltk(C, ltkC) ]
+  --[ SessKeyC( C, S, k ) ]->
+    []
+
+// A server thread answering in one-step to a session-key setup request from
+// some client.
+rule Serv_1:
+  let msg = adec(request, ~ltkS)
+      tag = fst(msg)
+      C   = fst(snd(msg))
+      k   = snd(snd(msg))
+  in
+    [ !Ltk($S, ~ltkS)
+    , In( request )
+    , !Pk(C, pkC)
+    ]
+  --[ Eq(tag, '1')  // This check is crucial to avoid receiving the
+                    // message output in this step as a client
+                    // message. Try proving the Client_auth lemma
+                    // without it to see the problem. (If you bound
+                    // the proof depth and use the GUI, then you can see that
+                    // there is the option that, without this check, servers
+                    // just forward messages to further servers.)
+    , ReceivedKey(C, $S, k)
+    , In_Serv_1(request, k)
+    ]->
+    [ Out( aenc{'2',k}pkC ) ]
+
+/* This is our sources assertion. It follows the construction outline above and
+ * uses the same trick as [1] to account for the interaction of the adversary,
+ * who doesn't have to follow a typing discipline.
+ */
+lemma typing_assertion [sources]:
+  "(All m v #i. In_Serv_1(m, v) @ i ==>
+      ( (Ex #j. KU(v) @ j & j < i)
+      | (Ex #j. Out_Client_1(m) @ j)
+      )
+   )
+  "
+
+/* We formulate the following lemma over the actions on adversary message
+ * deductions.  This is the core secrecy lemma, which verify for the traces of
+ * the normal form dependency graphs of the protocol. We afterwards reuse it
+ * in the proof of the two security properties formulated over the standard
+ * traces of the protocol.
+ */
+lemma Client_session_key_secrecy_raw [reuse]:
+  "  /* For all traces, we have that */
+     All S C k #i #j.
+        /* if client setup a session key 'k' with a server'S' */
+        SessKeyC(C, S, k) @ #i
+        /* and the adversary deduced 'k' */
+      & KU(k) @ #j
+        /* the he must have performed a long-term key reveal on 'S' or 'C'
+         * before learning the key 'k'. */
+      ==>
+       ( (Ex #r. LtkReveal(S) @ r & r < j)
+       | (Ex #r. LtkReveal(C) @ r & r < j)
+       )
+  "
+
+// Check the proof of this lemma. It consists only of showing that the above
+// lemma implies this one.
+lemma Client_session_key_secrecy:
+  "  /* For all traces, we have that */
+     All S C k #i #j.
+        /* if client setup a session key 'k' with a server'S' */
+        SessKeyC(C, S, k) @ #i
+        /* and the adversary knows 'k' */
+      & K(k) @ #j
+        /* the he must have performed a long-term key reveal on 'S' or 'C'
+         * before learning the key 'k'. */
+      ==>
+       ( (Ex #r. LtkReveal(S) @ r & r < j)
+       | (Ex #r. LtkReveal(C) @ r & r < j)
+       )
+  "
+
+lemma Client_auth:
+  /* For all traces satisfying all equality checks */
+  " (All x y #i. Eq(x,y) @ i ==> x = y)
+  ==>
+    ( All C S k #i.  SessKeyC(C, S, k) @ #i
+       /* for all session keys 'k' setup by clients with a server 'S' */
+       ==>
+         /* there is a server that answered the request */
+       ( (Ex #a. ReceivedKey(C, S, k) @ a)
+         /* or the intruder performed a long-term key reveal on 'S' or 'C'
+            before the key was setup. */
+       | (Ex #r. LtkReveal(S) @ r & r < i)
+       | (Ex #r. LtkReveal(C) @ r & r < i)
+       )
+    )
+  "
+
+end

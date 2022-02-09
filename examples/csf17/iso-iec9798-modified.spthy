@@ -1,0 +1,280 @@
+/*
+   Protocol:    Token commitment protocol applied to ISO-IEC-9798-3-3
+   Modeler:     Kevin Milner
+   Date:        July 2016
+   Source:      Original
+ */
+
+theory ISO_IEC9798_3_3_Modified
+begin
+heuristic: I
+builtins: signing
+
+restriction Eq_testing: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction InEq_testing: "All x y #i. InEq(x,y) @ i ==> not(x = y)"
+
+//There's one id, per role, per direction.
+restriction pairings_unique:
+    "All id1 id2 role ki kr #i #j.
+        Paired(id1,role,ki,kr) @ i & Paired(id2,role,ki,kr) @ j
+    ==> #i = #j"
+
+rule RegisterKey:
+    [ Fr(~ltkA) ]
+  --[ Key(~ltkA) ]->
+    [ !F_AgentKey(~ltkA), Out(pk(~ltkA)) ]
+
+rule CompromiseKey:
+    [ !F_AgentKey(~ltk) ]
+  --[ Compromise(pk(~ltk)) ]->
+    [ Out(~ltk) ]
+
+rule State_Compromise:
+    [ !F_TokenState(pkA,pkB,curtok)
+    ]--[
+      CompromiseToken(<pkA,pkB>,curtok)
+    ]->
+    [ Out(curtok)
+    ]
+
+/* Models an agent adding anothers public key out-of-band, we assume
+ * that all relationships set up this way are 'sane' in that both of the
+ * keys involved were generated fresh. */
+rule BindState_Init:
+    [ !F_AgentKey(~ltkA)
+    , !F_AgentKey(~ltkB)
+    , Fr(~id)
+    ]--[
+      Paired(~id, 'I', ~ltkA, ~ltkB)
+    , Counter(~id, '0')
+
+    , InvariantSource_I(~id,~ltkA,pk(~ltkB))
+    ]->
+    [ /* For search efficiency, state is divided into
+       * an invariant portion and a variant portion. This
+       * allows tamarin to immediately bind the keys back
+       * to this initial pairing rule. The fresh ~id is used
+       * to identify this pairing. */
+      St_I(~id,~ltkA,pk(~ltkB), 'm1', 'uninitialized', sign{'uninitialized'}'notoken')
+    ]
+
+rule BindState_Resp:
+    [ !F_AgentKey(~ltkA)
+    , !F_AgentKey(~ltkB)
+    , Fr(~id)
+    ]--[
+      Paired(~id, 'R', ~ltkA, ~ltkB)
+    , Counter(~id, '0')
+    , InvariantSource_R(~id,~ltkB,pk(~ltkA))
+    ]->
+    [ St_R(~id, ~ltkB, pk(~ltkA), sign{'uninitialized'}'notoken', 'notoken')
+    ]
+
+//////////////////////////////////////////
+//   Message rules
+rule I_1:
+    let pkA = pk(~ltkA)
+        m1 = <'1',pkA, pkB,~ni,commit> in
+    [ St_I(~id, ~ltkA, pkB,'m1',commitmsg,commit)
+    , Fr(~ni)
+    ]--[
+      Begin('I',<pkA,pkB>,~ni,commit)
+    , Gen(~ni)
+
+    , Invariant_I(~id,~ltkA,pkB)
+    ]->
+    [ St_I(~id, ~ltkA, pkB,<'m2',~ni>,commitmsg,commit)
+    , Out(<m1, sign{m1}~ltkA>)
+    ]
+
+
+rule R:
+    let pkB = pk(~ltkB)
+        m1 = <'1',pkA,pkB,ni,icommit> 
+        //Sign nonce to prove we still have secret key
+        //Provide our proof of the previous commit with the public key
+        //Provide a new commit dependent on some known freshness from I
+        newcommit = sign{<'commit',pkB,pkA,ni>}~newtok
+        ncc = <ni,icommit,~nr,newcommit>
+        m2 = <'2',pkB,pkA,~nr,ni,pk(token),newcommit,sign{ncc}token> in
+    [ St_R(~id, ~ltkB, pkA, commit,token)
+    , Fr(~newtok), Fr(~nr)
+    , In(<m1, sig>)
+    ]--[
+      Eq(verify(sig,m1,pkA), true)
+    , Gen(~nr)
+    , Token(~newtok)
+    , Commit(<pkA,pkB>,newcommit)
+    , Eq(icommit, commit)        //Matches the commit we expect in I's request
+    , Session('R', <pkA,pkB>, <ni,icommit,~nr,pk(token),newcommit>)
+    
+    , Invariant_R(~id,~ltkB,pkA)
+    ]->
+    [ St_R(~id, ~ltkB, pkA, newcommit,~newtok)
+    , !F_TokenState(pkA,pkB,~newtok)
+    , Out(<m2,sign{m2}~ltkB>)
+    ]
+
+
+
+//Everything matches as expected
+rule I_2_complete:
+    let pkA = pk(~ltkA)
+        m2 = <'2',pkB,pkA,nr,ni,proof,newcommit,nccsig> in
+    [ St_I(~id, ~ltkA, pkB, <'m2',ni>,commitmsg,commit)
+    , In(<m2,sig>)
+    ]--[
+      Eq(verify(sig,m2,pkB), true)
+    , InEq(newcommit,commit)     //Needs to be a new signature
+    , Session('I', <pkA,pkB>, <ni,commit,nr,proof,newcommit>)
+    //Check token matches previous commit:
+    , Eq(verify(commit,commitmsg,proof),true)
+    //Check the nonce signature to ensure R is alive:
+    , Eq(verify(nccsig,<ni,commit,nr,newcommit>,proof),true)       
+    //Session or detect depending on the previous checks:
+    , Complete(<pkA,pkB>)
+
+    , Invariant_I(~id,~ltkA,pkB)
+    ]->
+    [ St_I(~id, ~ltkA, pkB, 'm1', <'commit',pkB,pkA,ni>, newcommit)
+    ]
+
+
+//Proof mismatch but signed with B's key, so it must have been compromised.
+rule I_2_detect:
+    let pkA = pk(~ltkA)
+        m2 = <'2',pkB,pkA,nr,ni,proof,newcommit,nccsig> in
+    [ St_I(~id, ~ltkA, pkB, <'m2',ni>,commitmsg,commit)
+    , In(<m2,sig>)
+    ]--[
+      Eq(verify(sig,m2,pkB), true)
+    , InEq(newcommit,commit)     //Needs to be a new signature
+    , Session('I', <pkA,pkB>, <ni,commit,nr,proof,newcommit>)
+    //Check token matches previous commit:
+    , InEq(verify(commit,commitmsg,proof),true)
+    //Check the nonce signature to ensure R is alive:
+    , Eq(verify(nccsig,<ni,commit,nr,newcommit>,proof),true)       
+    //Session or detect depending on the previous checks:
+    , Detect(<pkA,pkB>)
+
+    , Invariant_I(~id,~ltkA,pkB)
+    ]->
+    [ Remediate_R(~id, ~ltkA, pkB,'m1', <'commit',pkB,pkA,ni>, newcommit)
+    ]
+
+
+
+//////////////////////////////////////////
+//   Helper Lemmas:
+lemma invariant_sources[sources]:
+    "(All id ka kb #i.
+        Invariant_I(id,ka,kb) @ i
+    ==> Ex #j. InvariantSource_I(id,ka,kb) @ j & #j < #i)
+    &(All id ka kb #i.
+        Invariant_R(id,ka,kb) @ i
+    ==> Ex #j. InvariantSource_R(id,ka,kb) @ j & #j < #i)"
+
+lemma commit_unique[reuse]:
+    "All id1 id2 com #i #j.
+        Commit(id1,com) @ i & Commit(id2,com) @ j
+    ==> #i = #j & id1 = id2"
+
+lemma token_compromise_source[reuse]:
+    "All pks tok #i.
+        CompromiseToken(pks,tok) @ i
+    ==> Ex #j. #j < #i & Token(tok) @ j"
+
+lemma force_nonce_ordering[reuse]:
+    "(All role keys ni data #i #j.
+        Session(role, keys, <ni, data>) @ i & Gen(ni) @ j
+    ==> #j < #i)
+    &(All keys ni c nr data #i #j.
+        Session('I', keys, <ni,c,nr,data>) @ i & Gen(nr) @ j
+    ==> #j < #i)"
+
+//////////////////////////////////////////
+//   Trace existence
+lemma exists_session: exists-trace
+    "Ex pks data #t0 #t1. #t0 < #t1 &
+        Session('R', pks, data) @ t0
+        & Session('I', pks, data) @ t1
+        & not(Ex #k key. Compromise(key) @ k) & not(Ex #k. Detect(pks) @ k)"
+
+lemma exists_second_session: exists-trace
+    "Ex pks data data2 #t0 #t1 #t2 #t3. #t0 < #t2 & #t1 < #t3 &
+        Session('R',pks,data) @ t0
+        & Session('I',pks,data) @ t1
+      & Session('R',pks,data2) @ t2
+        & Session('I',pks,data2) @ t3
+        & not(Ex #k key. Compromise(key) @ k) & not(Ex #k. Detect(pks) @ k)"
+
+lemma exists_detect_no_I_compromise: exists-trace
+    "Ex ki kr  #i.
+        Detect(<ki,kr>) @ i & not(Ex #j. Compromise(ki) @ j)"
+
+//////////////////////////////////////////
+//  Trace properties
+lemma detect_sound:
+    "All ki kr #t1.
+        Detect(<ki, kr>) @ t1
+    ==> Ex #t0. #t0 < #t1 & Compromise(kr) @ t0"
+
+lemma correct_dolevyao:
+    "All pks data #t1.
+        Session('I',pks,data) @ t1 & not(Ex k #tc. Compromise(k) @ tc)
+    ==> Ex #t0. #t0 < #t1 & 
+            Session('R',pks,data) @ t0"
+
+lemma matching_detects_prior_misuse[use_induction]:
+    "All pks data data2 #t1 #t2 #t3.
+        #t1 < #t2 & #t2 < #t3 &
+        //Given an matching session
+        Session('I', pks, data2) @ t2 & Session('R', pks, data2) @ t3
+        //Where detection did not occur
+        & not(Detect(pks) @ t3)
+        //Then for all sessions before that
+        & Session('R', pks, data) @ t1
+    ==> //Either that session was also matching
+        (Ex #t0. #t0 < #t1 &
+            Session('I', pks, data) @ t0)
+        //Or both keys were compromised?
+        | (Ex i r #tc #tc2. (pks = <i,r>) 
+            & Compromise(i) @ tc & Compromise(r) @ tc2)" 
+
+lemma sent_commit_implies_generated[reuse]:
+    "All pks pks2 n c data #t0 #t1.
+        Session('R',pks,<n,c,data>) @ t1
+        & Commit(pks2,c) @ t0
+    ==> (pks = pks2) & #t0 < #t1"
+
+
+lemma sessions_injective[reuse, use_induction]:
+    "(All role pks n2 c2 data data2 #t0 #t1 #t2. #t0 < #t2 &
+        Session(role, pks, data2) @ t0
+        & Session(role, pks, <n2, c2, data>) @ t2
+        & Begin(role, pks, n2, c2) @ t1
+    ==> #t0 < #t1)
+    &(All role pks n c data n2 data2 #t0 #t1 #t2. #t0 < #t2 &
+        Begin(role, pks, n, c) @ t0
+        & Session(role, pks, <n, c, data>) @ t1
+        & Session(role, pks, <n2,data2>) @ t2
+        & not(n = n2)
+    ==> #t1 < #t2)"
+
+lemma matching_detects_later_misuse[use_induction]:
+    "All pks data data2 #t0 #t1 #t3.
+        #t0 < #t1 & #t1 < #t3
+        //Given a matching session
+        & Session('R',pks,data) @ t0 
+        & Session('I',pks,data) @ t1
+        //and I finished a session without detecting
+        & Session('I',pks,data2) @ t3
+        & not(Detect(pks) @ t3)
+        //Without state compromise in between
+        & not(Ex #tc tok3. #tc < #t3 & #t0 < #tc &
+                CompromiseToken(pks,tok3) @ tc)
+    ==> //Then there is an agreeing R session, regardless of key compromise
+        (Ex #t2. #t2 < #t3 & 
+            Session('R',pks,data2) @ t2)"
+
+end

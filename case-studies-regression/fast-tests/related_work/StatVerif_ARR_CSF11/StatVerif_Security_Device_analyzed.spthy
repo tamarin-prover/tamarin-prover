@@ -1,0 +1,307 @@
+theory StatVerif_Security_Device begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) NewDevice:
+   [ Fr( ~sk ) ]
+  -->
+   [ UnconfiguredDevice( ~sk ), !DevicePublicKey( pk(~sk) ), Out( pk(~sk) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Alice:
+   [ Fr( ~x ), Fr( ~y ), !DevicePublicKey( key ) ]
+  --[ Exclusive( ~x, ~y ) ]->
+   [ Out( aenc(<~x, ~y>, key) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ConfigureDevice:
+   [ UnconfiguredDevice( sk ), In( config ) ]
+  -->
+   [ !ConfiguredDevice( sk, config ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) UseLeftDevice:
+   [ !ConfiguredDevice( sk, 'left' ), In( aenc(<x, y>, pk(sk)) ) ]
+  --[ Access( x ) ]->
+   [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) UseRightDevice:
+   [ !ConfiguredDevice( sk, 'right' ), In( aenc(<x, y>, pk(sk)) ) ]
+  --[ Access( y ) ]->
+   [ Out( y ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma types [sources]:
+  all-traces
+  "∀ m #i.
+    (Access( m ) @ #i) ⇒
+    (((∃ #j. (!KU( m ) @ #j) ∧ (#j < #i)) ∨
+      (∃ x #j. Exclusive( x, m ) @ #j)) ∨
+     (∃ y #j. Exclusive( m, y ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m #i.
+  (Access( m ) @ #i)
+ ∧
+  (∀ #j. (!KU( m ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ x #j. (Exclusive( x, m ) @ #j) ⇒ ⊥) ∧
+  (∀ y #j. (Exclusive( m, y ) @ #j) ⇒ ⊥)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
+         (∃ y #j. (Exclusive( m, y ) @ #j) ∧ ¬(last(#j))) )
+    case case_1
+    solve( Access( m ) @ #i )
+      case UseLeftDevice
+      solve( !ConfiguredDevice( sk, 'left' ) ▶₀ #i )
+        case ConfigureDevice
+        solve( !KU( aenc(<m, y>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case UseLeftDevice
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case UseRightDevice
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case UseRightDevice
+      solve( !ConfiguredDevice( sk, 'right' ) ▶₀ #i )
+        case ConfigureDevice
+        solve( !KU( aenc(<x, m>, pk(~sk)) ) @ #vk )
+          case Alice
+          by contradiction /* from formulas */
+        next
+          case UseLeftDevice
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case UseRightDevice
+          solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                 (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          next
+            case case_3
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  next
+    case case_4
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma reachability_left:
+  exists-trace "∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j. (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #j)"
+*/
+simplify
+solve( !DevicePublicKey( key ) ▶₂ #i )
+  case NewDevice
+  solve( !KU( ~x ) @ #vk )
+    case UseLeftDevice
+    solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.1 )
+      case Alice
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma reachability_right:
+  exists-trace "∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #k. (Exclusive( x, y ) @ #i) ∧ (K( y ) @ #k)"
+*/
+simplify
+solve( !DevicePublicKey( key ) ▶₂ #i )
+  case NewDevice
+  solve( !KU( ~y ) @ #vk )
+    case UseRightDevice
+    solve( !KU( aenc(<x.1, ~y>, pk(~sk.1)) ) @ #vk.1 )
+      case Alice
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma secrecy:
+  all-traces
+  "¬(∃ x y #i #k1 #k2.
+      ((Exclusive( x, y ) @ #i) ∧ (K( x ) @ #k1)) ∧ (K( y ) @ #k2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #k1 #k2.
+  (Exclusive( x, y ) @ #i) ∧ (K( x ) @ #k1) ∧ (K( y ) @ #k2)"
+*/
+simplify
+solve( !DevicePublicKey( key ) ▶₂ #i )
+  case NewDevice
+  solve( !KU( ~x ) @ #vk )
+    case Alice
+    by solve( !KU( ~sk ) @ #vk.2 )
+  next
+    case UseLeftDevice
+    solve( !KU( ~y ) @ #vk.1 )
+      case Alice
+      by solve( !KU( ~sk ) @ #vk.4 )
+    next
+      case UseLeftDevice
+      solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.2 )
+        case Alice
+        solve( !KU( aenc(<~y, y.1>, pk(~sk.1)) ) @ #vk.4 )
+          case c_aenc
+          by contradiction /* cyclic */
+        qed
+      next
+        case c_aenc
+        by contradiction /* cyclic */
+      qed
+    next
+      case UseRightDevice
+      solve( !KU( aenc(<~x, y.1>, pk(~sk.1)) ) @ #vk.2 )
+        case Alice
+        solve( !KU( aenc(<x.1, ~y>, pk(~sk.1)) ) @ #vk.4 )
+          case c_aenc
+          by contradiction /* cyclic */
+        qed
+      next
+        case c_aenc
+        by contradiction /* cyclic */
+      qed
+    qed
+  next
+    case UseRightDevice
+    solve( !KU( ~y ) @ #vk.1 )
+      case Alice
+      by solve( !KU( ~sk ) @ #vk.4 )
+    next
+      case UseLeftDevice
+      solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
+        case c_aenc
+        by contradiction /* cyclic */
+      qed
+    next
+      case UseRightDevice
+      solve( !KU( aenc(<x.1, ~x>, pk(~sk.1)) ) @ #vk.2 )
+        case c_aenc
+        by contradiction /* cyclic */
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+
+  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
+  processing time: 0.273767859s
+  types (all-traces): verified (32 steps)
+  reachability_left (exists-trace): verified (5 steps)
+  reachability_right (exists-trace): verified (5 steps)
+  secrecy (all-traces): verified (20 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
+
+  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
+  processing time: 0.273767859s
+  types (all-traces): verified (32 steps)
+  reachability_left (exists-trace): verified (5 steps)
+  reachability_right (exists-trace): verified (5 steps)
+  secrecy (all-traces): verified (20 steps)
+
+==============================================================================
+*/

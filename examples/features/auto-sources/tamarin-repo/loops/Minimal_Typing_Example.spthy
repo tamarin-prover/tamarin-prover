@@ -1,0 +1,110 @@
+theory Minimal_Typing_Example
+begin
+
+/*
+   Protocol:    A minimal example to demonstrate the use of sources assertions
+   Modeler:     Simon Meier
+   Date:        July 2012
+
+   Status:      working
+
+   Note that this is an artificial example to demonstrate the use of sources
+   assertions. It is explained in detail in my Ph.D. thesis.
+*/
+
+
+builtins: symmetric-encryption, hashing
+
+// Shared keys that can be compromised.
+rule Setup_Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Reveal_Key:
+  [ !Key(k) ] --[ Rev(k) ]-> [ Out(k) ]
+
+
+/* The protocol: there are shared keys that all honest processes have access
+ * to. The intruder can access them too by revealing them using the
+ * 'Reveal_Key' rule above. We use these keys to exchange a message consisting
+ * of a public part and a secret part. The initiator sends the message and the
+ * responder claims that the secret part is secret provided that the used key
+ * has not been revealed by the adversary.
+ */
+rule Initiator:
+  let msg = senc{~sec,~pub}k
+  in
+    [ !Key(k), Fr(~sec), Fr(~pub) ]
+  --[ Out_Initiator(msg)
+    , Public(~pub)
+    ]->
+    [ Out( msg ) ]
+
+rule Responder:
+  let msg = senc{sec,pub}key
+  in
+    [ !Key(key), In( msg )
+    ]
+  --[ In_Responder(msg, pub)
+    , Secret(sec, key)
+    ]->
+    [ Out( pub ) ]
+
+/* This is our sources assertion: it ensures that we have enough constraints on
+ * the 'pub' variable in the 'Responder' rule to determine all possible
+ * messages that can be extracted from it using the deconstruction rules.
+ * You can see the effect of having too few constraint in the GUI under the
+ * 'untyped precomupted case distinctions' link. Several cases have
+ * superfluous decryption chains. Getting rid of them is the goal of the
+ * sources assertion.
+ *
+ * Note that sources assertions are invariants over the traces of the normal
+ * form dependency graphs of a protocol. We mark lemmas with the 'sources'
+ * attribute to ensure that they are proving using induction and that they are
+ * reused when precomputing case distinctions and proving non-sources lemmas.
+ */
+lemma sources_assertion [sources]:
+  /* For all messages received by the responder */
+  "(All m k #i. In_Responder(m, k) @ i ==>
+        /* they either came from the adversary and he therefore knows the
+         * contained 'k' variable before it was instantiated */
+      ( (Ex #j. KU(k) @ j & j < i)
+        /* or there is an initiator that sent 'm'. */
+      | (Ex #j. Out_Initiator(m) @ j)
+      )
+   )
+  "
+/* Note that in general sources assertions do not directly relate received
+ * messsages to sent messages, but received cryptographic components to sent
+ * cryptographic components. For this simple protocol, the two notions
+ * however coincide.
+ */
+
+
+/* The secret part of the message received by Responder is secret provided the
+ * key has not been compromised.
+ */
+lemma Responder_secrecy:
+  "  /* For all traces, we have that */
+     All sec key #i #j.
+        /* if a responder claims the secrecy of a message 'sec' provided 'key'
+         * is not compromised */
+        Secret(sec, key) @ #i
+        /* and the adversary nevertheless deduced 'k' */
+      & K(sec) @ #j
+        /* then the adversary must have revealed 'key' */
+      ==>
+       (Ex #r. Rev(key) @ r)
+  "
+
+/* Sanity check: the public part is accessible to the adversary without
+ * performing a key reveal.
+ */
+lemma Public_part_public:
+  exists-trace
+  "  /* No key reveal has been performed */
+    not (Ex k #i. Rev(k) @ i)
+    /* and the public part of a message is known to the adversary. */
+  & (Ex pub #i #j. Public(pub) @ i & K(pub) @ j )
+  "
+
+end

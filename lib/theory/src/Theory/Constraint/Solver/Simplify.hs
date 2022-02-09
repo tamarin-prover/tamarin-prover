@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
+{-# LANGUAGE TupleSections      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -32,16 +33,17 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets)
+import           Control.Monad.State                (gets, modify)
 
 
-import           Extension.Data.Label
+import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
@@ -89,6 +91,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -100,6 +103,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -119,6 +123,7 @@ simplifySystem = do
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
+              c9 <- freshOrdering
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -130,6 +135,7 @@ simplifySystem = do
                     , ("decompose trace formula",             c6)
                     , ("propagate atom valuation to formula", c7)
                     , ("saturate under ∀-clauses (S_∀)",      c8)
+                    , ("orderings for ~vars (S_fresh-order)", c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -377,6 +383,8 @@ partialAtomValuation ctxt sys =
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
 
+          Syntactic _                            -> Nothing
+
 
 
 -- | CR-rule *S_∀*: insert all newly implied formulas.
@@ -393,3 +401,44 @@ insertImpliedFormulas = do
           then return (insertFormula implied)
           else []
 
+-- | CR-rule *S_fresh-order*:
+--
+-- `i:f`, `j:g`
+-- -- insert --
+-- `i<j`
+-- *with `prems(f)u = Fr(~s)` and `prems(g)v = Fact(t))`*
+-- *if `s` is syntactically in `t` and not below a reducible operator*
+freshOrdering :: Reduction ChangeIndicator
+freshOrdering = do
+  nodes <- M.assocs <$> getM sNodes
+  reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  let origins = concatMap getFreshFactVars nodes
+  let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
+  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
+
+  oldLesses <- gets (get sLessAtoms)
+  mapM_ (uncurry insertLess) newLesses
+  modifiedLesses <- gets (get sLessAtoms)
+  return $ if oldLesses == modifiedLesses
+    then Unchanged
+    else Changed
+
+    where
+      getFreshFactVars :: (NodeId, RuleACInst) -> [(LNTerm, NodeId)]
+      getFreshFactVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
+          FreshFact -> Just (head $ factTerms prem, idx)
+          _         -> Nothing
+        ) prems
+      
+      getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
+      getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
+          FreshFact -> []
+          _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
+        ) prems
+      
+      extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
+      extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
+                                      = concatMap (extractFreshNotBelowReducible reducible) as
+      extractFreshNotBelowReducible _ t | isFreshVar t = [t]
+      extractFreshNotBelowReducible _ _                = []
+      

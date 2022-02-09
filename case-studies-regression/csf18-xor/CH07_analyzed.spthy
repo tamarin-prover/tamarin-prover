@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k ), Fr( ~id ) ] --> [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
 
@@ -596,7 +598,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           by contradiction /* from formulas */
         next
           case split_case_2
-          by contradiction /* from formulas */
+          by contradiction /* cyclic */
         next
           case split_case_3
           by contradiction /* from formulas */
@@ -732,8 +734,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/CH07.spthy
@@ -742,7 +742,7 @@ analyzing: examples/csf18-xor/CH07.spthy
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 0.981041143s
+  processing time: 1.155481822s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
@@ -757,7 +757,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 0.981041143s
+  processing time: 1.155481822s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)

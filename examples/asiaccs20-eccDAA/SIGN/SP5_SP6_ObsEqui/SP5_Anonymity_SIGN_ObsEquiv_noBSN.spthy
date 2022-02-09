@@ -1,0 +1,250 @@
+theory SP5_Anonymity_SIGN_ObsEqui_noBSN
+begin
+
+/*
+  Protocol:	TPM_DAA
+  
+time tamarin-prover SP5_Anonymity_SIGN_ObsEquiv_noBSN.spthy --diff --heuristic=O --oraclename=ObsEquOracle.py --prove +RTS -N10 -RTS
+  
+==============================================================================
+summary of summaries:
+
+analyzed: SP5_Anonymity_SIGN_ObsEquiv_noBSN.spthy
+
+  RHS :  diff_signatures_no_verify (exists-trace): verified (7 steps)
+  LHS :  diff_signatures_no_verify (exists-trace): verified (7 steps)
+  DiffLemma:  Observational_equivalence : verified (5018 steps)
+
+==============================================================================
+
+real    11m9.875s
+user    32m9.696s
+sys     36m10.992s
+
+*/
+
+
+builtins:   asymmetric-encryption, symmetric-encryption, multiset
+
+functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3, multp/2, plus/2, minus/2, len16/1, 
+             H_SHA256/1,  H_k_1/1, H_k_4/4, H_k_6/6, H_n_2/2, H_n_4/4, curlyK/1, E/2, E_S/2, L_J/2, RB/2, RD/2, 
+			 calcE/1, calcE_S/1, calcL_J/1, calcRB/1, calcRD/1,
+			 PkX/2, PkY/2, verifyCre1/4, verifyCre2/5,verifyCre3/4,verifyCre4/5,
+			 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, Message/1
+
+// Protocol Restrictions (Axioms)
+
+//restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
+				
+				
+//the 'Issuer' should only be initialised once
+restriction single_issuer_single_init:
+	"All #i #j . (Issuer_Init() @ i & Issuer_Init() @ j) ==> (#i=#j)"
+
+
+rule Issuer_Init:
+		let 
+			I='Issuer'
+			pkX=PkX(~x,'P2')
+			pkY=PkY(~y,'P2')
+		in
+		[Fr(~x),
+		 Fr(~y)]
+		 
+		--[Issuer_Init()
+		   , OnlyOnce('Issuer_Init')]->
+		
+		[
+		!Ltk(I,~x, ~y), !Pk(I, pkX,pkY), 
+		Out(<pkX,pkY>)
+		]
+
+// simple key reveal rule for the issuer's secret key pair
+rule Issuer_KeyReveal:
+	[!Ltk(I, x, y)]
+	
+	--[KeyReveal('Issuer_KeyReveal', I)]->
+	
+	[Out(<x,y>)]
+	
+
+/*
+In this model, we create two signatures. One from TPM1 and one from TPM2.
+We also have the public key of TPM1.
+The question is: Can the adversary associate the public key of TPM1 with the correct signature,
+ie can he tell the two systems apart:
+Q_PD(TPM1), diff (sigma1, sigma2)
+*/
+rule Generate_TPM_DAA_Signatures:
+	let
+		//inputs from Issuer PK
+		pkX=PkX(x,'P2')
+		pkY=PkY(y,'P2')
+		
+		//The message to be signed:
+		msg=Message(~message)
+		
+		//TPM1 details
+		e1=KDF_EK(~TPM_EK_Seed1)
+		E_PD1=<'EK_public_data',pk(e1)>
+		Q1=multp(~f1, 'P1') //TPM1 DAA key
+		Q_PD1=<'DAA_public_data',Q1>
+		//TPM1 credentials 
+		A1=multp(~r1,'P1')
+		B1=multp(y,A1)
+		C1=plus(multp(x,A1),multp(multp(multp(~r1,x),y),Q1))
+		D1=multp(multp(~r1,y),Q1)
+		
+		//First signature of m by TPM1
+		
+		//randomise credentials with sl_1
+		R1=multp(~sl_1,A1)
+		S1=multp(~sl_1,B1)
+		T1=multp(~sl_1,C1)
+		W1=multp(~sl_1,D1)
+		
+		//compute signature sigma1
+		bsn1=BSN('bottom')
+		s_2_bar_1=BSN('bottom')
+		y_2_1=BSN('bottom')
+		//J1=BSN('bottom') 
+		//K1=BSN('bottom')
+		//L1=BSN('bottom')
+		E1=E_S(~r_cv1_1,S1)
+		c1=H_k_6(msg,R1,S1,T1,W1,E1)
+		c_tpm1=H_k_1(c1)
+		h2_host1=H_n_2(~n_M_1, c_tpm1)
+		smalls1=plus(~r_cv1_1,multp(h2_host1,~f1))
+		
+		sigma1=<bsn1, R1, S1, T1, W1, h2_host1, smalls1, ~n_M_1, msg, 'TPM_Signature_Of_m'>
+
+		//TPM2 details
+		e3=KDF_EK(~TPM_EK_Seed3)
+		E_PD3=<'EK_public_data',pk(e3)>
+		Q3=multp(~f3, 'P1') //TPM2 DAA key
+		Q_PD3=<'DAA_public_data',Q3>
+		//TPM1 credentials 
+		A3=multp(~r3,'P1')
+		B3=multp(y,A3)
+		C3=plus(multp(x,A3),multp(multp(multp(~r3,x),y),Q3))
+		D3=multp(multp(~r3,y),Q3)
+		
+		//First signature of m by TPM2
+		
+		//randomise credentials with sl_3
+		R3=multp(~sl_3,A3)
+		S3=multp(~sl_3,B3)
+		T3=multp(~sl_3,C3)
+		W3=multp(~sl_3,D3)
+		
+		//compute signature sigma1
+		bsn3=BSN('bottom')
+		s_2_bar_3=BSN('bottom')
+		y_2_3=BSN('bottom')
+		//J3=BSN('bottom')
+		//K3=BSN('bottom')
+		//L3=BSN('bottom')
+		E3=E_S(~r_cv1_3,S3)
+		c3=H_k_6(msg,R3,S3,T3,W3,E3)
+		c_tpm3=H_k_1(c3)
+		h2_host3=H_n_2(~n_M_3, c_tpm3)
+		smalls3=plus(~r_cv1_3,multp(h2_host3,~f3))
+		
+		sigma3=<bsn3, R3, S3, T3, W3, h2_host3, smalls3, ~n_M_3, msg, 'TPM_Signature_Of_m'>
+
+  in
+        [	//Issuer details
+			!Pk(I,pkX,pkY)		//the issuer's public key
+			, !Ltk(I,x,y)		//the issuer's secret key
+			, Fr(~r1) 			//randomising factor for credentials of TPM1
+			, Fr(~r3) 			//randomising factor for credentials of TPM2
+			
+			//The message
+			, Fr (~message) //the message to be signed
+			
+			
+			// TPM1 initialisation values
+			, Fr(~TPM_EK_Seed1)
+			, Fr(~f1)
+			
+			// TPM1 sigma1 values
+			, Fr(~sl_1)
+			, Fr(~cv1_1)
+			, Fr(~r_cv1_1)
+			, Fr(~n_M_1)
+			
+			// TPM2 initialisation values
+			, Fr(~TPM_EK_Seed3)
+			, Fr(~f3)
+			
+			// TPM2 sigma1 values
+			, Fr(~sl_3)
+			, Fr(~cv1_3)
+			, Fr(~r_cv1_3)
+			, Fr(~n_M_3)
+
+         
+      ]
+    --[	CreateSigmas(), 
+		OnlyOnce( 'SIGN' )
+	]->
+	
+	 [
+		Shuffle_Sigmas(<E1, sigma1>+<E3, sigma3>)
+		, TPM_EK_QPD1(<pk(e1), Q_PD1>)
+		, TPM_EK_QPD2(<pk(e3), Q_PD3>) 
+	 ]
+
+
+// Informal description of SP2_Anonymity:
+// An adversary, who does not know a Platform ’s secret key, finds it hard to recover the
+// identity of the Tpm used by the Platform from a given message.
+// we show this by checking whether Tamarin can find any connection between
+// the endorsement and public keys of a TPM and its signature
+// so the two systems would be different if Tamarin could associate the Q_PD of TPM1 with a given signature
+// or the Q_PD of TPM2 with a given signature
+rule Diff_DAA_SIGN_no_verify:
+	let
+		//First signature and values computed during verification
+		E1=E_S(r_cv1_1,S1)
+		sigma1=<bsn1, R1, S1, T1, W1,  h2_host1, smalls1, ~n_M_1, msg, 'TPM_Signature_Of_m'>
+		
+		//second signature and values computed during verification
+		E3=E_S(r_cv1_3,S3)
+		sigma3=<bsn3, R3, S3, T3, W3, h2_host3, smalls3, ~n_M_3, msg, 'TPM_Signature_Of_m'>
+	in
+	[
+		Shuffle_Sigmas(<E1, sigma1>+<E3, sigma3>)
+		, TPM_EK_QPD1(<pk(e1), Q_PD1>)
+		, TPM_EK_QPD2(<pk(e3), Q_PD3>)
+	]
+
+	--[ 
+		Diff_Sigs()
+		, OnlyOnce('Diff_DAA_SIGN')
+	]->
+	
+	[ 
+		Out(<'FirstTPM', pk(e1), Q_PD1>)
+		, Out(<'SecondTPM', pk(e3), Q_PD3>)
+		, Out( diff( <E1, sigma1>, <E3, sigma3> ))
+	]
+
+
+lemma diff_signatures_no_verify: exists-trace
+"	Ex #t1 #t2 #t3 .
+		Issuer_Init() @ t1
+		& CreateSigmas() @ t2
+		& Diff_Sigs() @ t3
+		& #t1<#t2
+		& #t2<#t3
+		
+		//we had no key reveal
+		& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+		
+		//restrict rules to only run once in a trace
+		& (All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+"
+
+end
+

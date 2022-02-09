@@ -1,0 +1,313 @@
+#!/usr/bin/python
+
+import sys
+import re
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+
+maxPriority = 101  # Maximum priority is 100
+
+# List of ranks
+rank = []
+for i in range(0, maxPriority):
+  rank.append([])
+
+## SOURCES LEMMAS
+if re.match('^GUTI', lemma):
+  for line in lines:
+    num = line.split(':')[0]
+
+    if re.match('.*last.*', line): rank[100].append(num)
+    elif re.match('.*\<\'MRU\',.*', line): rank[95].append(num)
+    elif re.match('.*RcvS\(.*\<\'ho\_req\',.*', line): rank[90].append(num)
+    else: rank[20].append(num)
+
+## HELPER LEMMAS
+elif re.match('^PDU', lemma):
+
+  # PDU origin
+  if (lemma == 'PDUorigin'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*last.*', line): rank[100].append(num)
+      elif re.match('.*PDU\_Session.*', line): rank[95].append(num)
+      else: rank[20].append(num)
+
+  # PDU arguments constant
+  if (lemma == 'PDUargsconstant'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*CreatePDUSession.*', line): rank[95].append(num)
+      else: rank[20].append(num)
+
+  # PDU identifier unique
+  if (lemma == 'PDUidunique'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*CreatePDUSession.*', line): rank[95].append(num)
+      else: rank[20].append(num)
+
+elif re.match('^Value', lemma):
+
+  # Value origin
+  if (lemma == 'ValueOrigin'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*last.*', line): rank[100].append(num)
+      elif re.match('.*St\_.\_CN\(.*', line): rank[95].append(num)
+      else: rank[20].append(num)
+
+  # Value reset
+  if (lemma == 'ValueReset'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*last.*', line): rank[100].append(num)
+      elif re.match('.*St\_.\_UE\(.*', line): rank[95].append(num)
+      else: rank[20].append(num)
+
+## EXECUTABILITY LEMMAS
+elif re.match('^executability\_', lemma):
+  for line in lines:
+    num = line.split(':')[0]
+
+    if re.match('.*Done\( .*', line): rank[100].append(num)
+    elif re.match('.*SessionHandover\( .*', line): rank[100].append(num)
+    elif re.match('.*Init.*', line): rank[99].append(num)
+    elif re.match('.*!NG.*', line): rank[98].append(num)
+    elif re.match('.*!UE.*', line): rank[97].append(num)
+    elif re.match('.*!N2.*', line): rank[96].append(num)
+    elif re.match('.*!CN.*', line): rank[96].append(num)
+    elif re.match('.*!HSS.*', line): rank[96].append(num)
+    elif re.match('.*!KU\( \~.?RAN\_ID.*', line): rank[0].append(num)
+    elif re.match('.*St\_.*\_CN.*\( .*', line): rank[93].append(num)
+    elif re.match('.*St\_.*\_UE.*\( .*', line): rank[92].append(num)
+    elif re.match('.*St\_.*\_.RAN.*\( .*', line): rank[91].append(num)
+    elif re.match('.*CreateValues.*ResetValues.*', line): rank[94].append(num)
+    elif re.match('.*CreateValues.*', line): rank[95].append(num)
+    elif re.match('.*CreatePDUSession\( .*ID\_SRAN.*', line): rank[80].append(num)
+    elif re.match('.*CreatePDUSession\( .*ID\..*', line): rank[80].append(num)
+    elif re.match('.*CreatePDUSession\( .*', line): rank[94].append(num)
+    elif re.match('.*RcvS\( .*', line): rank[90].append(num)
+    elif re.match('.*!KU\( senc.*', line): rank[80].append(num)
+    elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( \~SUPI.*', line): rank[83].append(num)
+    elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[84].append(num)
+    elif re.match('.*PDU\_Session.*', line): rank[89].append(num)
+    else: rank[20].append(num)
+
+## AGREEMENT LEMMAS
+elif re.match('^injectiveagreement\_', lemma):
+
+  # Injective agreement of K_AMF (UE -> CN)
+  if (lemma == 'injectiveagreement_ue_cn_k_amf'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit', line): rank[100].append(num)
+      elif re.match('.*St\_1\_CN\(.*\_OLD.*', line): rank[60].append(num)
+      elif re.match('.*St\_1\_CN\(.*\~T?RAN.*', line): rank[96].append(num)
+      elif re.match('.*St\_1\_UE\(.*KDF.*', line): rank[99].append(num)
+      elif re.match('.*St\_1\_UE\(.*', line): rank[90].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SUPI.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SEAF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_cmd\',.*\'0\'.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*', line): rank[50].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( KDF\(KDF\(\~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( senc\(\<\'ho\_cmd\'.*\'0\'.*', line): rank[90].append(num)
+      else: rank[20].append(num)
+
+  # Injective agreement of K_AMF (CN -> UE)
+  elif (lemma == 'injectiveagreement_cn_ue_k_amf'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit', line): rank[100].append(num)
+      elif re.match('.*St\_.\_CN\(.*\_OLD.*', line): rank[60].append(num)
+      elif re.match('.*St\_.\_CN\(.*\~T?RAN.*', line): rank[97].append(num)
+      elif re.match('.*St\_.\_UE\(.*KDF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SUPI.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SEAF.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req.*\'0\'.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_cmd\',.*\'0\'.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*', line): rank[50].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( KDF\(KDF\(\~K\_SEAF.*', line): rank[99].append(num)
+      elif re.match('.*!KU\( senc\(\'registration\_comp.*SEAF.*', line): rank[90].append(num)
+      else: rank[20].append(num)
+
+  # Injective agreement of K_gNB_star (UE -> T-RAN)
+  elif (lemma == 'injectiveagreement_ue_tran_k_gnb_star'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit', line): rank[100].append(num)
+      elif re.match('.*St\_.\_TRAN*\(.*', line): rank[97].append(num)
+      elif re.match('.*St\_.\_CN*\(.*KDF.*', line): rank[99].append(num)
+      elif re.match('.*St\_.\_CN*\(.*\~T?RAN.*', line): rank[90].append(num)
+      elif re.match('.*St\_.\_UE*\(.*KDF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SUPI.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SEAF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*CN\_ID,.*\<\'ho\_req\',.*NH.*', line): rank[99].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req.*\'0\'.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_cmd\',.*\'0\'.*', line): rank[85].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\',.*KDF.*', line): rank[99].append(num)
+      elif re.match('.*RcvS\(.*', line): rank[50].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[100].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[98].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[89].append(num)
+      else: rank[20].append(num)
+
+  # Injective agreement of K_gNB_star (T-RAN -> UE)
+  elif (lemma == 'injectiveagreement_tran_ue_k_gnb_star'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Commit', line): rank[100].append(num)
+      elif re.match('.*St\_.\_TRAN*\(.*', line): rank[97].append(num)
+      elif re.match('.*St\_.\_CN*\(.*KDF.*', line): rank[99].append(num)
+      elif re.match('.*St\_.\_CN*\(.*\~T?RAN.*', line): rank[90].append(num)
+      elif re.match('.*St\_.\_UE*\(.*KDF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SUPI.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\'.*SEAF.*', line): rank[95].append(num)
+      elif re.match('.*RcvS\(.*CN\_ID,.*\<\'ho\_req\',.*NH.*', line): rank[99].append(num)
+      elif re.match('.*RcvS\(.*\<\'ho\_req\',.*KDF.*', line): rank[99].append(num)
+      elif re.match('.*RcvS\(.*', line): rank[50].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[100].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[98].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[89].append(num)
+      else: rank[20].append(num)
+
+## SECRECY LEMMAS
+elif re.match('^secret\_', lemma):
+
+  if (lemma == 'secret_supi'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret.*', line): rank[100].append(num)
+      elif re.match('.*St\_.\_.*\(.*0x01.*', line): rank[100].append(num)
+      elif re.match('.*\_OLD.*', line): rank[20].append(num)
+      elif re.match('.*St\_.\_CN\(.*\~SUPI.*', line): rank[100].append(num)
+      elif re.match('.*St\_9\_CN\(.*', line): rank[100].append(num)
+      elif re.match('.*St\_1\_CN\(.*\.2.*', line): rank[20].append(num)
+      elif re.match('.*St\_1\_CN\(.*', line): rank[95].append(num)
+      elif re.match('.*!KU\( \~SUPI.*', line): rank[90].append(num)
+      elif re.match('.*RcvS\( .*\~SUPI.*', line): rank[96].append(num)
+      elif re.match('.*RcvS\( .*\~K_SEAF.*', line): rank[96].append(num)
+      elif re.match('.*!KU\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*CreatePDUSession\( \~sk\_HN.*', line): rank[100].append(num)
+      else: rank[20].append(num)
+
+  elif (lemma == 'secret_k_seaf'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret.*', line): rank[100].append(num)
+      elif re.match('.*St\_.\_CN\(.*\_OLD.*', line): rank[20].append(num)
+      elif re.match('.*St\_9\_CN\(.*', line): rank[95].append(num)
+      elif re.match('.*St\_1\_CN\(.*0x01.*', line): rank[96].append(num)
+      elif re.match('.*St\_1\_CN\(.*\~T?RAN\.*', line): rank[95].append(num)
+      elif re.match('.*St\_1\_CN\(.*', line): rank[90].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[90].append(num)
+      elif re.match('.*RcvS\( .*\~K\_SEAF.*', line): rank[94].append(num)
+      else: rank[20].append(num)
+
+  elif (lemma == 'secret_k_amf'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret.*', line): rank[100].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[99].append(num)
+      elif re.match('.*SendSUCI.*', line): rank[95].append(num)
+      elif re.match('.*St\_.\_.*\(.*0x01.*', line): rank[97].append(num)
+      elif re.match('.*St\_.\_.*\(.* r,.*', line): rank[96].append(num)
+      elif re.match('.*\_OLD.*', line): rank[20].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( \~SUPI.*', line): rank[95].append(num)
+      elif re.match('.*St\_1\_CN\(.*AMF.*SEAF.*', line): rank[97].append(num)
+      elif re.match('.*St\_1\_CN\(.*SUPI,.*', line): rank[97].append(num)
+      elif re.match('.*St\_9\_CN\(.*', line): rank[98].append(num)
+      elif re.match('.*St\_1\_..\(.*KDF.*', line): rank[96].append(num)
+      elif re.match('.*St\_1\_CN\(.*', line): rank[90].append(num)
+      elif re.match('.*RcvS\( .*\~K\_SEAF.*', line): rank[96].append(num)
+      elif re.match('.*RcvS\( .*\~SUPI.*', line): rank[96].append(num)
+      elif re.match('.*!KU\( senc.*', line): rank[88].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[96].append(num)
+      elif re.match('.*!KU\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*CreatePDUSession\( \~sk\_HN.*', line): rank[100].append(num)
+      else: rank[20].append(num)
+
+  elif (lemma == 'secret_k_gnb'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret.*', line): rank[100].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[99].append(num)
+      elif re.match('.*\_OLD.*', line): rank[20].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( \~SUPI.*', line): rank[95].append(num)
+      elif re.match('.*SendSUCI.*', line): rank[95].append(num)
+      elif re.match('.*St\_.\_.*\(.*MAX.*', line): rank[97].append(num)
+      elif re.match('.*St\_1\_CN\(.*SUPI,.*', line): rank[97].append(num)
+      elif re.match('.*St\_1\_CN\(.*', line): rank[90].append(num)
+      elif re.match('.*St\_9\_CN\(.*', line): rank[98].append(num)
+      elif re.match('.*RcvS\( .*\~K\_SEAF.*', line): rank[96].append(num)
+      elif re.match('.*RcvS\( .*\~SUPI.*', line): rank[96].append(num)
+      elif re.match('.*!KU\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*CreatePDUSession\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*!KU\( senc\(\<\'ho\_cmd\'.*', line): rank[20].append(num)
+      elif re.match('.*!KU\( senc.*', line): rank[88].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[96].append(num)
+      else: rank[20].append(num)
+
+  elif (lemma == 'secret_k_gnb_star'):
+    for line in lines:
+      num = line.split(':')[0]
+
+      if re.match('.*Secret.*', line): rank[100].append(num)
+      elif re.match('.*Bind.*', line): rank[98].append(num)
+      elif re.match('.*KeyDerived\( .*', line): rank[99].append(num)
+      elif re.match('.*\_OLD.*', line): rank[20].append(num)
+      elif re.match('.*!KU\( \~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( \~SUPI.*', line): rank[95].append(num)
+      elif re.match('.*SendSUCI.*', line): rank[95].append(num)
+      elif re.match('.*St\_.\_.*\(.*MAX.*', line): rank[97].append(num)
+      elif re.match('.*St\_.\_.*\(.*0x01.*', line): rank[97].append(num)
+      elif re.match('.*St\_1\_CN\(.*SUPI,.*', line): rank[97].append(num)
+      elif re.match('.*St\_1\_CN\(.*KDF.*', line): rank[92].append(num)
+      elif re.match('.*St\_1\_CN\(.*', line): rank[90].append(num)
+      elif re.match('.*St\_1\_UE\(.*KDF.*', line): rank[97].append(num)
+      elif re.match('.*St\_9\_CN\(.*', line): rank[98].append(num)
+      elif re.match('.*RcvS\( .*\~K\_SEAF.*', line): rank[96].append(num)
+      elif re.match('.*RcvS\( .*\~SUPI.*', line): rank[96].append(num)
+      elif re.match('.*!KU\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*CreatePDUSession\( \~sk\_HN.*', line): rank[100].append(num)
+      elif re.match('.*!KU\( senc.*', line): rank[80].append(num)
+      elif re.match('.*!KU\( senc\(\<\'ho\_cmd\'.*', line): rank[80].append(num)
+      elif re.match('.*!KU\( senc.*', line): rank[88].append(num)
+      elif re.match('.*!KU\( KDF\(\~K\_SEAF.*', line): rank[97].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF.*KDF\(KDF.*', line): rank[94].append(num)
+      elif re.match('.*!KU\( .*KDF\(KDF\(\~K\_SEAF.*', line): rank[96].append(num)
+      else: rank[20].append(num)
+
+## UNEXPECTED LEMMAS
+else:
+  print "Unexpected lemma: {}".format(lemma)
+  exit(0);
+
+for goalList in reversed(rank):
+  for goal in goalList:
+    sys.stderr.write(goal)
+    print goal

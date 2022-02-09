@@ -8,6 +8,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
 
@@ -227,8 +229,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/Tutorial.spthy
@@ -237,7 +237,7 @@ analyzing: examples/Tutorial.spthy
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.112404158s
+  processing time: 0.148319183s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -251,7 +251,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.112404158s
+  processing time: 0.148319183s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

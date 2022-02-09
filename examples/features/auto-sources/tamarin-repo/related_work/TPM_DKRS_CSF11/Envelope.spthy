@@ -1,0 +1,295 @@
+theory TPM_Envelope begin
+
+/*
+  Protocol: The Envelope protocol modeled according to [1]
+  Modeler: Simon Meier
+  Date:    September 2012
+  Status:  Working
+
+  [1] Stephanie Delaune, Steve Kremer, Mark D. Ryan, Graham Steel, "Formal
+  Analysis of Protocols Based on TPM State Registers," csf, pp.66-80, 2011
+  IEEE 24th Computer Security Foundations Symposium, 2011.
+
+  Note that this model can also be verified for an arbitrary number of
+  reboots. This is an open problem in [1]. The verification relies on the
+  construction that we track all writes to the PCR-fact using the additional
+  PCR_Write-fact. This allows us then to descend in the hash chain by solving
+  PCR_Write-premises.
+
+  Note also that verification without a reboot takes 19 seconds on an Intel i7
+  Quad Core laptop with 4GB RAM. This is two orders of magnitude faster than
+  the time reported for [1]; 35min according to
+  http://www.lsv.ens-cachan.fr/~delaune/TPM-PCR/.
+
+  The verification with reboot takes 75 seconds on this Intel i7 laptop. The
+  key reason why both of these times are so high is that the heuristic has
+  trouble discerning between the useful looping goals and the useless ones. A
+  manual proof can be much shorter than the one automatically produced.
+  Investigating a better heuristic is future work.
+*/
+
+builtins: signing, asymmetric-encryption, hashing
+
+// TPM platform configuration register (PCR) model
+// Here, we model only one PCR. Modelling multiple PCR's can be done by
+// parametrizing their facts on an additional term used to identify them.
+rule PCR_Init:
+    [ Fr(~aik)             // Authentication identity key
+    ]
+  --[
+      PCR_Init()           // Used in property to ensure at most one initialization
+    , PCR_Write('pcr0')
+    ]->
+    [ PCR('pcr0')          // the initial PCR value is 'pcr0'
+    , PCR_Write('pcr0')    // We also track the writes.
+    , !AIK(~aik)           // the auth. id. key is persistent
+    , Out(pk(~aik))        // publish the public key of the auth. id. key
+    ]
+
+// reset the PCR to 'pcr0'. The proof goes also through with reboot, but takes
+// considerably longer: about 1m 20sec on my i7 laptop. However, this is only
+// a problem with the heuristic. The interactively constructed proof given
+// below requires only 28 steps and 0.5 seconds to check.
+/*
+rule PCR_Reboot:
+     [ PCR(x)
+     , PCR_Write(x)
+     ]
+   --[ PCR_Write('pcr0')
+     ]->
+     [ PCR_Write('pcr0')
+     , PCR('pcr0')
+     ]
+*/
+
+// Extend the hash-chain in the PCR
+rule PCR_Extend:
+    [ PCR_Write(x)       // Get write access
+    , PCR(x)             //
+    , In(y)              // The adversary can present any value.
+    ]
+  --[ PCR_Write(h(x,y))
+    ]->
+    [ PCR(h(x,y))
+    , PCR_Write(h(x,y))
+    ]
+
+// Certify a key together with the value it is locked to.
+rule PCR_CertKey:
+    [ !AIK(aik)
+    , !KeyTable(lock, sk)
+    ]
+  --[ ]->
+    [ Out(sign{'certkey', lock, pk(sk)}aik)
+    ]
+
+// Quote the current value of the PCR
+rule PCR_Quote:
+    [ PCR(x)
+    , !AIK(aik)
+    ]
+  --[ PCR_Read(x)
+    ]->
+    [ Out(sign{'certpcr', x}aik)
+    , PCR(x)
+    ]
+
+// Decrypt a message encrypted with a key locked to the CURRENT value of the
+// PCR.
+rule PCR_Unbind:
+    [ PCR(x)
+    , !KeyTable(x, sk)
+    , In( aenc{m}pk(sk) )
+    ]
+  --[ PCR_Unbind(x,sk,m)
+    , PCR_Read(x)
+    ]->
+    [ PCR(x)
+    , Out(m) ]
+
+// Alice
+
+// Alice starts by communicating with Bob's PCR to setup a unique root ~n in
+// the hash-chain for the following envelope protocol.
+rule Alice1:
+    [ Fr(~n)
+    , PCR(x)
+    , PCR_Write(x)
+    ]
+  --[ PCR_Write(h(x,~n))
+    ]->
+    [ PCR(h(x,~n))
+    , PCR_Write(h(x,~n))
+    , Alice1(~n)
+    ]
+
+// Bob sends Alice a certified key locked to the value
+//   h(h('pcr0',n),'obtain')
+// to obtain a secret in an envelope. Note that we only allow for one session
+// per reboot as [1].
+rule Alice2:
+    [ Alice1(n)
+    , Fr(~s)
+    , !AIK(aik)
+    , In(sign{'certkey', h(h('pcr0',n),'obtain'), pk}aik)
+    ]
+  --[ Secret(~s)
+    ]->
+    [ Out(aenc{~s}pk)
+    , Alice2(n,~s)
+    ]
+
+// Bob can use the PCR to prove to Alice that he didn't access the secret.
+rule Alice3:
+    [ Alice2(n,s)
+    , !AIK(aik)
+    , In(sign{'certpcr', h(h('pcr0',n),'deny')}aik)
+    ]
+  --[ Denied(s) ]->
+    []
+
+// We use the adversary to simulate Bob. He uses ordinary message deduction
+// and it can create keys locked to specific values of the PCR.
+rule CreateLockedKey:
+    [ PCR(x)
+    , Fr(~sk)
+    , In(lock) // multiple keys can be locked to the same PCR value.
+    ]
+  --[ PCR_Read(x)
+    ]->
+    [ PCR(x)
+    , !KeyTable(h(x,lock), ~sk)
+    , Out(pk(~sk))
+    ]
+
+// Axioms; i.e., restrictions on the traces of interest
+///////////////////////////////////////////////////////
+
+restriction PCR_Init_unique:
+  " All #i #j. PCR_Init() @ i & PCR_Init() @ j ==> #i = #j "
+
+// Security Properties
+//////////////////////
+
+// Characterizing the values extractible via unbinding.
+lemma types [sources]:
+    // Values created by the PCR_Unbind rule
+  " (All m d1 d2 #i. PCR_Unbind(d1, d2, m) @ i ==>
+        (Ex #j. KU(m) @ j & j < i)
+      | (Ex #j. Secret(m) @ j)
+    )
+  "
+
+// Every read value was written once. This allows us to reason backwards and
+// ensure that the PCR value becomes smaller.
+lemma PCR_Write_charn [reuse, use_induction]:
+    // Values read from the PCR have been written to it beforehand.
+  " (All x #i. PCR_Read(x) @ i ==>
+      (Ex #j. PCR_Write(x) @ j)
+    )
+  "
+
+// The desired security property: the adversary (Bob) cannot know a secret to
+// which he officially denied having access.
+lemma Secret_and_Denied_exclusive:
+   " not(Ex s #i #j #k. Secret(s) @ i & Denied(s) @ j & K(s) @ k)"
+/* Note that the 28 steps of the proof below suffices to justify this lemma
+   even with the reboot rule enabled. The heuristic is stymied by the looping
+   PCR facts and acts too conservatively, thereby using significantly more
+   proof steps (7136) and time (74 seconds).
+*/
+/*
+simplify
+solve( Alice1( n ) ▶₀ #i )
+  case Alice1
+  solve( !AIK( aik ) ▶₂ #i )
+    case PCR_Init
+    solve( Alice2( n.1, ~s ) ▶₀ #j )
+      case Alice2
+      solve( !AIK( aik.1 ) ▶₁ #j )
+        case PCR_Init
+        solve( !KU( sign(<'certkey',
+                          h(<h(<'pcr0', ~n>), 'obtain'>), pk>,
+                         ~aik)
+               ) @ #vk )
+          case PCR_CertKey
+          solve( !KU( sign(<'certpcr',
+                            h(<h(<'pcr0', ~n>), 'deny'>)>,
+                           ~aik)
+                 ) @ #vk.1 )
+            case PCR_Quote
+            solve( PCR_Write( h(<h(<'pcr0', ~n>),
+                                 'deny'>)
+                   ) @ #j.2 )
+              case PCR_Extend
+              solve( !KU( ~s ) @ #vk.2 )
+                case Alice2
+                by solve( !KU( ~sk ) @ #vk.5 )
+              next
+                case PCR_Unbind
+                solve( !KU( aenc(~s, pk(~sk.1)) ) @ #vk.5 )
+                  case Alice2
+                  solve( PCR_Write( h(<h(<'pcr0', ~n>),
+                                       'obtain'>)
+                         ) @ #j.3 )
+                    case PCR_Extend
+                    solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.4 )
+                      case Alice1
+                      solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.3 )
+                        case Alice1
+                        solve( PCR_Write( 'pcr0' ) ▶₂ #vr )
+                          case PCR_Init
+                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                            case Alice1
+                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                              case PCR_Extend
+                              by solve( !KU( ~n ) @ #vk.6 )
+                            qed
+                          next
+                            case PCR_Extend
+                            by solve( !KU( ~n ) @ #vk.6 )
+                          qed
+                        next
+                          case PCR_Reboot
+                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                            case Alice1
+                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                              case PCR_Extend
+                              by solve( !KU( ~n ) @ #vk.6 )
+                            qed
+                          next
+                            case PCR_Extend
+                            by solve( !KU( ~n ) @ #vk.6 )
+                          qed
+                        qed
+                      next
+                        case PCR_Extend
+                        by solve( !KU( ~n ) @ #vk.6 )
+                      qed
+                    next
+                      case PCR_Extend
+                      by solve( !KU( ~n ) @ #vk.6 )
+                    qed
+                  qed
+                next
+                  case caenc
+                  by contradiction
+                qed
+              qed
+            qed
+          next
+            case csign
+            by solve( !KU( ~aik ) @ #vk.5 )
+          qed
+        next
+          case csign
+          by solve( !KU( ~aik ) @ #vk.4 )
+        qed
+      qed
+    qed
+  qed
+qed
+*/
+
+
+end

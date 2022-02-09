@@ -1,0 +1,20 @@
+free attacker_channel:channel.
+free test:bitstring.
+type skey.
+fun bij(bitstring):bitstring.
+fun senc(bitstring,skey):bitstring.
+fun unbij(bitstring):bitstring.
+equation forall x:bitstring;  bij(unbij(x)) = x.
+event Received(bitstring).
+event Secret(bitstring).
+reduc forall a:bitstring,b:bitstring; fst((a,b))=a.
+reduc forall a:bitstring,b:bitstring; snd((a,b))=b.
+reduc forall m:bitstring,sk:skey; sdec(senc(m,sk),sk) = m.
+process
+    new sk:skey;
+      (new a:bitstring;
+       event Secret( a );
+       out(attacker_channel,senc((a, test), sk)))
+    | (in(attacker_channel,m:bitstring);
+       if snd(sdec(m, sk))=test then 
+           (event Received( fst(sdec(m, sk)) )))

@@ -44,7 +44,13 @@ let annotate_locks (tree:annotated_btree) =
 let rec annotate_each_closest_unlock t annotation tree=
  match tree with  
     Empty -> Empty
-  | Node(Unlock(t),l,r) -> Node(AnnotatedUnlock(t,annotation),l,r)
+  | Node(Unlock(t'),l,r) ->
+          if Term.compare t t' = 0 
+          then (* same term including strings inside variable names *)
+              Node(AnnotatedUnlock(t,annotation),l,r)
+          else 
+             Node(Unlock(t'),(annotate_each_closest_unlock t annotation l),
+                    (annotate_each_closest_unlock t annotation r))
   | Node(Rep,l,r) -> raise ( ProcessNotWellformed "Replication underneath lock")
   | Node(Par,l,r) -> raise (ProcessNotWellformed "Parallel underneath lock")
   | Node(y,l,r) -> Node(y,(annotate_each_closest_unlock t annotation l),

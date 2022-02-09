@@ -1,0 +1,14 @@
+theory LetBlockCharlyOne
+
+begin
+
+builtins: diffie-hellman
+functions: hash/1
+
+let P = 
+   new a; 
+   let h='g'^a in
+   out(h)
+
+P
+end

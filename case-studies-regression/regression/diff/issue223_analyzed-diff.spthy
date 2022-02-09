@@ -11,6 +11,8 @@ equations:
     open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Attack3:
    [ Fr( ~ni1 ), Fr( ~rnd1 ), Fr( ~ltkV1 ) ]
   -->
@@ -3236,8 +3238,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/diff/issue223.spthy
@@ -3246,7 +3246,7 @@ analyzing: examples/regression/diff/issue223.spthy
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 2.719459377s
+  processing time: 3.950203264s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ------------------------------------------------------------------------------
@@ -3257,7 +3257,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 2.719459377s
+  processing time: 3.950203264s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

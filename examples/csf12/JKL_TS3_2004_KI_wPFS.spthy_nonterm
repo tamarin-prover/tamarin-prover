@@ -1,7 +1,7 @@
 theory JKL_TS3_2004_KI_wPFS
 begin
 
-builtin: hashing, diffie-hellman
+builtins: hashing, diffie-hellman
 
 section{* Jeong, Katz, Lee : TS3 (2004) *}
 /*

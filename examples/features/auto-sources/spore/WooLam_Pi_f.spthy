@@ -1,0 +1,185 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             April 2020
+  Time:                 ?
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/wooLamPif.html)
+
+  Woo and Lam Pi f
+
+  A, B, S :   	principal
+  shared :   	(principal, principal):key
+  Nb :   	nonce
+
+  1.   	A 	-> 	B 	:   	A
+  2.   	B 	-> 	A 	:   	Nb
+  3.   	A 	-> 	B 	:   	{A,B,Nb}shared(A, S)
+  4.  	B 	-> 	S 	:   	{A, B, Nb, {A, B, Nb}shared(A, S)}shared(B, S)
+  5.   	S 	-> 	B 	:   	{A, B, Nb}shared(B, S)
+
+  shared(A, S) is a long term symmetric key shared by A and S.
+  Initially, A only knowns shared(A, S) and the name of B,
+  B only knowns shared(B, S)
+  and S knowns all shared keys,
+  i.e. S given any principal's name X, S knowns shared(X, S),
+  or in other terms, S knows the ``function'' shared.
+
+  Woo and Lam give the following definition of correctness for this protocol:
+
+  whenever the principal B finishes the execution of the protocol,
+  the initiator of the protocol execution is in fact the principal A claimed in message 1.
+
+  We model a variant with tags, and consider only one server.
+
+*/
+
+theory WooLamPi_f
+begin
+
+builtins: symmetric-encryption
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[ KeyGen($X) ]->
+  [ !Ltk(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !Ltk(~sk,$A)]
+  --[ Reveal($A)]->
+    [ Out(~sk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1..   	A 	-> 	B 	:   	A
+rule A_to_B_1:
+  [ !Ltk(~kas, $A) ]
+ --[ ]->
+  [
+    Out($A)
+  , StateA1($A, $B, ~kas)
+  ]
+
+// 2..   	B 	-> 	A 	:   	Nb
+rule B_to_A:
+  [
+    In(a)
+  , Fr(~nb)
+  , !Ltk(~kbs, $B)
+  ]
+ --[ Running_B(a, $B, <'A', 'B', ~nb>) ]->
+ [
+    Out(~nb)
+  , StateB1(a, $B, ~kbs, ~nb)
+ ]
+
+// 3..   	A 	-> 	B 	:   	{A,B,Nb}shared(A, S)
+rule A_to_B_2:
+  [
+    In(nb)
+  , StateA1($A, $B, ~kas)
+  , !Ltk(~kas, $A)
+  ]
+ --[ Running_A($A, $B, <'A', 'B', nb>)
+   , Secret($A,$B, ~kas) ]->
+  [
+   Out(senc(<'1', $A, $B, nb>,~kas))
+  ]
+
+// 4..   	B 	-> 	S 	:   	{A, B, Nb, {A, B, Nb}shared(A, S)}shared(B, S)
+rule B_to_S:
+  [
+    In(msg)
+  , StateB1(a, $B, ~kbs, ~nb)
+  , !Ltk(~kbs, $B)
+  ]
+ --[ Secret(a,$B, ~kbs) ]->
+ [
+    Out(senc(<'2', a, $B, ~nb, msg>, ~kbs))
+  , StateB2(a, $B, ~kbs, ~nb, msg)
+ ]
+
+// 5..   	S 	-> 	B 	:   	{A, B, Nb}shared(B, S)   Send
+rule S_to_B:
+  let msg1 = senc(<'1', a, b, nb>,~kas)
+      msg2 = senc(<'2', a, b, nb, msg1>, ~kbs)
+  in
+  [
+    In(msg2)
+  , !Ltk(~kas, a)
+  , !Ltk(~kbs, b)
+  ]
+ --[ ]->
+  [
+  Out(senc(<'3', a, b, nb>,~kbs))
+  ]
+
+// 5..   	S 	-> 	B 	:   	{A, B, Nb}shared(B, S)   Receive
+rule B_from_S:
+  [
+    In(senc(<'3', a, $B,~nb>,~kbs))
+  , StateB2(a, $B, ~kbs, ~nb, msg)
+  , !Ltk(~kbs, $B)
+  ]
+ --[ Commit_B(a, $B, <'A', 'B', ~nb>) ]->
+  []
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B t #i #j #k.
+   Commit_B(A,B,t)@#i
+  & Running_A(A,B,t)@#j & #j<#i
+  & Running_B(A,B,t)@#k & #k<#j
+  & not(Ex #r1. Reveal(A)@#r1)
+  & not(Ex #r2. Reveal(B)@#r2)
+ "
+
+// check the secrecy of a secret x protected by the long-term key of A and B
+lemma Secrecy:
+ "
+   not(
+     Ex A B m #i .
+       Secret(A, B, m)@ #i
+       & (Ex #r. K(m) @ #r)
+       & not(Ex #r. Reveal(B) @ #r)
+       & not(Ex #r. Reveal(A) @ #r)
+   )
+ "
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                           & not (#i2 = #i)))
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma agreement_B:
+ "All A B t #i.
+   Commit_B(A,B,t) @i
+   ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+             | (Ex #r. Reveal(A)@r)
+             | (Ex #r. Reveal(B)@r)"
+
+
+end

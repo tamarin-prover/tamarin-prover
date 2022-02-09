@@ -1,0 +1,206 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             March 2020
+  Time:                ?
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/andrewBAN2.html)
+
+  Ban Concrete Andrew Secure RPC Protocol
+
+  A, B :    principal
+  Kab, K'ab :    symkey
+  Na, Nb, N'b :    nonce
+  succ :    nonce -> nonce
+
+  1.    A  ->  B  :    A, Na
+  2.    B  ->  A  :    {Na, K'ab}Kab  SendNsk(xna, ~nsk, xsk, $A, $B)
+  3.    A  ->  B  :    {Na}K'ab       ReturnNsk(~na, xnsk, ~sk, $A, $B)
+  4.    B  ->  A  :    Nb             SendNb(~nb, xna, ~nsk, ~sk, $A,$B)  ReceiveNb(xnb)
+
+  The protocol must guaranty the secrecy of the new shared key K'ab:
+    in every session, the value of K'ab must be known only by the participants playing the roles of A and B.
+
+  The protocol must guaranty the authenticity of K'ab:
+    in every session, on reception of message 4,
+    A must be ensured that the key K'ab in the message has been created by A in the same session.
+
+
+  with 2 parallel runs where the intruder I impersonates B.
+  i.1.      A  ->  I(B)  :    A, Na
+  ii.1.    I(B)  ->  A  :    B, Na
+  ii.2.    A  ->  I(B)  :    {Na, K'ab}Kab
+  i.2.      I(B)  ->  A  :    {Na, K'ab}Kab
+  i.3.      A  ->  I(B)  :    {Na}K'ab
+  ii.3.    I(B)  ->  A  :    {Na}K'ab
+  i.4.      I(B)  ->  A  :    Ni
+  ii.4.    A  ->  I(B)  :    Nb
+
+*/
+
+theory BanConcreteAndrewSecureRPC
+begin
+
+builtins: symmetric-encryption
+
+functions: succ/1, pred/1
+
+equations: pred(succ(x))=x
+
+
+// ==================
+// == Setup rules ===
+// ==================
+
+// A and B already share a long-term symmetric key
+rule Create_Key:
+ [
+  Fr(~sk)
+ ]
+ --[Secret($A, $B, ~sk)]->
+ [
+   !Key($A,$B,~sk),
+   !Key($B,$A,~sk)
+ ]
+
+// Participants can be dynamically currupted
+rule Reveal_sk:
+ [
+  !Key($A,$B,~sk)
+ ]
+ --[ Reveal($A, $B), Reveal($B, $A) ]->
+ [ Out(~sk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1.    A  ->  B  :    A, Na
+rule A_1:
+ [
+   !Key($A,$B,~sk)
+  ,Fr(~na)
+ ]
+ --[
+   Running_A($A,$B,<'A','B',~sk,~na>)
+   ]->
+ [
+  Out( <'1', $A, ~na > )
+  ,StateASend($A,$B,~sk,~na)
+ ]
+
+// 2.    B  ->  A  :    {Na, K'ab}Kab
+rule B_1: [
+   In(<'1', x, na >)
+  ,!Key(x,$B,~sk)
+  ,Fr(~kabp)
+ ]
+ --[ Secret(x, $B, ~kabp), Running_B(x,$B,<'A','B',~sk,~kabp>) ]->
+ [
+  Out( senc(<'2',na,~kabp>, ~sk) )
+  ,StateB(x,$B,~sk,na,~kabp)
+ ]
+
+// 3.    A  ->  B  :    {Na}K'ab
+rule A_2:
+ let nnb = succ(xnb) in
+ [
+  !Key($A,$B,~sk)
+  ,StateASend($A,$B,~sk,~na)
+  ,In(senc(<'2',~na,kabp>, ~sk))
+ ]
+ --[ Secret($A, $B, kabp), Commit_A($A,$B,<'A','B',~sk,kabp>) ]->
+ [
+  Out( senc(<'3',~na>, kabp) )
+  ,StateAReceive($A,$B,~sk,~na,kabp)
+ ]
+
+// 4.    B  ->  A  :    Nb
+rule B_2:
+ [
+  StateB(x,$B,~sk,na,~kabp),
+  In( senc(<'3',na>, ~kabp) )
+  ,Fr(~nb)
+  ,!Key(x,$B,~sk)
+ ]
+ --[ Commit_B(x,$B,<'A','B',~sk,na>) ]->
+ [
+  Out( <'4', ~nb> )
+ ]
+
+// 4.    B  ->  A  :    Nb Receiving end
+rule A_3:
+ [
+   !Key($A,$B,~sk)
+  ,In( <'4', nb> )
+  ,StateAReceive($A,$B,~sk,~na,kabp)
+ ]
+ --[ ]->
+ [ ]
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// check the secrecy of the long-term key used and the newly generated session key
+lemma secrecy:
+ "
+  not(
+   Ex A B sk #i #j.
+   Secret(A, B, sk) @ #i
+   & K(sk) @ #j
+   & not(Ex #r. Reveal(A,B) @ r)
+  )
+ "
+
+// check the authenticity and freshness of the transaction from A's point of view
+lemma injectiveagreement_A:
+ "All A B t #i.
+   Commit_A(A,B,t) @i
+   ==> (Ex #j. Running_B(A,B,t) @j
+       & j < i
+       & not (Ex A2 B2 #i2. Commit_A(A2,B2,t) @i2
+                          & not (#i2 = #i)))
+             | (Ex #r. Reveal(A,B)@r)"
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+"All A B t #i.
+  Commit_B(A,B,t) @i
+  ==> (Ex #j. Running_A(A,B,t) @j
+      & j < i
+      & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Reveal(A,B)@r)"
+
+// check the authenticity of the transaction from A's point of view
+lemma noninjectiveagreement_A:
+  "All A B t #i.
+    Commit_A(A,B,t) @i
+    ==> (Ex #j. Running_B(A,B,t) @j
+        & j < i)
+              | (Ex #r. Reveal(A,B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma noninjectiveagreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j
+        & j < i)
+              | (Ex #r. Reveal(A,B)@r)"
+
+// sanity check: check if honest execution is possible
+lemma Session_key_honest_setup:
+ exists-trace
+ "
+  Ex A B t s #i #j.
+  Commit_B(A,B,t)@i
+  & Commit_A(A,B,s)@j & i<j
+  & not(Ex #r. Reveal(A,B) @ r)
+ "
+
+
+end

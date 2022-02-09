@@ -1,0 +1,1414 @@
+theory aletheaD_vot_ShHh_functional begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: adec/2, aenc/2, decp/2, encp/3, fst/1, h/1, pair/2,
+           pk/1, sg/2, snd/1, ver/2, verzkp/4, zkp/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    decp(encp(x, r, pk(sk)), sk) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    ver(sg(m, sk), pk(sk)) = m
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Setup:
+   [ !Ltk( 'S', ~skS ), Fr( ~sskD1 ), Fr( ~sskD2 ) ]
+  --[
+  Setup( ), BB_pskDs( 'BB', <'spkDSG', (pk(~sskD1)+pk(~sskD2))> ),
+  Voter( 'H1' ), Voter( 'H2' ), SecretKeyD( ~sskD1 ),
+  SecretKeyD( ~sskD2 ), Pseudonym( 'H1', pk(~sskD1) ),
+  Pseudonym( 'H2', pk(~sskD2) )
+  ]->
+   [
+   AgSt_H0( 'H1', <'D1', 'BB', $v1> ),
+   AgSt_H0( 'H2', <'D2', 'BB', $v2> ),
+   AgSt_D0( 'D1', <'H1', 'S', pk(~skS), ~sskD1> ),
+   AgSt_D0( 'D2', <'H2', 'S', pk(~skS), ~sskD2> ),
+   AgSt_A0( 'A', <'S', 'BB', pk(~skS)> ),
+   AgSt_BB0( 'BB', <'S', 'spkDSG', (pk(~sskD1)+pk(~sskD2))> ),
+   Out_A( 'BB', <'spkDSG', (pk(~sskD1)+pk(~sskD2))> ),
+   AgSt_S0( 'S', <~skS, (pk(~sskD1)+pk(~sskD2))> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_1:
+   [ AgSt_H0( $H, <$D, $BB, $v> ) ]
+  --[ Vote( $H, $v ), Send( $H, $D, $v ) ]->
+   [ AgSt_H1( $H, <$D, $BB, $v> ), Out_S( $H, $D, $v ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) D_1:
+   [ AgSt_D0( $D, <$H, $S, pkS, ~sskD> ), In_S( $H, $D, v ), Fr( ~r )
+   ]
+  -->
+   [ Out_S( $D, $H, sg(encp(v, ~r, pkS), ~sskD) ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_2:
+   [ AgSt_H1( $H, <$D, $BB, $v> ), In_S( $D, $H, b ) ]
+  --[ Comm_H_vote( $H, $S, $v ), Comm_H_ballot( $H, $S, b ) ]->
+   [ AgSt_H2( $H, <$D, $BB, $v, b> ), Out( b ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) S_1:
+   [
+   AgSt_S0( $S, <~skS, (pk(~sskDa)+pk(~sskDb))> ),
+   In( sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+   In( sg(encp(vb, rb, pk(~skS)), ~sskDb) )
+   ]
+  --[
+  Learn_S_ballot( $S, sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+  Learn_S_ballot( $S, sg(encp(vb, rb, pk(~skS)), ~sskDb) )
+  ]->
+   [
+   AgSt_S1( $S,
+            <~skS, (pk(~sskDa)+pk(~sskDb)), 
+             (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+              sg(encp(vb, rb, pk(~skS)), ~sskDb))
+            >
+   ),
+   Out_A( $S,
+          <'b', 
+           (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+            sg(encp(vb, rb, pk(~skS)), ~sskDb))
+          >
+   ),
+   Out_A( $S,
+          <'bPrime', (encp(va, ra, pk(~skS))+encp(vb, rb, pk(~skS)))>
+   ),
+   Out_A( $S, <'v', (va+vb)> ),
+   Out_A( $S,
+          <'zkp', 
+           zkp(<encp(va, ra, pk(~skS)), encp(vb, rb, pk(~skS))>, <va, vb>,
+               ~skS)
+          >
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) BB:
+   [
+   AgSt_BB0( $BB, <$S, 'spkDSG', (spkDa+spkDb)> ),
+   In_A( $S, <'b', (ba+bbb)> ),
+   In_A( $S, <'bPrime', (bPrimea+bPrimeb)> ),
+   In_A( $S, <'v', (va+vb)> ), In_A( $S, <'zkp', p> )
+   ]
+  --[
+  BB_rec( $BB, <'b', (ba+bbb)> ),
+  BB_woS( $BB, <'bPrime', (bPrimea+bPrimeb)> ),
+  BB_tal( $BB, <'v', (va+vb)> ), BB_zkp( $BB, <'zkp', p> )
+  ]->
+   [
+   Out_A( $BB, <'b', (ba+bbb)> ),
+   Out_A( $BB, <'bPrime', (bPrimea+bPrimeb)> ),
+   Out_A( $BB, <'v', (va+vb)> ), Out_A( $BB, <'zkp', p> )
+   ]
+
+  // loop breakers: [1,2,3,4]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_1:
+   [
+   AgSt_A0( $A, <$S, $BB, pkS> ),
+   In_A( $BB, <'b', (sg(bPrimea, sskDa)+sg(bPrimeb, sskDb))> ),
+   In_A( $BB, <'bPrime', (bPrimea+bPrimeb)> ),
+   In_A( $BB, <'v', (va+vb)> ), In_A( $BB, <'zkp', p> ),
+   In_A( $BB, <'spkDSG', (pk(sskDa)+pk(sskDb))> )
+   ]
+  --[
+  Learn_A_proof( $A, <'zkp', p> ),
+  Learn_A_spkDSG( $A, <'spkDSG', (pk(sskDa)+pk(sskDb))> ),
+  Learn_A_Vs( $A, <'v', (va+vb)> ),
+  Learn_A_Bs( $A, <'b', (sg(bPrimea, sskDa)+sg(bPrimeb, sskDb))> ),
+  Learn_A_bPrimes( $A, <'bPrime', (bPrimea+bPrimeb)> ),
+  VerifyA2( $A, verzkp(p, <bPrimea, bPrimeb>, <va, vb>, pkS) )
+  ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) H_3:
+   [ AgSt_H2( $H, <$D, $BB, $v, b> ), In_A( $BB, <'b', (ba+bbb)> ) ]
+  --[ Verify( $H, b, (ba+bbb) ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction OneSetup:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional:
+  exists-trace
+  "∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n A p bPrimea bPrimeb pkS
+     #o.
+    ((((((((((¬(H1 = H2)) ∧ (¬(v1 = v2))) ∧
+            (Comm_H_vote( H1, S, v1 ) @ #i)) ∧
+           (Comm_H_ballot( H1, S, b1 ) @ #i)) ∧
+          (Comm_H_vote( H2, S, v2 ) @ #j)) ∧
+         (Comm_H_ballot( H2, S, b2 ) @ #j)) ∧
+        (BB_rec( BB, <'b', (b1+b2)> ) @ #k)) ∧
+       (BB_tal( BB, <'v', (v1+v2)> ) @ #l)) ∧
+      (Verify( H1, b1, (b1+b2) ) @ #m)) ∧
+     (Verify( H2, b2, (b1+b2) ) @ #n)) ∧
+    (VerifyA2( A, verzkp(p, <bPrimea, bPrimeb>, <v1, v2>, pkS) ) @ #o)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n A p bPrimea bPrimeb pkS
+   #o.
+  (Comm_H_vote( H1, S, v1 ) @ #i) ∧
+  (Comm_H_ballot( H1, S, b1 ) @ #i) ∧
+  (Comm_H_vote( H2, S, v2 ) @ #j) ∧
+  (Comm_H_ballot( H2, S, b2 ) @ #j) ∧
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #k) ∧
+  (BB_tal( BB, <'v', (v1+v2)> ) @ #l) ∧
+  (Verify( H1, b1, (b1+b2) ) @ #m) ∧
+  (Verify( H2, b2, (b1+b2) ) @ #n) ∧
+  (VerifyA2( A, verzkp(p, <bPrimea, bPrimeb>, <v1, v2>, pkS) ) @ #o)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(v1 = v2))"
+*/
+simplify
+  case 1
+  solve( AgSt_H1( $H, <$D, $BB, $v> ) ▶₀ #i )
+    case H_1_case_1
+    solve( In_S( 'D1', 'H1', b1 ) ▶₁ #i )
+      case ChanIn_S
+      solve( AgSt_H1( $H, <$D, $BB, $v.2> ) ▶₀ #j )
+        case H_1_case_1
+        by contradiction /* from formulas */
+      next
+        case H_1_case_2
+        solve( AgSt_BB0( $BB, <$S.1, 'spkDSG', (spkDa+spkDb)> ) ▶₀ #k )
+          case Setup
+          solve( In_S( 'D2', 'H2', b2 ) ▶₁ #j )
+            case ChanIn_S
+            solve( Verify( 'H1', sg(encp(v.1, ~r, pk(~skS)), ~sskD1),
+                           (sg(encp(v.1, ~r, pk(~skS)), ~sskD1)+
+                            sg(encp(v.2, ~r.1, pk(~skS)), ~sskD2))
+                   ) @ #m )
+              case H_3
+              solve( Verify( 'H2', sg(encp(v.2, ~r.1, pk(~skS)), ~sskD2),
+                             (sg(encp(v.1, ~r, pk(~skS)), ~sskD1)+
+                              sg(encp(v.2, ~r.1, pk(~skS)), ~sskD2))
+                     ) @ #n )
+                case H_3
+                solve( AgSt_H2( 'H1',
+                                <$D, $BB, $v.3, sg(encp(v.1, ~r, pk(~skS)), ~sskD1)>
+                       ) ▶₀ #m )
+                  case H_2
+                  solve( AgSt_H2( 'H2',
+                                  <$D, $BB, $v.3, sg(encp(v.2, ~r.1, pk(~skS)), ~sskD2)>
+                         ) ▶₀ #n )
+                    case H_2
+                    solve( In_S( 'H1', 'D1', v.1 ) ▶₁ #vr.5 )
+                      case ChanIn_S
+                      solve( In_S( 'H2', 'D2', v.1 ) ▶₁ #vr.9 )
+                        case ChanIn_S
+                        solve( AgSt_BB0( 'BB', <$S.1, 'spkDSG', (spkDa+spkDb)> ) ▶₀ #l )
+                          case Setup
+                          solve( In_A( 'S',
+                                       <'b', 
+                                        (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                         sg(encp($v2, ~r.1, pk(~skS)), ~sskD2))
+                                       >
+                                 ) ▶₁ #k )
+                            case ChanIn_A_case_1
+                            solve( !KU( sg(encp($v, ~r, pk(~skS)), ~sskD1) ) @ #vk )
+                              case ChanOut_A_case_1
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_2
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_3
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_4
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_5
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_6
+                              by contradiction /* cyclic */
+                            next
+                              case ChanOut_A_case_7
+                              by contradiction /* cyclic */
+                            next
+                              case H_2_case_1
+                              solve( !KU( sg(encp($v2, ~r.1, pk(~skS)), ~sskD2) ) @ #vk.1 )
+                                case ChanOut_A_case_1
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_2
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_3
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_4
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_5
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_6
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_7
+                                by contradiction /* cyclic */
+                              next
+                                case H_2_case_1
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case H_2_case_2
+                                solve( In_A( 'S',
+                                             <'b', 
+                                              (sg(encp($x.2, ~x.3, pk(~skS)), ~x)+
+                                               sg(encp($x.4, ~x.5, pk(~skS)), ~x.1))
+                                             >
+                                       ) ▶₁ #k )
+                                  case ChanIn_A
+                                  solve( In_A( 'BB',
+                                               <'b', 
+                                                (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                                 sg(encp($v2, ~r.1, pk(~skS)), ~sskD2))
+                                               >
+                                         ) ▶₁ #m )
+                                    case ChanIn_A
+                                    solve( AgSt_A0( $A, <$S.1, $BB, pkS> ) ▶₀ #o )
+                                      case Setup
+                                      solve( In_A( 'BB',
+                                                   <'b', 
+                                                    (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                                     sg(encp($v2, ~r.1, pk(~skS)), ~sskD2))
+                                                   >
+                                             ) ▶₁ #n )
+                                        case ChanIn_A
+                                        solve( In_A( 'BB', <'spkDSG', (pk(sskDa)+pk(sskDb))>
+                                               ) ▶₅ #o )
+                                          case ChanIn_A_case_1
+                                          solve( In_A( 'BB', <'bPrime', (bPrimea.1+bPrimeb.1)>
+                                                 ) ▶₂ #o )
+                                            case ChanIn_A_case_1
+                                            solve( In_A( 'S',
+                                                         <'b', 
+                                                          (sg(encp($x.2, ~x.3, pk(~skS)), ~x)+
+                                                           sg(encp($x.4, ~x.5, pk(~skS)), ~x.1))
+                                                         >
+                                                   ) ▶₁ #k )
+                                              case ChanIn_A
+                                              solve( In_A( 'BB', <'v', ($v+$v2)> ) ▶₃ #o )
+                                                case ChanIn_A
+                                                solve( In_A( 'BB', <'zkp', p.1> ) ▶₄ #o )
+                                                  case ChanIn_A
+                                                  solve( In_A( 'BB',
+                                                               <'b', 
+                                                                (sg(bPrimea.1, ~sskD1)+
+                                                                 sg(bPrimeb.1, ~sskD2))
+                                                               >
+                                                         ) ▶₁ #o )
+                                                    case ChanIn_A
+                                                    solve( In_A( 'S',
+                                                                 <'bPrime', 
+                                                                  (encp($x, ~x.1, pk(~skS))+
+                                                                   encp($x.2, ~x.3, pk(~skS)))
+                                                                 >
+                                                           ) ▶₂ #k )
+                                                      case ChanIn_A
+                                                      solve( In_A( 'S',
+                                                                   <'bPrime', 
+                                                                    (encp($x.36, ~x.37, pk(~skS))+
+                                                                     encp($x.38, ~x.39, pk(~skS)))
+                                                                   >
+                                                             ) ▶₂ #k )
+                                                        case ChanIn_A
+                                                        solve( In_A( 'S',
+                                                                     <'bPrime', 
+                                                                      (encp($x.4, ~x.6, pk(~skS))+
+                                                                       encp($x.5, ~x.7, pk(~skS)))
+                                                                     >
+                                                               ) ▶₂ #k )
+                                                          case ChanIn_A
+                                                          solve( In_A( 'S',
+                                                                       <'bPrime', 
+                                                                        (
+                                                                         encp($x.28, ~x.29,
+                                                                              pk(~skS))+
+                                                                         encp($x.30, ~x.31,
+                                                                              pk(~skS))
+                                                                        )
+                                                                       >
+                                                                 ) ▶₂ #k )
+                                                            case ChanIn_A
+                                                            solve( In_A( 'S',
+                                                                         <'bPrime', 
+                                                                          (
+                                                                           encp($x.24, ~x.25,
+                                                                                pk(~skS))+
+                                                                           encp($x.26, ~x.27,
+                                                                                pk(~skS))
+                                                                          )
+                                                                         >
+                                                                   ) ▶₂ #k )
+                                                              case ChanIn_A
+                                                              solve( In_A( 'S', <'zkp', p> ) ▶₄ #k )
+                                                                case ChanIn_A
+                                                                solve( In_A( 'S',
+                                                                             <'bPrime', 
+                                                                              (
+                                                                               encp($x, ~x.1,
+                                                                                    pk(~skS))+
+                                                                               encp($x.2, ~x.3,
+                                                                                    pk(~skS))
+                                                                              )
+                                                                             >
+                                                                       ) ▶₂ #k )
+                                                                  case ChanIn_A_case_1
+                                                                  solve( In_A( 'S',
+                                                                               <'b', 
+                                                                                (
+                                                                                 sg(encp($x.12,
+                                                                                         ~x.13,
+                                                                                         pk(~skS)),
+                                                                                    ~x.10)+
+                                                                                 sg(encp($x.14,
+                                                                                         ~x.15,
+                                                                                         pk(~skS)),
+                                                                                    ~x.11)
+                                                                                )
+                                                                               >
+                                                                         ) ▶₁ #k )
+                                                                    case ChanIn_A
+                                                                    solve( In_A( 'S',
+                                                                                 <'bPrime', 
+                                                                                  (
+                                                                                   encp($x.10,
+                                                                                        ~x.12,
+                                                                                        pk(~skS))+
+                                                                                   encp($x.11,
+                                                                                        ~x.13,
+                                                                                        pk(~skS))
+                                                                                  )
+                                                                                 >
+                                                                           ) ▶₂ #k )
+                                                                      case ChanIn_A
+                                                                      solve( In_A( 'S',
+                                                                                   <'b', 
+                                                                                    (
+                                                                                     sg(encp($x.2,
+                                                                                             ~x.3,
+                                                                                             pk(~skS)),
+                                                                                        ~x)+
+                                                                                     sg(encp($x.4,
+                                                                                             ~x.5,
+                                                                                             pk(~skS)),
+                                                                                        ~x.1)
+                                                                                    )
+                                                                                   >
+                                                                             ) ▶₁ #k )
+                                                                        case ChanIn_A
+                                                                        solve( In_A( 'S',
+                                                                                     <'bPrime', 
+                                                                                      (
+                                                                                       encp($x,
+                                                                                            ~x.2,
+                                                                                            pk(~skS))+
+                                                                                       encp($x.1,
+                                                                                            ~x.3,
+                                                                                            pk(~skS))
+                                                                                      )
+                                                                                     >
+                                                                               ) ▶₂ #k )
+                                                                          case ChanIn_A
+                                                                          solve( In_A( 'S',
+                                                                                       <'v', 
+                                                                                        ($va+$vb)>
+                                                                                 ) ▶₃ #k )
+                                                                            case ChanIn_A
+                                                                            solve( In_A( 'S',
+                                                                                         <'v', 
+                                                                                          ($va.4+
+                                                                                           $vb.4)
+                                                                                         >
+                                                                                   ) ▶₃ #k )
+                                                                              case ChanIn_A
+                                                                              solve( In_A( 'S',
+                                                                                           <'v', 
+                                                                                            ($va.3+
+                                                                                             $vb.3)
+                                                                                           >
+                                                                                     ) ▶₃ #k )
+                                                                                case ChanIn_A
+                                                                                solve( In_A( 'S',
+                                                                                             <'v', 
+                                                                                              (
+                                                                                               $va.2+
+                                                                                               $vb.2
+                                                                                              )
+                                                                                             >
+                                                                                       ) ▶₃ #k )
+                                                                                  case ChanIn_A
+                                                                                  solve( In_A( 'S',
+                                                                                               <
+                                                                                                'v', 
+                                                                                                (
+                                                                                                 $va.1+
+                                                                                                 $vb.1
+                                                                                                )
+                                                                                               >
+                                                                                         ) ▶₃ #k )
+                                                                                    case ChanIn_A
+                                                                                    solve( In_A( 'S',
+                                                                                                 <
+                                                                                                  'v', 
+                                                                                                  (
+                                                                                                   $va+
+                                                                                                   $vb
+                                                                                                  )
+                                                                                                 >
+                                                                                           ) ▶₃ #k )
+                                                                                      case ChanIn_A
+                                                                                      SOLVED // trace found
+                                                                                    qed
+                                                                                  qed
+                                                                                qed
+                                                                              qed
+                                                                            qed
+                                                                          qed
+                                                                        qed
+                                                                      qed
+                                                                    qed
+                                                                  qed
+                                                                next
+                                                                  case ChanIn_A_case_2
+                                                                  by sorry
+                                                                qed
+                                                              qed
+                                                            qed
+                                                          qed
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          next
+                                            case ChanIn_A_case_2
+                                            by sorry
+                                          next
+                                            case ChanIn_A_case_3
+                                            by sorry
+                                          next
+                                            case ChanIn_A_case_4
+                                            by sorry
+                                          qed
+                                        next
+                                          case ChanIn_A_case_2
+                                          by sorry
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              next
+                                case H_2_case_3
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case c_sg
+                                by sorry
+                              qed
+                            next
+                              case H_2_case_2
+                              by contradiction /* forbidden KD-fact */
+                            next
+                              case H_2_case_3
+                              by contradiction /* forbidden KD-fact */
+                            next
+                              case c_sg
+                              by sorry
+                            qed
+                          next
+                            case ChanIn_A_case_2
+                            by sorry
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case H_1_case_2
+    by sorry
+  qed
+next
+  case 2
+  by sorry
+next
+  case 3
+  by sorry
+next
+  case 4
+  by sorry
+qed
+
+lemma indivVerif_v:
+  all-traces
+  "∀ H v #i b #j bOther.
+    ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
+    (∃ BB b2 #l r pkS sskD.
+      (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+      (b = sg(encp(v, r, pkS), sskD)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H v #i b #j bOther.
+  (Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l r pkS sskD.
+   (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+   (b = sg(encp(v, r, pkS), sskD))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma indivVerif_b:
+  all-traces
+  "∀ H b #j bOther.
+    (Verify( H, b, (b+bOther) ) @ #j) ⇒
+    (∃ BB b2 #l. BB_rec( BB, <'b', (b+b2)> ) @ #l)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j bOther.
+  (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l. (BB_rec( BB, <'b', (b+b2)> ) @ #l) ⇒ ⊥"
+*/
+by sorry
+
+lemma secretSskD [reuse]:
+  all-traces
+  "∀ sskD #i. (SecretKeyD( sskD ) @ #i) ⇒ (¬(∃ #j. K( sskD ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sskD #i. (SecretKeyD( sskD ) @ #i) ∧ ∃ #j. (K( sskD ) @ #j)"
+*/
+by sorry
+
+lemma ballotsFromVoters [reuse]:
+  all-traces
+  "∀ S b #i.
+    (Learn_S_ballot( S, b ) @ #i) ⇒
+    (∃ H S2 #j. Comm_H_ballot( H, S2, b ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S b #i.
+  (Learn_S_ballot( S, b ) @ #i)
+ ∧
+  ∀ H S2 #j. (Comm_H_ballot( H, S2, b ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_1:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_2:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_3:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_4:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_5:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_6:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_7:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma Tall_As_Rec_D_8:
+  all-traces
+  "∀ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+    ((((((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+         (Learn_A_proof( A, <'zkp', p> ) @ #a)) ∧
+        (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+       (Learn_A_Bs( A, <'b', ballots> ) @ #a)) ∧
+      (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+      (((((BB_rec( BB, <'b', ballots> ) @ #b) ∧
+          (BB_tal( BB, <'v', votes> ) @ #b)) ∧
+         (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+        (spkDSG = (pk(sskD1)+pk(sskD2)))) ∧
+       (votes = (v1+v2))) ∧
+      (ballots =
+       (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)
+       )))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a spkDSG p votes ballots bPrimes sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_proof( A, <'zkp', p> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (Learn_A_Bs( A, <'b', ballots> ) @ #a) ∧
+  (Learn_A_bPrimes( A, <'bPrime', bPrimes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b BB v1 v2 r1 r2 sskD1 sskD2 #b2.
+   (BB_rec( BB, <'b', ballots> ) @ #b) ∧
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (spkDSG = (pk(sskD1)+pk(sskD2))) ∧
+   (votes = (v1+v2)) ∧
+   (ballots =
+    (sg(encp(v1, r1, pk(sk)), sskD1)+sg(encp(v2, r2, pk(sk)), sskD2)))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma EligVerif_1:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_2:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_3:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_4:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_5:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_6:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_7:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xa, xb>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+lemma EligVerif_8:
+  all-traces
+  "∀ A #a votes spkDSG sk xa ra xb rb.
+    (((Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+      (Learn_A_Vs( A, <'v', votes> ) @ #a)) ∧
+     (VerifyA2( A,
+                verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                           sk),
+                       <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+      ) @ #a)) ⇒
+    (∃ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+      ((((((((BB_tal( BB, <'v', votes> ) @ #b) ∧
+             (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2)) ∧
+            (votes = (v1+v2))) ∧
+           (Send( H1, A1, v1 ) @ #h1)) ∧
+          (Send( H2, A2, v2 ) @ #h2)) ∧
+         (¬(H1 = H2))) ∧
+        (spkDSG = (pkD1+pkD2))) ∧
+       (Pseudonym( H1, pkD1 ) @ #s1)) ∧
+      (Pseudonym( H2, pkD2 ) @ #s2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A #a votes spkDSG sk xa ra xb rb.
+  (Learn_A_spkDSG( A, <'spkDSG', spkDSG> ) @ #a) ∧
+  (Learn_A_Vs( A, <'v', votes> ) @ #a) ∧
+  (VerifyA2( A,
+             verzkp(zkp(<encp(xa, ra, pk(sk)), encp(xb, rb, pk(sk))>, <xb, xa>,
+                        sk),
+                    <encp(xb, rb, pk(sk)), encp(xa, ra, pk(sk))>, <xb, xa>, pk(sk))
+   ) @ #a)
+ ∧
+  ∀ #b #b2 BB v1 v2 H1 H2 A1 A2 pkD1 pkD2 #h1 #h2 #s1 #s2.
+   (BB_tal( BB, <'v', votes> ) @ #b) ∧
+   (BB_pskDs( BB, <'spkDSG', spkDSG> ) @ #b2) ∧
+   (votes = (v1+v2)) ∧
+   (Send( H1, A1, v1 ) @ #h1) ∧
+   (Send( H2, A2, v2 ) @ #h2) ∧
+   (spkDSG = (pkD1+pkD2)) ∧
+   (Pseudonym( H1, pkD1 ) @ #s1) ∧
+   (Pseudonym( H2, pkD2 ) @ #s2)
+  ⇒
+   H1 = H2"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+end

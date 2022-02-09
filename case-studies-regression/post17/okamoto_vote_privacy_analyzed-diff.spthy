@@ -16,6 +16,8 @@ equations:
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
 
+
+
 rule (modulo E) Register_Voter_pk1:
    [ Fr( ~ltkV ) ]
   -->
@@ -11365,8 +11367,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/okamoto_vote_privacy.spthy
@@ -11375,7 +11375,7 @@ analyzing: examples/post17/okamoto_vote_privacy.spthy
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 60.416955167s
+  processing time: 103.143473541s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)
@@ -11388,7 +11388,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 60.416955167s
+  processing time: 103.143473541s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)

@@ -1,0 +1,68 @@
+/*
+ * Protocol:    Causality - late preemption protocol 
+ * Modeler:   Robert Künnemann, Ilkan Esiyok
+ * Date:  
+ * Source:  
+ * Status:  
+ * Note:  execute with --heuristic=p 
+ * */
+theory Causality_LatePreemption
+begin
+
+functions: 
+  extract/1, 
+  sk/1[private]
+
+//Poisoned
+let A = 0
+
+//Shot
+let B = 0   
+
+let Victim = (in(~p); insert 'Victim',~p; in(~s); insert 'Victim',~s) 
+          +  (in(~s); insert 'Victim',~s) 
+
+let C =  insert 'Victim', 'Healthy'; 
+         // .. some time passes
+         lookup 'Victim' as x in (
+            if x=~s then (
+            	event Shoot(); event Control('0','1'); event Verdict()
+            	)
+            else (
+            	if x=~p then (
+            		event Poisoned(); event Control('0','2'); event Verdict()
+            	)
+            	else (
+            		event Healthy(); event Control('0','3'); event Verdict()
+            	)
+            )
+         )
+    
+new ~p; new ~s;
+(A || B || C || Victim ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     !(
+       (if $x='A' then out('c',~p))
+    ||
+       (if $x='B' then out('c',~s))
+     )
+   )
+)
+
+lemma sanity:
+	"
+    All #i. Verdict()@i  ==> 
+      ((Ex #j. Poisoned()@j) | (Ex #j. Shoot()@j) | (Ex #j. Healthy()@j)) "
+
+verdictfunction v1:
+    "Ex #i #k. Verdict()@i & Poisoned()@k" -> <'A'>,
+    "Ex #i #k. Verdict()@i & Shoot()@k " -> <'B'>,
+    otherwise -> empty
+
+
+lemma acc:
+    v1 accounts [control]
+    for "All #i . Verdict()@i ==> Ex #j. Healthy()@j"
+    for parties <'A','B'>
+
+end

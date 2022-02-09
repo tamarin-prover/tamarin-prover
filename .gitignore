@@ -3,7 +3,9 @@ hsenv.log
 dist
 cabal-dev
 testbed
-case-studies
+case-studies/**/*.spthy
+case-studies/**/system.info
+case-studies-regression/fast-tests/system.info
 case-studies-sapic
 case-studies-sequential
 tamarin-prover-img
@@ -11,6 +13,9 @@ tamarin-prover-img
 cabal-sandbox/
 cabal.sandbox.config
 .stack-work/
+
+*.spthy.out
+*.spthy.tmp
 
 *.hi
 *.o
@@ -32,3 +37,9 @@ unit
 client_session_key.aes
 
 .DS_Store
+tags
+stack.yaml.lock
+
+*.iml
+.idea/
+out/

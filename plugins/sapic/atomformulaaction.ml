@@ -16,7 +16,12 @@ and formula = Atom of atom
        |Iff of formula*formula
        |All of VarSet.t * formula
        |Ex of VarSet.t * formula
-and action = Init
+and action = 
+    InitEmpty
+  | InitId
+  | StopId
+  | EventEmpty
+  | EventId
   | Predicate of position * (VarSet.t) * formula
   | NegPredicate of position * (VarSet.t) * formula
   | Action of string*termlist 

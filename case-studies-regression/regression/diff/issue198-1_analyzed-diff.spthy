@@ -6,6 +6,8 @@ builtins: multiset
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~v1 ) ]
   --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
@@ -108,14 +110,14 @@ next
     step( simplify )
     step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
       case Setup
-      MIRRORED
+      by sorry // Cannot prove
     qed
   next
     case RHS
     step( simplify )
     step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
       case Setup
-      MIRRORED
+      by sorry // Cannot prove
     qed
   qed
 next
@@ -141,7 +143,7 @@ next
         case shuffleVoters_case_1
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          MIRRORED
+          by sorry // Cannot prove
         qed
       next
         case shuffleVoters_case_2
@@ -165,7 +167,7 @@ next
         case shuffleVoters_case_1
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          MIRRORED
+          by sorry // Cannot prove
         qed
       next
         case shuffleVoters_case_2
@@ -184,7 +186,7 @@ next
         case shuffleVoters_case_2
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          MIRRORED
+          by sorry // Cannot prove
         qed
       qed
     next
@@ -208,7 +210,7 @@ next
         case shuffleVoters_case_2
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          MIRRORED
+          by sorry // Cannot prove
         qed
       qed
     next
@@ -241,11 +243,11 @@ next
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    by sorry // Cannot prove
   next
     case RHS
     step( simplify )
-    MIRRORED
+    by sorry // Cannot prove
   qed
 next
   case Rule_shuffleVoters
@@ -254,20 +256,20 @@ next
     step( simplify )
     step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
       case Setup_case_1
-      MIRRORED
+      by sorry // Cannot prove
     next
       case Setup_case_2
-      MIRRORED
+      by sorry // Cannot prove
     qed
   next
     case RHS
     step( simplify )
     step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
       case Setup_case_1
-      MIRRORED
+      by sorry // Cannot prove
     next
       case Setup_case_2
-      MIRRORED
+      by sorry // Cannot prove
     qed
   qed
 qed
@@ -277,8 +279,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/diff/issue198-1.spthy
@@ -287,8 +287,8 @@ analyzing: examples/regression/diff/issue198-1.spthy
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.269641997s
-  DiffLemma:  Observational_equivalence : verified (84 steps)
+  processing time: 0.511661611s
+  DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ------------------------------------------------------------------------------
 
@@ -298,8 +298,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.269641997s
-  DiffLemma:  Observational_equivalence : verified (84 steps)
+  processing time: 0.511661611s
+  DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ==============================================================================
 */

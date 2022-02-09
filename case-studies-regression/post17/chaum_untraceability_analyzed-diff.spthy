@@ -11,6 +11,8 @@ equations:
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), k), r) = sign(m, k)
 
+
+
 rule (modulo E) Register_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -8694,8 +8696,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/chaum_untraceability.spthy
@@ -8704,7 +8704,7 @@ analyzing: examples/post17/chaum_untraceability.spthy
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 49.616541258s
+  processing time: 71.664705375s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)
@@ -8717,7 +8717,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 49.616541258s
+  processing time: 71.664705375s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)

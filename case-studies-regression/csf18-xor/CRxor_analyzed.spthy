@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
 
@@ -163,7 +165,7 @@ solve( Initiated( ~na ) ▶₀ #i )
         by solve( !KU( ~k ) @ #vk.3 )
       next
         case responder
-        by contradiction /* from formulas */
+        by contradiction /* cyclic */
       qed
     next
       case split_case_3
@@ -516,8 +518,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/CRxor.spthy
@@ -526,7 +526,7 @@ analyzing: examples/csf18-xor/CRxor.spthy
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.824366326s
+  processing time: 0.901126765s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
@@ -539,7 +539,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.824366326s
+  processing time: 0.901126765s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)

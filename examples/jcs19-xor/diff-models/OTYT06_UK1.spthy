@@ -1,0 +1,98 @@
+theory OTYT06_UK1
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+OTYT06: Reader R, RFID tag T, shared knowledge k
+	This is a stateful protocol, the tag and reader's knowledge is updated
+        after a successful run. 
+
+   R: knows(k)
+   T: knows(k)
+   R: fresh(r1)
+R->T: r1
+T->R: h(k XOR r1)
+   R: fresh(k1)
+R->T: k XOR k1
+   R: replace k by k1
+   T: replace k by k1
+
+Protocol satisfies recent aliveness of the tag, but not untracability.
+Recent aliveness of reader is not satisfied. 
+
+*/
+
+rule SetupLearning:
+   [ Fr( ~k1 )
+   , Fr( ~k2)
+   ]
+ --[ Setup(~k1), Setup(~k2)
+   , OnlyOnce( 'setupLearning' ) ]-> 
+   [ Tag(~k1, ~k1)   // first arg: initial key, snd arg: current key
+   , Tag(~k2, ~k2)
+   , SetupKeys(~k1, ~k2)
+   ]
+
+rule SetupGuessing:
+   let idb = diff(~k1, ~k2)
+       keyb = diff(x1, x2)
+   in
+   [ SetupKeys(~k1, ~k2)
+   , Tag(~k1, x1)
+   , Tag(~k2, x2)
+   ]
+ --[ OnlyOnce( 'setupGuessing' ) ]-> 
+   [ Tag(idb, keyb) ]
+   
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   , OnlyTwice('tag1')
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   , TagRunning( ~k, x )
+   ]
+
+rule tag2:
+   let newKey = x XOR newkey
+   in
+   [ Fr(~k2)
+   , In( newkey )
+   , TagRunning( ~k, x )
+   ]
+ --[ Update( x, newKey, 'Tag' )
+   , Alive( ~k, 'Reader' )
+   , OnlyTwice('tag2')
+   ]->
+   [ Tag( ~k, newKey)
+   ]
+
+/*
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+
+restriction unique:
+  "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+restriction uniqueTwice:
+  "∀ x #i #j #k. ((OnlyTwice(x) @ #i) ∧ (OnlyTwice(x) @ #j) ∧ (OnlyTwice(x) @ #k)) ⇒ ((#i = #j) | (#i = #k) | (#j = #k))"
+
+//PROOF FOUND AUTOMATICALLY
+lemma tag_start [reuse,use_induction]:
+"All x y #k. Tag(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
+
+// ATTACKS FOUND MANUALLY - see OTYT06_UK1-proof.spthy file, but also AUTOMATICALLY (in Rule_equality LHS start)
+// Observational Equivalence
+
+end

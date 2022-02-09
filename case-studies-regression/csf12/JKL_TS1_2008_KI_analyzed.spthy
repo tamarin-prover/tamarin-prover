@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* Jeong, Katz, Lee : TS1 (2008) *}
 
 rule (modulo E) generate_ltk:
@@ -212,8 +214,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/JKL_TS1_2008_KI.spthy
@@ -222,7 +222,7 @@ analyzing: examples/csf12/JKL_TS1_2008_KI.spthy
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.159131196s
+  processing time: 0.21599862s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -234,7 +234,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.159131196s
+  processing time: 0.21599862s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 

@@ -1,0 +1,110 @@
+theory KCL07_UK3 begin
+
+builtins: xor, hashing, multiset
+
+/*
+KCL07: Reader R, RFID tag T, shared knowledge k, ID
+
+   R: knows(k, ID)
+   T: knows(k, ID)
+   R: fresh(r1)
+R->T: r1
+   T: fresh(r2)
+T->R: ID XOR r2,  h(r1,k) XOR r2  
+   
+   R considers T recent alive if it can find ID, k such that
+     the pair of terms received from T in the last step satisfies
+     
+     ID XOR r2  XOR  h(r1,k) XOR r2   =   ID XOR h(r1,k)
+
+recent aliveness is satisfied, but untracability is not.
+The model below focuses on untraceability.
+*/
+
+rule Setup:
+   let left = <~k1,~id1>+<~k2,~id2>
+      right = <~k1,~id1>+<~k1,~id1>
+   in
+   [ Fr( ~k1 )
+   , Fr( ~id1 )
+   , Fr( ~k2 )
+   , Fr( ~id2 ) 
+   ]
+ --[ OnlyOnce( ) ]-> 
+   [ Reader( '1'+diff(left,right) )
+   , Tag(    '1'+diff(left,right) )
+   ]
+
+rule select_tag:
+  [ Tag( < ~k, ~id > + z ) ]
+  --[ Tag( < ~k, ~id > + z ) ]->
+  [ TagRun( ~k, ~id )
+  , Tag(z) 
+  ]
+
+rule select_reader:
+  [ Reader( < ~k, ~id > + z ) ]
+  --[ Reader( < ~k, ~id > + z ) ]->
+  [ ReaderRun( ~k, ~id )
+  , Reader(z) 
+  ]
+
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   [ In( r1 )
+   , Fr( ~r2 )
+   , TagRun( ~k, ~id ) 
+   ]
+ --[ Response( ~k, 'Tag' )
+   ]->
+   [ Out( <~id XOR ~r2, h(<r1,~k>) XOR ~r2>)
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , ReaderRun( ~k, ~id )
+//   , In( <idr2, hashr2> ) // This is how it should be
+   , In( xoredhash )        // This is the only way I can make it work
+   ]
+ --[ Alive( ~k, 'Tag' )
+//   , Eq( idr2 XOR hashr2, ~id XOR h(<~r1,~k>) ) // How it should be
+   , Eq( xoredhash, ~id XOR h(<~r1,~k>) )  // how it works
+   ]->
+   []
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+
+restriction max_number_of_tags_tag:
+  "All a b c d #i. Tag(a+b+c+d)@i ==> F"
+
+restriction max_number_of_tags_tag_reader:
+  "All a b c d #i. Reader(a+b+c+d)@i ==> F"
+
+// AUTOMATICALLY PROVEN WITH ORACLE KCL07-UK3.oracle [left+right]
+lemma recentalive_tag:
+  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+
+// MANUAL EXPLORATION FINDS TRACE, see
+// KCL07-UK3_proof-manual-execution-left.spthy and
+// KCL07-UK3_proof-manual-execution-right.spthy
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+                   // only one of each wanted for executability
+                   ∧ (All #k. Alive(x,'Tag')@k ==> #i=#k)
+                   ∧ (All #k. Response(x,'Tag')@k ==> #j=#k)"
+
+// ATTACK FOUND MANUALLY 
+// Observational_equivalence lemma
+
+end

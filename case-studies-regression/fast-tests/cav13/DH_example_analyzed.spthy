@@ -1,0 +1,152 @@
+theory ex1 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, g/0, mac/2, pair/2, shk/0 [private], snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Step1:
+   [ Fr( ~tid ), Fr( ~x ) ]
+  -->
+   [ Out( <g^~x, mac(shk, <g^~x, $A, $B>)> ), Step1( ~tid, $A, $B, ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Step2:
+   [ Step1( tid, A, B, ~x ), In( <Y, mac(shk, <Y, B, A>)> ) ]
+  --[ Accept( tid, Y^~x ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) Step2:
+     [ Step1( tid, A, B, ~x ), In( <Y, mac(shk, <Y, B, A>)> ) ]
+    --[ Accept( tid, z ) ]->
+     [ ]
+    variants (modulo AC)
+    1. ~x    = ~x.7
+       Y     = Y.7
+       z     = Y.7^~x.7
+    
+    2. ~x    = ~x.7
+       Y     = x.10^inv(~x.7)
+       z     = x.10
+    
+    3. ~x    = ~x.7
+       Y     = x.10^inv((~x.7*x.11))
+       z     = x.10^inv(x.11)
+    
+    4. ~x    = ~x.7
+       Y     = x.10^(x.11*inv(~x.7))
+       z     = x.10^x.11
+    
+    5. ~x    = ~x.7
+       Y     = x.10^(x.11*inv((~x.7*x.12)))
+       z     = x.10^(x.11*inv(x.12))
+    
+    6. ~x    = ~x.9
+       Y     = x.7^x.8
+       z     = x.7^(x.8*~x.9)
+  */
+
+rule (modulo E) RevealKey:
+   [ ] --[ Reveal( ) ]-> [ Out( shk ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Accept_Secret:
+  all-traces
+  "∀ #i #j tid key.
+    ((Accept( tid, key ) @ #i) ∧ (K( key ) @ #j)) ⇒
+    (∃ #l. (Reveal( ) @ #l) ∧ (#l < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j tid key.
+  (Accept( tid, key ) @ #i) ∧ (K( key ) @ #j)
+ ∧
+  ∀ #l. (Reveal( ) @ #l) ⇒ ¬(#l < #i)"
+*/
+simplify
+solve( Step1( tid, A, B, ~x ) ▶₀ #i )
+  case Step1
+  solve( !KU( mac(shk, <Y, $B, $A>) ) @ #vk.2 )
+    case Step1
+    solve( !KU( g^(~x*~x.1) ) @ #vk.3 )
+      case Step1_case_1
+      by solve( !KU( ~x ) @ #vk.4 )
+    next
+      case Step1_case_2
+      by solve( !KU( ~x.1 ) @ #vk.4 )
+    next
+      case c_exp
+      by solve( !KU( ~x ) @ #vk.6 )
+    qed
+  next
+    case c_mac
+    solve( !KU( shk ) @ #vk.5 )
+      case RevealKey
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma Accept_Secret_Counter:
+  all-traces
+  "∀ #i #j tid key. ((Accept( tid, key ) @ #i) ∧ (K( key ) @ #j)) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j tid key. (Accept( tid, key ) @ #i) ∧ (K( key ) @ #j)"
+*/
+simplify
+solve( Step1( tid, A, B, ~x ) ▶₀ #i )
+  case Step1
+  solve( !KU( mac(shk, <Y, $B, $A>) ) @ #vk.2 )
+    case c_mac
+    solve( !KU( shk ) @ #vk.5 )
+      case RevealKey
+      solve( splitEqs(0) )
+        case split_case_1
+        solve( !KU( Y^~x ) @ #vk.5 )
+          case Step1
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/cav13/DH_example.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/cav13/DH_example.spthy
+
+  output:          examples/cav13/DH_example.spthy.tmp
+  processing time: 0.140867963s
+  Accept_Secret (all-traces): verified (9 steps)
+  Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/cav13/DH_example.spthy
+
+  output:          examples/cav13/DH_example.spthy.tmp
+  processing time: 0.140867963s
+  Accept_Secret (all-traces): verified (9 steps)
+  Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
+
+==============================================================================
+*/

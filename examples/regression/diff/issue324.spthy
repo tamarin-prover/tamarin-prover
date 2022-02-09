@@ -1,0 +1,21 @@
+theory Issue324
+begin
+
+rule Init:
+  [ Fr(~k)  ]
+  --[ ]->
+  [ !Tag(~k) ]
+
+rule T_out:
+  [ !Tag(k) ]
+  --[ PlayT(k)]->
+  [ Out(k) ]
+
+restriction singleSessionTag [right]:
+  "not (Ex k #i1 #i2.
+    PlayT(k) @ i1 &
+    PlayT(k) @ i2 &
+    not(#i1 = #i2)
+  )"
+
+end

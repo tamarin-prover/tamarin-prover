@@ -1,0 +1,1076 @@
+theory Joux begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing, multiset
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+section{* The Joux Protocol using Signatures*}
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ]
+  -->
+   [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ), Out( pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Proto1:
+   [ Fr( ~ekA ), !Ltk( $A, ltkA ) ]
+  -->
+   [
+   PState( $A, ($B+$C), ~ekA ),
+   Out( <pmult(~ekA, 'P'), sign(<$A, ($B+$C), pmult(~ekA, 'P')>, ltkA)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Proto2:
+   [
+   PState( $A, ($B+$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
+   In( <XB, sign(<$B, ($A+$C), XB>, ltkB)> ),
+   In( <XC, sign(<$C, ($A+$B), XC>, ltkC)> )
+   ]
+  --[ SessionKey( $A, ($B+$C), em(XB, XC)^~ekA ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) Proto2:
+     [
+     PState( $A, ($B+$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
+     In( <XB, sign(<$B, ($A+$C), XB>, ltkB)> ),
+     In( <XC, sign(<$C, ($A+$B), XC>, ltkC)> )
+     ]
+    --[ SessionKey( $A, ($B+$C), z ) ]->
+     [ ]
+    variants (modulo AC)
+      1. ~ekA  = ~ekA.10
+         XB    = XB.10
+         XC    = XC.10
+         z     = em(XB.10, XC.10)^~ekA.10
+    
+      2. ~ekA  = ~x.10
+         XB    = XB.13
+         XC    = pmult(inv(~x.10), x.12)
+         z     = em(x.12, XB.13)
+    
+      3. ~ekA  = ~x.10
+         XB    = XB.14
+         XC    = pmult(inv((~x.10*x.12)), x.13)
+         z     = em(x.13, XB.14)^inv(x.12)
+    
+      4. ~ekA  = ~x.10
+         XB    = XB.14
+         XC    = pmult((x.12*inv(~x.10)), x.13)
+         z     = em(x.13, XB.14)^x.12
+    
+      5. ~ekA  = ~x.10
+         XB    = XB.15
+         XC    = pmult((x.12*inv((~x.10*x.13))), x.14)
+         z     = em(x.14, XB.15)^(x.12*inv(x.13))
+    
+      6. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult(inv(~x.10), x.13)
+         z     = em(x.12, x.13)^x.11
+    
+      7. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult(inv((~x.10*x.11)), x.13)
+         z     = em(x.12, x.13)
+    
+      8. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult(inv((~x.10*x.11*x.13)), x.14)
+         z     = em(x.12, x.14)^inv(x.13)
+    
+      9. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult(inv((~x.10*x.13)), x.14)
+         z     = em(x.12, x.14)^(x.11*inv(x.13))
+    
+     10. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult((x.13*inv(~x.10)), x.14)
+         z     = em(x.12, x.14)^(x.11*x.13)
+    
+     11. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult((x.13*inv((~x.10*x.11))), x.14)
+         z     = em(x.12, x.14)^x.13
+    
+     12. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult((x.13*inv((~x.10*x.11*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*inv(x.14))
+    
+     13. ~ekA  = ~x.10
+         XB    = pmult(x.11, x.12)
+         XC    = pmult((x.13*inv((~x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.11*x.13*inv(x.14))
+    
+     14. ~ekA  = ~x.10
+         XB    = pmult(inv(~x.10), x.11)
+         XC    = XC.12
+         z     = em(x.11, XC.12)
+    
+     15. ~ekA  = ~x.10
+         XB    = pmult(inv(~x.10), x.11)
+         XC    = pmult(x.12, x.13)
+         z     = em(x.11, x.13)^x.12
+    
+     16. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult(inv((~x.10*x.13)), x.14)
+         z     = em(x.12, x.14)^inv((x.11*x.13))
+    
+     17. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult((x.11*x.13*inv(~x.10)), x.14)
+         z     = em(x.12, x.14)^x.13
+    
+     18. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult((x.11*x.13*inv((~x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*inv(x.14))
+    
+     19. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult((x.11*inv(~x.10)), x.13)
+         z     = em(x.12, x.13)
+    
+     20. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult((x.11*inv((~x.10*x.13))), x.14)
+         z     = em(x.12, x.14)^inv(x.13)
+    
+     21. ~ekA  = ~x.10
+         XB    = pmult(inv(x.11), x.12)
+         XC    = pmult((x.13*inv((~x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*inv((x.11*x.14)))
+    
+     22. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = XC.13
+         z     = em(x.12, XC.13)^inv(x.11)
+    
+     23. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = pmult(x.11, x.13)
+         z     = em(x.12, x.13)
+    
+     24. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = pmult(x.13, x.14)
+         z     = em(x.12, x.14)^(x.13*inv(x.11))
+    
+     25. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = pmult(inv(x.13), x.14)
+         z     = em(x.12, x.14)^inv((x.11*x.13))
+    
+     26. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = pmult((x.11*x.13), x.14)
+         z     = em(x.12, x.14)^x.13
+    
+     27. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11)), x.12)
+         XC    = pmult((x.13*inv(x.14)), x.15)
+         z     = em(x.12, x.15)^(x.13*inv((x.11*x.14)))
+    
+     28. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11*x.12)), x.13)
+         XC    = pmult(x.11, x.14)
+         z     = em(x.13, x.14)^inv(x.12)
+    
+     29. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11*x.12)), x.13)
+         XC    = pmult((x.11*x.14), x.15)
+         z     = em(x.13, x.15)^(x.14*inv(x.12))
+    
+     30. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11*x.12)), x.13)
+         XC    = pmult((x.11*x.14*inv(x.15)), x.16)
+         z     = em(x.13, x.16)^(x.14*inv((x.12*x.15)))
+    
+     31. ~ekA  = ~x.10
+         XB    = pmult(inv((~x.10*x.11*x.12)), x.13)
+         XC    = pmult((x.11*inv(x.14)), x.15)
+         z     = em(x.13, x.15)^inv((x.12*x.14))
+    
+     32. ~ekA  = ~x.10
+         XB    = pmult(inv((x.11*x.12)), x.13)
+         XC    = pmult((x.11*x.14*inv(~x.10)), x.15)
+         z     = em(x.13, x.15)^(x.14*inv(x.12))
+    
+     33. ~ekA  = ~x.10
+         XB    = pmult(inv((x.11*x.12)), x.13)
+         XC    = pmult((x.11*x.14*inv((~x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*inv((x.12*x.15)))
+    
+     34. ~ekA  = ~x.10
+         XB    = pmult(inv((x.11*x.12)), x.13)
+         XC    = pmult((x.11*inv(~x.10)), x.14)
+         z     = em(x.13, x.14)^inv(x.12)
+    
+     35. ~ekA  = ~x.10
+         XB    = pmult(inv((x.11*x.12)), x.13)
+         XC    = pmult((x.11*inv((~x.10*x.14))), x.15)
+         z     = em(x.13, x.15)^inv((x.12*x.14))
+    
+     36. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12), x.13)
+         XC    = pmult(inv((~x.10*x.11)), x.14)
+         z     = em(x.13, x.14)^x.12
+    
+     37. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12), x.13)
+         XC    = pmult(inv((~x.10*x.11*x.14)), x.15)
+         z     = em(x.13, x.15)^(x.12*inv(x.14))
+    
+     38. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12), x.13)
+         XC    = pmult((x.14*inv((~x.10*x.11))), x.15)
+         z     = em(x.13, x.15)^(x.12*x.14)
+    
+     39. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12), x.13)
+         XC    = pmult((x.14*inv((~x.10*x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.12*x.14*inv(x.15))
+    
+     40. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(~x.10)), x.13)
+         XC    = pmult(inv(x.11), x.14)
+         z     = em(x.13, x.14)^x.12
+    
+     41. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(~x.10)), x.13)
+         XC    = pmult(inv((x.11*x.14)), x.15)
+         z     = em(x.13, x.15)^(x.12*inv(x.14))
+    
+     42. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(~x.10)), x.13)
+         XC    = pmult((x.14*inv(x.11)), x.15)
+         z     = em(x.13, x.15)^(x.12*x.14)
+    
+     43. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(~x.10)), x.13)
+         XC    = pmult((x.14*inv((x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.12*x.14*inv(x.15))
+    
+     44. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult(inv((~x.10*x.11*x.15)), x.16)
+         z     = em(x.14, x.16)^(x.12*inv((x.13*x.15)))
+    
+     45. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult((x.13*x.15*inv((~x.10*x.11))), x.16)
+         z     = em(x.14, x.16)^(x.12*x.15)
+    
+     46. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult((x.13*x.15*inv((~x.10*x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.12*x.15*inv(x.16))
+    
+     47. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult((x.13*inv((~x.10*x.11))), x.15)
+         z     = em(x.14, x.15)^x.12
+    
+     48. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult((x.13*inv((~x.10*x.11*x.15))), x.16)
+         z     = em(x.14, x.16)^(x.12*inv(x.15))
+    
+     49. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv(x.13)), x.14)
+         XC    = pmult((x.15*inv((~x.10*x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.12*x.15*inv((x.13*x.16)))
+    
+     50. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult(inv(x.11), x.15)
+         z     = em(x.14, x.15)^(x.12*inv(x.13))
+    
+     51. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult(inv((x.11*x.15)), x.16)
+         z     = em(x.14, x.16)^(x.12*inv((x.13*x.15)))
+    
+     52. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.13*x.15*inv(x.11)), x.16)
+         z     = em(x.14, x.16)^(x.12*x.15)
+    
+     53. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.13*x.15*inv((x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.12*x.15*inv(x.16))
+    
+     54. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.13*inv(x.11)), x.15)
+         z     = em(x.14, x.15)^x.12
+    
+     55. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.13*inv((x.11*x.15))), x.16)
+         z     = em(x.14, x.16)^(x.12*inv(x.15))
+    
+     56. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.15*inv(x.11)), x.16)
+         z     = em(x.14, x.16)^(x.12*x.15*inv(x.13))
+    
+     57. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13))), x.14)
+         XC    = pmult((x.15*inv((x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.12*x.15*inv((x.13*x.16)))
+    
+     58. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13*x.14))), x.15)
+         XC    = pmult((x.13*x.16*inv(x.11)), x.17)
+         z     = em(x.15, x.17)^(x.12*x.16*inv(x.14))
+    
+     59. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13*x.14))), x.15)
+         XC    = pmult((x.13*x.16*inv((x.11*x.17))), x.18)
+         z     = em(x.15, x.18)^(x.12*x.16*inv((x.14*x.17)))
+    
+     60. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13*x.14))), x.15)
+         XC    = pmult((x.13*inv(x.11)), x.16)
+         z     = em(x.15, x.16)^(x.12*inv(x.14))
+    
+     61. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((~x.10*x.13*x.14))), x.15)
+         XC    = pmult((x.13*inv((x.11*x.16))), x.17)
+         z     = em(x.15, x.17)^(x.12*inv((x.14*x.16)))
+    
+     62. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((x.13*x.14))), x.15)
+         XC    = pmult((x.13*x.16*inv((~x.10*x.11))), x.17)
+         z     = em(x.15, x.17)^(x.12*x.16*inv(x.14))
+    
+     63. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((x.13*x.14))), x.15)
+         XC    = pmult((x.13*x.16*inv((~x.10*x.11*x.17))), x.18)
+         z     = em(x.15, x.18)^(x.12*x.16*inv((x.14*x.17)))
+    
+     64. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((x.13*x.14))), x.15)
+         XC    = pmult((x.13*inv((~x.10*x.11))), x.16)
+         z     = em(x.15, x.16)^(x.12*inv(x.14))
+    
+     65. ~ekA  = ~x.10
+         XB    = pmult((x.11*x.12*inv((x.13*x.14))), x.15)
+         XC    = pmult((x.13*inv((~x.10*x.11*x.16))), x.17)
+         z     = em(x.15, x.17)^(x.12*inv((x.14*x.16)))
+    
+     66. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = XC.13
+         z     = em(x.12, XC.13)^x.11
+    
+     67. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = pmult(x.13, x.14)
+         z     = em(x.12, x.14)^(x.11*x.13)
+    
+     68. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = pmult(inv(x.11), x.13)
+         z     = em(x.12, x.13)
+    
+     69. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = pmult(inv((x.11*x.13)), x.14)
+         z     = em(x.12, x.14)^inv(x.13)
+    
+     70. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = pmult((x.13*inv(x.11)), x.14)
+         z     = em(x.12, x.14)^x.13
+    
+     71. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(~x.10)), x.12)
+         XC    = pmult((x.13*inv((x.11*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*inv(x.14))
+    
+     72. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult(inv((~x.10*x.11*x.14)), x.15)
+         z     = em(x.13, x.15)^inv((x.12*x.14))
+    
+     73. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult(inv((~x.10*x.14)), x.15)
+         z     = em(x.13, x.15)^(x.11*inv((x.12*x.14)))
+    
+     74. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv(~x.10)), x.15)
+         z     = em(x.13, x.15)^(x.11*x.14)
+    
+     75. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv((~x.10*x.11))), x.15)
+         z     = em(x.13, x.15)^x.14
+    
+     76. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv((~x.10*x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*inv(x.15))
+    
+     77. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv((~x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.11*x.14*inv(x.15))
+    
+     78. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv(~x.10)), x.14)
+         z     = em(x.13, x.14)^x.11
+    
+     79. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv((~x.10*x.11))), x.14)
+         z     = em(x.13, x.14)
+    
+     80. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv((~x.10*x.11*x.14))), x.15)
+         z     = em(x.13, x.15)^inv(x.14)
+    
+     81. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv((~x.10*x.14))), x.15)
+         z     = em(x.13, x.15)^(x.11*inv(x.14))
+    
+     82. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.14*inv((~x.10*x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*inv((x.12*x.15)))
+    
+     83. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv(x.12)), x.13)
+         XC    = pmult((x.14*inv((~x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.11*x.14*inv((x.12*x.15)))
+    
+     84. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = XC.14
+         z     = em(x.13, XC.14)^(x.11*inv(x.12))
+    
+     85. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult(x.12, x.14)
+         z     = em(x.13, x.14)^x.11
+    
+     86. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult(x.14, x.15)
+         z     = em(x.13, x.15)^(x.11*x.14*inv(x.12))
+    
+     87. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult(inv(x.11), x.14)
+         z     = em(x.13, x.14)^inv(x.12)
+    
+     88. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult(inv(x.14), x.15)
+         z     = em(x.13, x.15)^(x.11*inv((x.12*x.14)))
+    
+     89. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult(inv((x.11*x.14)), x.15)
+         z     = em(x.13, x.15)^inv((x.12*x.14))
+    
+     90. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.12*x.14), x.15)
+         z     = em(x.13, x.15)^(x.11*x.14)
+    
+     91. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.12*x.14*inv(x.11)), x.15)
+         z     = em(x.13, x.15)^x.14
+    
+     92. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.12*x.14*inv((x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*inv(x.15))
+    
+     93. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.12*inv(x.11)), x.14)
+         z     = em(x.13, x.14)
+    
+     94. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.12*inv((x.11*x.14))), x.15)
+         z     = em(x.13, x.15)^inv(x.14)
+    
+     95. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.14*inv(x.11)), x.15)
+         z     = em(x.13, x.15)^(x.14*inv(x.12))
+    
+     96. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.14*inv(x.15)), x.16)
+         z     = em(x.13, x.16)^(x.11*x.14*inv((x.12*x.15)))
+    
+     97. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12))), x.13)
+         XC    = pmult((x.14*inv((x.11*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*inv((x.12*x.15)))
+    
+     98. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult(x.12, x.15)
+         z     = em(x.14, x.15)^(x.11*inv(x.13))
+    
+     99. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15), x.16)
+         z     = em(x.14, x.16)^(x.11*x.15*inv(x.13))
+    
+    100. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv(x.11)), x.16)
+         z     = em(x.14, x.16)^(x.15*inv(x.13))
+    
+    101. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv(x.16)), x.17)
+         z     = em(x.14, x.17)^(x.11*x.15*inv((x.13*x.16)))
+    
+    102. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv((x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.15*inv((x.13*x.16)))
+    
+    103. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv(x.11)), x.15)
+         z     = em(x.14, x.15)^inv(x.13)
+    
+    104. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv(x.15)), x.16)
+         z     = em(x.14, x.16)^(x.11*inv((x.13*x.15)))
+    
+    105. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((~x.10*x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv((x.11*x.15))), x.16)
+         z     = em(x.14, x.16)^inv((x.13*x.15))
+    
+    106. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv(~x.10)), x.16)
+         z     = em(x.14, x.16)^(x.11*x.15*inv(x.13))
+    
+    107. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv((~x.10*x.11))), x.16)
+         z     = em(x.14, x.16)^(x.15*inv(x.13))
+    
+    108. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv((~x.10*x.11*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.15*inv((x.13*x.16)))
+    
+    109. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv((~x.10*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.11*x.15*inv((x.13*x.16)))
+    
+    110. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv(~x.10)), x.15)
+         z     = em(x.14, x.15)^(x.11*inv(x.13))
+    
+    111. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv((~x.10*x.11))), x.15)
+         z     = em(x.14, x.15)^inv(x.13)
+    
+    112. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv((~x.10*x.11*x.15))), x.16)
+         z     = em(x.14, x.16)^inv((x.13*x.15))
+    
+    113. ~ekA  = ~x.10
+         XB    = pmult((x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv((~x.10*x.15))), x.16)
+         z     = em(x.14, x.16)^(x.11*inv((x.13*x.15)))
+    
+    114. ~ekA  = ~ekA.12
+         XB    = XB.12
+         XC    = pmult(x.10, x.11)
+         z     = em(x.11, XB.12)^(x.10*~ekA.12)
+    
+    115. ~ekA  = ~ekA.12
+         XB    = pmult(x.10, x.11)
+         XC    = XC.12
+         z     = em(x.11, XC.12)^(x.10*~ekA.12)
+    
+    116. ~ekA  = ~ekA.13
+         XB    = pmult(x.10, x.11)
+         XC    = pmult(inv(x.10), x.12)
+         z     = em(x.11, x.12)^~ekA.13
+    
+    117. ~ekA  = ~ekA.13
+         XB    = pmult(inv(x.10), x.11)
+         XC    = pmult(x.10, x.12)
+         z     = em(x.11, x.12)^~ekA.13
+    
+    118. ~ekA  = ~ekA.14
+         XB    = pmult(x.10, x.11)
+         XC    = pmult(x.12, x.13)
+         z     = em(x.11, x.13)^(x.10*x.12*~ekA.14)
+    
+    119. ~ekA  = ~ekA.14
+         XB    = pmult(x.10, x.11)
+         XC    = pmult(inv((x.10*x.12)), x.13)
+         z     = em(x.11, x.13)^(~ekA.14*inv(x.12))
+    
+    120. ~ekA  = ~ekA.14
+         XB    = pmult(x.10, x.11)
+         XC    = pmult((x.12*inv(x.10)), x.13)
+         z     = em(x.11, x.13)^(x.12*~ekA.14)
+    
+    121. ~ekA  = ~ekA.14
+         XB    = pmult(inv(x.10), x.11)
+         XC    = pmult(inv(x.12), x.13)
+         z     = em(x.11, x.13)^(~ekA.14*inv((x.10*x.12)))
+    
+    122. ~ekA  = ~ekA.14
+         XB    = pmult(inv(x.10), x.11)
+         XC    = pmult((x.10*x.12), x.13)
+         z     = em(x.11, x.13)^(x.12*~ekA.14)
+    
+    123. ~ekA  = ~ekA.14
+         XB    = pmult(inv((x.10*x.11)), x.12)
+         XC    = pmult(x.10, x.13)
+         z     = em(x.12, x.13)^(~ekA.14*inv(x.11))
+    
+    124. ~ekA  = ~ekA.14
+         XB    = pmult((x.10*x.11), x.12)
+         XC    = pmult(inv(x.10), x.13)
+         z     = em(x.12, x.13)^(x.11*~ekA.14)
+    
+    125. ~ekA  = ~ekA.14
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult(x.11, x.13)
+         z     = em(x.12, x.13)^(x.10*~ekA.14)
+    
+    126. ~ekA  = ~ekA.14
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.11*inv(x.10)), x.13)
+         z     = em(x.12, x.13)^~ekA.14
+    
+    127. ~ekA  = ~ekA.15
+         XB    = pmult(x.10, x.11)
+         XC    = pmult((x.12*inv((x.10*x.13))), x.14)
+         z     = em(x.11, x.14)^(x.12*~ekA.15*inv(x.13))
+    
+    128. ~ekA  = ~ekA.15
+         XB    = pmult(inv(x.10), x.11)
+         XC    = pmult((x.12*inv(x.13)), x.14)
+         z     = em(x.11, x.14)^(x.12*~ekA.15*inv((x.10*x.13)))
+    
+    129. ~ekA  = ~ekA.15
+         XB    = pmult(inv((x.10*x.11)), x.12)
+         XC    = pmult((x.10*x.13), x.14)
+         z     = em(x.12, x.14)^(x.13*~ekA.15*inv(x.11))
+    
+    130. ~ekA  = ~ekA.15
+         XB    = pmult(inv((x.10*x.11)), x.12)
+         XC    = pmult((x.10*inv(x.13)), x.14)
+         z     = em(x.12, x.14)^(~ekA.15*inv((x.11*x.13)))
+    
+    131. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*x.11), x.12)
+         XC    = pmult(inv((x.10*x.13)), x.14)
+         z     = em(x.12, x.14)^(x.11*~ekA.15*inv(x.13))
+    
+    132. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*x.11), x.12)
+         XC    = pmult((x.13*inv(x.10)), x.14)
+         z     = em(x.12, x.14)^(x.11*x.13*~ekA.15)
+    
+    133. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv(x.10)), x.14)
+         z     = em(x.13, x.14)^(x.11*~ekA.15)
+    
+    134. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult(inv(x.13), x.14)
+         z     = em(x.12, x.14)^(x.10*~ekA.15*inv((x.11*x.13)))
+    
+    135. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult(inv((x.10*x.13)), x.14)
+         z     = em(x.12, x.14)^(~ekA.15*inv((x.11*x.13)))
+    
+    136. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.11*x.13), x.14)
+         z     = em(x.12, x.14)^(x.10*x.13*~ekA.15)
+    
+    137. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.11*x.13*inv(x.10)), x.14)
+         z     = em(x.12, x.14)^(x.13*~ekA.15)
+    
+    138. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.11*inv((x.10*x.13))), x.14)
+         z     = em(x.12, x.14)^(~ekA.15*inv(x.13))
+    
+    139. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult(x.11, x.14)
+         z     = em(x.13, x.14)^(x.10*~ekA.15*inv(x.12))
+    
+    140. ~ekA  = ~ekA.15
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*inv(x.10)), x.14)
+         z     = em(x.13, x.14)^(~ekA.15*inv(x.12))
+    
+    141. ~ekA  = ~ekA.16
+         XB    = pmult(inv((x.10*x.11)), x.12)
+         XC    = pmult((x.10*x.13*inv(x.14)), x.15)
+         z     = em(x.12, x.15)^(x.13*~ekA.16*inv((x.11*x.14)))
+    
+    142. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*x.11), x.12)
+         XC    = pmult((x.13*inv((x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.11*x.13*~ekA.16*inv(x.14))
+    
+    143. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult(inv((x.10*x.14)), x.15)
+         z     = em(x.13, x.15)^(x.11*~ekA.16*inv((x.12*x.14)))
+    
+    144. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv(x.10)), x.15)
+         z     = em(x.13, x.15)^(x.11*x.14*~ekA.16)
+    
+    145. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*inv((x.10*x.14))), x.15)
+         z     = em(x.13, x.15)^(x.11*~ekA.16*inv(x.14))
+    
+    146. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv(x.10)), x.15)
+         z     = em(x.14, x.15)^(x.11*~ekA.16*inv(x.13))
+    
+    147. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.11*x.13*inv((x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*~ekA.16*inv(x.14))
+    
+    148. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.13*inv(x.14)), x.15)
+         z     = em(x.12, x.15)^(x.10*x.13*~ekA.16*inv((x.11*x.14)))
+    
+    149. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv(x.11)), x.12)
+         XC    = pmult((x.13*inv((x.10*x.14))), x.15)
+         z     = em(x.12, x.15)^(x.13*~ekA.16*inv((x.11*x.14)))
+    
+    150. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*x.14), x.15)
+         z     = em(x.13, x.15)^(x.10*x.14*~ekA.16*inv(x.12))
+    
+    151. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*x.14*inv(x.10)), x.15)
+         z     = em(x.13, x.15)^(x.14*~ekA.16*inv(x.12))
+    
+    152. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*inv(x.14)), x.15)
+         z     = em(x.13, x.15)^(x.10*~ekA.16*inv((x.12*x.14)))
+    
+    153. ~ekA  = ~ekA.16
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*inv((x.10*x.14))), x.15)
+         z     = em(x.13, x.15)^(~ekA.16*inv((x.12*x.14)))
+    
+    154. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult((x.12*x.14*inv((x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.11*x.14*~ekA.17*inv(x.15))
+    
+    155. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*x.11*inv(x.12)), x.13)
+         XC    = pmult((x.14*inv((x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.11*x.14*~ekA.17*inv((x.12*x.15)))
+    
+    156. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv(x.10)), x.16)
+         z     = em(x.14, x.16)^(x.11*x.15*~ekA.17*inv(x.13))
+    
+    157. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*inv((x.10*x.15))), x.16)
+         z     = em(x.14, x.16)^(x.11*~ekA.17*inv((x.13*x.15)))
+    
+    158. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*x.14*inv(x.15)), x.16)
+         z     = em(x.13, x.16)^(x.10*x.14*~ekA.17*inv((x.12*x.15)))
+    
+    159. ~ekA  = ~ekA.17
+         XB    = pmult((x.10*inv((x.11*x.12))), x.13)
+         XC    = pmult((x.11*x.14*inv((x.10*x.15))), x.16)
+         z     = em(x.13, x.16)^(x.14*~ekA.17*inv((x.12*x.15)))
+    
+    160. ~ekA  = ~ekA.18
+         XB    = pmult((x.10*x.11*inv((x.12*x.13))), x.14)
+         XC    = pmult((x.12*x.15*inv((x.10*x.16))), x.17)
+         z     = em(x.14, x.17)^(x.11*x.15*~ekA.18*inv((x.13*x.16)))
+  */
+
+lemma session_key_establish:
+  exists-trace
+  "∃ A B C #ia #ib #ic k.
+    ((((((((SessionKey( A, (B+C), k ) @ #ia) ∧
+           (SessionKey( B, (A+C), k ) @ #ib)) ∧
+          (SessionKey( C, (A+B), k ) @ #ic)) ∧
+         (¬(A = B))) ∧
+        (¬(B = C))) ∧
+       (¬(A = C))) ∧
+      (¬(∃ #j. LtkReveal( A ) @ #j))) ∧
+     (¬(∃ #j. LtkReveal( B ) @ #j))) ∧
+    (¬(∃ #j. LtkReveal( C ) @ #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B C #ia #ib #ic k.
+  (SessionKey( A, (B+C), k ) @ #ia) ∧
+  (SessionKey( B, (A+C), k ) @ #ib) ∧
+  (SessionKey( C, (A+B), k ) @ #ic)
+ ∧
+  (¬(A = B)) ∧
+  (¬(B = C)) ∧
+  (¬(A = C)) ∧
+  (∀ #j. (LtkReveal( A ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkReveal( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkReveal( C ) @ #j) ⇒ ⊥)"
+*/
+simplify
+solve( SessionKey( A, (B+C), k ) @ #ia )
+  case Proto2_case_1
+  solve( PState( $A, ($B+$C), ~ekA ) ▶₀ #ia )
+    case Proto1
+    solve( !Pk( $B, pk(ltkB) ) ▶₁ #ia )
+      case Register_pk
+      solve( !Pk( $C, pk(ltkC) ) ▶₂ #ia )
+        case Register_pk
+        solve( SessionKey( $B, ($A+$C), k ) @ #ib )
+          case Proto2_case_1
+          solve( PState( $B, ($A+$C), ~ekA.1 ) ▶₀ #ib )
+            case Proto1
+            solve( !Pk( $A, pk(ltkB) ) ▶₁ #ib )
+              case Register_pk
+              solve( !Pk( $C, pk(ltkC) ) ▶₂ #ib )
+                case Register_pk
+                solve( SessionKey( $C, ($A+$B), k ) @ #ic )
+                  case Proto2_case_1
+                  solve( PState( $C, ($A+$B), ~ekA.2 ) ▶₀ #ic )
+                    case Proto1
+                    solve( !Pk( $A, pk(ltkB) ) ▶₁ #ic )
+                      case Register_pk
+                      solve( !Pk( $B, pk(ltkC) ) ▶₂ #ic )
+                        case Register_pk
+                        solve( !KU( sign(<$B, ($A+$C), XB>, ~ltk) ) @ #vk.2 )
+                          case Proto1
+                          solve( !KU( sign(<$C, ($A+$B), XC>, ~ltk.1) ) @ #vk.5 )
+                            case Proto1
+                            solve( !KU( sign(<$A, ($B+$C), XB>, ~ltk.2) ) @ #vk.8 )
+                              case Proto1
+                              solve( !KU( sign(<$C, ($A+$B), pmult(x, 'P')>, ~ltk.3) ) @ #vk.11 )
+                                case Proto1
+                                solve( !KU( sign(<$A, ($B+$C), XB>, ~ltk.4) ) @ #vk.14 )
+                                  case Proto1
+                                  solve( !KU( sign(<$B, ($A+$C), pmult(x, 'P')>, ~ltk.5) ) @ #vk.17 )
+                                    case Proto1
+                                    solve( splitEqs(3) )
+                                      case split_case_3
+                                      solve( splitEqs(6) )
+                                        case split_case_4
+                                        solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.6 )
+                                          case Proto1
+                                          solve( splitEqs(11) )
+                                            case split
+                                            solve( !KU( pmult(~ekA.2, 'P') ) @ #vk.7 )
+                                              case Proto1
+                                              solve( splitEqs(14) )
+                                                case split
+                                                solve( !KU( pmult(~ekA, 'P') ) @ #vk.8 )
+                                                  case Proto1
+                                                  solve( splitEqs(17) )
+                                                    case split
+                                                    SOLVED // trace found
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Session_Key_Secrecy_PFS:
+  all-traces
+  "∀ A B C sessKey #i #k.
+    ((SessionKey( A, (B+C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
+    (((∃ #l. (LtkReveal( A ) @ #l) ∧ (#l < #i)) ∨
+      (∃ #l. (LtkReveal( B ) @ #l) ∧ (#l < #i))) ∨
+     (∃ #l. (LtkReveal( C ) @ #l) ∧ (#l < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B C sessKey #i #k.
+  (SessionKey( A, (B+C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #l. (LtkReveal( A ) @ #l) ⇒ ¬(#l < #i)) ∧
+  (∀ #l. (LtkReveal( B ) @ #l) ⇒ ¬(#l < #i)) ∧
+  (∀ #l. (LtkReveal( C ) @ #l) ⇒ ¬(#l < #i))"
+*/
+simplify
+solve( SessionKey( A, (B+C), sessKey ) @ #i )
+  case Proto2
+  solve( PState( $A, ($B+$C), ~ekA ) ▶₀ #i )
+    case Proto1
+    solve( !Pk( $C, pk(ltkB) ) ▶₁ #i )
+      case Register_pk
+      solve( !Pk( $B, pk(ltkC) ) ▶₂ #i )
+        case Register_pk
+        solve( !KU( sign(<$C, ($A+$B), XB>, ~ltk) ) @ #vk.3 )
+          case Proto1
+          solve( !KU( sign(<$B, ($A+$C), XC>, ~ltk.1) ) @ #vk.6 )
+            case Proto1
+            solve( !KU( em('P', 'P')^(~ekA*~ekA.1*~ekA.2) ) @ #vk.3 )
+              case Proto1_case_1
+              by solve( !KU( ~ekA ) @ #vk.9 )
+            next
+              case Proto1_case_2
+              by solve( !KU( ~ekA ) @ #vk.9 )
+            next
+              case Proto1_case_3
+              by solve( !KU( ~ekA.1 ) @ #vk.9 )
+            next
+              case Proto1_case_4
+              by solve( !KU( ~ekA ) @ #vk.7 )
+            next
+              case Proto1_case_5
+              by solve( !KU( ~ekA ) @ #vk.7 )
+            next
+              case Proto1_case_6
+              by solve( !KU( ~ekA.1 ) @ #vk.7 )
+            next
+              case Proto1_case_7
+              by solve( !KU( ~ekA.2 ) @ #vk.7 )
+            next
+              case Proto1_case_8
+              by solve( !KU( ~ekA.1 ) @ #vk.7 )
+            next
+              case Proto1_case_9
+              by solve( !KU( ~ekA.2 ) @ #vk.7 )
+            next
+              case c_exp
+              by solve( !KU( ~ekA ) @ #vk.9 )
+            qed
+          next
+            case c_sign
+            solve( !KU( ~ltk.1 ) @ #vk.9 )
+              case Reveal_ltk
+              by contradiction /* from formulas */
+            qed
+          qed
+        next
+          case c_sign
+          solve( !KU( ~ltk ) @ #vk.9 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/ake/bilinear/Joux.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/ake/bilinear/Joux.spthy
+
+  output:          examples/ake/bilinear/Joux.spthy.tmp
+  processing time: 19.734988017s
+  session_key_establish (exists-trace): verified (28 steps)
+  Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/ake/bilinear/Joux.spthy
+
+  output:          examples/ake/bilinear/Joux.spthy.tmp
+  processing time: 19.734988017s
+  session_key_establish (exists-trace): verified (28 steps)
+  Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
+
+==============================================================================
+*/

@@ -50,6 +50,7 @@ module Theory.Constraint.System (
   , dpcDestrRules
   , dpcConstrRules
   , dpcRestrictions
+  , dpcReuseLemmas
   , eitherProofContext
 
   -- ** Classified rules
@@ -69,10 +70,10 @@ module Theory.Constraint.System (
 
   , cdGoal
   , cdCases
-  
+
   , Side(..)
   , opposite
-    
+
   -- * Constraint systems
   , System
   , DiffProofType(..)
@@ -84,7 +85,7 @@ module Theory.Constraint.System (
 
   , SystemTraceQuantifier(..)
   , formulaToSystem
-  
+
   -- ** Diff proof system
   , dsProofType
   , dsProtoRules
@@ -98,6 +99,8 @@ module Theory.Constraint.System (
   -- ** Node constraints
   , sNodes
   , allKDConcs
+  , allInPrems
+  , allPrems
 
   , nodeRule
   , nodeRuleSafe
@@ -129,16 +132,16 @@ module Theory.Constraint.System (
   , getMirrorDGandEvaluateRestrictions
   , doRestrictionsHold
   , filterRestrictions
-  
+
   , checkIndependence
-  
+
   , unsolvedPremises
   , unsolvedTrivialGoals
   , allFormulasAreSolved
   , dgIsNotEmpty
   , allOpenFactGoalsAreIndependent
   , allOpenGoalsAreSimpleFacts
-  
+
   -- ** Temporal ordering
   , sLessAtoms
 
@@ -178,7 +181,7 @@ module Theory.Constraint.System (
 
   , sGoals
   , sNextGoalNr
-  
+
   , isDiffSystem
   , sDiffSystem
 
@@ -393,10 +396,11 @@ data DiffProofContext = DiffProofContext
        , _dpcConstrRules          :: [RuleAC]
        , _dpcDestrRules           :: [RuleAC]
        , _dpcRestrictions         :: [(Side, [LNGuarded])]
+       , _dpcReuseLemmas          :: [(Side, LNGuarded)]
        }
        deriving( Eq, Ord, Show )
 
-       
+
 $(mkLabels [''ProofContext, ''DiffProofContext, ''Source])
 
 
@@ -411,20 +415,10 @@ eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPC
 -- Instances
 ------------
 
-instance HasFrees Source where
-    foldFrees f th =
-        foldFrees f (L.get cdGoal th)   `mappend`
-        foldFrees f (L.get cdCases th)
-
-    foldFreesOcc  _ _ = const mempty
-
-    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
-                                    <*> mapFrees f (L.get cdCases th)
-
 data DiffProofType = RuleEquivalence | None
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
-    
--- | A system used in diff proofs. 
+
+-- | A system used in diff proofs.
 data DiffSystem = DiffSystem
     { _dsProofType      :: Maybe DiffProofType              -- The diff proof technique used
     , _dsSide           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
@@ -463,7 +457,7 @@ formulaToSystem :: [LNGuarded]           -- ^ Restrictions to add
                 -> Bool                  -- ^ In diff proofs, all action goals have to be resolved
                 -> LNFormula
                 -> System
-formulaToSystem restrictions kind traceQuantifier isdiff fm = 
+formulaToSystem restrictions kind traceQuantifier isdiff fm =
       insertLemmas safetyRestrictions
     $ L.set sFormulas (S.singleton gf2)
     $ (emptySystem kind isdiff)
@@ -500,9 +494,25 @@ insertLemmas fms sys = foldl' (flip insertLemma) sys fms
 -- | A list of all KD-conclusions in the 'System'.
 allKDConcs :: System -> [(NodeId, RuleACInst, LNTerm)]
 allKDConcs sys = do
-    (i, ru)                            <- M.toList $ L.get sNodes sys
+    (i, ru)                         <- M.toList $ L.get sNodes sys
     (_, kFactView -> Just (DnK, m)) <- enumConcs ru
     return (i, ru, m)
+
+-- | A list of all In-premises in the 'System'.
+allInPrems :: System -> [(NodeId, PremIdx, LNTerm)]
+allInPrems sys = do
+    (i, ru)                   <- M.toList $ L.get sNodes sys
+    (j, inFactView -> Just m) <- enumPrems ru
+    return (i, j, m)
+
+-- | A list of all In- and Protocol premises in the 'System'.
+allPrems :: System -> [(NodeId, PremIdx, Int, LNTerm)]
+allPrems sys = do
+    (i, ru)                           <- M.toList $ L.get sNodes sys
+    (j, protoOrInFactView -> Just m') <- enumPrems ru
+    (k, m)                            <- zip [0..] m'
+    return (i, j, k, m)
+
 
 -- | @nodeRule v@ accesses the rule label of node @v@ under the assumption that
 -- it is present in the sequent.
@@ -602,7 +612,7 @@ intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
                                                                                  _                   -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
-    
+
 -- | 'getOppositeRules' @ctxt@ @side@ @rule@ returns all rules with the same name as @rule@ in diff proof context @ctxt@ on the opposite side of side @side@.
 getOppositeRules :: DiffProofContext -> Side -> RuleACInst -> [RuleAC]
 getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
@@ -613,12 +623,12 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
         (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
-                                                            (map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
+                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
         (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
         _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                             [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                             x  -> x
-                                                                                 
+
 -- | 'getOriginalRule' @ctxt@ @side@ @rule@ returns the original rule of protocol rule @rule@ in diff proof context @ctxt@ on side @side@.
 getOriginalRule :: DiffProofContext -> Side -> RuleACInst -> RuleAC
 getOriginalRule ctxt side (Rule rule _ _ _ _) = case rule of
@@ -636,12 +646,12 @@ isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) Tr
   where
     checkRuleInstance :: System -> NodeId -> RuleACInst -> Bool
     checkRuleInstance sys' idx rule = foldr (\x y -> y && (checkPrems sys' idx x)) True (enumPrems rule)
-      
+
     checkPrems :: System -> NodeId -> (PremIdx, LNFact) -> Bool
     checkPrems sys' idx (premidx, fact) = case S.toList (S.filter (\(Edge _ y) -> y == (idx, premidx)) (L.get sEdges sys')) of
                                                [(Edge x _)] -> fact == nodeConcFact x sys'
                                                _            -> False
-                                               
+
 -- | A partial valuation for atoms. The return value of this function is
 -- interpreted as follows.
 --
@@ -704,6 +714,8 @@ safePartialAtomValuation ctxt sys =
                 case L.get sLastAtom sys of
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
+          
+          Syntactic _                            -> Nothing
 
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are
 -- implied by @se@.
@@ -773,14 +785,15 @@ impliedFormulasAndSystems hnd sys gf = res
         go :: [(NodeId, LNFact)] -> [([Equal LNTerm], [Equal LNTerm])]
         go []                                                  = []
         go ((nid, sysAct):acts) | factTag sysAct == factTag fa =
-            (map (\(x, y) -> ((((Equal (toConst nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ x),
-                              (((Equal (varTerm nid) a):(zipWith Equal (factTerms sysAct) (factTerms fa))) ++ y))) $ equalities as)
+            (map (\(x, y) -> ((((Equal (variableToConst nid) a):(zipWith Equal sysTerms formulaTerms)) ++ x),
+                              (((Equal (varTerm nid) a):(zipWith Equal sysTerms formulaTerms)) ++ y))) $ equalities as)
                                   ++ (go acts)
+            where
+                sysTerms = map freshToConst (factTerms sysAct)
+                formulaTerms = factTerms fa
+
         go ((_  , _     ):acts) | otherwise                    = go acts
     equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
-
-    toConst cvar = constTerm (Name NodeName (NameId ("constVar_" ++ toConstName cvar)))
-    toConstName (LVar name vsort idx) = (show vsort) ++ "_" ++ (show idx) ++ "_" ++ name
 
 -- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
@@ -792,7 +805,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
     -- instantiated to a different index *in* the trace.
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms {-$ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
+         (GAto ato)  -> unifiableAtoms {-- $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
          gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
@@ -809,7 +822,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
 
     mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
 
--- | Data type for a trivalent logic used to return whether restrictions on mirrors are valid, invalid or unknown 
+-- | Data type for a trivalent logic used to return whether restrictions on mirrors are valid, invalid or unknown
 data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
 
 -- | Computes the mirror dependency graph and evaluates whether the restrictions hold.
@@ -859,7 +872,7 @@ doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME J
         res = step forms solved
 
     step :: [(LNGuarded, System)] -> Bool -> [(LNGuarded, System)]
-    step forms solved = map simpGuard $ concat {-$ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
+    step forms solved = map simpGuard $ concat {-- $ trace (show (map (impliedOrInitial solved) forms))-} $ map (impliedOrInitial solved) forms
 
     valuation s' = safePartialAtomValuation ctxt s'
 
@@ -885,7 +898,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
     newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshAndPubConstrRules]) newProtoRules) otherRules)
 
-    -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances 
+    -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
     transformRuleInstance :: MonadFresh m => NodeId -> RuleACInst -> m ([M.Map NodeId RuleACInst]) -> m ([M.Map NodeId RuleACInst])
     transformRuleInstance idx rule nodes = genNodeMapsForAllRuleVariants <$> nodes <*> (getOtherRulesAndVariants rule)
@@ -905,7 +918,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
               if isProtocolRule r
                  then return ((mapMaybe (\ru -> ((flip apply) ru) <$> (getSubstitutionsFixingNewVars o ru)) variants) ++ rest)
                  else return (variants++rest)
-            
+
         getVariants :: MonadFresh m => (RuleACInst, Maybe RuleACConstrs) -> m ([RuleACInst])
         getVariants (r, Nothing)       = return [r]
         getVariants (r, Just (Disj v)) = appSubst v
@@ -917,7 +930,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
               inst <- rename (apply subst r)
               rest <- appSubst xs
               return (inst:rest)
-                                              
+
     unifyInstances :: [M.Map NodeId RuleACInst] -> [System]
     unifyInstances newrules =
       foldl jumpNotUnifiable [] newrules
@@ -927,7 +940,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
                       else (L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret
             where
               (foundUnifiers, constSubsts) = unifiers $ equalities True x
-              
+
               finalSubst :: [LNSubst] -> [LNSubst]
               finalSubst subst = map replaceConstants subst
                 where
@@ -939,22 +952,22 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
                               (Lit _) | t `M.member` inversSubst -> varTerm $ inversSubst M.! t
                                       | otherwise                -> t
                               (FApp s' ts)                       -> fApp s' $ map applyInverseSubst ts
-                      
+
                       inversSubst = M.fromList $ map swap constSubsts
-              
+
               freeUnifiers :: M.Map NodeId RuleACInst -> [LNSubst]
               freeUnifiers newnodes = finalSubst $ map (\y -> freshToFreeAvoiding y (newnodes, sys)) foundUnifiers
-        
+
     unifiers :: (Maybe [(Equal LNFact, (LVar, LNTerm))],[Equal LNFact]) -> ([SubstVFresh Name LVar], [(LVar, LNTerm)])
     unifiers (Nothing, _)                  = ([], [])
     unifiers (Just equalfacts, equaledges) = (runReader (unifyLNFactEqs $ (map fst equalfacts) ++ equaledges) (getMaudeHandle ctxt side), map snd equalfacts)
-    
+
     equalities :: Bool -> M.Map NodeId RuleACInst -> (Maybe [(Equal LNFact, (LVar, LNTerm))],[Equal LNFact])
     equalities fixNewPublicVars newrules = (getNewVarEqualities fixNewPublicVars newrules, (getGraphEqualities newrules) ++ (getKUGraphEqualities newrules))
-        
+
     getGraphEqualities :: M.Map NodeId RuleACInst -> [Equal LNFact]
     getGraphEqualities nodes = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys)
-    
+
     getKUGraphEqualities :: M.Map NodeId RuleACInst -> [Equal LNFact]
     getKUGraphEqualities nodes = toEquality [] $ getEdgesFromLessRelation sys
       where
@@ -969,15 +982,15 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndP
       where
         genEqualities :: [(LNFact, LVar, LVar)] -> [(Equal LNFact, (LVar, LNTerm))]
         genEqualities = map (\(x, y, z) -> (Equal x (replaceNewVarWithConstant x y z), (y, constant y z)))
-        
+
         genTrivialEqualities :: Maybe ([(Equal LNFact, (LVar, LNTerm))])
         genTrivialEqualities = genEqualities <$> getTrivialFacts nodes sys
-                
+
         replaceNewVarWithConstant :: LNFact -> LVar -> LVar -> LNFact
         replaceNewVarWithConstant fact v cvar = apply subst fact
           where
             subst = Subst (M.fromList [(v, constant v cvar)])
-        
+
         constant :: LVar -> LVar -> LNTerm
         constant v cvar = constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName cvar)))
           where
@@ -1013,7 +1026,7 @@ getAllMatchingConcs sys premid (x:xs) = case (nodeRuleSafe x sys) of
         ++ (getAllMatchingConcs sys premid xs)
 getAllMatchingConcs _    _     []     = []
 
--- | Given a system, a fact, and a set of node ids from the less relation returns the set of matching premises, if the rule instances exist                                                 
+-- | Given a system, a fact, and a set of node ids from the less relation returns the set of matching premises, if the rule instances exist
 getAllMatchingPrems :: System -> LNFact -> [NodeId] -> [NodePrem]
 getAllMatchingPrems sys fa (x:xs) = case (nodeRuleSafe x sys) of
     Nothing   -> getAllMatchingPrems sys fa xs
@@ -1036,9 +1049,9 @@ getOpenNodePrems sys = getOpenIncoming (M.toList $ L.get sNodes sys)
     getOpenIncoming :: [(NodeId, RuleACInst)] -> [NodePrem]
     getOpenIncoming []          = []
     getOpenIncoming ((k, r):xs) = (filter hasNoIncomingEdge $ map (\(x, _) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
-    
+
     hasNoIncomingEdge np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys))
-       
+
 -- | Returns a list of all open trivial facts of nodes in the current system, and the variable they need to be unified with
 getTrivialFacts :: M.Map NodeId RuleACInst -> System -> Maybe ([(LNFact, LVar, LVar)])
 getTrivialFacts nodes sys = case (unsolvedTrivialGoals sys) of
@@ -1047,14 +1060,14 @@ getTrivialFacts nodes sys = case (unsolvedTrivialGoals sys) of
   where
     foldTreatGoal :: Maybe [(LNFact, LVar, LVar)] -> (Either NodePrem LVar, LNFact) -> Maybe [(LNFact, LVar, LVar)]
     foldTreatGoal eqdata goal = (++) <$> (treatGoal eqdata goal) <*> eqdata
-    
+
     treatGoal :: HasFrees t => t -> (Either NodePrem LVar, LNFact) -> Maybe [(LNFact, LVar, LVar)]
     treatGoal _ (Left pidx, _ ) = (map (\(x, y) -> (x, y, y))) <$> getFactAndVars nodes pidx
     treatGoal a (Right var, fa) = premiseFacts (nodes, a) var fa
-    
+
     premisesForKUAction :: LVar -> LNFact -> [NodePrem]
     premisesForKUAction var fa = getAllMatchingPrems sys fa $ getAllLessSucs sys var
-    
+
     premiseFacts :: HasFrees t => t -> LVar -> LNFact -> Maybe ([(LNFact, LVar, LVar)])
     premiseFacts av var fa = fmap concat $ sequence $ map (getAllEqData (renameAvoiding fa av)) (premisesForKUAction var fa)
 
@@ -1066,8 +1079,8 @@ getFactAndVars :: M.Map NodeId RuleACInst -> NodePrem -> Maybe ([(LNFact, LVar)]
 getFactAndVars nodes premid = (map (\x -> (fact, x))) <$> (isTrivialFact fact)
   where
     fact = (nodePremFactMap premid nodes)
-                
--- | Assumption: the goal is trivial. Returns true if it is independent wrt the rest of the system.                                                 
+
+-- | Assumption: the goal is trivial. Returns true if it is independent wrt the rest of the system.
 checkIndependence :: System -> (Either NodePrem LVar, LNFact) -> Bool
 checkIndependence sys (eith, fact) = not (D.cyclic (rawLessRel sys))
     && (checkNodes $ case eith of
@@ -1076,14 +1089,14 @@ checkIndependence sys (eith, fact) = not (D.cyclic (rawLessRel sys))
   where
     edges = S.toList $ saturateEdgesWithLessRelation sys
     variables = fromMaybe (error $ "checkIndependence: This fact " ++ show fact ++ " should be trivial! System: " ++ show sys) (isTrivialFact fact)
-    
+
     identifyPremises :: LVar -> LNFact -> [NodePrem]
     identifyPremises var' fact' = getAllMatchingPrems sys fact' (getAllLessSucs sys var')
-    
+
     checkIndependenceRec :: M.Map NodeId RuleACInst -> NodePrem -> M.Map NodeId RuleACInst
     checkIndependenceRec nodes (nid, _) = foldl checkIndependenceRec (M.delete nid nodes)
         $ map (\(Edge _ tgt) -> tgt) $ filter (\(Edge (srcn, _) _) -> srcn == nid) edges
-    
+
     checkNodes :: M.Map NodeId RuleACInst -> Bool
     checkNodes nodes = all (\(_, r) -> null $ filter (\f -> not $ null $ intersect variables (getFactVariables f)) (facts r)) $ M.toList nodes
       where
@@ -1147,7 +1160,7 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
 isDiffSystem = L.get sDiffSystem
-        
+
 -- Actions
 ----------
 
@@ -1239,7 +1252,7 @@ isLast sys i = Just i == L.get sLastAtom sys
 
 -- | Pretty print a sequent
 prettySystem :: HighlightDocument d => System -> d
-prettySystem se = vcat $ 
+prettySystem se = vcat $
     map combine
       [ ("nodes",          vcat $ map prettyNode $ M.toList $ L.get sNodes se)
       , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
@@ -1267,7 +1280,7 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 --   , ("system",          text $ show se)
 --   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
 --   , ("DEBUG: Nodes",    vcat $ map prettyNode $ M.toList $ L.get sNodes se)
---   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-$ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
+--   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-- $ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -1291,7 +1304,7 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   where
     combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 --     help :: Maybe [LNGuarded]
---     help = do 
+--     help = do
 --       side <- L.get dsSide se
 -- --       system <- L.get dsSystem se
 --       restrictions <- Just $ L.get dpcRestrictions ctxt
@@ -1300,9 +1313,9 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
 -- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
 -- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
 --       return $ concat $ map snd siderestrictions
--- 
+--
 --     help2 :: Maybe [LNGuarded]
---     help2 = do 
+--     help2 = do
 --       side2 <- L.get dsSide se
 --       side <- Just $ if side2 == LHS then RHS else LHS
 -- --       system <- L.get dsSystem se
@@ -1460,6 +1473,15 @@ instance HasFrees System where
                <*> mapFrees fun k
                <*> mapFrees fun l
 
+instance HasFrees Source where
+    foldFrees f th =
+        foldFrees f (L.get cdGoal th)   `mappend`
+        foldFrees f (L.get cdCases th)
+
+    foldFreesOcc  _ _ = const mempty
+
+    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
+                                    <*> mapFrees f (L.get cdCases th)
 
 -- Special comparison functions to ignore new var instantiations
 ----------------------------------------------------------------

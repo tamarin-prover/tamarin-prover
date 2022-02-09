@@ -29,7 +29,7 @@ let compare s1 s2 =
                 | (Temp(n1),Temp(n2)) 
                 | (Msg(n1),Msg(n2)) -> (String.compare n1 n2)
                 (* needs to be a total order! *)
-        | (a,b)  -> compare (rank a) (rank b)
+        | (a,b)  -> Stdlib.compare (rank a) (rank b)
 
 let var2string = function 
         | PubFixed(name) -> "'"^name^"'"
@@ -44,4 +44,5 @@ let var2string = function
                 (string_of_int (String.length name)) *)
 
 
-let flatten_varlist varlist = (String.concat ", ") (List.map var2string varlist)
+let flatten_varlist_comma varlist = (String.concat ", ") (List.map var2string varlist)
+let flatten_varlist_space varlist = (String.concat " ") (List.map var2string varlist)

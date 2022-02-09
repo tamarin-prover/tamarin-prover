@@ -12,6 +12,8 @@ equations:
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), sk), r) = sign(m, sk)
 
+
+
 rule (modulo E) Register_Voter_pk:
    [ Fr( ~ltkV ) ]
   -->
@@ -317,8 +319,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/foo_eligibility.spthy
@@ -327,7 +327,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.73547019s
+  processing time: 1.108189481s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -340,7 +340,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.73547019s
+  processing time: 1.108189481s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

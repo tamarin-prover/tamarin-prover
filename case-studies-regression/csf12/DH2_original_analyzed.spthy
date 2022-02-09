@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: KDF/1, MAC/2, fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* DH2 *}
 
 rule (modulo E) Register_pk:
@@ -307,10 +309,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             qed
                           next
                             case Register_pk
-                            solve( !KU( ~m2 ) @ #vk.16 )
-                              case Ephk_reveal
-                              by contradiction /* cyclic */
-                            qed
+                            by contradiction /* cyclic */
                           next
                             case Resp_1_case_1
                             by contradiction /* cyclic */
@@ -1078,10 +1077,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           qed
                         next
                           case Register_pk
-                          solve( !KU( ~m2 ) @ #vk.19 )
-                            case Ephk_reveal
-                            by contradiction /* cyclic */
-                          qed
+                          by contradiction /* cyclic */
                         next
                           case Resp_1_case_1
                           by contradiction /* cyclic */
@@ -1818,8 +1814,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/DH2_original.spthy
@@ -1828,8 +1822,8 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 13.837541327s
-  KAS_key_secrecy (all-traces): verified (503 steps)
+  processing time: 27.951035633s
+  KAS_key_secrecy (all-traces): verified (501 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1839,8 +1833,8 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 13.837541327s
-  KAS_key_secrecy (all-traces): verified (503 steps)
+  processing time: 27.951035633s
+  KAS_key_secrecy (all-traces): verified (501 steps)
 
 ==============================================================================
 */

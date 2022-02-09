@@ -9,6 +9,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 section{* The Signed Diffie-Hellman Protocol *}
 
 rule (modulo E) Register_pk:
@@ -207,8 +209,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/SignedDH_PFS.spthy
@@ -217,7 +217,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.289054395s
+  processing time: 0.326212114s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.289054395s
+  processing time: 0.326212114s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

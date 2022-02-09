@@ -1,0 +1,89 @@
+theory LD07_UK2
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+LD07: Readers R_i for i>0, RFID tag T
+      Reader R_i knows k_0, k_i, k_{i+1}
+      Tag T knows alpha := k_0 XOR k_i
+
+   Ri: knows(k0, ki, ksi)
+   T: let alpha := k0 XOR ki
+   T: knows(alpha)
+   Ri: fresh(r)
+Ri->T: r
+   T: let alpha := k0 XOR ki
+T->Ri: h(r XOR alpha)
+   Ri: let  a := ki XOR ksi
+   Ri: let  b := h(a XOR k0 XOR ki)
+Ri->T: a, b
+   T: if b = h(a XOR k0 XOR ki) then let alpha' := alpha XOR a else alpha'=alpha
+   T: knows(alpha')
+
+This is a stateful protocol for the tag. The tag's knowledge is updated. 
+
+The model concerns untraceability based on the UK2 definition. 
+It shows that the untraceability claim made in the LD07 paper is false.
+*/
+
+rule Setup:
+   let alpha = ~k0 XOR ~k1
+   in 
+   [ Fr( ~k0 ), Fr( ~k1 ), Fr( ~k2 )
+   , Fr( ~r ), Fr( ~secondTag )
+   ]
+ --[ Setup(diff(~k0,~secondTag))
+   , OnlyOnce( 'setup' ) ]-> 
+   [ Out( <~r, h(~r XOR alpha), ~k1 XOR ~k2, h(~k2 XOR ~k0)> ) // full transcript of honest interaction b/w tag and reader
+   , Tag(diff(~k0, ~secondTag), diff(~k2 XOR ~k0,~k2 XOR ~secondTag))  // Tag(x,y): x is tag's key/id, y is current key
+   ]
+
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   , OnlyOnce('tag1')
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   , TagRunning( ~k, x )
+   ]
+
+rule tag2:
+   [ In( <newkey, newhash> )
+   , TagRunning( ~k, x )
+   ]
+ --[ Update( ~k, x XOR newkey, 'Tag' )
+   , Eq(h(newkey XOR x),newhash)
+   , Alive( ~k, 'Reader' )
+   , OnlyOnce('tag2')
+   ]->
+   [ Tag( ~k, x XOR newkey)
+   ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+/*
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+// We only consider one session of the tag, past the learning phase.
+restriction unique:
+  "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+// TRACE FOUND AUTOMATICALLY
+lemma executable:
+  exists-trace "∃ x y #i #j. (Response( x, 'Tag' ) @ #i) & (Update( x, y, 'Tag') @ #j)
+           // further restriction to automatically get the simplest execution
+           ∧ (not Ex #l. Response( x, 'Tag' ) @ #l & (not (#i=#l)))"
+
+//ATTACK FOUND AUTOMATICALLY
+// Observational Equivalence
+
+end

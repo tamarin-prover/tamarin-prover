@@ -8,6 +8,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 section{* KAS2 *}
 
 rule (modulo E) Register_pk:
@@ -233,8 +235,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KAS2_eCK.spthy
@@ -243,7 +243,7 @@ analyzing: examples/csf12/KAS2_eCK.spthy
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 1.833699187s
+  processing time: 3.000678473s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 1.833699187s
+  processing time: 3.000678473s
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

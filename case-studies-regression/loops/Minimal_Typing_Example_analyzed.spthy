@@ -8,6 +8,8 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Setup_Key:
    [ Fr( ~k ) ] --> [ !Key( ~k ) ]
 
@@ -144,8 +146,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/Minimal_Typing_Example.spthy
@@ -154,7 +154,7 @@ analyzing: examples/loops/Minimal_Typing_Example.spthy
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.080458723s
+  processing time: 0.115798168s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -167,7 +167,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.080458723s
+  processing time: 0.115798168s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)

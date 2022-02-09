@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* NAXOS *}
 
 rule (modulo E) generate_ltk:
@@ -725,8 +727,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/NAXOS_eCK.spthy
@@ -735,7 +735,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 2.467206491s
+  processing time: 4.054229711s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 2.467206491s
+  processing time: 4.054229711s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

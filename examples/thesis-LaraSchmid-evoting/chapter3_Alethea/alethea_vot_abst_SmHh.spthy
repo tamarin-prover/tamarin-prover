@@ -1,0 +1,253 @@
+theory alethea_vot_abst_SmHh
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea's voting phase with a voter who abstains
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+========
+RESULTS:
+========
+
+- lemma functional: verified w/o oracle and checked
+
+- lemma indivVerif_v: verified w/o oracle
+- lemma indivVerif_b: verified w/o oracle
+	
+- lemma Tall_As_Rec:  verified (8 steps)
+
+
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: signing, asymmetric-encryption, hashing, symmetric-encryption, multiset
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+//verification equation that returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all pks). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+
+rule Setup: 
+  	[ !Ltk('S',~skS), Fr(~x1), Fr(~x2) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkDSG', pk(h('H1',~x1)) >), //corresponds to singal BB_SG in thesis
+		Voter('H1')	
+	]-> 
+  	[ AgSt_H0('H1',< 'D1','BB','empty'>)
+	
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),h('H1',~x1) >)
+	
+	, AgSt_A0('A',<'S','BB',pk(~skS)>)
+	
+	, AgSt_BB0('BB', <'S','spkDSG', pk(h('H1',~x1))>)
+	, Out_A('BB',<'spkDSG', pk(h('H1',~x1)) >) //corresponds to [pk_D^SG] in thesis
+	
+	, Out(<'S', <~skS, ~x1>>)
+		
+  	]
+
+rule H_1:
+	[ AgSt_H0($H, <$D, $BB, $v>) ]
+	--[	Vote($H,$v)
+	]->
+	[ AgSt_H1($H, <$D, $BB, $v>), Out_S($H,$D,$v)
+	]
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,h($H,~x)>), In_S($H,$D,'empty') ]
+	--[  ]->
+	[ Out_S($D,$H, sg(encp('empty',~x,pkS),h($H,~x)) ) //use x as randomness for encrpytion
+	]
+
+rule H_2:
+	[ AgSt_H1($H, <$D, $BB, $v>), In_S($D,$H, b) ]
+	--[	Abstain($H,'empty'), 
+		Ballot($H,b)   	
+	]->
+	[ AgSt_H2($H, <$D, $BB, $v, b>)
+ // don't send any ballot
+	]
+
+/* omit rule S_1 as S is malicious and modeled by the adversary rules */
+
+rule BB: 
+	[ AgSt_BB0($BB, <$S,'spkDSG', spkDa >)
+	, In(<$S, <'b', ba >>)
+	, In(<$S, <'bPrime', bPrimea >>)
+	, In(<$S, <'v', va>>)
+	, In(<$S, <'zkp', p >>)
+	]
+ 	--[ 	BB_rec($BB,<'b', ba >),
+		BB_woS($BB,<'bPrime', bPrimea >),
+		BB_tal($BB,<'v', va >),
+		BB_zkp($BB,<'zkp', p >)
+	]->  
+	[ Out_A($BB, <'b', ba >)
+	, Out_A($BB, <'bPrime', bPrimea >)
+	, Out_A($BB, <'v', va >)
+	, Out_A($BB, <'zkp', p >)
+	]
+	
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,pkS>)
+	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really b w/o signatures:
+	, In_A($BB, <'b', sg(bPrimea,sskDa) >)
+	, In_A($BB, <'bPrime', bPrimea >)
+	, In_A($BB, <'v', va >)
+	, In_A($BB, <'zkp', p >)
+	, In_A($BB, <'spkDSG', pk(sskDa) >) 
+	]
+	--[   Learn_A_proof($A, <'zkp', p >),
+	      Learn_A_spkDSG($A, <'spkDSG', pk(sskDa) >),
+	      Learn_A_Vs($A,<'v', va >),
+	      Learn_A_Bs($A,<'b', sg(bPrimea,sskDa) >),
+	      Learn_A_bPrimes($A,<'bPrime', bPrimea >),
+  	      VerifyA2($A,verzkp( p, <bPrimea>,<va>,pkS) )
+	]->
+	[]
+
+rule H_3: 
+	[ AgSt_H2($H, <$D, $BB, $v, b>),
+	  In_A($BB, <'b', ba >)
+	]
+	--[	Verify($H,b,ba )
+	]->
+	[   ]
+
+
+
+/* =========
+RESTRICTIONS
+========== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+
+lemma functional: exists-trace
+	" Ex H #i #j b 
+		BB #k #l #m #n 
+		A p bPrime v pkS #o
+		.
+		Vote(H,'empty') @i
+		& Abstain(H,'empty') @j
+		& Ballot(H,b) @n
+				
+		& BB_rec(BB,<'b', b >) @k
+		& BB_tal(BB,<'v', 'empty'>) @l
+
+		& Verify(H,b,b) @m
+		& VerifyA2(A, verzkp(p,<bPrime>,<v>,pkS )) @o
+
+		"
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_v: 
+	"All H v #i b #j .
+		Vote(H,v) @i 			
+		& Verify(H,b,b) @j	
+	==> Ex BB #l r pkS sskD . 
+		BB_rec(BB,<'b', b >) @l 	
+		& b = sg(encp(v,r,pkS),sskD) " 	
+
+
+lemma indivVerif_b: 
+	"All H b #j .
+		Verify(H,b,b) @j
+	==> Ex BB #l . 
+		BB_rec(BB,<'b', b >) @l 
+  	" 	
+
+
+
+/*================================
+Universal verifiability properties
+================================*/
+
+lemma Tall_As_Rec:  
+"All A #a spkDSG p votes ballots bPrimes sk xa ra 
+	. 
+	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
+	& Learn_A_proof(A, <'zkp', p >) @a
+	& Learn_A_Vs(A,<'v', votes >) @a
+	& Learn_A_Bs(A,<'b', ballots >) @a
+	& Learn_A_bPrimes(A,<'bPrime', bPrimes >) @a
+	//by application of rule, A1 is checked;
+	//by application of rule, it is made sure that the values bPrimes, votes, and p are input to the VerifyA2
+	& VerifyA2(A, verzkp(zkp(<encp(xa,ra,pk(sk))>,<xa>,sk) 
+				,<encp(xa,ra,pk(sk))>,<xa>,pk(sk))) @a
+==> (Ex #b BB r1 sskD1 #b2.
+	BB_rec(BB,<'b', ballots >) @b	
+	& BB_tal(BB,<'v', votes>) @b	
+	& BB_pskDs(BB,<'spkDSG', spkDSG >) @b2	
+	& spkDSG =  pk(sskD1)
+	& ballots = sg(encp(votes,r1,pk(sk)),sskD1)
+     )"	
+
+
+
+end
+
+	     			   
+
+

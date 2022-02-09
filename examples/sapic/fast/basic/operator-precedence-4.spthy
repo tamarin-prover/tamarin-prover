@@ -1,0 +1,16 @@
+theory OperatorPrecedenceLet
+begin
+section{* A few test cases for operator precedence *}
+
+let pat_x = '1' in
+    in(pat_x); event E(pat_x)
+    |
+    in(pat_x); event E(pat_x)
+
+// should be parsed as
+// let pat_x = 1 in (in .. | in )
+
+lemma second_process_covered:
+    "All #e x. E(x)@e ==> x = '1'"
+
+end

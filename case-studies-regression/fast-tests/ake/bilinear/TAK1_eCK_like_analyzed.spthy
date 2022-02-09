@@ -1,0 +1,548 @@
+theory TAK1 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing, multiset
+functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* The TAK1 Protocol. *}
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ea ) ]
+  -->
+   [ !Ltk( $A, ~ea ), !Pk( $A, pmult(~ea, 'P') ), Out( pmult(~ea, 'P') ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( $A, ~ea ) ] --[ LtkRev( $A ) ]-> [ Out( ~ea ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ephk:
+   [ !EphKey( ~ek ) ] --[ EphkRev( ~ek ) ]-> [ Out( ~ek ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_sessk:
+   [ !SessKey( ~sid, kdf(sessKey) ) ]
+  --[ SesskRev( ~sid ) ]->
+   [ Out( kdf(sessKey) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Proto1:
+   [ Fr( ~ex ) ]
+  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A+$B+$C) ) ]->
+   [ PState1( ~ex, $A, $B, $C ), Out( pmult(~ex, 'P') ), !EphKey( ~ex ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Proto2:
+   [ PState1( ~ex, $A, $B, $C ), In( XB ), In( XC ) ]
+  -->
+   [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), em(XB, XC) ) ]
+
+  /*
+  rule (modulo AC) Proto2:
+     [ PState1( ~ex, $A, $B, $C ), In( XB ), In( XC ) ]
+    -->
+     [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), z ) ]
+    variants (modulo AC)
+     1. XB    = XB.8
+        XC    = XC.8
+        z     = em(XB.8, XC.8)
+    
+     2. XB    = XB.10
+        XC    = pmult(x.8, x.9)
+        z     = em(x.9, XB.10)^x.8
+    
+     3. XB    = pmult(x.8, x.9)
+        XC    = XC.10
+        z     = em(x.9, XC.10)^x.8
+    
+     4. XB    = pmult(x.8, x.9)
+        XC    = pmult(x.10, x.11)
+        z     = em(x.9, x.11)^(x.8*x.10)
+    
+     5. XB    = pmult(x.8, x.9)
+        XC    = pmult(inv(x.8), x.10)
+        z     = em(x.9, x.10)
+    
+     6. XB    = pmult(x.8, x.9)
+        XC    = pmult(inv((x.8*x.10)), x.11)
+        z     = em(x.9, x.11)^inv(x.10)
+    
+     7. XB    = pmult(x.8, x.9)
+        XC    = pmult((x.10*inv(x.8)), x.11)
+        z     = em(x.9, x.11)^x.10
+    
+     8. XB    = pmult(x.8, x.9)
+        XC    = pmult((x.10*inv((x.8*x.11))), x.12)
+        z     = em(x.9, x.12)^(x.10*inv(x.11))
+    
+     9. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult(x.8, x.10)
+        z     = em(x.9, x.10)
+    
+    10. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult(inv(x.10), x.11)
+        z     = em(x.9, x.11)^inv((x.8*x.10))
+    
+    11. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult((x.8*x.10), x.11)
+        z     = em(x.9, x.11)^x.10
+    
+    12. XB    = pmult(inv(x.8), x.9)
+        XC    = pmult((x.10*inv(x.11)), x.12)
+        z     = em(x.9, x.12)^(x.10*inv((x.8*x.11)))
+    
+    13. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult(x.8, x.11)
+        z     = em(x.10, x.11)^inv(x.9)
+    
+    14. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*x.11), x.12)
+        z     = em(x.10, x.12)^(x.11*inv(x.9))
+    
+    15. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*x.11*inv(x.12)), x.13)
+        z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
+    
+    16. XB    = pmult(inv((x.8*x.9)), x.10)
+        XC    = pmult((x.8*inv(x.11)), x.12)
+        z     = em(x.10, x.12)^inv((x.9*x.11))
+    
+    17. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult(inv(x.8), x.11)
+        z     = em(x.10, x.11)^x.9
+    
+    18. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult(inv((x.8*x.11)), x.12)
+        z     = em(x.10, x.12)^(x.9*inv(x.11))
+    
+    19. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult((x.11*inv(x.8)), x.12)
+        z     = em(x.10, x.12)^(x.9*x.11)
+    
+    20. XB    = pmult((x.8*x.9), x.10)
+        XC    = pmult((x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.9*x.11*inv(x.12))
+    
+    21. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult(inv((x.8*x.12)), x.13)
+        z     = em(x.11, x.13)^(x.9*inv((x.10*x.12)))
+    
+    22. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*x.12*inv(x.8)), x.13)
+        z     = em(x.11, x.13)^(x.9*x.12)
+    
+    23. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.9*x.12*inv(x.13))
+    
+    24. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^x.9
+    
+    25. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.10*inv((x.8*x.12))), x.13)
+        z     = em(x.11, x.13)^(x.9*inv(x.12))
+    
+    26. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
+        XC    = pmult((x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.9*x.12*inv((x.10*x.13)))
+    
+    27. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*x.13*inv(x.8)), x.14)
+        z     = em(x.12, x.14)^(x.9*x.13*inv(x.11))
+    
+    28. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*x.13*inv((x.8*x.14))), x.15)
+        z     = em(x.12, x.15)^(x.9*x.13*inv((x.11*x.14)))
+    
+    29. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*inv(x.8)), x.13)
+        z     = em(x.12, x.13)^(x.9*inv(x.11))
+    
+    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.10*inv((x.8*x.13))), x.14)
+        z     = em(x.12, x.14)^(x.9*inv((x.11*x.13)))
+    
+    31. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(x.9, x.11)
+        z     = em(x.10, x.11)^x.8
+    
+    32. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(inv(x.11), x.12)
+        z     = em(x.10, x.12)^(x.8*inv((x.9*x.11)))
+    
+    33. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult(inv((x.8*x.11)), x.12)
+        z     = em(x.10, x.12)^inv((x.9*x.11))
+    
+    34. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11), x.12)
+        z     = em(x.10, x.12)^(x.8*x.11)
+    
+    35. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11*inv(x.8)), x.12)
+        z     = em(x.10, x.12)^x.11
+    
+    36. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.11*inv(x.12))
+    
+    37. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*inv(x.8)), x.11)
+        z     = em(x.10, x.11)
+    
+    38. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.9*inv((x.8*x.11))), x.12)
+        z     = em(x.10, x.12)^inv(x.11)
+    
+    39. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.11*inv(x.12)), x.13)
+        z     = em(x.10, x.13)^(x.8*x.11*inv((x.9*x.12)))
+    
+    40. XB    = pmult((x.8*inv(x.9)), x.10)
+        XC    = pmult((x.11*inv((x.8*x.12))), x.13)
+        z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
+    
+    41. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult(x.9, x.12)
+        z     = em(x.11, x.12)^(x.8*inv(x.10))
+    
+    42. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12), x.13)
+        z     = em(x.11, x.13)^(x.8*x.12*inv(x.10))
+    
+    43. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv(x.8)), x.13)
+        z     = em(x.11, x.13)^(x.12*inv(x.10))
+    
+    44. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv(x.13)), x.14)
+        z     = em(x.11, x.14)^(x.8*x.12*inv((x.10*x.13)))
+    
+    45. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*x.12*inv((x.8*x.13))), x.14)
+        z     = em(x.11, x.14)^(x.12*inv((x.10*x.13)))
+    
+    46. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^inv(x.10)
+    
+    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv(x.12)), x.13)
+        z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
+    
+    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.9*inv((x.8*x.12))), x.13)
+        z     = em(x.11, x.13)^inv((x.10*x.12))
+  */
+
+rule (modulo E) Proto3:
+   [
+   PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
+   !Pk( $B, pmult(~eb, 'P') ), !Pk( $C, pmult(~ec, 'P') )
+   ]
+  --[
+  Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
+          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
+               (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+  ),
+  Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
+  Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+  ]->
+   [
+   !SessKey( ~ex,
+             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
+                  (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+   )
+   ]
+
+  /*
+  rule (modulo AC) Proto3:
+     [
+     PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
+     !Pk( $B, pmult(~x, 'P') ), !Pk( $C, pmult(~x.1, 'P') )
+     ]
+    --[
+    Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
+            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                 (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+    ),
+    Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
+    Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+    ]->
+     [
+     !SessKey( ~ex,
+               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                    (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+     )
+     ]
+    variants (modulo AC)
+    1. ~ex   = ~ex.50
+       emXBXC
+             = emXBXC.53
+       z     = emXBXC.53^~ex.50
+    
+    2. ~ex   = ~ex.50
+       emXBXC
+             = z.56^inv(~ex.50)
+       z     = z.56
+    
+    3. ~ex   = ~ex.482
+       emXBXC
+             = x.955^x.956
+       z     = x.955^(~ex.482*x.956)
+    
+    4. ~ex   = ~ex.485
+       emXBXC
+             = x.961^inv((~ex.485*x.962))
+       z     = x.961^inv(x.962)
+    
+    5. ~ex   = ~ex.485
+       emXBXC
+             = x.961^(x.962*inv(~ex.485))
+       z     = x.961^x.962
+    
+    6. ~ex   = ~ex.486
+       emXBXC
+             = x.962^(x.963*inv((~ex.486*x.964)))
+       z     = x.962^(x.963*inv(x.964))
+  */
+
+lemma session_key_establish:
+  exists-trace
+  "∃ A B C XA XB XC sa sb sc #ia #ib #ic k.
+    ((((((((Accept( sa, A, B, C, XA, tag(XB), tag(XC), k ) @ #ia) ∧
+           (Accept( sb, B, A, C, XB, tag(XA), tag(XC), k ) @ #ib)) ∧
+          (Accept( sc, C, A, B, XC, tag(XA), tag(XB), k ) @ #ic)) ∧
+         (¬(A = B))) ∧
+        (¬(B = C))) ∧
+       (¬(A = C))) ∧
+      (¬(∃ #j. LtkRev( A ) @ #j))) ∧
+     (¬(∃ #j. LtkRev( B ) @ #j))) ∧
+    (¬(∃ #j. LtkRev( C ) @ #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B C XA XB XC sa sb sc #ia #ib #ic k.
+  (Accept( sa, A, B, C, XA, tag(XB), tag(XC), k ) @ #ia) ∧
+  (Accept( sb, B, A, C, XB, tag(XA), tag(XC), k ) @ #ib) ∧
+  (Accept( sc, C, A, B, XC, tag(XA), tag(XB), k ) @ #ic)
+ ∧
+  (¬(A = B)) ∧
+  (¬(B = C)) ∧
+  (¬(A = C)) ∧
+  (∀ #j. (LtkRev( A ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkRev( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkRev( C ) @ #j) ⇒ ⊥)"
+*/
+simplify
+  case 17
+  solve( PState2( ~ex, $A, $B, $C, tag(pmult(~ex.1, 'P')),
+                  tag(pmult(~ex.2, 'P')), emXBXC
+         ) ▶₀ #ia )
+    case Proto2
+    solve( !Ltk( $A, ~ea ) ▶₁ #ia )
+      case Register_pk
+      solve( !Pk( $B, pmult(~x, 'P') ) ▶₂ #ia )
+        case Register_pk
+        solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #ia )
+          case Register_pk
+          solve( PState2( ~ex.1, $B, $A, $C, tag(pmult(~ex, 'P')),
+                          tag(pmult(~ex.2, 'P')), em('P', 'P')^(~ex*~ex.2)
+                 ) ▶₀ #ib )
+            case Proto2
+            solve( !Ltk( $B, ~x ) ▶₁ #ib )
+              case Register_pk
+              solve( !Pk( $A, pmult(~ea, 'P') ) ▶₂ #ib )
+                case Register_pk
+                solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #ib )
+                  case Register_pk
+                  solve( PState2( ~ex.2, $C, $A, $B, tag(pmult(~ex, 'P')),
+                                  tag(pmult(~ex.1, 'P')), em('P', 'P')^(~ex*~ex.1)
+                         ) ▶₀ #ic )
+                    case Proto2
+                    solve( !Ltk( $C, ~x.1 ) ▶₁ #ic )
+                      case Register_pk
+                      solve( !Pk( $A, pmult(~ea, 'P') ) ▶₂ #ic )
+                        case Register_pk
+                        solve( !Pk( $B, pmult(~x, 'P') ) ▶₃ #ic )
+                          case Register_pk
+                          solve( !KU( pmult(~ex.1, 'P') ) @ #vk )
+                            case Proto1
+                            solve( !KU( pmult(~ex.2, 'P') ) @ #vk.1 )
+                              case Proto1
+                              solve( !KU( pmult(~ex, 'P') ) @ #vk.2 )
+                                case Proto1
+                                SOLVED // trace found
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Session_Key_Secrecy:
+  all-traces
+  "∀ stest A B C XA XB XC sessKey sessString #i #j.
+    (((Accept( stest, A, B, C, XA, tag(XB), tag(XC), sessKey ) @ #i) ∧
+      (K( sessKey ) @ #j)) ∧
+     (Match( stest, sessString ) @ #i)) ⇒
+    (((∃ #m #n smatch.
+        (Sid( smatch, sessString ) @ #m) ∧ (SesskRev( smatch ) @ #n)) ∨
+      (((¬(∃ #k spartner. Origin( spartner, XC ) @ #k)) ∨
+        (¬(∃ #k spartner. Origin( spartner, XB ) @ #k))) ∧
+       (((∃ #m. LtkRev( A ) @ #m) ∨ (∃ #m. LtkRev( B ) @ #m)) ∨
+        (∃ #m. LtkRev( C ) @ #m)))) ∨
+     (∃ #k #l spartner1 spartner2.
+       ((Origin( spartner1, XB ) @ #k) ∧ (Origin( spartner2, XC ) @ #l)) ∧
+       ((((∃ #v1. LtkRev( B ) @ #v1) ∨ (∃ #v1. LtkRev( C ) @ #v1)) ∧
+         ((∃ #v2. EphkRev( spartner1 ) @ #v2) ∨
+          (∃ #v2. EphkRev( spartner2 ) @ #v2))) ∨
+        ((∃ #v1. LtkRev( A ) @ #v1) ∧ (∃ #v2. EphkRev( stest ) @ #v2)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ stest A B C XA XB XC sessKey sessString #i #j.
+  (Accept( stest, A, B, C, XA, tag(XB), tag(XC), sessKey ) @ #i) ∧
+  (K( sessKey ) @ #j) ∧
+  (Match( stest, sessString ) @ #i)
+ ∧
+  (∀ #m #n smatch.
+    (Sid( smatch, sessString ) @ #m) ∧ (SesskRev( smatch ) @ #n) ⇒ ⊥) ∧
+  ((((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
+     (∃ #k spartner. (Origin( spartner, XB ) @ #k))) ∨
+    ((∀ #m. (LtkRev( A ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( B ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( C ) @ #m) ⇒ ⊥)))) ∧
+  (∀ #k #l spartner1 spartner2.
+    (Origin( spartner1, XB ) @ #k) ∧ (Origin( spartner2, XC ) @ #l)
+   ⇒
+    ((((∀ #v1. (LtkRev( B ) @ #v1) ⇒ ⊥) ∧ (∀ #v1. (LtkRev( C ) @ #v1) ⇒ ⊥)) ∨
+      ((∀ #v2. (EphkRev( spartner1 ) @ #v2) ⇒ ⊥) ∧
+       (∀ #v2. (EphkRev( spartner2 ) @ #v2) ⇒ ⊥)))) ∧
+    (((∀ #v1. (LtkRev( A ) @ #v1) ⇒ ⊥) ∨
+      (∀ #v2. (EphkRev( stest ) @ #v2) ⇒ ⊥))))"
+*/
+simplify
+solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
+        (∃ #k spartner. (Origin( spartner, XB ) @ #k)))  ∥
+       ((∀ #m. (LtkRev( $A ) @ #m) ⇒ ⊥) ∧
+        (∀ #m. (LtkRev( $B ) @ #m) ⇒ ⊥) ∧
+        (∀ #m. (LtkRev( $C ) @ #m) ⇒ ⊥)) )
+  case case_1
+  solve( ((∀ #v1. (LtkRev( $B ) @ #v1) ⇒ ⊥) ∧
+          (∀ #v1. (LtkRev( $C ) @ #v1) ⇒ ⊥))  ∥
+         ((∀ #v2. (EphkRev( ~ex.1 ) @ #v2) ⇒ ⊥) ∧
+          (∀ #v2. (EphkRev( ~ex.2 ) @ #v2) ⇒ ⊥)) )
+    case case_1
+    solve( (∀ #v1. (LtkRev( $A ) @ #v1) ⇒ ⊥)  ∥
+           (∀ #v2. (EphkRev( ~ex ) @ #v2) ⇒ ⊥) )
+      case case_2
+      solve( PState2( ~ex, $A, $B, $C, tag(pmult(~ex.1, 'P')),
+                      tag(pmult(~ex.2, 'P')), emXBXC
+             ) ▶₀ #i )
+        case Proto2
+        solve( !Ltk( $A, ~ea ) ▶₁ #i )
+          case Register_pk
+          solve( !Pk( $B, pmult(~x, 'P') ) ▶₂ #i )
+            case Register_pk
+            solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
+              case Register_pk
+              solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
+                               em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                               (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
+                     ) @ #vk )
+                case c_kdf
+                solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.13 )
+                  case c_tag
+                  solve( !KU( tag(pmult(~ex.1, 'P')) ) @ #vk.14 )
+                    case c_tag
+                    solve( !KU( tag(pmult(~ex.2, 'P')) ) @ #vk.15 )
+                      case c_tag
+                      solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.9 )
+                        case Proto1_case_3
+                        solve( !KU( ~ex.1 ) @ #vk.19 )
+                          case Reveal_ephk
+                          solve( !KU( ~ex.2 ) @ #vk.20 )
+                            case Reveal_ephk
+                            solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.15 )
+                              case Register_pk_case_4
+                              solve( !KU( ~ea ) @ #vk.21 )
+                                case Reveal_ltk
+                                solve( !KU( pmult(~ex.1, 'P') ) @ #vk.15 )
+                                  case Proto1
+                                  solve( !KU( pmult(~ex.2, 'P') ) @ #vk.16 )
+                                    case Proto1
+                                    solve( !KU( pmult(~ex, 'P') ) @ #vk.11 )
+                                      case Proto1
+                                      SOLVED // trace found
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
+
+  output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
+  processing time: 77.880592316s
+  session_key_establish (exists-trace): verified (17 steps)
+  Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
+
+  output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
+  processing time: 77.880592316s
+  session_key_establish (exists-trace): verified (17 steps)
+  Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
+
+==============================================================================
+*/

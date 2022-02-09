@@ -1,0 +1,52 @@
+theory runningV2
+begin
+
+
+/* 
+We formalize the following challenge-response protocol
+    1. I -> R: {'req',I, n}pk(R)
+    2. I <- R: {'rep',n}pk(I)
+*/
+
+
+builtins: asymmetric-encryption
+
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+
+ rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
+
+
+
+rule Rule_I:
+  let m1 = aenc{'req', $I, ~n}pkR
+  in
+    [ Fr(~n), !Pk(R, pkR),!Ltk($I, ltkI)]
+  --[SecretI($I,R,~n)]->
+    [ Out(m1), State_I($I, R, ~n)]
+
+
+
+rule Rule_R:
+  let m1 = aenc{'req', I, x}pk(ltkR)
+      m2 = aenc{'rep', x}pkI
+  in
+    [ !Ltk(R, ltkR), In(m1), !Pk(I, pkI)]
+  -->
+    [ Out(m2), State_R(R, I, x)]
+
+
+lemma nonce_secrecy:
+  "     not(
+        Ex A B s #i. SecretI(A, B, s) @ i  & (Ex #j. K(s) @ j)
+       & not (Ex #r. RevLtk(A) @ r)
+        & not (Ex #r. RevLtk(B) @ r)
+       )"
+
+end

@@ -1,0 +1,15 @@
+// Raised by askamkin
+// https://github.com/tamarin-prover/tamarin-prover/issues/329
+theory MyTheory 
+begin
+
+functions:
+  A/0,
+  AB/0,
+  F/1
+
+rule MyRule:
+  let x = F(AB())
+  in
+    [] --> [ Out(x) ]
+end

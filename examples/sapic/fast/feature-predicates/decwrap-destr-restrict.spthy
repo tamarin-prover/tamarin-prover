@@ -1,0 +1,68 @@
+theory DecWrapDestr
+
+begin
+
+builtins: symmetric-encryption
+
+functions: encSucc/2, true/0
+equations: encSucc(senc(x,y),y) = true
+
+predicate: IsTrue(x) <=> x = true()
+
+!(
+	(  new h; new k; event NewKey(h,k); 
+		insert <'key',h>,k; 
+	 	insert <'att',h>, 'dec'; out(h) )
+  || //allow wrap
+	(  in(h); lock h; insert <'att',h>, 'wrap'; unlock h)
+  || //Dec
+	( in(<h,c>);
+	  lookup <'att',h> as a in 
+			if a='dec' then lookup <'key',h> as k in
+				if IsTrue(encSucc(c,k)) then
+                                    event DecUsing(k,sdec(c,k));
+                                    out(sdec(c,k)) 
+	)
+  || //Wrap
+	( in(<h1,h2>); lookup <'att',h1> as a1 in 
+			if a1='wrap' then lookup <'key',h1> as k1 in
+			lookup <'key',h2> as k2 in
+				event Wrap(k1,k2);
+				out(senc(k2,k1))
+	)
+)
+
+
+lemma can_create_key: //for sanity
+	exists-trace
+	"Ex #t h k. NewKey(h,k)@t"
+
+lemma can_obtain_wrapping: //for sanity
+	exists-trace
+	"Ex #t k1 k2. Wrap(k1,k2)@t"
+
+lemma dec_limits[reuse,sources]: 
+	//a message that can be decrypted was
+	//either encrypted on the device, or some key leaked, or 
+	// not a valid enc
+	"All k m #t1. DecUsing(k,m)@t1 ==> 
+	( Ex h k2 #t2 #t3. NewKey(h, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
+	/* | not (encSucc(m)=true()) */
+	"
+
+lemma cannot_obtain_key_ind[reuse,use_induction]:
+	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
+
+lemma cannot_obtain_key:
+	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+
+end
+
+/* analyzed: examples/sapic/feature-predicates/decwrap-destr-manual.spthy */
+
+/*   can_create_key (exists-trace): verified (3 steps) */
+/*   can_obtain_wrapping (exists-trace): verified (11 steps) */
+/*   dec_limits (all-traces): verified (59 steps) */
+/*   cannot_obtain_key_ind (all-traces): verified (37 steps) */
+/*   cannot_obtain_key (all-traces): verified (2 steps) */
+

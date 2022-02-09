@@ -1,0 +1,161 @@
+theory OTYT06_UK2_proof begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~k2 ), Fr( ~r ), Fr( ~newKey1 ), Fr( ~newKey2 ) ]
+  --[ Setup( ~k1 ), Setup( ~k2 ), OnlyOnce( 'setup' ) ]->
+   [
+   Out( <~r, h((~k1⊕~r)), (~k1⊕~newKey1)> ),
+   Tag( diff(~k1, ~k2), diff(~newKey1, ~newKey2) )
+   ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyOnce( 'tag1' )
+  ]->
+   [ Out( h((r1⊕x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( newkey ), TagRunning( ~k, x ) ]
+  --[
+  Update( x, (newkey⊕x), 'Tag' ), Alive( ~k, 'Reader' ),
+  OnlyOnce( 'tag2' )
+  ]->
+   [ Tag( ~k, (newkey⊕x) ) ]
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma tag_start [right, reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#k))  ∥
+         (∃ #i. (Setup( ~k.1 ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #k)) )
+    case case_1
+    solve( Tag( ~k.1, y ) ▶₁ #k )
+      case Setup
+      by contradiction /* from formulas */
+    next
+      case tag1
+      by contradiction /* cyclic */
+    next
+      case tag2
+      by contradiction /* cyclic */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma tag_start [left, reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#k))  ∥
+         (∃ #i. (Setup( ~k.1 ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #k)) )
+    case case_1
+    solve( Tag( ~k.1, y ) ▶₁ #k )
+      case Setup
+      by contradiction /* from formulas */
+    next
+      case tag1
+      by contradiction /* cyclic */
+    next
+      case tag2
+      by contradiction /* cyclic */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( Tag( ~k, x ) ▶₁ #vr ) )
+          case Setup
+          step( solve( !KU( h(z) ) @ #vk ) )
+            case Setup
+            step( solve( splitEqs(0) ) )
+              case split_case_2
+              step( solve( !KU( (~k⊕~newKey1⊕~r) ) @ #vk.1 ) )
+                case c_xor_case_3
+                step( solve( !KU( ~r ) @ #vk.2 ) )
+                  case Setup
+                  step( solve( !KU( (~k⊕~newKey1) ) @ #vk.3 ) )
+                    case coerce
+                    step( solve( !KD( (~k⊕~newKey1) ) ▶₀ #vk.3 ) )
+                      case Setup
+                      step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_snd
+                        step( solve( (#vr.5, 0) ~~> (#vk.3, 0) ) )
+                          case d_0_snd
+                          step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                            case Xor
+                            by ATTACK // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+end

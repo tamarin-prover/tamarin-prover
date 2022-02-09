@@ -1,0 +1,170 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:        Stéphanie Delaune
+  Date:           March 2020
+  Time:             ??
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/denningSacco.html)
+
+  Denning-Sacco shared key
+
+  A, B, S :    principal
+  Kas, Kbs, Kab :    key
+  T :    timestamp
+
+  1.    A  ->  S  :    A, B
+  2.    S  ->  A  :    {B, Kab, T, {Kab, A, T}Kbs}Kas
+  3.    A  ->  B  :    {Kab,A, T}Kbs
+  4.    B  ->  A  :    {Nb}Kab
+  5.    A  ->  B  :    {hash(Nb)}Kab
+
+
+  This version add a nonce handshake (messages 4, 5) at the end of Denning-Sacco shared key 
+  to prevent the attack from [Low97].
+
+  The nonces of Needham Schroeder Symmetric Key (for mutual authentication of A and B) have been replaced by a timestamp T.
+
+  The shared symmetric key established by the protocol is Kab.
+
+  We consider here the tagged version of this protocol.
+*/
+
+theory Denning_Sacco_Lowe_SK
+begin
+
+builtins: symmetric-encryption, hashing
+
+// ====================
+// == General rules ===
+// ====================
+
+// A and B already share a long-term symmetric key with S
+
+rule Init:
+  [ Fr(~kxs)]
+  --[KeyGen($X)]->
+  [ !LongtermKey(~kxs,$X) ]
+
+rule Reveal_Longterm_Key:
+    [ !LongtermKey(~sk,$A)]
+  --[ Compromise($A)]->
+    [ Out(~sk) ]
+
+rule Reveal_Shortterm_Key:
+    [ !ShorttermKey(~kab,$B,$A)]
+  --[ Compromise($A), Compromise($B)]->
+    [ Out(~kab) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1.    A  ->  S  :    A, B
+rule A_1:
+[]  --[]->
+  [Out(<$A, $B>), StateA1($A, $B)]
+
+// 2.    S  ->  A  :    {B, Kab, T, {Kab, A, T}Kbs}Kas
+rule S_1:
+  let msg = senc(<'1', y, ~kab, ~t, senc(<'2',~kab, x,~t>,kbs)>,kas) in
+  [In(<x, y>), !LongtermKey(kas,x), !LongtermKey(kbs,y), Fr(~kab), Fr(~t)]
+  -->
+  [Out(msg), !ShorttermKey(~kab,x,y)]
+
+// 3.    A  ->  B  :    {Kab,A, T}Kbs   
+rule A_2:
+  let msg = senc(<'1', B, xkab, xt, xmb>,xkas) in
+  [ StateA1(A, B), !LongtermKey(xkas,A), In(msg) ]
+  --[]->
+  [StateA2(A,B,xkab), Out(xmb)]
+
+// 4.   B  ->  A  :    {Nb}Kab
+rule B_1:
+  let msg1 = senc(<'2', ykab,<yA,yt>>,ykbs) in
+  [!LongtermKey(ykbs,B), In(msg1), Fr(~nb)]
+  --[RunningB(B,yA,<ykab,~nb>)]->
+  [StateB(B,yA,ykab,~nb), Out(senc(<'3',~nb>,ykab))]
+
+//5.   A  ->  B  :    {dec(Nb)}Kab
+rule A_3:
+let chall = senc(<'3',xnb>,xkab) in
+ [StateA2(A,B,xkab),In(chall)]
+--[CommitA(A,B,<xkab,xnb>),RunningA(A,B,<xkab,xnb>),Secret(A, B, xkab)]->
+[Out(senc(<'4',h(xnb)>,xkab))]
+
+//6. 
+rule B_2:
+ let resp = senc(<'4',h(~nb)>,ykab) in
+[StateB(B,A,ykab,~nb),In(resp)]
+--[CommitB(B,A,<ykab,~nb>),Secret(B, A, ykab)]->
+[]
+
+restriction singlelongtermkeyperuser:
+  "All A #i #j. KeyGen(A) @ i & KeyGen(A) @ j ==> #i = #j"
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// sanity check: check if honest execution is possible
+lemma executability:
+ exists-trace
+ " Ex A B t #i #j.
+   CommitB(B,A,t)@#i
+  & CommitA(A,B,t)@#j & #j<#i
+  & not(Ex #r1. Compromise(A)@#r1) 
+  & not(Ex #r2. Compromise(B)@#r2)
+ "
+
+// check the secrecy of the newly generated session key
+lemma secrecy:
+  "All A B k #i. Secret(A,B,k)@i ==> not (Ex #j. K(k)@j ) |  (Ex #j. Compromise(B)@j)  |  (Ex #j. Compromise(A)@j)  "
+
+
+
+// check the authenticity of the transaction from B's point of view
+lemma noninjectiveagreement_B:
+  "All A B t  #i.
+    CommitB(B, A, t) @i
+    ==> ((Ex #j. RunningA(A,B,t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+// check the authenticity of the transaction from A's point of view
+lemma noninjectiveagreement_A:
+  "All A B t #i.
+    CommitA(A, B,t) @i
+    ==> ((Ex #j. RunningB(B,A,t) @j
+        & j < i)
+              | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+"All A B t #i. CommitB(B,A,t) @i
+  ==> ((Ex #j. RunningA(A,B,t) @j
+      & j < i
+      & not (Ex B2 A2  #i2. CommitB(B2,A2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+// check the authenticity and freshness of the transaction from A's point of view
+// status: attack since A did not generate any fresh data
+lemma injectiveagreement_A:
+"All A B t #i. CommitA(A,B,t) @i
+  ==> ((Ex #j. RunningB(B,A,t) @j
+      & j < i
+      & not (Ex A2 B2  #i2. CommitA(A2,B2,t) @i2
+                         & not (#i2 = #i)))
+            | (Ex #r. Compromise(A)@r) | (Ex #r. Compromise(B)@r))"
+
+
+
+end

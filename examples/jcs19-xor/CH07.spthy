@@ -1,0 +1,112 @@
+theory CH07 begin
+
+/* 
+  CH07 RFID protocol model based on 
+  "Attacks on RFID protocols" v1.1 from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
+  This model focuses on authentication properties (recent aliveness and 
+  agreement.)
+
+  Reader R, Tag T, shared knowledge k, ID.
+
+  R: knows(k,ID) 
+  T: knows(k,ID) 
+  R: fresh(r1)
+  R -> T: r1
+  T: fresh(r2)
+  T -> R: r2,lh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k)) 
+  R -> T: rh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k))
+
+*/
+
+builtins: xor, hashing
+functions: rot/2, lh/1, rh/1
+
+rule Setup:
+   [ Fr( ~k )
+   , Fr(~id) 
+   ]
+ --[ ]-> 
+   [ !Reader( ~k, ~id )
+   , !Tag( ~k, ~id ) 
+   ]
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   let hash = h((r1⊕~r2⊕~k)) in 
+   [ In( r1 )
+   , Fr( ~r2 )
+   , !Tag( ~k, ~id ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge(~r2, 'Tag') 
+   , Running(<'R','T',<~k XOR r1 XOR ~r2>>)
+//   , Running(<'R','T',<~k, r1, ~r2>>)
+   ]->
+   [ Out( <~r2,lh(rot(~id,hash) XOR hash)>)
+   , TagState(~k, r1, ~r2, hash)
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , !Reader( ~k, ~id )
+   , In( <r2, lh(rot(~id,hash) XOR hash)> ) 
+   ]
+ --[ Alive( ~k, 'Tag' )
+   , Response(~k, 'Reader') 
+   , Eq( h((~r1⊕r2⊕~k)), hash )
+   , Running(<'T','R',<~k XOR ~r1 XOR r2>>)
+//   , Running(<'T','R',<~k, ~r1, r2>>)
+   , Commit(<'R','T',<~k XOR ~r1 XOR r2>>)
+//   , Commit(<'R','T',<~k, ~r1, r2>>)
+   ]->
+   [ Out( rh(rot(~id,hash) XOR hash) ) ]
+
+rule tag2:
+   [ In( rh(rot(~id,hash) XOR hash) )
+   , !Tag( ~k, ~id) 
+   , TagState(~k, r1, ~r2, hash)
+   ]
+ --[ Alive( ~k, 'Reader' )
+   , Commit(<'T','R',<~k XOR r1 XOR ~r2>>)
+//   , Commit(<'T','R',<~k, r1, ~r2>>)
+   ]->
+   [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+// FINDS ATTACK AUTOMATICALLY 
+lemma recentalive_tag:
+  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+
+// FINDS PROOF AUTOMATICALLY 
+lemma recentalive_reader:
+  all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
+
+// Depends on what data t is specified. Use the commented out Running/Commit
+// claims above for attack. 
+// FINDS PROOF/ATTACK AUTOMATICALLY. 
+lemma noninjectiveagreement_tag:
+  "All t #i. 
+    Commit(<'T','R',t>) @i
+    ==> (Ex #j. Running(<'T','R',t>) @j)"
+
+
+// Depends on what data t is specified. FINDS PROOF/ATTACK AUTOMATICALLY. 
+lemma noninjectiveagreement_reader:
+  "All t #i. 
+    Commit(<'R','T',t>) @i
+    ==> (Ex #j. Running(<'R','T',t>) @j)"
+
+// SHOWS CORRECT EXECUTION 
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
+           // further restriction to automatically get the desired execution
+           ∧ (not Ex #k. Response( x, 'Tag' ) @ #k & (not (#j=#k)))"
+
+end

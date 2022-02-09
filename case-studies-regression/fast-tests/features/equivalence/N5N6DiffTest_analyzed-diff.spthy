@@ -1,0 +1,65 @@
+theory N5N6DiffTest begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Test:
+   [ Fr( ~f ) ] --> [ Out( diff(h($A), ~f) ) ]
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Test
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h($A) ) @ #vk ) )
+          case c_h
+          step( solve( !KU( $A ) @ #vk.1 ) )
+            case pub
+            by ATTACK // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/features/equivalence/N5N6DiffTest.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/features/equivalence/N5N6DiffTest.spthy
+
+  output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
+  processing time: 0.075212962s
+  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equivalence/N5N6DiffTest.spthy
+
+  output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
+  processing time: 0.075212962s
+  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
+
+==============================================================================
+*/

@@ -6,15 +6,18 @@ open Tamarin
 open Formula
 open Fact
 open Action
+open Var
+open Verdict
 open Atomformulaaction
 open Sapicaction
 open Sapicvar
 open Sapicterm
+open Lemma
 
 module TermSet = Set.Make( Term );;
 
-let reswords= ["Init"; "Insert"; "Delete"; "IsIn"; "IsNotSet"; "Lock"; "Unlock"; "Out"; "Fr"; "In"; "Msg"; "ProtoNonce"; "Event"; "InEvent"] 
-let reswords_pref = ["State_"; "Pred_"; "Pred_not_"; "n_"; "lock_"]
+let reswords= ["Init"; "Insert"; "Delete"; "IsIn"; "IsNotSet"; "Lock"; "Unlock"; "Out"; "Fr"; "In"; "Msg"; "ProtoNonce"; "Event"; "InEvent"; "ExecId"] 
+let reswords_pref = ["State_"; "Pred_"; "Pred_not_"; "n_"; "lock_"; "prog_" ]
 
 let reserved symbol =
   (List.mem symbol reswords) ||
@@ -33,11 +36,12 @@ let reserved symbol =
 module VarSet = Set.Make( Var );;
 let (@@) (a:VarSet.t) (b:VarSet.t) = VarSet.union a b
 
-type lemma = {header:string; quantif:char; formula: string}
-type restriction = {aheader:string; aformula: string}
-type options = { progress: bool}
-let defaultop= {progress=false}
-let mergeopt a b = {progress=(a.progress || b.progress)}
+type options = { progress: bool; accountability:bool}
+let defaultop= {progress=false; accountability=false}
+let mergeopt a b = { 
+    progress=(a.progress || b.progress);
+    accountability=(a.accountability || b.accountability)
+}
 
 type inp = {sign : string;
             pred : string list;
@@ -45,7 +49,6 @@ type inp = {sign : string;
             rules: rule list;
             proc : sapic_action btree;
             lem  : lemma list;
-            ax   : restriction list
 }
 
 type fct_attr =
@@ -54,6 +57,7 @@ type fct_attr =
 | Pred of string
 
 let proc_table = Hashtbl.create 10;;
+let verdictf_table = Hashtbl.create 10;;
 
 let varlist n =
   let rec work i =
@@ -105,8 +109,9 @@ let location_rule=
 
 %token <char> ALL_TRACES EXISTS_TRACE
 %token <string> IDENTIFIER NUM BUILTIN_THEORY FUNCTION_ATTR LEMMA_ATTR FORMALCOMMENT QUOTED_IDENTIFIER 
-%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION LEMMA REUSE INDUCTIVE INVARIANT  ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA
-
+%token THEORY BEGIN END BUILTINS FUNCTIONS EQUATIONS PREDICATES OPTIONS PROGRESS RESTRICTION VERDICTFUNCTION LEMMA REUSE INDUCTIVE INVARIANT 
+%token ALL EXISTS IFF IMP NOT TRUE FALSE AT OR AND HIDE_LEMMA RIGHTARROW OTHERWISE EMPTY ACCOUNTS FOR PARTIES
+%token COARSE CASES CONTROL CONTROLEQUIVALENCE CONTROLSUBSET
 %token NULL NEW IN OUT IF THEN ELSE EQ REP LET EVENT INSERT DELETE LOOKUP AS LOCK UNLOCK REPORT
 %token SLASH LP RP COMMA SEMICOLON COLON POINT PARALLEL NEWLINE LCB RCB LSB RSB DOLLAR QUOTE DQUOTE TILDE SHARP STAR EXP LEQ GEQ RULE TRANSIT OPENTRANS CLOSETRANS PLUS XOR ZERO
 
@@ -114,6 +119,13 @@ let location_rule=
 %left PARALLEL
 %left REP
 %left SEMICOLON
+
+%right ALL EXISTS 
+%right IFF IMP  
+%right OR
+%right AND
+%nonassoc NOT
+
 
 /* entry point */
 %start input
@@ -127,7 +139,7 @@ let location_rule=
 %type <string * rule list> signature_spec 
 %type <string> builtins 
 %type <string> builtin_theory_seq
-%type <string> tvarseq
+%type <VarSet.t> varseq
 %type <string * rule list> fctseq
 %type <string * int * fct_attr> fct
 %type <options> optionseq
@@ -139,17 +151,14 @@ let location_rule=
 %type <term> expterm
 %type <term> term
 %type <var> literal
-%type <restriction> restriction
 %type <string> restriction_header
 %type <lemma> lemma
-%type <string> lemma_header
+%type <string*string> lemma_header
 %type <string> lemma_attr
 %type <string> lemma_attr_seq
-%type <char> trace_quantifier
-%type <string> formula
-%type <string> quantifier
-%type <string> atom
-%type <string> tvar
+%type <formula> formula
+%type <atom> atom
+%type <var> tvar
 %type <fact list> factseq
 %type <fact> fact
 %type <rule> rule
@@ -164,21 +173,23 @@ let location_rule=
 %% /* Grammar rules and actions follow */
 
 input: 	       
-    |   THEORY IDENTIFIER BEGIN body END {{sign="theory "^$2^"\nbegin\n\n"^location_sign^$4.sign; pred=$4.pred; op=$4.op; rules=location_rule::$4.rules; proc=$4.proc; lem=$4.lem; ax=$4.ax}}
+    |   THEORY IDENTIFIER BEGIN body END {{sign="theory "^$2^"\nbegin\n\n"^location_sign^$4.sign; pred=$4.pred; op=$4.op; rules=location_rule::$4.rules; proc=$4.proc; lem=$4.lem}}
 
 ;
 
 body: 
-    | /* empty*/           {{sign=""; pred=[]; op=defaultop; rules=[]; proc=Empty; lem=[]; ax=[]}}
-    | signature_spec body  {let (s,rl)=$1 in {sign=(s^$2.sign); pred=$2.pred; op=$2.op; rules=rl@$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | let_process body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}} 
-    | predicates body   {{sign=$2.sign; pred=($2.pred @ $1); op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem; ax=$2.ax}}
-    | lemma body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=($1::$2.lem); ax=$2.ax}}
-    | restriction body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=($1::$2.ax)}}
-    | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem; ax=$2.ax}}
-    | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem; ax=$2.ax}}
+    | /* empty*/           {{sign=""; pred=[]; op=defaultop; rules=[]; proc=Empty; lem=[]}}
+    | signature_spec body  {let (s,rl)=$1 in {sign=(s^$2.sign); pred=$2.pred; op=$2.op; rules=rl@$2.rules; proc=$2.proc; lem=$2.lem}}
+    | let_process body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}} 
+    | verdictf body     {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}} 
+    | predicates body   {{sign=$2.sign; pred=($2.pred @ $1); op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
+    | options body   {{sign=$2.sign; pred=$2.pred; op=(mergeopt $1 $2.op); rules=$2.rules; proc=$2.proc; lem=$2.lem}}
+    | process body 	      {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=$2.rules; proc=$1; lem=$2.lem}}
+    | lemma body 	      {{sign=$2.sign; pred=$2.pred; 
+                                op=(mergeopt {progress=false; accountability=isAccLemma_with_control $1} $2.op);
+                                rules=$2.rules; proc=$2.proc; lem=($1::$2.lem)}}
+    | rule body 	          {{sign=$2.sign; pred=$2.pred; op=$2.op; rules=($1::$2.rules); proc=$2.proc; lem=$2.lem}}
+    | formal_comment body  {{sign=($1^$2.sign); pred=$2.pred; op=$2.op; rules=$2.rules; proc=$2.proc; lem=$2.lem}}
 ;
 
 signature_spec: 
@@ -249,7 +260,7 @@ fct_decl :
 ;
 
 opt:
-         |    PROGRESS	{ {progress=true} }
+  |    PROGRESS	{ {progress=true; accountability = false} }
 ;
 
 eq :
@@ -257,15 +268,15 @@ eq :
 ;
 
 predicate :
-         |    IDENTIFIER LP varseq RP IFF cond_predicate
+         |    IDENTIFIER LP varseqstring RP IFF cond_predicate
                 { ["All #i "^(String.concat " " $3)^". Pred_"^$1^"("^(String.concat "," $3)^")@i ==> "^(formula2string $6);
                   "All #i "^(String.concat " " $3)^". Pred_not_"^$1^"("^(String.concat "," $3)^")@i ==> "^(formula2string ((Not($6):Formula.formula))) ]
                 }
 ;
 
-varseq :  
+varseqstring :  
     |    messagevar		{ [$1] }
-    |    varseq COMMA messagevar	{$1 @ [$3]}
+    |    varseqstring COMMA messagevar	{$1 @ [$3]}
 ;
 
 messagevar :
@@ -281,6 +292,39 @@ id_not_res :
 
 let_process:
 	 |    LET id_not_res EQ process			 {Hashtbl.add proc_table $2 $4; ()} 
+
+verdictf:
+	|     VERDICTFUNCTION IDENTIFIER COLON caseseq {Hashtbl.add verdictf_table $2 $4; ()} 
+;
+
+caseseq:
+    |	/* empty */		{[]}
+    |     case			{[$1]}
+    |     case COMMA caseseq	{$1::$3}
+    |     case COMMA OTHERWISE RIGHTARROW verdict	{[$1;Otherwise($5)]} /*otherwise needs to be at the very end*/
+;
+
+case:
+  | DQUOTE formula DQUOTE RIGHTARROW verdict {Case($2,$5)}
+  | DQUOTE formula DQUOTE RIGHTARROW LET IDENTIFIER EQ LEQ singleton_verdict GEQ {RefCase($6,$2,[$9])}
+;
+
+verdict:
+  | EMPTY  {[]} 
+  | LEQ singleton_verdict GEQ  {[$2]}
+  | LEQ singleton_verdict GEQ OR verdict {$2::$5}
+  ;
+
+singleton_verdict:
+    | pvarseq { VerdictPart(VarSet.of_list $1) } 
+    | IDENTIFIER {  Ref($1) }
+;
+
+pvarseq:
+    |	/* empty */		{[]}
+    |     pvar			{[$1]}
+    |     pvar COMMA pvarseq	{$1::$3}
+;
 
 process:
     | LP process RP                                  { $2 }
@@ -380,6 +424,14 @@ term:
 ;
 
 literal:
+        | pvar                                  {$1}
+	|     TILDE QUOTE IDENTIFIER QUOTE	{Var.FreshFixed($3)}
+    |     TILDE IDENTIFIER	     		{Var.Fresh($2)}
+	|     SHARP IDENTIFIER			{Var.Temp($2)}
+	|     IDENTIFIER			{Var.Msg($1)}
+;
+
+pvar:
 	/*|     QUOTE IDENTIFIER QUOTE		{Var.PubFixed($2)}  */
     /* tamarin does actually not respect its grammar and accepts e.g. '1'*/
         |     QUOTED_IDENTIFIER
@@ -391,26 +443,24 @@ literal:
                         Var.PubFixed(unquoted_id)
         } 
 	|     DOLLAR IDENTIFIER			{Var.Pub($2)}
-	|     TILDE QUOTE IDENTIFIER QUOTE	{Var.FreshFixed($3)}
-    |     TILDE IDENTIFIER	     		{Var.Fresh($2)}
-	|     SHARP IDENTIFIER			{Var.Temp($2)}
-	|     IDENTIFIER			{Var.Msg($1)}
 ;
 
 lemma:
-	|     lemma_header trace_quantifier DQUOTE formula DQUOTE	{{header=$1; quantif=$2; formula=$4}}
-;
-
-restriction:
-    |     restriction_header DQUOTE formula DQUOTE	{{aheader=$1; aformula=$3}}
+	|     lemma_header ALL_TRACES DQUOTE formula DQUOTE	{ ForallLemma($1, $4) }
+	|     lemma_header EXISTS_TRACE DQUOTE formula DQUOTE	{ ExistsLemma($1, $4) }
+	|     lemma_header DQUOTE formula DQUOTE	{ ForallLemma($1, $3) }
+	|     restriction_header DQUOTE formula DQUOTE	{ Restriction($1, $3) }
+	|     lemma_header IDENTIFIER ACCOUNTS account_attr_col FOR DQUOTE formula DQUOTE FOR PARTIES LEQ pvarseq GEQ {  try 
+            AccLemma($4, $1, Hashtbl.find verdictf_table $2, $7,( VarSet.of_list $12))
+            with Not_found -> Printf.eprintf "The verdict: %s is undefined. \n " $2; raise Parsing.Parse_error }
 ;
 
 lemma_header:
-	|     LEMMA IDENTIFIER lemma_attr_col COLON  {"lemma "^$2^" "^$3^":"}
+	|     LEMMA IDENTIFIER lemma_attr_col COLON  {($2,$3)}
 ;
 
 restriction_header:
-	|     RESTRICTION IDENTIFIER COLON  {"restriction "^$2^" :"}
+	|     RESTRICTION IDENTIFIER COLON  {$2}
 ;
 
 
@@ -436,46 +486,49 @@ lemma_attr:
 	|     HIDE_LEMMA EQ IDENTIFIER	{"hide_lemma="^$3}
 ;
 
-trace_quantifier:
-	|     /* empty */ {' '}
-	|     ALL_TRACES	{'A'}
-	|     EXISTS_TRACE	{'E'}
-;	
+account_attr_col:
+	|     /* empty */ { Coarse }
+	|     LSB account_attr RSB { $2 }
+;
+
+account_attr:
+	|     COARSE			{Coarse}
+	|     CASES			{Cases}
+	|     CONTROL			{ControlEquivalence}
+	|     CONTROLEQUIVALENCE	{ControlEquivalence}
+	|     CONTROLSUBSET		{ControlSubset}
+;
 
 
 formula:
-	|     atom				{$1}
-	|     NOT formula			{"not"^$2}
-	|     formula OR formula		{$1^" | "^$3}
-	|     formula AND formula		{$1^" & "^$3}
-	|     formula IMP formula		{$1^" ==> "^$3}
-	|     formula IFF formula		{$1^" <=> "^$3}
-	|     quantifier tvarseq POINT formula 	{$1^" "^$2^". "^$4}
-	|     LP formula RP    	     		{"( "^$2^" )"}
-;
-
-quantifier:
-	|    ALL     {"All"}
-	|    EXISTS  {"Ex"}
+	|     atom				{Atom($1)}
+	|     NOT formula			{Not($2)}
+	|     formula OR formula		{Or($1,$3)}
+	|     formula AND formula		{And($1,$3)}
+	|     formula IMP formula		{Imp($1,$3)}
+	|     formula IFF formula		{Iff($1,$3)}
+	|     ALL varseq POINT formula 	{All($2,$4)}
+	|     EXISTS varseq POINT formula 	{Ex($2,$4)}
+	|     LP formula RP    	     		{$2}
 ;
 
 atom:
-	|    tvar LEQ tvar		{$1^" < "^$3}
-	|    SHARP IDENTIFIER EQ SHARP IDENTIFIER 	{"#"^$2^" = #"^$5}
-	|    multterm EQ multterm       {(Term.term2string $1)^" = "^(Term.term2string $3)}
-	|    fact AT tvar 		{fact2string($1)^" @ "^$3}
-	|    TRUE    			{"T"}
-	|    FALSE    			{"F"}
+	|    tvar LEQ tvar		{TLeq($1,$3)}
+	|    SHARP IDENTIFIER EQ SHARP IDENTIFIER 	{TEq(Temp($2),Temp($5))}
+	|    multterm EQ multterm       {Eq($1,$3)}
+	|    action AT tvar 		{At($1,$3)}
+	|    TRUE    			{True}
+	|    FALSE    			{False}
 ;
 
 tvar:
-	|    SHARP IDENTIFIER	{"#"^$2}
-	|    IDENTIFIER		{$1}
+	|    SHARP IDENTIFIER	{Temp($2)}
+	|    IDENTIFIER		{Temp($1)}
 ;
 
-tvarseq :  
- 	 |    tvar		{$1}
-	 |    tvarseq tvar	{$1^" "^$2}
+varseq :  
+ 	 |    literal		{VarSet.singleton $1}
+	 |    varseq literal	{VarSet.add $2 $1}
 ;
 
 

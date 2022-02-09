@@ -11,6 +11,8 @@ equations:
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), k), r) = sign(m, k)
 
+
+
 rule (modulo E) Register_pk_Bank:
    [ Fr( ~ltkB ) ]
   -->
@@ -120,8 +122,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/post17/chaum_unforgeability.spthy
@@ -130,7 +130,7 @@ analyzing: examples/post17/chaum_unforgeability.spthy
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.073837699s
+  processing time: 0.145190986s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 
@@ -142,7 +142,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.073837699s
+  processing time: 0.145190986s
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
 

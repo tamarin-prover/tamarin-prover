@@ -1,0 +1,301 @@
+theory aletheaDR_ShHm
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-DR's voting phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+========
+RESULTS:
+========
+lemmas labeled with "reuse" are such that other lemmas can use their statements, however they do not just assume that the stated property holds, as the reuse-lemmas are also proven correct
+
+- lemma onlyonce5 [reuse]: verified (5 steps) 
+- lemma onlyonce6 [reuse]: verified (5 steps)
+- lemma onlyonce7 [reuse]: verified (4 steps)
+- lemma onlyonce8 [reuse]: verified (5 steps)
+- lemma onlyonce9 [reuse]: verified (4 steps)
+- lemma onlyonce10 [reuse]:verified (9 steps)
+
+- lemma functional: 	   verified (21 steps) 
+
+- lemma DRauth: 	   verified (58 steps) 
+		
+- lemma secretSskD [reuse]: verified (128 steps) 
+
+*/
+
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+functions and equations 
+======================= */
+builtins: hashing, asymmetric-encryption
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+// the function models that given a signature, one can also see the signed plaintext (only if one has the public key, but adversary has all public keys). With this, we do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+
+
+/* ==========
+Channel rules
+============= */
+
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+//reliable insecure channel from H to P: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_HP:  	[ Out_IR_HP($A,$B,m) ]--[ ChanOut_IR_HP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_HP:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_HP($A,$B,m) ]->[ In_IR_HP($A,$B,m) ] 
+ 
+//reliable insecure channel from P to S: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_PS:  	[ Out_IR_PS($A,$B,m) ]--[ ChanOut_IR_PS($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PS:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PS($A,$B,m) ]->[ In_IR_PS($A,$B,m) ] 
+restriction Chan_R_PS:
+	"All A B m #i. Send_R_PS(A,B,m) @i ==> Ex #j. Receive_R_PS(A,B,m) @j "
+ 
+//reliable insecure channel from S to P: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_SP:  	[ Out_IR_SP($A,$B,m) ]--[ ChanOut_IR_SP($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_SP:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_SP($A,$B,m) ]->[ In_IR_SP($A,$B,m) ] 
+restriction Chan_R_SP:
+	"All A B m #i. Send_R_SP(A,B,m) @i ==> Ex #j. Receive_R_SP(A,B,m) @j "
+ 
+
+//reliable insecure channel from P to H: all messages sent on a reliable channel, are received unchanged
+rule ChanOut_IR_PH:  	[ Out_IR_PH($A,$B,m) ]--[ ChanOut_IR_PH($A,$B,m) ]->[ Out(<$A,$B,m>) ] 
+rule ChanIn_IR_PH:  	[ In(<$A,$B,m>) ]--[ ChanIn_IR_PH($A,$B,m) ]->[ In_IR_PH($A,$B,m) ] 
+ 
+
+
+/* ======================
+Adversary's fake evidence
+====================== */
+// the adversary can claim any term that he knows to be evidence
+rule fakeEvidence:
+	[ In(<ballot,evidence>) ] --[ Evidence(ballot,evidence) ]-> [ ] 
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+  [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~sskD1) ] 
+  	--[ 	Setup(),
+		BB_pskDs('BB',<'spkD', pk(~sskD1)>), //corresponds to signal BBps in thesis
+		BB_pkS('BB',<'spkS', pk(~skS)>),	
+		BB_H('BB',<'H','H1'>),
+		// castBy is defined over the relation of the voters and their devices' keys
+		CastByCorresp('H1', pk(~sskD1)), //corresponds to signal "Corr" in thesis
+		Voter('H1'),
+		SecretKeyD(~sskD1),
+		Server('S'), Honest('S') 			
+	]-> 
+  	[ Out(<'H1',< 'D1','P','BB',$v1>>)
+		
+	, AgSt_D0('D1',< 'H1','S',pk(~skS),~sskD1 >)
+	
+	, AgSt_A0('A',<'S','BB',pk(~skS)>)
+	
+	, AgSt_P0('P',<'S'>)
+	, AgSt_P1('P',<'H1'>)
+	
+	, AgSt_BB0('BB', <'S', pk(~sskD1), pk(~skS),'H1'>)
+	, Out_A('BB',<'spkD', pk(~sskD1)>)
+	, Out_A('BB',<'spkS', pk(~skS)>)
+	, Out_A('BB',<'H','H1'>)
+	
+	, AgSt_S0('S', <~skS, pk(~sskD1)>)
+		
+  	]
+
+/* omitting rule H_1 as H is dishonest and modeled by the adversary rules */
+
+rule D_1:
+	[ AgSt_D0($D, <$H,$S,pkS,~sskD >), In(<$H,$D,v>), Fr(~r) ]
+	--[  	D1() ]->
+	[ Out(<$D,$H, sg(encp(v,~r,pkS),~sskD)> )
+	]
+
+/* omitting rule H_2 as H is dishonest and modeled by the adversary rules */
+	
+rule P: // P is partially trusted to forward messages from H to S
+	[ AgSt_P0($P,<$S>), In_IR_HP($H,$P,b)] 
+	--[ Receive_R_HP($H,$P,b),
+	    Send_R_PS($P,$S,b),
+	    P1()
+	]->
+	[  Out_IR_PS($P,$S,b) ]
+
+rule S_1a: 
+	[ AgSt_S0($S, < ~skS, pk(~sskDa)>), 
+	  In_IR_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)) ]
+	--[ Learn_S_ballot($S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Receive_R_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)),
+	    Send_R_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS)),
+	    S1()
+	]->
+	[ AgSt_S1a($S, < ~skS, sg(encp(va,ra,pk(~skS)),~sskDa) >),
+	  Out_IR_SP($S,$P,sg(sg(encp(va,ra,pk(~skS)),~sskDa),~skS)),
+	  Out_A($S, <'b', sg(encp(va,ra,pk(~skS)),~sskDa)>)
+	, Out_A($S, <'bPrime', encp(va,ra,pk(~skS))  >)
+	, Out_A($S, <'v', va>)
+	, Out_A($S, <'zkp', zkp(<encp(va,ra,pk(~skS))>,<va>,~skS)>)
+	]
+
+rule P_2: // P is partially trusted to forward messages from S to H
+	[ AgSt_P1($P,<$H>), In_IR_SP($S,$P,c) ] 
+	--[ Receive_R_SP($S,$P,c),
+	    Send_R_PH($P,$H,c),
+	    P2()
+	]->
+	[  Out_IR_PH($P,$H,c) ]
+
+/* omitting rule H_3 as H is dishonest and modeled by the adversary rules */
+
+rule BB: 
+	[ AgSt_BB0($BB, <$S, spkDa, pkS,Ha>)
+	, In_A($S, <'b', ba >)
+	, In_A($S, <'bPrime', bPrimea >)
+	, In_A($S, <'v', va >)
+	, In_A($S, <'zkp', p >)
+	]
+ 	--[	BB_rec($BB,<'b', ba >),
+		BB_woS($BB,<'bPrime', bPrimea >),
+		BB_tal($BB,<'v', va >),
+		BB_zkp($BB,<'zkp', p >),
+		End()
+	]->  
+	[ Out_A($BB, <'b', ba>)
+	, Out_A($BB, <'bPrime', bPrimea >)
+	, Out_A($BB, <'v', va>)
+	, Out_A($BB, <'zkp', p >)
+	]
+	
+rule A_1:
+	[ AgSt_A0($A,<$S,$BB,pkS>)
+	// implicitly do verifyA1 (by pattern matching) since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really corresponds to b without signatures:
+	, In_A($BB, <'b', sg(bPrimea,sskDa) >)
+	, In_A($BB, <'bPrime', bPrimea >)
+	, In_A($BB, <'v', va>)
+	, In_A($BB, <'zkp', p >)
+	, In_A($BB, <'spkD', pk(sskDa) >) 
+	]
+	--[   Learn_A_proof($A, <'zkp', p >),
+	      Learn_A_spkDSG($A, <'spkD', pk(sskDa) >),
+	      Learn_A_Vs($A,<'v', va >),
+	      Learn_A_Bs($A,<'b', sg(bPrimea,sskDa) >),
+	      Learn_A_bPrimes($A,<'bPrime', bPrimea >),
+	      VerifyA2($A,verzkp( p, <bPrimea>,<va>,pkS) ),
+	      A1()
+	]->
+	[]
+
+/* omitting rule H_4 as H is dishonest and modeled by the adversary rules */
+
+
+/* =========
+RESTRICTIONS
+========= */
+// there is only one setup
+restriction OneSetup: 
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+
+/* ====
+LEMMAS 
+======= */
+
+lemma onlyonce5 [reuse]: " All #i #j. P1()  @i & P1()  @j ==> #i = #j "
+lemma onlyonce6 [reuse]: " All #i #j. P2() @i & P2() @j ==> #i = #j "
+lemma onlyonce7 [reuse]: " All #i #j. D1()  @i & D1()  @j ==> #i = #j "
+lemma onlyonce8 [reuse]: " All #i #j. S1() @i & S1() @j ==> #i = #j "
+lemma onlyonce9 [reuse]: " All #i #j. End()@i & End()@j ==> #i = #j " 
+lemma onlyonce10 [reuse]: " All #i #j. A1()@i & A1()@j ==> #i = #j " 
+
+
+/* ================
+FUNCTIONAL PROPERTY
+=================== */
+
+lemma functional: exists-trace
+	" Ex H1 #d b P #p S #s c #p2 #k v #l BB #i2
+		A pr bPrimea pkS #o
+		.
+		D1() @d
+		& Receive_R_HP(H1,P,b)	@p
+
+		& Receive_R_PS(P,S,b) @s
+		& Send_R_SP(S,P,c) @s
+		& Receive_R_SP(S,P,c) @p2
+		& Send_R_PH(P,H1,c) @p2
+		& Evidence(b,c) @i2
+		
+		& BB_rec(BB,<'b', b  >) @k
+		& BB_tal(BB,<'v', v >) @l
+
+		& VerifyA2(A, verzkp(pr,<bPrimea>,<v>,pkS )) @o
+		"
+
+
+/*================
+DISPUTE RESOLUTION
+==================*/
+
+lemma DRauth: 
+	"All  S #i.
+		Honest(S) @i 
+	==> // not exists b. Faulty(S,b)
+	not (Ex b BB skS #k #l #m ba . 
+		BB_rec(BB,<'b', ba >) @k
+		& not (b=ba) 
+		& Evidence(b,sg(b,skS)) @l
+		& BB_pkS(BB,<'spkS', pk(skS)>) @m
+		)	
+	&    //Faulty's second disjunct
+	not (Ex BB ba bPrimea sskDa #k #l #m. 
+		BB_rec(BB,<'b', ba >) @k
+		& BB_woS(BB,<'bPrime', bPrimea >)@l
+		& BB_pskDs(BB,<'spkD', pk(sskDa) >)@m 	 
+		& not ba = sg(bPrimea,sskDa) 
+		)"	
+
+lemma secretSskD [reuse]:
+"All sskD #i.
+	SecretKeyD(sskD) @i
+==> not (Ex #j. K(sskD) @j)"
+
+
+
+end
+
+	     			   
+
+

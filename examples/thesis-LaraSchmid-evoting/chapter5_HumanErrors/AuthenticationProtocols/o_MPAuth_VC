@@ -1,0 +1,55 @@
+#!/usr/bin/python
+#oracle_RF
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global priorities, plist, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         break
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         break
+
+if lemma == "functional": 
+  match = False
+  priorities = ["AgSt_S7","AgSt","~skD","~skS"]
+
+if lemma == "message_authentication": 
+  match = False
+  priorities = ["AgSt_S11(","~rS","~rD","!KU( ~vc","!HK( 'Human', 'vc', ~vc", "InitK( 'Human', 'm',"]
+
+
+
+#j
+plist = [ [] for i in priorities ]
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+#  if lemma == "secret":
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+print 1

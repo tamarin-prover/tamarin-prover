@@ -1,0 +1,1063 @@
+theory KAS2_original begin
+
+// Function signature and definition of the equational theory E
+
+functions: KDF/1, MAC/2, adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+section{* KAS2 *}
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !Ltk( $A, ~ltkA ), !Pk( $A, pk(~ltkA) ), Out( pk(~ltkA) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~m1 ), !Ltk( $I, ~lkI ), !Pk( $R, pkR ) ]
+  --[ Sid( ~m1, $I, $R, <$I, $R, 'Init', aenc(~m1, pkR)> ) ]->
+   [
+   Init_1( ~m1, $I, $R, ~lkI, ~m1, aenc(~m1, pkR) ), !Ephk( ~m1, ~m1 ),
+   Out( aenc(~m1, pkR) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Resp_1:
+   [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !Pk( $I, pkI ) ]
+  --[
+  Sid( ~m2, $R, $I, <$R, $I, 'Resp', aenc(~m2, pkI), c1> ),
+  Match( ~m2, <$I, $R, 'Init', c1> ),
+  Match( ~m2, <$I, $R, 'Init', c1, aenc(~m2, pkI)> )
+  ]->
+   [
+   Resp_1( ~m2, $I, $R, ~lkR, adec(c1, ~lkR), ~m2, c1, aenc(~m2, pkI) ),
+   !Ephk( ~m2, ~m2 ),
+   Out( <aenc(~m2, pkI), 
+         MAC(KDF(<adec(c1, ~lkR), ~m2, $I, $R, c1, aenc(~m2, pkI)>),
+             <'Resp', $R, $I, aenc(~m2, pkI), c1>)
+        >
+   )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ Fr( ~m2 ), In( c1 ), !Ltk( $R, ~lkR ), !Pk( $I, pkI ) ]
+    --[
+    Sid( ~m2, $R, $I, <$R, $I, 'Resp', aenc(~m2, pkI), c1> ),
+    Match( ~m2, <$I, $R, 'Init', c1> ),
+    Match( ~m2, <$I, $R, 'Init', c1, aenc(~m2, pkI)> )
+    ]->
+     [
+     Resp_1( ~m2, $I, $R, ~lkR, z, ~m2, c1, aenc(~m2, pkI) ),
+     !Ephk( ~m2, ~m2 ),
+     Out( <aenc(~m2, pkI), 
+           MAC(KDF(<z, ~m2, $I, $R, c1, aenc(~m2, pkI)>),
+               <'Resp', $R, $I, aenc(~m2, pkI), c1>)
+          >
+     )
+     ]
+    variants (modulo AC)
+    1. ~lkR  = ~lkR.11
+       c1    = c1.13
+       z     = adec(c1.13, ~lkR.11)
+    
+    2. ~lkR  = ~lkR.13
+       c1    = aenc(z.17, pk(~lkR.13))
+       z     = z.17
+  */
+
+rule (modulo E) Init_2:
+   [
+   Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ),
+   In( <c2, 
+        MAC(KDF(<~m1, adec(c2, ~lkI), $I, $R, c1, c2>), <'Resp', $R, $I, c2, c1>)
+       >
+   )
+   ]
+  --[
+  Sid( ~m1, $I, $R, <$I, $R, 'Init', c1, c2> ),
+  Match( ~m1, <$R, $I, 'Resp', c2, c1> ),
+  Accept( ~m1, $I, $R, KDF(<~m1, adec(c2, ~lkI), $I, $R, c1, c2>) )
+  ]->
+   [
+   Out( MAC(KDF(<~m1, adec(c2, ~lkI), $I, $R, c1, c2>),
+            <'Init', $I, $R, c1, c2>)
+   ),
+   !Sessk( ~m1, KDF(<~m1, adec(c2, ~lkI), $I, $R, c1, c2>) )
+   ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [
+     Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ),
+     In( <c2, MAC(KDF(<~m1, z, $I, $R, c1, c2>), <'Resp', $R, $I, c2, c1>)> )
+     ]
+    --[
+    Sid( ~m1, $I, $R, <$I, $R, 'Init', c1, c2> ),
+    Match( ~m1, <$R, $I, 'Resp', c2, c1> ),
+    Accept( ~m1, $I, $R, KDF(<~m1, z, $I, $R, c1, c2>) )
+    ]->
+     [
+     Out( MAC(KDF(<~m1, z, $I, $R, c1, c2>), <'Init', $I, $R, c1, c2>) ),
+     !Sessk( ~m1, KDF(<~m1, z, $I, $R, c1, c2>) )
+     ]
+    variants (modulo AC)
+    1. ~lkI  = ~lkI.12
+       c2    = c2.15
+       z     = adec(c2.15, ~lkI.12)
+    
+    2. ~lkI  = ~lkI.13
+       c2    = aenc(z.17, pk(~lkI.13))
+       z     = z.17
+  */
+
+rule (modulo E) Resp_2:
+   [
+   Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ),
+   In( MAC(KDF(<m1, ~m2, $I, $R, c1, c2>), <'Init', $I, $R, c1, c2>) )
+   ]
+  --[ Accept( ~m2, $R, $I, KDF(<m1, ~m2, $I, $R, c1, c2>) ) ]->
+   [ !Sessk( ~m2, KDF(<m1, ~m2, $I, $R, c1, c2>) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~tid, k ) ] --[ SesskRev( ~tid ) ]-> [ Out( k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, lkA ) ] --[ LtkRev( $A ) ]-> [ Out( lkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~s, ~ek ) ] --[ EphkRev( ~s ) ]-> [ Out( ~ek ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma KAS_key_secrecy:
+  all-traces
+  "¬(∃ #i1 #i2 s A B k.
+      ((((Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+        (¬(∃ #i4. SesskRev( s ) @ #i4))) ∧
+       (∀ ss #i4 #i5 C D ms.
+         ((Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ⇒
+         (((((¬(∃ #i6. SesskRev( ss ) @ #i6)) ∧
+             (¬(∃ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7)))) ∧
+            (¬(∃ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7)))) ∧
+           (¬(∃ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7)))) ∧
+          (¬(∃ #i6 #i7. (EphkRev( s ) @ #i6) ∧ (EphkRev( ss ) @ #i7)))))) ∧
+      ((¬(∃ ss #i4 #i5 C D ms.
+           (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))) ⇒
+       ((¬(∃ #i6. EphkRev( s ) @ #i6)) ∧
+        (¬(∃ #i6. (LtkRev( B ) @ #i6) ∧ (#i6 < #i1))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 #i2 s A B k.
+  (Accept( s, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i4. (SesskRev( s ) @ #i4) ⇒ ⊥) ∧
+  (∀ ss #i4 #i5 C D ms.
+    (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)
+   ⇒
+    (∀ #i6. (SesskRev( ss ) @ #i6) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (EphkRev( s ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( B ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (LtkRev( A ) @ #i6) ∧ (LtkRev( B ) @ #i7) ⇒ ⊥) ∧
+    (∀ #i6 #i7. (EphkRev( s ) @ #i6) ∧ (EphkRev( ss ) @ #i7) ⇒ ⊥)) ∧
+  (((∃ ss #i4 #i5 C D ms.
+      (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5)) ∨
+    ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
+     (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1)))))"
+*/
+simplify
+solve( (∃ ss #i4 #i5 C D ms.
+         (Sid( ss, C, D, ms ) @ #i4) ∧ (Match( s, ms ) @ #i5))  ∥
+       ((∀ #i6. (EphkRev( s ) @ #i6) ⇒ ⊥) ∧
+        (∀ #i6. (LtkRev( B ) @ #i6) ⇒ ¬(#i6 < #i1))) )
+  case case_1
+  solve( Accept( s, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
+      case Init_1
+      solve( Sid( ss, C, D, ms ) @ #i4 )
+        case Init_1
+        solve( !Ltk( $I.1, ~lkI.1 ) ▶₁ #i4 )
+          case Register_pk
+          solve( !Pk( $R.1, pkR ) ▶₂ #i4 )
+            case Register_pk
+            by solve( Match( ~m1, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1))>
+                      ) @ #i5 )
+          qed
+        qed
+      next
+        case Init_2
+        solve( Init_1( ~m1.1, $I.1, $R.1, ~lkI.1, ~m1.1, c1 ) ▶₀ #i4 )
+          case Init_1
+          by solve( Match( ~m1,
+                           <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1)), c2.1>
+                    ) @ #i5 )
+        qed
+      next
+        case Resp_1
+        solve( !Ltk( $R.1, ~lkR ) ▶₂ #i4 )
+          case Register_pk
+          solve( !Pk( $I.1, pkI ) ▶₃ #i4 )
+            case Register_pk
+            solve( Match( ~m1, <$R.1, $I.1, 'Resp', aenc(~m2, pk(~ltkA.1)), c1>
+                   ) @ #i5 )
+              case Init_2
+              solve( Init_1( ~m1, $I.1, $R.1, ~lkI.1, ~m1, c1 ) ▶₀ #i5 )
+                case Init_1
+                solve( splitEqs(0) )
+                  case split_case_1
+                  solve( splitEqs(1) )
+                    case split_case_1
+                    solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                     aenc(~m2, pk(~lkI))>)
+                           ) @ #vk )
+                      case Sessk_reveal_case_1
+                      by contradiction /* from formulas */
+                    next
+                      case Sessk_reveal_case_2
+                      by contradiction /* from formulas */
+                    next
+                      case c_KDF
+                      solve( !KU( ~m1 ) @ #vk.7 )
+                        case Ephk_reveal
+                        solve( !KU( ~m2 ) @ #vk.10 )
+                          case Ephk_reveal
+                          by contradiction /* from formulas */
+                        next
+                          case Resp_1
+                          solve( !KU( ~lkI ) @ #vk.14 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      next
+                        case Init_1
+                        solve( !KU( ~m2 ) @ #vk.10 )
+                          case Ephk_reveal
+                          solve( !KU( ~lkR ) @ #vk.14 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case Resp_1
+                          solve( !KU( ~lkR ) @ #vk.14 )
+                            case Ltk_reveal
+                            solve( !KU( ~lkI ) @ #vk.15 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case split_case_2
+                    solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~ltkA)), 
+                                         aenc(~m2, pk(~lkI))>),
+                                    <'Resp', $R, $I, aenc(~m2, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
+                           ) @ #vk.3 )
+                      case c_MAC
+                      solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~ltkA)), 
+                                       aenc(~m2, pk(~lkI))>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction /* cyclic */
+                      next
+                        case c_KDF
+                        solve( !KU( ~m1 ) @ #vk.16 )
+                          case Ephk_reveal
+                          solve( !KU( ~m2 ) @ #vk.18 )
+                            case Ephk_reveal
+                            by contradiction /* from formulas */
+                          next
+                            case Resp_1
+                            solve( !KU( ~lkI ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        next
+                          case Init_1
+                          solve( !KU( ~m2 ) @ #vk.18 )
+                            case Ephk_reveal
+                            solve( !KU( ~ltkA ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case Resp_1
+                            solve( !KU( ~ltkA ) @ #vk.19 )
+                              case Ltk_reveal
+                              solve( !KU( ~lkI ) @ #vk.20 )
+                                case Ltk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case split_case_2
+                  solve( splitEqs(1) )
+                    case split_case_1
+                    solve( !KU( MAC(KDF(<~m1, adec(aenc(~m2, pk(~ltkA)), ~lkI), $I, $R, 
+                                         aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>),
+                                    <'Resp', $R, $I, aenc(~m2, pk(~ltkA)), aenc(~m1, pk(~lkR))>)
+                           ) @ #vk.3 )
+                      case c_MAC
+                      solve( !KU( KDF(<~m1, adec(aenc(~m2, pk(~ltkA)), ~lkI), $I, $R, 
+                                       aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction /* cyclic */
+                      next
+                        case c_KDF
+                        solve( !KU( ~m1 ) @ #vk.16 )
+                          case Ephk_reveal
+                          solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.18 )
+                            case c_adec
+                            solve( !KU( ~lkI ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        next
+                          case Init_1
+                          solve( !KU( ~lkR ) @ #vk.19 )
+                            case Ltk_reveal
+                            solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.19 )
+                              case c_adec
+                              solve( !KU( ~lkI ) @ #vk.20 )
+                                case Ltk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case split_case_2
+                    solve( !KU( MAC(KDF(<~m1, adec(aenc(~m2, pk(~ltkA.1)), ~lkI), $I, $R, 
+                                         aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>),
+                                    <'Resp', $R, $I, aenc(~m2, pk(~ltkA.1)), aenc(~m1, pk(~ltkA))>)
+                           ) @ #vk.3 )
+                      case c_MAC
+                      solve( !KU( KDF(<~m1, adec(aenc(~m2, pk(~ltkA.1)), ~lkI), $I, $R, 
+                                       aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>)
+                             ) @ #vk.1 )
+                        case Sessk_reveal
+                        by contradiction /* cyclic */
+                      next
+                        case c_KDF
+                        solve( !KU( ~m1 ) @ #vk.16 )
+                          case Ephk_reveal
+                          solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.18 )
+                            case c_adec
+                            solve( !KU( ~lkI ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
+                        next
+                          case Init_1
+                          solve( !KU( ~ltkA ) @ #vk.19 )
+                            case Ltk_reveal
+                            solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.19 )
+                              case c_adec
+                              solve( !KU( ~lkI ) @ #vk.20 )
+                                case Ltk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_2
+    solve( Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ) ▶₀ #i1 )
+      case Resp_1
+      solve( Sid( ss, C, D, ms ) @ #i4 )
+        case Init_1
+        solve( !Ltk( $I.1, ~lkI ) ▶₁ #i4 )
+          case Register_pk
+          solve( !Pk( $R.1, pkR ) ▶₂ #i4 )
+            case Register_pk
+            solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1))>
+                   ) @ #i5 )
+              case Resp_1
+              solve( splitEqs(1) )
+                case split_case_1
+                solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                     aenc(~m2, pk(~ltkA))>),
+                                <'Init', $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
+                       ) @ #vk.1 )
+                  case Init_2
+                  solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                   aenc(~m2, pk(~lkI))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal_case_1
+                    by contradiction /* from formulas */
+                  next
+                    case Sessk_reveal_case_2
+                    by contradiction /* from formulas */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m1 ) @ #vk.8 )
+                      case Ephk_reveal
+                      solve( !KU( ~m2 ) @ #vk.11 )
+                        case Ephk_reveal
+                        by contradiction /* from formulas */
+                      next
+                        case Resp_1
+                        solve( !KU( ~lkI ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Init_1
+                      solve( !KU( ~m2 ) @ #vk.11 )
+                        case Ephk_reveal
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case Resp_1
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          solve( !KU( ~lkI ) @ #vk.16 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case c_MAC
+                  solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                   aenc(~m2, pk(~ltkA))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal_case_1
+                    by contradiction /* from formulas */
+                  next
+                    case Sessk_reveal_case_2
+                    by contradiction /* cyclic */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m1 ) @ #vk.13 )
+                      case Ephk_reveal
+                      solve( !KU( ~m2 ) @ #vk.14 )
+                        case Ephk_reveal
+                        by contradiction /* from formulas */
+                      next
+                        case Resp_1
+                        solve( !KU( ~ltkA ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Init_1
+                      solve( !KU( ~m2 ) @ #vk.14 )
+                        case Ephk_reveal
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case Resp_1
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          solve( !KU( ~ltkA ) @ #vk.16 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case split_case_2
+                solve( !KU( MAC(KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                     aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>),
+                                <'Init', $I, $R, aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>)
+                       ) @ #vk.1 )
+                  case c_MAC
+                  solve( !KU( KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                   aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal
+                    by contradiction /* cyclic */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m2 ) @ #vk.14 )
+                      case Ephk_reveal
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.14 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Resp_1
+                      solve( !KU( ~ltkA.1 ) @ #vk.15 )
+                        case Ltk_reveal
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.15 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.16 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case Init_2
+        solve( Init_1( ~m1.1, $I.1, $R.1, ~lkI, ~m1.1, c1.1 ) ▶₀ #i4 )
+          case Init_1
+          solve( Match( ~m2, <$I.1, $R.1, 'Init', aenc(~m1.1, pk(~ltkA.1)), c2>
+                 ) @ #i5 )
+            case Resp_1_case_1
+            solve( splitEqs(2) )
+              case split_case_1
+              solve( !KU( MAC(KDF(<
+                                   adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR), ~m2, $I, $R, 
+                                   <aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, aenc(~m2, pk(~ltkA.1))>),
+                              <'Init', $I, $R, <aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, 
+                               aenc(~m2, pk(~ltkA.1))>)
+                     ) @ #vk.1 )
+                case c_MAC
+                solve( !KU( KDF(<adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR), 
+                                 ~m2, $I, $R, <aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, 
+                                 aenc(~m2, pk(~ltkA.1))>)
+                       ) @ #vk.1 )
+                  case Sessk_reveal
+                  by contradiction /* cyclic */
+                next
+                  case c_KDF
+                  solve( !KU( ~m2 ) @ #vk.18 )
+                    case Ephk_reveal
+                    solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
+                           ) @ #vk.18 )
+                      case c_adec
+                      solve( !KU( ~lkR ) @ #vk.19 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  next
+                    case Resp_1
+                    solve( !KU( ~ltkA.1 ) @ #vk.19 )
+                      case Ltk_reveal
+                      solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
+                             ) @ #vk.19 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.20 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case split_case_2
+              solve( !KU( MAC(KDF(<adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR), ~m2, $I, 
+                                   $R, <aenc(~m1, pk(~ltkA)), c2>, aenc(~m2, pk(~ltkA.1))>),
+                              <'Init', $I, $R, <aenc(~m1, pk(~ltkA)), c2>, aenc(~m2, pk(~ltkA.1))>)
+                     ) @ #vk.1 )
+                case c_MAC
+                solve( !KU( KDF(<adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR), ~m2, $I, $R, 
+                                 <aenc(~m1, pk(~ltkA)), c2>, aenc(~m2, pk(~ltkA.1))>)
+                       ) @ #vk.1 )
+                  case Sessk_reveal
+                  by contradiction /* cyclic */
+                next
+                  case c_KDF
+                  solve( !KU( ~m2 ) @ #vk.18 )
+                    case Ephk_reveal
+                    solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.18 )
+                      case c_adec
+                      solve( !KU( ~lkR ) @ #vk.19 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  next
+                    case Resp_1
+                    solve( !KU( ~ltkA.1 ) @ #vk.19 )
+                      case Ltk_reveal
+                      solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.19 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.20 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case Resp_1_case_2
+            solve( splitEqs(1) )
+              case split_case_1
+              solve( splitEqs(2) )
+                case split_case_1
+                solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                 aenc(~m2, pk(~lkI))>)
+                       ) @ #vk )
+                  case Sessk_reveal_case_1
+                  by contradiction /* from formulas */
+                next
+                  case Sessk_reveal_case_2
+                  by contradiction /* from formulas */
+                next
+                  case c_KDF
+                  solve( !KU( ~m1 ) @ #vk.8 )
+                    case Ephk_reveal
+                    solve( !KU( ~m2 ) @ #vk.11 )
+                      case Ephk_reveal
+                      by contradiction /* from formulas */
+                    next
+                      case Resp_1
+                      solve( !KU( ~lkI ) @ #vk.15 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
+                      qed
+                    qed
+                  next
+                    case Init_1
+                    solve( !KU( ~m2 ) @ #vk.11 )
+                      case Ephk_reveal
+                      solve( !KU( ~lkR ) @ #vk.15 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case Resp_1
+                      solve( !KU( ~lkR ) @ #vk.15 )
+                        case Ltk_reveal
+                        solve( !KU( ~lkI ) @ #vk.16 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case split_case_2
+                solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                     aenc(~m2, pk(~ltkA))>),
+                                <'Init', $I, $R, aenc(~m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
+                       ) @ #vk.1 )
+                  case c_MAC
+                  solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                                   aenc(~m2, pk(~ltkA))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal
+                    by contradiction /* cyclic */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m1 ) @ #vk.15 )
+                      case Ephk_reveal
+                      solve( !KU( ~m2 ) @ #vk.16 )
+                        case Ephk_reveal
+                        by contradiction /* from formulas */
+                      next
+                        case Resp_1
+                        solve( !KU( ~ltkA ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Init_1
+                      solve( !KU( ~m2 ) @ #vk.16 )
+                        case Ephk_reveal
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case Resp_1
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          solve( !KU( ~ltkA ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case split_case_2
+              solve( splitEqs(2) )
+                case split_case_1
+                solve( !KU( MAC(KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                     aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~lkI))>),
+                                <'Init', $I, $R, aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~lkI))>)
+                       ) @ #vk.1 )
+                  case c_MAC
+                  solve( !KU( KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                   aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~lkI))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal
+                    by contradiction /* cyclic */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m2 ) @ #vk.16 )
+                      case Ephk_reveal
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.16 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Resp_1
+                      solve( !KU( ~lkI ) @ #vk.17 )
+                        case Ltk_reveal
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.17 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case split_case_2
+                solve( !KU( MAC(KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                     aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>),
+                                <'Init', $I, $R, aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>)
+                       ) @ #vk.1 )
+                  case c_MAC
+                  solve( !KU( KDF(<adec(aenc(~m1, pk(~ltkA)), ~lkR), ~m2, $I, $R, 
+                                   aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>)
+                         ) @ #vk.1 )
+                    case Sessk_reveal
+                    by contradiction /* cyclic */
+                  next
+                    case c_KDF
+                    solve( !KU( ~m2 ) @ #vk.16 )
+                      case Ephk_reveal
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.16 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    next
+                      case Resp_1
+                      solve( !KU( ~ltkA.1 ) @ #vk.17 )
+                        case Ltk_reveal
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.17 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case Resp_1
+        solve( !Ltk( $R.1, ~lkR.1 ) ▶₂ #i4 )
+          case Register_pk
+          solve( !Pk( $I.1, pkI ) ▶₃ #i4 )
+            case Register_pk
+            solve( Match( ~m2, <$R.1, $I.1, 'Resp', aenc(~m2.1, pk(~ltkA.1)), c1.1>
+                   ) @ #i5 )
+              case Init_2
+              by solve( Init_1( ~m2, $I.1, $R.1, ~lkI, ~m2, c1.1 ) ▶₀ #i5 )
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( Accept( s, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init_1( ~m1, $I, $R, ~lkI, ~m1, c1 ) ▶₀ #i1 )
+      case Init_1
+      solve( splitEqs(0) )
+        case split_case_1
+        solve( !KU( MAC(KDF(<~m1, adec(c2, ~lkI), $I, $R, aenc(~m1, pk(~ltkA)), 
+                             c2>),
+                        <'Resp', $R, $I, c2, aenc(~m1, pk(~ltkA))>)
+               ) @ #vk.3 )
+          case c_MAC
+          solve( !KU( KDF(<~m1, adec(c2, ~lkI), $I, $R, aenc(~m1, pk(~ltkA)), c2>)
+                 ) @ #vk.1 )
+            case Sessk_reveal
+            by contradiction /* cyclic */
+          next
+            case c_KDF
+            solve( !KU( ~m1 ) @ #vk.16 )
+              case Ephk_reveal
+              by contradiction /* from formulas */
+            next
+              case Init_1
+              solve( !KU( ~ltkA ) @ #vk.19 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case split_case_2
+        solve( !KU( MAC(KDF(<~m1, z, $I, $R, aenc(~m1, pk(~ltkA)), 
+                             aenc(z, pk(~lkI))>),
+                        <'Resp', $R, $I, aenc(z, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
+               ) @ #vk.3 )
+          case Resp_1
+          solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~ltkA)), 
+                           aenc(~m2, pk(~lkI))>)
+                 ) @ #vk.1 )
+            case Sessk_reveal_case_1
+            by contradiction /* from formulas */
+          next
+            case Sessk_reveal_case_2
+            by contradiction /* from formulas */
+          next
+            case c_KDF
+            solve( !KU( ~m1 ) @ #vk.7 )
+              case Ephk_reveal
+              by contradiction /* from formulas */
+            next
+              case Init_1
+              solve( !KU( ~m2 ) @ #vk.10 )
+                case Ephk_reveal
+                solve( !KU( ~ltkA ) @ #vk.14 )
+                  case Ltk_reveal
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Resp_1
+                solve( !KU( ~ltkA ) @ #vk.14 )
+                  case Ltk_reveal
+                  solve( !KU( ~lkI ) @ #vk.15 )
+                    case Ltk_reveal
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case c_MAC
+          solve( !KU( KDF(<~m1, z, $I, $R, aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))
+                          >)
+                 ) @ #vk.1 )
+            case Sessk_reveal_case_1
+            by contradiction /* cyclic */
+          next
+            case Sessk_reveal_case_2
+            by contradiction /* from formulas */
+          next
+            case c_KDF
+            solve( !KU( ~m1 ) @ #vk.16 )
+              case Ephk_reveal
+              by contradiction /* from formulas */
+            next
+              case Init_1
+              solve( !KU( ~ltkA ) @ #vk.19 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_2
+    solve( Resp_1( ~m2, $I, $R, ~lkR, m1, ~m2, c1, c2 ) ▶₀ #i1 )
+      case Resp_1
+      solve( splitEqs(1) )
+        case split_case_1
+        solve( !KU( MAC(KDF(<adec(c1, ~lkR), ~m2, $I, $R, c1, 
+                             aenc(~m2, pk(~ltkA))>),
+                        <'Init', $I, $R, c1, aenc(~m2, pk(~ltkA))>)
+               ) @ #vk.1 )
+          case c_MAC
+          solve( !KU( KDF(<adec(c1, ~lkR), ~m2, $I, $R, c1, aenc(~m2, pk(~ltkA))>)
+                 ) @ #vk.1 )
+            case Sessk_reveal
+            by contradiction /* cyclic */
+          next
+            case c_KDF
+            solve( !KU( ~m2 ) @ #vk.14 )
+              case Ephk_reveal
+              by contradiction /* from formulas */
+            next
+              case Resp_1
+              solve( !KU( ~ltkA ) @ #vk.15 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case split_case_2
+        solve( !KU( MAC(KDF(<m1, ~m2, $I, $R, aenc(m1, pk(~lkR)), 
+                             aenc(~m2, pk(~ltkA))>),
+                        <'Init', $I, $R, aenc(m1, pk(~lkR)), aenc(~m2, pk(~ltkA))>)
+               ) @ #vk.1 )
+          case Init_2
+          solve( !KU( KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~lkR)), 
+                           aenc(~m2, pk(~ltkA))>)
+                 ) @ #vk.1 )
+            case Sessk_reveal_case_1
+            by contradiction /* from formulas */
+          next
+            case Sessk_reveal_case_2
+            by contradiction /* from formulas */
+          next
+            case c_KDF
+            solve( !KU( ~m1 ) @ #vk.8 )
+              case Ephk_reveal
+              solve( !KU( ~m2 ) @ #vk.11 )
+                case Ephk_reveal
+                by contradiction /* from formulas */
+              next
+                case Resp_1
+                solve( !KU( ~ltkA ) @ #vk.15 )
+                  case Ltk_reveal
+                  by contradiction /* from formulas */
+                qed
+              qed
+            next
+              case Init_1
+              solve( !KU( ~m2 ) @ #vk.11 )
+                case Ephk_reveal
+                by contradiction /* from formulas */
+              next
+                case Resp_1
+                solve( !KU( ~lkR ) @ #vk.15 )
+                  case Ltk_reveal
+                  solve( !KU( ~ltkA ) @ #vk.16 )
+                    case Ltk_reveal
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              qed
+            qed
+          qed
+        next
+          case c_MAC
+          solve( !KU( KDF(<m1, ~m2, $I, $R, aenc(m1, pk(~lkR)), 
+                           aenc(~m2, pk(~ltkA))>)
+                 ) @ #vk.1 )
+            case Sessk_reveal_case_1
+            by contradiction /* from formulas */
+          next
+            case Sessk_reveal_case_2
+            by contradiction /* cyclic */
+          next
+            case c_KDF
+            solve( !KU( ~m2 ) @ #vk.14 )
+              case Ephk_reveal
+              by contradiction /* from formulas */
+            next
+              case Resp_1
+              solve( !KU( ~ltkA ) @ #vk.15 )
+                case Ltk_reveal
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/csf12/KAS2_original.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/csf12/KAS2_original.spthy
+
+  output:          examples/csf12/KAS2_original.spthy.tmp
+  processing time: 5.363854043s
+  KAS_key_secrecy (all-traces): verified (254 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf12/KAS2_original.spthy
+
+  output:          examples/csf12/KAS2_original.spthy.tmp
+  processing time: 5.363854043s
+  KAS_key_secrecy (all-traces): verified (254 steps)
+
+==============================================================================
+*/

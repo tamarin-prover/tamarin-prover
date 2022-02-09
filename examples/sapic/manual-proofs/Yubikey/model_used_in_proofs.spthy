@@ -1,0 +1,246 @@
+theory Yubikey
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+section{* The Yubikey-Protocol *}
+
+builtins: symmetric-encryption, multiset
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule Par_: // [process=top-level] Par 
+ [State_()] --[]-> [State_1(), State_2()]
+
+rule Rep_0_1 [color=#569DC0]: // [process=Server] Rep, 0 
+ [State_1()] --[]-> [!Semistate_11()]
+
+rule Rep_1_1 [color=#569DC0]: // [process=Server] Rep, 1 
+ [!Semistate_11()] --[]-> [State_11()]
+
+rule in_L_pid_nonce_senc_secretid_tc_npr_k__11 [color=#569DC0]: // [process=Server] in <L_pid, nonce, senc(<secretid, tc, npr>, k)> 
+ [State_11(), In(<L_pid, nonce, senc(<secretid, tc, npr>, k)>)] --[]-> [State_111(L_pid, k, nonce, npr, secretid, tc)]
+
+rule lock_Server_L_pid__111 [color=#569DC0]: // [process=Server] lock <'Server', L_pid> 
+ [State_111(L_pid, k, nonce, npr, secretid, tc), Fr(~lock12)] --[Lock($12, ~lock12, <'Server', L_pid>), Lock_12($12, ~lock12, <'Server', L_pid>)]-> [State_1111(~lock12, L_pid, k, nonce, npr, secretid, tc)]
+
+rule lookup_Server_L_pid_as_tuple_0_1111 [color=#569DC0]: // [process=Server] lookup <'Server', L_pid> as tuple, 0 
+ [State_1111(~lock12, L_pid, k, nonce, npr, secretid, tc)] --[IsIn(<'Server', L_pid>, tuple)]-> [State_11111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)]
+
+rule lookup_Server_L_pid_as_tuple_1_1111 [color=#569DC0]: // [process=Server] lookup <'Server', L_pid> as tuple, 1 
+ [State_1111(~lock12, L_pid, k, nonce, npr, secretid, tc)] --[IsNotSet(<'Server', L_pid>)]-> [State_11112(~lock12, L_pid, k, nonce, npr, secretid, tc)]
+
+rule if_eqfsttuple_secretid_0_11111 [color=#569DC0]: // [process=Server] if eq(fst(tuple), secretid), 0 
+ [State_11111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[Pred_eq(fst(tuple), secretid)]-> [State_111111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)]
+
+rule if_eqfsttuple_secretid_1_11111 [color=#569DC0]: // [process=Server] if eq(fst(tuple), secretid), 1 
+ [State_11111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[Pred_not_eq(fst(tuple), secretid)]-> [State_111112(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)]
+
+rule if_eqfstsndtuple_k_0_111111 [color=#569DC0]: // [process=Server] if eq(fst(snd(tuple)), k), 0 
+ [State_111111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[Pred_eq(fst(snd(tuple)), k)]-> [State_1111111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)]
+
+rule if_eqfstsndtuple_k_1_111111 [color=#569DC0]: // [process=Server] if eq(fst(snd(tuple)), k), 1 
+ [State_111111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[Pred_not_eq(fst(snd(tuple)), k)]-> [State_1111112(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)]
+
+rule in_otc_1111111 [color=#569DC0]: // [process=Server] in otc 
+ [State_1111111(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple), In(otc)] --[]-> [State_11111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule if_eqsndsndtuple_otc_0_11111111 [color=#569DC0]: // [process=Server] if eq(snd(snd(tuple)), otc), 0 
+ [State_11111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Pred_eq(snd(snd(tuple)), otc)]-> [State_111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule if_eqsndsndtuple_otc_1_11111111 [color=#569DC0]: // [process=Server] if eq(snd(snd(tuple)), otc), 1 
+ [State_11111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Pred_not_eq(snd(snd(tuple)), otc)]-> [State_111111112(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule if_smallerotc_tc_0_111111111 [color=#569DC0]: // [process=Server] if smaller(otc, tc), 0 
+ [State_111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Pred_smaller(otc, tc)]-> [State_1111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule if_smallerotc_tc_1_111111111 [color=#569DC0]: // [process=Server] if smaller(otc, tc), 1 
+ [State_111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Pred_not_smaller(otc, tc)]-> [State_1111111112(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule event_InitStuffL_pid_secretid_k_tuple_otc_tc_1111111111 [color=#569DC0]: // [process=Server] event InitStuff(L_pid, secretid, k, tuple, otc, tc) 
+ [State_1111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[InitStuff(L_pid, secretid, k, tuple, otc, tc)]-> [State_11111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule event_LoginL_pid_k_tc_11111111111 [color=#569DC0]: // [process=Server] event Login(L_pid, k, tc) 
+ [State_11111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Login(L_pid, k, tc)]-> [State_111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule insert_Server_L_pid_secretid_k_tc__111111111111 [color=#569DC0]: // [process=Server] insert <'Server', L_pid>,<secretid, k, tc> 
+ [State_111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Insert(<'Server', L_pid>, <secretid, k, tc>)]-> [State_1111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule unlock_Server_L_pid__1111111111111 [color=#569DC0]: // [process=Server] unlock <'Server', L_pid> 
+ [State_1111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[Unlock($12, ~lock12, <'Server', L_pid>), Unlock_12($12, ~lock12, <'Server', L_pid>)]-> [State_11111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)]
+
+rule Zero_11111111111111 [color=#569DC0]: // [process=Server] Zero 
+ [State_11111111111111(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[]-> []
+
+rule Zero_1111111112 [color=#569DC0]: // [process=Server] Zero 
+ [State_1111111112(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[]-> []
+
+rule Zero_111111112 [color=#569DC0]: // [process=Server] Zero 
+ [State_111111112(~lock12, L_pid, k, nonce, npr, otc, secretid, tc, tuple)] --[]-> []
+
+rule Zero_1111112 [color=#569DC0]: // [process=Server] Zero 
+ [State_1111112(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[]-> []
+
+rule Zero_111112 [color=#569DC0]: // [process=Server] Zero 
+ [State_111112(~lock12, L_pid, k, nonce, npr, secretid, tc, tuple)] --[]-> []
+
+rule Zero_11112 [color=#569DC0]: // [process=Server] Zero 
+ [State_11112(~lock12, L_pid, k, nonce, npr, secretid, tc)] --[]-> []
+
+rule Rep_0_2: // [process=top-level] Rep, 0 
+ [State_2()] --[]-> [!Semistate_21()]
+
+rule Rep_1_2: // [process=top-level] Rep, 1 
+ [!Semistate_21()] --[]-> [State_21()]
+
+rule new_k_21 [color=#2CD719]: // [process=Yubikey] new k 
+ [State_21(), Fr(k)] --[]-> [State_211(k)]
+
+rule new_L_pid_211 [color=#2CD719]: // [process=Yubikey] new L_pid 
+ [State_211(k), Fr(L_pid)] --[]-> [State_2111(L_pid, k)]
+
+rule new_secretid_2111 [color=#2CD719]: // [process=Yubikey] new secretid 
+ [State_2111(L_pid, k), Fr(secretid)] --[]-> [State_21111(L_pid, k, secretid)]
+
+rule insert_Server_L_pid_secretid_k_zero__21111 [color=#2CD719]: // [process=Yubikey] insert <'Server', L_pid>,<secretid, k, 'zero'> 
+ [State_21111(L_pid, k, secretid)] --[Insert(<'Server', L_pid>, <secretid, k, 'zero'>)]-> [State_211111(L_pid, k, secretid)]
+
+rule insert_L_Yubikey_L_pid__zero___one__211111 [color=#2CD719]: // [process=Yubikey] insert <'L_Yubikey', L_pid>,('zero') + ('one') 
+ [State_211111(L_pid, k, secretid)] --[Insert(<'L_Yubikey', L_pid>, ('zero') + ('one'))]-> [State_2111111(L_pid, k, secretid)]
+
+rule event_YubiInitL_pid_secretid_k_2111111 [color=#2CD719]: // [process=Yubikey] event YubiInit(L_pid, secretid, k) 
+ [State_2111111(L_pid, k, secretid)] --[YubiInit(L_pid, secretid, k)]-> [State_21111111(L_pid, k, secretid)]
+
+rule out_L_pid_21111111 [color=#2CD719]: // [process=Yubikey] out L_pid 
+ [State_21111111(L_pid, k, secretid)] --[]-> [State_211111111(L_pid, k, secretid), Out(L_pid)]
+
+rule Rep_0_211111111 [color=#2CD719]: // [process=Yubikey] Rep, 0 
+ [State_211111111(L_pid, k, secretid)] --[]-> [!Semistate_2111111111(L_pid, k, secretid)]
+
+rule Rep_1_211111111 [color=#2CD719]: // [process=Yubikey] Rep, 1 
+ [!Semistate_2111111111(L_pid, k, secretid)] --[]-> [State_2111111111(L_pid, k, secretid)]
+
+rule Par_2111111111 [color=#2CD719]: // [process=Yubikey] Par 
+ [State_2111111111(L_pid, k, secretid)] --[]-> [State_21111111111(L_pid, k, secretid), State_21111111112(L_pid, k, secretid)]
+
+rule lock_Yubikey_L_pid__21111111111 [color=#2CD719]: // [process=Yubikey] lock <'Yubikey', L_pid> 
+ [State_21111111111(L_pid, k, secretid), Fr(~lock6)] --[Lock($6, ~lock6, <'Yubikey', L_pid>), Lock_6($6, ~lock6, <'Yubikey', L_pid>)]-> [State_211111111111(~lock6, L_pid, k, secretid)]
+
+rule lookup_L_Yubikey_L_pid_as_sc_0_211111111111 [color=#2CD719]: // [process=Yubikey] lookup <'L_Yubikey', L_pid> as sc, 0 
+ [State_211111111111(~lock6, L_pid, k, secretid)] --[IsIn(<'L_Yubikey', L_pid>, sc)]-> [State_2111111111111(~lock6, L_pid, k, sc, secretid)]
+
+rule lookup_L_Yubikey_L_pid_as_sc_1_211111111111 [color=#2CD719]: // [process=Yubikey] lookup <'L_Yubikey', L_pid> as sc, 1 
+ [State_211111111111(~lock6, L_pid, k, secretid)] --[IsNotSet(<'L_Yubikey', L_pid>)]-> [State_2111111111112(~lock6, L_pid, k, secretid)]
+
+rule in_sc_2111111111111 [color=#2CD719]: // [process=Yubikey] in sc 
+ [State_2111111111111(~lock6, L_pid, k, sc, secretid), In(sc)] --[]-> [State_21111111111111(~lock6, L_pid, k, sc, secretid)]
+
+rule insert_L_Yubikey_L_pid_sc__one__21111111111111 [color=#2CD719]: // [process=Yubikey] insert <'L_Yubikey', L_pid>,(sc) + ('one') 
+ [State_21111111111111(~lock6, L_pid, k, sc, secretid)] --[Insert(<'L_Yubikey', L_pid>, (sc) + ('one'))]-> [State_211111111111111(~lock6, L_pid, k, sc, secretid)]
+
+rule unlock_Yubikey_L_pid__211111111111111 [color=#2CD719]: // [process=Yubikey] unlock <'Yubikey', L_pid> 
+ [State_211111111111111(~lock6, L_pid, k, sc, secretid)] --[Unlock($6, ~lock6, <'Yubikey', L_pid>), Unlock_6($6, ~lock6, <'Yubikey', L_pid>)]-> [State_2111111111111111(~lock6, L_pid, k, sc, secretid)]
+
+rule Zero_2111111111111111 [color=#2CD719]: // [process=Yubikey] Zero 
+ [State_2111111111111111(~lock6, L_pid, k, sc, secretid)] --[]-> []
+
+rule Zero_2111111111112 [color=#2CD719]: // [process=Yubikey] Zero 
+ [State_2111111111112(~lock6, L_pid, k, secretid)] --[]-> []
+
+rule lock_Yubikey_L_pid__21111111112 [color=#2CD719]: // [process=Yubikey] lock <'Yubikey', L_pid> 
+ [State_21111111112(L_pid, k, secretid), Fr(~lock10)] --[Lock($10, ~lock10, <'Yubikey', L_pid>), Lock_10($10, ~lock10, <'Yubikey', L_pid>)]-> [State_211111111121(~lock10, L_pid, k, secretid)]
+
+rule lookup_L_Yubikey_L_pid_as_tc_0_211111111121 [color=#2CD719]: // [process=Yubikey] lookup <'L_Yubikey', L_pid> as tc, 0 
+ [State_211111111121(~lock10, L_pid, k, secretid)] --[IsIn(<'L_Yubikey', L_pid>, tc)]-> [State_2111111111211(~lock10, L_pid, k, secretid, tc)]
+
+rule lookup_L_Yubikey_L_pid_as_tc_1_211111111121 [color=#2CD719]: // [process=Yubikey] lookup <'L_Yubikey', L_pid> as tc, 1 
+ [State_211111111121(~lock10, L_pid, k, secretid)] --[IsNotSet(<'L_Yubikey', L_pid>)]-> [State_2111111111212(~lock10, L_pid, k, secretid)]
+
+rule in_tc_2111111111211 [color=#2CD719]: // [process=Yubikey] in tc 
+ [State_2111111111211(~lock10, L_pid, k, secretid, tc), In(tc)] --[]-> [State_21111111112111(~lock10, L_pid, k, secretid, tc)]
+
+rule insert_L_Yubikey_L_pid_tc__one__21111111112111 [color=#2CD719]: // [process=Yubikey] insert <'L_Yubikey', L_pid>,(tc) + ('one') 
+ [State_21111111112111(~lock10, L_pid, k, secretid, tc)] --[Insert(<'L_Yubikey', L_pid>, (tc) + ('one'))]-> [State_211111111121111(~lock10, L_pid, k, secretid, tc)]
+
+rule new_nonce_211111111121111 [color=#2CD719]: // [process=Yubikey] new nonce 
+ [State_211111111121111(~lock10, L_pid, k, secretid, tc), Fr(nonce)] --[]-> [State_2111111111211111(~lock10, L_pid, k, nonce, secretid, tc)]
+
+rule new_npr_2111111111211111 [color=#2CD719]: // [process=Yubikey] new npr 
+ [State_2111111111211111(~lock10, L_pid, k, nonce, secretid, tc), Fr(npr)] --[]-> [State_21111111112111111(~lock10, L_pid, k, nonce, npr, secretid, tc)]
+
+rule event_YubiPressL_pid_secretid_k_tc_21111111112111111 [color=#2CD719]: // [process=Yubikey] event YubiPress(L_pid, secretid, k, tc) 
+ [State_21111111112111111(~lock10, L_pid, k, nonce, npr, secretid, tc)] --[YubiPress(L_pid, secretid, k, tc)]-> [State_211111111121111111(~lock10, L_pid, k, nonce, npr, secretid, tc)]
+
+rule out_L_pid_nonce_senc_secretid_tc_npr_k__211111111121111111 [color=#2CD719]: // [process=Yubikey] out <L_pid, nonce, senc(<secretid, tc, npr>, k)> 
+ [State_211111111121111111(~lock10, L_pid, k, nonce, npr, secretid, tc)] --[]-> [State_2111111111211111111(~lock10, L_pid, k, nonce, npr, secretid, tc), Out(<L_pid, nonce, senc(<secretid, tc, npr>, k)>)]
+
+rule unlock_Yubikey_L_pid__2111111111211111111 [color=#2CD719]: // [process=Yubikey] unlock <'Yubikey', L_pid> 
+ [State_2111111111211111111(~lock10, L_pid, k, nonce, npr, secretid, tc)] --[Unlock($10, ~lock10, <'Yubikey', L_pid>), Unlock_10($10, ~lock10, <'Yubikey', L_pid>)]-> [State_21111111112111111111(~lock10, L_pid, k, nonce, npr, secretid, tc)]
+
+rule Zero_21111111112111111111 [color=#2CD719]: // [process=Yubikey] Zero 
+ [State_21111111112111111111(~lock10, L_pid, k, nonce, npr, secretid, tc)] --[]-> []
+
+rule Zero_2111111111212 [color=#2CD719]: // [process=Yubikey] Zero 
+ [State_2111111111212(~lock10, L_pid, k, secretid)] --[]-> []
+
+restriction set_in:
+ "(All #t3 x y . ((IsIn(x, y)@#t3 ==> (Ex #t2 . ((Insert(x, y)@#t2 & (#t2 < #t3 & (All #t1 yp . ((Insert(x, yp)@#t1 ==> (#t1 < #t2 | (#t1 = #t2 | #t3 < #t1))))))))))))"
+
+restriction set_notin:
+ "(All #t3 x . ((IsNotSet(x)@#t3 ==> (All #t1 y . ((Insert(x, y)@#t1 ==> #t3 < #t1))))))"
+
+restriction locking_12:
+ "(All #t1 #t3 l lp p pp x . (((Lock_12(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_12(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_6:
+ "(All #t1 #t3 l lp p pp x . (((Lock_6(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_6(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_10:
+ "(All #t1 #t3 l lp p pp x . (((Lock_10(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_10(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction immeadiate_in:
+ "(All #i a b . ((Pred_eq(a, b)@#i ==> a = b)))"
+
+restriction predicate_not_eq:
+ "(All #i a b . ((Pred_not_eq(a, b)@#i ==> not(a = b))))"
+
+restriction single_session:
+ "(All #i #j . (((Init()@#i & Init()@#j) ==> #i = #j)))"
+restriction predicate1:
+	"All #i a b. Pred_not_smaller(a,b)@i ==> not((Ex z . ((a) + (z) = b)))"
+
+restriction predicate0:
+	"All #i a b. Pred_smaller(a,b)@i ==> (Ex z . ((a) + (z) = b))"
+
+lemma init_server [sources]:
+ all-traces
+"(All #i k otc pid sid tc tuple . ((InitStuff(pid, sid, k, tuple, otc, tc)@#i ==> (tuple = <sid, k, otc> & (Ex #j . ((YubiInit(pid, sid, k)@#j & #j < #i)))))))"
+
+lemma init_server_secrecy [use_induction, reuse]:
+ all-traces
+"(All #i k otc pid sid tc tuple . ((InitStuff(pid, sid, k, tuple, otc, tc)@#i ==> not((Ex #j . (KU(k)@#j))))))"
+
+lemma init_yubikey [sources]:
+ all-traces
+"(All #i k pid sid tc . ((YubiPress(pid, sid, k, tc)@#i ==> (Ex #j . ((YubiInit(pid, sid, k)@#j & #j < #i))))))"
+
+lemma slightly_weaker_invariant [reuse, use_induction]:
+ all-traces
+"(All #t1 #t2 k pid tc1 tc2 . (((Login(pid, k, tc1)@#t1 & Login(pid, k, tc2)@#t2) ==> ((#t1 < #t2 & (Ex z . ((tc1) + (z) = tc2))) | (#t2 < #t1 | #t1 = #t2)))))"
+
+lemma one_count_foreach_login [reuse, use_induction]:
+ all-traces
+"(All #t2 k pid x . ((Login(pid, k, x)@#t2 ==> (Ex #t1 sid . ((YubiPress(pid, sid, k, x)@#t1 & #t1 < #t2))))))"
+
+lemma no_replay [reuse]:
+ all-traces
+"not((Ex #i #j k pid x . ((Login(pid, k, x)@#i & (Login(pid, k, x)@#j & not(#i = #j))))))"
+
+lemma injective_correspondance [reuse, use_induction]:
+ all-traces
+"(All #t2 k pid x . ((Login(pid, k, x)@#t2 ==> ((Ex #t1 sid . ((YubiPress(pid, sid, k, x)@#t1 & #t1 < #t2))) & (All #t3 . ((Login(pid, k, x)@#t3 ==> #t3 = #t2)))))))"
+
+lemma Login_invalidates_smaller_counters :
+ all-traces
+"(All #t1 #t2 k pid tc1 tc2 . (((Login(pid, k, tc1)@#t1 & (Login(pid, k, tc2)@#t2 & (Ex z . ((tc1) + (z) = tc2)))) ==> #t1 < #t2)))"
+end

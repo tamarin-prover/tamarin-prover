@@ -11,7 +11,9 @@ module Utils.Misc (
   , partitions
   , nonTrivialPartitions
   , twoPartitions
- 
+  , duplicate
+  , multiply
+
   -- * Control
   , whileTrue
 
@@ -26,6 +28,12 @@ module Utils.Misc (
 
   -- * unsafeEq
   , unsafeEq
+
+  -- * triples
+  , fst3
+  , snd3
+  , thd3
+
 ) where
 
 import Data.List
@@ -47,6 +55,18 @@ import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8 (fromString)
 
 import GHC.Exts (reallyUnsafePtrEquality#, Int (I#))
 
+-- | @fst3 (x, y, z)@ returns the first element @x@ of the triple
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
+
+-- | @snd3 (x, y, z)@ returns the second element @y@ of the triple
+snd3 :: (a, b, c) -> b
+snd3 (_, x, _) = x
+
+-- | @thd3 (x, y, z)@ returns the third element @z@ of the triple
+thd3 :: (a, b, c) -> c
+thd3 (_, _, x) = x
+
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool
 noDuplicates xs = all ((==1).length) . group . sort $ xs
@@ -61,9 +81,17 @@ getEnvMaybe k = unsafePerformIO $ do
 envIsSet :: String -> Bool
 envIsSet k = isJust $ getEnvMaybe k
 
--- | @subsetOf xs ys@ return @True@ if @set xs@ is a subset of @set ys@ 
+-- | @subsetOf xs ys@ return @True@ if @set xs@ is a subset of @set ys@
 subsetOf :: Ord a => [a] -> [a] -> Bool
 subsetOf xs ys = (S.fromList xs) `S.isSubsetOf` (S.fromList ys)
+
+-- | @duplicate x@ return @(x, x)@
+duplicate :: a -> (a, a)
+duplicate x = (x, x)
+
+-- | @multiply f (a, c)@ returns the list of all tuples (f a, c)
+multiply :: (a -> [b]) -> (a, c) -> [(b, c)]
+multiply f (a, c) = zip (f a) (repeat c)
 
 -- | Inverts a bijective Map.
 invertMap :: Ord v => Map k v -> Map v k
@@ -78,8 +106,8 @@ whileTrue m = go 0
 
 -- | Compute the equality classes given wrto a partial function.
 equivClasses :: (Ord a, Ord b) => [(a, b)] -> M.Map b (S.Set a)
-equivClasses = 
-    foldl' insertEdge M.empty 
+equivClasses =
+    foldl' insertEdge M.empty
   where
     insertEdge m (from,to) = M'.insertWith S.union to (S.singleton from) m
 
@@ -124,4 +152,3 @@ twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
         addToFirst  (a, b) = (x:a, b)
         addToSecond (a, b) = (a, x:b)
         ps = twoPartitions xs
-

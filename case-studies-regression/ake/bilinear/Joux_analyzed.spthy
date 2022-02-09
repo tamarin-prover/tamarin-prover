@@ -9,6 +9,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 section{* The Joux Protocol using Signatures*}
 
 rule (modulo E) Register_pk:
@@ -1046,8 +1048,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Joux.spthy
@@ -1056,7 +1056,7 @@ analyzing: examples/ake/bilinear/Joux.spthy
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 13.223644859s
+  processing time: 17.700104637s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 
@@ -1068,7 +1068,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 13.223644859s
+  processing time: 17.700104637s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)
 

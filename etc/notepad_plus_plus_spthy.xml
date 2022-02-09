@@ -12,7 +12,7 @@
             <Keywords name="Operators">&quot; # $ ( ) , . : [ ] { } ~ &lt; &gt;</Keywords>
             <Keywords name="Comment">1/* 2*/ 0//</Keywords>
             <Keywords name="Words1">axiom lemma equations functions builtins protocol property theory begin end subsection section text rule</Keywords>
-            <Keywords name="Words2">h sk pk Fr In Out fr in out pb lts diffie-hellman symmetric-encryption asymmetric-encryption exists-trace all-traces enable assertions modulo default_rules anb-proto in let Fresh fresh Public public signing hashing</Keywords>
+            <Keywords name="Words2">h sk pk Fr In Out fr in out pb lts diffie-hellman symmetric-encryption asymmetric-encryption exists-trace all-traces enable assertions modulo default_rules anb-proto in let Fresh fresh Public public signing hashing revealing-signing</Keywords>
             <Keywords name="Words3">@ &amp; | ==&gt; = &lt;=&gt;</Keywords>
             <Keywords name="Words4">All Ex</Keywords>
         </KeywordLists>

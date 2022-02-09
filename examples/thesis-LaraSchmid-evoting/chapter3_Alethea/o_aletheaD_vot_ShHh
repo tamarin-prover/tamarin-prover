@@ -1,0 +1,122 @@
+#!/usr/bin/python
+#oracle_RF
+import re
+import os
+import sys
+
+debug = False
+
+lines = sys.stdin.readlines()
+
+lemma = sys.argv[1]
+if debug: print >> sys.stderr, "Lemma is "+lemma
+
+priorities = []
+
+def prioritize(num,m):
+  global priorities, plist, match
+  for i in range(len(priorities)):
+    if match:
+      if re.match(priorities[i],m):
+         plist[i].append(num)
+         break
+    else:
+      if priorities[i] in m:
+         plist[i].append(num)
+         break
+
+if lemma == "secretSskD": 
+  match = False
+  priorities = ["!KU( ~sskD","'zkp'","'b'","In_S","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_1": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_2": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_3": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_4": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_5": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_6": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_7": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "EligVerif_8": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+
+if lemma == "ballotsFromVoters": 
+  match = False
+  priorities = ["'zkp'","In_S","~sskD","~skS","~sskD","h(","encp("]
+
+if lemma == "Tall_As_Rec_D_1": 
+  match = False
+  priorities = ["'zkp'","'b'","In_S","!KU( ~sskD","~sskD","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_2": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_3": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_4": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_5": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_6": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_7": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+if lemma == "Tall_As_Rec_D_8": 
+  match = False
+  priorities = ["'b'","In_S","!KU( ~sk","AgSt","!KU( ~skD","!KU( sg(cp(","'pr'","'bs'","sg(cp(","In_A","In_S","~~>","cp("]
+
+
+
+
+
+#j
+plist = [ [] for i in priorities ]
+
+for line in lines:
+  if debug: print >> sys.stderr, "Line is "+line,
+
+  num = line.split(':')[0]
+
+#  if lemma == "secret":
+  prioritize(num,line)
+#    if debug: print >> sys.stderr, "Current list: ",plist
+#  else:
+#    sys.exit(0)
+
+for j in range(len(plist)):
+  for i in plist[j]:
+    print i
+print 1

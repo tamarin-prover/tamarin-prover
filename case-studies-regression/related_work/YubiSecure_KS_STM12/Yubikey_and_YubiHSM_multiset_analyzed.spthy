@@ -16,6 +16,8 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 /* looping facts with injective instances: S_Counter/2, Y_counter/2 */
 
 section{* The Yubikey-Protocol with a YubiHSM *}
@@ -487,7 +489,7 @@ next
          (∃ #i a b.
            (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
     case case_1
-    solve( (last(#t2))  ∥ (last(#t1))  ∥
+    solve( (last(#t2))  ∥
            (∃ #t3 #t4 k.
              (K( k ) @ #t3) ∧ (MasterKey( k ) @ #t4)
             ∧
@@ -523,21 +525,6 @@ next
       qed
     next
       case case_2
-      solve( !HSM( kh, ~k ) ▶₃ #t1 )
-        case HSMInit
-        solve( !KU( ~k2 ) @ #vk.1 )
-          case irecvHSM
-          by contradiction /* cyclic */
-        next
-          case read_AEAD_case_1
-          by contradiction /* from formulas */
-        next
-          case read_AEAD_case_2
-          by contradiction /* from formulas */
-        qed
-      qed
-    next
-      case case_3
       by contradiction /* from formulas */
     qed
   next
@@ -927,58 +914,7 @@ next
       case case_2
       solve( S_Counter( pid, otc2 ) ▶₃ #t2 )
         case BuyANewYubikey
-        solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
-                 (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
-                 (LoginCounter( pid, otc2, tc2 ) @ #t2)
-                ⇒
-                 ((last(#t2)) ∨
-                  (last(#t1)) ∨
-                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
-                  (#t2 < #t1) ∨
-                  (#t1 = #t2)))  ∥
-               (∃ #i a b.
-                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
-          case case_1
-          solve( (last(#t2))  ∥ (∃ z.2. (('1'+z.1) = (otc1+z+z.2))) )
-            case case_1
-            solve( !HSM( kh, k ) ▶₁ #t1 )
-              case HSMInit
-              solve( !S_AEAD( ~pid,
-                              <xorc(senc(keystream(~kh, ~pid), ~k), <k2, sid>), mac(<k2, sid>, ~k)>
-                     ) ▶₂ #t1 )
-                case BuyANewYubikey
-                by contradiction /* non-injective facts (#vr,#t1,#t2) */
-              next
-                case write_AEAD
-                solve( !S_sid( ~pid, sid ) ▶₄ #t1 )
-                  case BuyANewYubikey
-                  by contradiction /* non-injective facts (#vr,#t1,#t2) */
-                qed
-              qed
-            qed
-          next
-            case case_2_case_1
-            by contradiction /* from formulas */
-          next
-            case case_2_case_2
-            by contradiction /* from formulas */
-          next
-            case case_2_case_3
-            by contradiction /* from formulas */
-          next
-            case case_2_case_4
-            by contradiction /* from formulas */
-          next
-            case case_2_case_5
-            by contradiction /* from formulas */
-          next
-            case case_2_case_6
-            by contradiction /* from formulas */
-          qed
-        next
-          case case_2
-          by contradiction /* from formulas */
-        qed
+        by contradiction /* non-injective facts (#vr,#t1,#t2) */
       next
         case Server_ReceiveOTP_NewSession_case_1
         solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
@@ -1691,8 +1627,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
@@ -1701,14 +1635,14 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multise
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 4.772220744s
+  processing time: 5.509804619s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
-  k2_is_secret_use_induction (all-traces): verified (22 steps)
+  k2_is_secret_use_induction (all-traces): verified (17 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
   one_count_foreach_login (all-traces): verified (72 steps)
-  slightly_weaker_invariant (all-traces): verified (132 steps)
+  slightly_weaker_invariant (all-traces): verified (119 steps)
   no_replay (all-traces): verified (8 steps)
   injective_correspondance (all-traces): verified (84 steps)
   Login_invalidates_smaller_counters (all-traces): verified (8 steps)
@@ -1721,14 +1655,14 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 4.772220744s
+  processing time: 5.509804619s
   transitivity (all-traces): verified (2 steps)
   adv_can_guess_counter (all-traces): verified (13 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
-  k2_is_secret_use_induction (all-traces): verified (22 steps)
+  k2_is_secret_use_induction (all-traces): verified (17 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
   one_count_foreach_login (all-traces): verified (72 steps)
-  slightly_weaker_invariant (all-traces): verified (132 steps)
+  slightly_weaker_invariant (all-traces): verified (119 steps)
   no_replay (all-traces): verified (8 steps)
   injective_correspondance (all-traces): verified (84 steps)
   Login_invalidates_smaller_counters (all-traces): verified (8 steps)

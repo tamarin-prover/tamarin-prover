@@ -1,0 +1,267 @@
+theory aletheaD_sel_ShHh_A
+begin
+
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Alethea-D's selection phase
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+* Notes: 	
+By Trust Assumption AL 4 [1], we consider an honest S for privacy properties and by Trust Assumption AL 1 [1], the devices are honest.
+As an adversary cannot influence an honest agent's state if this agent does not receive any message, we simplify the model by including the first steps of D in the setup rule. 
+As S is honest, we do not model the auditors. Nevertheless, we model the posting of messages to BB, such that the adversary can still learn everything that auditors normally learn.
+Also, we do not model the environment and model that the honest S will choose the sample group as it should. 
+We model two voters, 'H1' and 'H2' and model that in the left system, pk(sskD1) is H1's pseudonym and pk(sskD2) is H2's pseudonym and in the right system vice versa. 
+S chooses H1 left and H2 right. 
+
+=========
+RESULTS: 
+=========
+
+- lemma functional: 
+	LHS: verified (by hand) and checked
+	RHS: verified (by hand -> in first step " AgSt_S0( $S," and then can proceed as in LHS, if go for case "case Setup_case_2"(other case not trace functional)) and checked
+- lemma indivVerif_D_ps: 
+	LHS: verified (aut)
+	RHS: verified (aut)
+- lemma indivVerif_D_sel: 
+	LHS: verified (aut)
+	RHS: verified (aut)
+- lemma ObservationalEquivalence: (modeling Anonym_SG)
+	verified (aut, but w/ deletion in interactive mode, think it might work alone)
+
+
+*/
+/*============
+SPECIFICATION:
+============== */
+
+/*=====================
+Functions and equations 
+======================= */
+builtins: asymmetric-encryption, hashing, multiset
+
+functions: 
+zkp/3, 		//zero knowledge proof of mix and decrypt
+verzkp/4, 	//verification of zkp
+encp/3, decp/2, //encryption function
+sg/2, ver/2 	//new signing function
+
+equations: 
+
+//encryption of x under pk(sk) and with randomness r; don't need randomness to decrypt it
+decp(encp(x,r,pk(sk)),sk)=x,
+
+//verification equation that returns the signed message: models that given a signature, can also see the signed plaintext (only if have public key, but adversary anyways has all pks). with this, do not explicitly have to always send the message in plaintext and signed, but only the signed one is enough.
+
+ver(sg(m, sk), pk(sk)) = m 
+
+
+/* ==========
+Channel rules
+============= */
+rule ChanOut_S: [Out_S($A,$B,x)]--[ChanOut_S($A,$B,x)]->[!Sec($A,$B,x)]
+rule ChanIn_S: [!Sec($A,$B,x)]--[ChanIn_S($A,$B,x)]->[In_S($A,$B,x)]
+/*
+rule ChanOut_C:	[Out_C($A,$B,x)]--[ChanOut_C($A,$B,x)]->[!Conf($B,x)]
+rule ChanIn_C:	[!Conf($B,x), In($A)]--[ChanIn_C($A,$B,x)]->[In_C($A,$B,x)]
+rule ChanIn_CAdv: [In(<$A,$B,x>)]--[]->[In_C($A,$B,x)]
+*/
+rule ChanOut_A: [Out_A($A,x)]--[ChanOut_A($A,x)]->[!Auth($A,x), Out(<$A,x>)]
+rule ChanIn_A:	[!Auth($A,x)]--[ChanIn_A($A,x)]->[In_A($A,x)]
+
+
+/* =====
+Protocol
+======== */
+
+rule publickeyinfrastructure:
+   [ Fr(~skX) ]--[ LongtermKey($X,~skX) ]-> [ !Ltk($X,~skX), !Pk($X,pk(~skX)), Out(pk(~skX)) ]
+
+
+rule Setup: 
+  	[ !Ltk('S',~skS), !Ltk('D1',~lskD1), !Ltk('D2',~lskD2), 
+	  Fr(~sskD1), Fr(~rPrime1), 
+	  Fr(~sskD2), Fr(~rPrime2) ] 
+  	--[ 	Setup(), 
+		Voter('H1'), 
+		Voter('H2'),
+		Device('H1','D1'),
+		Device('H2','D2'),
+		PseudonymD('H1',pk(diff(~sskD1,~sskD2))),
+		PseudonymD('H2',pk(diff(~sskD2,~sskD1)))
+
+	]-> 
+	[ AgSt_D0('D1',<'H1','S',~lskD1,pk(~skS)>)
+	, AgSt_D0('D2',<'H2','S',~lskD2,pk(~skS)>)
+	// rule D_1 is merged with the setup rule (as D is honest and only perfroms internal computations, the adversary cannot influence it between this and the next step)
+	, Out_S('D1','H1',sg(encp(pk(diff(~sskD1,~sskD2)),~rPrime1,pk(~skS)),~lskD1) )
+	, Out_S('D2','H2',sg(encp(pk(diff(~sskD2,~sskD1)),~rPrime2,pk(~skS)),~lskD2) )
+	, Out_S('D1','H1',<'pseudonym',pk(diff(~sskD1,~sskD2))>)	
+	, Out_S('D2','H2',<'pseudonym',pk(diff(~sskD2,~sskD1))>)
+
+	, AgSt_S0('S', <'E',~skS, diff(pk(~lskD1),pk(~lskD2)), <'H1','D1',pk(~lskD1)>+<'H2','D2',pk(~lskD2)>>)
+	 // S chooses whatever it receives signed with H1's longtermkey (~lskD1) left and with H2's long term key (~lskD2) right; thus the third term in its knowledge keeps track of who should be chosen
+	, AgSt_BB0('BB',<'S'>) 
+	
+	, AgSt_H0('H1',<'D1','BB'>)
+	, AgSt_H0('H2',<'D2','BB'>)
+
+	]
+
+rule H_2:
+	[ AgSt_H0($H, <$D, $BB>), In_S($D,$H, eps) ]
+	--[		   	
+	]->
+	[ AgSt_H1($H, <$D, $BB, eps>),
+	  Out(eps)
+	]
+
+rule S_1a:
+	[ AgSt_S0($S,<$E,~skS, pk(~lskDs), <$Ha,$Da,pk(~lskDa)>+<$Hb,$Db,pk(~lskDb)>>)
+ 	, In(sg(encp(spkDa,rPrimea,pk(~skS)),~lskDa) )
+	, In(sg(encp(spkDb,rPrimeb,pk(~skS)),~lskDb) )		
+	]
+	--[	Pseudonym($Ha,spkDa,$Hb,spkDb) 
+	]->
+	[ AgSt_S1($S,<$E,~skS, pk(~lskDs), <$Ha,$Da,pk(~lskDa),spkDa>+<$Hb,$Db,pk(~lskDb),spkDb>>)
+	// S receives the pseudonyms and stores them together with the associated voter's information
+	]
+// the multiset has the effect of a random permutation in that for an outside adversary, the order of the published pseudonyms does not reveal which pseuodnym was received by which voter.
+
+rule S_1b: //according to the third term in its knowledge, S chooses a voter for the sample group
+	[ AgSt_S1($S,<$E,~skS, pk(~lskDs), <$Hs,$Ds,pk(~lskDs),spkDs>+<$Ho,$Do,pk(~lskDo),spkDo>>)
+	]
+	--[  ]->
+	[ Out_A($S,<'spkDs',spkDs,spkDo>), //correponds to [pkD] in thesis
+	  AgSt_S1b($S,<$E,~skS, <$Hs,$Ds,pk(~lskDs),spkDs>,<$Ho,$Do,pk(~lskDo),spkDo>>) // to remember who is selected, S's knowledge is ordered such that the selected voter's information is listed first
+	]
+
+rule BB_1:
+	[ AgSt_BB0($BB,<$S>) 
+	, In_A($S,<'spkDs',spkDa,spkDb >)
+	]
+	--[ 	BB_spkDs($BB,<'spkDs',spkDa,spkDb >)
+	]->
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, Out_A($BB,<'spkDs',spkDa,spkDb >)
+
+	]
+
+rule H_5: 
+	[ AgSt_H1($H, <$D, $BB, eps>)
+	, In_S($D,$H,<'pseudonym',spkDD>)
+	, In_A($BB,<'spkDs',spkDa,spkDb >)
+	] 
+	--[ 	Verify_spkDD($H,spkDD,spkDa,spkDb)  //corresponds to signal verify_ps(H,pkD \in[pkD]) in thesis
+	]-> 
+	[ AgSt_H2($H,<$D,$BB, eps,spkDD,spkDa,spkDb >)]
+
+rule S_2a: 
+	[ AgSt_S1b($S,<$E,~skS, <$Hs,$Ds,pk(~lskDs),spkDs>,<$Ho,$Do,pk(~lskDo),spkDo>>)
+	] //the first voter in S's knowledge is the one that is now published as the sample group
+ 	--[ 	
+	]->  
+	[ Out_A($S,<'SG',spkDs>)	// corresponds to [pk_D^SG] in thesis
+	] 
+
+rule BB_2:
+	[ AgSt_BB1($BB,<$S,'spkDs',spkDa,spkDb > )
+	, In_A($S,<'SG',spkDsel>)
+	]
+	--[ 	BB_SG($BB,<'SG',spkDsel >),
+		Commit_SBB($BB,spkDsel)
+	]->
+	[ Out_A($BB,<'SG',spkDsel>) // corresponds to [pk_D^SG] in thesis
+	]
+
+rule H_9: 
+	[ AgSt_H2($H,<$D,$BB, eps,spkDD,spkDa,spkDb >),
+	  In_A($BB,<'SG',spkDsel>)
+	]
+	--[     Sel($H, spkDD, spkDsel) // corresponds to signal verify_sel(H,pkD \in[pkD^SG]) in thesis
+	]->
+	[ ]
+
+
+/* =========
+RESTRICTIONS
+========== */
+
+// there is only one setup
+restriction OneSetup:
+	"All #i #j. Setup() @i & Setup() @j ==> #i = #j "
+
+
+/* ====
+LEMMAS 
+======= */
+/* ==================
+Functional properties
+=================== */
+lemma functional: exists-trace  //spkD2,spkD1 in list and spkD2 chosen in SG
+	" Ex H1 H2 #i spkD2 spkD1 BB  #j  #k #l  #n   #o  #p
+	      	.
+		not (H1 = H2)
+		& Pseudonym(H1,spkD1,H2,spkD2) @i 
+		& BB_spkDs(BB,<'spkDs',spkD1,spkD2 >) @j
+		& Verify_spkDD(H1,spkD1,spkD1,spkD2 ) @k
+		& Verify_spkDD(H2,spkD2,spkD1,spkD2 ) @l
+		& BB_SG(BB,<'SG',spkD1 >) @n
+		& Sel(H1, spkD1, spkD1) @o
+		& Sel(H2, spkD2, spkD1) @p
+
+"
+
+
+/*=================================
+Individual verifiability properties
+=================================*/
+
+lemma indivVerif_D_ps: // pkD \in [pkD] from thesis is expressed as "either pkD is first or second element of [pkD]"
+	" (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDD,spkDb) @i  
+	==> (Ex BB spkD2 #j #k. 
+		BB_spkDs(BB,<'spkDs',spkDD,spkD2 >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	    |(Ex BB spkD2 #j #k.   
+		BB_spkDs(BB,<'spkDs',spkD2,spkDD >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	 )
+	& (All H spkDD spkDb #i . 
+		Verify_spkDD(H,spkDD,spkDb,spkDD) @i  
+	==> (Ex BB spkD2 #j #k.  
+		BB_spkDs(BB,<'spkDs',spkDD,spkD2 >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	    |(Ex BB spkD2 #j #k.   
+		BB_spkDs(BB,<'spkDs',spkD2,spkDD >) @j
+		& PseudonymD(H,spkDD) @k
+	     )
+	 )	
+	"
+
+lemma indivVerif_D_sel:
+	" All H spkDD #i .
+		Sel(H, spkDD, spkDD) @i
+	==> Ex BB #j #k.   
+		BB_SG(BB,<'SG',spkDD >) @j
+		& PseudonymD(H,spkDD) @k 
+		"
+
+
+end
+
+
+
+
+
+
+
+

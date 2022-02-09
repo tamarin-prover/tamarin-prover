@@ -29,7 +29,7 @@ import Control.Arrow
 -- import Control.Applicative
 import Control.Monad.Reader
 
-import           System.Environment
+-- import           System.Environment
 import           System.IO.Unsafe (unsafePerformIO)
 import qualified Term.Maude.Process as UM
 

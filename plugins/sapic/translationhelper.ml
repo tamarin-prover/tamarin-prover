@@ -1,30 +1,32 @@
 open Printf
 open Sapic
 open List
+open Formula
 open Annotatedrule
 open Annotatedsapicaction
 open Annotatedsapictree
 open Atomformulaaction
 open Restrictions
 open Btree
+open Lemma
+open Term
+open Var
+open Verdict
 
-let rec print_lemmas lem_list =
-    match lem_list with
-    | [] -> ""
-    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.header^(if (h.quantif='A') then " all-traces" else (if (h.quantif='E') then " exists-trace" else "")))
-    h.formula  ^
-    print_lemmas t
-
-let rec print_restrictions res_list =
-    match res_list with
-    | [] -> ""
-    | h::t -> sprintf "%s\n\"\t%s\"\n\n" (h.aheader) h.aformula  ^ print_restrictions t
+let lemma2string = lemma2string_base Sufficient.sufficient_conditions
+let print_lemmas = print_lemmas_base Sufficient.sufficient_conditions
 
 let rec contains_lookup t = 
     match t with
       Empty -> false
     |   Node(Lookup _, left, right) -> true
     |   Node(_,left,right) -> (contains_lookup left) || (contains_lookup right)
+
+let rec contains_delete t = 
+    match t with
+      Empty -> false
+    |   Node(Delete _, left, right) -> true
+    |   Node(_,left,right) -> (contains_delete left) || (contains_delete right)
 
 let rec contains_locking t = 
     match t with
@@ -39,19 +41,9 @@ let rec contains_eq t =
     |   Node(Cond(Action("eq",_)), _, _) -> true
     |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)
 
-let rec get_lock_positions x = match x with
-   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
-    | Node(_, l, r) -> ( get_lock_positions (l)  @ get_lock_positions (r))
-    | _ -> []
-
-let rec remove_duplicates lst= match lst with
-      [] -> []
-    | h::hs -> h :: (remove_duplicates (List.filter (fun x -> x<>h) hs))
-
-let rec print_lock_restrictions x = match x with
-      [] -> ""
-    | h::t -> res_locking_l h ^ print_lock_restrictions t
-
-
-
-
+let rec contains_resilient_io t = 
+    match t with
+      Empty -> false
+    |   Node(Ch_In(Var(PubFixed("r")),_), _, _) 
+    |   Node(Ch_Out(Var(PubFixed("r")),_), _, _)  -> true
+    |   Node(_,left,right) -> (contains_eq left) || (contains_eq right)

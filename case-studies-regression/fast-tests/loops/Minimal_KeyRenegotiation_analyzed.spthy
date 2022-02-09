@@ -1,0 +1,158 @@
+theory KeyRenegotiation_Minimal begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+/* looping facts with injective instances: Sender/1 */
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ] --> [ Sender( ~k ), Receiver( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Send:
+   [ Sender( k0 ), Fr( ~k ) ]
+  --[ Secret( ~k ) ]->
+   [ Sender( ~k ), Out( senc(~k, k0) ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Receive:
+   [ Receiver( k0 ), In( senc(k, k0) ) ]
+  --[ Secret( k ) ]->
+   [ Receiver( k ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+lemma Secret_reachable [use_induction]:
+  exists-trace "∃ k #i. Secret( k ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ k #i. (Secret( k ) @ #i)"
+*/
+induction
+  case non_empty_trace
+  simplify
+  solve( Secret( k ) @ #i )
+    case Send
+    solve( Sender( k0 ) ▶₀ #i )
+      case Setup
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma secrecy [use_induction]:
+  all-traces "∀ k #i #j. ((Secret( k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k #i #j. (Secret( k ) @ #i) ∧ (!KU( k ) @ #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#j))  ∥ (last(#i)) )
+    case case_1
+    solve( Secret( k ) @ #i )
+      case Receive
+      solve( !KU( senc(k, k0) ) @ #vk )
+        case Send
+        solve( !KU( ~k ) @ #j )
+          case Send
+          solve( Receiver( k0 ) ▶₀ #i )
+            case Receive
+            by contradiction /* from formulas */
+          next
+            case Setup
+            by solve( !KU( ~k ) @ #vk.1 )
+          qed
+        qed
+      next
+        case c_senc
+        by contradiction /* node #i after last node #j */
+      qed
+    next
+      case Send
+      solve( !KU( ~k ) @ #j )
+        case Send
+        solve( Sender( k0 ) ▶₀ #i )
+          case Send
+          by contradiction /* from formulas */
+        next
+          case Setup
+          by solve( !KU( ~k ) @ #vk )
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( Secret( k ) @ #i )
+      case Receive
+      solve( !KU( senc(k, k0) ) @ #vk )
+        case Send
+        by solve( !KU( ~k ) @ #i )
+      next
+        case c_senc
+        solve( Receiver( k0 ) ▶₀ #i )
+          case Receive
+          by contradiction /* from formulas */
+        next
+          case Setup
+          by solve( !KU( ~k ) @ #vk.1 )
+        qed
+      qed
+    next
+      case Send
+      solve( !KU( ~k ) @ #j )
+        case Send
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
+
+  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
+  processing time: 0.094748361s
+  Secret_reachable (exists-trace): verified (5 steps)
+  secrecy (all-traces): verified (23 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
+
+  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
+  processing time: 0.094748361s
+  Secret_reachable (exists-trace): verified (5 steps)
+  secrecy (all-traces): verified (23 steps)
+
+==============================================================================
+*/

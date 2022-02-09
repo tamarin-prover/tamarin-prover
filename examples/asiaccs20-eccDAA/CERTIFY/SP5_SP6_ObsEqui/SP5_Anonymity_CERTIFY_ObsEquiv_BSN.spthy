@@ -1,0 +1,270 @@
+theory SP5_Anonymity_CERTIFY_ObsEqui_withBSN
+begin
+
+/*
+  Protocol:	TPM_DAA
+
+time tamarin-prover SP5_Anonymity_CERTIFY_ObsEquiv_BSN.spthy\
+ --diff --heuristic=O --oraclename=ObsEquOracle.py\
+ --prove +RTS -N10 -RTS
+
+real    112m18.265s
+user    320m27.984s
+sys     381m11.124s
+  
+==============================================================================
+summary of summaries:
+
+analyzed: SP5_Anonymity_CERTIFY_ObsEquiv_BSN.spthy
+
+  RHS :  diff_signatures_no_verify (exists-trace): verified (7 steps)
+  LHS :  diff_signatures_no_verify (exists-trace): verified (7 steps)
+  DiffLemma:  Observational_equivalence : verified (14858 steps)
+
+==============================================================================
+
+
+*/
+
+builtins:   asymmetric-encryption, symmetric-encryption, multiset
+
+functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3, multp/2, plus/2, minus/2, len16/1, 
+             H_SHA256/1,  H_6/1, H_k_1/1, H_k_2/2, H_k_9/9, H_n_2/2, H_n_4/4, curlyK/1, E/2, E_S/2, L_J/2, RB/2, RD/2, 
+			 calcE/1, calcE_S/1, calcL_J/1, calcRB/1, calcRD/1,
+			 PkX/2, PkY/2, verifyCre1/4, verifyCre2/5,verifyCre3/4,verifyCre4/5,
+			 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, QPub/2, QName/2, certData/2, Nonce/1
+			 
+
+// Protocol Restrictions (Axioms)
+
+//restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
+				
+				
+//the 'Issuer' should only be initialised once
+restriction single_issuer_single_init:
+	"All #i #j . (Issuer_Init() @ i & Issuer_Init() @ j) ==> (#i=#j)"
+
+
+rule Issuer_Init:
+		let 
+			I='Issuer'
+			pkX=PkX(~x,'P2')
+			pkY=PkY(~y,'P2')
+		in
+		[Fr(~x),
+		 Fr(~y)]
+		 
+		--[Issuer_Init()
+		   , OnlyOnce('Issuer_Init')]->
+		
+		[
+		!Ltk(I,~x, ~y), !Pk(I, pkX,pkY), 
+		Out(<pkX,pkY>)
+		]
+
+// simple key reveal rule for the issuer's secret key pair
+rule Issuer_KeyReveal:
+	[!Ltk(I, x, y)]
+	
+	--[KeyReveal('Issuer_KeyReveal', I)]->
+	
+	[Out(<x,y>)]
+	
+
+/*
+In this model, we create two messages containing quoted PCR values. One from TPM1 and one from TPM2.
+We also have the public key of TPM1 and TPM2
+The question is: Can the adversary associate the public key of either TPM with the correct signature,
+ie can he tell the two systems apart:
+Q_PD(TPM1), Q_PD(TPM2), diff (sigma1, sigma2)
+*/
+rule Generate_TPM_DAA_CERTIFICATES:
+	let
+		//inputs from Issuer PK
+		pkX=PkX(x,'P2')
+		pkY=PkY(y,'P2')
+		
+	
+		//TPM1 details
+		e1=KDF_EK(~TPM_EK_Seed1)
+		E_PD1=<'EK_public_data',pk(e1)>
+		Q1=multp(~f1, 'P1') //TPM1 DAA key
+		Q_PD1=<'DAA_public_data',Q1>
+		//TPM1 credentials 
+		A1=multp(~r1,'P1')
+		B1=multp(y,A1)
+		C1=plus(multp(x,A1),multp(multp(multp(~r1,x),y),Q1))
+		D1=multp(multp(~r1,y),Q1)
+		
+		//randomise credentials with sl_1
+		R1=multp(~sl_1,A1)
+		S1=multp(~sl_1,B1)
+		T1=multp(~sl_1,C1)
+		W1=multp(~sl_1,D1)
+		
+		//compute certification sigma_K1 for TPM1
+		bsn1=BSN(~basename1)
+		s_2_bar_1=F1(bsn1)
+		y_2_1=F2(bsn1)
+		J1=PointG1(H_p(s_2_bar_1),y_2_1) 
+		K1=multp(~f1,J1)
+		L1=L_J(~r_cv1_1,J1)
+		E1=E_S(~r_cv1_1,S1)
+		
+		credData='CredentialData'
+		//Generate generic DAA key for signing
+		Qk1=multp(~g1, ~genP1)
+		Qk_PD1=QPub('Generic_DAA_public_data', Qk1)
+		Qk_n1=QName('SHA256',H_SHA256(Qk_PD1))
+		curlyA1=certData('certificationData',Qk_n1)
+		c1=H_k_9(credData,R1,S1,T1,W1,J1,K1,L1,E1)
+		h1_host1=H_k_2(c1, H_6(curlyA1))
+		n_C1=Nonce(~rnd_n_C1)
+		h2_host1=H_n_2(n_C1, h1_host1)
+		small_s1=plus(~r_cv1_1,multp(h2_host1,~f1))
+		
+		sigma_K1=<Qk_PD1, curlyA1, bsn1, R1, S1, T1, W1, J1, K1, h2_host1, small_s1, n_C1>
+
+		//TPM2 details
+		e2=KDF_EK(~TPM_EK_Seed2)
+		E_PD2=<'EK_public_data',pk(e2)>
+		Q2=multp(~f2, 'P1') //TPM2 DAA key
+		Q_PD2=<'DAA_public_data',Q2>
+		//TPM2 credentials 
+		A2=multp(~r2,'P1')
+		B2=multp(y,A2)
+		C2=plus(multp(x,A2),multp(multp(multp(~r2,x),y),Q2))
+		D2=multp(multp(~r2,y),Q2)
+		
+		//randomise credentials with sl_2
+		R2=multp(~sl_2,A2)
+		S2=multp(~sl_2,B2)
+		T2=multp(~sl_2,C2)
+		W2=multp(~sl_2,D2)
+		
+		//compute quoted PCR value sigma_Q2 for TPM2
+		bsn2=BSN(~basename2)
+		s_2_bar_2=F1(bsn2)
+		y_2_2=F2(bsn2)
+		J2=PointG1(H_p(s_2_bar_2),y_2_2) 
+		K2=multp(~f2,J2)
+		L2=L_J(~r_cv1_2,J2)
+		E2=E_S(~r_cv1_2,S2)
+		
+		Qk2=multp(~g2, ~genP2)
+		Qk_PD2=QPub('Generic_DAA_public_data', Qk2)
+		Qk_n2=QName('SHA256',H_SHA256(Qk_PD2))
+		curlyA2=certData('certificationData',Qk_n2)
+		c2=H_k_9(credData,R2,S2,T2,W2,J2,K2,L2,E2)
+		h1_host2=H_k_2(c2, H_6(curlyA2))
+		n_C2=Nonce(~rnd_n_C2)
+		h2_host2=H_n_2(n_C2, h1_host2)
+		small_s2=plus(~r_cv1_2,multp(h2_host2,~f2))
+		
+		sigma_K2=<Qk_PD2, curlyA2, bsn2, R2, S2, T2, W2, J2, K2, h2_host2, small_s2, n_C2>
+
+  in
+        [	//Issuer details
+			!Pk(I,pkX,pkY)		//the issuer's public key
+			, !Ltk(I,x,y)		//the issuer's secret key
+			, Fr(~r1) 			//randomising factor for credentials of TPM1
+			, Fr(~r2) 			//randomising factor for credentials of TPM2
+			
+			//The certification values
+			, Fr(~g1) //our secret key for the DAA key
+			, Fr(~genP1) //our public point for the DAA key
+			, Fr(~g2) //our secret key for the DAA key
+			, Fr(~genP2) //our public point for the DAA key
+
+			
+			//The different basenames to use in each sigma
+			, Fr (~basename1) //basename to use for sigma_Q1
+			, Fr (~basename2) //basename to use for sigma_Q2
+			
+			// TPM1 initialisation values
+			, Fr(~TPM_EK_Seed1)
+			, Fr(~f1)
+			
+			// TPM1 sigma1 values
+			, Fr(~sl_1)
+			, Fr(~cv1_1)
+			, Fr(~r_cv1_1)
+			, Fr(~rnd_n_C1)
+			
+			// TPM2 initialisation values
+			, Fr(~TPM_EK_Seed2)
+			, Fr(~f2)
+			
+			// TPM2 sigma1 values
+			, Fr(~sl_2)
+			, Fr(~cv1_2)
+			, Fr(~r_cv1_2)
+			, Fr(~rnd_n_C2)
+
+         
+      ]
+    --[	CreateSigmas(), 
+		OnlyOnce( 'SIGN' )
+	]->
+	
+	 [
+		Shuffle_Sigmas(<L1, E1, sigma_K1>+<L2, E2, sigma_K2>)
+		, TPM_EK_QPD1(<pk(e1), Q_PD1>)
+		, TPM_EK_QPD2(<pk(e2), Q_PD2>) 
+	 ]
+
+
+// Informal description of SP2_Anonymity:
+// An adversary, who does not know a Platform ’s secret key, finds it hard to recover the
+// identity of the Tpm used by the Platform from a given message.
+// we show this by checking whether Tamarin can find any connection between
+// the endorsement and public keys of a TPM and its signature
+// so the two systems would be different if Tamarin could associate the Q_PD of TPM1 with a given signature
+// or the Q_PD of TPM2 with a given signature
+rule Diff_DAA_CERTIFY_no_verify:
+	let
+		//First signature and values computed during verification
+		L1=L_J(r_cv1_1,J1)
+		E1=E_S(r_cv1_1,S1)
+		sigma_K1=<Qk_PD1, curlyA1, bsn1, R1, S1, T1, W1, J1, K1, h2_host1, small_s1, n_C1>
+		
+		//second signature and values computed during verification
+		L2=L_J(r_cv1_2,J2)
+		E2=E_S(r_cv1_2,S2)
+		sigma_K2=<Qk_PD2, curlyA2, bsn2, R2, S2, T2, W2, J2, K2, h2_host2, small_s2, n_C2>
+	in
+	[
+		Shuffle_Sigmas(<L1, E1, sigma_K1>+<L2, E2, sigma_K2>)
+		, TPM_EK_QPD1(<pk(e1), Q_PD1>)
+		, TPM_EK_QPD2(<pk(e2), Q_PD2>)
+	]
+
+	--[ 
+		Diff_Sigs()
+		, OnlyOnce('Diff_DAA_QUOTE')
+	]->
+	
+	[ 
+		Out(<'FirstTPM', pk(e1), Q_PD1>)
+		, Out(<'SecondTPM', pk(e2), Q_PD2>)
+		, Out( diff( <L1, E1, sigma_K1>, <L2, E2, sigma_K2> ))
+	]
+
+
+lemma diff_signatures_no_verify: exists-trace
+"	Ex #t1 #t2 #t3 .
+		Issuer_Init() @ t1
+		& CreateSigmas() @ t2
+		& Diff_Sigs() @ t3
+		& #t1<#t2
+		& #t2<#t3
+		
+		//we had no key reveal
+		& not( Ex RevealEvent ENTITY #k1 . KeyReveal(RevealEvent, ENTITY)@k1) 
+		
+		//restrict rules to only run once in a trace
+		& (All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
+"
+
+end
+

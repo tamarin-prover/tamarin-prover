@@ -1,0 +1,16 @@
+theory OperatorPrecedenceNDC
+begin
+section{* A few test cases for operator precedence *}
+
+event A(); event B() + event C()
+// Should read: ( A; B) + C
+// instead of
+//                A;( B + C)
+
+lemma semicolon_binds_stronger_than_NDC:
+    exists-trace
+    "(Ex #c. C()@c)
+     & not (Ex #a. A()@a)
+     & not (Ex #b. B()@b)"
+
+end

@@ -1,0 +1,334 @@
+/*
+ * Protocol:    Accountable Algorithms protocol
+ * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
+ * Date: 	Dec 2017
+ * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
+ * Status: 	wip
+ * Notes: Protocol modified in the lines proposed in "Accountability in
+ * security protocols" paper, however, instead of x, a comittment to x is
+ * signed, to preserve condidentiality. In contrast to
+ * AccountableAlgorithmsStore.sapic, we chose to modify the proof system so
+ * that $S_i$ choses the comittment on x, but x can produce a proof for
+ * precisely this comittment. We hope that this gets rid of the notary in most places.
+ * 
+ * */
+theory AccountableAlgorithmsStoreModifiedProof
+begin
+
+builtins: signing
+
+functions: 
+  extract/1, 
+  sk/1[private],
+  ZK/7, verZK/1, Pub/1, f/2,
+  commit/2, open/2, verCom/2,
+  eq/2,
+  oracle/3
+
+equations: 
+  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
+  verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true(),
+  open(commit(m,r),r)=m,
+  verCom(commit(m,r),r)=true,
+  extract(sign(x,y)) = x,
+  eq(x,x)=true(),
+  oracle(x,commit(y,ry),f(x,y))=true()
+
+predicates:
+  and3(x,y,z) <=> (x=true() & y=true() & z=true() ),
+  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true() )
+
+let S =
+(
+  let res = <'2',z,rz> 
+      claim = <'3',x,res,sig_res,rxp>
+      Cxp = commit(x, rxp)
+      m1 = <'1', x, rxp, sign(Cxp, sk('S'))>
+      sig_cxp = fst(log)
+      zkp = snd(log)
+      CxpL = fst(Pub(zkp))
+  in 
+  lookup <'A', 'Initialize'> as Cy in 
+  new x; 
+  new rxp;
+  out (<m1, sign(m1,sk('S'))>); 
+  lookup <'A','Log','S'> as log in
+  if and3( verZK(zkp),
+           eq(sig_cxp,sign(Cxp, sk('S'))),
+           eq(CxpL,Cxp)
+           ) then 
+	    (
+                in (<res, sig_res>); 
+                if verify(sig_res, res, pk(sk('A')))=true() then
+                  out (<claim, sign(claim, sk('S'))>)
+            )
+)
+
+let A =
+(
+  let m1      = <'1', x, rxp, sig_cxp>
+   	  z   = f(x, y)
+  	  res = <'2', z, rz>
+      Cy      = commit(y, ry)
+      Cz      = commit(z, rz)
+      Cxp     = commit(x, rxp)
+      zkp     = ZK(<Cxp,Cy,Cz>,x,y,z,rxp,ry,rz)
+      sig_res = sign(res, sk('A'))
+      
+  in
+  new y; new ry;
+  insert <'A', 'Initialize'>, Cy;
+
+  in (<m1, sig_m1>);
+  new rz;
+  if and3(      true(),
+  		verify(sig_m1,m1,pk(sk('S'))), 
+  		verify(sig_cxp,Cxp,pk(sk('S')))) then  //verify(sig_x,x,pk(sk('S')))
+    (
+      
+      out (<res, sig_res>);  // send result to S
+      insert <'A','Log','S'>, <sig_cxp, zkp>;
+      insert <'A','Final'>, true()
+    )
+)
+
+let J =
+( let res     = <'2', z, rz>
+      claim   = <'3', x, res, sig_res, rxp>
+      sig_cxp = fst(log)  // log is <sig_cxp, zkp>;
+      zkp     = snd(log)
+      Cxp     = fst(Pub(zkp))
+      Cy      = fst(snd(Pub(zkp)))
+      Cz      = snd(snd(Pub(zkp)))
+  in
+  lookup <'A','Final'> as y in
+  event Final();
+
+  lookup <'A','Initialize'> as CyL in (
+  event Initialize(CyL);
+  lookup <'A','Log','S'> as log in ( // log is present .. 
+        event Log(log);
+        // first check validity of the log by itself --> else branch means A dishonest
+        if and4( verZK(zkp), //produced by A
+                 eq(CyL, Cy), // produced by A
+                 verify(sig_cxp,Cxp,pk(sk('S'))), // honest A checks this
+                 true()
+                 )
+        then (  // only if we have a log and it is ok, we accept claims..
+                  in (<claim, sig_claim>);
+                  if and4( verify(sig_claim, claim, pk(sk('S'))),
+                           eq(x,open(Cxp,rxp)),
+                           verCom(Cxp,rxp),
+                           verCom(Cz,rz))
+                  then ( 
+                      // we ignore unsigned claims, and claims that do not correspond
+                      // to the log..
+                      if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+                               verCom(Cz,rz),
+                               true()
+                               )
+                      then ( // We now believe S is honest and its claim is valid
+                          if and3(eq(z,open(Cz,rz)),true(),true()) then (
+                              event HonestS();
+                              event HonestA(); 
+                              event Verified(claim))
+                          else(
+                              event DisHonestA(); 
+                              event HonestS();
+                              event Verified(claim)
+                              )
+                          )
+                      else ( 
+                          event HonestA(); 
+                          event DisHonestS();
+                          event Verified(claim)
+                          )
+                      )
+                  )
+                  else (
+                  event DisHonestA()
+                  )
+            )
+         else ( // no log...
+             event DisHonestA())
+         )
+  else ( // no log...
+        event DisHonestA()
+  )
+  else ( // no commitment
+          event DisHonestA()
+  )
+)
+
+( 
+A || S || J ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     out ('c',sk($x));
+     !(
+       (if $x='A' then in(y); insert <'A','Initialize'>,y)
+     ||
+       (if $x='A' then in(y); insert <'A','Log','S'>, y)
+     ||
+       (if $x='A' then in(y); insert <'A','Final'>, y)
+     ||
+       (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
+     ||
+       (if $x='S' then lookup <'A','Log','S'> as y in out(y))//
+     ) 
+
+     )
+)
+
+// TODO Give adversary read access to log.
+
+restriction no_overwrite:
+    "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
+
+lemma no_overwrite_lookup [reuse]:
+    "All #i #j x y x yp. IsIn(x,y)@i & IsIn(x,yp)@j ==> y = yp"
+
+// auto
+/* lemma sanity_exists_accepted: */
+/*   exists-trace */
+/*     "Ex #i a. Verified(a)@i" */
+
+/* // auto */
+/* lemma sanity_exists_final: */
+/*   exists-trace */
+/*     "Ex #j. Final()@j" */
+
+
+lemma sanity:
+  exists-trace
+  "
+    ( Ex two three rxp x z rz sig_r #i #j #k y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j 
+      & Verified(<three,x,<two,z,rz>,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      & #i < #j & #j < #k
+      & z = f(x,y) 
+    )
+  "
+
+// TODO Now need to hold A accountable for keeping a correct log...
+//
+/* verdictfunction v1: */ 
+/*   "Ex #i #j #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       DisHonestS()@#i & DisHonestA()@#j */
+/*       " */
+/*   -> <'A','S'>, */
+
+/*   "Ex #i #j #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       DisHonestA()@#i & HonestS()@#j */
+/*       " */
+/*   -> <'A'>, */
+
+/*   "Ex #i #j  #k */
+/*       three x z r sig_r rxp. */ 
+/*       Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp> */
+/*       & */
+/*       HonestA()@#i & DisHonestS()@#j */
+/*       " */
+/*   -> <'S'>, */
+
+/*   /1* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" *1/ */
+
+/*   otherwise -> empty */
+
+/* lemma acc_log: */ 
+/*   v1 accounts  [cases] */
+/*   for " */
+/*       All #f. */
+/*         Final()@#f */
+/*       ==> */
+/*       ( Ex #i #l y ry. */ 
+/*         Initialize(commit(y,ry))@#i */
+/*       & Log(sign(commit(x,rxp), sk('S')),ZK(commits,x,y,f(x,y),rxp,ry,rz))@#l */
+/*       & #i < #f & #l < #f */
+/*       ) */
+/*       " */
+/*   for parties <'A','S'> */ 
+
+verdictfunction v2: 
+  // "Ex #i #j #k
+  //     three x r sig_r rxp. 
+  //     Verified(<three,x,r,sig_r,rxp>)@#k // claim = <'3',x,res,sig_res,rxp>
+  //     &
+  //     DisHonestS()@#i & DisHonestA()@#j
+  //     "
+  // -> <'A','S'>,
+
+  "Ex #i #j #k
+      three x r sig_r rxp. 
+      Verified(<three,x,r,sig_r,rxp>)@#k 
+      &
+      DisHonestA()@#i & HonestS()@#j
+      "
+  -> <'A'>,
+
+  "Ex #i #j  #k
+      three x r sig_r rxp. 
+      Verified(<three,x,r,sig_r,rxp>)@#k 
+      &
+      HonestA()@#i & DisHonestS()@#j
+      "
+  -> <'S'>,
+
+  /* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" */
+
+  otherwise -> empty
+
+  /* no_overwrite_lookup (all-traces): verified (54 steps) */
+  /* sanity (exists-trace): verified (19 steps) */
+  /* acc_claim_excl_0_1 (all-traces): verified (12 steps) */
+  /* acc_claim_excl_0_2 (all-traces): verified (13 steps) */
+  /* acc_claim_excl_0_3 (all-traces): verified (2 steps) */
+  /* acc_claim_excl_1_2 (all-traces): verified (12 steps) */
+  /* acc_claim_excl_1_3 (all-traces): verified (2 steps) */
+  /* acc_claim_excl_2_3 (all-traces): verified (2 steps) */
+  /* acc_claim_exh (all-traces): verified (5 steps) */
+  /* acc_claim_suf_0 (exists-trace): falsified - no trace found (14 steps) */
+  /* acc_claim_suf_1 (exists-trace): verified (25 steps) */
+  /* acc_claim_suf_2 (exists-trace): verified (22 steps) */
+  /* acc_claim_compl_empty_3 (all-traces): verified (8 steps) */
+  /* acc_claim_compl_nonempty_0 (all-traces): verified (7 steps) */
+  /* acc_claim_compl_nonempty_1 (all-traces): verified (17 steps) */
+  /* acc_claim_compl_nonempty_2 (all-traces): verified (7 steps) */
+  /* acc_claim_min_0_0 (all-traces): verified (13 steps) */
+  /* acc_claim_min_0_1 (all-traces): verified (13 steps) */
+  /* acc_claim_min_1_0 (all-traces): verified (39 steps) */
+  /* acc_claim_min_2_0 (all-traces): verified (15 steps) */
+  /* acc_claim_uniq_0 (all-traces): verified (12 steps) */
+  /* acc_claim_uniq_1 (all-traces): verified (43 steps) */
+  /* acc_claim_uniq_2 (all-traces): verified (15 steps) */
+
+// TODO:
+// 1. solve suf_0
+// 2. integrate uncomitted changes from ilkan (e.g., adversary can read lock)
+// 3. write verdict function v1 to prove accountability of A for fake log
+// 4. integrate both properties and verdict functions into one!
+
+lemma acc_claim:  // altered: S has correct result and a proof for it!
+  v2 accounts  [cases]
+  for "
+      All three rxp x z two rz sig_r #k.
+      Verified(<three,x,<two,z,rz>,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      ==>
+      ( Ex #j #i y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j
+      & #i < #j & #j < #k
+      & z = f(x,y) 
+      & sig_r = sign(<two,z,rz>,sk('A'))
+      )
+      "
+  for parties <'A','S'> 
+ 
+      
+end

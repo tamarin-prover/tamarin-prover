@@ -1,0 +1,511 @@
+theory aletheaD_vot_ShHh_RF_functional begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: adec/2, aenc/2, decp/2, encp/3, fst/1, h/1, pair/2,
+           pk/1, sg/2, snd/1, ver/2, verzkp/4, zkp/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    decp(encp(x, r, pk(sk)), sk) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    ver(sg(m, sk), pk(sk)) = m
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+rule (modulo E) Setup:
+   [
+   !Ltk( 'S', ~skS ), Fr( ~x1 ), Fr( ~x2 ), Fr( ~sskD1 ), Fr( ~sskD2 )
+   ]
+  --[
+  Setup( ), BB_pskDs( 'BB', <'spkDSG', (pk(~sskD1)+pk(~sskD2))> ),
+  Voter( 'H1' ), Voter( 'H2' )
+  ]->
+   [
+   AgSt_H0( 'H1', <'D1', 'BB', diff($v1, $v2)> ),
+   AgSt_H0( 'H2', <'D2', 'BB', diff($v2, $v1)> ),
+   AgSt_D0( 'D1', <'H1', 'S', pk(~skS), ~sskD1> ),
+   AgSt_D0( 'D2', <'H2', 'S', pk(~skS), ~sskD2> ),
+   Out_A( 'BB', <'spkDSG', (pk(~sskD1)+pk(~sskD2))> ),
+   AgSt_SBB( 'S', 'BB', <~skS, (pk(~sskD1)+pk(~sskD2))> ),
+   Out( <'H1', 'D1', 'BB', $v1> )
+   ]
+
+rule (modulo E) H_1:
+   [ AgSt_H0( $H, <$D, $BB, $v> ) ]
+  --[ Vote( $H, $v ) ]->
+   [ AgSt_H1( $H, <$D, $BB, $v> ), Out_S( $H, $D, $v ) ]
+
+rule (modulo E) D_1:
+   [ AgSt_D0( $D, <$H, $S, pkS, ~sskD> ), In_S( $H, $D, v ), Fr( ~r )
+   ]
+  -->
+   [ Out_S( $D, $H, sg(encp(v, ~r, pkS), ~sskD) ) ]
+
+rule (modulo E) H_2:
+   [ AgSt_H1( $H, <$D, $BB, $v> ), In_S( $D, $H, b ) ]
+  --[ Comm_H_vote( $H, $S, $v ), Comm_H_ballot( $H, $S, b ) ]->
+   [ AgSt_H2( $H, <$D, $BB, $v, b> ), Out( b ) ]
+
+rule (modulo E) S_1:
+   [
+   AgSt_SBB( $S, $BB, <~skS, (pk(~sskDa)+pk(~sskDb))> ),
+   In( sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+   In( sg(encp(vb, rb, pk(~skS)), ~sskDb) )
+   ]
+  --[
+  Learn_S_ballot( $S, sg(encp(va, ra, pk(~skS)), ~sskDa) ),
+  Learn_S_ballot( $S, sg(encp(vb, rb, pk(~skS)), ~sskDb) ),
+  BB_rec( $BB,
+          <'b', 
+           (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+            sg(encp(vb, rb, pk(~skS)), ~sskDb))
+          >
+  ),
+  BB_woS( $BB,
+          <'bPrime', (encp(va, ra, pk(~skS))+encp(vb, rb, pk(~skS)))>
+  ),
+  BB_tal( $BB, <'v', (va+vb)> ),
+  BB_zkp( $BB,
+          <'zkp', 
+           zkp(<encp(va, ra, pk(~skS)), encp(vb, rb, pk(~skS))>, <va, vb>,
+               ~skS)
+          >
+  )
+  ]->
+   [
+   Out_A( $BB,
+          <'b', 
+           (sg(encp(va, ra, pk(~skS)), ~sskDa)+
+            sg(encp(vb, rb, pk(~skS)), ~sskDb))
+          >
+   ),
+   Out_A( $BB,
+          <'bPrime', (encp(va, ra, pk(~skS))+encp(vb, rb, pk(~skS)))>
+   ),
+   Out_A( $BB, <'v', (va+vb)> ),
+   Out_A( $BB,
+          <'zkp', 
+           zkp(<encp(va, ra, pk(~skS)), encp(vb, rb, pk(~skS))>, <va, vb>,
+               ~skS)
+          >
+   )
+   ]
+
+rule (modulo E) H_3:
+   [ AgSt_H2( $H, <$D, $BB, $v, b> ), In_A( $BB, <'b', (ba+bbb)> ) ]
+  --[ Verify( $H, b, (ba+bbb) ) ]->
+   [ ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional [right]:
+  exists-trace
+  "∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n.
+    (((((((((¬(H1 = H2)) ∧ (¬(v1 = v2))) ∧
+           (Comm_H_vote( H1, S, v1 ) @ #i)) ∧
+          (Comm_H_ballot( H1, S, b1 ) @ #i)) ∧
+         (Comm_H_vote( H2, S, v2 ) @ #j)) ∧
+        (Comm_H_ballot( H2, S, b2 ) @ #j)) ∧
+       (BB_rec( BB, <'b', (b1+b2)> ) @ #k)) ∧
+      (BB_tal( BB, <'v', (v1+v2)> ) @ #l)) ∧
+     (Verify( H1, b1, (b1+b2) ) @ #m)) ∧
+    (Verify( H2, b2, (b1+b2) ) @ #n)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n.
+  (Comm_H_vote( H1, S, v1 ) @ #i) ∧
+  (Comm_H_ballot( H1, S, b1 ) @ #i) ∧
+  (Comm_H_vote( H2, S, v2 ) @ #j) ∧
+  (Comm_H_ballot( H2, S, b2 ) @ #j) ∧
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #k) ∧
+  (BB_tal( BB, <'v', (v1+v2)> ) @ #l) ∧
+  (Verify( H1, b1, (b1+b2) ) @ #m) ∧
+  (Verify( H2, b2, (b1+b2) ) @ #n)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(v1 = v2))"
+*/
+simplify
+  case 1
+  solve( AgSt_H1( $H, <$D, $BB, $v> ) ▶₀ #i )
+    case H_1_case_1
+    solve( AgSt_H1( $H, <$D, $BB, $v.1> ) ▶₀ #j )
+      case H_1_case_1
+      by contradiction /* from formulas */
+    next
+      case H_1_case_2
+      solve( In_S( 'D1', 'H1', sg(encp(va, ra, pk(~skS)), ~sskDa)
+             ) ▶₁ #i )
+        case ChanIn_S
+        solve( In_S( 'D2', 'H2', sg(encp(vb, rb, pk(~skS)), ~sskDb)
+               ) ▶₁ #j )
+          case ChanIn_S
+          solve( In_S( 'H1', 'D1', va ) ▶₁ #vr.6 )
+            case ChanIn_S
+            solve( In_S( 'H2', 'D2', vb ) ▶₁ #vr.9 )
+              case ChanIn_S
+              solve( Verify( 'H2', sg(encp($v1, ~r.1, pk(~skS)), ~sskD2),
+                             (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                              sg(encp($v1, ~r.1, pk(~skS)), ~sskD2))
+                     ) @ #n )
+                case H_3
+                solve( AgSt_SBB( $S.1, $BB, <~skS, (pk(~sskD1)+pk(~sskD2))>
+                       ) ▶₀ #k )
+                  case Setup
+                  solve( Verify( 'H1', sg(encp($v, ~r, pk(~skS)), ~sskD1),
+                                 (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                  sg(encp($v1, ~r.1, pk(~skS)), ~sskD2))
+                         ) @ #m )
+                    case H_3
+                    solve( AgSt_H2( 'H2',
+                                    <$D.1, $BB.1, $v.2, sg(encp($v1, ~r.1, pk(~skS)), ~sskD2)>
+                           ) ▶₀ #n )
+                      case H_2
+                      solve( AgSt_H2( 'H1',
+                                      <$D, $BB, $v.1, sg(encp($v, ~r, pk(~skS)), ~sskD1)>
+                             ) ▶₀ #m )
+                        case H_2
+                        solve( AgSt_SBB( $S.1, 'BB', <~skS.1, (pk(~sskDa)+pk(~sskDb))>
+                               ) ▶₀ #l )
+                          case Setup
+                          solve( In_A( 'BB',
+                                       <'b', 
+                                        (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                         sg(encp($v1, ~r.1, pk(~skS)), ~sskD2))
+                                       >
+                                 ) ▶₁ #n )
+                            case ChanIn_A
+                            solve( In_A( 'BB',
+                                         <'b', 
+                                          (sg(encp($v, ~r, pk(~skS)), ~sskD1)+
+                                           sg(encp($v1, ~r.1, pk(~skS)), ~sskD2))
+                                         >
+                                   ) ▶₁ #m )
+                              case ChanIn_A
+                              solve( !KU( sg(encp($v1, ~r.1, pk(~skS)), ~sskD2) ) @ #vk.1 )
+                                case ChanOut_A_case_1
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_2
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_3
+                                by contradiction /* cyclic */
+                              next
+                                case H_2_case_1
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case H_2_case_2
+                                solve( !KU( sg(encp($v, ~r, pk(~skS)), ~sskD1) ) @ #vk.1 )
+                                  case ChanOut_A_case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_2
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_3
+                                  by contradiction /* cyclic */
+                                next
+                                  case H_2_case_1
+                                  SOLVED // trace found
+                                next
+                                  case H_2_case_2
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case H_2_case_3
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case c_sg
+                                  by sorry
+                                qed
+                              next
+                                case H_2_case_3
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case c_sg
+                                by sorry
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case H_1_case_2
+    by sorry
+  qed
+next
+  case 2
+  by sorry
+next
+  case 3
+  by sorry
+next
+  case 4
+  by sorry
+qed
+
+lemma functional [left]:
+  exists-trace
+  "∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n.
+    (((((((((¬(H1 = H2)) ∧ (¬(v1 = v2))) ∧
+           (Comm_H_vote( H1, S, v1 ) @ #i)) ∧
+          (Comm_H_ballot( H1, S, b1 ) @ #i)) ∧
+         (Comm_H_vote( H2, S, v2 ) @ #j)) ∧
+        (Comm_H_ballot( H2, S, b2 ) @ #j)) ∧
+       (BB_rec( BB, <'b', (b1+b2)> ) @ #k)) ∧
+      (BB_tal( BB, <'v', (v1+v2)> ) @ #l)) ∧
+     (Verify( H1, b1, (b1+b2) ) @ #m)) ∧
+    (Verify( H2, b2, (b1+b2) ) @ #n)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ H1 H2 v1 v2 S #i b1 #j b2 BB #k #l #m #n.
+  (Comm_H_vote( H1, S, v1 ) @ #i) ∧
+  (Comm_H_ballot( H1, S, b1 ) @ #i) ∧
+  (Comm_H_vote( H2, S, v2 ) @ #j) ∧
+  (Comm_H_ballot( H2, S, b2 ) @ #j) ∧
+  (BB_rec( BB, <'b', (b1+b2)> ) @ #k) ∧
+  (BB_tal( BB, <'v', (v1+v2)> ) @ #l) ∧
+  (Verify( H1, b1, (b1+b2) ) @ #m) ∧
+  (Verify( H2, b2, (b1+b2) ) @ #n)
+ ∧
+  (¬(H1 = H2)) ∧ (¬(v1 = v2))"
+*/
+simplify
+  case 1
+  solve( AgSt_H1( $H.1, <$D.1, $BB.1, $v.1> ) ▶₀ #j )
+    case H_1_case_1
+    solve( AgSt_H1( $H, <$D, $BB, $v> ) ▶₀ #i )
+      case H_1_case_1
+      by contradiction /* from formulas */
+    next
+      case H_1_case_2
+      solve( In_S( 'D1', 'H1', sg(encp(vb, rb, pk(~skS)), ~sskDb)
+             ) ▶₁ #j )
+        case ChanIn_S
+        solve( In_S( 'D2', 'H2', sg(encp(va, ra, pk(~skS)), ~sskDa)
+               ) ▶₁ #i )
+          case ChanIn_S
+          solve( In_S( 'H1', 'D1', vb ) ▶₁ #vr.6 )
+            case ChanIn_S
+            solve( In_S( 'H2', 'D2', va ) ▶₁ #vr.9 )
+              case ChanIn_S
+              solve( Verify( 'H1', sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1),
+                             (sg(encp($v, ~r, pk(~skS)), ~sskD2)+
+                              sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1))
+                     ) @ #n )
+                case H_3
+                solve( Verify( 'H2', sg(encp($v, ~r, pk(~skS)), ~sskD2),
+                               (sg(encp($v, ~r, pk(~skS)), ~sskD2)+
+                                sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1))
+                       ) @ #m )
+                  case H_3
+                  solve( AgSt_H2( 'H2',
+                                  <$D, $BB.1, $v.2, sg(encp($v, ~r, pk(~skS)), ~sskD2)>
+                         ) ▶₀ #m )
+                    case H_2
+                    solve( AgSt_H2( 'H1',
+                                    <$D, $BB.1, $v.2, sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1)>
+                           ) ▶₀ #n )
+                      case H_2
+                      solve( AgSt_SBB( $S.1, $BB, <~skS, (pk(~sskD1)+pk(~sskD2))>
+                             ) ▶₀ #k )
+                        case Setup
+                        solve( AgSt_SBB( $S.1, 'BB', <~skS.1, (pk(~sskDa)+pk(~sskDb))>
+                               ) ▶₀ #l )
+                          case Setup
+                          solve( In_A( 'BB',
+                                       <'b', 
+                                        (sg(encp($v, ~r, pk(~skS)), ~sskD2)+
+                                         sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1))
+                                       >
+                                 ) ▶₁ #n )
+                            case ChanIn_A
+                            solve( In_A( 'BB',
+                                         <'b', 
+                                          (sg(encp($v, ~r, pk(~skS)), ~sskD2)+
+                                           sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1))
+                                         >
+                                   ) ▶₁ #m )
+                              case ChanIn_A
+                              solve( !KU( sg(encp($v.1, ~r.1, pk(~skS)), ~sskD1) ) @ #vk.1 )
+                                case ChanOut_A_case_1
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_2
+                                by contradiction /* cyclic */
+                              next
+                                case ChanOut_A_case_3
+                                by contradiction /* cyclic */
+                              next
+                                case H_2_case_1
+                                solve( !KU( sg(encp($v, ~r, pk(~skS)), ~sskD2) ) @ #vk.1 )
+                                  case ChanOut_A_case_1
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_2
+                                  by contradiction /* cyclic */
+                                next
+                                  case ChanOut_A_case_3
+                                  by contradiction /* cyclic */
+                                next
+                                  case H_2_case_1
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case H_2_case_2
+                                  SOLVED // trace found
+                                next
+                                  case H_2_case_3
+                                  by contradiction /* forbidden KD-fact */
+                                next
+                                  case c_sg
+                                  by sorry
+                                qed
+                              next
+                                case H_2_case_2
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case H_2_case_3
+                                by contradiction /* forbidden KD-fact */
+                              next
+                                case c_sg
+                                by sorry
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case H_1_case_2
+    by sorry
+  qed
+next
+  case 2
+  by sorry
+next
+  case 3
+  by sorry
+next
+  case 4
+  by sorry
+qed
+
+lemma indivVerif1 [right]:
+  all-traces
+  "∀ H v #i b #j bOther.
+    ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
+    (∃ BB b2 #l r pkS sskD.
+      (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+      (b = sg(encp(v, r, pkS), sskD)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H v #i b #j bOther.
+  (Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l r pkS sskD.
+   (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+   (b = sg(encp(v, r, pkS), sskD))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma indivVerif1 [left]:
+  all-traces
+  "∀ H v #i b #j bOther.
+    ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
+    (∃ BB b2 #l r pkS sskD.
+      (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+      (b = sg(encp(v, r, pkS), sskD)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H v #i b #j bOther.
+  (Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l r pkS sskD.
+   (BB_rec( BB, <'b', (b+b2)> ) @ #l) ∧
+   (b = sg(encp(v, r, pkS), sskD))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma indivVerif2 [right]:
+  all-traces
+  "∀ H b #j bOther.
+    (Verify( H, b, (b+bOther) ) @ #j) ⇒
+    (∃ BB b2 #l. BB_rec( BB, <'b', (b+b2)> ) @ #l)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j bOther.
+  (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l. (BB_rec( BB, <'b', (b+b2)> ) @ #l) ⇒ ⊥"
+*/
+by sorry
+
+lemma indivVerif2 [left]:
+  all-traces
+  "∀ H b #j bOther.
+    (Verify( H, b, (b+bOther) ) @ #j) ⇒
+    (∃ BB b2 #l. BB_rec( BB, <'b', (b+b2)> ) @ #l)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H b #j bOther.
+  (Verify( H, b, (b+bOther) ) @ #j)
+ ∧
+  ∀ BB b2 #l. (BB_rec( BB, <'b', (b+b2)> ) @ #l) ⇒ ⊥"
+*/
+by sorry
+
+/* All well-formedness checks were successful. */
+
+diffLemma Observational_equivalence:
+by sorry
+
+end

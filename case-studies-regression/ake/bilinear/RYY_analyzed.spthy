@@ -6,6 +6,8 @@ builtins: diffie-hellman, bilinear-pairing
 functions: fst/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* RYY : UM-like identity based key exchange protocol *}
 
 rule (modulo E) KGC_Setup:
@@ -517,8 +519,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/RYY.spthy
@@ -527,7 +527,7 @@ analyzing: examples/ake/bilinear/RYY.spthy
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 4.542333324s
+  processing time: 6.813841705s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -539,7 +539,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 4.542333324s
+  processing time: 6.813841705s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

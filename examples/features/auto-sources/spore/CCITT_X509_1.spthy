@@ -1,0 +1,155 @@
+/*
+  Example for the Tamarin Prover
+  ==============================
+
+  Authors:       Jannik Dreier
+  Date:             April 2020
+  Time:                 ?
+
+  Description from SPORE:
+  (http://www.lsv.fr/Software/spore/ccittx509_1.html)
+
+  CCITT X.509 (1)
+
+  A, B :     principal
+  Na, Nb :    nonce
+  Ta, Tb :    timestamp
+  Ya, Yb :    userdata
+  Xa, Xb :    userdata
+  PK, SK :    principal -> key (keypair)
+
+  Spore simplification
+  1.    A  ->  B  :    A, {Ta, Na, B, Xa, {Ya}PK(B)}SK(A)
+  Spore reminder of actual specification
+  1.    A  ->  B  :    A, Ta, Na, B, Xa, {Ya}PK(B), {h(Ta, Na, B, Xa, {Ya}PK(B))}SK(A)
+
+  h is a one-way function.
+
+  The timestamp Ta and nonce Na are not used here.
+  Xa and Ya are the data transmitted,
+  the privacy of Ya is ensured by its encryption with the public key of B and
+  the authenticity of Xa and Ya is ensured by the encryption with the private key of A.
+
+  The protocol must ensure the confidentiality of Ya:
+    if A and B follow the protocol,
+    then an attacker should not be able to obtain Ya.
+
+  The protocol must ensure the recipient B of the message that the data Xa and Ya originate from A.
+
+  Failure of the authenticity of Xa and Ya.
+  i.1.      A  ->  I(B)  :    A, {Ta, Na, B, Xa, {Ya}PK(B)}SK(A)
+  ii.1.    I  ->  B    :    I, {Ta, Na, B, Xa, {Ya}PK(B)}SK(I)
+
+*/
+
+theory CcittX509_1
+begin
+
+builtins: asymmetric-encryption, signing
+
+functions: h/1
+
+// ====================
+// == General rules ===
+// ====================
+
+// Registering a public key
+rule Register_pk:
+    [ Fr(~ltk) ]
+  --[ Register($X, ~ltk) ]->
+    [ !Ltk($X, ~ltk), !Pk($X, pk(~ltk)) ]
+
+rule Get_pk:
+    [ !Pk($X, pubkey) ]
+  -->
+    [ Out(pubkey) ]
+
+rule Reveal_ltk:
+    [ !Ltk($U, ~ltk) ]
+  --[ Reveal($U) ]->
+    [ Out(~ltk) ]
+
+// ====================
+// == Protocol rules ==
+// ====================
+
+// 1.    A  ->  B  :    A, Ta, Na, B, Xa, {Ya}PK(B), {h(Ta, Na, B, Xa, {Ya}PK(B))}SK(A)
+rule A_send:
+  let m  = <~ta,~na,$B,~xa,aenc(~Ya,pkB)>
+      ha = h(m)
+  in
+ [
+      !Pk($B, pkB)
+    , !Ltk($A, ltkA)
+    , Fr(~ta)
+    , Fr(~na)
+    , Fr(~xa)
+    , Fr(~Ya)
+  ]
+ --[ Running_A($A, $B, <'A','B',~xa, ~Ya>)
+      , Secret($A, $B, ~Ya)
+    ]->
+ [
+    Out(< $A, ~ta, ~na, $B, ~xa, aenc(~Ya,pkB), ha, sign(ha,ltkA)>)
+  ]
+
+rule B_receive:
+  let m  = <ta, na, $B, xa, aenc(Ya, pk(~ltkB))>
+      ha = h(m)
+  in
+  [
+    In( < x, ta, na, $B, xa, aenc(Ya, pk(~ltkB)), ha, sign(ha, ~ltkA)> )
+    , !Pk(x, pk(~ltkA))
+    , !Ltk($B, ~ltkB)
+  ]
+  --[ Commit_B(x, $B, <'A','B',xa, Ya>)
+      , Secret(x, $B, Ya)
+    ]->
+  []
+
+// ====================
+// ====== Lemmas ======
+// ====================
+
+// check the secrecy of a secret x protected by the long-term key of B
+lemma Secrecy:
+  "
+    not(
+      Ex A B m #i .
+        Secret(A, B, m)@ #i
+        & (Ex #r. K(m) @ #r)
+        & not(Ex #r. Reveal(B) @ #r)
+        & not(Ex #r. Reveal(A) @ #r)
+    )
+  "
+
+// check the authenticity and freshness of the transaction from B's point of view
+lemma injectiveagreement_B:
+   "All A B t #i.
+     Commit_B(A,B,t) @i
+     ==> (Ex #j. Running_A(A,B,t) @j
+         & j < i
+         & not (Ex A2 B2 #i2. Commit_B(A2,B2,t) @i2
+                            & not (#i2 = #i)))
+               | (Ex #r. Reveal(A)@r)
+               | (Ex #r. Reveal(B)@r)"
+
+// check the authenticity of the transaction from B's point of view
+lemma agreement_B:
+  "All A B t #i.
+    Commit_B(A,B,t) @i
+    ==> (Ex #j. Running_A(A,B,t) @j  & j < i)
+              | (Ex #r. Reveal(A)@r)
+              | (Ex #r. Reveal(B)@r)"
+
+// sanity check: check if honest execution is possible
+lemma Session_key_honest_setup:
+  exists-trace
+  " Ex A B t #i #j.
+        Running_A(A, B, t) @ #i
+      & Commit_B(A, B, t)@ #j
+      & not(Ex #r. Reveal(B) @ r)
+      & not(Ex #s. Reveal(A) @ s)
+  "
+
+end

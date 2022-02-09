@@ -51,7 +51,8 @@ let rec substitute  (id:string) (t:term) process =
   | Empty -> Empty
   | Node(a, left, right) ->
     begin
-      let f = Term.subs_t id t in
+      let v = (Var.Msg id) in
+      let f = Term.subs_t v t in
       match a with
       | Null -> Node(a, left, right)
       | Par
@@ -68,8 +69,8 @@ let rec substitute  (id:string) (t:term) process =
       | Msg_Out(u) -> Node(Msg_Out( (f u) ), substitute id t left, right)
       | Insert(u1,u2) -> Node(Insert( (f  u1), (f u2)), substitute id t left, right)
       | Ch_Out(u1,u2) -> Node(Ch_Out( (f  u1), (f u2)), substitute id t left, right)
-      | Event(a) -> Node(Event(subs_a id t a), substitute id t left, substitute id t right)
-      | Cond(a) -> Node(Cond(subs_a id t a), substitute id t left, substitute id t right)
+      | Event(a) -> Node(Event(substitute_a v t a), substitute id t left, substitute id t right)
+      | Cond(a) -> Node(Cond(substitute_a v t a), substitute id t left, substitute id t right)
       | Msg_In(u) ->
             (* Note for future port: raise warning if variables in message input are bound or pattern matching is used,
              * as the formal semantics consider only variables. Or maybe introduce strict mode?

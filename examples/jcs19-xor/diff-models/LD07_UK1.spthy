@@ -1,0 +1,105 @@
+theory LD07_UK1
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+LD07: Readers R_i for i>0, RFID tag T
+      Reader R_i knows k_0, k_i, k_{i+1}
+      Tag T knows alpha := k_0 XOR k_i
+
+   Ri: knows(k0, ki, ksi)
+   T: let alpha := k0 XOR ki
+   T: knows(alpha)
+   Ri: fresh(r)
+Ri->T: r
+   T: let alpha := k0 XOR ki
+T->Ri: h(r XOR alpha)
+   Ri: let  a := ki XOR ksi
+   Ri: let  b := h(a XOR k0 XOR ki)
+Ri->T: a, b
+   T: if b = h(a XOR k0 XOR ki) then let alpha' := alpha XOR a else alpha'=alpha
+   T: knows(alpha')
+
+This is a stateful protocol for the tag. The tag's knowledge is updated. 
+
+The model concerns untraceability based on the UK1 definition
+which is different from the claims made in the LD07 paper. 
+*/
+
+rule SetupLearning:
+   [ Fr( ~k1 )
+   , Fr( ~k2 )
+   , Fr( ~k )
+   ]
+ --[ Setup(~k1), Setup(~k2)
+   , OnlyOnce( 'setupLearning' ) ]-> 
+   [ Tag(~k1, ~k XOR ~k1)   // first arg: tag's key/id, snd arg: current key
+   , Tag(~k2, ~k XOR ~k2)
+   , SetupKeys(~k1, ~k2)
+   ]
+
+rule SetupGuessing:
+   let idb = diff(~k1, ~k2)
+       keyb = diff(x1, x2)
+   in
+   [ SetupKeys(~k1, ~k2)
+   , Tag(~k1, x1)
+   , Tag(~k2, x2)
+   ]
+ --[ OnlyOnce( 'setupGuessing' ) ]-> 
+   [ Tag(idb, keyb) ]
+   
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   , OnlyTwice('tag1')
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   , TagRunning( ~k, x )
+   ]
+
+rule tag2:
+   [ Fr(~k2)
+   , In( <newkey, newhash> )
+   , TagRunning( ~k, x )
+   ]
+ --[ Update( ~k, x XOR newkey, 'Tag' )
+   , Eq(h(newkey XOR x),newhash)
+   , Alive( ~k, 'Reader' )
+   , OnlyTwice('tag2')
+   ]->
+   [ Tag( ~k, x XOR newkey)
+   ]
+
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+/*
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+
+restriction unique:
+  "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+restriction uniqueTwice:
+  "∀ x #i #j #k. ((OnlyTwice(x) @ #i) ∧ (OnlyTwice(x) @ #j) ∧ (OnlyTwice(x) @ #k)) ⇒ ((#i = #j) | (#i = #k) | (#j = #k))"
+
+// TRACE FOUND AUTOMATICALLY
+lemma executable:
+  exists-trace "∃ x y #i #j. (Response( x, 'Tag' ) @ #i) & (Update( x, y, 'Tag') @ #j)
+           // further restriction to automatically get the simplest execution
+           ∧ (not Ex #l. Response( x, 'Tag' ) @ #l & (not (#i=#l)))
+"
+
+// ATTACK FOUND AUTOMATICALLY 
+// Observational Equivalence
+
+end

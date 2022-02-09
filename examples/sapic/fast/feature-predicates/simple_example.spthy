@@ -1,0 +1,16 @@
+theory SimpleIf
+begin
+
+predicates:
+Equal(h1,h2) <=> h1=h2
+
+new h; 
+if Equal(h,h) then
+            event Bogus()
+        else
+            0
+
+lemma bogus_exists: exists-trace
+	"Ex #i . Bogus()@i "
+
+end

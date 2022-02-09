@@ -1,0 +1,306 @@
+theory JCS12_Typing_Example begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pk ) ] --> [ Out( pk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_1:
+   [ Fr( ~k ), !Pk( $S, pkS ) ]
+  --[ Out_Client_1( aenc(<'1', $C, ~k>, pkS) ) ]->
+   [ Client_1( $C, $S, ~k ), Out( aenc(<'1', $C, ~k>, pkS) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_2:
+   [ Client_1( C, S, k ), In( aenc(<'2', k>, pk(ltkC)) ), !Ltk( C, ltkC ) ]
+  --[ SessKeyC( C, S, k ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Serv_1:
+   [
+   !Ltk( $S, ~ltkS ), In( request ),
+   !Pk( fst(snd(adec(request, ~ltkS))), pkC )
+   ]
+  --[
+  Eq( fst(adec(request, ~ltkS)), '1' ),
+  ReceivedKey( fst(snd(adec(request, ~ltkS))), $S,
+               snd(snd(adec(request, ~ltkS)))
+  ),
+  In_Serv_1( request, snd(snd(adec(request, ~ltkS))) )
+  ]->
+   [ Out( aenc(<'2', snd(snd(adec(request, ~ltkS)))>, pkC) ) ]
+
+  /*
+  rule (modulo AC) Serv_1:
+     [ !Ltk( $S, ~ltkS ), In( request ), !Pk( z, pkC ) ]
+    --[ Eq( z.2, '1' ), ReceivedKey( z, $S, z.1 ), In_Serv_1( request, z.1 )
+    ]->
+     [ Out( aenc(<'2', z.1>, pkC) ) ]
+    variants (modulo AC)
+    1. ~ltkS = ~ltkS.12
+       request
+             = request.14
+       z     = fst(snd(adec(request.14, ~ltkS.12)))
+       z.1   = snd(snd(adec(request.14, ~ltkS.12)))
+       z.2   = fst(adec(request.14, ~ltkS.12))
+    
+    2. ~ltkS = ~ltkS.16
+       request
+             = aenc(<z.22, z.19, z.21>, pk(~ltkS.16))
+       z     = z.19
+       z.1   = z.21
+       z.2   = z.22
+    
+    3. ~ltkS = ~ltkS.20
+       request
+             = aenc(x.37, pk(~ltkS.20))
+       z     = fst(snd(x.37))
+       z.1   = snd(snd(x.37))
+       z.2   = fst(x.37)
+    
+    4. ~ltkS = ~ltkS.21
+       request
+             = aenc(<z.27, x.39>, pk(~ltkS.21))
+       z     = fst(x.39)
+       z.1   = snd(x.39)
+       z.2   = z.27
+  */
+
+lemma typing_assertion [sources]:
+  all-traces
+  "∀ m v #i.
+    (In_Serv_1( m, v ) @ #i) ⇒
+    ((∃ #j. (!KU( v ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. Out_Client_1( m ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m v #i.
+  (In_Serv_1( m, v ) @ #i)
+ ∧
+  (∀ #j. (!KU( v ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j. (Out_Client_1( m ) @ #j) ⇒ ⊥)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( v ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j. (Out_Client_1( m ) @ #j) ∧ ¬(last(#j))) )
+    case case_1
+    solve( !Ltk( $S, ~ltkS ) ▶₀ #i )
+      case Register_pk
+      solve( !Pk( z, pkC ) ▶₂ #i )
+        case Register_pk
+        solve( !KU( aenc(<z, $A, v>, pk(~ltkS)) ) @ #vk )
+          case Client_1
+          by contradiction /* from formulas */
+        next
+          case Serv_1_case_1
+          solve( (∃ #j. (!KU( <$A, v> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (Out_Client_1( aenc(<z, $S, $A, v>, pk(~ltkS.1)) ) @ #j) ∧ ¬(last(#j))) )
+            case case_1
+            by contradiction /* from formulas */
+          qed
+        next
+          case Serv_1_case_2
+          solve( (∃ #j. (!KU( z.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (Out_Client_1( aenc(<z.2, $A.1, z.1>, pk(~ltkS.1)) ) @ #j)
+                  ∧
+                   ¬(last(#j))) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by contradiction /* impossible chain */
+          qed
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Client_session_key_secrecy_raw [reuse]:
+  all-traces
+  "∀ S C k #i #j.
+    ((SessKeyC( C, S, k ) @ #i) ∧ (!KU( k ) @ #j)) ⇒
+    ((∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #j)) ∨
+     (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S C k #i #j.
+  (SessKeyC( C, S, k ) @ #i) ∧ (!KU( k ) @ #j)
+ ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #j)) ∧
+  (∀ #r. (LtkReveal( C ) @ #r) ⇒ ¬(#r < #j))"
+*/
+simplify
+solve( Client_1( C, S, k ) ▶₀ #i )
+  case Client_1
+  solve( !Ltk( $C, ltkC ) ▶₂ #i )
+    case Register_pk
+    solve( !KU( ~k ) @ #j )
+      case Client_1
+      solve( !KU( ~ltk.1 ) @ #vk.1 )
+        case Reveal_ltk
+        by contradiction /* from formulas */
+      qed
+    next
+      case Serv_1
+      solve( !KU( ~ltk.2 ) @ #vk.2 )
+        case Reveal_ltk
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma Client_session_key_secrecy:
+  all-traces
+  "∀ S C k #i #j.
+    ((SessKeyC( C, S, k ) @ #i) ∧ (K( k ) @ #j)) ⇒
+    ((∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #j)) ∨
+     (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S C k #i #j.
+  (SessKeyC( C, S, k ) @ #i) ∧ (K( k ) @ #j)
+ ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #j)) ∧
+  (∀ #r. (LtkReveal( C ) @ #r) ⇒ ¬(#r < #j))"
+*/
+simplify
+solve( (∃ #r. (LtkReveal( S ) @ #r) ∧ #r < #vk.1)  ∥
+       (∃ #r. (LtkReveal( C ) @ #r) ∧ #r < #vk.1) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+qed
+
+lemma Client_auth:
+  all-traces
+  "(∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)) ⇒
+   (∀ C S k #i.
+     (SessKeyC( C, S, k ) @ #i) ⇒
+     (((∃ #a. ReceivedKey( C, S, k ) @ #a) ∨
+       (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i))) ∨
+      (∃ #r. (LtkReveal( C ) @ #r) ∧ (#r < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ x y #i. (Eq( x, y ) @ #i) ⇒ x = y) ∧
+ (∃ C S k #i.
+   (SessKeyC( C, S, k ) @ #i)
+  ∧
+   (∀ #a. (ReceivedKey( C, S, k ) @ #a) ⇒ ⊥) ∧
+   (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i)) ∧
+   (∀ #r. (LtkReveal( C ) @ #r) ⇒ ¬(#r < #i)))"
+*/
+simplify
+solve( Client_1( C, S, k ) ▶₀ #i )
+  case Client_1
+  solve( !Ltk( $C, ltkC ) ▶₂ #i )
+    case Register_pk
+    solve( !KU( aenc(<'2', ~k>, pk(~ltk)) ) @ #vk )
+      case Serv_1
+      solve( !KU( aenc(<'1', $C, ~k>, pk(~ltkS)) ) @ #vk.1 )
+        case Client_1
+        by contradiction /* from formulas */
+      next
+        case c_aenc
+        solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.7)  ∥
+               (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.7) )
+          case case_1
+          by contradiction /* from formulas */
+        next
+          case case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case c_aenc
+      solve( (∃ #r. (LtkReveal( $S ) @ #r) ∧ #r < #vk.4)  ∥
+             (∃ #r. (LtkReveal( $C ) @ #r) ∧ #r < #vk.4) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/loops/JCS12_Typing_Example.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/loops/JCS12_Typing_Example.spthy
+
+  output:          examples/loops/JCS12_Typing_Example.spthy.tmp
+  processing time: 0.182358858s
+  typing_assertion (all-traces): verified (16 steps)
+  Client_session_key_secrecy_raw (all-traces): verified (8 steps)
+  Client_session_key_secrecy (all-traces): verified (4 steps)
+  Client_auth (all-traces): verified (12 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/loops/JCS12_Typing_Example.spthy
+
+  output:          examples/loops/JCS12_Typing_Example.spthy.tmp
+  processing time: 0.182358858s
+  typing_assertion (all-traces): verified (16 steps)
+  Client_session_key_secrecy_raw (all-traces): verified (8 steps)
+  Client_session_key_secrecy (all-traces): verified (4 steps)
+  Client_auth (all-traces): verified (12 steps)
+
+==============================================================================
+*/

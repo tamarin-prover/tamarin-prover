@@ -23,6 +23,7 @@ import Control.Monad.List
 import Control.Monad.Reader
 import Control.Monad.Disj.Class
 
+
 ------------------------------------------------------------------------------
 -- The 'DisjT' monad transformer
 ------------------------------------------------------------------------------
@@ -46,12 +47,14 @@ runDisjT = runListT . unDisjT
 ------------
 
 instance Monad m => Monad (DisjT m) where
-    -- Ensure that contradictions are not reported via fail!
-    fail    = error
     {-# INLINE return #-}
     return  = DisjT . return
     {-# INLINE (>>=) #-}
     m >>= f = DisjT $ (unDisjT . f) =<< unDisjT m
+
+instance MonadFail m => MonadFail (DisjT m) where
+    -- Ensure that contradictions are not reported via fail!
+    fail = error
 
 instance Monad m => MonadDisj (DisjT m) where
     contradictoryBecause _ = DisjT mzero

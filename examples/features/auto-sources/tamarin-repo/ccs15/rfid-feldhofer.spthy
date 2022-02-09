@@ -1,0 +1,91 @@
+theory RFID_Feldhofer
+begin
+
+
+/*
+ * Protocol:	RFID protocol by Feldhofer, using symmetric encryption
+described in: 
+  Untraceability of RFID Protocols
+  Ton van Deursen, Sjouke Mauw, Sasa Radomirovic
+  Figure 1.
+ * Modeler: 	 Jannik Dreier and Ralf Sasse
+ * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
+ * Date:         April 2015
+ *
+ * Status: 	working
+// All the lemmas and the observational equivalence are proven automatically.
+// Observational equivalence takes under 2.6 seconds.
+ */
+
+
+builtins: symmetric-encryption
+
+rule Setup_Shared_Key:
+  [ Fr(~k1), Fr(~k2) ]
+--[ Setup(~k1), Setup(~k2) 
+  , StartLeft(~k1) , StartRight(~k2) ]->
+  [ !Reader(<~k1,~k2>), !Tag(<~k1,~k2>) ]
+
+// 1
+rule Reader_Start:
+  [ Fr(~nr) ]
+--[ ]->
+  [ Reader_Sent(~nr), Out(~nr) ]
+
+// 3
+rule Reader_Finish:
+  let r_in = senc(<~nr, hnt> , ~k) 
+      r_out = senc(<hnt, ~nr>, ~k)
+  in
+  [ Reader_Sent(~nr), !Reader(diff(<~k, ~k2>, <~k2,~k>)), In(r_in) ]
+--[ IN_R_1(hnt, r_in) ]->
+  [ Reader_Done(~k, ~nr, hnt), Out(r_out) ]
+
+// 2
+rule Tag_Start:
+  let t_msg = senc(<~nr,~nt>, diff(~k1,~k2))
+  in
+  [ !Tag(<~k1,~k2>) 
+  , In(~nr) // we assume by type we can see if the nr is actually a nonce type!
+  , Fr(~nt) ] 
+--[ OUT_T_1(~nt, t_msg) , InEq(~k1,~k2) ]->
+  [ Trun(diff(~k1, ~k2), ~nr, ~nt), Out(t_msg) ]
+
+// 4
+rule Tag_Finish:
+  [ Trun(~k, ~nr, ~nt), In(senc(<~nt,~nr>, ~k)) ]
+--[ Secret(~nt, ~k) ]->
+  [ Tdone(~k, ~nr, ~nt) ]
+
+
+//The sources lemma is needed to resolve remaining partial deconstructions.
+lemma types [sources]:
+  " (All n m1 #i.
+       IN_R_1( n, m1) @ i
+       ==>
+       ( (Ex #j. KU(n) @ j & j < i)
+       | (Ex #j. OUT_T_1(n, m1 ) @ j)
+       )
+    )"
+
+
+// These 3 executability lemmas are here to convince ourselves that
+// the protocol  actually is executable as expected
+lemma executable:
+  exists-trace
+  "Ex n k1 #i. Secret(n,k1)@i"
+
+lemma executable_left [left]:
+  exists-trace
+  "Ex n k1 #i #j. Secret(n,k1)@i & StartLeft(k1)@j"
+
+lemma executable_right [right]:
+  exists-trace
+  "Ex n k1 #i #j. Secret(n,k1)@i & StartRight(k1)@j"
+
+// This lemma shows that it is not possible that the intruder actually
+//knows the secret nonce once a tag is done
+lemma secret_value:
+  "All s k #i #i2. Secret(s,k)@i & K(s)@i2  ==>  ⊥"
+
+end

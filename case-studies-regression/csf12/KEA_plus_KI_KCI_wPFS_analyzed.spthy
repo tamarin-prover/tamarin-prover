@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* KEA+ *}
 
 rule (modulo E) generate_ltk:
@@ -274,8 +276,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
@@ -284,7 +284,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.72752338s
+  processing time: 0.735636316s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -296,7 +296,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.72752338s
+  processing time: 0.735636316s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

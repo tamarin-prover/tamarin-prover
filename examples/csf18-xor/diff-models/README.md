@@ -10,7 +10,7 @@ DETAILS
 Extra care must be taken for CH07 property UK3, to only run the
 diff-equivalence by itself:
 
-tamarin-prover --prove=Observ --diff CH07-UK1.spthy
+tamarin-prover --prove=Observ* --diff CH07-UK1.spthy
 
 
 For KCL07 BFS must be used for property UK1. For property UK3 the

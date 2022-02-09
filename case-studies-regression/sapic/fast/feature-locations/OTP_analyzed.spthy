@@ -1,0 +1,1209 @@
+theory OTP begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, cde/1, chall/1, chall2/1, check_rep/2, dcde/1,
+           dchall/1, dchall2/1, dscode/1, dshared/1, dsko/1, fst/1, get_rep/1, h/1,
+           hash/2, list/2, pair/2, pk/1, prog/2, rep/2 [private], report/1, scode/1,
+           sdec/2, senc/2, shared/1, sko/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    dcde(cde(m)) = m,
+    dscode(scode(m)) = m,
+    dshared(shared(m)) = m,
+    dsko(sko(m)) = m,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: S
+
+predicate: Report( x, y )<=>¬(y = 'loc')
+
+lemma secrecy_key [reuse]:
+  all-traces "¬(∃ k #t1 #t2. (Key( k ) @ #t1) ∧ (!KU( k ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k #t1 #t2. (Key( k ) @ #t1) ∧ (!KU( k ) @ #t2)"
+*/
+simplify
+solve( State_1111111( cu, pc, pw, k ) ▶₀ #t1 )
+  case outpw_0_111111
+  solve( !KU( ~n.3 ) @ #t2 )
+    case outcdecode_0_111111111121111
+    solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.10 )
+      case inpccode_0_1111111111211_case_1
+      by solve( (#vr.9, 0) ~~> (#t2, 0) )
+    next
+      case inpccode_0_1111111111211_case_2
+      solve( (#vr.9, 0) ~~> (#t2, 0) )
+        case d_0_fst
+        by solve( State_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.25 )
+      next
+        case d_0_snd
+        by solve( (#vr.26, 0) ~~> (#t2, 0) )
+      qed
+    qed
+  qed
+qed
+
+lemma key_ex [reuse]:
+  all-traces
+  "∀ pka k #t1.
+    (SessionV( pka, k ) @ #t1) ⇒
+    (∃ #t2. (SessionP( pka, k ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1.
+  (SessionV( pka, k ) @ #t1)
+ ∧
+  ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111
+  solve( !KU( shared(<aenc(k, pk(~n.3)), rep(aenc(k, pk(~n.3)), 'loc')>)
+         ) @ #vk )
+    case c_shared
+    solve( !KU( rep(aenc(k, pk(~n.3)), 'loc') ) @ #vk.3 )
+      case ReportRule
+      by contradiction /* from formulas */
+    next
+      case outcdecode_0_111111111121111
+      solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.17 )
+        case inpccode_0_1111111111211_case_1
+        by contradiction /* impossible chain */
+      next
+        case inpccode_0_1111111111211_case_2
+        solve( (#vr.16, 0) ~~> (#vk.1, 0) )
+          case d_0_fst
+          by solve( State_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.30 )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      qed
+    qed
+  next
+    case outcdecode_0_111111111121111
+    solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.17 )
+      case inpccode_0_1111111111211_case_1
+      by contradiction /* impossible chain */
+    next
+      case inpccode_0_1111111111211_case_2
+      solve( (#vr.16, 0) ~~> (#vk, 0) )
+        case d_0_fst
+        by solve( State_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.30 )
+      next
+        case d_0_snd
+        by contradiction /* impossible chain */
+      qed
+    qed
+  qed
+qed
+
+lemma secrecy_ex [reuse]:
+  all-traces
+  "¬(∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
+*/
+simplify
+solve( State_1111111111111( cu, pc, pw, k, signed, skV ) ▶₀ #t1 )
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111
+  solve( State_111111111121211( cu, pc, pw, k, ~n.3 ) ▶₀ #t2 )
+    case newsharedk_0_11111111112121
+    solve( State_111111111121211( cu, pc, pw, ~n.3, ~n.4 ) ▶₀ #t2.1 )
+      case newsharedk_0_11111111112121
+      solve( !KU( ~n.3 ) @ #t2.1 )
+        case outcdecode_0_111111111121111
+        solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
+          case inpccode_0_1111111111211_case_1
+          by solve( (#vr.24, 0) ~~> (#t2.1, 0) )
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.24, 0) ~~> (#t2.1, 0) )
+            case d_0_fst
+            by solve( State_11111111112111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+          next
+            case d_0_snd
+            by solve( (#vr.39, 0) ~~> (#t2.1, 0) )
+          qed
+        qed
+      next
+        case outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111212111
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma unic [reuse]:
+  all-traces
+  "¬(∃ #t1 #t2 pw fr.
+      ((AskU( pw, fr ) @ #t1) ∧ (AskU( pw, fr ) @ #t2)) ∧ (¬(#t1 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 pw fr.
+  (AskU( pw, fr ) @ #t1) ∧ (AskU( pw, fr ) @ #t2) ∧ ¬(#t1 = #t2)"
+*/
+simplify
+solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( State_111111111121111111( code, cu, fr, pc, pw, skV ) ▶₀ #t1 )
+    case newfr_0_11111111112111111
+    solve( State_111111111121111111( code.1, cu.1, ~n, pc.1, pw, skV.1
+           ) ▶₀ #t2 )
+      case newfr_0_11111111112111111
+      by contradiction /* cyclic */
+    qed
+  qed
+next
+  case case_2
+  solve( State_111111111121111111( code, cu, fr, pc, pw, skV ) ▶₀ #t1 )
+    case newfr_0_11111111112111111
+    solve( State_111111111121111111( code.1, cu.1, ~n, pc.1, pw, skV.1
+           ) ▶₀ #t2 )
+      case newfr_0_11111111112111111
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+lemma secrecy_chall [reuse]:
+  all-traces
+  "¬(∃ pw chal fr k #t1 #t2.
+      (Ask( pw, chal, fr, k ) @ #t1) ∧ (!KU( chal ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pw chal fr k #t1 #t2.
+  (Ask( pw, chal, fr, k ) @ #t1) ∧ (!KU( chal ) @ #t2)"
+*/
+simplify
+solve( State_111111111121211111111111( chal, code, cu, fr, kOTP, pc, pw,
+                                       k, skV
+       ) ▶₀ #t1 )
+  case insencchallengesharedk_0_11111111112121111111111
+  solve( State_11111111112111( code.1, ~n, pc, ~n.3, skV ) ▶₀ #vr.15 )
+    case inpccode_0_1111111111211_case_1
+    solve( State_111111111121211( cu, pc, pw, shared_k, ~n.5 ) ▶₀ #t2 )
+      case newsharedk_0_11111111112121
+      solve( !KU( senc(chal, ~n.4) ) @ #vk )
+        case c_senc
+        solve( !KU( ~n.4 ) @ #vk.4 )
+          case outcdecode_0_111111111121111
+          solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.59 )
+            case inpccode_0_1111111111211_case_1
+            by solve( (#vr.58, 0) ~~> (#vk.1, 0) )
+          next
+            case inpccode_0_1111111111211_case_2
+            solve( (#vr.58, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( State_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.72 )
+            next
+              case d_0_snd
+              by solve( (#vr.73, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        next
+          case outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111212111
+          by contradiction /* from formulas */
+        qed
+      next
+        case outcdecode_0_111111111121111
+        solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.59 )
+          case inpccode_0_1111111111211_case_1
+          by contradiction /* impossible chain */
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.58, 0) ~~> (#vk, 0) )
+            case d_0_fst
+            by solve( State_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.72 )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case outsencchallengesharedk_0_11111111111111111111111
+        solve( State_111111111121211( cu, pc, pw, ~n.5, ~n.6 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( ~n ) @ #t2.2 )
+            case outcdecode_0_111111111121111
+            solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.81 )
+              case inpccode_0_1111111111211_case_1
+              by solve( (#vr.80, 0) ~~> (#t2.2, 0) )
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.80, 0) ~~> (#t2.2, 0) )
+                case d_0_fst
+                by solve( State_11111111112111( code.1, ~n.3, pc, pw, skV ) ▶₀ #vr.94 )
+              next
+                case d_0_snd
+                by solve( (#vr.95, 0) ~~> (#t2.2, 0) )
+              qed
+            qed
+          next
+            case outsencchallengesharedk_0_11111111111111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case outskosenckOTPsharedk_0_1111111111111111111
+        solve( State_111111111121211( cu, pc, pw, ~n.5, ~n.6 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( ~n ) @ #t2.2 )
+            case outcdecode_0_111111111121111
+            solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.77 )
+              case inpccode_0_1111111111211_case_1
+              by solve( (#vr.76, 0) ~~> (#t2.2, 0) )
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.76, 0) ~~> (#t2.2, 0) )
+                case d_0_fst
+                by solve( State_11111111112111( code.1, ~n.3, pc, pw, skV ) ▶₀ #vr.90 )
+              next
+                case d_0_snd
+                by solve( (#vr.91, 0) ~~> (#t2.2, 0) )
+              qed
+            qed
+          next
+            case outskosenckOTPsharedk_0_1111111111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    qed
+  next
+    case inpccode_0_1111111111211_case_2
+    by solve( State_11111111112111( code.1, ~n.2, pc, pw, skV ) ▶₀ #vr.48 )
+  qed
+qed
+
+lemma valid [reuse]:
+  all-traces
+  "∀ #t1 pw ch.
+    (Accept( pw, ch ) @ #t1) ⇒
+    (∃ #t2 fr k. (Ask( pw, ch, fr, k ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 pw ch.
+  (Accept( pw, ch ) @ #t1)
+ ∧
+  ∀ #t2 fr k. (Ask( pw, ch, fr, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
+                                        shared_k, signed, skV
+       ) ▶₀ #t1 )
+  case inhpwhashkOTPchallenge_0_111111111111111111111111
+  solve( State_111111111121211( cu, pc, pw, shared_k, ~n.6 ) ▶₀ #t2 )
+    case newsharedk_0_11111111112121
+    solve( !KU( h(~n.5) ) @ #vk.1 )
+      case c_h
+      solve( !KU( hash(~n.3, ~n) ) @ #vk.2 )
+        case c_hash
+        solve( !KU( ~n.3 ) @ #vk.6 )
+          case outcdecode_0_111111111121111
+          solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+            case inpccode_0_1111111111211_case_1
+            by solve( (#vr.44, 0) ~~> (#vk.2, 0) )
+          next
+            case inpccode_0_1111111111211_case_2
+            solve( (#vr.44, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( State_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+            next
+              case d_0_snd
+              by solve( (#vr.59, 0) ~~> (#vk.2, 0) )
+            qed
+          qed
+        next
+          case outskosenckOTPsharedk_0_1111111111111111111
+          by contradiction /* from formulas */
+        qed
+      next
+        case outcdecode_0_111111111121111
+        solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+          case inpccode_0_1111111111211_case_1
+          by contradiction /* impossible chain */
+        next
+          case inpccode_0_1111111111211_case_2
+          solve( (#vr.44, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( State_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case outhpwhashkOTPchallenge_0_1111111111212111111111111
+        by contradiction /* from formulas */
+      qed
+    next
+      case outcdecode_0_111111111121111
+      solve( State_11111111112111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+        case inpccode_0_1111111111211_case_1
+        by contradiction /* impossible chain */
+      next
+        case inpccode_0_1111111111211_case_2
+        solve( (#vr.44, 0) ~~> (#vk, 0) )
+          case d_0_fst
+          by solve( State_11111111112111( code, ~n.4, pc, pw, skV ) ▶₀ #vr.58 )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhpwhashkOTPchallenge_0_1111111111212111111111111
+      solve( State_11111111112111( code.1, ~n.2, pc, ~n.5, skV ) ▶₀ #vr.61 )
+        case inpccode_0_1111111111211_case_1
+        solve( State_111111111121211( cu, pc, pw, shared_k, ~n.7 ) ▶₀ #t2.1 )
+          case newsharedk_0_11111111112121
+          solve( !KU( hash(~n.3, ~n) ) @ #vk.2 )
+            case c_hash
+            solve( !KU( ~n.3 ) @ #vk.9 )
+              case outcdecode_0_111111111121111
+              solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.94 )
+                case inpccode_0_1111111111211_case_1
+                by solve( (#vr.93, 0) ~~> (#vk.2, 0) )
+              next
+                case inpccode_0_1111111111211_case_2
+                solve( (#vr.93, 0) ~~> (#vk.2, 0) )
+                  case d_0_fst
+                  by solve( State_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.107 )
+                next
+                  case d_0_snd
+                  by solve( (#vr.108, 0) ~~> (#vk.2, 0) )
+                qed
+              qed
+            next
+              case outskosenckOTPsharedk_0_1111111111111111111
+              by contradiction /* from formulas */
+            qed
+          next
+            case outcdecode_0_111111111121111
+            solve( State_11111111112111( code.1, cu, pc, pw, skV ) ▶₀ #vr.94 )
+              case inpccode_0_1111111111211_case_1
+              by contradiction /* impossible chain */
+            next
+              case inpccode_0_1111111111211_case_2
+              solve( (#vr.93, 0) ~~> (#vk.1, 0) )
+                case d_0_fst
+                by solve( State_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.107 )
+              next
+                case d_0_snd
+                by contradiction /* impossible chain */
+              qed
+            qed
+          next
+            case outhpwhashkOTPchallenge_0_1111111111212111111111111
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case inpccode_0_1111111111211_case_2
+        by solve( State_11111111112111( code.1, ~n.4, pc, pw, skV ) ▶₀ #vr.83 )
+      qed
+    qed
+  qed
+qed
+
+lemma unic_2 [reuse]:
+  all-traces
+  "¬(∃ #t1 #t2 pw ch fr k.
+      ((Ask( pw, ch, fr, k ) @ #t1) ∧ (Ask( pw, ch, fr, k ) @ #t2)) ∧
+      (¬(#t1 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 pw ch fr k.
+  (Ask( pw, ch, fr, k ) @ #t1) ∧ (Ask( pw, ch, fr, k ) @ #t2)
+ ∧
+  ¬(#t1 = #t2)"
+*/
+simplify
+solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( State_111111111121211111111111( ch, code, cu, fr, kOTP, pc, pw, k,
+                                         skV
+         ) ▶₀ #t1 )
+    case insencchallengesharedk_0_11111111112121111111111
+    solve( State_111111111121211111111111( ch, code.1, cu, ~n.1, kOTP.1, pc,
+                                           ~n.3, ~n.4, skV
+           ) ▶₀ #t2 )
+      case insencchallengesharedk_0_11111111112121111111111
+      by contradiction /* cyclic */
+    qed
+  qed
+next
+  case case_2
+  solve( State_111111111121211111111111( ch, code, cu, fr, kOTP, pc, pw, k,
+                                         skV
+         ) ▶₀ #t1 )
+    case insencchallengesharedk_0_11111111112121111111111
+    solve( State_111111111121211111111111( ch, code.1, cu, ~n.1, kOTP.1, pc,
+                                           ~n.3, ~n.4, skV
+           ) ▶₀ #t2 )
+      case insencchallengesharedk_0_11111111112121111111111
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+lemma valid_final:
+  all-traces
+  "∀ #t1 pw ch.
+    (Accept( pw, ch ) @ #t1) ⇒
+    (∃ #t2 #t3 fr k.
+      (((((Ask( pw, ch, fr, k ) @ #t2) ∧ (AskU( pw, fr ) @ #t3)) ∧
+         (#t2 < #t1)) ∧
+        (#t3 < #t2)) ∧
+       (¬(∃ #t5. (Ask( pw, ch, fr, k ) @ #t5) ∧ (¬(#t2 = #t5))))) ∧
+      (¬(∃ #t6. (AskU( pw, fr ) @ #t6) ∧ (¬(#t3 = #t6)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 pw ch.
+  (Accept( pw, ch ) @ #t1)
+ ∧
+  ∀ #t2 #t3 fr k.
+   (Ask( pw, ch, fr, k ) @ #t2) ∧ (AskU( pw, fr ) @ #t3)
+  ⇒
+   ((¬(#t2 < #t1)) ∨
+    (¬(#t3 < #t2)) ∨
+    (∃ #t5. (Ask( pw, ch, fr, k ) @ #t5) ∧ ¬(#t2 = #t5)) ∨
+    (∃ #t6. (AskU( pw, fr ) @ #t6) ∧ ¬(#t3 = #t6)))"
+*/
+simplify
+solve( State_1111111111111111111111111( ch, code, cu, kOTP, pc, pw,
+                                        shared_k, signed, skV
+       ) ▶₀ #t1 )
+  case inhpwhashkOTPchallenge_0_111111111111111111111111
+  solve( State_111111111121211111111111( ~n, code, cu, fr, kOTP, pc, ~n.5,
+                                         k, skV
+         ) ▶₀ #t2 )
+    case insencchallengesharedk_0_11111111112121111111111
+    solve( (∃ #t5. (Ask( ~n.5, ~n, ~n.7, ~n.8 ) @ #t5) ∧ ¬(#t2 = #t5))  ∥
+           (∃ #t6. (AskU( ~n.5, ~n.7 ) @ #t6) ∧ ¬(#vr.40 = #t6)) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process="new skV;"]:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="new skV;"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newskV_0_[color=#ffffff, process="new skV;"]:
+   [ State_( ), Fr( skV ) ] --> [ State_1( skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newpc_0_1[color=#ffffff, process="new pc;"]:
+   [ State_1( skV ), Fr( pc ) ] --> [ State_11( pc, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newcu_0_11[color=#ffffff, process="new cu;"]:
+   [ State_11( pc, skV ), Fr( cu ) ] --> [ State_111( cu, pc, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newpw_0_111[color=#ffffff, process="new pw;"]:
+   [ State_111( cu, pc, skV ), Fr( pw ) ]
+  -->
+   [ State_1111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventChancu_0_1111[color=#ffffff,
+                                   process="event Chan( cu );"]:
+   [ State_1111( cu, pc, pw, skV ) ]
+  --[ Chan( cu ) ]->
+   [ State_11111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventChanpc_0_11111[color=#ffffff,
+                                    process="event Chan( pc );"]:
+   [ State_11111( cu, pc, pw, skV ) ]
+  --[ Chan( pc ) ]->
+   [ State_111111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpw_0_111111[color=#ffffff, process="out(pw);"]:
+   [ State_111111( cu, pc, pw, skV ) ]
+  -->
+   [ State_1111111( cu, pc, pw, skV ), Out( pw ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventKeyskV_0_1111111[color=#ffffff,
+                                      process="event Key( skV );"]:
+   [ State_1111111( cu, pc, pw, skV ) ]
+  --[ Key( skV ) ]->
+   [ State_11111111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpkskV_0_11111111[color=#ffffff,
+                                    process="out(pk(skV));"]:
+   [ State_11111111( cu, pc, pw, skV ) ]
+  -->
+   [ State_111111111( cu, pc, pw, skV ), Out( pk(skV) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111111[color=#ffffff, process="!"]:
+   [ State_111111111( cu, pc, pw, skV ) ]
+  -->
+   [ !Semistate_1111111111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
+   [ !Semistate_1111111111( cu, pc, pw, skV ) ]
+  -->
+   [ State_1111111111( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111[color=#ffffff, process="|"]:
+   [ State_1111111111( cu, pc, pw, skV ) ]
+  -->
+   [
+   State_11111111111( cu, pc, pw, skV ),
+   State_11111111112( cu, pc, pw, skV )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insharedaencsharedkpkskVsigned_0_11111111111[color=#658040,
+                                                             process="in(shared(<aenc(shared_k, pk(skV)), signed>));"]:
+   [
+   State_11111111111( cu, pc, pw, skV ),
+   In( shared(<aenc(shared_k, pk(skV)), signed>) )
+   ]
+  -->
+   [ State_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111[color=#658040,
+                                                                   process="if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')"]:
+   [ State_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+  --[ Pred_Eq( aenc(shared_k, pk(skV)), check_rep(signed, 'loc') ) ]->
+   [ State_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111[color=#658040,
+                                                                      process="if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')"]:
+     [ State_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    --[ Pred_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [ State_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       z     = check_rep(signed.8, 'loc')
+    
+    2. signed
+             = rep(x.8, 'loc')
+       z     = x.8
+  */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111[color=#658040,
+                                                                   process="if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')"]:
+   [ State_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+  --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), check_rep(signed, 'loc') ) ]->
+   [ State_1111111111112( cu, pc, pw, shared_k, signed, skV ) ]
+
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111[color=#658040,
+                                                                      process="if aenc(shared_k, pk(skV))=check_rep(signed, 'loc')"]:
+     [ State_111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+    --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [ State_1111111111112( cu, pc, pw, shared_k, signed, skV ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       z     = check_rep(signed.8, 'loc')
+    
+    2. signed
+             = rep(x.8, 'loc')
+       z     = x.8
+  */
+
+rule (modulo E) eventSessionVpkskVsharedk_0_1111111111111[color=#658040,
+                                                          process="event SessionV( pk(skV), shared_k );"]:
+   [ State_1111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+  --[ SessionV( pk(skV), shared_k ) ]->
+   [ State_11111111111111( cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newcode_0_11111111111111[color=#658040,
+                                         process="new code;"]:
+   [ State_11111111111111( cu, pc, pw, shared_k, signed, skV ), Fr( code ) ]
+  -->
+   [ State_111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpccode_0_111111111111111[color=#658040,
+                                            process="out(pc,code);"]:
+   [ State_111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+  -->
+   [
+   Message( pc, code ),
+   Semistate_1111111111111111( code, cu, pc, pw, shared_k, signed, skV )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpccode_1_111111111111111[color=#658040,
+                                            process="out(pc,code);"]:
+   [
+   Semistate_1111111111111111( code, cu, pc, pw, shared_k, signed, skV ),
+   Ack( pc, code )
+   ]
+  -->
+   [ State_1111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inscodesenccodesharedk_0_1111111111111111[color=#658040,
+                                                          process="in(scode(senc(code, shared_k)));"]:
+   [
+   State_1111111111111111( code, cu, pc, pw, shared_k, signed, skV ),
+   In( scode(senc(code, shared_k)) )
+   ]
+  -->
+   [ State_11111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventProvScode_0_11111111111111111[color=#658040,
+                                                   process="event ProvS( code );"]:
+   [ State_11111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+  --[ ProvS( code ) ]->
+   [ State_111111111111111111( code, cu, pc, pw, shared_k, signed, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newkOTP_0_111111111111111111[color=#658040,
+                                             process="new kOTP;"]:
+   [
+   State_111111111111111111( code, cu, pc, pw, shared_k, signed, skV ),
+   Fr( kOTP )
+   ]
+  -->
+   [
+   State_1111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outskosenckOTPsharedk_0_1111111111111111111[color=#658040,
+                                                            process="out(sko(senc(kOTP, shared_k)));"]:
+   [
+   State_1111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed, skV
+   )
+   ]
+  -->
+   [
+   State_11111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed, skV
+   ),
+   Out( sko(senc(kOTP, shared_k)) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111111111111111[color=#658040, process="!"]:
+   [
+   State_11111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed, skV
+   )
+   ]
+  -->
+   [
+   !Semistate_111111111111111111111( code, cu, kOTP, pc, pw, shared_k,
+                                     signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_11111111111111111111[color=#658040, process="!"]:
+   [
+   !Semistate_111111111111111111111( code, cu, kOTP, pc, pw, shared_k,
+                                     signed, skV
+   )
+   ]
+  -->
+   [
+   State_111111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed,
+                                skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newchallenge_0_111111111111111111111[color=#658040,
+                                                     process="new challenge;"]:
+   [
+   State_111111111111111111111( code, cu, kOTP, pc, pw, shared_k, signed,
+                                skV
+   ),
+   Fr( challenge )
+   ]
+  -->
+   [
+   State_1111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                 shared_k, signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventChallchallengesharedk_0_1111111111111111111111[color=#658040,
+                                                                    process="event Chall( challenge, shared_k );"]:
+   [
+   State_1111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                 shared_k, signed, skV
+   )
+   ]
+  --[ Chall( challenge, shared_k ) ]->
+   [
+   State_11111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                  shared_k, signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsencchallengesharedk_0_11111111111111111111111[color=#658040,
+                                                                  process="out(senc(challenge, shared_k));"]:
+   [
+   State_11111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                  shared_k, signed, skV
+   )
+   ]
+  -->
+   [
+   State_111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                   shared_k, signed, skV
+   ),
+   Out( senc(challenge, shared_k) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inhpwhashkOTPchallenge_0_111111111111111111111111[color=#658040,
+                                                                  process="in(<h(pw), hash(kOTP, challenge)>);"]:
+   [
+   State_111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                   shared_k, signed, skV
+   ),
+   In( <h(pw), hash(kOTP, challenge)> )
+   ]
+  -->
+   [
+   State_1111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                    shared_k, signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventAcceptpwchallenge_0_1111111111111111111111111[color=#658040,
+                                                                   process="event Accept( pw, challenge );"]:
+   [
+   State_1111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                    shared_k, signed, skV
+   )
+   ]
+  --[ Accept( pw, challenge ) ]->
+   [
+   State_11111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                     shared_k, signed, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111111111111111111111[color=#658040,
+                                               process="0"]:
+   [
+   State_11111111111111111111111111( challenge, code, cu, kOTP, pc, pw,
+                                     shared_k, signed, skV
+   )
+   ]
+  -->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111112[color=#658040, process="0"]:
+   [ State_1111111111112( cu, pc, pw, shared_k, signed, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111112[color=#ffffff, process="!"]:
+   [ State_11111111112( cu, pc, pw, skV ) ]
+  -->
+   [ !Semistate_111111111121( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
+   [ !Semistate_111111111121( cu, pc, pw, skV ) ]
+  -->
+   [ State_111111111121( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111111121[color=#ffffff, process="|"]:
+   [ State_111111111121( cu, pc, pw, skV ) ]
+  -->
+   [
+   State_1111111111211( cu, pc, pw, skV ),
+   State_1111111111212( cu, pc, pw, skV )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inpccode_0_1111111111211[color=#504080,
+                                         process="in(pc,code);"]:
+   [ State_1111111111211( cu, pc, pw, skV ), Message( pc, code ) ]
+  -->
+   [ Ack( pc, code ), State_11111111112111( code, cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventProvUcode_0_11111111112111[color=#504080,
+                                                process="event ProvU( code );"]:
+   [ State_11111111112111( code, cu, pc, pw, skV ) ]
+  --[ ProvU( code ) ]->
+   [ State_111111111121111( code, cu, pc, pw, skV ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outcdecode_0_111111111121111[color=#504080,
+                                             process="out(cde(code));"]:
+   [ State_111111111121111( code, cu, pc, pw, skV ) ]
+  -->
+   [ State_1111111111211111( code, cu, pc, pw, skV ), Out( cde(code) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111211111[color=#504080, process="!"]:
+   [ State_1111111111211111( code, cu, pc, pw, skV ) ]
+  -->
+   [ !Semistate_11111111112111111( code, cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1111111111211111[color=#504080, process="!"]:
+   [ !Semistate_11111111112111111( code, cu, pc, pw, skV ) ]
+  -->
+   [ State_11111111112111111( code, cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newfr_0_11111111112111111[color=#504080,
+                                          process="new fr;"]:
+   [ State_11111111112111111( code, cu, pc, pw, skV ), Fr( fr ) ]
+  -->
+   [ State_111111111121111111( code, cu, fr, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventAskUpwfr_0_111111111121111111[color=#504080,
+                                                   process="event AskU( pw, fr );"]:
+   [ State_111111111121111111( code, cu, fr, pc, pw, skV ) ]
+  --[ AskU( pw, fr ) ]->
+   [ State_1111111111211111111( code, cu, fr, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outcupwfr_0_1111111111211111111[color=#504080,
+                                                process="out(cu,<pw, fr>);"]:
+   [ State_1111111111211111111( code, cu, fr, pc, pw, skV ) ]
+  -->
+   [
+   Message( cu, <pw, fr> ),
+   Semistate_11111111112111111111( code, cu, fr, pc, pw, skV )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outcupwfr_1_1111111111211111111[color=#504080,
+                                                process="out(cu,<pw, fr>);"]:
+   [
+   Semistate_11111111112111111111( code, cu, fr, pc, pw, skV ),
+   Ack( cu, <pw, fr> )
+   ]
+  -->
+   [ State_11111111112111111111( code, cu, fr, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111112111111111[color=#504080, process="0"]:
+   [ State_11111111112111111111( code, cu, fr, pc, pw, skV ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111212[color=#ffffff, process="!"]:
+   [ State_1111111111212( cu, pc, pw, skV ) ]
+  -->
+   [ !Semistate_11111111112121( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1111111111212[color=#ffffff, process="!"]:
+   [ !Semistate_11111111112121( cu, pc, pw, skV ) ]
+  -->
+   [ State_11111111112121( cu, pc, pw, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsharedk_0_11111111112121[color=#80407b,
+                                            process="new shared_k;"]:
+   [ State_11111111112121( cu, pc, pw, skV ), Fr( shared_k ) ]
+  -->
+   [ State_111111111121211( cu, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSessionPpkskVsharedk_0_111111111121211[color=#80407b,
+                                                            process="event SessionP( pk(skV), shared_k );"]:
+   [ State_111111111121211( cu, pc, pw, shared_k, skV ) ]
+  --[ SessionP( pk(skV), shared_k ) ]->
+   [ State_1111111111212111( cu, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111212111[color=#80407b,
+                                                                                   process="out(shared(<aenc(shared_k, pk(skV)), report(aenc(shared_k, pk(skV)))>));"]:
+   [ State_1111111111212111( cu, pc, pw, shared_k, skV ) ]
+  -->
+   [
+   State_11111111112121111( cu, pc, pw, shared_k, skV ),
+   Out( shared(<aenc(shared_k, pk(skV)), report(aenc(shared_k, pk(skV)))>) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incdecode_0_11111111112121111[color=#80407b,
+                                              process="in(cde(code));"]:
+   [ State_11111111112121111( cu, pc, pw, shared_k, skV ), In( cde(code) ) ]
+  -->
+   [ State_111111111121211111( code, cu, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventProvEcode_0_111111111121211111[color=#80407b,
+                                                    process="event ProvE( code );"]:
+   [ State_111111111121211111( code, cu, pc, pw, shared_k, skV ) ]
+  --[ ProvE( code ) ]->
+   [ State_1111111111212111111( code, cu, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outdscodesenccodesharedk_0_1111111111212111111[color=#80407b,
+                                                               process="out(dscode(senc(code, shared_k)));"]:
+   [ State_1111111111212111111( code, cu, pc, pw, shared_k, skV ) ]
+  -->
+   [
+   State_11111111112121111111( code, cu, pc, pw, shared_k, skV ),
+   Out( dscode(senc(code, shared_k)) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inskosenckOTPsharedk_0_11111111112121111111[color=#80407b,
+                                                            process="in(sko(senc(kOTP, shared_k)));"]:
+   [
+   State_11111111112121111111( code, cu, pc, pw, shared_k, skV ),
+   In( sko(senc(kOTP, shared_k)) )
+   ]
+  -->
+   [ State_111111111121211111111( code, cu, kOTP, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111111121211111111[color=#80407b, process="!"]:
+   [ State_111111111121211111111( code, cu, kOTP, pc, pw, shared_k, skV ) ]
+  -->
+   [
+   !Semistate_1111111111212111111111( code, cu, kOTP, pc, pw, shared_k, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_111111111121211111111[color=#80407b, process="!"]:
+   [
+   !Semistate_1111111111212111111111( code, cu, kOTP, pc, pw, shared_k, skV
+   )
+   ]
+  -->
+   [ State_1111111111212111111111( code, cu, kOTP, pc, pw, shared_k, skV ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incupwfr_0_1111111111212111111111[color=#80407b,
+                                                  process="in(cu,<pw, fr>);"]:
+   [
+   State_1111111111212111111111( code, cu, kOTP, pc, pw, shared_k, skV ),
+   Message( cu, <pw, fr> )
+   ]
+  -->
+   [
+   Ack( cu, <pw, fr> ),
+   State_11111111112121111111111( code, cu, fr, kOTP, pc, pw, shared_k, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insencchallengesharedk_0_11111111112121111111111[color=#80407b,
+                                                                 process="in(senc(challenge, shared_k));"]:
+   [
+   State_11111111112121111111111( code, cu, fr, kOTP, pc, pw, shared_k, skV
+   ),
+   In( senc(challenge, shared_k) )
+   ]
+  -->
+   [
+   State_111111111121211111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                   shared_k, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventAskpwchallengefrsharedk_0_111111111121211111111111[color=#80407b,
+                                                                        process="event Ask( pw, challenge, fr, shared_k );"]:
+   [
+   State_111111111121211111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                   shared_k, skV
+   )
+   ]
+  --[ Ask( pw, challenge, fr, shared_k ) ]->
+   [
+   State_1111111111212111111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                    shared_k, skV
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outhpwhashkOTPchallenge_0_1111111111212111111111111[color=#80407b,
+                                                                    process="out(<h(pw), hash(kOTP, challenge)>);"]:
+   [
+   State_1111111111212111111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                    shared_k, skV
+   )
+   ]
+  -->
+   [
+   State_11111111112121111111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                     shared_k, skV
+   ),
+   Out( <h(pw), hash(kOTP, challenge)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111112121111111111111[color=#80407b,
+                                               process="0"]:
+   [
+   State_11111111112121111111111111( challenge, code, cu, fr, kOTP, pc, pw,
+                                     shared_k, skV
+   )
+   ]
+  -->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-locations/OTP.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-locations/OTP.spthy
+
+  output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
+  processing time: 8.568364236s
+  secrecy_key (all-traces): verified (8 steps)
+  key_ex (all-traces): verified (15 steps)
+  secrecy_ex (all-traces): verified (11 steps)
+  unic (all-traces): verified (8 steps)
+  secrecy_chall (all-traces): verified (34 steps)
+  valid (all-traces): verified (40 steps)
+  unic_2 (all-traces): verified (8 steps)
+  valid_final (all-traces): verified (6 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/OTP.spthy
+
+  output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
+  processing time: 8.568364236s
+  secrecy_key (all-traces): verified (8 steps)
+  key_ex (all-traces): verified (15 steps)
+  secrecy_ex (all-traces): verified (11 steps)
+  unic (all-traces): verified (8 steps)
+  secrecy_chall (all-traces): verified (34 steps)
+  valid (all-traces): verified (40 steps)
+  unic_2 (all-traces): verified (8 steps)
+  valid_final (all-traces): verified (6 steps)
+
+==============================================================================
+*/

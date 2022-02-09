@@ -1,0 +1,318 @@
+theory SetAbst begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, sign/2, snd/1, true/0,
+           verify/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+heuristic: s i
+
+section{* The PKI-example *}
+
+lemma Knows_Honest_Key_imp_Revoked:
+  all-traces
+  "∀ sk #i #d.
+    ((HonestKey( sk ) @ #i) ∧ (K( sk ) @ #d)) ⇒ (∃ #r. Revoked( sk ) @ #r)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ sk #i #d.
+  (HonestKey( sk ) @ #i) ∧ (K( sk ) @ #d) ∧ ∀ #r. (Revoked( sk ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( HonestKey( sk ) @ #i )
+  case ClientKeyuserskHonestKeynskClientKeyusernsk_0_1112111
+  solve( State_1112111( ~nsk, pki, user ) ▶₀ #i )
+    case newnsk_0_111211
+    solve( !KU( ~nsk ) @ #vk )
+      case outsk_0_111211111111
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case HonestKeyskServerDBpkiuserpkskClientKeyusersk_0_11111111
+  solve( State_11111111( ~sk, pki, user ) ▶₀ #i )
+    case newsk_0_1111111
+    solve( !KU( ~sk ) @ #vk )
+      case outsk_0_111211111111
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="!"]:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newpki_0_1[color=#ffffff, process="new pki;"]:
+   [ State_1( ), Fr( pki ) ] --> [ State_11( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="!"]:
+   [ State_11( pki ) ] --> [ !Semistate_111( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+   [ !Semistate_111( pki ) ] --> [ State_111( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|"]:
+   [ State_111( pki ) ] --> [ State_1111( pki ), State_1112( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#806040, process="|"]:
+   [ State_1111( pki ) ] --> [ State_11111( pki ), State_11112( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111[color=#806040, process="|"]:
+   [ State_11111( pki ) ] --> [ State_111111( pki ), State_111112( pki ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) innewuser_0_111111[color=#806040,
+                                   process="in(<'new', user>);"]:
+   [ State_111111( pki ), In( <'new', user> ) ]
+  -->
+   [ State_1111111( pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsk_0_1111111[color=#806040, process="new ~sk;"]:
+   [ State_1111111( pki, user ), Fr( ~sk ) ]
+  -->
+   [ State_11111111( ~sk, pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) HonestKeyskServerDBpkiuserpkskClientKeyusersk_0_11111111[color=#806040,
+                                                                         process=" [ ]
+--[ HonestKey( ~sk ) ]->
+ [ ServerDB( pki, user, pk(~sk) ), ClientKey( user, ~sk ) ];"]:
+   [ State_11111111( ~sk, pki, user ) ]
+  --[ HonestKey( ~sk ) ]->
+   [
+   State_111111111( ~sk, pki, user ), ServerDB( pki, user, pk(~sk) ),
+   ClientKey( user, ~sk )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outpksk_0_111111111[color=#806040,
+                                    process="out(pk(~sk));"]:
+   [ State_111111111( ~sk, pki, user ) ]
+  -->
+   [ State_1111111111( ~sk, pki, user ), Out( pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111[color=#806040, process="0"]:
+   [ State_1111111111( ~sk, pki, user ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inusersk_0_111112[color=#806040,
+                                  process="in(<user, sk>);"]:
+   [ State_111112( pki ), In( <user, sk> ) ]
+  -->
+   [ State_1111121( pki, sk, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ServerDBpkiuserpksk_0_1111121[color=#806040,
+                                              process=" [ ] --> [ ServerDB( pki, user, pk(sk) ) ];"]:
+   [ State_1111121( pki, sk, user ) ]
+  -->
+   [ State_11111211( pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111211[color=#806040, process="0"]:
+   [ State_11111211( pki, sk, user ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inrenewuserpknsk_0_11112[color=#806040,
+                                         process="in(<'renew', user, pk(nsk)>);"]:
+   [ State_11112( pki ), In( <'renew', user, pk(nsk)> ) ]
+  -->
+   [ State_111121( nsk, pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insignrenewuserpknsksk_0_111121[color=#806040,
+                                                process="in(sign(<'renew', user, pk(nsk)>, sk));"]:
+   [
+   State_111121( nsk, pki, user ), In( sign(<'renew', user, pk(nsk)>, sk) )
+   ]
+  -->
+   [ State_1111211( nsk, pki, sk, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ServerDBpkiuserpkskServerDBpkiuserpknsk_0_1111211[color=#806040,
+                                                                  process=" [ ServerDB( pki, user, pk(sk) ) ]
+-->
+ [ ServerDB( pki, user, pk(nsk) ) ];"]:
+   [ State_1111211( nsk, pki, sk, user ), ServerDB( pki, user, pk(sk) ) ]
+  -->
+   [ State_11112111( nsk, pki, sk, user ), ServerDB( pki, user, pk(nsk) ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsignconfirmsignrenewuserpknskskpki_0_11112111[color=#806040,
+                                                                 process="out(sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki));"]:
+   [ State_11112111( nsk, pki, sk, user ) ]
+  -->
+   [
+   State_111121111( nsk, pki, sk, user ),
+   Out( sign(<'confirm', sign(<'renew', user, pk(nsk)>, sk)>, pki) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111121111[color=#806040, process="0"]:
+   [ State_111121111( nsk, pki, sk, user ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newuser_0_1112[color=#ffffff, process="new user;"]:
+   [ State_1112( pki ), Fr( user ) ] --> [ State_11121( pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11121[color=#ffffff, process="!"]:
+   [ State_11121( pki, user ) ] --> [ !Semistate_111211( pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
+   [ !Semistate_111211( pki, user ) ] --> [ State_111211( pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newnsk_0_111211[color=#518040, process="new ~nsk;"]:
+   [ State_111211( pki, user ), Fr( ~nsk ) ]
+  -->
+   [ State_1112111( ~nsk, pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ClientKeyuserskHonestKeynskClientKeyusernsk_0_1112111[color=#518040,
+                                                                      process=" [ ClientKey( user, ~sk ) ]
+--[ HonestKey( ~nsk ) ]->
+ [ ClientKey( user, ~nsk ) ];"]:
+   [ State_1112111( ~nsk, pki, user ), ClientKey( user, ~sk ) ]
+  --[ HonestKey( ~nsk ) ]->
+   [ State_11121111( ~nsk, ~sk, pki, user ), ClientKey( user, ~nsk ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outrenewuserpknsk_0_11121111[color=#518040,
+                                             process="out(<'renew', user, pk(~nsk)>);"]:
+   [ State_11121111( ~nsk, ~sk, pki, user ) ]
+  -->
+   [
+   State_111211111( ~nsk, ~sk, pki, user ), Out( <'renew', user, pk(~nsk)> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsignrenewuserpknsksk_0_111211111[color=#518040,
+                                                    process="out(sign(<'renew', user, pk(~nsk)>, ~sk));"]:
+   [ State_111211111( ~nsk, ~sk, pki, user ) ]
+  -->
+   [
+   State_1112111111( ~nsk, ~sk, pki, user ),
+   Out( sign(<'renew', user, pk(~nsk)>, ~sk) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_1112111111[color=#518040,
+                                                                  process="in(sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki));"]:
+   [
+   State_1112111111( ~nsk, ~sk, pki, user ),
+   In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
+   ]
+  -->
+   [ State_11121111111( ~nsk, ~sk, pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventRevokedsk_0_11121111111[color=#518040,
+                                             process="event Revoked( ~sk );"]:
+   [ State_11121111111( ~nsk, ~sk, pki, user ) ]
+  --[ Revoked( ~sk ) ]->
+   [ State_111211111111( ~nsk, ~sk, pki, user ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) outsk_0_111211111111[color=#518040, process="out(~sk);"]:
+   [ State_111211111111( ~nsk, ~sk, pki, user ) ]
+  -->
+   [ State_1112111111111( ~nsk, ~sk, pki, user ), Out( ~sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1112111111111[color=#518040, process="0"]:
+   [ State_1112111111111( ~nsk, ~sk, pki, user ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
+
+  output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
+  processing time: 0.575415571s
+  Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
+
+  output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
+  processing time: 0.575415571s
+  Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
+
+==============================================================================
+*/

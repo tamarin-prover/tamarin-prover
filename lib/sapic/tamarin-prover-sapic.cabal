@@ -1,0 +1,78 @@
+name:               tamarin-prover-sapic
+
+cabal-version:      >= 1.8
+build-type:         Simple
+version:            1.7.1
+license:            GPL
+license-file:       LICENSE
+category:           Theorem Provers
+author:             Robert Künnemann <robert@kunnemann.de>,
+                    Alexander Dax <alexander.dax@cispa.saarland>
+maintainer:         Robert Künnemann <robert@kunnemann.de>
+copyright:          Robert Künnemann, Alexander Dax, CISPA-Helmholtz-Centre Saarbrücken, 2019
+
+synopsis:           Library for input processes in SAPIC calculus for the tamarin prover.
+
+description:        This is an internal library of the Tamarin prover for
+                    security protocol verification
+                    (<hackage.haskell.org/package/tamarin-prover>).
+                    .
+                    This library provides a translation from processes stated in the SAPIC calculus into multiset rewrite rules.
+homepage:           https://tamarin-prover.github.io/
+
+
+source-repository head
+  type:     git
+  location: https://github.com/tamarin-prover/tamarin-prover.git
+
+----------------------
+-- library stanzas
+----------------------
+
+library
+    ghc-options:       -Wall -fwarn-tabs
+
+    ghc-prof-options:  -auto-all
+
+    build-depends:
+        aeson
+      , aeson-pretty
+      , base
+      , binary
+      , bytestring
+      , containers
+      , deepseq
+      , dlist
+      , fclabels
+      , mtl
+      , parallel
+      , parsec
+      , process
+      , safe
+      , text
+      , transformers
+      , uniplate
+      , exceptions
+      , raw-strings-qq
+      , tamarin-prover-utils
+      , tamarin-prover-term
+      , tamarin-prover-theory
+
+
+    hs-source-dirs: src
+
+    exposed-modules:
+        Sapic.Annotation
+      , Sapic.Exceptions
+      , Sapic.ProcessUtils
+      , Sapic.Locks
+      , Sapic.SecretChannels
+      , Sapic.Facts
+      , Sapic.Basetranslation
+      , Sapic.ProgressFunction
+      , Sapic.ProgressTranslation
+      , Sapic.ReliableChannelTranslation
+      , Sapic.Report
+      , Sapic
+
+    other-modules:

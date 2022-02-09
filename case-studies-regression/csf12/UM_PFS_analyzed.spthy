@@ -6,6 +6,8 @@ builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 section{* The Unified Model (UM) Key-Exchange Protocol *}
 
 rule (modulo E) generate_ltk:
@@ -208,8 +210,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/UM_PFS.spthy
@@ -218,7 +218,7 @@ analyzing: examples/csf12/UM_PFS.spthy
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 2.263482508s
+  processing time: 0.679026753s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -230,7 +230,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 2.263482508s
+  processing time: 0.679026753s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

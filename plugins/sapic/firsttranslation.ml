@@ -17,6 +17,7 @@ open Restrictions
 open Translationhelper
 open Basetranslation
 open Progressfunction
+open Lemma
 
 module ActionSet = Set.Make( Action );;
 
@@ -37,9 +38,9 @@ let rec gen trans tree p tildex  = match (process_at tree p) with
     let msrs = (* subst_by_pstate_where_needed tree p *) basemsrs in
     let tildex'1 = (try next_tildex (1::p) msrs with
         NoNextState -> match y with
-          Null -> VarSet.empty 
+          Null ->  VarSet.empty 
         | NDC | Let(_) -> tildex
-        | _ -> raise ProgrammingError)
+        | _ -> raise (ImplementationError "ImplementationError"))
     and tildex'2 = try next_tildex (2::p) msrs with
         NoNextState -> 
             (* If we don't get a new tildex because there is no next state, y should be one of the following *)
@@ -83,7 +84,7 @@ let noprogresstrans anP =
     position=[];
     left= [];
     right=[State([],VarSet.empty)] ;
-    actions= [Init]
+    actions= [InitEmpty]
   }
   in
   initrule::(gen basetrans anP [] VarSet.empty)
@@ -193,22 +194,89 @@ let progresstrans anP = (* translation for processes with progress *)
       right=[State([],varset)] ;
       actions=
         (if (Progressfunction.is_from pf []) then 
-            [Init; ProgressFrom [] ]
+            [InitEmpty; ProgressFrom [] ]
          else 
-            [Init])
+            [InitEmpty])
     }
   in
   initrule::messsageidrule::(gen trans anP [] varset )
 
+(*Old version of getting locks, problematic when there are multiple locks*)
+(* let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> [] *)
+
+(*Returns a list of positions of each defined locks*)
+let rec get_lock_positions x = match x with
+   Node(AnnotatedLock(_,a), l, r) -> a :: ( get_lock_positions (l)  @ get_lock_positions (r))
+    | Node(_, l, r) -> ( get_lock_positions (l)  @ get_lock_positions (r))
+    | _ -> []
+
+let rec remove_duplicates lst= match lst with
+      [] -> []
+    | h::hs -> h :: (remove_duplicates (List.filter (fun x -> x<>h) hs))
     
-let generate_sapic_restrictions annotated_process =
-  if (annotated_process = Empty) then ""
-  else 
-      (if contains_lookup annotated_process then res_set_in ^ res_set_notin else "")
-    (*^ (if contains_locking annotated_process then  List.map res_locking_l (get_lock_positions  annotated_process) else [])*)
-    ^ (if contains_eq annotated_process then res_predicate_eq ^ res_predicate_not_eq else "")
-    ^ (* Stuff that's always there *)
-    res_single_session (*  ^ass_immeadiate_in TODO disabled ass_immeadiate, need to change semantics in the paper *)
+let generate_sapic_restrictions op annotated_process =
+    let restrs = 
+        if (annotated_process = Empty) then []
+      else 
+          (if contains_lookup annotated_process then 
+              (if  (contains_delete annotated_process) then 
+                  [res_set_in_l;  res_set_notin_l]
+              else 
+                  [res_set_in_no_delete_l; res_set_notin_no_delete_l])
+          else [])
+          @ (if contains_locking annotated_process then  List.map res_locking_l (remove_duplicates (get_lock_positions  annotated_process)) else [])
+          @ (if contains_eq annotated_process then [res_predicate_eq_l; res_predicate_not_eq_l] else [])
+          @ (if op.progress then generate_progress_restrictions annotated_process else [])
+          @ (if op.progress && contains_resilient_io annotated_process then [res_resilient_l] else [])
+          @ (if op.accountability then [] else [res_single_session_l])
+        (*  ^ ass_immeadiate_in -> disabled, sound for most lemmas, see liveness paper
+         *                  TODO it would be better if we would actually check whether each lemma
+         *                  is of the right form so we can leave it out...
+         *                  *)
+    in
+        if op.accountability then
+            (* if an accountability lemma with control needs to be shown, we use a 
+             * more complex variant of the restritions, that applies them to only one execution *)
+            (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
+            @ (if op.progress then [progress_init_lemma_acc] else [])
+        else 
+            restrs
+             @ (if op.progress then [progress_init_lemma] else [])
+
+let annotate_eventId msr =
+    let stop_fact = LFact("Stop",[Var(var_ExecId)]) 
+    and has_init = List.exists (function InitId  -> true | _ -> false )
+    in
+    let fa  = function EventEmpty -> EventId 
+                    | InitEmpty -> InitId
+                    | o -> o 
+    and rewrite_init (l,a,r) = if has_init a then
+                    (Fr(var_ExecId)::l,a,stop_fact::r)
+                else
+                    (l,a,r)
+    and add_event_unless_empty = function
+        [] -> []
+       |l  -> if has_init l then l else EventId::l
+    and flr = function 
+        State(p,vs) -> State(p,VarSet.add var_ExecId vs)
+       |PState(p,vs) -> PState(p,VarSet.add var_ExecId vs)
+       |Semistate(p,vs) -> Semistate(p,VarSet.add var_ExecId vs)
+       |PSemistate(p,vs) -> PSemistate(p,VarSet.add var_ExecId vs)
+                    | o -> o
+    and stop_rule = 
+        { 
+          process_name = None;
+          sapic_terms = [Comment "Stop rule"];
+          position=[];
+          left=[ stop_fact];
+          right=[] ;
+          actions= [StopId]
+        }
+  in
+    let f' = function (l,a,r) -> rewrite_init (map flr l,add_event_unless_empty (map fa a),map flr r) in
+        stop_rule::(map (msrs_subst f') msr)
 
 let translation input =
   let annotated_process = annotate_locks ( sapic_tree2annotatedtree input.proc) in
@@ -221,27 +289,15 @@ let translation input =
   let msr =  
       if input.op.progress 
       then progresstrans annotated_process
-      else noprogresstrans annotated_process
-  in
-  let lemmas_tamarin = print_lemmas input.lem
-  and users_restrictions = print_restrictions input.ax
+      else noprogresstrans annotated_process 
+  and lemmas_tamarin = print_lemmas input.lem
   and predicate_restrictions = print_predicates input.pred
-  and sapic_restrictions = 
-    if input.op.progress then 
-      generate_sapic_restrictions annotated_process
-      ^ (generate_progress_restrictions annotated_process)
-      ^ res_resilient 
-    else 
-      generate_sapic_restrictions annotated_process
-  (*and sapic_restrictions = List.map print_lemmas (generate_sapic_restrictions annotated_process)*)
-  and sapic_restrictions_locks = 
-    if contains_locking annotated_process
-    then  
-      let lock_list = get_lock_positions annotated_process  
-      in
-      print_lock_restrictions  (remove_duplicates lock_list)
-    else ""
+  and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
   in
-  input.sign ^ options ^ ( print_msr msr ) ^ users_restrictions ^ sapic_restrictions ^  sapic_restrictions_locks ^
+  let msr' = if Lemma.contains_control input.lem (* equivalent to op.accountability *)
+             then annotate_eventId msr 
+             else msr
+  in
+  input.sign ^ options ^ ( print_msr msr' ) ^ sapic_restrictions ^
   predicate_restrictions ^ lemmas_tamarin 
   ^ "end"

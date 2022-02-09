@@ -43,13 +43,12 @@ analyze each lemma separately, as documented in the CSF paper in
 Fig. 12. The following commands will complete the analysis for
 LAK06_state:
 
-tamarin-prover --prove=helpingUpdateKey --heuristic=O --oraclename=LAK06_state.oracle LAK06_state.spthy
+tamarin-prover --prove=helpingUpdateKey* --heuristic=O --oraclename=LAK06_state.oracle LAK06_state.spthy
 
-tamarin-prover --prove=helpingStackHash LAK06_state.spthy
+tamarin-prover --prove=helpingStackHash* LAK06_state.spthy
 
-tamarin-prover --prove=helpingSecrecy LAK06_state_proof-secrecy.spthy
+tamarin-prover --prove=helpingSecrecy* LAK06_state_proof-secrecy.spthy
 
-tamarin-prover --prove=noninjectiveagreementTAG LAK06_state_proof-nonInjectiveAgreementTag.spthy
+tamarin-prover --prove=noninjectiveagreementTAG* LAK06_state_proof-nonInjectiveAgreementTag.spthy
 
-tamarin-prover --prove=noninjectiveagreementREADER --stop-on-trace=BFS LAK06_state.spthy
-
+tamarin-prover --prove=noninjectiveagreementREADER* --stop-on-trace=BFS LAK06_state.spthy

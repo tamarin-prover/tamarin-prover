@@ -6,6 +6,8 @@ builtins: multiset, xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
@@ -144,10 +146,7 @@ rule-equivalence
             by step( solve( !KU( ~k ) @ #vk ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk ) )
-              case tag1
-              MIRRORED
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             MIRRORED
@@ -200,10 +199,7 @@ rule-equivalence
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -248,10 +244,7 @@ rule-equivalence
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -259,10 +252,7 @@ rule-equivalence
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -347,10 +337,7 @@ rule-equivalence
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -505,10 +492,7 @@ rule-equivalence
             by step( solve( !KU( ~k ) @ #vk ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk ) )
-              case tag1
-              MIRRORED
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             MIRRORED
@@ -561,10 +545,7 @@ rule-equivalence
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -609,10 +590,7 @@ rule-equivalence
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -620,10 +598,7 @@ rule-equivalence
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -708,10 +683,7 @@ rule-equivalence
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -869,10 +841,7 @@ next
             by step( solve( !KU( ~k ) @ #vk ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk ) )
-              case tag1
-              MIRRORED
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             MIRRORED
@@ -925,10 +894,7 @@ next
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -973,10 +939,7 @@ next
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -984,10 +947,7 @@ next
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -1072,10 +1032,7 @@ next
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -1230,10 +1187,7 @@ next
             by step( solve( !KU( ~k ) @ #vk ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk ) )
-              case tag1
-              MIRRORED
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             MIRRORED
@@ -1286,10 +1240,7 @@ next
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -1334,10 +1285,7 @@ next
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -1345,10 +1293,7 @@ next
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -1433,10 +1378,7 @@ next
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -1943,10 +1885,7 @@ next
                   by step( solve( !KU( ~k ) @ #vk.3 ) )
                 next
                   case split_case_2
-                  step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case split_case_3
                   step( solve( splitEqs(1) ) )
@@ -1964,10 +1903,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.5 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -2012,10 +1948,7 @@ next
                       case c_xor_case_2
                       step( solve( !KU( (r2⊕~r2.1) ) @ #vk.5 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -2058,10 +1991,7 @@ next
                       qed
                     next
                       case c_xor_case_3
-                      step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -2204,10 +2134,7 @@ next
                       case split
                       step( solve( !KU( (~r1⊕~r2) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2 ) @ #vk.5 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2) ) ▶₀ #vk.4 ) )
@@ -2527,10 +2454,7 @@ next
                         case split_case_2
                         step( solve( !KU( (~r2⊕x) ) @ #vk.5 ) )
                           case c_xor
-                          step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                            case tag1
-                            by step( contradiction /* cyclic */ )
-                          qed
+                          by step( contradiction /* cyclic */ )
                         next
                           case coerce
                           step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.5 ) )
@@ -2940,10 +2864,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -2988,10 +2909,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3034,10 +2952,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -3093,10 +3008,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3141,10 +3053,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3187,10 +3096,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -3291,10 +3197,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3339,10 +3242,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3385,10 +3285,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -3438,10 +3335,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3486,10 +3380,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3532,10 +3423,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -3636,10 +3524,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3684,10 +3569,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3730,10 +3612,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -3786,10 +3665,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3834,10 +3710,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -3880,10 +3753,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -5427,10 +5297,7 @@ next
                 by step( solve( !KU( ~k ) @ #vk.1 ) )
               next
                 case split_case_2
-                step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                  case tag1
-                  MIRRORED
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case split_case_3
                 MIRRORED
@@ -5483,10 +5350,7 @@ next
                 case split_case_5
                 step( solve( !KU( (~k⊕~r2) ) @ #vk.1 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -5531,10 +5395,7 @@ next
                 case split_case_6
                 step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk.1 ) )
                   case c_xor_case_1
-                  step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case c_xor_case_2
                   by step( solve( !KU( ~k ) @ #vk.3 ) )
@@ -5542,10 +5403,7 @@ next
                   case c_xor_case_3
                   step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                     case c_xor
-                    step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.2 ) )
@@ -5630,10 +5488,7 @@ next
                 case split_case_7
                 step( solve( !KU( (~r2⊕x) ) @ #vk.1 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.1 ) )
@@ -5738,10 +5593,7 @@ next
                 case split_case_3
                 step( solve( !KU( (~k⊕~r2⊕~z) ) @ #vk.1 ) )
                   case c_xor_case_1
-                  step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case c_xor_case_2
                   by step( solve( !KU( ~k ) @ #vk.3 ) )
@@ -5751,10 +5603,7 @@ next
                     case fresh
                     step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                       case c_xor
-                      step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -5799,10 +5648,7 @@ next
                     case reader1
                     step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                       case c_xor
-                      step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -5890,10 +5736,7 @@ next
                   case c_xor_case_1
                   step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.2 ) )
                     case c_xor
-                    step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -5938,10 +5781,7 @@ next
                   case c_xor_case_2
                   step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.2 ) )
                     case c_xor
-                    step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -5984,10 +5824,7 @@ next
                   qed
                 next
                   case c_xor_case_3
-                  step( solve( !KU( ~r2.1 ) @ #vk.2 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.1 ) )
@@ -6791,10 +6628,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.2 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -6839,10 +6673,7 @@ next
                       case c_xor_case_2
                       step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.2 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -6885,10 +6716,7 @@ next
                       qed
                     next
                       case c_xor_case_3
-                      step( solve( !KU( ~r2.1 ) @ #vk.2 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.1 ) )
@@ -7004,10 +6832,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7052,10 +6877,7 @@ next
                       case c_xor_case_2
                       step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7098,10 +6920,7 @@ next
                       qed
                     next
                       case c_xor_case_3
-                      step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -7211,10 +7030,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7259,10 +7075,7 @@ next
                       case c_xor_case_2
                       step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7305,10 +7118,7 @@ next
                       qed
                     next
                       case c_xor_case_3
-                      step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -7425,10 +7235,7 @@ next
                     case c_xor_case_1
                     step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.5 ) )
                       case c_xor
-                      step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.5 ) )
@@ -7473,10 +7280,7 @@ next
                     case c_xor_case_2
                     step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.5 ) )
                       case c_xor
-                      step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.5 ) )
@@ -7519,10 +7323,7 @@ next
                     qed
                   next
                     case c_xor_case_3
-                    step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7632,10 +7433,7 @@ next
                     case c_xor_case_1
                     step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.5 ) )
                       case c_xor
-                      step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.5 ) )
@@ -7680,10 +7478,7 @@ next
                     case c_xor_case_2
                     step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.5 ) )
                       case c_xor
-                      step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.5 ) )
@@ -7726,10 +7521,7 @@ next
                     qed
                   next
                     case c_xor_case_3
-                    step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -7908,10 +7700,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -7956,10 +7745,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8002,10 +7788,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -8061,10 +7844,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8109,10 +7889,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8155,10 +7932,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -8259,10 +8033,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8307,10 +8078,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8353,10 +8121,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -8406,10 +8171,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8454,10 +8216,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8500,10 +8259,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -8604,10 +8360,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8652,10 +8405,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8698,10 +8448,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -8754,10 +8501,7 @@ next
                                 case c_xor_case_1
                                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8802,10 +8546,7 @@ next
                                 case c_xor_case_2
                                 step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.9 ) )
                                   case c_xor
-                                  step( solve( !KU( ~r2.1 ) @ #vk.10 ) )
-                                    case tag1
-                                    by step( contradiction /* cyclic */ )
-                                  qed
+                                  by step( contradiction /* cyclic */ )
                                 next
                                   case coerce
                                   step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.9 ) )
@@ -8848,10 +8589,7 @@ next
                                 qed
                               next
                                 case c_xor_case_3
-                                step( solve( !KU( ~r2.1 ) @ #vk.9 ) )
-                                  case tag1
-                                  by step( contradiction /* cyclic */ )
-                                qed
+                                by step( contradiction /* cyclic */ )
                               next
                                 case coerce
                                 step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.8 ) )
@@ -10398,10 +10136,7 @@ next
                   by step( solve( !KU( ~k ) @ #vk.3 ) )
                 next
                   case split_case_2
-                  step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case split_case_3
                   step( solve( splitEqs(1) ) )
@@ -10419,10 +10154,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.5 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -10467,10 +10199,7 @@ next
                       case c_xor_case_2
                       step( solve( !KU( (r2⊕~r2.1) ) @ #vk.5 ) )
                         case c_xor
-                        step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -10513,10 +10242,7 @@ next
                       qed
                     next
                       case c_xor_case_3
-                      step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                        case tag1
-                        by step( contradiction /* cyclic */ )
-                      qed
+                      by step( contradiction /* cyclic */ )
                     next
                       case coerce
                       step( solve( !KD( (~r1⊕r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -10659,10 +10385,7 @@ next
                       case split
                       step( solve( !KU( (~r1⊕~r2) ) @ #vk.4 ) )
                         case c_xor
-                        step( solve( !KU( ~r2 ) @ #vk.5 ) )
-                          case tag1
-                          by step( contradiction /* cyclic */ )
-                        qed
+                        by step( contradiction /* cyclic */ )
                       next
                         case coerce
                         step( solve( !KD( (~r1⊕~r2) ) ▶₀ #vk.4 ) )
@@ -10982,10 +10705,7 @@ next
                         case split_case_2
                         step( solve( !KU( (~r2⊕x) ) @ #vk.5 ) )
                           case c_xor
-                          step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                            case tag1
-                            by step( contradiction /* cyclic */ )
-                          qed
+                          by step( contradiction /* cyclic */ )
                         next
                           case coerce
                           step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.5 ) )
@@ -11524,10 +11244,7 @@ next
                 by step( solve( !KU( ~k ) @ #vk.1 ) )
               next
                 case split_case_2
-                step( solve( !KU( ~r2 ) @ #vk.1 ) )
-                  case tag1
-                  MIRRORED
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case split_case_3
                 MIRRORED
@@ -11580,10 +11297,7 @@ next
                 case split_case_5
                 step( solve( !KU( (~k⊕~r2) ) @ #vk.1 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -11628,10 +11342,7 @@ next
                 case split_case_6
                 step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk.1 ) )
                   case c_xor_case_1
-                  step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case c_xor_case_2
                   by step( solve( !KU( ~k ) @ #vk.3 ) )
@@ -11639,10 +11350,7 @@ next
                   case c_xor_case_3
                   step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                     case c_xor
-                    step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.2 ) )
@@ -11727,10 +11435,7 @@ next
                 case split_case_7
                 step( solve( !KU( (~r2⊕x) ) @ #vk.1 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.3 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.1 ) )
@@ -12982,10 +12687,7 @@ next
             by step( solve( !KU( ~k ) @ #vk.2 ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             step( solve( splitEqs(1) ) )
@@ -13096,10 +12798,7 @@ next
                 case c_xor_case_1
                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.4 ) )
                   case c_xor
-                  step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -13144,10 +12843,7 @@ next
                 case c_xor_case_2
                 step( solve( !KU( (r2⊕~r2.1) ) @ #vk.4 ) )
                   case c_xor
-                  step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -13190,10 +12886,7 @@ next
                 qed
               next
                 case c_xor_case_3
-                step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~r1⊕r2⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -13243,10 +12936,7 @@ next
                 case split
                 step( solve( !KU( (~r1⊕~r2) ) @ #vk.3 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r1⊕~r2) ) ▶₀ #vk.3 ) )
@@ -13566,10 +13256,7 @@ next
                   case split_case_2
                   step( solve( !KU( (~r2⊕x) ) @ #vk.4 ) )
                     case c_xor
-                    step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.4 ) )
@@ -14867,10 +14554,7 @@ next
             by step( solve( !KU( ~k ) @ #vk.2 ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             step( solve( splitEqs(1) ) )
@@ -14981,10 +14665,7 @@ next
                 case c_xor_case_1
                 step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.4 ) )
                   case c_xor
-                  step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -15029,10 +14710,7 @@ next
                 case c_xor_case_2
                 step( solve( !KU( (r2⊕~r2.1) ) @ #vk.4 ) )
                   case c_xor
-                  step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -15075,10 +14753,7 @@ next
                 qed
               next
                 case c_xor_case_3
-                step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~r1⊕r2⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -15128,10 +14803,7 @@ next
                 case split
                 step( solve( !KU( (~r1⊕~r2) ) @ #vk.3 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~r1⊕~r2) ) ▶₀ #vk.3 ) )
@@ -15451,10 +15123,7 @@ next
                   case split_case_2
                   step( solve( !KU( (~r2⊕x) ) @ #vk.4 ) )
                     case c_xor
-                    step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                      case tag1
-                      by step( contradiction /* cyclic */ )
-                    qed
+                    by step( contradiction /* cyclic */ )
                   next
                     case coerce
                     step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.4 ) )
@@ -15658,10 +15327,7 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
-        step( solve( !KU( ~r2 ) @ #vk ) )
-          case tag1
-          MIRRORED
-        qed
+        by step( contradiction /* cyclic */ )
       next
         case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
@@ -15711,10 +15377,7 @@ next
         case split_case_4
         step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
           case c_xor
-          step( solve( !KU( ~r2 ) @ #vk.1 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case coerce
           step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -15762,10 +15425,7 @@ next
         case split_case_6
         step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
           case c_xor_case_1
-          step( solve( !KU( ~r2 ) @ #vk.2 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case c_xor_case_2
           by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -15773,10 +15433,7 @@ next
           case c_xor_case_3
           step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
             case c_xor
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case coerce
             step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -15861,10 +15518,7 @@ next
         case split_case_7
         step( solve( !KU( (~r2⊕x) ) @ #vk ) )
           case c_xor
-          step( solve( !KU( ~r2 ) @ #vk.2 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case coerce
           step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -15962,10 +15616,7 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
-        step( solve( !KU( ~r2 ) @ #vk ) )
-          case tag1
-          MIRRORED
-        qed
+        by step( contradiction /* cyclic */ )
       next
         case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
@@ -16015,10 +15666,7 @@ next
         case split_case_4
         step( solve( !KU( (~k⊕~r2) ) @ #vk ) )
           case c_xor
-          step( solve( !KU( ~r2 ) @ #vk.1 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case coerce
           step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk ) )
@@ -16066,10 +15714,7 @@ next
         case split_case_6
         step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk ) )
           case c_xor_case_1
-          step( solve( !KU( ~r2 ) @ #vk.2 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case c_xor_case_2
           by step( solve( !KU( ~k ) @ #vk.2 ) )
@@ -16077,10 +15722,7 @@ next
           case c_xor_case_3
           step( solve( !KU( (~k⊕~r2) ) @ #vk.2 ) )
             case c_xor
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case coerce
             step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.1 ) )
@@ -16165,10 +15807,7 @@ next
         case split_case_7
         step( solve( !KU( (~r2⊕x) ) @ #vk ) )
           case c_xor
-          step( solve( !KU( ~r2 ) @ #vk.2 ) )
-            case tag1
-            by step( contradiction /* cyclic */ )
-          qed
+          by step( contradiction /* cyclic */ )
         next
           case coerce
           step( solve( !KD( (~r2⊕x) ) ▶₀ #vk ) )
@@ -16369,10 +16008,7 @@ next
             by step( solve( !KU( ~k ) @ #vk.3 ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             step( solve( splitEqs(2) ) )
@@ -16773,10 +16409,7 @@ next
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.5 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -16821,10 +16454,7 @@ next
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk.3 ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.6 ) )
@@ -16832,10 +16462,7 @@ next
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.6 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.4 ) )
@@ -16920,10 +16547,7 @@ next
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk.3 ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.3 ) )
@@ -17028,10 +16652,7 @@ next
             case split_case_3
             step( solve( !KU( (~k⊕~r2⊕~z) ) @ #vk.3 ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.6 ) )
@@ -17041,10 +16662,7 @@ next
                 case fresh
                 step( solve( !KU( (~k⊕~r2) ) @ #vk.6 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.5 ) )
@@ -17089,10 +16707,7 @@ next
                 case reader1
                 step( solve( !KU( (~k⊕~r2) ) @ #vk.6 ) )
                   case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                    case tag1
-                    by step( contradiction /* cyclic */ )
-                  qed
+                  by step( contradiction /* cyclic */ )
                 next
                   case coerce
                   step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.5 ) )
@@ -17180,10 +16795,7 @@ next
               case c_xor_case_1
               step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.5 ) )
                 case c_xor
-                step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -17228,10 +16840,7 @@ next
               case c_xor_case_2
               step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.5 ) )
                 case c_xor
-                step( solve( !KU( ~r2.1 ) @ #vk.7 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.4 ) )
@@ -17274,10 +16883,7 @@ next
               qed
             next
               case c_xor_case_3
-              step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.3 ) )
@@ -17338,10 +16944,7 @@ next
           case split_case_3
           step( solve( !KU( (~k⊕~r2⊕~z) ) @ #vk.1 ) )
             case c_xor_case_1
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case c_xor_case_2
             by step( solve( !KU( ~k ) @ #vk.3 ) )
@@ -17351,10 +16954,7 @@ next
               case fresh
               step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -17399,10 +16999,7 @@ next
               case reader1
               step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.4 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -17490,10 +17087,7 @@ next
             case c_xor_case_1
             step( solve( !KU( (~r1⊕~r2.1) ) @ #vk.2 ) )
               case c_xor
-              step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r1⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -17538,10 +17132,7 @@ next
             case c_xor_case_2
             step( solve( !KU( (~r2⊕~r2.1) ) @ #vk.2 ) )
               case c_xor
-              step( solve( !KU( ~r2.1 ) @ #vk.4 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕~r2.1) ) ▶₀ #vk.2 ) )
@@ -17584,10 +17175,7 @@ next
             qed
           next
             case c_xor_case_3
-            step( solve( !KU( ~r2.1 ) @ #vk.2 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case coerce
             step( solve( !KD( (~r1⊕~r2⊕~r2.1) ) ▶₀ #vk.1 ) )
@@ -17741,10 +17329,7 @@ next
             by step( solve( !KU( ~k ) @ #vk.3 ) )
           next
             case split_case_2
-            step( solve( !KU( ~r2 ) @ #vk.3 ) )
-              case tag1
-              by step( contradiction /* cyclic */ )
-            qed
+            by step( contradiction /* cyclic */ )
           next
             case split_case_3
             step( solve( splitEqs(2) ) )
@@ -18145,10 +17730,7 @@ next
             case split_case_5
             step( solve( !KU( (~k⊕~r2) ) @ #vk.3 ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.5 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 ) )
@@ -18193,10 +17775,7 @@ next
             case split_case_6
             step( solve( !KU( (~k⊕~r2⊕z) ) @ #vk.3 ) )
               case c_xor_case_1
-              step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.6 ) )
@@ -18204,10 +17783,7 @@ next
               case c_xor_case_3
               step( solve( !KU( (~k⊕~r2) ) @ #vk.6 ) )
                 case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.7 ) )
-                  case tag1
-                  by step( contradiction /* cyclic */ )
-                qed
+                by step( contradiction /* cyclic */ )
               next
                 case coerce
                 step( solve( !KD( (~k⊕~r2) ) ▶₀ #vk.4 ) )
@@ -18292,10 +17868,7 @@ next
             case split_case_7
             step( solve( !KU( (~r2⊕x) ) @ #vk.3 ) )
               case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                case tag1
-                by step( contradiction /* cyclic */ )
-              qed
+              by step( contradiction /* cyclic */ )
             next
               case coerce
               step( solve( !KD( (~r2⊕x) ) ▶₀ #vk.3 ) )
@@ -18416,8 +17989,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/diff-models/CH07-UK2.spthy
@@ -18426,10 +17997,10 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK2.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 309.222525753s
+  processing time: 94.256628796s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (6116 steps)
+  DiffLemma:  Observational_equivalence : verified (5973 steps)
 
 ------------------------------------------------------------------------------
 
@@ -18439,10 +18010,10 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 309.222525753s
+  processing time: 94.256628796s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (6116 steps)
+  DiffLemma:  Observational_equivalence : verified (5973 steps)
 
 ==============================================================================
 */

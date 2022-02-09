@@ -400,6 +400,7 @@ insertAtom ato = case ato of
     Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j)
                         return Unchanged
     Last i        -> insertLast (ltermNodeId' i)
+    Syntactic _   -> return Unchanged
 
 -- | Insert a 'Guarded' formula. Ensures that existentials, conjunctions, negated
 -- last atoms, and negated less atoms, are immediately solved using the rules
@@ -613,7 +614,7 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m {-|| isXor m-}) && (apply subst m /= m) ->
+          | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
                   M'.insertWith combineGoalStatus (apply subst goal) status

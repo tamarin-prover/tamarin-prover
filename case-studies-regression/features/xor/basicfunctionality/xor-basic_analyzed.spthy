@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) testsend:
    [ Fr( ~x ), Fr( ~y ), Fr( ~a ), Fr( ~b ) ]
   --[ OnlyOnce( ), Secret( (~x⊕~y) ) ]->
@@ -197,8 +199,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/xor/basicfunctionality/xor-basic.spthy
@@ -207,7 +207,7 @@ analyzing: examples/features/xor/basicfunctionality/xor-basic.spthy
 analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
 
   output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 0.625606741s
+  processing time: 0.839934272s
   secrecybroken (all-traces): falsified - found trace (19 steps)
 
 ------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
 
   output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 0.625606741s
+  processing time: 0.839934272s
   secrecybroken (all-traces): falsified - found trace (19 steps)
 
 ==============================================================================

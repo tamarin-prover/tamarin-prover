@@ -1,0 +1,179 @@
+theory NSLPK3
+begin
+
+builtins: asymmetric-encryption
+
+/*
+   Protocol:    The classic three message version of the
+                Needham-Schroeder-Lowe Public Key Protocol
+   Modeler:     Simon Meier
+   Date:        June 2012
+   Source:      Modeled after the description by Paulson in
+                Isabelle/HOL/Auth/NS_Public.thy.
+
+   Status:      working
+
+   Note that we are using explicit global constants for discerning the
+   different encryption instead of the implicit sources.
+ */
+
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA), !Pk($A, pk(~ltkA)), Out(pk(~ltkA)) ]
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ RevLtk(A)    ]-> [ Out(ltkA) ]
+
+
+/* We formalize the following protocol
+
+  protocol NSLPK3 {
+    1. I -> R: {'1',ni,I}pk(R)
+    2. I <- R: {'2',ni,nr,R}pk(I)
+    3. I -> R: {'3',nr}pk(R)
+  }
+*/
+
+rule I_1:
+  let m1 = aenc{'1', ~ni, $I}pkR
+  in
+    [ Fr(~ni)
+    , !Pk($R, pkR)
+    ]
+  --[ OUT_I_1(m1)
+    ]->
+    [ Out( m1 )
+    , St_I_1($I, $R, ~ni)
+    ]
+
+rule R_1:
+  let m1 = aenc{'1', ni, I}pk(ltkR)
+      m2 = aenc{'2', ni, ~nr, $R}pkI
+  in
+    [ !Ltk($R, ltkR)
+    , In( m1 )
+    , !Pk(I, pkI)
+    , Fr(~nr)
+    ]
+  --[ IN_R_1_ni( ni, m1 )
+    , OUT_R_1( m2 )
+    , Running(I, $R, <'init',ni,~nr>)
+    ]->
+    [ Out( m2 )
+    , St_R_1($R, I, ni, ~nr)
+    ]
+
+rule I_2:
+  let m2 = aenc{'2', ni, nr, R}pk(ltkI)
+      m3 = aenc{'3', nr}pkR
+  in
+    [ St_I_1(I, R, ni)
+    , !Ltk(I, ltkI)
+    , In( m2 )
+    , !Pk(R, pkR)
+    ]
+  --[ IN_I_2_nr( nr, m2)
+    , Commit (I, R, <'init',ni,nr>)  // need to log identities explicitely to
+    , Running(R, I, <'resp',ni,nr>)  // specify that they must not be
+                                     // compromised in the property.
+    ]->
+    [ Out( m3 )
+    , Secret(I,R,nr)
+    , Secret(I,R,ni)
+    ]
+
+rule R_2:
+    [ St_R_1(R, I, ni, nr)
+    , !Ltk(R, ltkR)
+    , In( aenc{'3', nr}pk(ltkR) )
+    ]
+  --[ Commit (R, I, <'resp',ni,nr>)
+    ]->
+    [ Secret(R,I,nr)
+    , Secret(R,I,ni)
+    ]
+
+/* TODO: Also model session-key reveals and adapt security properties. */
+rule Secrecy_claim:
+  [ Secret(A, B, m) ] --[ Secret(A, B, m) ]-> []
+
+
+
+/* Note that we are using an untyped protocol model.
+The contents of the 'ni' variable in rule R_1 may therefore in general be any
+message. This leads to unsolved chain constraints when checking what message
+can be extracted from the message sent by rule R_1. In order to get rid of
+these constraints, we require the following sources invariant that relates the
+point of instantiation to the point of sending by either the adversary or the
+initiator.
+
+In order to understand the use of this sources invariant you might try the
+follwing experiment. Comment out this sources invariant and then check the
+precomputed case distinctions in the GUI. Try to complete the proof of the
+'nonce_secrecy' lemma.
+*/
+lemma types [sources]:
+  " (All ni m1 #i.
+       IN_R_1_ni( ni, m1) @ i
+       ==>
+       ( (Ex #j. KU(ni) @ j & j < i)
+       | (Ex #j. OUT_I_1( m1 ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+  "
+
+// Nonce secrecy from the perspective of both the initiator and the responder.
+lemma nonce_secrecy:
+  " /* It cannot be that */
+    not(
+        Ex A B s #i.
+          /* somebody claims to have setup a shared secret, */
+          Secret(A, B, s) @ i
+          /* but the adversary knows it */
+        & (Ex #j. K(s) @ j)
+          /* without having performed a long-term key reveal. */
+        & not (Ex #r. RevLtk(A) @ r)
+        & not (Ex #r. RevLtk(B) @ r)
+       )"
+
+// Injective agreement from the perspective of both the initiator and the responder.
+lemma injective_agree:
+  " /* Whenever somebody commits to running a session, then*/
+    All actor peer params #i.
+        Commit(actor, peer, params) @ i
+      ==>
+        /* there is somebody running a session with the same parameters */
+          (Ex #j. Running(actor, peer, params) @ j & j < i
+            /* and there is no other commit on the same parameters */
+            & not(Ex actor2 peer2 #i2.
+                    Commit(actor2, peer2, params) @ i2 & not(#i = #i2)
+                 )
+          )
+        /* or the adversary perform a long-term key reveal on actor or peer */
+        | (Ex #r. RevLtk(actor) @ r)
+        | (Ex #r. RevLtk(peer)  @ r)
+  "
+
+// Consistency check: ensure that secrets can be shared between honest agents.
+lemma session_key_setup_possible:
+  exists-trace
+  " /* It is possible that */
+    Ex A B s #i.
+      /* somebody claims to have setup a shared secret, */
+      Secret(A, B, s) @ i
+      /* without the adversary having performed a long-term key reveal. */
+    & not (Ex #r. RevLtk(A) @ r)
+    & not (Ex #r. RevLtk(B) @ r)
+  "
+
+end

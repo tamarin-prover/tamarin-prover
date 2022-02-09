@@ -71,6 +71,7 @@ are part of every installation of the Tamarin prover. See
 following sub-directories to organize the models.
 
 ~~~~
+accountability/ case studies for our 'Automated Verification of Accountability in Security Protocols' paper.
 csf12/         the AKE case studies from our CSF'12 paper.
 classic/       classic security protocols like the ones from
                [SPORE](http://www.lsv.ens-cachan.fr/Software/spore/table.html)
@@ -83,6 +84,7 @@ ake/           more AKE examples including ID-based and tripartite group KE
                protocols based on bilinear pairing
 features/      (small) models that demonstrate a given feature
 ccs15/	       the observational equivalence case studies from our CCS'15 paper
+csf-18/        the XOR case studies from the CSF'18 paper
 ~~~~
 
 Feel free to add more sub-directories and describe them here.

@@ -1,0 +1,393 @@
+theory NSPK3 begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !Ltk( $A, ~ltkA ), !Pk( $A, pk(~ltkA) ), Out( pk(~ltkA) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltkA ) ] --[ RevLtk( A ) ]-> [ Out( ltkA ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) I_1:
+   [ Fr( ~ni ), !Pk( $R, pkR ) ]
+  --[ OUT_I_1( aenc(<'1', ~ni, $I>, pkR) ) ]->
+   [ Out( aenc(<'1', ~ni, $I>, pkR) ), St_I_1( $I, $R, ~ni ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) R_1:
+   [
+   !Ltk( $R, ltkR ), In( aenc(<'1', ni, I>, pk(ltkR)) ), !Pk( I, pkI ),
+   Fr( ~nr )
+   ]
+  --[
+  IN_R_1_ni( ni, aenc(<'1', ni, I>, pk(ltkR)) ),
+  OUT_R_1( aenc(<'2', ni, ~nr>, pkI) ), Running( I, $R, <'init', ni, ~nr> )
+  ]->
+   [ Out( aenc(<'2', ni, ~nr>, pkI) ), St_R_1( $R, I, ni, ~nr ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) I_2:
+   [
+   St_I_1( I, R, ni ), !Ltk( I, ltkI ), In( aenc(<'2', ni, nr>, pk(ltkI)) ),
+   !Pk( R, pkR )
+   ]
+  --[
+  IN_I_2_nr( nr, aenc(<'2', ni, nr>, pk(ltkI)) ),
+  Commit( I, R, <'init', ni, nr> ), Running( R, I, <'resp', ni, nr> )
+  ]->
+   [ Out( aenc(<'3', nr>, pkR) ), Secret( I, R, nr ), Secret( I, R, ni ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) R_2:
+   [
+   St_R_1( R, I, ni, nr ), !Ltk( R, ltkR ), In( aenc(<'3', nr>, pk(ltkR)) )
+   ]
+  --[ Commit( R, I, <'resp', ni, nr> ) ]->
+   [ Secret( R, I, nr ), Secret( R, I, ni ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Secrecy_claim:
+   [ Secret( A, B, m ) ] --[ Secret( A, B, m ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma types [sources]:
+  all-traces
+  "(∀ ni m1 #i.
+     (IN_R_1_ni( ni, m1 ) @ #i) ⇒
+     ((∃ #j. (!KU( ni ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
+   (∀ nr m2 #i.
+     (IN_I_2_nr( nr, m2 ) @ #i) ⇒
+     ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. OUT_R_1( m2 ) @ #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ ni m1 #i.
+           (IN_R_1_ni( ni, m1 ) @ #i)
+          ∧
+           (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥))  ∥
+         (∃ nr m2 #i.
+           (IN_I_2_nr( nr, m2 ) @ #i)
+          ∧
+           (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+           (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( ni ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j. (OUT_I_1( aenc(<'1', ni, I>, pk(ltkR)) ) @ #j) ∧ ¬(last(#j))) )
+      case case_1
+      solve( !Ltk( $R, ltkR ) ▶₀ #i )
+        case Register_pk
+        solve( !Pk( I, pkI ) ▶₂ #i )
+          case Register_pk
+          solve( !KU( aenc(<'1', ni, $A>, pk(~ltkA)) ) @ #vk )
+            case I_1
+            by contradiction /* from formulas */
+          next
+            case I_2
+            solve( (∃ #j. (!KU( nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (OUT_R_1( aenc(<'2', ~ni.1, nr.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            qed
+          next
+            case R_1
+            solve( (∃ #j. (!KU( ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                   (∃ #j.
+                     (OUT_I_1( aenc(<'1', ni.1, $A.1>, pk(~ltkA.3)) ) @ #j) ∧ ¬(last(#j))) )
+              case case_1
+              by contradiction /* cyclic */
+            next
+              case case_2
+              by contradiction /* impossible chain */
+            qed
+          next
+            case c_aenc
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( nr ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+           (∃ #j. (OUT_R_1( aenc(<'2', ni, nr>, pk(ltkI)) ) @ #j) ∧ ¬(last(#j))) )
+      case case_1
+      solve( St_I_1( I, R, ni ) ▶₀ #i )
+        case I_1
+        solve( !Ltk( $I, ltkI ) ▶₁ #i )
+          case Register_pk
+          solve( !Pk( $R, pkR ) ▶₃ #i )
+            case Register_pk
+            solve( !KU( aenc(<'2', ~ni, nr>, pk(~ltkA)) ) @ #vk )
+              case I_2
+              solve( (∃ #j. (!KU( nr.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                     (∃ #j.
+                       (OUT_R_1( aenc(<'2', ~ni.1, nr.1>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case R_1_case_1
+              by contradiction /* from formulas */
+            next
+              case R_1_case_2
+              solve( (∃ #j. (!KU( ni.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.4))  ∥
+                     (∃ #j.
+                       (OUT_I_1( aenc(<'1', ni.1, $A>, pk(~ltkA.4)) ) @ #j) ∧ ¬(last(#j))) )
+                case case_1
+                by contradiction /* cyclic */
+              next
+                case case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case c_aenc
+              by contradiction /* from formulas */
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma nonce_secrecy:
+  all-traces
+  "¬(∃ A B s #i.
+      (((Secret( A, B, s ) @ #i) ∧ (∃ #j. K( s ) @ #j)) ∧
+       (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+      (¬(∃ #r. RevLtk( B ) @ #r)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∃ #j. (K( s ) @ #j)) ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( Secret( A, B, s ) ▶₀ #i )
+  case R_2_case_1
+  solve( !KU( ~nr ) @ #vk )
+    case I_2
+    solve( !KU( ~ltkA.3 ) @ #vk.4 )
+      case Reveal_ltk
+      solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk.2 )
+        case I_2
+        solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA.2)) ) @ #vk.3 )
+          case c_aenc
+          solve( !KU( ~ni ) @ #vk.10 )
+            case I_1
+            solve( !KU( ~ltkA.4 ) @ #vk.12 )
+              case Reveal_ltk
+              solve( !KU( aenc(<'2', ~ni.1, ~nr>, pk(~ltkA.5)) ) @ #vk.8 )
+                case c_aenc
+                solve( !KU( ~ni.1 ) @ #vk.17 )
+                  case R_1
+                  solve( !KU( ~ltkA.7 ) @ #vk.19 )
+                    case Reveal_ltk
+                    solve( !KU( aenc(<'2', ~ni, ~nr>, pk(~ltkA.3)) ) @ #vk.13 )
+                      case R_1
+                      solve( !KU( pk(~ltkA.2) ) @ #vk.14 )
+                        case Register_pk
+                        solve( !KU( pk(~ltkA.6) ) @ #vk.17 )
+                          case Register_pk
+                          solve( !KU( aenc(<'1', ~ni.1, $I>, pk(~ltkA.7)) ) @ #vk.19 )
+                            case I_1
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma injective_agree:
+  all-traces
+  "∀ actor peer params #i.
+    (Commit( actor, peer, params ) @ #i) ⇒
+    (((∃ #j.
+        ((Running( actor, peer, params ) @ #j) ∧ (#j < #i)) ∧
+        (¬(∃ actor2 peer2 #i2.
+            (Commit( actor2, peer2, params ) @ #i2) ∧ (¬(#i = #i2))))) ∨
+      (∃ #r. RevLtk( actor ) @ #r)) ∨
+     (∃ #r. RevLtk( peer ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ actor peer params #i.
+  (Commit( actor, peer, params ) @ #i)
+ ∧
+  (∀ #j.
+    (Running( actor, peer, params ) @ #j)
+   ⇒
+    ((¬(#j < #i)) ∨
+     (∃ actor2 peer2 #i2.
+       (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2)))) ∧
+  (∀ #r. (RevLtk( actor ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (RevLtk( peer ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( Commit( actor, peer, params ) @ #i )
+  case R_2
+  solve( St_R_1( actor, peer, ni, nr ) ▶₀ #i )
+    case R_1
+    solve( !Ltk( $R, ltkR ) ▶₁ #i )
+      case Register_pk
+      solve( !KU( aenc(<'3', ~nr>, pk(~ltkA)) ) @ #vk )
+        case c_aenc
+        solve( !KU( ~nr ) @ #vk.5 )
+          case I_2
+          solve( !KU( ~ltkA.3 ) @ #vk.7 )
+            case Reveal_ltk
+            solve( !KU( aenc(<'1', ~ni, $A>, pk(~ltkA.2)) ) @ #vk.4 )
+              case c_aenc
+              solve( !KU( ~ni ) @ #vk.12 )
+                case I_1
+                solve( !KU( ~ltkA.4 ) @ #vk.14 )
+                  case Reveal_ltk
+                  solve( !KU( pk(~ltkA) ) @ #vk.8 )
+                    case Register_pk
+                    solve( !KU( aenc(<'2', ~ni, ~nr>, pk(~ltkA.3)) ) @ #vk.11 )
+                      case R_1
+                      solve( !KU( pk(~ltkA.2) ) @ #vk.12 )
+                        case Register_pk
+                        SOLVED // trace found
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma session_key_setup_possible:
+  exists-trace
+  "∃ A B s #i.
+    ((Secret( A, B, s ) @ #i) ∧ (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+    (¬(∃ #r. RevLtk( B ) @ #r))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧ (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( Secret( A, B, s ) ▶₀ #i )
+  case I_2_case_1
+  solve( !KU( aenc(<'2', ~ni, s>, pk(~ltkA)) ) @ #vk )
+    case R_1
+    solve( !KU( aenc(<'1', ~ni, $I>, pk(~ltkA.3)) ) @ #vk.1 )
+      case I_1
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/classic/NSPK3.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/classic/NSPK3.spthy
+
+  output:          examples/classic/NSPK3.spthy.tmp
+  processing time: 1.969025694s
+  types (all-traces): verified (33 steps)
+  nonce_secrecy (all-traces): falsified - found trace (16 steps)
+  injective_agree (all-traces): falsified - found trace (14 steps)
+  session_key_setup_possible (exists-trace): verified (5 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/classic/NSPK3.spthy
+
+  output:          examples/classic/NSPK3.spthy.tmp
+  processing time: 1.969025694s
+  types (all-traces): verified (33 steps)
+  nonce_secrecy (all-traces): falsified - found trace (16 steps)
+  injective_agree (all-traces): falsified - found trace (14 steps)
+  session_key_setup_possible (exists-trace): verified (5 steps)
+
+==============================================================================
+*/

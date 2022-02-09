@@ -1,0 +1,10 @@
+The following case studies are in the repository, but cannot be proven automatically.
+
+PKCS11/pkcs11-templates.spthy 
+# heavy use of manual lemmas, not part of regresstion tests
+
+PKCS11/pkcs11-dynamic-policy.spthy \ 
+# not working 
+
+envelope/envelope.spthy envelope/envelope_simpler.spthy envelope/envelope_allowsattack.spthy \ 
+# these examples were never completed and are here for reference only

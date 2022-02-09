@@ -1,0 +1,11 @@
+theory function_application begin
+
+functions: true/0,eq/2
+equations: eq(x,x)=x
+predicate: True(x) <=> (x = true())
+
+rule A:
+  [In(x)] --[ _restrict(True(eq(x,x))) ]-> []
+
+end
+

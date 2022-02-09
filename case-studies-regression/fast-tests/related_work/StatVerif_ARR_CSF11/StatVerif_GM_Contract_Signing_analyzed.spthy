@@ -1,0 +1,415 @@
+theory StatVerif_GM_Contract_Signing begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
+           pcs/3, pk/1, sign/2, snd/1, true/0
+equations:
+    check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
+    checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
+    convertpcs(zsk, pcs(sign(xsk, xc), ypk, pk(zsk))) = sign(xsk, xc),
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+rule (modulo E) Setup_TTP:
+   [ Fr( seed ) ] --> [ !TTP( seed ), Out( pk(seed) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Abort1:
+   [ !TTP( skT ), In( <'abort', ct, pk1, pk2, pcsig1> ) ]
+  --[
+  Answered( ct ), Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true ),
+  Abort1( ct )
+  ]->
+   [ Out( sign(skT, pcsig1) ) ]
+
+  /*
+  rule (modulo AC) Abort1:
+     [ !TTP( skT ), In( <'abort', ct, pk1, pk2, pcsig1> ) ]
+    --[ Answered( ct ), Eq( z, true ), Abort1( ct ) ]->
+     [ Out( sign(skT, pcsig1) ) ]
+    variants (modulo AC)
+    1. ct    = ct.9
+       pcsig1
+             = pcsig1.10
+       pk1   = pk1.11
+       pk2   = pk2.12
+       skT   = skT.13
+       z     = checkpcs(ct.9, pk1.11, pk2.12, pk(skT.13), pcsig1.10)
+    
+    2. ct    = ct.12
+       pcsig1
+             = pcs(sign(x.20, ct.12), pk2.15, pk(skT.16))
+       pk1   = pk(x.20)
+       pk2   = pk2.15
+       skT   = skT.16
+       z     = true
+  */
+
+rule (modulo E) Resolve2:
+   [ !TTP( skT ), In( <'resolve2', ct, pk1, pk2, pcsig1, sig2> ) ]
+  --[
+  Answered( ct ), Eq( check_getmsg(pk2, sig2), ct ),
+  Eq( checkpcs(ct, pk1, pk2, pk(skT), pcsig1), true ), Resolve2( ct )
+  ]->
+   [ Out( sign(skT, <convertpcs(skT, pcsig1), sig2>) ) ]
+
+  /*
+  rule (modulo AC) Resolve2:
+     [ !TTP( skT ), In( <'resolve2', ct, pk1, pk2, pcsig1, sig2> ) ]
+    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true ), Resolve2( ct ) ]->
+     [ Out( sign(skT, <z, sig2>) ) ]
+    variants (modulo AC)
+    1. ct    = ct.12
+       pcsig1
+             = pcsig1.13
+       pk1   = pk1.14
+       pk2   = pk2.15
+       sig2  = sig2.16
+       skT   = skT.17
+       z     = convertpcs(skT.17, pcsig1.13)
+       z.1   = check_getmsg(pk2.15, sig2.16)
+       z.2   = checkpcs(ct.12, pk1.14, pk2.15, pk(skT.17), pcsig1.13)
+    
+    2. ct    = ct.14
+       pcsig1
+             = pcsig1.15
+       pk1   = pk1.16
+       pk2   = pk(x.24)
+       sig2  = sign(x.24, z.22)
+       skT   = skT.19
+       z     = convertpcs(skT.19, pcsig1.15)
+       z.1   = z.22
+       z.2   = checkpcs(ct.14, pk1.16, pk(x.24), pk(skT.19), pcsig1.15)
+    
+    3. ct    = ct.16
+       pcsig1
+             = pcs(sign(x.26, x.27), x.28, pk(skT.21))
+       pk1   = pk1.18
+       pk2   = pk2.19
+       sig2  = sig2.20
+       skT   = skT.21
+       z     = sign(x.26, x.27)
+       z.1   = check_getmsg(pk2.19, sig2.20)
+       z.2   = checkpcs(ct.16, pk1.18, pk2.19, pk(skT.21),
+                        pcs(sign(x.26, x.27), x.28, pk(skT.21)))
+    
+    4. ct    = ct.16
+       pcsig1
+             = pcs(sign(x.27, ct.16), pk2.19, pk(skT.21))
+       pk1   = pk(x.27)
+       pk2   = pk2.19
+       sig2  = sig2.20
+       skT   = skT.21
+       z     = sign(x.27, ct.16)
+       z.1   = check_getmsg(pk2.19, sig2.20)
+       z.2   = true
+    
+    5. ct    = ct.16
+       pcsig1
+             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
+       pk1   = pk(x.27)
+       pk2   = pk(x.28)
+       sig2  = sign(x.28, z.24)
+       skT   = skT.21
+       z     = sign(x.27, ct.16)
+       z.1   = z.24
+       z.2   = true
+    
+    6. ct    = ct.19
+       pcsig1
+             = pcs(sign(x.29, x.30), x.31, pk(skT.24))
+       pk1   = pk1.21
+       pk2   = pk(x.34)
+       sig2  = sign(x.34, z.27)
+       skT   = skT.24
+       z     = sign(x.29, x.30)
+       z.1   = z.27
+       z.2   = checkpcs(ct.19, pk1.21, pk(x.34), pk(skT.24),
+                        pcs(sign(x.29, x.30), x.31, pk(skT.24)))
+  */
+
+rule (modulo E) Resolve1:
+   [ !TTP( skT ), In( <'resolve1', ct, pk1, pk2, sig1, pcsig2> ) ]
+  --[
+  Answered( ct ), Eq( check_getmsg(pk1, sig1), ct ),
+  Eq( checkpcs(ct, pk2, pk1, pk(skT), pcsig2), true ), Resolve1( ct )
+  ]->
+   [ Out( sign(skT, <sig1, convertpcs(skT, pcsig2)>) ) ]
+
+  /*
+  rule (modulo AC) Resolve1:
+     [ !TTP( skT ), In( <'resolve1', ct, pk1, pk2, sig1, pcsig2> ) ]
+    --[ Answered( ct ), Eq( z.1, ct ), Eq( z.2, true ), Resolve1( ct ) ]->
+     [ Out( sign(skT, <sig1, z>) ) ]
+    variants (modulo AC)
+    1. ct    = ct.12
+       pcsig2
+             = pcsig2.13
+       pk1   = pk1.14
+       pk2   = pk2.15
+       sig1  = sig1.16
+       skT   = skT.17
+       z     = convertpcs(skT.17, pcsig2.13)
+       z.1   = check_getmsg(pk1.14, sig1.16)
+       z.2   = checkpcs(ct.12, pk2.15, pk1.14, pk(skT.17), pcsig2.13)
+    
+    2. ct    = ct.15
+       pcsig2
+             = pcsig2.16
+       pk1   = pk(x.25)
+       pk2   = pk2.18
+       sig1  = sign(x.25, z.23)
+       skT   = skT.20
+       z     = convertpcs(skT.20, pcsig2.16)
+       z.1   = z.23
+       z.2   = checkpcs(ct.15, pk2.18, pk(x.25), pk(skT.20), pcsig2.16)
+    
+    3. ct    = ct.16
+       pcsig2
+             = pcs(sign(x.26, x.27), x.28, pk(skT.21))
+       pk1   = pk1.18
+       pk2   = pk2.19
+       sig1  = sig1.20
+       skT   = skT.21
+       z     = sign(x.26, x.27)
+       z.1   = check_getmsg(pk1.18, sig1.20)
+       z.2   = checkpcs(ct.16, pk2.19, pk1.18, pk(skT.21),
+                        pcs(sign(x.26, x.27), x.28, pk(skT.21)))
+    
+    4. ct    = ct.16
+       pcsig2
+             = pcs(sign(x.27, ct.16), pk1.18, pk(skT.21))
+       pk1   = pk1.18
+       pk2   = pk(x.27)
+       sig1  = sig1.20
+       skT   = skT.21
+       z     = sign(x.27, ct.16)
+       z.1   = check_getmsg(pk1.18, sig1.20)
+       z.2   = true
+    
+    5. ct    = ct.16
+       pcsig2
+             = pcs(sign(x.27, ct.16), pk(x.28), pk(skT.21))
+       pk1   = pk(x.28)
+       pk2   = pk(x.27)
+       sig1  = sign(x.28, z.24)
+       skT   = skT.21
+       z     = sign(x.27, ct.16)
+       z.1   = z.24
+       z.2   = true
+    
+    6. ct    = ct.19
+       pcsig2
+             = pcs(sign(x.29, x.30), x.31, pk(skT.24))
+       pk1   = pk(x.33)
+       pk2   = pk2.22
+       sig1  = sign(x.33, z.27)
+       skT   = skT.24
+       z     = sign(x.29, x.30)
+       z.1   = z.27
+       z.2   = checkpcs(ct.19, pk2.22, pk(x.33), pk(skT.24),
+                        pcs(sign(x.29, x.30), x.31, pk(skT.24)))
+  */
+
+rule (modulo E) Witness_Aborted:
+   [ In( sign(skT, pcs(sign(sk1, ct), pk(ysk), pk(skT))) ), !TTP( skT ) ]
+  --[ AbortCert( ct ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Witness_Resolved:
+   [ In( sign(skT, <sign(sk1, ct), sign(sk2, ct)>) ), !TTP( skT ) ]
+  --[ ResolveCert( ct ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Answered_unique:
+  "∀ x #i #j. ((Answered( x ) @ #i) ∧ (Answered( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Eq_checks_succeed:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+lemma aborted_and_resolved_exclusive:
+  all-traces
+  "¬(∃ ct #i #j. (AbortCert( ct ) @ #i) ∧ (ResolveCert( ct ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ ct #i #j. (AbortCert( ct ) @ #i) ∧ (ResolveCert( ct ) @ #j)"
+*/
+simplify
+solve( !TTP( skT ) ▶₁ #i )
+  case Setup_TTP
+  solve( !TTP( skT ) ▶₁ #j )
+    case Setup_TTP
+    solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
+      case Abort1
+      solve( !KU( sign(~n.1, <sign(sk1.1, ct), sign(sk2, ct)>) ) @ #vk.2 )
+        case c_sign
+        by solve( !KU( ~n.1 ) @ #vk.13 )
+      qed
+    next
+      case c_sign
+      by solve( !KU( ~n ) @ #vk.2 )
+    qed
+  qed
+qed
+
+lemma aborted_contract_reachable:
+  exists-trace
+  "(((∃ ct #i. AbortCert( ct ) @ #i) ∧
+     (∀ ct1 ct2 #i1 #i2.
+       ((Abort1( ct1 ) @ #i1) ∧ (Abort1( ct2 ) @ #i2)) ⇒ (#i1 = #i2))) ∧
+    (∀ ct #i. (Resolve1( ct ) @ #i) ⇒ (⊥))) ∧
+   (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ (⊥))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ ct #i. (AbortCert( ct ) @ #i)) ∧
+ (∀ ct1 ct2 #i1 #i2.
+   (Abort1( ct1 ) @ #i1) ∧ (Abort1( ct2 ) @ #i2) ⇒ #i1 = #i2) ∧
+ (∀ ct #i. (Resolve1( ct ) @ #i) ⇒ ⊥) ∧
+ (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ ⊥)"
+*/
+simplify
+solve( !TTP( skT ) ▶₁ #i )
+  case Setup_TTP
+  solve( !KU( sign(~n, pcs(sign(sk1, ct), pk(ysk), pk(~n))) ) @ #vk )
+    case Abort1
+    solve( !KU( sign(sk1, ct) ) @ #vk.10 )
+      case c_sign
+      solve( !KU( pk(sk1) ) @ #vk.9 )
+        case c_pk
+        solve( !KU( pk(ysk) ) @ #vk.10 )
+          case Setup_TTP
+          solve( !KU( pk(~n) ) @ #vk.11 )
+            case Setup_TTP
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma resolved1_contract_reachable:
+  exists-trace
+  "(((∃ ct #i. ResolveCert( ct ) @ #i) ∧
+     (∀ ct #i. (Abort1( ct ) @ #i) ⇒ (⊥))) ∧
+    (∀ ct1 ct2 #i1 #i2.
+      ((Resolve1( ct1 ) @ #i1) ∧ (Resolve1( ct2 ) @ #i2)) ⇒ (#i1 = #i2))) ∧
+   (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ (⊥))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ ct #i. (ResolveCert( ct ) @ #i)) ∧
+ (∀ ct #i. (Abort1( ct ) @ #i) ⇒ ⊥) ∧
+ (∀ ct1 ct2 #i1 #i2.
+   (Resolve1( ct1 ) @ #i1) ∧ (Resolve1( ct2 ) @ #i2) ⇒ #i1 = #i2) ∧
+ (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ ⊥)"
+*/
+simplify
+solve( !TTP( skT ) ▶₁ #i )
+  case Setup_TTP
+  solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
+    case Resolve1
+    solve( !KU( sign(sk1, ct) ) @ #vk.11 )
+      case c_sign
+      solve( !KU( sign(sk2, ct) ) @ #vk.12 )
+        case c_sign
+        solve( !KU( pk(sk1) ) @ #vk.11 )
+          case c_pk
+          solve( !KU( pk(sk2) ) @ #vk.12 )
+            case c_pk
+            solve( !KU( pk(~n) ) @ #vk.13 )
+              case Setup_TTP
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma resolved2_contract_reachable:
+  exists-trace
+  "(((∃ ct #i. ResolveCert( ct ) @ #i) ∧
+     (∀ ct #i. (Abort1( ct ) @ #i) ⇒ (⊥))) ∧
+    (∀ ct #i. (Resolve1( ct ) @ #i) ⇒ (⊥))) ∧
+   (∀ ct1 ct2 #i1 #i2.
+     ((Resolve2( ct1 ) @ #i1) ∧ (Resolve2( ct2 ) @ #i2)) ⇒ (#i1 = #i2))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ ct #i. (ResolveCert( ct ) @ #i)) ∧
+ (∀ ct #i. (Abort1( ct ) @ #i) ⇒ ⊥) ∧
+ (∀ ct #i. (Resolve1( ct ) @ #i) ⇒ ⊥) ∧
+ (∀ ct1 ct2 #i1 #i2.
+   (Resolve2( ct1 ) @ #i1) ∧ (Resolve2( ct2 ) @ #i2) ⇒ #i1 = #i2)"
+*/
+simplify
+solve( !TTP( skT ) ▶₁ #i )
+  case Setup_TTP
+  solve( !KU( sign(~n, <sign(sk1, ct), sign(sk2, ct)>) ) @ #vk )
+    case Resolve2
+    solve( !KU( sign(sk2, ct) ) @ #vk.11 )
+      case c_sign
+      solve( !KU( sign(sk1, ct) ) @ #vk.12 )
+        case c_sign
+        solve( !KU( pk(sk1) ) @ #vk.11 )
+          case c_pk
+          solve( !KU( pk(sk2) ) @ #vk.12 )
+            case c_pk
+            solve( !KU( pk(~n) ) @ #vk.13 )
+              case Setup_TTP
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+
+  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
+  processing time: 0.376145678s
+  aborted_and_resolved_exclusive (all-traces): verified (7 steps)
+  aborted_contract_reachable (exists-trace): verified (8 steps)
+  resolved1_contract_reachable (exists-trace): verified (9 steps)
+  resolved2_contract_reachable (exists-trace): verified (9 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
+
+  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
+  processing time: 0.376145678s
+  aborted_and_resolved_exclusive (all-traces): verified (7 steps)
+  aborted_contract_reachable (exists-trace): verified (8 steps)
+  resolved1_contract_reachable (exists-trace): verified (9 steps)
+  resolved2_contract_reachable (exists-trace): verified (9 steps)
+
+==============================================================================
+*/

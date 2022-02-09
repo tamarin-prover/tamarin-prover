@@ -8,6 +8,8 @@ equations:
     pdec(penc(m, pk(k), r), k) = m,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) gen:
    [ Fr( ~k ) ] --> [ !Key( ~k ), Out( pk(~k) ) ]
 
@@ -220,8 +222,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/probEnc.spthy
@@ -230,7 +230,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.095019526s
+  processing time: 0.135102884s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.095019526s
+  processing time: 0.135102884s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

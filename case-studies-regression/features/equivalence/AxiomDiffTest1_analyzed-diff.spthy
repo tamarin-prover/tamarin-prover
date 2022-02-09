@@ -5,6 +5,8 @@ theory AxiomDiffTest1 begin
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) Test:
    [ Fr( ~f ) ] --[ Never( ) ]-> [ Out( ~f ) ]
 
@@ -29,8 +31,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/equivalence/AxiomDiffTest1.spthy
@@ -39,7 +39,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest1.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest1.spthy.tmp
-  processing time: 0.0415402s
+  processing time: 0.069335321s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest1.spthy.tmp
-  processing time: 0.0415402s
+  processing time: 0.069335321s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ==============================================================================

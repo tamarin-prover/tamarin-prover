@@ -1,0 +1,384 @@
+theory OIDC_Implicit
+/*
+ * Protocol:     Standard OpenID Connect Implicit Flow
+ * Modeler:      Sven Hammann and Ralf Sasse
+ * Described in: "Secure, Private, and Personal: Advancing Digital Identity", doctoral thesis, Sven Hammann
+ * Date:      September 2020
+ *
+ * Status:      working
+ */
+
+/*Color Coding: blue:    Browser
+                yellow:  Initializations
+                red:     Adversary */
+
+
+begin
+
+functions: sign/3, pk/1, true/0, false/0
+
+functions: mangle/2
+equations: mangle(sign(m,r1,sk),r2) = sign(m,r2,sk)
+
+functions: e1/1 [private]
+functions: e2/1 [private]
+functions: e3/1 [private]
+equations: e1(sign(x,y,z)) = x
+equations: e2(sign(x,y,z)) = y
+equations: e3(sign(x,y,z)) = z
+
+rule reSign:
+[In(<sk1,r1>), In(sign(m,r2,sk2))]
+-->
+[Out(sign(m,r1,sk1))]
+
+/*Public key infrastructure*/
+// only the IdP has a key. The Registration of the key is inside the Initialization of the IdP.
+
+rule Get_pk:
+    [ !Pk(A, pubkey) ]
+  -->
+    [ Out(pubkey) ]
+
+
+/* Channel Rules*/
+
+rule Init_TLS_Session:
+    [ !St_Browser_Init(~browserID, $User), Fr(~browser_ID_TLS) ]
+  --[TLS_Hello(~browserID, $Server), BrowserServerSession(~browserID, $Server, ~browser_ID_TLS) ]->
+    [ !St_Browser_Session(~browserID, $Server, ~browser_ID_TLS), !St_Server_Session($Server, ~browser_ID_TLS) ]
+
+
+/*Adversary rules for TLS:*/
+
+rule Init_Adversary_TLS_Session[color= #f5b7b1]:
+    [ In($Server), Fr(~browserID), Fr(~browser_ID_TLS) ]
+  --[ AdversaryAction() ]->
+    [ !St_Server_Session($Server, ~browser_ID_TLS)
+    , !Adversary_Session_TLS(~browserID, $Server, ~browser_ID_TLS) ]
+
+rule Send_Adversary_TLS[color= #f5b7b1]:
+    [ !Adversary_Session_TLS(browserID, $Server, browser_ID_TLS)
+    , In(message) ]
+  --[ AdversaryAction()  ]->
+    [ !Client_to_Server_TLS(browser_ID_TLS, $Server, message) ]
+
+rule Receive_Adversary_TLS[color= #f5b7b1]:
+    [ !Adversary_Session_TLS(browserID, $Server, browser_ID_TLS)
+    , !Server_to_Client_TLS($Server, browser_ID_TLS, message), AdversaryAction()  ]
+  --[ Adversary_receives(message, 'AuthResponse') ]->
+    [ Out(message) ]
+
+
+/* Browser Rules */
+
+//Browser reacts to user action
+rule Browser_Performs_User_Action[color=  #aed6f1]:
+    [ User_InputTo_Browser($User, ~browserID, <'userAction', $Server, message>)
+    , !St_Browser_Init(~browserID, $User)
+    , !St_Browser_Session(~browserID, $Server, ~browser_ID_TLS)
+    ]
+  -->
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $Server, message) ]
+
+//Browser performs a redirect.
+rule Browser_Redirects_To_URI[color=  #aed6f1]:
+    [ !Server_to_Client_TLS($Server1, ~browser_ID_TLS1, <'redirectToURI', $uri, message>)
+    , !St_Browser_Session(browserID, $Server1, ~browser_ID_TLS1)
+    , !St_Browser_Session(browserID, $Server2, ~browser_ID_TLS2)
+    , !Uri_belongs_to($uri, $Server2)
+    ]
+  -->
+    [ !Client_to_Server_TLS(~browser_ID_TLS2, $Server2, message) ]
+
+//Browser shows content to the user.
+rule Browser_Shows[color=  #aed6f1]:
+    [ !Server_to_Client_TLS($Server, ~browser_ID_TLS, <'show', message>)
+    , !St_Browser_Session(~browserID, $Server, ~browser_ID_TLS)
+    , !St_Browser_Init(~browserID, $User)
+    ]
+  -->
+    [ Browser_Shows_User(~browserID, $User, $Server, message) ]
+
+
+/* Compromised Agents */
+
+rule Compromised_IdP_leaks_Signing_Key[color= #f5b7b1]:
+    [ !St_IdP_Init($IdP, $authEP_uri_IdP), !Ltk($IdP, ~ltk) ]
+  --[ Is_Compromised($IdP), AdversaryAction()]->
+    [ Out(~ltk) ]
+
+rule Compromised_Server_receives[color= #f5b7b1]:
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $Server, message)
+    , !St_Server_Session($Server, ~browser_ID_TLS)
+    ]
+  --[Compromised_Party_receives(message), AdversaryAction(), Is_Compromised($Server) ]->
+    [ Out(message) ]
+
+rule Compromised_Server_sends[color= #f5b7b1]:
+    [ !St_Server_Session($Server, ~browser_ID_TLS), In(message) ]
+  --[ CompromisedPartySends(~browser_ID_TLS, $Server, message), AdversaryAction(), Is_Compromised($Server)  ]->
+    [ !Server_to_Client_TLS($Server, ~browser_ID_TLS, message) ]
+
+// No direct communication between RP and IdP: No need for Compromised_Client Rules
+
+
+/* Protocol Rules*/
+
+/*Initialization*/
+
+rule Init_Browser[color=  #f9e79f]:
+    [ Fr(~browserID) ]
+  --[ BrowserInits(~browserID), BrowserUser(~browserID, $User), Start()]->
+    [ !St_Browser_Init(~browserID, $User) ]
+
+rule User_registers_at_IdP[color=  #f9e79f]:
+    [ Fr(~userSecret)]
+  --[ UserRegisters(~userSecret), UserID_belongs_To($userID, $User, $IdP), Unique(<$userID, $IdP>) ]->
+    [ !User_registration_at_IdP($User, $IdP, ~userSecret, $userID) ]
+
+// When the adversary registers, he learns the ~userSecretAdv
+rule Adversary_registers_at_IdP[color=  #f9e79f]:
+    [ Fr(~userSecretAdv)]
+  --[ UserID_belongs_To($userID, $Adversary, $IdP), AdversaryRegisters($userID), Unique(<$userID, $IdP>), AdversaryAction() ]->
+    [ !User_registration_at_IdP($Adversary, $IdP, ~userSecretAdv, $userID), Out(~userSecretAdv) ]
+
+
+rule Initialization_IdP[color=  #f9e79f]:
+    [ Fr(~ltk) ]
+  --[ IdPInitializes($IdP, $authEP_uri_IdP), UriBelongsTo($authEP_uri_IdP, $IdP), GoodKey(pk(~ltk)) ]->
+    [ !St_IdP_Init($IdP, $authEP_uri_IdP)
+    , !Uri_belongs_to($authEP_uri_IdP, $IdP)
+    , !Ltk($IdP, ~ltk), !Pk($IdP, pk(~ltk))
+    ]
+
+rule Registration_RP[color=  #f9e79f]:
+    [ !St_IdP_Init($IdP, $authEP_uri_IdP)
+    ]
+  --[ Neq($RP, $IdP), RPRegisters($RP, $IdP), Not_an_IdP($RP), UriBelongsTo($redirect_uri_RP, $RP), Unique(<$client_id, $IdP>) ]->
+    [ !St_RP_Registered($RP, $IdP, $client_id, $redirect_uri_RP, $authEP_uri_IdP)
+    , !Uri_belongs_to($redirect_uri_RP, $RP) ]
+
+
+
+/*AuthRequest*/
+
+//User Starts a Session with a Browser and "Selects" a RP and a IDP
+rule User_starts_Session:
+    [ !St_Browser_Init(~browserID, $User), !User_registration_at_IdP($User, $IdP, ~userSecret, $userID) ]
+  --[ UserStarts(~browserID, $User), UserStartsSession($User, $RP, $IdP)]->
+    [ St_User_1($User, ~browserID, $IdP, $RP)
+    , User_InputTo_Browser($User, ~browserID, <'userAction', $RP, <'loginWith', $IdP>>) 
+    ]
+
+//The RP answers with an Authorization request
+rule AuthRequest_RP:
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $RP, <'loginWith', $IdP>), !St_Server_Session($RP, ~browser_ID_TLS)
+    , !St_RP_Registered($RP, $IdP, $client_id, $redirect_uri_RP, $authEP_uri_IdP)
+    , Fr(~nonce) ]
+  --[ AuthRequestRP(~nonce), UsedNonce(~nonce)]->
+    [ !Server_to_Client_TLS($RP, ~browser_ID_TLS
+        , <'redirectToURI', $authEP_uri_IdP, <'authRequest', $client_id, $redirect_uri_RP, $authEP_uri_IdP, ~nonce>>) 
+    , St_RP_1($RP, $IdP, $client_id, $redirect_uri_RP, $authEP_uri_IdP, ~nonce)
+    ]
+
+
+//The IdP gets the Request
+rule AuthRequest_IdP:
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $IdP
+        , <'authRequest', $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce>)
+    , !St_Server_Session($IdP, ~browser_ID_TLS)
+    , !St_RP_Registered($RP, $IdP, $client_id, $redirect_uri_RP, $authEP_uri_IdP)
+    ]
+  --[ AuthRequestIdP(nonce), IdPAuthRequest($IdP, 'authRequest', $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce), ReceivedNonce(nonce) ]->
+    [ St_IdP_1($IdP, $RP, ~browser_ID_TLS, $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce) 
+    , !Server_to_Client_TLS($IdP, ~browser_ID_TLS, <'show', <'pleaseAuthenticate', $IdP>>)
+    ]
+
+/* User Authentication and Consent*/
+
+rule User_Authenticates:
+    [ Browser_Shows_User(~browserID, $User, $IdP, <'pleaseAuthenticate', $IdP>)
+    , St_User_1($User, ~browserID, $IdP, $RP)
+    , !User_registration_at_IdP($User, $IdP, ~userSecret, $userID)
+    ]
+  --[ UserAuthenticates('IAuthenticate', $User, $IdP) ]->
+    [ User_InputTo_Browser($User, ~browserID, <'userAction', $IdP, <'IAuthenticate', $User,  ~userSecret>>) 
+    , St_User_2($User, ~browserID, $IdP, $RP, ~userSecret)
+    ]
+
+rule IdP_asks_for_Consent:
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $IdP, <'IAuthenticate', $User, ~userSecret>)
+    , St_IdP_1($IdP, $RP, ~browser_ID_TLS, $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce)  
+    , !User_registration_at_IdP($User, $IdP, ~userSecret, $userID)
+    , Fr(~consent_nonce)
+    ]
+  -->
+    [ !Server_to_Client_TLS($IdP, ~browser_ID_TLS, <'show', <'pleaseGiveConsent', $IdP, $RP, $User, ~consent_nonce>>)
+    , St_IdP_2($IdP, $RP, ~browser_ID_TLS, $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce, $User, ~userSecret, $userID, ~consent_nonce) 
+    ]
+
+rule User_Gives_Consent:
+    [ Browser_Shows_User(~browserID, $User, $IdP, <'pleaseGiveConsent', $IdP, $RP, $User, consent_nonce>)
+    , St_User_2($User, ~browserID, $IdP, $RP, ~userSecret)
+    ]
+  --[ UserGivesConsent($User, $RP, $IdP) ]->
+    [ User_InputTo_Browser($User, ~browserID, <'userAction', $IdP, <'Consent', $IdP, $RP, $User, consent_nonce>>) 
+    ]
+
+/*Authentication Response*/
+
+//IdP Responds with the id-Token
+rule Authentication_Response_IdP:
+    let id_token = <'id_token'
+        , <'iss', $IdP>
+        , <'sub', $userID>
+        , <'aud', $client_id>
+        , <'nonce', nonce>>
+    in
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $IdP, <'Consent', $IdP, $RP, $User, ~consent_nonce>)
+    , St_IdP_2($IdP, $RP, ~browser_ID_TLS, $client_id, $redirect_uri_RP, $authEP_uri_IdP, nonce, $User, ~userSecret, $userID, ~consent_nonce) 
+    , !Ltk($IdP, ~ltk)
+    ]
+  --[ ReceiveConsent($IdP, $RP, $User) ]->
+    [ !Server_to_Client_TLS($IdP, ~browser_ID_TLS, <'redirectToURI', $redirect_uri_RP  
+    , <'AuthResponse', id_token, sign(id_token, '0', ~ltk)>>)
+    ]
+
+//RP gets id-Token
+rule RP_gets_idToken:
+    let id_token = <'id_token'
+        , <'iss', $IdP>
+        , <'sub', $userID>
+        , <'aud', $client_id>
+        , <'nonce', ~nonce>>
+    in
+    [ !Client_to_Server_TLS(~browser_ID_TLS, $RP, <'AuthResponse', id_token, id_token_sig>)
+    , St_RP_1($RP, $IdP, $client_id, $redirect_uri_RP, $authEP_uri_IdP, ~nonce)
+    , !Pk($IdP, pk_idp)
+    ]
+  --[ Finish(), RP_gets_IDToken($RP, $userID, $IdP), RPgetsIDToken_FromBrowser($RP, ~browser_ID_TLS, $IdP),
+      Verified(id_token_sig,e1(id_token_sig),pk(e3(id_token_sig)),id_token,pk_idp,true)  ]->
+    []
+
+
+restriction uniqueness:
+   "All x #i #j. Unique(x) @ i & Unique(x) @ j ==> #i = #j"
+
+restriction uri_belongs_to_only_one_server:
+  "All uri server1 server2 #i #j. UriBelongsTo(uri, server1) @ i & UriBelongsTo(uri, server2) @j ==> server1 = server2"
+
+// IdP and RP should not be the same entity.
+// This makes traces more readable, but does not restrict the adversary,
+// who can compromise both an RP and an IdP.
+restriction Inequality_RP_IdP:
+    "All x #i. Neq(x,x) @ #i ==> F"
+
+restriction registered_RP_shouldnt_be_an_IdP:
+    "All rp #i. Not_an_IdP(rp)@i ==> not(Ex x #j. IdPInitializes(rp, x)@j)"
+
+// A single IdP should not be initialized more than once:
+restriction IdP_initializes_Once:
+    " All idp v u #i #j. (IdPInitializes(idp, v)@i & IdPInitializes(idp, u)@j)
+    ==> (#i = #j & u = v)
+    "
+
+// A single RP cannot register at the same IdP more than once:
+restriction RP_registers_at_IdP_Once:
+    " All rp idp #i #j. (RPRegisters(rp, idp)@i & RPRegisters(rp, idp)@j)
+    ==> (#i = #j)
+    "
+
+// A single user only has one account at the same IdP:
+// (While this is not required in practice, for our security properties,
+//  the user should be identified with a unique account)
+restriction User_has_only_one_account_at_IdP:
+    " All uid1 uid2 usr idp #i #j. (UserID_belongs_To(uid1, usr, idp)@i & UserID_belongs_To(uid2, usr, idp)@j)
+    ==> (#i = #j & uid1 = uid2)
+    "
+
+// New Signature Verification Model
+restriction Correctness:
+"
+All sig tm tpk #i #j .
+GoodKey(tpk) @ i & Verified(sig,tm,tpk,tm,tpk,false) @ j
+==>
+F
+"
+
+restriction NoForgery:
+"
+All tpk tm spk sm sig #i #j .
+GoodKey(tpk) @ i & Verified(sig,sm,spk,tm,tpk,true) @ j
+==>
+sm = tm & spk = tpk
+"
+
+restriction Consistency:
+"
+All sig sm spk tm tpk r1 r2 #i #j .
+Verified(sig,sm,spk,tm,tpk,r1) @ i & Verified(sig,sm,spk,tm,tpk,r2) @ j
+==>
+r1 = r2
+"
+
+//source Lemmas
+/*lemma Nonce_Sources[sources]:
+    "All iss sub aud nonce sig #i.
+      Compromised_Party_receives(<'AuthResponse', 
+      <'id_token', <'iss', iss>, <'sub', sub>, <'aud', aud>, <'nonce', nonce> >, sig >)@i
+    ==> ((Ex #j. KU(nonce)@j & #j < #i)
+     | (Ex #j. UsedNonce(nonce)@j))
+    "*/
+//lemmas
+
+//executable with one User, one Browser, one RP and one IdP
+lemma executable:
+  exists-trace
+    "Ex #i. Finish() @i 
+    & (All x y #i #j. (BrowserInits(x)@i & BrowserInits(y)@j) ==> x = y)
+    & (All x y #i #j. (UserRegisters(x)@i & UserRegisters(y)@j) ==> x = y)
+    & (All x y a b #i #j. (IdPInitializes(x, a)@i & IdPInitializes(y, b)@j) ==> x = y)
+    & (All rp1 rp2 idp #i #j. (RPRegisters(rp1, idp)@i & RPRegisters(rp2, idp)@j) ==> rp1 = rp2)
+    & (All x y a b #i #j. (UserStarts(x, a)@i & UserStarts(y, b)@j) ==> x = y & a = b & #i = #j)
+    & (All x y #i #j. (TLS_Hello(x, y)@i & TLS_Hello(x, y)@j) ==> #i = #j)
+    & (All x y #i #j. (AuthRequestRP(x)@i & AuthRequestRP(y)@j) ==> x = y)
+    & (All x #i #j. (AuthRequestIdP(x)@i & AuthRequestIdP(x)@j) ==> #i = #j)
+    & (not(Ex #i. AdversaryAction()@i))
+    "
+
+lemma User_Authentication:
+    "All rp uid idp #finish. (RP_gets_IDToken(rp, uid, idp)@finish
+       & not (Ex #j. Is_Compromised(idp)@j) 
+       & not (Ex #j. Is_Compromised(rp)@j))
+       & not (Ex #j. AdversaryRegisters(uid)@j)
+    ==> (Ex usr browserSession browser #k #start #consent #m #n.         
+        UserGivesConsent(usr, rp, idp)@consent
+      & UserStartsSession(usr, rp, idp)@start
+      & UserID_belongs_To(uid, usr, idp)@k
+      & RPgetsIDToken_FromBrowser(rp, browserSession, idp)@finish
+      & BrowserUser(browser, usr)@n
+      & BrowserServerSession(browser, rp, browserSession)@m
+      & consent < finish & start < consent)
+    "
+
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

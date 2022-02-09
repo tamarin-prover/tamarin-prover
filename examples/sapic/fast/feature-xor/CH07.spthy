@@ -1,0 +1,101 @@
+theory CH07
+
+begin
+
+/* 
+  CH07 RFID protocol model based on 
+  "Attacks on RFID protocols" v1.1 from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
+  This model focuses on authentication properties (recent aliveness and 
+  agreement.)
+
+  Adapted from tamarin file to SAPIC.
+
+  Reader R, Tag T, shared knowledge k, ID.
+
+  R: knows(k,ID) 
+  T: knows(k,ID) 
+  R: fresh(r1)
+  R -> T: r1
+  T: fresh(r2)
+  T -> R: r2,lh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k)) 
+  R -> T: rh(rot(ID,h(r1⊕r2⊕k))⊕h(r1⊕r2⊕k))
+
+*/
+
+builtins: xor, hashing
+functions: rot/2, lh/1, rh/1
+
+let Reader =
+   new ~r1;
+   event Challenge( ~r1, 'Reader' );
+   out( ~r1 );
+   in( <r2, x> );
+   if x = lh(rot(~id, h((~r1 XOR r2 XOR ~k))) XOR h((~r1 XOR r2 XOR ~k))) then 
+     (
+      event Alive( ~k, 'Tag' );
+      event Response(~k, 'Reader');
+      event Running(<'T','R',<~k XOR ~r1 XOR r2>>);
+//    event Running(<'T','R',<~k, ~r1, r2>>);
+      event Commit(<'R','T',<~k XOR ~r1 XOR r2>>);
+//    event Commit(<'R','T',<~k, ~r1, r2>>);
+      out( rh(rot(~id,h((~r1 XOR r2 XOR ~k))) XOR h((~r1 XOR r2 XOR ~k))) )
+      )
+    else 0
+
+
+let Tag = 
+   in( r1 );
+   new ~r2;
+   event Response( ~k, 'Tag' );
+   event Challenge(~r2, 'Tag');
+   event Running(<'R','T',<~k XOR r1 XOR ~r2>>);
+// event Running(<'R','T',<~k, r1, ~r2>>);
+   out( <~r2,lh(rot(~id, h((r1 XOR ~r2 XOR ~k))) XOR  h((r1 XOR ~r2 XOR ~k)) )>);
+   in( rh(rot(~id, h((r1 XOR ~r2 XOR ~k))) XOR  h((r1 XOR ~r2 XOR ~k))) );
+   event Alive( ~k, 'Reader' );
+   event Commit(<'T','R',<~k XOR r1 XOR ~r2>>)
+
+! new ~k; new ~id; ! (Reader || Tag)
+
+// FINDS ATTACK AUTOMATICALLY 
+/* lemma recentalive_tag: */
+/*   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)" */
+
+// Negated and rephrased as exist-trace, to be used for regression testing...
+lemma recentalive_tag_attack:
+  exists-trace "not (∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i))"
+
+// FINDS PROOF AUTOMATICALLY 
+lemma recentalive_reader:
+  all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
+
+// Depends on what data t is specified. Use the commented out Running/Commit
+// claims above for attack. 
+// FINDS PROOF/ATTACK AUTOMATICALLY. 
+lemma noninjectiveagreement_tag:
+  "All t #i. 
+    Commit(<'T','R',t>) @i
+    ==> (Ex #j. Running(<'T','R',t>) @j)"
+
+
+// Depends on what data t is specified. FINDS PROOF/ATTACK AUTOMATICALLY. 
+lemma noninjectiveagreement_reader:
+  "All t #i. 
+    Commit(<'R','T',t>) @i
+    ==> (Ex #j. Running(<'R','T',t>) @j)"
+
+// SHOWS CORRECT EXECUTION 
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j) 
+           // further restriction to automatically get the desired execution
+           ∧ (not Ex #k. Response( x, 'Tag' ) @ #k & (not (#j=#k)))"
+
+end
+
+/* analyzed: examples/sapic/xor/CH07.sapic */
+
+/*   recentalive_tag (all-traces): falsified - found trace (10 steps) */
+/*   recentalive_reader (all-traces): verified (24 steps) */
+/*   noninjectiveagreement_tag (all-traces): verified (87 steps) */
+/*   noninjectiveagreement_reader (all-traces): verified (77 steps) */
+/*   executable (exists-trace): verified (11 steps) */

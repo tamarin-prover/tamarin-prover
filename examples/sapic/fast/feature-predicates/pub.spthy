@@ -1,0 +1,34 @@
+theory pubInRestr
+begin
+
+functions: eq/2,true/0
+
+equations: eq(x,x)=true
+
+predicates:
+  	True(x) <=> x=true()
+  ,And2(x,y) <=> x=true() & y=true()
+
+// Test if we can have public names in predicates used in restrictions.
+// Fixed a bug in the parser that disallowed this legitimate use.
+
+let 
+    z = eq(x,'test')
+in
+in(x);
+if True(x) then 
+if True(true()) then 
+if True(eq(x,x)) then 
+if True(eq(x,'test') ) then
+if And2(eq(x,'test'),true()) then
+if True(z) then
+0
+
+rule testA:
+    [] --[_restrict(True('true'))]-> [] 
+
+rule testB:
+    [In(x)] --[_restrict(True(x))]-> [] 
+
+end
+

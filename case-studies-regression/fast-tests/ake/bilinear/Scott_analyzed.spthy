@@ -1,0 +1,1826 @@
+theory Scott begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing
+functions: fst/1, hp/1, kdf/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+section{* Scott: MTI-C0 like identity based key exchange protocol *}
+
+rule (modulo E) KGC_Setup:
+   [ Fr( ~msk ) ] --[ KGCSetup( ) ]-> [ !MSK( ~msk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) KGC_request:
+   [ !MSK( ~msk ) ] --> [ !LTK( $ID, pmult(~msk, hp($ID)) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !LTK( $ID, skID ) ] --[ LtkRev( $ID ) ]-> [ Out( skID ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_master_key:
+   [ !MSK( ~msk ) ] --[ MskRev( ) ]-> [ Out( ~msk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_session_key:
+   [ !Sessk( ~ey, sek ) ] --[ SesskRev( ~ey ) ]-> [ Out( sek ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init_1:
+   [ Fr( ~ex ), !LTK( $A, pmult(~s, hp($A)) ) ]
+  -->
+   [
+   Init( ~ex, $A, $B, em(hp($B), pmult(~s, hp($A)))^~ex ),
+   Out( em(hp($B), pmult(~s, hp($A)))^~ex )
+   ]
+
+  /*
+  rule (modulo AC) Init_1:
+     [ Fr( ~ex ), !LTK( $A, pmult(~s, hp($A)) ) ]
+    -->
+     [
+     Init( ~ex, $A, $B, em(hp($A), hp($B))^(~ex*~s) ),
+     Out( em(hp($A), hp($B))^(~ex*~s) )
+     ]
+  */
+
+rule (modulo E) Init_2:
+   [ Init( ~ex, $A, $B, X ), In( Y ) ]
+  --[
+  Accept( ~ex, $A, $B, kdf(<Y^~ex, $A, $B, X, Y>) ),
+  Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+  ]->
+   [ !Sessk( ~ex, kdf(<Y^~ex, $A, $B, X, Y>) ) ]
+
+  /*
+  rule (modulo AC) Init_2:
+     [ Init( ~ex, $A, $B, X ), In( Y ) ]
+    --[
+    Accept( ~ex, $A, $B, kdf(<z, $A, $B, X, Y>) ),
+    Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+    ]->
+     [ !Sessk( ~ex, kdf(<z, $A, $B, X, Y>) ) ]
+    variants (modulo AC)
+    1. ~ex   = ~ex.10
+       Y     = Y.12
+       z     = Y.12^~ex.10
+    
+    2. ~ex   = ~ex.11
+       Y     = z.14^inv(~ex.11)
+       z     = z.14
+    
+    3. ~ex   = ~ex.15
+       Y     = x.25^x.26
+       z     = x.25^(~ex.15*x.26)
+    
+    4. ~ex   = ~ex.17
+       Y     = x.29^inv((~ex.17*x.30))
+       z     = x.29^inv(x.30)
+    
+    5. ~ex   = ~ex.17
+       Y     = x.29^(x.30*inv(~ex.17))
+       z     = x.29^x.30
+    
+    6. ~ex   = ~ex.18
+       Y     = x.30^(x.31*inv((~ex.18*x.32)))
+       z     = x.30^(x.31*inv(x.32))
+  */
+
+rule (modulo E) Resp_1:
+   [ Fr( ~ey ), !LTK( $B, pmult(~s, hp($B)) ), In( X ) ]
+  --[
+  Accept( ~ey, $B, $A,
+          kdf(<X^~ey, $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey>)
+  ),
+  Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), pmult(~s, hp($B)))^~ey> ),
+  Match( ~ey, <'Init', $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey> )
+  ]->
+   [
+   Out( em(hp($A), pmult(~s, hp($B)))^~ey ),
+   !Sessk( ~ey, kdf(<X^~ey, $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey>) )
+   ]
+
+  /*
+  rule (modulo AC) Resp_1:
+     [ Fr( ~ey ), !LTK( $B, pmult(~x, hp($B)) ), In( X ) ]
+    --[
+    Accept( ~ey, $B, $A, kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) ),
+    Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), hp($B))^(~ey*~x)> ),
+    Match( ~ey, <'Init', $A, $B, X, em(hp($A), hp($B))^(~ey*~x)> )
+    ]->
+     [
+     Out( em(hp($A), hp($B))^(~ey*~x) ),
+     !Sessk( ~ey, kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) )
+     ]
+    variants (modulo AC)
+    1. ~ey   = ~ey.36
+       X     = X.38
+       z     = X.38^~ey.36
+    
+    2. ~ey   = ~ey.36
+       X     = z.41^inv(~ey.36)
+       z     = z.41
+    
+    3. ~ey   = ~ey.372
+       X     = x.739^x.740
+       z     = x.739^(~ey.372*x.740)
+    
+    4. ~ey   = ~ey.374
+       X     = x.743^inv((~ey.374*x.744))
+       z     = x.743^inv(x.744)
+    
+    5. ~ey   = ~ey.374
+       X     = x.743^(x.744*inv(~ey.374))
+       z     = x.743^x.744
+    
+    6. ~ey   = ~ey.375
+       X     = x.744^(x.745*inv((~ey.375*x.746)))
+       z     = x.744^(x.745*inv(x.746))
+  */
+
+lemma key_agreement_reachable:
+  exists-trace
+  "∃ #i #j A B SID t1 t2 k.
+    (((Accept( t1, A, B, k ) @ #i) ∧ (Match( t1, SID ) @ #i)) ∧
+     (Accept( t2, B, A, k ) @ #j)) ∧
+    (Sid( t2, SID ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j A B SID t1 t2 k.
+  (Accept( t1, A, B, k ) @ #i) ∧
+  (Match( t1, SID ) @ #i) ∧
+  (Accept( t2, B, A, k ) @ #j) ∧
+  (Sid( t2, SID ) @ #j)"
+*/
+simplify
+solve( Accept( t1, A, B, k ) @ #i )
+  case Init_2
+  solve( Init( ~ex, $A, $B, X ) ▶₀ #i )
+    case Init_1
+    solve( Match( ~ex, SID ) @ #i )
+      case Init_2
+      solve( Accept( t2, $B, $A,
+                     kdf(<z, $A, $B, em(hp($A), hp($B))^(~ex*~s), Y>)
+             ) @ #j )
+        case Resp_1
+        solve( !LTK( $B, pmult(~x, hp($B)) ) ▶₁ #j )
+          case KGC_request
+          solve( Sid( ~ey,
+                      <'Resp', $B, $A, em(hp($A), hp($B))^(~ex*~x), em(hp($A), hp($B))^(~ey*~x)
+                      >
+                 ) @ #j )
+            case Resp_1
+            solve( !KU( em(hp($A), hp($B))^(~ey*~x) ) @ #vk )
+              case Resp_1_case_1
+              solve( !KU( em(hp($A), hp($B))^(~ex*~x) ) @ #vk.1 )
+                case Init_1_case_1
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma key_secrecy:
+  all-traces
+  "∀ #i1 #i2 test A B k.
+    ((Accept( test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)) ⇒
+    ((((∃ #i3. SesskRev( test ) @ #i3) ∨
+       (∃ #i3 #i4.
+         ((KGCSetup( ) @ #i3) ∧ (KGCSetup( ) @ #i4)) ∧ (¬(#i3 = #i4)))) ∨
+      (∃ matching #i3 #i4 sid.
+        ((Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∧
+        (∃ #i5. SesskRev( matching ) @ #i5))) ∨
+     ((¬(∃ matching #i3 #i4 sid.
+          (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4))) ∧
+      (((∃ #i5. LtkRev( B ) @ #i5) ∨ (∃ #i3. LtkRev( A ) @ #i3)) ∨
+       (∃ #i3. MskRev( ) @ #i3))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 #i2 test A B k.
+  (Accept( test, A, B, k ) @ #i1) ∧ (K( k ) @ #i2)
+ ∧
+  (∀ #i3. (SesskRev( test ) @ #i3) ⇒ ⊥) ∧
+  (∀ #i3 #i4. (KGCSetup( ) @ #i3) ∧ (KGCSetup( ) @ #i4) ⇒ #i3 = #i4) ∧
+  (∀ matching #i3 #i4 sid.
+    (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)
+   ⇒
+    ∀ #i5. (SesskRev( matching ) @ #i5) ⇒ ⊥) ∧
+  (((∃ matching #i3 #i4 sid.
+      (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4)) ∨
+    ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+     (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+     (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥))))"
+*/
+simplify
+solve( (∃ matching #i3 #i4 sid.
+         (Sid( matching, sid ) @ #i3) ∧ (Match( test, sid ) @ #i4))  ∥
+       ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
+        (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
+        (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)) )
+  case case_1
+  solve( Accept( test, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init( ~ex, $A, $B, X ) ▶₀ #i1 )
+      case Init_1
+      solve( Sid( matching, sid ) @ #i3 )
+        case Init_2
+        solve( Init( ~ex.1, $A.1, $B.1, X ) ▶₀ #i3 )
+          case Init_1
+          by solve( Match( ~ex,
+                           <'Init', $A.1, $B.1, em(hp($A.1), hp($B.1))^(~s*~ex.1), Y.1>
+                    ) @ #i4 )
+        qed
+      next
+        case Resp_1
+        solve( !LTK( $B.1, pmult(~x, hp($B.1)) ) ▶₁ #i3 )
+          case KGC_request
+          solve( Match( ~ex,
+                        <'Resp', $B.1, $A.1, X, em(hp($A.1), hp($B.1))^(~ey*~s)>
+                 ) @ #i4 )
+            case Init_2
+            solve( Init( ~ex, $A.1, $B.1, X ) ▶₀ #i4 )
+              case Init_1
+              solve( !KU( kdf(<em(hp($A), hp($B))^(~ex*~ey*~s), $A, $B, 
+                               em(hp($A), hp($B))^(~ex*~s), em(hp($A), hp($B))^(~ey*~s)>)
+                     ) @ #vk )
+                case Reveal_session_key_case_1
+                by contradiction /* from formulas */
+              next
+                case Reveal_session_key_case_2
+                by contradiction /* from formulas */
+              next
+                case c_kdf
+                solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~s) ) @ #vk.5 )
+                  case Init_1_case_1
+                  by solve( !KU( ~ey ) @ #vk.10 )
+                next
+                  case Init_1_case_2
+                  by solve( !KU( ~ey ) @ #vk.9 )
+                next
+                  case Init_1_case_3
+                  by solve( !KU( ~ex.1 ) @ #vk.13 )
+                next
+                  case Init_1_case_4
+                  by solve( !KU( ~ex.1 ) @ #vk.13 )
+                next
+                  case Init_1_case_5
+                  solve( !KU( ~s ) @ #vk.13 )
+                    case Reveal_master_key
+                    by solve( !KU( ~ey ) @ #vk.14 )
+                  qed
+                next
+                  case Init_1_case_6
+                  solve( !KU( ~s ) @ #vk.12 )
+                    case Reveal_master_key
+                    by solve( !KU( ~ey ) @ #vk.13 )
+                  qed
+                next
+                  case Resp_1_case_1
+                  by solve( !KU( ~ex ) @ #vk.10 )
+                next
+                  case Resp_1_case_2
+                  by solve( !KU( ~ex ) @ #vk.9 )
+                next
+                  case Resp_1_case_3
+                  by solve( !KU( ~ey.1 ) @ #vk.14 )
+                next
+                  case Resp_1_case_4
+                  by solve( !KU( ~ey.1 ) @ #vk.14 )
+                next
+                  case Resp_1_case_5
+                  solve( !KU( ~s ) @ #vk.13 )
+                    case Reveal_master_key
+                    by solve( !KU( ~ex ) @ #vk.14 )
+                  qed
+                next
+                  case Resp_1_case_6
+                  solve( !KU( ~s ) @ #vk.12 )
+                    case Reveal_master_key
+                    by solve( !KU( ~ex ) @ #vk.13 )
+                  qed
+                next
+                  case Reveal_ltk_case_1
+                  by solve( !KU( ~ex ) @ #vk.12 )
+                next
+                  case Reveal_ltk_case_2
+                  by solve( !KU( ~ex ) @ #vk.12 )
+                next
+                  case c_exp
+                  by solve( !KU( ~ex ) @ #vk.12 )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_1
+    solve( !LTK( $B, pmult(~x, hp($B)) ) ▶₁ #i1 )
+      case KGC_request
+      solve( Sid( matching, sid ) @ #i3 )
+        case Init_2
+        solve( Init( ~ex, $A.1, $B.1, X.1 ) ▶₀ #i3 )
+          case Init_1
+          solve( Match( ~ey,
+                        <'Init', $A.1, $B.1, em(hp($A.1), hp($B.1))^(~ex*~x), Y>
+                 ) @ #i4 )
+            case Resp_1
+            solve( !KU( kdf(<em(hp($A), hp($B))^(~ex*~ey*~x), $A, $B, 
+                             em(hp($A), hp($B))^(~ex*~x), em(hp($A), hp($B))^(~ey*~x)>)
+                   ) @ #vk )
+              case Reveal_session_key_case_1
+              by contradiction /* from formulas */
+            next
+              case Reveal_session_key_case_2
+              by contradiction /* from formulas */
+            next
+              case c_kdf
+              solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~x) ) @ #vk.5 )
+                case Init_1_case_1
+                by solve( !KU( ~ey ) @ #vk.10 )
+              next
+                case Init_1_case_2
+                by solve( !KU( ~ey ) @ #vk.9 )
+              next
+                case Init_1_case_3
+                by solve( !KU( ~ex.1 ) @ #vk.13 )
+              next
+                case Init_1_case_4
+                by solve( !KU( ~ex.1 ) @ #vk.13 )
+              next
+                case Init_1_case_5
+                solve( !KU( ~x ) @ #vk.13 )
+                  case Reveal_master_key
+                  by solve( !KU( ~ey ) @ #vk.14 )
+                qed
+              next
+                case Init_1_case_6
+                solve( !KU( ~x ) @ #vk.12 )
+                  case Reveal_master_key
+                  by solve( !KU( ~ey ) @ #vk.13 )
+                qed
+              next
+                case Resp_1_case_1
+                by solve( !KU( ~ex ) @ #vk.10 )
+              next
+                case Resp_1_case_2
+                by solve( !KU( ~ex ) @ #vk.9 )
+              next
+                case Resp_1_case_3
+                by solve( !KU( ~ey.1 ) @ #vk.14 )
+              next
+                case Resp_1_case_4
+                by solve( !KU( ~ey.1 ) @ #vk.14 )
+              next
+                case Resp_1_case_5
+                solve( !KU( ~x ) @ #vk.13 )
+                  case Reveal_master_key
+                  by solve( !KU( ~ex ) @ #vk.14 )
+                qed
+              next
+                case Resp_1_case_6
+                solve( !KU( ~x ) @ #vk.12 )
+                  case Reveal_master_key
+                  by solve( !KU( ~ex ) @ #vk.13 )
+                qed
+              next
+                case Reveal_ltk_case_1
+                by solve( !KU( ~ex ) @ #vk.12 )
+              next
+                case Reveal_ltk_case_2
+                by solve( !KU( ~ex ) @ #vk.12 )
+              next
+                case c_exp
+                by solve( !KU( ~ex ) @ #vk.12 )
+              qed
+            qed
+          qed
+        qed
+      next
+        case Resp_1
+        solve( !LTK( $B.1, pmult(~x.1, hp($B.1)) ) ▶₁ #i3 )
+          case KGC_request
+          solve( Match( ~ey,
+                        <'Resp', $B.1, $A.1, X.1, em(hp($A.1), hp($B.1))^(~x*~ey.1)>
+                 ) @ #i4 )
+            case Init_2
+            by solve( Init( ~ey, $A.1, $B.1, X.1 ) ▶₀ #i4 )
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( Accept( test, A, B, k ) @ #i1 )
+    case Init_2
+    solve( Init( ~ex, $A, $B, X ) ▶₀ #i1 )
+      case Init_1
+      solve( !KU( kdf(<z, $A, $B, em(hp($A), hp($B))^(~ex*~s), Y>) ) @ #vk )
+        case Reveal_session_key_case_1
+        by contradiction /* from formulas */
+      next
+        case Reveal_session_key_case_2
+        by contradiction /* from formulas */
+      next
+        case c_kdf
+        solve( splitEqs(0) )
+          case split_case_1
+          solve( !KU( Y^~ex ) @ #vk.5 )
+            case Init_1
+            solve( !KU( ~s ) @ #vk.11 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.10 )
+          qed
+        next
+          case split_case_2
+          solve( !KU( z^inv(~ex) ) @ #vk.1 )
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.11 )
+          qed
+        next
+          case split_case_3
+          solve( !KU( x^(~ex*x.1) ) @ #vk.5 )
+            case Init_1_case_01
+            solve( !KU( em(hp($A), hp($B))^~s ) @ #vk.2 )
+              case Init_1_case_1
+              by solve( !KU( ~ex.1 ) @ #vk.10 )
+            next
+              case Init_1_case_2
+              by solve( !KU( ~ex.1 ) @ #vk.10 )
+            next
+              case Resp_1_case_1
+              by solve( !KU( ~ey ) @ #vk.11 )
+            next
+              case Resp_1_case_2
+              by solve( !KU( ~ey ) @ #vk.11 )
+            next
+              case Reveal_ltk_case_1
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_2
+              by contradiction /* from formulas */
+            next
+              case c_exp
+              solve( !KU( ~s ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            qed
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ex ) @ #vk.10 )
+          next
+            case Init_1_case_03
+            solve( !KU( em(hp($A), hp($B))^(~s*x) ) @ #vk.2 )
+              case Init_1_case_01
+              by solve( !KU( ~x ) @ #vk.10 )
+            next
+              case Init_1_case_02
+              by solve( !KU( ~x ) @ #vk.10 )
+            next
+              case Init_1_case_03
+              solve( !KU( ~s ) @ #vk.11 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_04
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_05
+              by solve( !KU( ~ex.1 ) @ #vk.12 )
+            next
+              case Init_1_case_06
+              solve( !KU( ~s ) @ #vk.11 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_07
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_08
+              by solve( !KU( ~ex.1 ) @ #vk.12 )
+            next
+              case Init_1_case_09
+              solve( !KU( ~s ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_10
+              by solve( !KU( ~ex.1 ) @ #vk.13 )
+            next
+              case Init_1_case_11
+              by solve( !KU( ~ex.1 ) @ #vk.13 )
+            next
+              case Init_1_case_12
+              solve( !KU( ~s ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_13
+              by solve( !KU( ~ex.1 ) @ #vk.13 )
+            next
+              case Init_1_case_14
+              by solve( !KU( ~ex.1 ) @ #vk.13 )
+            next
+              case Init_1_case_15
+              solve( !KU( ~s ) @ #vk.14 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_16
+              solve( !KU( ~s ) @ #vk.14 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_17
+              by solve( !KU( ~ex.1 ) @ #vk.14 )
+            next
+              case Init_1_case_18
+              by solve( !KU( ~ex.1 ) @ #vk.14 )
+            next
+              case Init_1_case_19
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_20
+              by solve( !KU( ~ex.1 ) @ #vk.15 )
+            next
+              case Init_1_case_21
+              by solve( !KU( ~ex.1 ) @ #vk.15 )
+            next
+              case Init_1_case_22
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_23
+              by solve( !KU( ~ex.1 ) @ #vk.15 )
+            next
+              case Init_1_case_24
+              by solve( !KU( ~ex.1 ) @ #vk.15 )
+            next
+              case Init_1_case_25
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_26
+              solve( !KU( ~s ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_27
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_28
+              solve( !KU( ~s ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_01
+              by solve( !KU( ~x ) @ #vk.10 )
+            next
+              case Resp_1_case_02
+              by solve( !KU( ~x ) @ #vk.10 )
+            next
+              case Resp_1_case_03
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_04
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_05
+              by solve( !KU( ~ey ) @ #vk.13 )
+            next
+              case Resp_1_case_06
+              solve( !KU( ~s ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_07
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_08
+              by solve( !KU( ~ey ) @ #vk.13 )
+            next
+              case Resp_1_case_09
+              solve( !KU( ~s ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_10
+              by solve( !KU( ~ey ) @ #vk.14 )
+            next
+              case Resp_1_case_11
+              by solve( !KU( ~ey ) @ #vk.14 )
+            next
+              case Resp_1_case_12
+              solve( !KU( ~s ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_13
+              by solve( !KU( ~ey ) @ #vk.14 )
+            next
+              case Resp_1_case_14
+              by solve( !KU( ~ey ) @ #vk.14 )
+            next
+              case Resp_1_case_15
+              solve( !KU( ~s ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_16
+              solve( !KU( ~s ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_17
+              by solve( !KU( ~ey ) @ #vk.15 )
+            next
+              case Resp_1_case_18
+              by solve( !KU( ~ey ) @ #vk.15 )
+            next
+              case Resp_1_case_19
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_20
+              by solve( !KU( ~ey ) @ #vk.16 )
+            next
+              case Resp_1_case_21
+              by solve( !KU( ~ey ) @ #vk.16 )
+            next
+              case Resp_1_case_22
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_23
+              by solve( !KU( ~ey ) @ #vk.16 )
+            next
+              case Resp_1_case_24
+              by solve( !KU( ~ey ) @ #vk.16 )
+            next
+              case Resp_1_case_25
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_26
+              solve( !KU( ~s ) @ #vk.16 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_27
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_28
+              solve( !KU( ~s ) @ #vk.16 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Reveal_ltk_case_01
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_02
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_03
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_04
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_05
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_06
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_07
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_08
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_09
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_10
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_11
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_12
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_13
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_14
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_15
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_16
+              by contradiction /* from formulas */
+            next
+              case c_exp
+              solve( !KU( ~s ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            qed
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_05
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_06
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_08
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_09
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_10
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_11
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_12
+            by solve( !KU( ~ex.1 ) @ #vk.14 )
+          next
+            case Init_1_case_13
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_14
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_15
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_03
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_05
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_06
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_08
+            by solve( !KU( ~ey ) @ #vk.15 )
+          next
+            case Resp_1_case_09
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_10
+            solve( !KU( ~s ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ex ) @ #vk.10 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.12 )
+          qed
+        next
+          case split_case_4
+          solve( !KU( x^inv((~ex*x.1)) ) @ #vk.1 )
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.13 )
+          qed
+        next
+          case split_case_5
+          solve( !KU( x^(x.1*inv(~ex)) ) @ #vk.1 )
+            case Init_1_case_01
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_03
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_05
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_06
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Init_1_case_08
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Init_1_case_09
+            by solve( !KU( ~ex.1 ) @ #vk.14 )
+          next
+            case Init_1_case_10
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Resp_1_case_03
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_05
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_06
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Resp_1_case_08
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Resp_1_case_09
+            by solve( !KU( ~ey ) @ #vk.15 )
+          next
+            case Resp_1_case_10
+            solve( !KU( ~s ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.14 )
+          qed
+        next
+          case split_case_6
+          solve( !KU( x^(x.1*inv((~ex*x.2))) ) @ #vk.1 )
+            case Init_1_case_01
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Init_1_case_03
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_05
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_06
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ex.1 ) @ #vk.13 )
+          next
+            case Init_1_case_08
+            solve( !KU( ~s ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_09
+            by solve( !KU( ~ex.1 ) @ #vk.14 )
+          next
+            case Init_1_case_10
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ex ) @ #vk.15 )
+          next
+            case Resp_1_case_03
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_05
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_06
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_08
+            solve( !KU( ~s ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_09
+            by solve( !KU( ~ey ) @ #vk.15 )
+          next
+            case Resp_1_case_10
+            solve( !KU( ~s ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ex ) @ #vk.15 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ex ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case c_exp
+            by solve( !KU( ~ex ) @ #vk.15 )
+          qed
+        qed
+      qed
+    qed
+  next
+    case Resp_1
+    solve( !LTK( $B, pmult(~x, hp($B)) ) ▶₁ #i1 )
+      case KGC_request
+      solve( !KU( kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) ) @ #vk )
+        case Reveal_session_key_case_1
+        by contradiction /* from formulas */
+      next
+        case Reveal_session_key_case_2
+        by contradiction /* from formulas */
+      next
+        case c_kdf
+        solve( splitEqs(0) )
+          case split_case_1
+          solve( !KU( X^~ey ) @ #vk.5 )
+            case Resp_1
+            solve( !KU( ~x ) @ #vk.11 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.10 )
+          qed
+        next
+          case split_case_2
+          solve( !KU( z^inv(~ey) ) @ #vk.1 )
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.11 )
+          qed
+        next
+          case split_case_3
+          solve( !KU( x.1^(~ey*x.2) ) @ #vk.5 )
+            case Init_1_case_01
+            by solve( !KU( ~ey ) @ #vk.10 )
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_03
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_05
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_06
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_08
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Init_1_case_09
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_10
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            solve( !KU( em(hp($A), hp($B))^~x ) @ #vk.2 )
+              case Init_1_case_1
+              by solve( !KU( ~ex ) @ #vk.10 )
+            next
+              case Init_1_case_2
+              by solve( !KU( ~ex ) @ #vk.10 )
+            next
+              case Resp_1_case_1
+              by solve( !KU( ~ey.1 ) @ #vk.11 )
+            next
+              case Resp_1_case_2
+              by solve( !KU( ~ey.1 ) @ #vk.11 )
+            next
+              case Reveal_ltk_case_1
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_2
+              by contradiction /* from formulas */
+            next
+              case c_exp
+              solve( !KU( ~x ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            qed
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Resp_1_case_03
+            solve( !KU( em(hp($A), hp($B))^(~x*x.1) ) @ #vk.2 )
+              case Init_1_case_01
+              by solve( !KU( ~x.1 ) @ #vk.10 )
+            next
+              case Init_1_case_02
+              by solve( !KU( ~x.1 ) @ #vk.10 )
+            next
+              case Init_1_case_03
+              solve( !KU( ~x ) @ #vk.11 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_04
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_05
+              by solve( !KU( ~ex ) @ #vk.12 )
+            next
+              case Init_1_case_06
+              solve( !KU( ~x ) @ #vk.11 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_07
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_08
+              by solve( !KU( ~ex ) @ #vk.12 )
+            next
+              case Init_1_case_09
+              solve( !KU( ~x ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_10
+              by solve( !KU( ~ex ) @ #vk.13 )
+            next
+              case Init_1_case_11
+              by solve( !KU( ~ex ) @ #vk.13 )
+            next
+              case Init_1_case_12
+              solve( !KU( ~x ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_13
+              by solve( !KU( ~ex ) @ #vk.13 )
+            next
+              case Init_1_case_14
+              by solve( !KU( ~ex ) @ #vk.13 )
+            next
+              case Init_1_case_15
+              solve( !KU( ~x ) @ #vk.14 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_16
+              solve( !KU( ~x ) @ #vk.14 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_17
+              by solve( !KU( ~ex ) @ #vk.14 )
+            next
+              case Init_1_case_18
+              by solve( !KU( ~ex ) @ #vk.14 )
+            next
+              case Init_1_case_19
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_20
+              by solve( !KU( ~ex ) @ #vk.15 )
+            next
+              case Init_1_case_21
+              by solve( !KU( ~ex ) @ #vk.15 )
+            next
+              case Init_1_case_22
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_23
+              by solve( !KU( ~ex ) @ #vk.15 )
+            next
+              case Init_1_case_24
+              by solve( !KU( ~ex ) @ #vk.15 )
+            next
+              case Init_1_case_25
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_26
+              solve( !KU( ~x ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_27
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_1_case_28
+              solve( !KU( ~x ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_01
+              by solve( !KU( ~x.1 ) @ #vk.10 )
+            next
+              case Resp_1_case_02
+              by solve( !KU( ~x.1 ) @ #vk.10 )
+            next
+              case Resp_1_case_03
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_04
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_05
+              by solve( !KU( ~ey.1 ) @ #vk.13 )
+            next
+              case Resp_1_case_06
+              solve( !KU( ~x ) @ #vk.12 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_07
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_08
+              by solve( !KU( ~ey.1 ) @ #vk.13 )
+            next
+              case Resp_1_case_09
+              solve( !KU( ~x ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_10
+              by solve( !KU( ~ey.1 ) @ #vk.14 )
+            next
+              case Resp_1_case_11
+              by solve( !KU( ~ey.1 ) @ #vk.14 )
+            next
+              case Resp_1_case_12
+              solve( !KU( ~x ) @ #vk.10 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_13
+              by solve( !KU( ~ey.1 ) @ #vk.14 )
+            next
+              case Resp_1_case_14
+              by solve( !KU( ~ey.1 ) @ #vk.14 )
+            next
+              case Resp_1_case_15
+              solve( !KU( ~x ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_16
+              solve( !KU( ~x ) @ #vk.15 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_17
+              by solve( !KU( ~ey.1 ) @ #vk.15 )
+            next
+              case Resp_1_case_18
+              by solve( !KU( ~ey.1 ) @ #vk.15 )
+            next
+              case Resp_1_case_19
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_20
+              by solve( !KU( ~ey.1 ) @ #vk.16 )
+            next
+              case Resp_1_case_21
+              by solve( !KU( ~ey.1 ) @ #vk.16 )
+            next
+              case Resp_1_case_22
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_23
+              by solve( !KU( ~ey.1 ) @ #vk.16 )
+            next
+              case Resp_1_case_24
+              by solve( !KU( ~ey.1 ) @ #vk.16 )
+            next
+              case Resp_1_case_25
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_26
+              solve( !KU( ~x ) @ #vk.16 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_27
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Resp_1_case_28
+              solve( !KU( ~x ) @ #vk.16 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            next
+              case Reveal_ltk_case_01
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_02
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_03
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_04
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_05
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_06
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_07
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_08
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_09
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_10
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_11
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_12
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_13
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_14
+              by contradiction /* from formulas */
+            next
+              case Reveal_ltk_case_15
+              by contradiction /* non-normal bilinear pairing rule instance */
+            next
+              case Reveal_ltk_case_16
+              by contradiction /* from formulas */
+            next
+              case c_exp
+              solve( !KU( ~x ) @ #vk.13 )
+                case Reveal_master_key
+                by contradiction /* from formulas */
+              qed
+            qed
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_05
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_06
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_08
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_09
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_10
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_11
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_12
+            by solve( !KU( ~ey.1 ) @ #vk.15 )
+          next
+            case Resp_1_case_13
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_14
+            solve( !KU( ~x ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_15
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ey ) @ #vk.10 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.12 )
+          qed
+        next
+          case split_case_4
+          solve( !KU( x.1^inv((~ey*x.2)) ) @ #vk.1 )
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.13 )
+          qed
+        next
+          case split_case_5
+          solve( !KU( x.1^(x.2*inv(~ey)) ) @ #vk.1 )
+            case Init_1_case_01
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case Init_1_case_03
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_05
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_06
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Init_1_case_08
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Init_1_case_09
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Init_1_case_10
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Resp_1_case_03
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_05
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_06
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case Resp_1_case_08
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case Resp_1_case_09
+            by solve( !KU( ~ey.1 ) @ #vk.15 )
+          next
+            case Resp_1_case_10
+            solve( !KU( ~x ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ey ) @ #vk.11 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.14 )
+          qed
+        next
+          case split_case_6
+          solve( !KU( x.1^(x.2*inv((~ey*x.3))) ) @ #vk.1 )
+            case Init_1_case_01
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Init_1_case_02
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case Init_1_case_03
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_04
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_05
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_06
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_07
+            by solve( !KU( ~ex ) @ #vk.13 )
+          next
+            case Init_1_case_08
+            solve( !KU( ~x ) @ #vk.13 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Init_1_case_09
+            by solve( !KU( ~ex ) @ #vk.14 )
+          next
+            case Init_1_case_10
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_01
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case Resp_1_case_02
+            by solve( !KU( ~ey ) @ #vk.15 )
+          next
+            case Resp_1_case_03
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_04
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_05
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_06
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_07
+            by solve( !KU( ~ey.1 ) @ #vk.14 )
+          next
+            case Resp_1_case_08
+            solve( !KU( ~x ) @ #vk.14 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Resp_1_case_09
+            by solve( !KU( ~ey.1 ) @ #vk.15 )
+          next
+            case Resp_1_case_10
+            solve( !KU( ~x ) @ #vk.15 )
+              case Reveal_master_key
+              by contradiction /* from formulas */
+            qed
+          next
+            case Reveal_ltk_case_1
+            by solve( !KU( ~ey ) @ #vk.13 )
+          next
+            case Reveal_ltk_case_2
+            by solve( !KU( ~ey ) @ #vk.15 )
+          next
+            case Reveal_ltk_case_3
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Reveal_ltk_case_4
+            by solve( !KU( ~ey ) @ #vk.14 )
+          next
+            case c_exp
+            by solve( !KU( ~ey ) @ #vk.15 )
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+
+analyzing: examples/ake/bilinear/Scott.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/ake/bilinear/Scott.spthy
+
+  output:          examples/ake/bilinear/Scott.spthy.tmp
+  processing time: 17.709937462s
+  key_agreement_reachable (exists-trace): verified (10 steps)
+  key_secrecy (all-traces): verified (518 steps)
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/ake/bilinear/Scott.spthy
+
+  output:          examples/ake/bilinear/Scott.spthy.tmp
+  processing time: 17.709937462s
+  key_agreement_reachable (exists-trace): verified (10 steps)
+  key_secrecy (all-traces): verified (518 steps)
+
+==============================================================================
+*/

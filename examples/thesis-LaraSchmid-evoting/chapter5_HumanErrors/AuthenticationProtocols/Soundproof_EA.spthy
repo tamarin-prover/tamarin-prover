@@ -1,0 +1,319 @@
+theory Soundproof_EA 
+begin
+
+/* 
+============
+INTRODUCTION
+============
+* Protocol:	Sound-Proof
+* Modeler: 	Lara Schmid
+* Date: 	March 2020
+* Source:	[1] "Advancing the Formal Foundations for Voting Protocols", Lara Schmid, PhD Thesis, ETH Zürich.
+
+=========
+RESULTS: 
+=========
+proven with oracle o_Phoolproof_MA
+
+// for -D=infallible
+- lemma functional (exists-trace): verified (13 steps)
+- lemma entity_authentication (all-traces): falsified - found trace (15 steps)
+- lemma device_authentication (all-traces): verified (11 steps)
+- lemma entity_authentication_withrestrictedtrace (all-traces): falsified - found trace (16 steps)
+
+// for -D=untrained
+- lemma functional (exists-trace): verified (13 steps)
+- lemma entity_authentication (all-traces): falsified - found trace (27 steps)
+- lemma device_authentication (all-traces): verified (12 steps)
+- lemma entity_authentication_withrestrictedtrace (all-traces): falsified - found trace (14 steps)
+
+
+*/
+
+
+/* built-ins */
+builtins: signing, asymmetric-encryption, symmetric-encryption
+functions:  r/1, pw/1 // used to give record and password a type.
+
+
+
+/* only allow human agent rules (corresponding to infallible human) */
+#ifdef infallible
+axiom only_infallible_humans:  
+  	"not (Ex #k. H('Human') @k)" 
+#endif
+
+/* only allow for untrained human rules (corresponding to fallible human) */
+#ifdef ruleBased
+axiom only_fallible_humansRB:  
+  	"not (Ex H x #k. H_role(H,x) @k)" 
+#endif
+#ifdef untrained
+axiom only_fallible_humansU:  
+  	"not (Ex H x #k. H_role(H,x) @k)"
+#endif
+
+
+/* untrained human rules*/ 
+// insecure channels
+rule H_fresh:
+        [ Fr(~x) ]
+	--[ Fresh($H,$x.1,~x), !HK($H,$x.1,~x),
+		H($H) ]->
+	[ !HK($H,$x.1,~x)]
+
+rule H_send: 
+	[ !HK($H,$x.1,x.2) ]
+	--[ Send($H,$x.1,x.2),
+		H($H) ]->
+	[ Out(<$x.1,x.2>)]
+
+rule H_receive: 
+	[ In( <$x.1,x.2>) ]
+	--[ Receive($H,$x.1,x.2), !HK($H,$x.1, x.2),
+		H($H) ]->
+	[ !HK($H,$x.1, x.2) ]
+
+// secure channel
+rule H_send_S:
+  	[ !HK($H,$x.1,x.2) ]
+	--[ Send($H,$x.1,x.2),
+		H($H), To($A)]->
+	[ Out_S($H,$A,$x.1,x.2) ]
+
+rule H_receive_S:
+	[ In_S( $A,$H, $x.1, x.2 ) ]
+	--[ Receive($H,$x.1,x.2), !HK($H,$x.1,x.2), 
+		H($H), From($A)]->
+	[ !HK($H,$x.1,x.2) ]
+
+rule H_send_S2: 
+	[ !HK($H,$x.1,x.2), !HK($H,$y.1,y.2) ]
+	--[ Send($H,$x.1,x.2), 
+  	    Send($H,$y.1,y.2), 
+	    H($H), To($A)]->
+	[ Out_S($H,$A,<$x.1,$y.1>,<x.2,y.2>) ]
+
+
+rule H_send_S3:
+	[ !HK($H,$x.1,x.2), !HK($H,$y.1,y.2), !HK($H,$z.1,z.2) ]
+	--[ Send($H,$x.1,x.2), 
+	    Send($H,$y.1,y.2),
+	    Send($H,$z.1,z.2), 
+	    H($H), To($A)]->
+	[ Out_S($H,$A,<$x.1,$y.1,$z.1>,<x.2,y.2,z.2>) ]
+
+rule H_send_S4:
+	[ !HK($H,$x.1,x.2), !HK($H,$y.1,y.2), !HK($H,$z.1,z.2), !HK($H,$w.1,w.2) ]
+	--[     Send($H,$x.1,x.2), 
+		Send($H,$y.1,y.2),
+		Send($H,$z.1,z.2), 
+		Send($H,$w.1,w.2), 
+		H($H), To($A)]->
+	[ Out_S($H,$A,<$x.1,$y.1,$z.1,$w.1>,<x.2,y.2,z.2,w.2>) ]
+
+
+rule H_receive_S2:
+	[ In_S( $A,$H, <$x.1,$y.1>, <x.2,y.2> ) ]
+	--[ Receive($H,$x.1,x.2), 
+		Receive($H,$y.1,y.2), !HK($H,$x.1,x.2),!HK($H,$y.1,y.2),
+		H($H), From($A)]->
+	[ !HK($H,$x.1,x.2),!HK($H,$y.1,y.2) ]
+
+
+rule H_receive_S4:
+	[ In_S( $A,$H, <$x.1,$y.1,$z.1,$v.1>,<x.2,y.2,z.2,v.2> ) ]
+	--[     Receive($H,$x.1,x.2), 
+		Receive($H,$y.1,y.2), 
+		Receive($H,$z.1,z.2), 
+		Receive($H,$v.1,v.2), !HK($H,$x.1,x.2), !HK($H,$y.1,y.2), !HK($H,$z.1,z.2), !HK($H,$v.1,v.2),
+		H($H), From($A)]->
+	[ !HK($H,$x.1,x.2), !HK($H,$y.1,y.2), !HK($H,$z.1,z.2), !HK($H,$v.1,v.2) ]
+
+
+
+/* Channel rules */
+rule ChanOut_S:
+	[Out_S($A,$B,xn,x)]
+	--[ChanOut_S($A,$B,xn,x)]->
+	[!Sec($A,$B,xn,x)]
+
+rule ChanIn_S:
+	[!Sec($A,$B,xn,x)]
+	--[ChanIn_S($A,$B,xn,x)]->
+	[In_S($A,$B,xn,x)]
+
+rule ChanOut_C:
+	[Out_C($A,$B,xn,x)]
+	--[ChanOut_C($A,$B,xn,x)]->
+	[!Conf($B,xn,x)]
+
+rule ChanIn_C:
+	[!Conf($B,xn,x), In($A)]
+	--[ChanIn_C($A,$B,xn,x)]->
+	[In_C($A,$B,xn,x)]
+
+rule ChanIn_CAdv:
+	[In(<$A,$B,xn,x>)]
+	--[]->
+	[In_C($A,$B,xn,x)]
+
+rule ChanOut_A:
+	[Out_A($A,$B,xn,x)]
+	--[ChanOut_A($A,$B,xn,x)]->
+	[!Auth($A,xn,x), Out(<$A,$B,xn,x>)]
+rule ChanIn_A:
+	[!Auth($A,xn,x), In($B)]
+	--[ChanIn_A($A,$B,xn,x)]->
+	[In_A($A,$B,xn,x)]
+
+
+/* setup */
+rule passworddistribution:
+	[Fr(~pw)]
+	--[PasswordHS($X,$Y,~pw)]->
+	[!Password($X,$Y,~pw)]
+
+rule publickeyinfrastructure:
+	[Fr(~skX)]
+	--[LontermKey($X,~skX)]->
+	[!Ltk($X, ~skX),!Pk($X, pk(~skX)), Out(pk(~skX)) ]
+
+rule Setup:
+  	[ !Ltk($D, ~skD), !Password($H,$S,~pw) ] 
+  	--[ Setup($H), Roles($H,$D,$P,$S), PwdServer($S,$H,pw(~pw)), IdHs($S,$H,$idH), Device($H,$D)
+		,InitK($H,'D',$D),InitK($H,'P',$P),InitK($H,'S',$S),InitK($H,'pw',pw(~pw)),InitK($H,'H',$H), InitK($H,'idH',$idH)
+	]-> 
+  	[ AgSt_D0($D,'D_0',< $H, $S, ~skD >),
+	 AgSt_S0($S,'S_0',< $H, $D, pk(~skD), pw(~pw), $idH >) 
+
+	,!HK($H,'D',$D),!HK($H,'P',$P),!HK($H,'S',$S),!HK($H,'pw',pw(~pw)),!HK($H,'H',$H), !HK($H,'idH',$idH)
+	, AgSt_H0($H,'H_0',< $P, $D, $S, pw(~pw), $idH >)
+  	]
+
+/* agent rules */
+rule D_4:
+	[ AgSt_D0($D,'D_0',< $H, $S, ~skD >), In_S($S,$D,'l','record')]
+	--[ D($D) ]->
+	[ AgSt_D4($D,'D_4',< $H, $S, ~skD >)]
+rule D_7:
+	[ AgSt_D5($D,'D_5',< $H, $S, ~skD, r(~r) >), In_S($S,$D,'l',<senc(<$S,r(~r)>,~k),aenc(~k,pk(~skD))>)]
+	--[ D($D), Dfin() ]->
+	[ Out_S($D,$S,'l','ok')]
+
+rule D_P_5:
+	[ AgSt_D4($D,'D_4',< $H, $S, ~skD >), Fr(~r)] //~r models the randomness from the environment. As P is dishonest, ~r is just output to the network for P to learn it.
+	--[ ]->
+ 	[ AgSt_D5($D,'D_5',< $H, $S, ~skD, r(~r) >),  Out(r(~r)) ]
+
+rule S_2:
+	[ AgSt_S0($S,'S_0',< $H, $D, pk(~skD), pw(~pw), $idH >), In(<$idH,pw(~pw)>)] 
+	--[ Sstart($S)]->
+ 	[ AgSt_S4($S,'S_4',< $H, $D, pk(~skD), pw(~pw), $idH >), Out(<'record',pk(~skD)>), Out_S($S,$D,'l','record')]
+rule S_6:
+	[ AgSt_S4($S,'S_4',< $H, $D, pk(~skD), pw(~pw), $idH >), In(record)]
+	--[ ]->
+	[ AgSt_S7($S,'S_7',< $H, $D, pk(~skD), pw(~pw), $idH, record >), Out_S($S,$D,'l',record)]
+rule S_8:
+	[ AgSt_S7($S,'S_7',< $H, $D, pk(~skD), pw(~pw), $idH, record >), In_S($D,$S,'l','ok')]
+	--[ Commit($S,$H,pw(~pw)),  CommitCA($S,$H) ]->
+	[]
+
+
+/* human agent rules */
+rule H_1:
+	[ AgSt_H0($H,'H_0',< $P, $D, $S, pw(~pw), $idH >) ]
+	--[H_role($H,'1'), Send($H,'S',$S)
+			 , Send($H,'idH',$idH)
+			 , Send($H,'pw',pw(~pw))]->
+	[ Out(< <'S','idH','pw'>,<$S,$idH,pw(~pw) > >)]
+
+
+/* axioms assumptions */
+
+/* Every Human starts in the initial state */
+axiom setup_for_IK:
+	"All H #i. H(H) @i ==> Ex #j. Setup(H) @j & j<i"
+
+/* No secure channels between humans exist. Humans
+   must communicate over incecure channels.         
+   This assumption is necessary to remove unsolved chains
+   in the protocol model. It is not a strong restriction
+   because the protocols do not rely on human to human 
+   for security. */
+axiom not_Chan_S_human_to_human:
+	"All A B mn m #i #j #k.
+		ChanOut_S(A,B,mn,m) @i & H(A) @j & H(B) @k ==> F"
+
+/* Assumption: Two distinct roles are not executed by the same agent */
+axiom notSameRole:
+	"All H1 H2 D1 D2 P1 P2 S1 S2 #i #j. Roles(H1,D1,P1,S1) @i & Roles(H2,D2,P2,S2) @j ==>
+		  not H1 = D1
+		& not H1 = D2
+		& not H1 = P1
+		& not H1 = P2
+		& not H1 = S1
+		& not H1 = S2
+		& not D1 = P1
+		& not D1 = P2
+		& not D1 = S1
+		& not D1 = S2
+		& not P1 = S1
+		& not P1 = S2
+	"
+/* Assumption: Two humans do not share a single device */
+axiom Device:
+	"All H1 H2 D #i #j. Device(H1,D) @i & Device (H2,D) @j ==> H1=H2 "
+
+
+
+
+/* lemmas */
+
+/* Functionality Lemma */
+
+lemma functional: exists-trace
+	"(All H1 H2 #i #j. Setup(H1) @i & Setup(H2) @j ==> #i = #j) 
+	& (Ex #k #n S m 
+		.
+		Dfin() @k
+		& Commit(S,'Human',m) @n
+		
+		)"
+
+/* Entity and Device Authentication */
+
+lemma entity_authentication: 
+	"All S m #k. Commit(S,'Human',m) @k ==> 
+		(Ex #i #j. Sstart(S)@i & H('Human') @j & i<j &j<k) 		//in case when untrained human rules are used
+		|(Ex x #i #j. Sstart(S)@i & H_role('Human',x) @j& i<j &j<k) 	//in case when (infallible) human agent rules are used
+		
+	"
+
+lemma device_authentication: 
+	"All S #k. CommitCA(S,'Human') @k ==> 
+		(Ex D #i #j #s. Sstart(S)@i & D(D) @j & i<j &j<k & Device('Human',D) @s )		
+	"
+
+
+/* Entity Authentication property which includes additional assumptions only used to find better attack trace */
+
+lemma entity_authentication_withrestrictedtrace: 
+ 	"// Human only has one password registered with same server server
+  	(All pw1 pw2 H S #i #j. PwdServer(S,H,pw1) @i & PwdServer(S,H,pw2) @j  ==> pw1=pw2)
+	 // for every server S, human H has exactly one unique user-id idH
+	&( All S H1 H2 idH #i #j. IdHs(S,H1,idH) @i & IdHs(S,H2,idH) @j ==> H1=H2
+	& All S H idH1 idH2 #i #j. IdHs(S,H,idH1) @i & IdHs(S,H,idH2) @j ==> idH1=idH2) 
+	// a Human only has one device
+	&(All H D2 D1 #i #j. Device(H,D1) @i & Device(H,D2) @j ==> D1=D2)
+	==> //entity_authentication holds
+		All S m #k. Commit(S,'Human',m) @k ==> 
+		(Ex #i #j. Sstart(S)@i & H('Human') @j & i<j &j<k) 		//in case when untrained human rules are used
+		|(Ex x #i #j. Sstart(S)@i & H_role('Human',x) @j& i<j &j<k) 	//in case when (infallible) human agent rules are used
+		
+	"
+
+
+end
+
+ 

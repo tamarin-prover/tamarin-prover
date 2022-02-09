@@ -182,7 +182,7 @@ type CaseName = String
 -- | Sound transformations of sequents.
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
-  | Solved                               -- ^ An attack was found
+  | Solved                               -- ^ An attack was found.
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -239,8 +239,8 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                  -> return M.empty
         Solved
-          | null (openGoals sys) -> return M.empty
-          | otherwise            -> Nothing
+          | null (plainOpenGoals sys) -> return M.empty
+          | otherwise                 -> Nothing 
         SolveGoal goal
           | goal `M.member` L.get sGoals sys -> execSolveGoal goal
           | otherwise                        -> Nothing
@@ -351,6 +351,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
                                                                       (Just _, Just s, Just sys') -> if (isSolved s sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
                                                                                                         then return M.empty
+                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys')) && (isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
+                                                                                                        -- here the system is trivial, has no mirror and restrictions do not get in the way.
+                                                                                                        -- If we solve arbitrarily the last remaining trivial goals,
+                                                                                                        -- then there will be an attack.
+                                                                                                        return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
@@ -391,7 +396,10 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     
     backwardSearchSystem :: Side -> DiffSystem -> String -> DiffSystem
     backwardSearchSystem s sys' rulename = L.set dsSide (Just s)
-      $ L.set dsSystem (Just (formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcRestrictions ctxt) RefinedSource ExistsSomeTrace True (formula rulename))) sys'
+      $ L.set dsSystem (Just ruleSys) sys'
+        where
+          ruleSys = insertLemmas reuseLemmas $ formulaToSystem (snd . head $ filter (\x -> fst x == s) $ L.get dpcRestrictions ctxt) RefinedSource ExistsSomeTrace True (formula rulename)
+          reuseLemmas = map snd $ filter (\x -> fst x == s) $ L.get dpcReuseLemmas ctxt
 
     startBackwardSearch :: String -> M.Map CaseName DiffSystem
     startBackwardSearch rulename = M.insert ("LHS") (backwardSearchSystem LHS sys rulename) $ M.insert ("RHS") (backwardSearchSystem RHS sys rulename) $ M.empty
@@ -413,12 +421,11 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 rankGoals :: ProofContext -> GoalRanking -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
-    OracleRanking oracleName -> oracleRanking oracleName ctxt
+    OracleRanking oracle -> oracleRanking oracle ctxt
     OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
-    SapicLivenessRanking -> sapicLivenessRanking ctxt
     SapicPKCS11Ranking -> sapicPKCS11Ranking ctxt
     SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
     SmartDiffRanking -> smartDiffRanking ctxt
@@ -528,11 +535,11 @@ goalNrRanking = sortOn (fst . snd)
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately.
-oracleRanking :: String
+oracleRanking :: Oracle
               -> ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleRanking oracleName ctxt _sys ags0
+oracleRanking oracle ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -540,7 +547,7 @@ oracleRanking oracleName ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
       
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
@@ -561,11 +568,11 @@ oracleRanking oracleName ctxt _sys ags0
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately, using the smartRanking heuristic
 --   as the baseline.
-oracleSmartRanking :: String
+oracleSmartRanking :: Oracle
                    -> ProofContext
                    -> System
                    -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleSmartRanking oracleName ctxt _sys ags0
+oracleSmartRanking oracle ctxt _sys ags0
 --  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
   | otherwise =
     unsafePerformIO $ do
@@ -573,7 +580,7 @@ oracleSmartRanking oracleName ctxt _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      outp <- readProcess oracleName [ L.get pcLemmaName ctxt ] inp
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
@@ -597,7 +604,7 @@ isAuthOutFact (Fact (ProtoFact _ "AuthOut" _) _ _) = True
 isAuthOutFact  _                                 = False
 
 isStateFact :: Goal -> Bool
-isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "State_" n
+isStateFact (PremiseG _ (Fact (ProtoFact _ n _) _ _)) = isPrefixOf "state_" n
 isStateFact  _                                 = False
 
 isUnlockAction :: Goal -> Bool
@@ -675,99 +682,18 @@ sapicRanking ctxt sys =
 
     solveLast = 
         [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst,
-        isLastProtoFact . fst ,
-        isKnowsLastNameGoal . fst,
-        isEventAction . fst
+        isLastInsertAction . fst, -- move insert actions for positions that start with L_ to the end
+        isLastProtoFact . fst, -- move Last proto facts (L_) to the end.
+        isKnowsLastNameGoal . fst, -- move last names (L_key) to the end
+        isEventAction . fst -- move event action, used in accountabilty translation, to the end
         ]
-        -- move the Last proto facts (L_) to the end.
 
     solveFirst =
         [ isChainGoal . fst
-        , isDisjGoal . fst
+        , isDisjGoalButNotProgress . fst --
         , isFirstProtoFact . fst
-        , isStateFact . fst
-        , isUnlockAction . fst
-        , isKnowsFirstNameGoal . fst
-        , isFirstInsertAction . fst
-        , isNonLoopBreakerProtoFactGoal
-        , isStandardActionGoalButNotInsert  . fst
-        , isNotAuthOut . fst
-        , isPrivateKnowsGoal . fst
-        -- , isFreshKnowsGoal . fst
-        , isSplitGoalSmall . fst
-        , isMsgOneCaseGoal . fst
-        , isDoubleExpGoal . fst
-        , isNoLargeSplitGoal . fst 
-        ]
-        -- move the rest (mostly more expensive KU-goals) before expensive
-        -- equation splits
-
-    -- FIXME: This small split goal preferral is quite hacky when using
-    -- induction. The problem is that we may end up solving message premise
-    -- goals all the time instead of performing a necessary split. We should make
-    -- sure that a split does not get too old.
-    smallSplitGoalSize = 3
-
-    -- Be conservative on splits that don't exist.
-    isSplitGoalSmall (SplitG sid) =
-        maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
-    isSplitGoalSmall _            = False
-
-    isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
-    isNoLargeSplitGoal _               = True
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-
-    
--- | A ranking function tuned for the automatic verification of
--- protocols with liveness properties generated with the Sapic tool
-sapicLivenessRanking :: ProofContext
-                     -> System
-                     -> [AnnotatedGoal] -> [AnnotatedGoal]
-sapicLivenessRanking ctxt sys =
-    sortOnUsefulness . unmark . sortDecisionTreeLast solveLast . sortDecisionTree solveFirst . goalNrRanking
-  where
-    oneCaseOnly = catMaybes . map getMsgOneCase . L.get pcSources $ ctxt
-
-    getMsgOneCase cd = case msgPremise (L.get cdGoal cd) of
-      Just (viewTerm -> FApp o _)
-        | length (getDisj (L.get cdCases cd)) == 1 -> Just o
-      _                                            -> Nothing
-
-    sortOnUsefulness = sortOn (tagUsefulness . snd . snd)
-
-    unmark = map unmarkPremiseG
-
-    tagUsefulness Useful                = 0 :: Int
-    tagUsefulness ProbablyConstructible = 1
-    tagUsefulness LoopBreaker           = 0
-    tagUsefulness CurrentlyDeducible    = 2
-
-    solveLast = 
-        [ 
-        -- isNotInsertAction . fst 
-        -- ,
-        isLastInsertAction . fst ,
-        isLastProtoFact . fst,
-        isKnowsLastNameGoal . fst,
-        isEventAction . fst
-        ]
-        -- move the Last proto facts (L_) to the end.
-
-    solveFirst =
-        [ 
-          isChainGoal . fst
-        , isDisjGoalButNotProgress . fst
-        , isFirstProtoFact . fst
-        , isMID_Receiver . fst
-        , isMID_Sender . fst
+        , isMID_Receiver . fst --
+        , isMID_Sender . fst --
         , isStateFact . fst
         , isUnlockAction . fst
         , isKnowsFirstNameGoal . fst
@@ -792,17 +718,6 @@ sapicLivenessRanking ctxt sys =
     -- sure that a split does not get too old.
     smallSplitGoalSize = 3
 
-
---  Problematic when using handles.
---    isFreshKnowsGoal goal = case msgPremise goal of
---        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
---        _                                                           -> False
-    -- we recognize any variable starting with h as a handle an deprioritize 
-
-    isMsgOneCaseGoal goal = case msgPremise goal of
-        Just (viewTerm -> FApp o _) | o `elem` oneCaseOnly -> True
-        _                                                  -> False
-
     -- Be conservative on splits that don't exist.
     isSplitGoalSmall (SplitG sid) =
         maybe False (<= smallSplitGoalSize) $ splitSize (L.get sEqStore sys) sid
@@ -811,6 +726,11 @@ sapicLivenessRanking ctxt sys =
     isNoLargeSplitGoal goal@(SplitG _) = isSplitGoalSmall goal
     isNoLargeSplitGoal _               = True
 
+--  Problematic when using handles.
+--    isFreshKnowsGoal goal = case msgPremise goal of
+--        Just (viewTerm -> Lit (Var lv)) | lvarSort lv == LSortFresh -> True
+--        _                                                           -> False
+    -- we recognize any variable starting with h as a handle an deprioritize 
 
 -- | A ranking function tuned for a specific model of the
 -- PKCS#11 keymanagement API formulated in SAPIC's input language.

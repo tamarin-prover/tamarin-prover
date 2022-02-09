@@ -4,7 +4,7 @@ packages:
 - lib/theory/
 - lib/term/
 - lib/utils/
-extra-deps: []
-resolver: lts-13.2
+- lib/sapic/
+resolver: lts-18.13
 nix:
   packages: [ zlib ]

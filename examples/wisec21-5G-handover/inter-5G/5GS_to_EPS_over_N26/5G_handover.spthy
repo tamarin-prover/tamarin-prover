@@ -1,0 +1,622 @@
+theory 5gs_to_eps_over_n26_handover
+
+/*
+  Protocol:   Handover from 5GS to EPS over N26
+
+  Comments:   Only models steps that are relevant to security
+
+  References: [TS 33.501] Security Architecture and Procedures for 5G System
+                          3GPP TS 33.501 V16.3.0 (2020-07)
+
+              [TS 33.401] 3GPP System Architecture Evolution (SAE)
+                          3GPP TS 33.401 V16.3.0 (2020-07)
+
+              [TS 23.502] Procedures for the 5G System (5GS)
+                          3GPP TS 23.502 V16.5.0 (2020-07)
+
+              [TS 23.401] General Packet Radio Service (GPRS) enhancements for
+                          Evolved Universal Terrestrial Radio Access Network
+                          (E-UTRAN) access
+                          3GPP TS 23.401 V16.7.0 (2020-07)
+
+  Notations:  HO  - Handover
+              UE  - User Equipment
+              AMF - Access and Mobility Management Function
+              MME - Mobility Management Entity
+              eNB - evolved Node B
+              gNB - Next generation Node B
+
+  Key derivation:
+    K_ASME  = KDF(K_AMF, NAS_COUNT) [TS 33.501, A.14.2]
+    K_gNB   = KDF(K_AMF, NAS_COUNT) [TS 33.501, A.9]
+    K_eNB   = KDF(K_ASME, 2^31-1)   [TS 33.401, A.3]
+    NH      = KDF(K_ASME, K_eNB)    [TS 33.401, A.4] (initial key derivation)
+            = KDF(K_ASME, NH)                        (subsequent key derivation)
+    K_eNB*  = KDF(NH, eNB_ID)       [TS 33.401, A.5]
+
+  Protocol [TS 33.501, Sec. 8.3], [TS 23.401, Sec. 5.5.1.2.2],
+           [TS 23.502, Sec. 4.11.1.2.1]:
+    1. gNB -> AMF : gNB_UE_ID, eNB_ID
+    2. AMF -> MME : K_ASME, gNB_UE_ID, eNB_ID, NH, NCC (=2)
+    3. MME -> eNB : MME_UE_S1AP_ID, NH, NCC, (=2)
+    4. eNB -> MME : MME_UE_S1AP_ID, eNB_UE_S1AP_ID, NCC
+    5. MME -> AMF : gNB_UE_ID, NCC
+    6. AMF -> gNB : gNB_UE_ID, NCC, NAS_COUNT
+    7. gNB -> UE  : eNB_ID, NCC, NAS_COUNT
+    8. UE  -> eNB : Handover Complete
+    9. eNB -> MME : Handover Notify
+*/
+
+begin
+
+builtins:
+  symmetric-encryption, multiset
+
+functions:
+  // 3GPP KDFs [TS 33.501]
+  KDF/2 // KDF --> K_ASME, K_gNB, K_eNB, NH, K_eNB*,
+
+/***********************************/
+/*         Secure Channels         */
+/***********************************/
+// This is a standard, secure channel abstraction, as previously used in work
+// by Basin, Radomirovic and Schmid: Modeling Human Errors in Security Protocols
+// (CSF 2016)
+// This version provides replay protection, order-preserving (binding channel).
+rule send_secure:
+  // ~cid denotes a channel identifier: should always be a fresh name
+  // (possibly CreateValues by the attacker)
+  [ SndS(~cid,A,B,m) ]
+-->
+  [ Sec(~cid,A,B,m) ]
+
+rule receive_secure:
+  [ Sec(~cid,A,B,m) ]
+-->
+  [ RcvS(~cid,A,B,m) ]
+
+rule secureChannel_compromised_in:
+  // An attacker can learn cid with secureChannel_compromised_out
+  [ In(<~cid,A,B,x>) ]
+--[ Rev(A,'secureChannel')
+  , Rev(B,'secureChannel')
+  , Injected(x)
+  ]->
+  [ Sec(~cid,A,B,x) ]
+
+rule secureChannel_compromised_out:
+  [ Sec(~cid,A,B,m) ]
+--[ Rev(B,'secureChannel')
+  , Rev(A,'secureChannel')
+  ]->
+  [ Out(<~cid,m>) ]
+
+/************************************/
+/*       Initialization Rules       */
+/************************************/
+
+// Initialize AMF
+rule init_AMF:
+  [ Fr(~AMF_ID) ]
+--[ AMF_initialized(~AMF_ID) ]->
+  [ !AMF(~AMF_ID)
+  , Out(~AMF_ID) ]
+
+// Initialize MME
+rule init_MME:
+  [ Fr(~MME_ID) ]
+--[ MME_initialized(~MME_ID) ]->
+  [ !MME(~MME_ID)
+  , Out(~MME_ID) ]
+
+// Initialize eNB
+rule init_eNB:
+  [ Fr(~eNB_ID) ]
+--[ ENB_initialized(~eNB_ID) ]->
+  [ !ENB(~eNB_ID)
+  , Out(~eNB_ID) ]
+
+// Initialize gNB
+rule init_gNB:
+  [ Fr(~gNB_ID) ]
+--[ GNB_initialized(~gNB_ID) ]->
+  [ !GNB(~gNB_ID)
+  , Out(~gNB_ID) ]
+
+// Create a User Equipment (UE)
+rule create_UE:
+  [ Fr(~SUPI) ]
+--[ UserEquipment(~SUPI) ]->
+  [ !UE(~SUPI) ]
+
+// Initialize a UE in a 5G network
+rule init_UE:
+  let
+    NAS_COUNT = '0'
+    K_gNB = KDF(~K_AMF, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+  in
+  [ !AMF(~AMF_ID)
+  , !GNB(~gNB_ID)
+  , !ENB(~eNB_ID)
+  , !UE(~SUPI)
+  , Fr(~gNB_UE_ID)
+  , Fr(~K_AMF)
+  , In(NAS_COUNT) ]
+--[ Subscribe(~SUPI, ~gNB_ID)
+  , KeyDerived(<'K_gNB', K_gNB>, ~K_AMF)
+  ]->
+  [ !Ltk_sym_amf(~AMF_ID, ~SUPI, <'K_AMF', ~K_AMF>)
+  , Session_key(~SUPI, ~gNB_ID, <'K_gNB', K_gNB>)
+  , St_1_UE(~SUPI, ~K_AMF, K_gNB, ~AMF_ID, ~gNB_ID, ~eNB_ID)
+  , St_1_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , St_1_AMF(~AMF_ID, ~K_AMF, NAS_COUNT, ~SUPI, ~gNB_UE_ID) ]
+
+// Initialize an N26 interface between the AMF and MME
+// N26: AMF - MME
+rule connect_networks_N26:
+  [ !AMF(~AMF_ID)
+  , !MME(~MME_ID)
+  , Fr(~cid_N26) ]
+--[ OnlyOnce(~AMF_ID, ~MME_ID) ]->
+  [ !N26(~cid_N26, ~AMF_ID, ~MME_ID) ]
+
+// Initialize an N2 interface between a gNB and the AMF
+// N2: gNB - AMF
+rule connect_networks_N2:
+  [ !GNB(~gNB_ID)
+  , !AMF(~AMF_ID)
+  , Fr(~cid_N2) ]
+--[ OnlyOnce(~gNB_ID, ~AMF_ID) ]->
+  [ !N2(~cid_N2, ~gNB_ID, ~AMF_ID) ]
+
+// Initialize an S1 interface between an eNB and the MME
+// S1: eNB - MME
+rule connect_networks_S1:
+  [ !ENB(~eNB_ID)
+  , !MME(~MME_ID)
+  , Fr(~cid_S1) ]
+--[ OnlyOnce(~eNB_ID, ~MME_ID) ]->
+  [ !S1(~cid_S1, ~eNB_ID, ~MME_ID) ]
+
+/***********************************/
+/*           Key Leakage           */
+/***********************************/
+
+// NOTE: Rules for compromising secure channels are defined above.
+
+// K_AMF is compromised
+rule reveal_k_amf:
+  [ !Ltk_sym_amf(AMF_ID, SUPI, <'K_AMF', K_AMF>) ]
+--[ Rev(AMF_ID, <'K_AMF', K_AMF>)
+  , Rev(SUPI, <'K_AMF', K_AMF>)
+  ]->
+  [ Out(K_AMF) ]
+
+// K_ASME is compromised
+rule reveal_k_asme:
+  [ !Ltk_sym_amse(AMF_ID,  MME_ID, SUPI, <'K_ASME', K_ASME>) ]
+--[ Rev(AMF_ID, <'K_ASME', K_ASME>)
+  , Rev(SUPI, <'K_ASME', K_ASME>)
+  , Rev(MME_ID, <'K_ASME', K_ASME>)
+  ]->
+  [ Out(K_ASME) ]
+
+// K_gNB is compromised
+rule reveal_k_gnb:
+  [ Session_key(SUPI, gNB_ID, <'K_gNB', K_gNB>) ]
+--[ Rev(SUPI, <'K_gNB', K_gNB>)
+  , Rev(gNB_ID, <'K_gNB', K_gNB>)
+  ]->
+  [ Out(K_gNB) ]
+
+// K_eNB* is compromised
+rule reveal_k_enb_star:
+  [ Session_key(SUPI, eNB_ID, <'K_eNB_star', K_eNB_star>) ]
+--[ Rev(SUPI, <'K_eNB_star', K_eNB_star>)
+  , Rev(eNB_ID, <'K_eNB_star', K_eNB_star>)
+  ]->
+  [ Out(K_eNB_star) ]
+
+// NH is compromised
+rule reveal_nh:
+  [ Intermediate_key(AMF_ID, MME_ID, eNB_ID, <'NH', NH>) ]
+--[ Rev(AMF_ID, <'NH', NH>)
+  , Rev(MME_ID, <'NH', NH>)
+  , Rev(eNB_ID, <'NH', NH>)
+  ]->
+  [ Out(NH) ]
+
+/************************************/
+/*          Protocol Rules          */
+/************************************/
+
+rule gnb_snd_ho_req:
+  let
+    msgOut = <'ho_req', ~gNB_UE_ID, ~eNB_ID>
+  in
+  [ St_1_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , !N2(~cid_N2, ~gNB_ID, ~AMF_ID) ]
+-->
+  [ St_2_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , SndS(~cid_N2, ~gNB_ID, ~AMF_ID, msgOut) ]
+
+rule amf_rcv_ho_req_snd_fr_req:
+  let
+    K_ASME = KDF(~K_AMF, NAS_COUNT)
+    K_eNB = KDF(K_ASME, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_ASME, KDF(K_ASME, K_eNB))
+    NCC = '1'+'1'
+    msgIn = <'ho_req', ~gNB_UE_ID, ~eNB_ID>
+    msgOut = <'fr_req', K_ASME, ~gNB_UE_ID, ~eNB_ID, NH, NCC>
+  in
+  [ St_1_AMF(~AMF_ID, ~K_AMF, NAS_COUNT, ~SUPI, ~gNB_UE_ID)
+  , !N2(~cid_N2, ~gNB_ID, ~AMF_ID)
+  , !N26(~cid_N26, ~AMF_ID, ~MME_ID)
+  , RcvS(~cid_N2, ~gNB_ID, ~AMF_ID, msgIn) ]
+--[ // Sources
+    NH_SND(NH, <~AMF_ID, ~MME_ID>)
+    // Key derivation
+  , KeyDerived(<'K_ASME', K_ASME>, ~K_AMF)
+  , KeyDerived(<'NH', NH>, K_ASME)
+  ]->
+  [ St_2_AMF(~AMF_ID, K_ASME, ~K_AMF, NAS_COUNT, NH, NCC, ~MME_ID, ~eNB_ID, ~gNB_ID, ~SUPI, ~gNB_UE_ID)
+  , !Handover_Session(NH, <~AMF_ID, ~MME_ID, ~gNB_ID, ~eNB_ID, ~SUPI>)
+  , !Ltk_sym_amse(~AMF_ID, ~MME_ID, ~SUPI, <'K_ASME', K_ASME>)
+  , Intermediate_key(~AMF_ID, ~MME_ID, ~eNB_ID, <'NH', NH>)
+  , SndS(~cid_N26, ~AMF_ID, ~MME_ID, msgOut) ]
+
+rule mme_rcv_fr_req_snd_s1_ho_req:
+  let
+    msgIn = <'fr_req', K_ASME, ~gNB_UE_ID, ~eNB_ID, NH, NCC>
+    msgOut = <'s1_ho_req', ~MME_UE_S1AP_ID, NH, NCC>
+  in
+  [ !MME(~MME_ID)
+  , !N26(~cid_N26, ~AMF_ID, ~MME_ID)
+  , !S1(~cid_S1, ~eNB_ID, ~MME_ID)
+  , RcvS(~cid_N26, ~AMF_ID, ~MME_ID, msgIn)
+  , Fr(~MME_UE_S1AP_ID)
+  , In(NCC) ]
+--[ // Sources
+    NH_RCV(NH, <~AMF_ID, ~MME_ID>)
+  , NH_SND(NH, <~MME_ID, ~eNB_ID>)
+  ]->
+  [ St_1_MME(~MME_ID, K_ASME, NH, NCC, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID, ~MME_UE_S1AP_ID)
+  , Out(~MME_UE_S1AP_ID) // Reveal identifier
+  , SndS(~cid_S1, ~MME_ID, ~eNB_ID, msgOut) ]
+
+rule enb_rcv_s1_ho_req_snd_ack:
+  let
+    K_eNB_star  = KDF(NH, ~eNB_ID)
+    msgIn = <'s1_ho_req', ~MME_UE_S1AP_ID, NH, NCC>
+    msgOut = <'s1_ho_req_ack', ~MME_UE_S1AP_ID, ~eNB_UE_S1AP_ID, NCC>
+  in
+  [ !ENB(~eNB_ID)
+  , !S1(~cid_S1, ~eNB_ID, ~MME_ID)
+  , !Handover_Session(NH, <~AMF_ID, ~MME_ID, ~gNB_ID, ~eNB_ID, ~SUPI>)
+  , RcvS(~cid_S1, ~MME_ID, ~eNB_ID, msgIn)
+  , Fr(~eNB_UE_S1AP_ID)
+  , In(NCC) ]
+--[ // Key agreement
+    Running(~eNB_ID, ~SUPI, <'UE','eNB',<'K_eNB_star',K_eNB_star>>)
+    // Sources
+  , NH_RCV(NH, <~MME_ID, ~eNB_ID>)
+    // Key derivation
+  , KeyDerived(<'K_eNB_star', K_eNB_star>, NH)
+  ]->
+  [ St_1_eNB(~eNB_ID, K_eNB_star, NH, ~MME_ID, ~MME_UE_S1AP_ID, ~eNB_UE_S1AP_ID)
+  , Session_key(~MME_UE_S1AP_ID, ~eNB_ID, <'K_eNB_star', K_eNB_star>)
+  , Out(~eNB_UE_S1AP_ID) // Reveal identifier
+  , SndS(~cid_S1, ~eNB_ID, ~MME_ID, msgOut) ]
+
+rule mme_rcv_ack_snd_fr_res:
+  let
+    msgIn = <'s1_ho_req_ack', ~MME_UE_S1AP_ID, ~eNB_UE_S1AP_ID, NCC>
+    msgOut = <'ffr_res', ~gNB_UE_ID, NCC>
+  in
+  [ St_1_MME(~MME_ID, K_ASME, NH, NCC, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID, ~MME_UE_S1AP_ID)
+  , !N26(~cid_N26, ~AMF_ID, ~MME_ID)
+  , !S1(~cid_S1, ~eNB_ID, ~MME_ID)
+  , RcvS(~cid_S1, ~eNB_ID, ~MME_ID, msgIn) ]
+-->
+  [ St_2_MME(~MME_ID, K_ASME, NH, NCC, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID, ~MME_UE_S1AP_ID)
+  , SndS(~cid_N26, ~MME_ID, ~AMF_ID, msgOut) ]
+
+rule amf_rcv_fr_res_snd_ho_cmd:
+  let
+    msgIn = <'ffr_res', ~gNB_UE_ID, NCC>
+    msgOut = <'ho_cmd', ~gNB_UE_ID, NCC, NAS_COUNT>
+  in
+  [ St_2_AMF(~AMF_ID, K_ASME, ~K_AMF, NAS_COUNT, NH, NCC, ~MME_ID, ~eNB_ID, ~gNB_ID, ~SUPI, ~gNB_UE_ID)
+  , !N2(~cid_N2, ~gNB_ID, ~AMF_ID)
+  , !N26(~cid_N26, ~AMF_ID, ~MME_ID)
+  , RcvS(~cid_N26, ~MME_ID, ~AMF_ID, msgIn) ]
+-->
+  [ St_3_AMF(~AMF_ID, K_ASME, ~K_AMF, NH, ~SUPI)
+  , SndS(~cid_N2, ~AMF_ID, ~gNB_ID, msgOut) ]
+
+rule gnb_fwd_ho_cm:
+  let
+    msgIn = <'ho_cmd', ~gNB_UE_ID, NCC, NAS_COUNT>
+    msgOut = <'ho_cmd', ~eNB_ID, NCC, NAS_COUNT>
+  in
+  [ St_2_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , !N2(~cid_N2, ~gNB_ID, ~AMF_ID)
+  , RcvS(~cid_N2, ~AMF_ID, ~gNB_ID, msgIn) ]
+-->
+  [ St_3_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , Out(senc(msgOut, K_gNB)) ]
+
+rule ue_rcv_ho_cmd_snd_ho_complete:
+  let
+    K_ASME = KDF(~K_AMF, NAS_COUNT)
+    K_eNB = KDF(K_ASME, 'MAX_NAS_COUNT') // MAX NAS COUNT = 2^32-1
+    NH = KDF(K_ASME, KDF(K_ASME, K_eNB))
+    K_eNB_star  = KDF(NH, ~eNB_ID)
+    msgIn = <'ho_cmd', ~eNB_ID, NCC, NAS_COUNT>
+    msgOut = <'handover_complete'>
+  in
+  [ St_1_UE(~SUPI, ~K_AMF, K_gNB, ~AMF_ID, ~gNB_ID, ~eNB_ID)
+  , !Handover_Session(NH, <~AMF_ID, ~MME_ID, ~gNB_ID, ~eNB_ID, ~SUPI>)
+  , In(senc(msgIn, K_gNB)) ]
+--[ // Key agreement
+    Commit(~SUPI, ~eNB_ID, <'UE','eNB',<'K_eNB_star',K_eNB_star>>)
+  , Running(~SUPI, ~eNB_ID, <'eNB','UE',<'K_eNB_star',K_eNB_star>>)
+  , Honest(~AMF_ID)
+  , Honest(~MME_ID)
+  , Honest(~eNB_ID)
+  , Honest(~gNB_ID)
+  , Honest(~SUPI)
+    // Key derivation
+  , KeyDerived(<'K_eNB_star', K_eNB_star>, NH)
+  ]->
+  [ St_2_UE(~SUPI, ~K_AMF, K_gNB, K_ASME, K_eNB_star, ~AMF_ID)
+  , Out(senc(msgOut, K_eNB_star)) ]
+
+rule enb_rcv_ho_complete_snd_ho_notify:
+  let
+    msgIn = <'handover_complete'>
+    msgOut = <'handover_notify'>
+  in
+  [ St_1_eNB(~eNB_ID, K_eNB_star, NH, ~MME_ID, ~MME_UE_S1AP_ID, ~eNB_UE_S1AP_ID)
+  , !Handover_Session(NH, <~AMF_ID, ~MME_ID, ~gNB_ID, ~eNB_ID, ~SUPI>)
+  , !S1(~cid_S1, ~eNB_ID, ~MME_ID)
+  , In(senc(msgIn, K_eNB_star)) ]
+--[ // Key agreement
+    Commit(~eNB_ID, ~SUPI, <'eNB','UE',<'K_eNB_star',K_eNB_star>>)
+  , Honest(~AMF_ID)
+  , Honest(~MME_ID)
+  , Honest(~eNB_ID)
+  , Honest(~gNB_ID)
+  , Honest(~SUPI)
+  ]->
+  [ St_2_eNB(~eNB_ID, K_eNB_star)
+  , SndS(~cid_S1, ~eNB_ID, ~MME_ID, msgOut) ]
+
+rule mme_rcv_ho_notify:
+  let
+    msgIn = <'handover_notify'>
+  in
+  [ St_2_MME(~MME_ID, K_ASME, NH, NCC, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID, ~MME_UE_S1AP_ID)
+  , !S1(~cid_S1, ~eNB_ID, ~MME_ID)
+  , RcvS(~cid_S1, ~eNB_ID, ~MME_ID, msgIn) ]
+--[ // Executability
+    HandoverDone(K_ASME)
+  ]->
+  [ St_3_MME(~MME_ID, K_ASME, NH) ]
+
+// Secrecy and honesty
+rule handover_done:
+  [ St_3_AMF(~AMF_ID, K_ASME, ~K_AMF, NH, ~SUPI)
+  , St_3_MME(~MME_ID, K_ASME, NH)
+  , St_2_eNB(~eNB_ID, K_eNB_star)
+  , St_3_gNB(~gNB_ID, K_gNB, ~AMF_ID, ~gNB_UE_ID, ~eNB_ID)
+  , St_2_UE(~SUPI, ~K_AMF, K_gNB, K_ASME, K_eNB_star, ~AMF_ID) ]
+--[ // Secrecy
+    Honest(~AMF_ID)
+  , Honest(~MME_ID)
+  , Honest(~eNB_ID)
+  , Honest(~gNB_ID)
+  , Honest(~SUPI)
+  , Secret(<'K_AMF', ~K_AMF>)
+  , Secret(<'K_ASME', K_ASME>)
+  , Secret(<'K_gNB', K_gNB>)
+  , Secret(<'K_eNB_star', K_eNB_star>)
+  ]->
+  [ ]
+
+/************************************/
+/*          Sources Lemmas          */
+/************************************/
+
+// Proof: Automatic (~2 s (22 steps), +RTS -N10 -M20G -RTS)
+lemma NH_SRC [sources]:
+  " All a b n #i. NH_RCV(n,<a,b>)@i
+      ==> (Ex #j. NH_SND(n,<a,b>)@j & j < i)
+           | (Ex #k. KU(n)@k & k < i)
+  "
+
+/************************************/
+/*           Restrictions           */
+/************************************/
+
+restriction OnlyOnce:
+  " All p q #i #j. OnlyOnce(p, q)@i & OnlyOnce(p, q)@j ==> #i = #j "
+
+/************************************/
+/*       Executability Lemmas       */
+/************************************/
+
+// Normal executability for one handover
+// Proof: Automatic (~5 s (16 steps), +RTS -N10 -M20G -RTS)
+lemma executability:
+  exists-trace
+  " Ex x #i.
+      HandoverDone(x)@i
+      // Restrictions
+    & not (Ex X data #r. Rev(X,data)@r)
+
+    & (All a #k. HandoverDone(a)@k ==> #k = #i)
+
+    & (All a b #k1 #k2. UserEquipment(a)@k1
+                      & UserEquipment(b)@k2 ==> #k1 = #k2)
+    & (All a b #k1 #k2. GNB_initialized(a)@k1
+                      & GNB_initialized(b)@k2 ==> #k1 = #k2)
+    & (All a b #k1 #k2. AMF_initialized(a)@k1
+                      & AMF_initialized(b)@k2 ==> #k1 = #k2)
+    & (All a b #k1 #k2. MME_initialized(a)@k1
+                      & MME_initialized(b)@k2 ==> #k1 = #k2)
+    & (All a b #k1 #k2. ENB_initialized(a)@k1
+                      & ENB_initialized(b)@k2 ==> #k1 = #k2)
+    & (All a b c d #k1 #k2. Subscribe(a,b)@k1
+                          & Subscribe(c,d)@k2 ==> #k1 = #k2)
+  "
+
+/************************************/
+/*         Agreement Lemmas         */
+/************************************/
+
+/* Injective agreement of K_eNB_star: UE -> eNB
+ *
+ * If a UE commits to a key K_eNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one eNB that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~3 s (37 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = SUPI
+ *  b = eNB_ID
+ *  r = K_eNB_star
+ */
+lemma injectiveagreement_ue_enb_k_enb:
+  " All a b r #i. Commit(a,b,<'UE','eNB',<'K_eNB_star',r>>)@i
+      ==> (Ex #j. Running(b,a,<'UE','eNB',<'K_eNB_star',r>>)@j
+           & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','eNB',<'K_eNB_star',r>>)@i2
+             & not (#i2 = #i))
+           ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/* Injective agreement of K_eNB_star: eNB -> UE
+ *
+ * If an eNB commits to a key K_eNB_star, then at least one of the following are
+ * true:
+ *  - There exists exactly one UE that derived the same key
+ *  - One of the participating agents was compromised
+ *
+ * Proof: Automatic (~10 s (133 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *  a = eNB_ID
+ *  b = SUPI
+ *  r = K_eNB_star
+ */
+lemma injectiveagreement_enb_ue_k_enb:
+  " All a b r #i. Commit(a,b,<'eNB','UE',<'K_eNB_star',r>>)@i
+      ==> (Ex #j. Running(b,a,<'eNB','UE',<'K_eNB_star',r>>)@j
+           & not (Ex a2 b2 #i2. Commit(a2,b2,<'eNB','UE',<'K_eNB_star',r>>)@i2
+             & not (#i2 = #i))
+           ) | (Ex X data #k. Rev(X,data)@k & Honest(X)@i)
+  "
+
+/************************************/
+/*          Secrecy Lemmas          */
+/************************************/
+
+/* Secrecy of K_AMF
+ *
+ * If an attacker knows a key K_AMF, then the following is true:
+ *  - The key itself was revealed to the attacker
+ *
+ * Proof: Automatic (~2 s (128 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   p = K_AMF
+ */
+lemma secret_k_amf:
+  " All p #i. Secret(<'K_AMF',p>)@i
+    ==> (not (Ex #k. K(p)@k))
+         | (Ex X #k. Rev(X,<'K_AMF',p>)@k & Honest(X)@i)
+  "
+
+/* Secrecy of K_ASME
+ *
+ * If an attacker knows a key K_ASME, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it was derived from was revealed to the attacker
+ *  - The secure channel that it was sent over was compromised by the attacker
+ *
+ * Proof: Automatic (~2 s (15 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   p = K_AMF
+ *   q = K_ASME
+ */
+lemma secret_k_asme:
+  " All p q #i #j.
+        Secret(<'K_ASME',q>)@i
+      & KeyDerived(<'K_ASME',q>,p)@j
+      ==> (not (Ex #k. K(q)@k))
+           | (Ex X #k. Rev(X,<'K_ASME',q>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'K_AMF',p>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,'secureChannel')@k & Honest(X)@i)
+  "
+
+/* Secrecy of K_gNB
+ *
+ * If an attacker knows a key K_gNB, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The K_AMF that it was derived from was revealed to the attacker
+ *
+ * Proof: Automatic (~3 s (24 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   p = K_AMF
+ *   r = K_gNB
+ */
+lemma secret_k_gnb:
+  " All p r #i #j.
+        Secret(<'K_gNB',r>)@i
+      & KeyDerived(<'K_gNB',r>,p)@j
+      ==> (not (Ex #k. K(r)@k))
+           | (Ex X #k. Rev(X,<'K_gNB',r>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'K_AMF',p>)@k & Honest(X)@i)
+  "
+
+/* Secrecy of K_eNB*
+ *
+ * If an attacker knows a key K_eNB*, then at least one of the following are
+ * true:
+ *  - The key itself was revealed to the attacker
+ *  - The NH that it was derived from was revealed to the attacker
+ *  - The K_ASME that it originates from was revealed to the attacker
+ *  - The K_AMF that it originates from was revealed to the attacker
+ *  - The secure channel that the K_ASME was sent over was compromised by the
+ *    attacker
+ *
+ * Proof: Automatic (~40 s (315 steps), +RTS -N10 -M20G -RTS)
+ *
+ * Notations:
+ *   p = K_AMF
+ *   q = K_ASME
+ *   s = K_eNB_star
+ *   t = NH
+ */
+lemma secret_k_enb_star:
+  " All s t #i #j.
+        Secret(<'K_eNB_star',s>)@i
+      & KeyDerived(<'K_eNB_star',s>,t)@j
+      ==> (not (Ex #k. K(s)@k))
+           | (Ex X #k. Rev(X,<'K_eNB_star',s>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,<'NH',t>)@k & Honest(X)@i)
+           | (Ex X q #k #l. KeyDerived(<'NH',t>,q)@l
+              & Rev(X,<'K_ASME',q>)@k & Honest(X)@i)
+           | (Ex X p q #k #l #m. KeyDerived(<'NH',t>,q)@l
+              & KeyDerived(<'K_ASME',q>,p)@m
+              & Rev(X,<'K_AMF',p>)@k & Honest(X)@i)
+           | (Ex X #k. Rev(X,'secureChannel')@k & Honest(X)@i)
+  "
+
+end

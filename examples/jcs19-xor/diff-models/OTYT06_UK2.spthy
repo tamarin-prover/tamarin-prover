@@ -1,0 +1,86 @@
+theory OTYT06_UK2
+begin
+
+builtins: xor, hashing, multiset
+
+/*
+OTYT06: Reader R, RFID tag T, shared knowledge k
+	This is a stateful protocol, the tag and reader's knowledge is updated
+        after a successful run. 
+
+   R: knows(k)
+   T: knows(k)
+   R: fresh(r1)
+R->T: r1
+T->R: h(k XOR r1)
+   R: fresh(k1)
+R->T: k XOR k1
+   R: replace k by k1
+   T: replace k by k1
+
+Protocol satisfies recent aliveness of the tag, but not untracability.
+Recent aliveness of reader is not satisfied. 
+
+*/
+
+rule Setup:
+   [ Fr( ~k1 )
+   , Fr( ~k2 )
+   , Fr( ~r )
+   , Fr( ~newKey1 )
+   , Fr( ~newKey2 )
+   ]
+ --[ Setup(~k1), Setup(~k2)
+   , OnlyOnce( 'setup' ) ]-> 
+   [ Out( <~r, h(~k1 XOR ~r), ~k1 XOR ~newKey1> )
+   , Tag(diff(~k1,~k2), diff(~newKey1, ~newKey2))  // first arg: initial key, snd arg: current key
+   ]
+
+rule tag1:
+   [ In( r1 )
+   , Tag( ~k, x ) ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge( x, 'Tag' )
+   , Tag( ~k, x)
+   , Running( ~k, 'Tag', x)
+   , OnlyOnce('tag1')
+   ]->
+   [ Out( h(x XOR r1) )
+   , Tag( ~k, x )   // having this here allows two parallel sessions with the same tag to run, removing it would force the tag to finish a run. In practice, an adversary can always drop a message. Hence, we prefer our modeling choice.
+   , TagRunning( ~k, x )
+   ]
+
+rule tag2:
+   let newKey = x XOR newkey
+   in
+   [ Fr(~k2)
+   , In( newkey )
+   , TagRunning( ~k, x )
+   ]
+ --[ Update( x, newKey, 'Tag' )
+   , Alive( ~k, 'Reader' )
+   , OnlyOnce('tag2')
+   ]->
+   [ Tag( ~k, newKey)
+   ]
+
+/*
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ F"
+*/
+
+// We only consider one session of the tag, past the learning phase.
+restriction unique:
+  "∀ x #i #j. ((OnlyOnce(x) @ #i) ∧ (OnlyOnce(x) @ #j)) ⇒ (#i = #j)"
+
+//PROOFFOUND AUTOMATICALLY
+lemma tag_start [reuse,use_induction]:
+"All x y #k. Tag(x, y) @k ==> Ex #i. Setup(x) @ #i & i<k"
+
+// ATTACK FOUND automatically: falsified
+// Observational Equivalence
+
+end

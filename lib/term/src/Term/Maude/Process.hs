@@ -117,10 +117,10 @@ startMaudeProcess maudePath maudeSig = do
   where
     maudeCmd
       | dEBUGMAUDE = "sh -c \"tee /tmp/maude.input | "
-                     ++ maudePath ++ " -no-tecla -no-banner -no-wrap -batch "
+                     ++ maudePath ++ " -interactive -no-tecla -no-banner -no-wrap -batch "
                      ++ "\" | tee /tmp/maude.output"
       | otherwise  =
-          maudePath ++ " -no-tecla -no-banner -no-wrap -batch "
+          maudePath ++ " -interactive -no-tecla -no-banner -no-wrap -batch "
     executeMaudeCommand hin hout cmd =
         B.hPutStr hin cmd >> hFlush hin >> getToDelim hout >> return ()
     setupCmds = [ "set show command off .\n"

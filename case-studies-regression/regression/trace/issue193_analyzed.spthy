@@ -10,6 +10,8 @@ equations:
     revealVerify(revealSign(x.1, x.2), x.1, pk(x.2)) = true,
     snd(<x.1, x.2>) = x.2
 
+
+
 rule (modulo E) ONE:
    [ Fr( ~sk ), Fr( ~random ) ]
   -->
@@ -66,8 +68,6 @@ end
 maude tool: 'maude'
  checking version: 2.7.1. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/regression/trace/issue193.spthy
@@ -76,7 +76,7 @@ analyzing: examples/regression/trace/issue193.spthy
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.040131363s
+  processing time: 0.072211427s
   debug (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.040131363s
+  processing time: 0.072211427s
   debug (exists-trace): verified (4 steps)
 
 ==============================================================================

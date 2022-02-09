@@ -1,0 +1,117 @@
+theory RFID_Simple begin
+
+/*
+   Protocol:    Extended version of the running example from StatVerif paper
+   Modeler:     Simon Meier
+   Date:        May 2012
+
+   Status:      working
+
+   ...
+
+*/
+
+// Declare RFID/1 fact as globally fresh...for testing purposes.
+// unique_insts: RFID/1
+
+builtins: asymmetric-encryption
+
+// RFID Memory Cell model
+
+rule GenKey:
+    [ Fr(~sk)  // We let the key identify the device.
+    ]
+  --[ Device_Key(~sk) ]->
+    [ Device_Init(~sk)
+    , Device_Alice(~sk)
+    , Out(pk(~sk)) // make the public key available to the adversary
+    ]
+
+rule Alice:
+    [ Device_Alice(sk)
+    , Fr(~x)
+    , Fr(~y)
+    ]
+  --[ Exclusive(~x,~y)
+    , Device_Use(sk)
+    ]->
+    [ Device_Alice(sk)
+    , Out( aenc{~x,~y}pk(sk) )
+    ]
+
+rule DeviceToBob:
+    [ Device_Init(sk), Device_Alice(sk) ]
+  --[ ToBob(sk) ]->
+    [ Device_Select(sk) ]
+
+rule Select_Left:
+    [ Device_Select(sk) ]
+    -->
+    [ !Device_Left(sk) ]
+
+rule Select_Right:
+    [ Device_Select(sk) ]
+    -->
+    [ !Device_Right(sk) ]
+
+rule Decrypt_Left:
+    [ !Device_Left(sk), In(aenc{x,y}pk(sk)) ]
+  --[ Access(x) ]->
+    [ Out(x) ]
+
+rule Decrypt_Right:
+    [ !Device_Right(sk), In(aenc{x,y}pk(sk)) ]
+  --[ Access(y) ]->
+    [ Out(y) ]
+
+lemma types [sources]:
+  "All m #i. Access(m) @ i ==>
+      (Ex   #j. KU(m) @ j & j < i)
+    | (Ex x #j. Exclusive(x,m) @ j)
+    | (Ex y #j. Exclusive(m,y) @ j)
+  "
+
+lemma Device_ToBob [use_induction]:
+  "All sk #i. Device_Use(sk) @ i ==>
+      (All #j. ToBob(sk) @ j ==> i < j)"
+
+lemma Device_Init_Use_Set [reuse, use_induction]:
+  "All sk #i. Device_Use(sk) @ i ==>
+      (All #j. ToBob(sk) @ j ==> i < j)
+    & (Ex #j. Device_Key(sk) @ j & j < i)"
+
+// attackable
+lemma reachability_left:
+  exists-trace
+  "Ex x y #i #j. Exclusive(x,y) @i & K(x) @ j"
+
+end
+
+/*
+lemma reachability_right:
+  exists-trace
+  "Ex x y #i #k.  Exclusive(x,y) @i & K(y) @ k"
+
+lemma secrecy:
+  "not(Ex x y #i #k1 #k2.
+         Exclusive(x,y) @i & K(x) @ k1 & K(y) @ k2
+      )
+  "
+
+/*
+// We cannot prove this lemma with the current system. We cannot state that
+// the ressource "Device_Alice" is no longer available after the device has
+// been handed to Bob.
+//
+// The fundamental problem is that we cannot express the multiplicity of a
+// fact in the *state* in our formula language, as we are always talking about
+// the whole history. It's also unclear how to exploit such state use_inductions
+// in our backwards approach.
+lemma Alice_before_to_bob:
+  "All sk #i #j. Device_Use(sk) @ i & ToBob(sk) @ j ==> i < j"
+
+*/
+*/
+*/
+
+end

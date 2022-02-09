@@ -19,6 +19,7 @@ import           Data.Maybe
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing                   (timed)
+import           Extension.Data.Label
 
 import qualified Text.PrettyPrint.Class          as Pretty
 
@@ -72,7 +73,6 @@ run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | otherwise    = do
       _ <- ensureMaude as
-      _ <- ensureSapic as
       putStrLn $ ""
       summaries <- mapM processThy $ inFiles
       putStrLn $ ""
@@ -119,7 +119,7 @@ run thisMode as
       | (argExists "parseOnly" as) && (argExists "diff" as) =
           out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
       | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTheory       (loadOpenThy       as inFile)
+          out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
       | argExists "diff" as =
           out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
       | otherwise        =
@@ -128,7 +128,7 @@ run thisMode as
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
 
         ppWfAndSummary thy =
-            case checkWellformedness (openTheory thy) of
+            case checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)
@@ -137,7 +137,7 @@ run thisMode as
             Pretty.$--$ prettyClosedSummary thy
 
         ppWfAndSummaryDiff thy =
-            case checkWellformednessDiff (openDiffTheory thy) of
+            case checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy) of
                 []   -> Pretty.emptyDoc
                 errs -> Pretty.vcat $ map Pretty.text $
                           [ "WARNING: " ++ show (length errs)

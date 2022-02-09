@@ -1,0 +1,99 @@
+theory CH07_UK3 begin
+
+builtins: xor, hashing, multiset
+functions: rot/2, lh/1, rh/1
+
+rule Setup:
+   let left = <~k1,~id1>+<~k2,~id2>
+      right = <~k1,~id1>+<~k1,~id1>
+   in
+   [ Fr( ~k1 )
+   , Fr( ~id1 )
+   , Fr( ~k2 )
+   , Fr( ~id2 ) 
+   ]
+ --[ OnlyOnce( ) ]-> 
+   [ Reader( '1'+diff(left,right) )
+   , Tag(    '1'+diff(left,right) )
+   ]
+
+rule select_tag:
+  [ Tag( < ~k, ~id > + z ) ]
+  --[ Tag( < ~k, ~id > + z ) ]->
+  [ TagRun( ~k, ~id )
+  , Tag(z) 
+  ]
+
+rule select_reader:
+  [ Reader( < ~k, ~id > + z ) ]
+  --[ Reader( < ~k, ~id > + z ) ]->
+  [ ReaderRun( ~k, ~id )
+  , Reader(z) 
+  ]
+
+rule reader1:
+   [ Fr( ~r1 ) ]
+ --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 )
+   , Initiated( ~r1 ) 
+   ]
+
+rule tag1:
+   let hash = h((r1⊕~r2⊕~k)) in 
+   [ In( r1 )
+   , Fr( ~r2 )
+   , TagRun( ~k, ~id )
+   ]
+ --[ Response( ~k, 'Tag' )
+   , Challenge(~r2, 'Tag') 
+   ]->
+   [ Out( <~r2,lh(rot(~id,hash) XOR hash)>)
+   , TagState(~k, ~id, r1, ~r2, hash)
+   ]
+
+rule reader2:
+   [ Initiated( ~r1 )
+   , ReaderRun( ~k, ~id )
+   , In( <r2, lh(rot(~id,hash) XOR hash)> ) 
+   ]
+ --[ Alive( ~k, 'Tag' )
+   , Response(~k, 'Reader') 
+   , Eq( h((~r1⊕r2⊕~k)), hash )
+   ]->
+   [ Out( rh(rot(~id,hash) XOR hash) ) ]
+
+rule tag2:
+   [ In( rh(rot(~id,hash) XOR hash) )
+   , TagState(~k, ~id, r1, ~r2, hash)
+   ]
+ --[ Alive( ~k, 'Reader' ) ]->
+   [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+
+restriction max_number_of_tags_tag:
+  "All a b c d #i. Tag(a+b+c+d)@i ==> F"
+
+restriction max_number_of_tags_tag_reader:
+  "All a b c d #i. Reader(a+b+c+d)@i ==> F"
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+
+// FINDS ATTACK AUTOMATICALLY 
+lemma recentalive_tag:
+  all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
+
+// FINDS PROOF AUTOMATICALLY 
+lemma recentalive_reader:
+  all-traces "∀ x #i. (Alive( x, 'Reader' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Tag') @k & Response( x, 'Reader' ) @ #j & k < j & j < i)"
+
+// FINDS PROOF AUTOMATICALLY 
+lemma executable:
+  exists-trace "∃ x #i #j. (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+
+// FINDS ATTACK AUTOMATICALLY 
+// Observational_equivalence lemma
+
+end

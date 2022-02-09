@@ -1,0 +1,274 @@
+/*
+ * Protocol:    Modified Keyless SSL protocol for Client Detection
+ * Modeler: 	Kevin Milner
+ * Source:	    Original
+ */
+
+theory Keyless_SSL_Modified
+begin
+
+builtins: signing, hashing
+functions: S/1
+
+restriction Eq_testing: "All x y #i. Eq(x,y) @ i ==> x = y"
+restriction InEq_testing: "All x y #i. InEq(x,y) @ i ==> not(x = y)"
+
+//There's one id, per role, per direction.
+restriction pairings_unique:
+    "All id1 id2 role ka kb #i #j.
+        Paired(id1,role,ka,kb) @ i & Paired(id2,role,ka,kb) @ j
+    ==> #i = #j"
+
+rule RegisterKey:
+    [ Fr(~ltk) ]
+    --[Key(~ltk)]->
+    [!F_AgentKey(~ltk), Out(pk(~ltk))]
+
+rule CompromiseKey:
+    [!F_AgentKey(~ltk)]
+    --[ Compromise(pk(~ltk)) ]->
+    [Out(~ltk)]
+
+
+/* Models an agent adding anothers public key out-of-band, we assume
+ * that all relationships set up this way are 'sane' and both of the
+ * keys involved were generated fresh. */
+rule BindState_C:
+    [ !F_AgentKey(~ltkA)
+    , !F_AgentKey(~ltkB)
+    , Fr(~id)
+    ]--[
+      Paired(~id, 'C', ~ltkA, ~ltkB)
+    , Counter(~id, '0')
+    , Injectivity(~id,'nonce','0')
+    ]->
+    [ /* For search efficiency, state is divided into
+       * an invariant portion and a variant portion. This
+       * allows tamarin to immediately bind the keys back
+       * to this initial pairing rule. The fresh ~id is used
+       * to identify this pairing. */
+      St_C(~id, 'm0', '0')
+    , !F_StateInvariants(~id, 'C', ~ltkA, pk(~ltkB))
+    ]
+
+rule BindState_W:
+    [ !F_AgentKey(~ltkA)
+    , !F_AgentKey(~ltkB)
+    , Fr(~id)
+    ]--[
+      Paired(~id, 'W', ~ltkA, ~ltkB)
+    , Counter(~id, '0')
+    , Injectivity(~id,'nonce','0')
+    ]->
+    [ St_W(~id, 'm1', '0')
+    , !F_StateInvariants(~id, 'W', ~ltkA, pk(~ltkB))
+    ]
+
+//////////////////////////////////////////
+// MESSAGE RULES
+rule C_0:
+    let m1 = <'1',pk(~ltkA), pkB,~nc> in
+    [ St_C(~id, 'm0', cc)
+    , !F_StateInvariants(~id, 'C', ~ltkA, pkB)
+    , Fr(~nc)
+    ]--[
+      Gen(~nc)
+    , Injectivity(~id,cc,~nc)
+    ]->
+    [ St_C(~id, <'m2', ~nc>, cc)
+    , Out(m1)
+    ]
+
+rule W_0:
+    let pkB = pk(~ltkB)
+        m1 = <'1',pkA,pkB,nc>
+        m2 = <'2',pkB,pkA,nc,~nw> in
+    [ St_W(~id, 'm1', cw)
+    , !F_StateInvariants(~id, 'W', ~ltkB, pkA)
+    , Fr(~nw)
+    , In(m1)
+    ]--[
+      Nonces(~id,nc,~nw)
+    , Counter(<~id,'m1'>, cw)
+    , Gen(~nw)
+    , Begin('W', <pkA,pkB>, S(cw))
+    , Injectivity(~id,cw,~nw)
+    ]->
+    [ St_W(~id, <'m3', nc, ~nw>, cw)
+    , Out(<m2,sign{m2}~ltkB>)
+    ]
+
+rule C_1:
+    let pkA = pk(~ltkA)
+        m1 = <'1',pkA,pkB,nc>
+        m2 = <'2',pkB,pkA,nc,nw>
+        m3 = <'3',pkA,pkB,h(<m1,m2>),S(cc)> in
+    [ St_C(~id, <'m2', nc>, cc)
+    , !F_StateInvariants(~id, 'C', ~ltkA, pkB)
+    , In(<m2,sig>)
+    , Fr(~inj) // Just for maintaining injectivity actions
+    ]--[
+      Eq(verify(sig,m2,pkB), true)
+    , Nonces(~id,nc,nw)
+    , Counter(<~id,'m3'>, S(cc))
+    , Injectivity(~id,nc,~inj)
+    , Begin('C', <pkA,pkB>, S(cc))
+    , Session('C', <pkA,pkB>, <nc,nw>, S(cc))
+    ]->
+    [ St_C(~id, <'m4', nc, nw, ~inj>, S(cc))
+    , Out(<m3, sign{m3}~ltkA>) 
+    ]
+
+
+
+rule W_detect:
+    let pkB = pk(~ltkB)
+        m1 = <'1',pkA,pkB,nc>
+        m2 = <'2',pkB,pkA,nc,nw>
+        m3 = <'3',pkA,pkB,h(<m1,m2>),scc>
+        m4 = <'4',pkB,pkA,h(<m1,m2,m3>)> in
+    [ St_W(~id, <'m3', nc, nw>, cw)
+    , !F_StateInvariants(~id, 'W', ~ltkB, pkA)
+    , In(<m3, sig>)
+    ]--[
+      Eq(verify(sig,m3,pkA), true)
+    , InEq(scc, S(cw))
+    , Detect(<pkA,pkB>)
+    , Session('W', <pkA,pkB>, <nc,nw>, scc)
+    , Counter(<~id, 'm4'>, S(cw))
+    , Injectivity(~id,nw,S(cw))
+    ]->
+    [ Remediate_W(~id, 'm1', scc)
+    , Discard(<m4, sign{m4}~ltkB>) 
+    ]
+
+rule W_session:
+    let pkB = pk(~ltkB)
+        m1 = <'1',pkA,pkB,nc>
+        m2 = <'2',pkB,pkA,nc,nw>
+        m3 = <'3',pkA,pkB,h(<m1,m2>),scc>
+        m4 = <'4',pkB,pkA,h(<m1,m2,m3>)> in
+    [ St_W(~id, <'m3', nc, nw>, cw)
+    , !F_StateInvariants(~id, 'W', ~ltkB, pkA)
+    , In(<m3, sig>)
+    ]--[
+      Eq(verify(sig,m3,pkA), true)
+    , Eq(scc, S(cw))
+    , Completed(~id)
+    , Session('W', <pkA,pkB>, <nc,nw>, scc)
+    , Counter(<~id, 'm4'>, S(cw))
+    , Injectivity(~id,nw,S(cw))
+    ]->
+    [ St_W(~id, 'm1', scc)
+    , Out(<m4, sign{m4}~ltkB>) 
+    ]
+
+
+rule C_2:
+    let pkA = pk(~ltkA)
+        m1 = <'1',pkA,pkB,nc>
+        m2 = <'2',pkB,pkA,nc,nw>
+        m3 = <'3',pkA,pkB,h(<m1,m2>),scc>
+        m4 = <'4',pkB,pkA,h(<m1,m2,m3>)> in
+    [ St_C(~id, <'m4', nc, nw, ~inj>, scc)
+    , !F_StateInvariants(~id, 'C', ~ltkA, pkB)
+    , In(<m4, sig>) 
+    , Fr(~injc)
+    ]--[
+      Eq(verify(sig,m4,pkB), true)
+    , Counter(<~id,'m4'>, scc)
+    , Complete('C', <pkA,pkB>, <nc,nw>, scc)
+    , Injectivity(~id,~inj,scc)
+    ]->
+    [ St_C(~id, 'm0', scc)
+    ]
+
+
+//////////////////////////////////////////
+//   Helper Lemmas:
+lemma count_unique[reuse, use_induction]:
+    "All id c #i #j.
+        Counter(id,c) @ i & Counter(id,c) @ j
+    ==> #i = #j"
+
+lemma nonces_unique[reuse, use_induction]:
+    "All id ni nr #i #j.
+        Nonces(id,ni,nr) @ i & Nonces(id,ni,nr) @ j
+    ==> #i = #j"
+
+lemma force_nonce_ordering[reuse]:
+    "(All role pks nc nw c #i #j.
+        Session(role, pks, <nc,nw>, c) @ i & Gen(nc) @ j
+    ==> #j < #i)
+    &(All role pks nc nw c #i #j.
+        Session(role, pks, <nc,nw>, c) @ i & Gen(nw) @ j
+    ==> #j < #i)
+    &(All id nc nw #i #j.
+        Nonces(id, nc, nw) @ i & Gen(nc) @ j
+    ==> #j < #i)"
+
+//////////////////////////////////////////
+//   Trace existence
+lemma exists_session: exists-trace
+    "Ex pks nonces c #t0 #t1. #t0 < #t1 &
+        Session('W', pks, nonces, c) @ t0
+        & Complete('C', pks, nonces, c) @ t1
+        & not(Ex #k key. Compromise(key) @ k) & not(Ex #k. Detect(pks) @ k)"
+
+lemma exists_second_session: exists-trace
+    "Ex pks nonces nonces2 c #t0 #t1 #t2 #t3. #t0 < #t2 & #t1 < #t3 & c = S('0') &
+        Session('W',pks,nonces,c) @ t0
+        & Complete('C',pks,nonces,c) @ t1
+      & Session('W',pks,nonces2,S(c)) @ t2
+        & Complete('C',pks,nonces2,S(c)) @ t3
+        & not(Ex #k key. Compromise(key) @ k) & not(Ex #k. Detect(pks) @ k)"
+
+lemma exists_detect_no_C_compromise: exists-trace
+    "Ex kc kw  #i.
+        Detect(<kc,kw>) @ i & not(Ex #j. Compromise(kc) @ j)"
+
+lemma exists_detect_no_I_compromise: exists-trace
+    "Ex kc kw  #i.
+        Detect(<kc,kw>) @ i & not(Ex #j. Compromise(kw) @ j)"
+
+//////////////////////////////////////////
+//   Additional helper lemma for injectivity
+lemma injectivity[reuse]:
+    "All id n1 n2 n3 #i #j on1 on2 #k.
+        //Injective facts that are linked by n2
+        Injectivity(id,n1,n2) @ i & Injectivity(id,n2,n3) @ j
+        //And some other injective fact with the same id with relation to j
+        & Injectivity(id,on1,on2) @ k & #k < #j
+    ==> //can't be in between (might be equal to #i, though)
+        not(#i < #k)"
+
+//////////////////////////////////////////
+//  Trace properties
+lemma detect_sound:
+    "All kc kw #t1.
+        Detect(<kc, kw>) @ t1
+    ==> (Ex #t0. #t0 < #t1 & Compromise(kc) @ t0)
+        | (Ex #t0. #t0 < #t1 & Compromise(kw) @ t0)"
+
+lemma correct_dolevyao:
+    "All pks nonces c #t1.
+        Complete('C',pks,nonces,c) @ t1 & not(Ex k #tc. Compromise(k) @ tc)
+    ==> Ex #t0. #t0 < #t1 & 
+            Session('W',pks,nonces,c) @ t0"
+
+lemma unmatching_implies_detect_with_W_uncompromised[use_induction]:
+    "All keys nonces1 nonces2 c1 c2 #t1 #t2 #t3.
+        #t1 < #t3 &
+        //Given an matching m3
+        Session('C', keys, nonces2, c2) @ t2
+        & Session('W', keys, nonces2, c2) @ t3
+        //And we didn't detect key misuse
+        & not(Detect(keys) @ t3)
+        //Then for all sessions before that
+        & Session('W', keys, nonces1, c1) @ t1
+    ==> //Either there was a corresponding C request
+        (Ex #t0. Session('C', keys, nonces1, c1) @ t0)
+        //Or W's key was compromised
+        | (Ex kc kw #tc. (keys = <kc,kw>) & Compromise(kw) @ tc)" 
+
+end
