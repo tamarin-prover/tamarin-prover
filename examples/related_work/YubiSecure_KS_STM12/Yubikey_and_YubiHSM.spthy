@@ -252,15 +252,6 @@ lemma otp_decode_does_not_help_adv_use_induction[reuse,use_induction]:
     "All #t3 k2 k m sc enc mac . OtpDecode(k2,k,m,sc,enc,mac)@t3
     ==> Ex #t1 pid . YubiPress(pid,sc)@#t1 & #t1<#t3"
 
-/* All keys shared between the YubiHSM and the Authentication Server are
- * either not known to the adversary, or the adversary learned the key used
- * to encrypt said keys in form of AEADs.
- */
-lemma k2_is_secret_use_induction[use_induction,reuse]:
-    "All #t1 #t2 pid k2 . Init(pid,k2)@t1 & K(k2)@t2
-    ==>
-     (Ex #t3 #t4 k . K(k)@t3 & MasterKey(k)@t4 & #t3<#t2)"
-
 /* Neither of those kinds of keys are ever learned by the adversary */
 lemma neither_k_nor_k2_are_ever_leaked_inv[use_induction,reuse]: 
     " 
@@ -272,7 +263,7 @@ not( Ex #t1 #t2 k . MasterKey(k)@t1 & KU(k)@t2 )
 // event with the same counter value
 // This lemma cannot be proven at the moment, but it would be a first step
 // to reach the no_replay result present in Yubikey.spthy
-lemma one_count_foreach_login[reuse,use_induction]:
+lemma one_count_foreach_login[use_induction]:
         "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
          ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
 induction
