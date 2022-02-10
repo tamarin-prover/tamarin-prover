@@ -68,7 +68,8 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
-import           Text.Regex.Posix
+-- import           Text.Regex.Posix
+
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -576,7 +577,7 @@ oracleRanking oracle ctxt _sys ags0
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      _ <- getLine
+      -- _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
       -- guard $ trace sd True
 
@@ -659,7 +660,7 @@ itRanking tactic ags = result
 internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
-      let defaultMethod =  charToGoalRanking "noOracle" (tacticiHeuristic tactic)
+      let defaultMethod =  charToGoalRanking "noOracle" (tacticiPresort tactic)
       let ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
@@ -679,7 +680,7 @@ internalTacticRanking tactic ctxt _sys ags0 =
                    ++ prettyOut 
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      _ <- getLine
+      -- _ <- getLine
       return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g

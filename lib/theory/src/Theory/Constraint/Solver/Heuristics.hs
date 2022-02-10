@@ -32,9 +32,11 @@ module Theory.Constraint.Solver.Heuristics (
   , Deprio(..)
   , defaultTacticI
   , tacticiName
-  , tacticiHeuristic
+  , tacticiPresort
   , tacticiPrio
+  , tacticiPrioString
   , tacticiDeprio
+  , tacticiDeprioString
   , prioFunctions
   , deprioFunctions
   , mapInternalTacticRanking
@@ -127,9 +129,11 @@ instance Binary Deprio where
 -- | New type for Tactis inside the theory file
 data TacticI = TacticI{
       _name :: String,
-      _heuristic :: Char,
+      _presort :: Char,
       _prios :: [Prio],
-      _deprios :: [Deprio]
+      _prioString :: [[String]],
+      _deprios :: [Deprio],
+      _deprioString :: [[String]]
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
     --deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -165,7 +169,7 @@ defaultHeuristic :: Bool -> Heuristic
 defaultHeuristic = Heuristic . defaultRankings
 
 defaultTacticI :: TacticI
-defaultTacticI = TacticI "default" 's' [] []
+defaultTacticI = TacticI "default" 's' [] [] [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -197,11 +201,14 @@ mapInternalTacticRanking _ r = r
 tacticiName :: TacticI -> String
 tacticiName TacticI{..} = _name
 
-tacticiHeuristic :: TacticI -> Char
-tacticiHeuristic TacticI{..} = _heuristic
+tacticiPresort :: TacticI -> Char
+tacticiPresort TacticI{..} = _presort
 
 tacticiPrio :: TacticI -> [Prio]
 tacticiPrio TacticI{..} = _prios
+
+tacticiPrioString :: TacticI -> [[String]]
+tacticiPrioString TacticI{..} = _prioString
 
 prioFunctions :: Prio -> [AnnotatedGoal -> Bool] 
 prioFunctions Prio{..} = functionsPrio
@@ -211,6 +218,9 @@ deprioFunctions Deprio{..} = functionsDeprio
 
 tacticiDeprio :: TacticI -> [Deprio]
 tacticiDeprio TacticI{..} = _deprios
+
+tacticiDeprioString :: TacticI -> [[String]]
+tacticiDeprioString TacticI{..} = _deprioString
 
 --setTact
 
@@ -286,7 +296,7 @@ listGoalRankingsDiff = M.foldMapWithKey
     (\k v -> "'"++[k]++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiff
 
 filterHeuristic :: String -> [GoalRanking]
-filterHeuristic ('{':t) = trace (show $ tail $ dropWhile (/= '}') t) (InternalTacticRanking (TacticI (takeWhile (/= '}') t) ' ' [] [])):(filterHeuristic $ tail $ dropWhile (/= '}') t)
+filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) ' ' [] [] [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
 filterHeuristic (c:t)   = (charToGoalRanking "" c):(filterHeuristic t)
 filterHeuristic ("")    = []
 

@@ -274,7 +274,7 @@ import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.LoopBreakers
 import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
+import           Theory.Tools.IntruderRules         
 
 import           Term.Positions
 
@@ -2601,6 +2601,7 @@ prettyTheoryWithSapic ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
+    , if thyT == [] then text "" else vcat $ map prettyTactic thyT
     , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
@@ -2610,6 +2611,7 @@ prettyTheoryWithSapic ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
     thyH = L.get thyHeuristic thy
+    thyT = L.get thyTacticI thy
 
 --Pretty print a theory
 prettyTheory :: HighlightDocument d
@@ -2619,6 +2621,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
+    , if thyT == [] then text "" else vcat $ map prettyTactic thyT
     , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
@@ -2628,6 +2631,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
     thyH = L.get thyHeuristic thy
+    thyT = L.get thyTacticI thy
 
 emptyString :: HighlightDocument d => () -> d
 emptyString _ = text ("")
@@ -2655,6 +2659,7 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get diffThySignature thy
+    , if thyT == [] then text "" else vcat $ map prettyTactic thyT
     , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get diffThyCacheLeft thy
     , ppCache $ L.get diffThyCacheRight thy
@@ -2667,6 +2672,24 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     ppItem = foldDiffTheoryItem
         prettyDiffRule ppRule (prettyDiffLemma ppDiffPrf) (prettyEitherLemma ppPrf) prettyEitherRestriction (uncurry prettyFormalComment)
     thyH = L.get diffThyHeuristic thy
+    thyT = L.get diffThyTacticI thy
+
+-- | Pretty print the tactics.
+prettyTactic :: HighlightDocument d => TacticI -> d
+prettyTactic tactic = kwTactic <> colon <> space <> (text $ tacticiName tactic) 
+    $-$ kwPresort <> colon <> space <> (char $ tacticiPresort tactic) $-$ sep --vcat dovetail ce con
+        [ ppTabTab  "prio"  (tacticiPrioString tactic)
+        , ppTabTab "deprio" (tacticiDeprioString tactic)
+        , char '\n'
+        ]
+   where 
+        ppTab "prio" xs = kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs) -- pretty print pour un niveau de prio
+        ppTab "deprio" xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
+
+        ppTabTab _  [] = emptyDoc
+        ppTabTab param  xs = vcat (map (ppTab param) xs)
+        ppTabTab _ [] = emptyDoc
+        ppTabTab param xs = vcat (map (ppTab param) xs)
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
@@ -2681,7 +2704,7 @@ prettyLemmaName l = case L.get lAttributes l of
     prettyLemmaAttribute InvariantLemma     = text "use_induction"
     prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
     prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
-    prettyLemmaAttribute (LemmaTacticI s)   = text ("tactic=" ++ s)
+    prettyLemmaAttribute (LemmaTacticI s)   = text ("tactic=" ++ s)  -- ici l'affichage moche
     prettyLemmaAttribute LHSLemma           = text "left"
     prettyLemmaAttribute RHSLemma           = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"

@@ -109,8 +109,8 @@ theoryLoadFlags =
   , flagOpt "./oracle" ["oraclename"] (updateArg "oraclename") "FILE"
       "Path to the oracle heuristic (default './oracle')."
 
-  , flagOpt "" ["interntacticname"] (updateArg "interntacticname") "STRING"
-      ("Chosen tactic among the tactics written in the theory file")
+  , flagNone ["quiet"] (addEmptyArg "quiet")
+      "Do not display computation steps of oracle or tactic."
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -127,6 +127,10 @@ diff as = if (argExists "diff" as) then ["diff"] else []
 -- | quit-on-warning flag in the argument
 quitOnWarning :: Arguments -> [String]
 quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
+
+-- | quiet flag in the argument
+quiet :: Arguments -> [String]
+quiet as = if (argExists "quiet" as) then ["quiet"] else []
 
 -- | Select lemmas for proving
 lemmaSelector :: Arguments -> Lemma p -> Bool

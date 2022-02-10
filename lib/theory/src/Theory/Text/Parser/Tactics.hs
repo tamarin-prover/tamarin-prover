@@ -61,7 +61,7 @@ functionValue = many $ noneOf "\n|&\""
             return $ '\\':[c] -}
 
 --Fonction
-function :: Parser (AnnotatedGoal -> Bool)
+function :: Parser (AnnotatedGoal -> Bool, String)
 function = do
     _ <- skipMany (char ' ')
     f <- functionName
@@ -70,59 +70,59 @@ function = do
     v <- functionValue
     _ <- char '"'
     _ <- skipMany (char ' ')
-    return $ nameToFunction (f,v)
+    return $ (nameToFunction (f,v),f++" \""++v++"\"")
 
-functionNot :: (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool)
-functionNot f = not . f
+functionNot :: (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String)
+functionNot (f,s) = (not . f, "not "++s)
 
-functionAnd :: (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool)
-functionAnd f g = (\x -> and [f x, g x])
+functionAnd :: (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String)
+functionAnd (f,s1) (g,s2) = ((\x -> and [f x, g x]),s1++" & "++s2)
 
-functionOr :: (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool) -> (AnnotatedGoal -> Bool)
-functionOr f g = (\x -> or [f x, g x])
+functionOr :: (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String)
+functionOr (f,s1) (g,s2) = ((\x -> or [f x, g x]),s1++" | "++s2)
 
 -- | Parse a negation.
-negation :: Parser (AnnotatedGoal -> Bool)
+negation :: Parser (AnnotatedGoal -> Bool, String)
 negation = opLNot *> (functionNot <$> function) <|> function
 -- opLNot *> (functionNot <$> between (char '(') (char ')') function) <|> between (char '(') (char ')') function
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser (AnnotatedGoal -> Bool)
+conjuncts :: Parser (AnnotatedGoal -> Bool, String)
 conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser (AnnotatedGoal -> Bool)
+disjuncts :: Parser (AnnotatedGoal -> Bool, String)
 disjuncts = try $ (skipMany space *> chainl1 conjuncts (functionOr <$ opLOr) <* newline) -- error here is not triggered when empty prio (appends higher -> function parsing)
 
 --Parsing prio
-prio :: Parser Prio
+prio :: Parser (Prio, [String])
 prio = do
     _ <- symbol "prio:"
     -- _ <- skipMany (char ' ')
     -- _ <- newline
     fs <- many1 disjuncts
     -- _ <- newline
-    return $ Prio fs
+    return $ (Prio $ map fst fs, map snd fs)
 
 --Parsing deprio
-deprio :: Parser Deprio
+deprio :: Parser (Deprio, [String])
 deprio = do 
     _ <- string "deprio:"
     _ <- skipMany (char ' ')
     _ <- newline
     fs <- many1 disjuncts
     -- _ <- newline
-    return $ Deprio fs
+    return $ (Deprio $ map fst fs, map snd fs)
 
 
 tactic :: Parser TacticI
 tactic = do
     tName <- tacticName
-    heuristicDef <- option 's' selectedPreSort -- type String
-    prios <- option [] $ many1 prio            -- type [Prio]
+    heuristicDef <- option 's' selectedPreSort 
+    prios <- option [] $ many1 prio            
     deprios <- option [] $ many1 deprio
-    _ <- many1 newline
-    return $ TacticI tName heuristicDef prios deprios
+    _ <- newline
+    return $ TacticI tName heuristicDef (map fst prios) (map snd prios) (map fst deprios) (map snd deprios)
 
 tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
 tacticFunctions = M.fromList
