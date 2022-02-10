@@ -183,21 +183,22 @@ heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *
 goalRanking :: Bool -> Maybe FilePath -> Parser GoalRanking
 goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
    where
-       regularRanking = toGoalRanking <$> letter <* skipMany (char ' ')
+       regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
 
        internalTacticRanking = do 
-            goal <- toGoalRanking <$> char '{' <* skipMany (char ' ')
-            tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}}") <* char '}' <* skipMany (char ' '))
+            _ <- string "{" <* skipMany (char ' ')
+            goal <- toGoalRanking <$> pure ("{.}")
+            tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}") <* char '}' <* skipMany (char ' '))
 
             return $ mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal
 
        oracleRanking = do
-           goal <- toGoalRanking <$> oneOf "oO" <* skipMany (char ' ')
+           goal <- toGoalRanking <$> (string "o" <|> string "O") <* skipMany (char ' ')
            relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
 
            return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
 
-       toGoalRanking = if diff then charToGoalRankingDiff else charToGoalRanking ""
+       toGoalRanking = if diff then stringToGoalRankingDiff else stringToGoalRanking ""
 
 
 liftedAddPredicate :: Catch.MonadThrow m =>

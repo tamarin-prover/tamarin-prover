@@ -48,7 +48,7 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf,intersperse)
+import           Data.List                           (isPrefixOf,intercalate)
 import           Data.Map                            (keys)
 -- import           Data.Monoid
 import           Data.FileEmbed                      (embedFile)
@@ -90,7 +90,7 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt "s" ["heuristic"] (updateArg "heuristic") ("(" ++ (intersperse '|' $ keys goalRankingIdentifiers) ++ ")+")
+  , flagOpt "s" ["heuristic"] (updateArg "heuristic") ("(" ++ (intercalate "|" $ keys goalRankingIdentifiers) ++ ")+")
       "Sequence of goal rankings to use (default 's')"
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partialEvaluation")
@@ -398,7 +398,7 @@ constructAutoDiffProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . stringToGoalRankingDiff) [rawRankings]
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
         -- map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as)))
