@@ -32,20 +32,21 @@ import           Text.Regex.Posix
 
 --Tactic
 tacticName :: Parser String
-tacticName = do 
+tacticName = do
     _ <- symbol "tactic"
-    _ <- char ':'
-    _ <- skipMany (char ' ')
-    tName <- many (alphaNum <|> oneOf "_-@")
-    _ <- newline
-    return $ tName
+    _ <- colon
+--    _ <- skipMany (char ' ')
+    tName <- identifier -- many (alphaNum <|> oneOf "_-@")
+--    _ <- newline
+    return tName
 
 -- Default heuristic
 selectedPreSort :: Parser Char
-selectedPreSort = do 
-    _ <- symbol "presort:" *> skipMany (char ' ') 
-    presort <- letter <* newline
-    return $ presort
+selectedPreSort = do
+    _ <- symbol "presort"
+    _ <- colon
+    presort <- identifier -- Should be (but lacking imports): (goalRanking diff workDir)
+    return $ presort!!0   -- Dirty HACK! FIXME
 
 --Function name
 functionName :: Parser String
@@ -55,21 +56,21 @@ functionName = many space *> many (alphaNum <|> oneOf "[]_-@")
 functionValue :: Parser String
 functionValue = many $ noneOf "\n|&\""
     {-liftA concat (manyTill (many (noneOf "\n)\\") <|> char '\\' *> escaped) eof )
-    where 
-        escaped = do 
+    where
+        escaped = do
             c <- anyChar
             return $ '\\':[c] -}
 
 --Fonction
 function :: Parser (AnnotatedGoal -> Bool, String)
 function = do
-    _ <- skipMany (char ' ')
-    f <- functionName
-    _ <- skipMany $ char ' '
-    _ <- char '"'
-    v <- functionValue
-    _ <- char '"'
-    _ <- skipMany (char ' ')
+    -- _ <- skipMany (char ' ')
+    f <- identifier
+    -- _ <- skipMany $ char ' '
+    -- _ <- char '"'
+    v <- doubleQuoted functionValue
+    -- _ <- char '"'
+    -- _ <- skipMany (char ' ')
     return $ (nameToFunction (f,v),f++" \""++v++"\"")
 
 functionNot :: (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String)
@@ -92,12 +93,13 @@ conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
 disjuncts :: Parser (AnnotatedGoal -> Bool, String)
-disjuncts = try $ (skipMany space *> chainl1 conjuncts (functionOr <$ opLOr) <* newline) -- error here is not triggered when empty prio (appends higher -> function parsing)
+disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr)) -- error here is not triggered when empty prio (appends higher -> function parsing)
 
 --Parsing prio
 prio :: Parser (Prio, [String])
 prio = do
-    _ <- symbol "prio:"
+    _ <- symbol "prio"
+    _ <- colon
     -- _ <- skipMany (char ' ')
     -- _ <- newline
     fs <- many1 disjuncts
@@ -106,10 +108,11 @@ prio = do
 
 --Parsing deprio
 deprio :: Parser (Deprio, [String])
-deprio = do 
-    _ <- string "deprio:"
-    _ <- skipMany (char ' ')
-    _ <- newline
+deprio = do
+    _ <- symbol "deprio"
+    _ <- colon
+    -- _ <- skipMany (char ' ')
+    -- _ <- newline
     fs <- many1 disjuncts
     -- _ <- newline
     return $ (Deprio $ map fst fs, map snd fs)
@@ -118,10 +121,10 @@ deprio = do
 tactic :: Parser TacticI
 tactic = do
     tName <- tacticName
-    heuristicDef <- option 's' selectedPreSort 
-    prios <- option [] $ many1 prio            
+    heuristicDef <- option 's' selectedPreSort
+    prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
-    _ <- newline
+    -- _ <- newline
     return $ TacticI tName heuristicDef (map fst prios) (map snd prios) (map fst deprios) (map snd deprios)
 
 tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
@@ -130,7 +133,7 @@ tacticFunctions = M.fromList
                       , ("isFactName", isFactName)
                       , ("isInFactTerms", isInFactTerms)
                       ]
-  where 
+  where
     regex' :: String -> AnnotatedGoal -> Bool
     regex' s agoal = pg =~ s
         where
@@ -148,7 +151,7 @@ tacticFunctions = M.fromList
     isInFactTerms _ _ = False
 
 nameToFunction :: (String, String) -> AnnotatedGoal -> Bool
-nameToFunction (s,param) = case M.lookup s tacticFunctions of 
+nameToFunction (s,param) = case M.lookup s tacticFunctions of
   Just f  -> f param
   Nothing ->  error $ "\nThe function "++ s
             ++" is not defined.\nUse one of the following:\n"++listTacticFunction

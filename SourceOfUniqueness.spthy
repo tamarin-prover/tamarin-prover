@@ -2,24 +2,30 @@ theory SourceOfUniqueness begin
 
 builtins: symmetric-encryption
 
+// Comment
 tactic: huhu
 presort: s
 prio:
     isFactName "ReceiverKeySimple"
+    // Comment
+    isFactName "Wurst"
 prio:
     isInFactTerms "xsimple" | isInFactTerms "~xsimple"
 prio:
     regex "KU\( ~key"
 
 tactic: uniqueness
+// Comment
 presort: s
 prio:
     isFactName "ReceiverKeySimple"
 prio:
-    regex "senc\(xsimple" | regex "senc\(~xsimple"
+    regex "senc\(xsimple" /* test */ | regex "senc\(~xsimple"
 prio:
+    // Comment
     regex "KU\( ~key"
 
+// Comment
 rule generatecomplicated:
  [ In(x), Fr(~key)  ]
  --[ Complicated(x) ]->
@@ -36,12 +42,12 @@ rule receive:
  ]
  --[ Unique(<xcomplicated,xsimple>) ]->
  [  ]
- 
+
 //this restriction artificially complicates an occurrence of an event Complicated(x)
 restriction complicate:
- "All x #i. Complicated(x)@i
+ "All x #i. Complicated(x)@i // blabla
    ==> (Ex y #j. Complicated(y)@j & #j < #i) | (Ex y #j. Simpleunique(y)@j & #j < #i)"
- 
+
 lemma uniqueness[heuristic={uniqueness}]:
  "All #i #j x. Unique(x)@i & Unique(x)@j ==> #i=#j"
 
