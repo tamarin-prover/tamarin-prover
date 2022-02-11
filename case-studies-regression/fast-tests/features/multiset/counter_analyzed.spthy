@@ -511,7 +511,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -521,7 +521,7 @@ analyzing: examples/features//multiset/counter.spthy
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.081170875s
+  processing time: 1.457228485s
   counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
@@ -535,7 +535,7 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.081170875s
+  processing time: 1.457228485s
   counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)

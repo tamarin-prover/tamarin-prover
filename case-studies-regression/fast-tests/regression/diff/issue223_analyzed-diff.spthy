@@ -3236,7 +3236,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -3246,7 +3246,7 @@ analyzing: examples/regression/diff/issue223.spthy
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 3.836841976s
+  processing time: 4.508606728s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ------------------------------------------------------------------------------
@@ -3257,7 +3257,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 3.836841976s
+  processing time: 4.508606728s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

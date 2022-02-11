@@ -98,6 +98,9 @@ rule (modulo E) Init_2:
     6. ~ex   = ~ex.18
        Y     = x.30^(x.31*inv((~ex.18*x.32)))
        z     = x.30^(x.31*inv(x.32))
+    
+    7. Y     = grpid
+       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -153,6 +156,9 @@ rule (modulo E) Resp_1:
     6. ~ey   = ~ey.375
        X     = x.744^(x.745*inv((~ey.375*x.746)))
        z     = x.744^(x.745*inv(x.746))
+    
+    7. X     = grpid
+       z     = grpid
   */
 
 lemma key_agreement_reachable:
@@ -248,43 +254,18 @@ solve( (∃ matching #i3 #i4 sid.
        ((∀ #i5. (LtkRev( B ) @ #i5) ⇒ ⊥) ∧
         (∀ #i3. (LtkRev( A ) @ #i3) ⇒ ⊥) ∧
         (∀ #i3. (MskRev( ) @ #i3) ⇒ ⊥)) )
-  case case_1
+  case case_2
   solve( Accept( test, A, B, k ) @ #i1 )
     case Init_2
     solve( Init( ~ex, $A, $B, X ) ▶₀ #i1 )
       case Init_1
-      solve( Sid( matching, sid ) @ #i3 )
-        case Resp_1
-        solve( !LTK( $B.1, pmult(~x, hp($B.1)) ) ▶₁ #i3 )
-          case KGC_request
-          solve( Match( ~ex,
-                        <'Resp', $B.1, $A.1, X, em(hp($A.1), hp($B.1))^(~ey*~s)>
-                 ) @ #i4 )
-            case Init_2
-            solve( Init( ~ex, $A.1, $B.1, X ) ▶₀ #i4 )
-              case Init_1
-              solve( !KU( kdf(<em(hp($A), hp($B))^(~ex*~ey*~s), $A, $B, 
-                               em(hp($A), hp($B))^(~ex*~s), em(hp($A), hp($B))^(~ey*~s)>)
-                     ) @ #vk )
-                case c_kdf
-                solve( !KU( em(hp($A), hp($B))^(~ex*~ey*~s) ) @ #vk.5 )
-                  case Init_1_case_1
-                  solve( !KU( ~ey ) @ #vk.10 )
-                    case Reveal_ephmeral_key
-                    solve( !KU( em(hp($A), hp($B))^(~ey*~s) ) @ #vk.5 )
-                      case Init_1_case_1
-                      solve( !KU( ~ex.1 ) @ #vk.13 )
-                        case Reveal_ephmeral_key
-                        solve( !KU( em(hp($A), hp($B))^(~ex*~s) ) @ #vk.5 )
-                          case Init_1_case_1
-                          SOLVED // trace found
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
-              qed
-            qed
+      solve( !KU( kdf(<z, $A, $B, em(hp($A), hp($B))^(~ex*~s), Y>) ) @ #vk )
+        case c_kdf
+        solve( splitEqs(0) )
+          case split_case_7
+          solve( !KU( em(hp($A), hp($B))^(~ex*~s) ) @ #vk.8 )
+            case Init_1_case_1
+            SOLVED // trace found
           qed
         qed
       qed
@@ -297,7 +278,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -307,9 +288,9 @@ analyzing: examples/ake/bilinear/Scott_EphkRev.spthy
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 21.344707014s
+  processing time: 10.524657679s
   key_agreement_reachable (exists-trace): verified (12 steps)
-  key_secrecy (all-traces): falsified - found trace (15 steps)
+  key_secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
 
@@ -319,9 +300,9 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 21.344707014s
+  processing time: 10.524657679s
   key_agreement_reachable (exists-trace): verified (12 steps)
-  key_secrecy (all-traces): falsified - found trace (15 steps)
+  key_secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================
 */

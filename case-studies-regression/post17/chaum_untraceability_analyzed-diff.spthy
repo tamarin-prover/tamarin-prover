@@ -8694,7 +8694,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -8704,7 +8704,7 @@ analyzing: examples/post17/chaum_untraceability.spthy
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 71.664705375s
+  processing time: 267.558699829s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)
@@ -8717,7 +8717,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 71.664705375s
+  processing time: 267.558699829s
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)
   DiffLemma:  Observational_equivalence : verified (2863 steps)

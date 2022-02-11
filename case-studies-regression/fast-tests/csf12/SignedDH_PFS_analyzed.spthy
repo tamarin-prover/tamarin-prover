@@ -78,6 +78,9 @@ rule (modulo E) Init_2:
     6. ~ekI  = ~ekI.12
        Y     = x.18^(x.19*inv((~ekI.12*x.20)))
        z     = x.18^(x.19*inv(x.20))
+    
+    7. Y     = grpid
+       z     = grpid
   */
 
 rule (modulo E) Resp:
@@ -120,6 +123,9 @@ rule (modulo E) Resp:
     6. ~ekR  = ~ekR.66
        X     = x.126^(x.127*inv((~ekR.66*x.128)))
        z     = x.126^(x.127*inv(x.128))
+    
+    7. X     = grpid
+       z     = grpid
   */
 
 lemma Perfect_Forward_Secrecy:
@@ -207,7 +213,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -217,7 +223,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.335212598s
+  processing time: 0.467789878s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -228,7 +234,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.335212598s
+  processing time: 0.467789878s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

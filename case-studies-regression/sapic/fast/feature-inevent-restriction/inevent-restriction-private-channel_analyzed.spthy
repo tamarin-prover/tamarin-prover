@@ -78,7 +78,7 @@ restriction in_event:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -88,7 +88,7 @@ analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-p
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.080177226s
+  processing time: 0.091954423s
   test (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.080177226s
+  processing time: 0.091954423s
   test (all-traces): verified (4 steps)
 
 ==============================================================================

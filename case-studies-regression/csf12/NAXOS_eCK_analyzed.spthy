@@ -136,6 +136,10 @@ rule (modulo E) Init_2:
         Y     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z     = x.608^(~lkI.308*x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z.1   = x.608^(x.609*inv(x.610))
+    
+    15. Y     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -251,6 +255,10 @@ rule (modulo E) Resp_1:
         X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z.1   = x.1076^(x.1077*inv(x.1078))
+    
+    15. X     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -724,7 +732,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -734,7 +742,7 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 2.929443023s
+  processing time: 3.872797634s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -745,7 +753,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 2.929443023s
+  processing time: 3.872797634s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

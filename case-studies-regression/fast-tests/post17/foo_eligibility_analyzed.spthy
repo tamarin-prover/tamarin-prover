@@ -317,7 +317,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -327,7 +327,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.074399146s
+  processing time: 1.234717611s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -340,7 +340,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.074399146s
+  processing time: 1.234717611s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

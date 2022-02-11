@@ -124,6 +124,10 @@ rule (modulo E) Init_2:
         Y     = x.594^(x.595*inv((x.596*sk($A.299))))
         z     = x.594^(x.595*inv(x.596))
         z.1   = x.594^(x.595*h1(<~ex.301, sk($A.299)>)*inv((x.596*sk($A.299))))
+    
+    15. Y     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -236,6 +240,10 @@ rule (modulo E) Resp_1:
         X     = x.931^(x.932*inv((x.933*sk($B.468))))
         z     = x.931^(x.932*inv(x.933))
         z.1   = x.931^(x.932*h1(<~ey.469, sk($B.468)>)*inv((x.933*sk($B.468))))
+    
+    15. X     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -580,7 +588,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -590,7 +598,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 1.86349486s
+  processing time: 2.405074139s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ------------------------------------------------------------------------------
@@ -601,7 +609,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 1.86349486s
+  processing time: 2.405074139s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

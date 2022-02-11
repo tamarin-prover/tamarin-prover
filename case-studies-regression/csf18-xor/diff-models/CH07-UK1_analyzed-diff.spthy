@@ -9205,7 +9205,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -9215,7 +9215,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 29.652684198s
+  processing time: 130.349725031s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)
@@ -9228,7 +9228,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 29.652684198s
+  processing time: 130.349725031s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)

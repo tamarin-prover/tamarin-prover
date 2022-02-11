@@ -29,7 +29,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -39,7 +39,7 @@ analyzing: examples/features/equivalence/AxiomDiffTest3.spthy
 analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest3.spthy.tmp
-  processing time: 0.069347513s
+  processing time: 0.094972518s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest3.spthy.tmp
-  processing time: 0.069347513s
+  processing time: 0.094972518s
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ==============================================================================

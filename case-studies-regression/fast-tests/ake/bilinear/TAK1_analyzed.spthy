@@ -315,6 +315,10 @@ rule (modulo E) Proto3:
        emXBXC
              = x.962^(x.963*inv((~ex.486*x.964)))
        z     = x.962^(x.963*inv(x.964))
+    
+    7. emXBXC
+             = grpid
+       z     = grpid
   */
 
 lemma session_key_establish:
@@ -2640,7 +2644,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -2650,7 +2654,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 65.867014029s
+  processing time: 52.369441035s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2662,7 +2666,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 65.867014029s
+  processing time: 52.369441035s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

@@ -375,7 +375,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -385,7 +385,7 @@ analyzing: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 0.951424254s
+  processing time: 1.955560804s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
@@ -400,7 +400,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 0.951424254s
+  processing time: 1.955560804s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)

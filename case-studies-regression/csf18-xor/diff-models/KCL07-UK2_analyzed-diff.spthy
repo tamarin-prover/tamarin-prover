@@ -105,7 +105,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -115,7 +115,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 62.356128295s
+  processing time: 211.835992066s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 62.356128295s
+  processing time: 211.835992066s
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

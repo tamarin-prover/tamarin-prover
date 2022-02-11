@@ -58,6 +58,9 @@ rule (modulo E) Init_2:
     6. ~lkI  = ~lkI.144
        Y     = x.281^(x.282*inv((~lkI.144*x.283)))
        z     = x.281^(x.282*inv(x.283))
+    
+    7. Y     = grpid
+       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -103,6 +106,9 @@ rule (modulo E) Resp_1:
     6. ~lkR  = ~lkR.216
        X     = x.424^(x.425*inv((~lkR.216*x.426)))
        z     = x.424^(x.425*inv(x.426))
+    
+    7. X     = grpid
+       z     = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -274,7 +280,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -284,7 +290,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.80403474s
+  processing time: 1.128318594s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -296,7 +302,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.80403474s
+  processing time: 1.128318594s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

@@ -277,7 +277,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -287,7 +287,7 @@ analyzing: examples/regression/diff/issue198-1.spthy
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.517863798s
+  processing time: 0.69727178s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.517863798s
+  processing time: 0.69727178s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ==============================================================================

@@ -8695,70 +8695,6 @@ next
   qed
 qed
 
-lemma trusted_as_ut_impossible [reuse]:
-  all-traces
-  "¬(∃ L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-      Insert( <'obj', L_h>,
-              <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>
-      ) @ #t)"
-/*
-guarded formula characterizing all counter-examples:
-"∃ L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-  (Insert( <'obj', L_h>,
-           <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>
-   ) @ #t)"
-*/
-simplify
-by contradiction /* from formulas */
-
-lemma untrusted_as_ut_impossible [reuse]:
-  all-traces
-  "¬(∃ L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-      Insert( <'obj', L_h>,
-              <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>
-      ) @ #t)"
-/*
-guarded formula characterizing all counter-examples:
-"∃ L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-  (Insert( <'obj', L_h>,
-           <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>
-   ) @ #t)"
-*/
-simplify
-by contradiction /* from formulas */
-
-lemma untrusted_as_wt_impossible [reuse]:
-  all-traces
-  "¬(∃ L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-      Insert( <'obj', L_h>,
-              <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>
-      ) @ #t)"
-/*
-guarded formula characterizing all counter-examples:
-"∃ L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-  (Insert( <'obj', L_h>,
-           <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>
-   ) @ #t)"
-*/
-simplify
-by contradiction /* from formulas */
-
-lemma trusted_as_wt_impossible [reuse]:
-  all-traces
-  "¬(∃ L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-      Insert( <'obj', L_h>,
-              <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>
-      ) @ #t)"
-/*
-guarded formula characterizing all counter-examples:
-"∃ L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-  (Insert( <'obj', L_h>,
-           <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>
-   ) @ #t)"
-*/
-simplify
-by contradiction /* from formulas */
-
 lemma bad_keys [reuse, use_induction]:
   all-traces
   "∀ h2 k #t2 a.
@@ -25036,7 +24972,7 @@ restriction locking_5:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -25046,12 +24982,8 @@ analyzing: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 255.363117622s
+  processing time: 369.628641397s
   dec_limits (all-traces): verified (1417 steps)
-  trusted_as_ut_impossible (all-traces): verified (2 steps)
-  untrusted_as_ut_impossible (all-traces): verified (2 steps)
-  untrusted_as_wt_impossible (all-traces): verified (2 steps)
-  trusted_as_wt_impossible (all-traces): verified (2 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)
   no_key_is_enc_and_unwrap (all-traces): verified (322 steps)
@@ -25066,12 +24998,8 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 255.363117622s
+  processing time: 369.628641397s
   dec_limits (all-traces): verified (1417 steps)
-  trusted_as_ut_impossible (all-traces): verified (2 steps)
-  untrusted_as_ut_impossible (all-traces): verified (2 steps)
-  untrusted_as_wt_impossible (all-traces): verified (2 steps)
-  trusted_as_wt_impossible (all-traces): verified (2 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)
   no_key_is_enc_and_unwrap (all-traces): verified (322 steps)

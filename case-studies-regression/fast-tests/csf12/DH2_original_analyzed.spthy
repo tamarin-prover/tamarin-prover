@@ -103,6 +103,9 @@ rule (modulo E) Resp_1:
     6. ~ltkR = ~ltkR.270
        XB    = x.534^(~ltkR.270*x.535)
        z     = x.534^x.535
+    
+    7. XB    = grpid
+       z     = grpid
   */
 
 rule (modulo E) Init_2:
@@ -164,6 +167,9 @@ rule (modulo E) Init_2:
     6. ~ltkI = ~ltkI.23
        YA    = x.41^(~ltkI.23*x.42)
        z     = x.41^x.42
+    
+    7. YA    = grpid
+       z     = grpid
   */
 
 rule (modulo E) Resp_2:
@@ -1812,7 +1818,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1822,7 +1828,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 26.390886746s
+  processing time: 28.927869683s
   KAS_key_secrecy (all-traces): verified (501 steps)
 
 ------------------------------------------------------------------------------
@@ -1833,7 +1839,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 26.390886746s
+  processing time: 28.927869683s
   KAS_key_secrecy (all-traces): verified (501 steps)
 
 ==============================================================================

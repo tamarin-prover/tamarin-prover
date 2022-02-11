@@ -115,7 +115,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -125,7 +125,7 @@ analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 10.411569455s
+  processing time: 12.830410539s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 10.411569455s
+  processing time: 12.830410539s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

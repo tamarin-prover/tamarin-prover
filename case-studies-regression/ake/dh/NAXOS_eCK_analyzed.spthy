@@ -132,6 +132,10 @@ rule (modulo E) Init_2:
         Y     = x.698^(x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z     = x.698^(~ea.352*x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z.1   = x.698^(x.699*inv(x.700))
+    
+    15. Y     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -244,6 +248,10 @@ rule (modulo E) Resp_1:
         X     = x.874^(x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z     = x.874^(~eb.440*x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z.1   = x.874^(x.875*inv(x.876))
+    
+    15. X     = grpid
+        z     = grpid
+        z.1   = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -725,7 +733,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -735,7 +743,7 @@ analyzing: examples/ake/dh/NAXOS_eCK.spthy
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 4.054229711s
+  processing time: 4.229019445s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ------------------------------------------------------------------------------
@@ -746,7 +754,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 4.054229711s
+  processing time: 4.229019445s
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

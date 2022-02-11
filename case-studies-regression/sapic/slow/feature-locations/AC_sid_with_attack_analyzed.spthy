@@ -813,7 +813,7 @@ restriction locking_1:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -823,7 +823,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 57.033632055s
+  processing time: 83.573636945s
   attested_comput (exists-trace): verified (31 steps)
 
 ------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 57.033632055s
+  processing time: 83.573636945s
   attested_comput (exists-trace): verified (31 steps)
 
 ==============================================================================

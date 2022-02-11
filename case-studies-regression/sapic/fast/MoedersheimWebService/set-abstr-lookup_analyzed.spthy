@@ -685,7 +685,7 @@ restriction locking_2:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -695,7 +695,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.259846175s
+  processing time: 1.597301175s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -706,7 +706,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.259846175s
+  processing time: 1.597301175s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ==============================================================================

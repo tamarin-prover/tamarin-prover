@@ -2962,7 +2962,7 @@ next
   qed
 qed
 
-lemma no_replay [reuse]:
+lemma no_replay:
   all-traces
   "¬(∃ #i #j pid k x.
       ((Login( pid, k, x ) @ #i) ∧ (Login( pid, k, x ) @ #j)) ∧ (¬(#i = #j)))"
@@ -2974,7 +2974,7 @@ guarded formula characterizing all counter-examples:
 simplify
 by solve( (#i < #j)  ∥ (#j < #i) )
 
-lemma injective_correspondance [reuse, use_induction]:
+lemma injective_correspondance [use_induction]:
   all-traces
   "∀ pid k x #t2.
     (Login( pid, k, x ) @ #t2) ⇒
@@ -3000,7 +3000,162 @@ next
     by contradiction /* from formulas */
   next
     case case_2
-    by contradiction /* from formulas */
+    solve( (∀ pid k x #t2.
+             (Login( pid, k, x ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              ((∃ #t1 sid.
+                 (YubiPress( pid, sid, k, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) ∧
+               (∀ #t3. (Login( pid, k, x ) @ #t3) ⇒ ((last(#t3)) ∨ (#t3 = #t2))))))  ∥
+           (∃ pid k tc1 tc2 #t1 #t2.
+             (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+            ∧
+             (¬(last(#t2))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+             (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+             (¬(#t1 = #t2)))  ∥
+           (∃ x #NOW x.1.
+             (Restr_ifSmallerotctc_0_111111111_1( x, x.1 ) @ #NOW)
+            ∧
+             (¬(last(#NOW))) ∧ (∀ z. ((x+z) = x.1) ⇒ ⊥))  ∥
+           (∃ x y #t3.
+             (IsIn( x, y ) @ #t3)
+            ∧
+             (¬(last(#t3))) ∧
+             (∀ #t2.
+               (Insert( x, y ) @ #t2)
+              ⇒
+               ((last(#t2)) ∨
+                (#t2 = #t3) ∨
+                (#t3 < #t2) ∨
+                (∃ #t1 yp.
+                  (Insert( x, yp ) @ #t1)
+                 ∧
+                  (¬(last(#t1))) ∧
+                  (((#t1 = #t2) ∨ (#t2 < #t1))) ∧
+                  (¬(#t1 = #t2)) ∧
+                  (((#t3 = #t1) ∨ (#t1 < #t3)))))))  ∥
+           (∃ p pp l x lp #t1 #t3.
+             (Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)
+            ∧
+             (¬(last(#t3))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t3) ∨
+               (#t3 < #t1) ∨
+               (∀ #t2.
+                 (Unlock_0( p, l, x ) @ #t2)
+                ⇒
+                 ((last(#t2)) ∨
+                  (#t1 = #t2) ∨
+                  (#t2 < #t1) ∨
+                  (#t2 = #t3) ∨
+                  (#t3 < #t2) ∨
+                  (∃ #t0 pp.1.
+                    (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Lock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (¬(#t0 = #t1)) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Unlock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                    (¬(#t2 = #t0))))))) ∧
+             (((#t3 = #t1) ∨ (#t1 < #t3))) ∧
+             (¬(#t1 = #t3)))  ∥
+           (∃ p pp l x lp #t1 #t3.
+             (Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)
+            ∧
+             (¬(last(#t3))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t3) ∨
+               (#t3 < #t1) ∨
+               (∀ #t2.
+                 (Unlock_1( p, l, x ) @ #t2)
+                ⇒
+                 ((last(#t2)) ∨
+                  (#t1 = #t2) ∨
+                  (#t2 < #t1) ∨
+                  (#t2 = #t3) ∨
+                  (#t3 < #t2) ∨
+                  (∃ #t0 pp.1.
+                    (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Lock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (¬(#t0 = #t1)) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Unlock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                    (¬(#t2 = #t0))))))) ∧
+             (((#t3 = #t1) ∨ (#t1 < #t3))) ∧
+             (¬(#t1 = #t3)))  ∥
+           (∃ p pp l x lp #t1 #t3.
+             (Lock_2( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)
+            ∧
+             (¬(last(#t3))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t3) ∨
+               (#t3 < #t1) ∨
+               (∀ #t2.
+                 (Unlock_2( p, l, x ) @ #t2)
+                ⇒
+                 ((last(#t2)) ∨
+                  (#t1 = #t2) ∨
+                  (#t2 < #t1) ∨
+                  (#t2 = #t3) ∨
+                  (#t3 < #t2) ∨
+                  (∃ #t0 pp.1.
+                    (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Lock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (¬(#t0 = #t1)) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2)))) ∨
+                  (∃ pp.1 lpp #t0.
+                    (Unlock( pp.1, lpp, x ) @ #t0)
+                   ∧
+                    (¬(last(#t0))) ∧
+                    (((#t0 = #t1) ∨ (#t1 < #t0))) ∧
+                    (((#t2 = #t0) ∨ (#t0 < #t2))) ∧
+                    (¬(#t2 = #t0))))))) ∧
+             (((#t3 = #t1) ∨ (#t1 < #t3))) ∧
+             (¬(#t1 = #t3))) )
+      case case_1
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    next
+      case case_2
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    next
+      case case_3
+      by contradiction /* from formulas */
+    next
+      case case_4
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    next
+      case case_5
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    next
+      case case_6
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    next
+      case case_7
+      by solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
+    qed
   qed
 qed
 
@@ -5116,7 +5271,7 @@ restriction locking_2:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -5126,13 +5281,13 @@ analyzing: examples/sapic/slow/Yubikey/Yubikey.spthy
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 37.739510996s
+  processing time: 38.650786865s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)
   one_count_foreach_login (all-traces): verified (88 steps)
   no_replay (all-traces): verified (2 steps)
-  injective_correspondance (all-traces): verified (6 steps)
+  injective_correspondance (all-traces): verified (13 steps)
   Login_invalidates_smaller_counters (all-traces): verified (340 steps)
 
 ------------------------------------------------------------------------------
@@ -5143,13 +5298,13 @@ summary of summaries:
 analyzed: examples/sapic/slow/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/slow/Yubikey/Yubikey.spthy.tmp
-  processing time: 37.739510996s
+  processing time: 38.650786865s
   init_server (all-traces): verified (148 steps)
   init_server_secrecy (all-traces): verified (191 steps)
   init_yubikey (all-traces): verified (63 steps)
   one_count_foreach_login (all-traces): verified (88 steps)
   no_replay (all-traces): verified (2 steps)
-  injective_correspondance (all-traces): verified (6 steps)
+  injective_correspondance (all-traces): verified (13 steps)
   Login_invalidates_smaller_counters (all-traces): verified (340 steps)
 
 ==============================================================================

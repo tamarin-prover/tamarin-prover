@@ -3358,7 +3358,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -3368,7 +3368,7 @@ analyzing: examples/features/auto-sources/spore/Otway-Rees.spthy
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 11.208354044s
+  processing time: 22.932499102s
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
   agreement_B (all-traces): verified (16 steps)
@@ -3387,7 +3387,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 11.208354044s
+  processing time: 22.932499102s
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
   agreement_B (all-traces): verified (16 steps)

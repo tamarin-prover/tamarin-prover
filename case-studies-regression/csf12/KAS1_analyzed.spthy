@@ -249,7 +249,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -259,7 +259,7 @@ analyzing: examples/csf12/KAS1.spthy
 analyzed: examples/csf12/KAS1.spthy
 
   output:          examples/csf12/KAS1.spthy.tmp
-  processing time: 0.513771989s
+  processing time: 0.718224825s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ------------------------------------------------------------------------------
@@ -270,7 +270,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          examples/csf12/KAS1.spthy.tmp
-  processing time: 0.513771989s
+  processing time: 0.718224825s
   KAS1_key_secrecy (all-traces): verified (38 steps)
 
 ==============================================================================

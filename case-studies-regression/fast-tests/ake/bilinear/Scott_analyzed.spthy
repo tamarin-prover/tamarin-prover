@@ -57,7 +57,8 @@ rule (modulo E) Init_2:
    [ Init( ~ex, $A, $B, X ), In( Y ) ]
   --[
   Accept( ~ex, $A, $B, kdf(<Y^~ex, $A, $B, X, Y>) ),
-  Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+  Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> ),
+  NotNeutral( Y )
   ]->
    [ !Sessk( ~ex, kdf(<Y^~ex, $A, $B, X, Y>) ) ]
 
@@ -66,7 +67,8 @@ rule (modulo E) Init_2:
      [ Init( ~ex, $A, $B, X ), In( Y ) ]
     --[
     Accept( ~ex, $A, $B, kdf(<z, $A, $B, X, Y>) ),
-    Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+    Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> ),
+    NotNeutral( Y )
     ]->
      [ !Sessk( ~ex, kdf(<z, $A, $B, X, Y>) ) ]
     variants (modulo AC)
@@ -93,6 +95,9 @@ rule (modulo E) Init_2:
     6. ~ex   = ~ex.18
        Y     = x.30^(x.31*inv((~ex.18*x.32)))
        z     = x.30^(x.31*inv(x.32))
+    
+    7. Y     = grpid
+       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -102,7 +107,8 @@ rule (modulo E) Resp_1:
           kdf(<X^~ey, $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey>)
   ),
   Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), pmult(~s, hp($B)))^~ey> ),
-  Match( ~ey, <'Init', $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey> )
+  Match( ~ey, <'Init', $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey> ),
+  NotNeutral( X )
   ]->
    [
    Out( em(hp($A), pmult(~s, hp($B)))^~ey ),
@@ -115,7 +121,8 @@ rule (modulo E) Resp_1:
     --[
     Accept( ~ey, $B, $A, kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) ),
     Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), hp($B))^(~ey*~x)> ),
-    Match( ~ey, <'Init', $A, $B, X, em(hp($A), hp($B))^(~ey*~x)> )
+    Match( ~ey, <'Init', $A, $B, X, em(hp($A), hp($B))^(~ey*~x)> ),
+    NotNeutral( X )
     ]->
      [
      Out( em(hp($A), hp($B))^(~ey*~x) ),
@@ -145,7 +152,14 @@ rule (modulo E) Resp_1:
     6. ~ey   = ~ey.375
        X     = x.744^(x.745*inv((~ey.375*x.746)))
        z     = x.744^(x.745*inv(x.746))
+    
+    7. X     = grpid
+       z     = grpid
   */
+
+restriction notneutral:
+  "∀ x #i. (NotNeutral( x ) @ #i) ⇒ (¬(x = grpid))"
+  // safety formula
 
 lemma key_agreement_reachable:
   exists-trace
@@ -1104,6 +1118,9 @@ next
             case c_exp
             by solve( !KU( ~ex ) @ #vk.15 )
           qed
+        next
+          case split_case_7
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1785,6 +1802,9 @@ next
             case c_exp
             by solve( !KU( ~ey ) @ #vk.15 )
           qed
+        next
+          case split_case_7
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1796,7 +1816,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1806,9 +1826,9 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 17.709937462s
+  processing time: 18.532202046s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (518 steps)
+  key_secrecy (all-traces): verified (520 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1818,9 +1838,9 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 17.709937462s
+  processing time: 18.532202046s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (518 steps)
+  key_secrecy (all-traces): verified (520 steps)
 
 ==============================================================================
 */
