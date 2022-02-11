@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from distutils.spawn import find_executable
-import concurrent.futures
+import signal
+import multiprocessing
 import re
 import argparse
 import subprocess
@@ -33,6 +33,7 @@ NOT_STARTED = 'not_started'
 STARTED = 'started'
 FINISHED = 'finished'
 TIMEOUT = 'timeout'
+INTERRUPTED = 'interrupted'
 ERROR = 'error'
 PARSE_ERROR = "parse_error"
 
@@ -51,12 +52,10 @@ class Job():
         # Lemmas the proofs
         # For a Deepsec/ProVerif job, this will be a singleton list
         self.lemma = lemma
-        # A dict mapping lemma names to results
-        # Results are a tuple (status, time)
-        # i.e. (proof, 1second) or (counterexample, 34seconds)
-        self.results = dict()
+        # The result of the job
+        self.result = None
         # returncode of job
-        self.returncode = 0
+        self.returncode = None
         # Status of the job
         self.status = NOT_STARTED
         # Time the job took
@@ -68,53 +67,62 @@ class Job():
     def __repr__(self):
         return str(self)
 
-    def execute(self):
+    def execute(self, result_queue):
+        """
+        Executes the job specified by self.arguments and, iff
+        it was sucessful, returns a dictionary containing the result
+        """
         self.status = STARTED
         call =  "'" + " ".join(self.arguments) + "'"
-        print("Executing " + call )
+        print("Executing " + call)
         try:
+            p = None
+            def execute_signal_handler(signum, frame):
+                self.status = INTERRUPTED
+                if p:
+                    # If the job already started
+                    p.terminate()
+                    # kill own process
+                    sys.exit(1)
+
+            # Register new signal handler
+            signal.signal(signal.SIGINT, execute_signal_handler)
+            signal.signal(signal.SIGTERM, execute_signal_handler)
+            p = subprocess.Popen(self.arguments, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, universal_newlines=True)
             # Start timer
             starttime = time.time()
-            finishedjob = subprocess.run(self.arguments,
-                                    capture_output=True,
-                                    universal_newlines=True,
-                                    timeout=JOB_TIMEOUT)
+            stdout_data, stderr_data = p.communicate(timeout=JOB_TIMEOUT)
             # calculate time
             self.time = format(time.time() - starttime, '.4f')
-            if finishedjob.returncode != 0:
+            if p.returncode != 0:
                 # Check if job completed correctly
                 # Save returncode to later report it
-                self.returncode = finishedjob.returncode
+                self.returncode = p.returncode
                 self.status = ERROR
-                return self
+                return
             # Get the results
-            self.parse_results(finishedjob)
+            self.parse_results(stdout_data, stderr_data)
             if self.status == PARSE_ERROR:
-                return self
+                return
 
             self.status = FINISHED
         except subprocess.TimeoutExpired:
             self.status = TIMEOUT
         finally:
-            if self.status == FINISHED:
-                # normal execution
-                result = self.results[self.lemma]
-                resultstring = ": " + result + " in " + str(self.time)
-            else:
-                resultstring = ": " + self.status
+            result = (self.status, call, self.lemma, self.returncode, self.result, self.time)
+            result_queue.put(result)
+            print_single_result(result)
 
-            print("Finished " + call + resultstring)
-            return self
 
 class TamarinJob(Job):
 
-    def parse_results(self, finishedjob):
+    def parse_results(self, stdout, stderr):
         # Parse the results for the self.lemma from the output
         # and save them in self.results
         # If no lemmas was specified, we assume that there is
         # only one lemma in a .spthy file
         # Search for the time Tamarin took
-        stdout = finishedjob.stdout
         basepattern = self.lemma + " .*: "
         verpattern = re.compile(basepattern + "verified")
         falsepattern =  re.compile(basepattern + "falsified")
@@ -130,18 +138,17 @@ class TamarinJob(Job):
             self.status = PARSE_ERROR
             return
 
-        self.results[self.lemma] = result
+        self.result = result
 
 
 class ProverifJob(Job):
 
-    def parse_results(self, finishedjob):
+    def parse_results(self, stdout, stderr):
         # Parse the results for the self.lemma from the output
         # and save them in self.results
         # We assume that there is only one query in a .pv file
         # Search for the time ProVerif took
         # Search for the result in ProVerif stdout
-        stdout = finishedjob.stdout
         result = ""
         if re.search(r"RESULT .* is true", stdout):
             result = PROOF
@@ -153,16 +160,15 @@ class ProverifJob(Job):
             self.status = PARSE_ERROR
             return
         # Update dict
-        self.results[self.lemma] = result
+        self.result = result
 
 class DeepsecJob(Job):
 
-    def parse_results(self, finishedjob):
+    def parse_results(self, stdout, stderr):
         # Parse the results for the self.lemma from the output
         # and save them in self.results
         # We assume that there is only one query in a .dps file
         # Search for the time Deepsec took
-        stdout = finishedjob.stdout
         result = ""
         if re.search(r"not session equivalent", stdout):
             result = COUNTEREXAMPLE
@@ -172,7 +178,7 @@ class DeepsecJob(Job):
             self.status = PARSE_ERROR
             return
 
-        self.results[self.lemma] = result
+        self.result = result
 
 
 
@@ -189,74 +195,112 @@ def add_dashes_to_arguments(cliarguments):
     return [['-' + argument for argument in argumentlist] for argumentlist \
            in cliarguments ]
 
-def execute_joblist(joblist):
-    # Concurrently execute the jobs in the joblist.
-    # TODO: Early return once one job has finished
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = [ executor.submit(job.execute) for job in joblist ]
-        # Wait for the jobs
-        result = concurrent.futures.wait(futures,
-                                    return_when=concurrent.futures.ALL_COMPLETED)
-        return [ finishedjob.result() for finishedjob in result.done ]
 
-def report_results(results):
-    for lemma in results:
-        call = results[lemma][1]
-        outcome = results[lemma][0][0]
-        time = results[lemma][0][1]
-        lemmastring = " for " + lemma if lemma else ""
+def execute_joblist(joblist, queue):
+    # Concurrently execute the jobs in the joblist.
+    processes = [None] * len(joblist)
+    result_queue = multiprocessing.SimpleQueue()
+    for i in range(len(processes)):
+        job = joblist[i]
+        processes[i] = multiprocessing.Process(target=job.execute,
+                       args=(result_queue, ))
+
+    try:
+        for p in processes:
+            p.start()
+        # Counter to abort once all jobs are done
+        counter = len(processes)
+        # We want the results as they finish
+        results = []
+
+        while counter:
+            result = result_queue.get()
+            counter -= 1
+            results.append(result)
+            # Check job status
+            if result[0] == FINISHED:
+                # abort all jobs as we got a valid result
+                for p in processes:
+                    if p.is_alive():
+                        os.kill(p.pid, signal.SIGINT)
+                break
+
+    finally:
+        for p in processes:
+            p.join()
+
+    # return results via queue
+    queue.put(results)
+
+
+
+def print_single_result(result):
+    status, call, lemma, returncode, outcome, time = result
+    if status == ERROR:
+        eprint(FAIL + "ERROR: " + ENDC + \
+               call + " returned returncode " + str(returncode))
+    elif status == TIMEOUT:
+        eprint(WARNING + "WARNING: " + ENDC + \
+                call + " timed out after " + str(JOB_TIMEOUT) + " seconds")
+    elif status == INTERRUPTED:
+        eprint(WARNING + "INTERRUPTED: " + ENDC + call)
+    elif status == PARSE_ERROR:
+        eprint(FAIL + "ERROR: " + ENDC + "The result from "\
+                + call + " could not be parsed.")
+    elif status == FINISHED:
         color = GREEN if outcome == PROOF else \
                 (FAIL if outcome == COUNTEREXAMPLE else INCONCLUSIVE)
-        print("=" * 90)
-        print("Reporting results" + lemmastring + ":\n")
-        print(" ".join(call) + " finished in " + str(time) + " seconds\n")
-        print("Result: " +  color + outcome + ENDC + '\n')
+        print("Finished " + call + " after " + str(time) + " seconds: " + color + outcome + ENDC)
 
-def collect_results(jobs):
-    results = dict()
-    for joblist in jobs:
-        for job in joblist:
+
+def report_results(results):
+    # Here we save the good results
+    for results_per_lemma in results:
+        # get lemma name, ugly... but yeah
+        # Initialize best result to None
+        best_result = None
+        bad_results = []
+        lemma = ""
+        for result in results_per_lemma:
+            lemma = result[2]
             # String for error reporting
-            call = " ".join(job.arguments)
+            status, call, lemma, returncode, outcome, time = result
             # Make sure every job ran
-            assert job.status == FINISHED or job.status == TIMEOUT or \
-                   job.status == ERROR or job.status == PARSE_ERROR
-            if job.returncode != 0:
-                eprint(FAIL + "ERROR: " + ENDC + \
-                       "'" + call + "'" + " returned returncode " + \
-                       str(job.returncode))
+            assert status == FINISHED or status == TIMEOUT or \
+                   status == ERROR or status == PARSE_ERROR
+            if status != FINISHED:
+                # Report error/timeout etc.
+                bad_results.append(result)
                 continue
-            if job.status == TIMEOUT:
-                eprint(WARNING + "WARNING: " + ENDC + \
-                       "'" + call + "'" + " timed out after " + \
-                       str(JOB_TIMEOUT) + " seconds")
-                continue
-            if job.status == PARSE_ERROR:
-                eprint(FAIL + "ERROR: " + ENDC + "The result from "\
-                       "'" + call + "'" + " could not be parsed.")
-                continue
-            # Job finished with zero returncode
-            time = job.time
-            for lemma, result in job.results.items():
-                if lemma not in results:
-                    # New entry
-                    results[lemma] = (result, time), job.arguments
-                else:
-                    (oldresult, oldtime), oldjob = results[lemma]
-                    if oldresult != result:
-                        # the old result is different from the new result
-                        # i.e. the tool(s) disagree. Tamarin proofs. Pv gives ce.
-                        oldcall = " ".join(oldjob)
-                        eprint(FAIL + "ERROR: " + ENDC + "'" + oldcall + "'" + \
-                               " had result: " + oldresult)
-                        eprint(FAIL + "ERROR: " + ENDC + "'" + call + "'" + \
-                               " had result: " + result)
-                        eprint("\n")
-                    else:
-                        # Results agree
-                        if oldtime > time:
-                            # new result is faster; update results
-                            results[lemma] = (result, time), job.arguments
+            # Result is good
+            if best_result is None:
+                best_result = result
+
+            if best_result[0] != status:
+                # Report mismatch
+                oldcall = best_result[1]
+                oldresult = best_result[5]
+                eprint(FAIL + "ERROR: " + ENDC + "'" + oldcall + "'" + \
+                       " had result: " + oldresult)
+                eprint(FAIL + "ERROR: " + ENDC + "'" + call + "'" + \
+                       " had result: " + outcome)
+            elif best_result[5] > time:
+                # compare time
+                best_result = result
+
+
+        # Report results for this lemma
+        print("=" * 90)
+        lemmastring = " for " + lemma if lemma else ""
+        if bad_results:
+            print("Reporting errors" + lemmastring + ":\n")
+            for bad_result in bad_results:
+                print_single_result(bad_result)
+
+        if best_result:
+            print("Reporting result" + lemmastring + ":\n")
+            print_single_result(best_result)
+
     return results
 
 
@@ -383,6 +427,12 @@ def generate_tamarin_jobs(input_file, lemma, argdict, flags):
     return jobs
 
 
+def std_signal_handler(sig, frame):
+    # Standard signal handler that exits.
+    # We use this to catch SIGINT
+    print("Std sig handler called")
+    sys.exit(1)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -477,21 +527,46 @@ if __name__ == '__main__':
 
 
     # Generate desired model files from the input file
-    generate_files(args.input_file, flags, lemmas, argdict, args.diff)
+    # generate_files(args.input_file, flags, lemmas, argdict, args.diff)
 
     # Generate the jobs that we want to concurrently execute
     jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
     # For every lemma/joblist start a concurrent execution of its jobs.
     # This first layer of concurrency uses a worker per lemma/joblist
-    with concurrent.futures.ProcessPoolExecutor(max_workers=len(jobs)) as executor:
-        # Execute and evaluate every lemma/joblist
-        futures = [ executor.submit(execute_joblist, joblist) for joblist in jobs ]
-        # Wait for all jobs
-        results = concurrent.futures.wait(futures)
-        # Unwrap results
-        results = [ r.result() for r in results.done ]
-        # Go through the jobs and collect the results
-        results = collect_results(results)
-        report_results(results)
+    processes = [None] * len(jobs)
+
+    # Register signal handler
+    # This handler is inherited by the child processes
+    signal.signal(signal.SIGINT, std_signal_handler)
+    signal.signal(signal.SIGTERM, std_signal_handler)
+    for i in range(len(processes)):
+        # Processes[i] = jobs[i] + queue for communication
+        q = multiprocessing.SimpleQueue()
+        processes[i] = multiprocessing.Process(target=execute_joblist,
+                       args=(jobs[i], q, )), q
+
+
+
+    try:
+        # Start all the processes
+        for p, q in processes:
+            p.start()
+        # !!! There is a race condition here. If the main process receives
+        # !!! a signal before the code below executes, the started child
+        # !!! processes are not terminated correctly.
+
+
+        # Collect the results of the Processes
+        results = [ q.get() for p, q in processes ]
+        # q.get() blocks until a result is available
+
+    finally:
+        for p, q in processes:
+            p.join()
+
+    # Current results list contains results with timeouts, errors etc.
+    # Sort these out of the list, and report them.
+    results = report_results(results)
+    # report_results(results)
 
     sys.exit(0)
