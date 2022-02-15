@@ -527,7 +527,7 @@ if __name__ == '__main__':
 
 
     # Generate desired model files from the input file
-    # generate_files(args.input_file, flags, lemmas, argdict, args.diff)
+    generate_files(args.input_file, flags, lemmas, argdict, args.diff)
 
     # Generate the jobs that we want to concurrently execute
     jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
