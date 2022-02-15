@@ -129,6 +129,7 @@ module Theory (
   , addDiffHeuristic
   , removeLemma
   , removeLemmaDiff
+  , filterLemma
   , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
@@ -250,8 +251,7 @@ module Theory (
   -- * Convenience exports
   , module Theory.Model
   , module Theory.Proof
-
-  ) where
+) where
 
 -- import           Debug.Trace
 
@@ -1480,6 +1480,17 @@ removeLemma lemmaName thy = do
                              (return . PredicateItem)
                              (return . SapicItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
+
+filterLemma :: (ProtoLemma LNFormula p -> Bool) -> Theory sig c r p s -> Theory sig c r p s
+filterLemma lemmaSelector = modify thyItems (concatMap fItem) 
+    where
+    fItem   = foldTheoryItem (return . RuleItem)
+                             (return . RestrictionItem)
+                             check
+                             (return . TextItem)
+                             (return . PredicateItem)
+                             (return . SapicItem)
+    check l = do guard (lemmaSelector l); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemmaDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)

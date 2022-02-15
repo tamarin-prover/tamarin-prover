@@ -36,6 +36,7 @@ import           Main.TheoryLoader
 import           Main.Utils
 
 import           Theory.Module
+import Theory (removeLemma)
 -- import           Debug.Trace
 
 -- | Batch processing mode.
@@ -161,10 +162,12 @@ run thisMode as
         choosePretty = case getOutputModule as of
           ModuleSpthy      -> return . prettyOpenTheory  -- output as is, including SAPIC elements
           ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
-          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< Sapic.translate  <=< Sapic.typeTheory
+          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< filterLemmas'  <=< Sapic.translate  <=< Sapic.typeTheory
           ModuleProVerif              -> prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv
           ModuleProVerifEquivalence   -> prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
           ModuleDeepSec               -> prettyDeepSecTheory <=< Sapic.typeTheory
+
+        filterLemmas' thy = return $ filterLemma (lemmaSelector as) thy
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
