@@ -143,6 +143,7 @@ lemmaSelectorByModule as lem = case lemmaModules of
 -- | Select lemmas for proving
 lemmaSelector :: Arguments -> Lemma p -> Bool
 lemmaSelector as lem
+  | null lemmaNames = True
   | lemmaNames == [""] = True
   | lemmaNames == ["",""] = True
   | otherwise = any lemmaMatches lemmaNames
