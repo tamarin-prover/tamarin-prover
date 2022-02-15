@@ -350,9 +350,13 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
         lemmas = lemmas if lemmas else [""]
 
         for lemma in lemmas:
-            # TODO: Once Tamarin can export a single lemma, change the call
-            # to do it!
-            cmd = " ".join([TAMARIN_COMMAND, '-m='+tool] + flags + [input_file])
+            if lemma:
+                # Not the dummy value but a real lemma
+                tamarin_call = [TAMARIN_COMMAND, '-m='+tool, '--lemma=' + lemma]
+            else:
+                tamarin_call = [TAMARIN_COMMAND, '-m='+tool]
+
+            cmd = " ".join(tamarin_call + flags + [input_file])
             # Add diff flag
             cmd = cmd + diffstring
             # Change file type according to current tool
