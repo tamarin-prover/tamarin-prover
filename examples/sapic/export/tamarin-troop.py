@@ -23,7 +23,7 @@ HEURISTICS = [ 's', 'S', 'c', 'C', 'i', 'I' ]
 DEEPSEC = "deepsec"
 SPTHY = "spthy"
 PROVERIF = "proverif"
-TAMARIN_COMMAND = "tamarin-prover-proverif-output"
+TAMARIN_COMMAND = "tamarin-prover"
 PROVERIF_COMMAND = "proverif"
 DEEPSEC_COMMAND = "deepsec"
 PROOF = "proof"
@@ -249,7 +249,7 @@ def print_single_result(result):
                 + call + " could not be parsed.")
     elif status == FINISHED:
         color = GREEN if outcome == PROOF else \
-                (FAIL if outcome == COUNTEREXAMPLE else INCONCLUSIVE)
+                (FAIL if outcome == COUNTEREXAMPLE else WARNING)
         print("Finished " + call + " after " + str(time) + " seconds: " + color + outcome + ENDC)
 
 
@@ -423,9 +423,7 @@ def generate_tamarin_jobs(input_file, lemma, argdict, flags):
     else:
         jobs = [TamarinJob([toolcmd, input_file] + lemmacli + flags + \
                 list(tuple), lemma) for tuple in itertools.product(*argdict[SPTHY])]
-
     return jobs
-
 
 def std_signal_handler(sig, frame):
     # Standard signal handler that exits.
@@ -436,6 +434,8 @@ def std_signal_handler(sig, frame):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    # The source file we built the models from
+    parser.add_argument('input_file', type=str, help='the sapic file')
     parser.add_argument('-l', '--lemma', action='extend', nargs='+', type=str,
                         help='prove the given lemmas. If no lemmas are \
                         specified, the tool assumes that there is only one \
@@ -443,10 +443,11 @@ if __name__ == '__main__':
     # Flags for Tamarin's preprocessor. Used during file/model generation
     parser.add_argument('-D', '--defines', action='extend', nargs='+', type=str,
                         help="flags for Tamarin's preprocessor")
-    # The source file we built the models from
-    parser.add_argument('input_file', type=str, help='the sapic file')
     # Args for ProVerif.
     parser.add_argument('-p', '--proverif', action='append',
+                        nargs='*', type=str, help='arguments for ProVerif')
+    # Args for ProVerif.
+    parser.add_argument('-gs', '--gsverif', action='append',
                         nargs='*', type=str, help='arguments for ProVerif')
     # Args for Tamarin
     parser.add_argument('-t', '--tamarin', action='append',
