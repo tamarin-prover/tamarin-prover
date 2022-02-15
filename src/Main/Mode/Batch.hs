@@ -161,8 +161,8 @@ run thisMode as
         choosePretty = case getOutputModule as of
           ModuleSpthy      -> return . prettyOpenTheory  -- output as is, including SAPIC elements
           ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
-          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< Sapic.translate <=< Sapic.typeTheory
-          ModuleProVerif              -> prettyProVerifTheory <=< Sapic.typeTheoryEnv
+          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< Sapic.translate  <=< Sapic.typeTheory
+          ModuleProVerif              -> prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv
           ModuleProVerifEquivalence   -> prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
           ModuleDeepSec               -> prettyDeepSecTheory <=< Sapic.typeTheory
 

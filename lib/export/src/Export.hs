@@ -96,8 +96,8 @@ proverifTemplate headers queries process macroproc lemmas =
   nest 4 process
 
 
-prettyProVerifTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
-prettyProVerifTheory (thy, typEnv) = do
+prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
                                           `S.union` prochd `S.union` macroprochd)
@@ -107,7 +107,7 @@ prettyProVerifTheory (thy, typEnv) = do
     (proc, prochd, hasBoundState) = loadProc tc thy
     base_headers = if hasBoundState then state_headers else S.empty
     queries = loadQueries thy
-    lemmas = loadLemmas tc typEnv thy
+    lemmas = loadLemmas lemSel tc typEnv thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
@@ -921,10 +921,10 @@ ppLemma te p = text "(*" <> text (L.get lName p) <> text "*)"
             $$ Precise.evalFresh (ppRestrictFormula te fm) (avoidPrecise fm)
   where fm = L.get lFormula p
 
-loadLemmas :: TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
-loadLemmas tc te thy = map (ppLemma te) proverifLemmas
-  where thyLemmas = (theoryLemmas thy)
-        proverifLemmas = filter (\lem -> case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
+loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
+loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
+  where thyLemmas =  (theoryLemmas thy)
+        proverifLemmas = filter (\lem -> lemSel lem && case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
                                      [] -> True
                                      ls -> (exportModule $ trans tc) `elem` ls
                                        )  thyLemmas
