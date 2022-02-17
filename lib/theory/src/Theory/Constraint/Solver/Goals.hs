@@ -91,7 +91,9 @@ openGoals sys = do
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
-                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
+                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys))
+                    || sortOfLNTerm m == LSortPub
+                    || sortOfLNTerm m == LSortNat
                     -- handled by 'insertAction'
                     || isPair m || isInverse m || isProduct m --- || isXor m
                     || isUnion m || isNullaryPublicFunction m
@@ -150,7 +152,7 @@ openGoals sys = do
     -- are composed of public names only and do not contain private function
     -- symbols or because they can be extracted from a sent message using
     -- unpairing or inversion only.
-    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+    currentlyDeducible i m = (checkTermLits (`elem` [LSortPub, LSortNat]) m
                               && not (containsPrivate m))
                           || extractible i m
 

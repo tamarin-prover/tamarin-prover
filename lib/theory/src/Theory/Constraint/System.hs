@@ -1387,7 +1387,7 @@ prettyGoals solved sys = vsep $ do
     -- are composed of public names only and do not contain private function
     -- symbols or because they can be extracted from a sent message using
     -- unpairing or inversion only.
-    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+    currentlyDeducible i m = (checkTermLits (`elem` [LSortPub, LSortNat]) m
                               && not (containsPrivate m))
                           || extractible i m
 
