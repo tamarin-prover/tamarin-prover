@@ -26,6 +26,7 @@ PROVERIF = "proverif"
 TAMARIN_COMMAND = "tamarin-prover"
 PROVERIF_COMMAND = "proverif"
 DEEPSEC_COMMAND = "deepsec"
+GSVERIF_COMMAND = "gsverif"
 PROOF = "proof"
 COUNTEREXAMPLE = 'counterexample'
 INCONCLUSIVE = 'inconclusive'
@@ -317,7 +318,7 @@ def intermediate_file_name(input_file, tool, lemma):
     lemmastring = lemma + "_" if lemma else ""
     return file_name + "_" + lemmastring + tool + TOOL_TO_FILE_TYPE[tool]
 
-def generate_files(input_file, flags, lemmas, argdict, diff):
+def generate_files(input_file, flags, lemmas, argdict, diff, gsverif):
     """
         This function generates files for all tools in argdict except
         for Tamarin. For Tamarin, we do not need to generate intermediate
@@ -338,14 +339,6 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
 
         # For each tool generate a file using Tamarin -m
 
-        # Charlie, Robert, and Niklas discussed this via Mattermost.
-        # They plan to add a --lemma parameter to Tamarin which
-        # makes Tamarin only export the specified lemma.
-        # For now, we can only prove files that contain a single lemma?!
-        # Once --lemma has been changed, we need to change the call to Tamarin
-        # to include this parameter!
-        # Build command
-
         # Hack to make the loop work if not lemmas are specified
         lemmas = lemmas if lemmas else [""]
 
@@ -360,9 +353,15 @@ def generate_files(input_file, flags, lemmas, argdict, diff):
             # Add diff flag
             cmd = cmd + diffstring
             # Change file type according to current tool
-            destination = " > " + intermediate_file_name(input_file, tool, lemma)
+            file_name = intermediate_file_name(input_file, tool, lemma)
+            destination = " > " + file_name
             # Concatenate the cmd and destination, and run it
             subprocess.run(cmd + destination, shell=True, check=True)
+
+            if tool == PROVERIF and gsverif:
+                # If GSVerif flag is set, we use it on the ProVerif file
+                gsverif_call = [GSVERIF_COMMAND, file_name, '-o', file_name]
+                subprocess.run(gsverif_call, check=True)
 
 def generate_jobs(input_file, lemmas, argdict, flags):
     """
@@ -438,48 +437,51 @@ def std_signal_handler(sig, frame):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
     # The source file we built the models from
-    parser.add_argument('input_file', type=str, help='the sapic file')
-    parser.add_argument('-l', '--lemma', action='extend', nargs='+', type=str,
+    required.add_argument('-file', type=str, help='the sapic file', required=True)
+    optional.add_argument('-l', '--lemma', action='extend', nargs='+', type=str,
                         help='prove the given lemmas. If no lemmas are \
                         specified, the tool assumes that there is only one \
                         lemma in the given .spthy')
     # Flags for Tamarin's preprocessor. Used during file/model generation
-    parser.add_argument('-D', '--defines', action='extend', nargs='+', type=str,
+    optional.add_argument('-D', '--defines', action='extend', nargs='+', type=str,
                         help="flags for Tamarin's preprocessor")
     # Args for ProVerif.
-    parser.add_argument('-p', '--proverif', action='append',
-                        nargs='*', type=str, help='arguments for ProVerif')
-    # Args for ProVerif.
-    parser.add_argument('-gs', '--gsverif', action='append',
+    optional.add_argument('-p', '--proverif', action='append',
                         nargs='*', type=str, help='arguments for ProVerif')
     # Args for Tamarin
-    parser.add_argument('-t', '--tamarin', action='append',
+    optional.add_argument('-t', '--tamarin', action='append',
                         nargs='*', type=str, help='arguments for Tamarin')
     # Heuristics for Tamarin
-    parser.add_argument('-H', '--heuristic', action='extend',
+    optional.add_argument('-H', '--heuristic', action='extend',
                         nargs='+', type=str, choices=HEURISTICS,
                         help='heuristics Tamarin should use')
     # Args for Deepsec
-    parser.add_argument('-d', '--deepsec', action='append',
+    optional.add_argument('-d', '--deepsec', action='append',
                         nargs='*', type=str, help='arguments for Deepsec')
-    # Arg for Tamarin diff mode
-    parser.add_argument('--diff', action='store_true',
+    # Flag for Tamarin diff mode
+    optional.add_argument('--diff', action='store_true',
                         help="use Tamarin's diff mode for file generation")
+    # Flag for GSVerif
+    optional.add_argument('--gs', action='store_true',
+                        help="use GSVerif on the exported ProVerif file.")
     # Custom Tamarin command
-    parser.add_argument('-tname', '--tname', action='store', type=str,
+    optional.add_argument('-tname', '--tname', action='store', type=str,
                         help='customize how Tamarin is called; defaults to \
                               "tamarin-prover"')
     # Custom ProVerif command
-    parser.add_argument('-pname', '--pname', action='store', type=str,
+    optional.add_argument('-pname', '--pname', action='store', type=str,
                         help='customize how ProVerif is called; defaults to \
                               "proverif"')
     # Custom Deepsec command
-    parser.add_argument('-dname', '--dname', action='store', type=str,
+    optional.add_argument('-dname', '--dname', action='store', type=str,
                         help='customize how Deepsec is called; defaults to \
                               "deepsec"')
     # Custom timeout
-    parser.add_argument('-to', '--timeout', action='store',
+    optional.add_argument('-to', '--timeout', action='store',
                         type=int, help='timeout for the jobs')
 
     args = parser.parse_args()
@@ -532,10 +534,10 @@ if __name__ == '__main__':
 
 
     # Generate desired model files from the input file
-    generate_files(args.input_file, flags, lemmas, argdict, args.diff)
+    generate_files(args.file, flags, lemmas, argdict, args.diff, args.gs)
 
     # Generate the jobs that we want to concurrently execute
-    jobs = generate_jobs(args.input_file, lemmas, argdict, flags)
+    jobs = generate_jobs(args.file, lemmas, argdict, flags)
     # For every lemma/joblist start a concurrent execution of its jobs.
     # This first layer of concurrency uses a worker per lemma/joblist
     processes = [None] * len(jobs)
@@ -550,16 +552,10 @@ if __name__ == '__main__':
         processes[i] = multiprocessing.Process(target=execute_joblist,
                        args=(jobs[i], q, )), q
 
-
-
     try:
         # Start all the processes
         for p, q in processes:
             p.start()
-        # !!! There is a race condition here. If the main process receives
-        # !!! a signal before the code below executes, the started child
-        # !!! processes are not terminated correctly.
-
 
         # Collect the results of the Processes
         results = [ q.get() for p, q in processes ]
@@ -572,6 +568,5 @@ if __name__ == '__main__':
     # Current results list contains results with timeouts, errors etc.
     # Sort these out of the list, and report them.
     results = report_results(results)
-    # report_results(results)
 
     sys.exit(0)
