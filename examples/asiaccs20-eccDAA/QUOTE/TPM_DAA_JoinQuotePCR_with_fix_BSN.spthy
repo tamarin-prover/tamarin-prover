@@ -201,6 +201,322 @@ equations:
 				PkX(x,P2),				//X
 				multp(l,plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),multp(f,P1)))), //T=lC=l(xA+rxyQ)=l(xrP1+rxyfP1)
 				P2)=accept
+
+tactic: oracle_corr
+presort: C
+prio:
+    regex "Host_"
+    regex "!SignatureVerified"
+prio:
+    regex "Issuer_"
+prio:
+    regex "!TPM_" | regex "TPM_tkt" | regex "TPM_CV_E" | regex "TPM_Commit_RCV1"
+prio:
+    regex "createPrimary"
+prio:
+    regex "returnEK'>"
+prio:
+    regex "createDAAKey"
+prio:
+    regex "returnDAAKey'>"
+prio:
+    regex "TPM2_ActivateCredentials'>"
+prio:
+    regex "ret_TPM2_ActivateCredentials'>"
+prio:
+    regex "TPM2_Commit'>"
+prio:
+    regex "retTPM2_commit'>"
+prio:
+    regex "TPM2_Hash'>"
+prio:
+    regex "ret_TPM2_Hash'>"
+prio:
+    regex "'TPM2_Sign'>"
+prio:
+    regex "ret_TPM2_Sign'>"
+prio:
+    regex "'TPM2_ActivateCredentials_2'"
+prio:
+    regex "ret_TPM2_ActivateCredentials_2'>"
+prio:
+    regex "TPM2_Commit_rand'>"
+prio:
+    regex "ret_TPM2_Commit_rand'>"
+prio:
+    regex "TPM2_Hash_2'>"
+prio:
+    regex "ret_TPM2_Hash_2'>"
+prio:
+    regex "'TPM2_Sign_2'>"
+prio:
+    regex "ret_TPM2_Sign_2'>"
+prio:
+    regex "!KU\( pk\(KDF_EK\(~TPM_EK_Seed\)"
+    regex "!KU\( multp\(f.*, 'P1'"
+prio:
+    regex "!KU\(.*<'1'"
+prio:
+    regex "!KU\( KDF_EK\(~TPM_EK_Seed\)"
+
+tactic: oracle_SP3_Unfo
+presort: c
+prio:
+    regex "!Pk\("
+    regex "!TPM_"
+prio:
+    regex "!KU\( ~y \)"
+    regex "!KU\( ~x \)"
+    regex "!KU\( ~r \)"
+    regex "!KU\( ~f \)"
+    regex "!KU\( ~l \)"
+    regex "!KU\( ~r_cv."
+prio:
+    regex "!KU\( plus\(~r_cv"
+prio:
+    regex "!KU\( senc\(.*~r.*~.*~.*~.*~.*~.*~.*.~.*~.*"
+    regex "!KU\( senc\(.*~f.*~.*~.*~.*~.*~.*~.*.~.*~.*"
+prio:
+    regex "!KU\( multp\(~l,"
+prio:
+    regex "!KU\( H_n_2\(Nonce.*quotePCR"
+prio:
+    regex "!KU\( E_S"
+prio:
+    regex "createPrimary"
+prio:
+    regex "returnEK'>"
+prio:
+    regex "createDAAKey"
+prio:
+    regex "returnDAAKey'>"
+prio:
+    regex "!KU\(.*<'1'"
+prio:
+    regex "In_S\( \$AS," 
+    regex "In_S\( \$PS," 
+prio:
+    regex "TPM2_ActivateCredentials'>"
+prio:
+    regex "ret_TPM2_ActivateCredentials'>"
+prio:
+    regex "TPM2_Commit'>"
+  prio:
+    regex "retTPM2_commit'>"
+prio:
+    regex "TPM2_Hash'>"
+prio:
+    regex "ret_TPM2_Hash'>"
+prio:
+    regex "'TPM2_Sign'>"
+prio:
+    regex "ret_TPM2_Sign'>"
+prio:
+    regex "'TPM2_ActivateCredentials_2'"
+prio:
+    regex "ret_TPM2_ActivateCredentials_2'>"
+prio:
+		regex "TPM2_Quote\'"
+prio:
+    regex "ret_TPM2_Quote\'"
+prio:
+    regex "!KU\( plus\(r_cv"
+prio:
+    regex "!KU\(.*H_n_2\(Nonce\(rnd"
+    regex "!KU\( multp\(~y"
+prio:
+    regex "!KU\( multp\(multp\(~r"
+    regex "!KU\( KDF_EK\(~TPM_EK_Seed"
+    regex "!KU\( multp\(multp\(~r"
+prio:
+    regex "!KU\( KDF_AES\(~TPM"
+
+tactic: oracle_auth_alive
+presort: c
+prio:
+    regex "Host_"
+prio:
+    regex "Issuer_"
+prio:
+    regex "In_S\("
+
+tactic: oracle_auth_many
+presort: c
+prio:
+    regex "In_S\( $B"
+    regex "In_S\( $A"
+    regex "In_S\( $AS"
+    regex "In_S\( $PS"
+    regex "_State_"
+    regex "!Pk\("
+prio:
+    regex "createDAAKey'>"
+    regex "createPrimary'\)"
+    regex "returnEK'>"
+    regex "returnDAAKey'>"
+    regex "!KU\( KDF_EK\(~TPM"
+    regex "!KU\( KDF_AES\(~TPM"
+prio:
+    regex "In_S\(."
+    regex "!KU\( curlyK\(~K_1\)"
+    regex "!KU\( curlyK\(~K_1_1\)"
+    regex "!KU\( multp\(~y,"
+    regex "!KU\( ~y \)"
+prio:
+    regex "!KU\(.*curlyK\(~K_1_1\)"
+    regex "!KU\( plus\(r_cv.*multp\(H_n_2.*~f\)"
+    regex "!KU\( plus\(r_cv.*multp\(H_n_2.*~f.1\)"
+    regex "!KU\( plus\(multp\(~x,"
+    regex "!KU\( multp\(~x,"
+    regex "!KU\( multp\(H_n_2.*~f\)"
+    regex "!KU\( multp\(H_n_2.*~f.1\)"
+    regex "!KU\( ~f \)"
+    regex "!KU\( ~f.1 \)"
+    regex "!KU\( ~x \)"
+prio:
+    regex "!KU\(.*<'1'.*~.*~.*"
+prio:
+    regex "!KU\( senc.*~.*~.*"
+    regex "!KU\( ~TPM_EK"
+prio:
+    not regex "KU\( Nonce\(~n_J\)" & not regex "splitEqs\(0\)"
+prio:
+    regex "splitEqs\(0\)" | regex "KU\( Nonce\(~n_J\)"
+
+tactic: oracle_auth_secrecy
+presort: c
+prio:
+    regex "In_S\( \$B,"
+    regex "In_S\( \$A,"
+    regex "In_S\( \$AS,"
+    regex "In_S\( \$PS,"
+    regex "_State_"
+    regex "!Pk\("
+prio:
+    regex "createDAAKey\'>"
+    regex "createPrimary\'\)"
+    regex "returnEK\'>"
+    regex "returnDAAKey\'>"
+prio:
+    regex "In_S\("
+prio:
+    regex "!KU\( ~f \)"
+    regex "!KU\( ~f.1 \)"
+    regex "!KU\( ~x \)"
+    regex "!KU\( ~y \)"
+    regex "!KU\( ~s_2 \)"
+    regex "!KU\( ~s \)"
+    regex "!KU\( ~TPM_EK"
+prio:
+    regex "!KU\( pk\( KDF_EK\(~TPM_EK"
+    regex "!KU\( KDF_EK\(~TPM_EK"
+prio:
+    regex "!KU\( curlyK\(~K_2\) \)"
+    regex "!KU\( ~K_2 \)"
+prio:
+    regex "!KU\( curlyK\(~K_1\) \)"
+    regex "!KU\( ~K_1 \)"
+    regex "!KU\( ~K \)"
+    regex "!KU\( multp\(~y,"
+prio:
+    regex "!KU\( multp\(~x,"
+prio:
+    regex "!KU\( plus\(r_cv.*multp\(H_n_2.*~f\)"
+    regex "!KU\( plus\(r_cv.*multp\(H_n_2.*~f.1\)"
+prio:
+    regex "!KU\( plus\(multp\(~x,"
+    regex "!KU\( multp\(H_n_2.*~f\)"
+    regex "!KU\( multp\(H_n_2.*~f.1\)"
+prio:
+    regex "!KU\( senc.*~.*~.*"
+
+
+tactic: oracle_SP4_Non
+presort: c
+prio:
+    regex "!SignatureVerified"
+prio:
+    regex "Host_"
+prio:
+    regex "_State_"
+prio:
+    regex "\'ret_TPM2_Sign_2\'>"
+prio:
+    regex "!KU\( ~y \)"
+    regex "!KU\( ~x \)"
+    regex "!KU\( ~r \)"
+    regex "!KU\( ~f \)"
+    regex "!KU\( ~l \)"
+    regex "!KU\( ~y \)"
+    regex "!KU\( ~pcr_set \)"
+    regex "!KU\( ~r_cv"
+prio:
+    regex "!KU\( plus\(~r_cv"
+prio:
+		regex "!KU\( H_n_2\(Nonce.*quotePCR"
+prio:
+		regex "!KU\( H_k_2\(H_k_9\(\'pcr"
+    regex "!KU\( H_k_9\(\'pcr"
+    regex "!KU\( multp\(~l,"
+prio:
+    regex "!KU\( senc\(.*~r.*~.*~.*~.*~.*~.*~.*.~.*~.*"
+    regex "!KU\( senc\(.*~f.*~.*~.*~.*~.*~.*~.*.~.*~.*"
+prio:    
+    regex "!KU\( E_S"
+prio:
+    regex "createPrimary"
+prio:
+    regex "returnEK\'>"
+prio:
+    regex "createDAAKey"
+prio:
+    regex "returnDAAKey\'>"
+prio:
+    regex "\!KU\( E_S.*"
+    regex "\!KU\(.*<\'1\'"
+prio:
+    regex "\!KU\( plus\(r_cv"
+    regex "\!KU\( multp\(H_n_2\(Nonce"
+prio:
+    regex "In_S\( \$AS,"
+    regex "In_S\( \$PS,"
+prio:
+    regex "TPM2_ActivateCredentials\'>"
+prio:
+    regex "ret_TPM2_ActivateCredentials\'>"
+prio:
+    regex "TPM2_Commit\'>"
+prio:
+    regex "retTPM2_commit\'>"
+prio:
+    regex "TPM2_Hash\'>"
+prio:
+    regex "ret_TPM2_Hash\'>"
+prio:
+    regex "\'TPM2_Sign\'>"
+prio:
+    regex "ret_TPM2_Sign\'>"
+prio:
+    regex "\'TPM2_ActivateCredentials_2\'"
+prio:
+    regex "ret_TPM2_ActivateCredentials_2\'>"
+prio:
+    regex "TPM2_Commit_rand\'>"
+prio:
+    regex "ret_TPM2_Commit_rand\'>"
+prio:
+    regex "TPM2_Quote\'>"
+prio:
+    regex "ret_TPM2_Quote\'>"
+prio:
+    regex "\!KU\(.*H_n_2\(Nonce\(rnd"
+    regex "\!KU\( multp\(~y"
+prio:
+    regex "\!KU\( multp\(multp\(~r"
+    regex "\!KU\( KDF_EK\(~TPM_EK_Seed"
+    regex "\!KU\( multp\(multp\(~r"
+prio:
+    regex "\!KU\( KDF_AES\(~TPM"
 			
 // Protocol Restrictions (Axioms)
 
@@ -1428,7 +1744,7 @@ lemma auto_verify_multiple_pkes: exists-trace
 // we should be able to create 2 quotes using the same 
 // randomised credentials
 
-lemma oracle_correctness_two_quotes_same_credentials_same_bsn: exists-trace
+lemma oracle_correctness_two_quotes_same_credentials_same_bsn[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke bsn R S T W sigma1 sigma2 #t01 #t02 .
 	Host_Sends_Quote_cred(TPM, Host, pke, bsn, R, S, T, W, sigma1) @ t01
 	&
@@ -1443,7 +1759,7 @@ lemma oracle_correctness_two_quotes_same_credentials_same_bsn: exists-trace
 	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j)
 	"
 
-lemma oracle_correctness_two_quotes_same_credentials_different_bsn: exists-trace
+lemma oracle_correctness_two_quotes_same_credentials_different_bsn[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke bsn1 bsn2 R S T W sigma1 sigma2 #t01 #t02 .
 	Host_Sends_Quote_cred(TPM, Host, pke, bsn1, R, S, T, W, sigma1) @ t01
 	&
@@ -1461,7 +1777,7 @@ lemma oracle_correctness_two_quotes_same_credentials_different_bsn: exists-trace
 // we should be able to get two quotes using different 
 // randomised credentials
 
-lemma oracle_correctness_two_quotes_different_credentials_same_bsn: exists-trace
+lemma oracle_correctness_two_quotes_different_credentials_same_bsn[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke bsn
 		R1 S1 T1 W1 sigma1 
 		R2 S2 T2 W2 sigma2 
@@ -1480,7 +1796,7 @@ lemma oracle_correctness_two_quotes_different_credentials_same_bsn: exists-trace
 	& //we only join once
 	(All event #i #j . OnlyOnce(event)@i & OnlyOnce(event)@j ==> #i=#j) 
 	"
-lemma oracle_correctness_two_quotes_different_credentials_different_bsn: exists-trace
+lemma oracle_correctness_two_quotes_different_credentials_different_bsn[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke 
 		bsn1 R1 S1 T1 W1 sigma1 
 		bsn2 R2 S2 T2 W2 sigma2 
@@ -1502,7 +1818,7 @@ lemma oracle_correctness_two_quotes_different_credentials_different_bsn: exists-
 
 // we should be able to create 2 quotes that are linked
 
-lemma oracle_correctness_two_valid_linked_quotes: exists-trace
+lemma oracle_correctness_two_valid_linked_quotes[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke bsn sigma1 sigma2 #t01 #t02 #t03 
 	.
 	  //the host sent out two sigs
@@ -1528,7 +1844,7 @@ lemma oracle_correctness_two_valid_linked_quotes: exists-trace
 
 // we should be able to create 2 quotes that are not linked
 
-lemma oracle_correctness_two_valid_unlinked_quotes: exists-trace
+lemma oracle_correctness_two_valid_unlinked_quotes[heuristic={oracle_corr}]: exists-trace
 	"Ex TPM Host pke bsn1 bsn2 sigma1 sigma2 #t01 #t02 #t03 
 	.
 
@@ -1565,7 +1881,7 @@ lemma oracle_correctness_two_valid_unlinked_quotes: exists-trace
 
 
 // SP1_Correctness of the JOIN process only
-lemma oracle_correctness_join_only: exists-trace
+lemma oracle_correctness_join_only[heuristic={oracle_corr}]: exists-trace
 " Ex TPM Host pke qpd
 					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10
 					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
@@ -1668,7 +1984,7 @@ lemma oracle_correctness_join_only: exists-trace
 // SP1_Correctness up to generating a quote 
 // using a basename (/=bottom) (without checking the quote)
 
-lemma oracle_correctness_no_verify: exists-trace
+lemma oracle_correctness_no_verify[heuristic={oracle_corr}]: exists-trace
 " Ex TPM Host pke qpd 
 					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10 
 					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
@@ -1799,7 +2115,7 @@ lemma oracle_correctness_no_verify: exists-trace
 // SP1_Correctness up to generating a quote 
 // with a basename (/=bottom) which is then verified.
 
-lemma oracle_correctness_with_verify: exists-trace
+lemma oracle_correctness_with_verify[heuristic={oracle_corr}]: exists-trace
 " Ex TPM Host pke qpd
 					#t01 #t02 #t03 #t04 #t05 #t06 #t07 #t08 #t09 #t10 
 					#t11 #t12 #t13 #t14 #t15 #t16 #t17 #t18 #t19 #t20 
@@ -1941,7 +2257,7 @@ lemma oracle_correctness_with_verify: exists-trace
 // But it does not require the issuer to have been involved in the running of the protocol at all.
 // This is a very weak requirement.
 
-lemma oracle_auth_aliveness_host_very_weak:
+lemma oracle_auth_aliveness_host_very_weak[heuristic={oracle_auth_alive}]:
 "
 All pke n #i .
    // For all commited JOIN sessions running between a platform and issuer on the term(s) n 
@@ -1960,7 +2276,7 @@ All pke n #i .
 //this lemma shows that the issuer was involved in a run of the protocol (at least one of its rules fired) 
 //or that some of the keys of the entities involved were revealed
 
-lemma oracle_auth_aliveness_host:
+lemma oracle_auth_aliveness_host[heuristic={oracle_auth_alive}]:
 "
 All pke n1 #i .
    // For all commited JOIN sessions running between a platform and issuer on the term(s) n 
@@ -1981,7 +2297,7 @@ All pke n1 #i .
 // This lemma simply shows that at the end of a run of the protocol for the issuer with a host, 
 // the host must have been involved in a run of a protocol that lead up to the final Issuer rule firing
 
-lemma oracle_auth_aliveness_issuer:
+lemma oracle_auth_aliveness_issuer[heuristic={oracle_auth_alive}]:
 
 "
 All pke curlyK1 #i .
@@ -2007,7 +2323,7 @@ All pke curlyK1 #i .
 // the str constructed in the Host_ReceiveCurlyK rule which then forms part of the hash p computed in
 // Host_ReceiveEAndCV.
 
-lemma oracle_auth_weak_agreement_host:
+lemma oracle_auth_weak_agreement_host[heuristic={oracle_auth_many}]:
 "
 All TPM Host pke n1 #i .
 	(
@@ -2030,7 +2346,7 @@ All TPM Host pke n1 #i .
 // then the Issuer has previously been running the protocol, apparently with the Host, and b was acting in role B in his run, and
 //the two principals agreed on the message t
 
-lemma oracle_auth_non_injective_agreement_host_issuer:
+lemma oracle_auth_non_injective_agreement_host_issuer[heuristic={oracle_auth_many}]:
 "
 All pke n #i .
 	(
@@ -2048,7 +2364,7 @@ All pke n #i .
 	)
 "
 
-lemma oracle_auth_injective_agreement_host_issuer:
+lemma oracle_auth_injective_agreement_host_issuer[heuristic={oracle_auth_many}]:
 "
 All pke n #i .
 	(
@@ -2082,7 +2398,7 @@ All pke n #i .
 
 
 // CRE secrecy from the perspective of both the Issuer and the TPM/Host.
-lemma oracle_auth_secrecy_cre:
+lemma oracle_auth_secrecy_cre[heuristic={oracle_auth_secrecy}]:
 "
   All pke cred #i. 
     // somebody claims to have setup a shared secret, 
@@ -2127,7 +2443,7 @@ lemma auto_SP2_UserControlledLinkability:
 
 // ********************************* SP3 Unforgeability *****************************************
 
-lemma oracle_SP3_Unforgeability:
+lemma oracle_SP3_Unforgeability[heuristic={oracle_SP3_Unfo}]:
 // Informal description:
 // An adversary, who is in the possession of a set of Platforms’ secret keys and associated credentials,
 // finds it hard to forge a valid message for a secret key and credential, which is not in that set.
