@@ -4,7 +4,7 @@ builtins: symmetric-encryption
 
 // Comment
 tactic: huhu
-presort: s
+presort: c
 prio:
     isFactName "ReceiverKeySimple"
     // Comment
@@ -16,7 +16,7 @@ prio:
 
 tactic: uniqueness
 // Comment
-presort: s
+presort: X
 prio:
     isFactName "ReceiverKeySimple"
 prio:
@@ -48,7 +48,7 @@ restriction complicate:
  "All x #i. Complicated(x)@i // blabla
    ==> (Ex y #j. Complicated(y)@j & #j < #i) | (Ex y #j. Simpleunique(y)@j & #j < #i)"
 
-lemma uniqueness[heuristic={uniqueness}]:
+lemma uniqueness[heuristic={huhu}]:
  "All #i #j x. Unique(x)@i & Unique(x)@j ==> #i=#j"
 
 end

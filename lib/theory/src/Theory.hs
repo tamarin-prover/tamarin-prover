@@ -2677,13 +2677,13 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
 -- | Pretty print the tactics.
 prettyTactic :: HighlightDocument d => TacticI -> d
 prettyTactic tactic = kwTactic <> colon <> space <> (text $ tacticiName tactic) 
-    $-$ kwPresort <> colon <> space <> (char $ tacticiPresort tactic) $-$ sep --vcat dovetail ce con
-        [ ppTabTab  "prio"  (tacticiPrioString tactic)
-        , ppTabTab "deprio" (tacticiDeprioString tactic)
+    $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ tacticiPresort tactic) $-$ sep
+        [ ppTabTab  "prio"  (map prioString $ tacticiPrio tactic)
+        , ppTabTab "deprio" (map deprioString $ tacticiDeprio tactic)
         , char '\n'
         ]
    where 
-        ppTab "prio" xs = kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs) -- pretty print pour un niveau de prio
+        ppTab "prio" xs = kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs) -- pretty print for a prio block
         ppTab "deprio" xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
 
         ppTabTab _  [] = emptyDoc

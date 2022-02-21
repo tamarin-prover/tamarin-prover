@@ -34,9 +34,9 @@ module Theory.Constraint.Solver.Heuristics (
   , tacticiName
   , tacticiPresort
   , tacticiPrio
-  , tacticiPrioString
+  , prioString
   , tacticiDeprio
-  , tacticiDeprioString
+  , deprioString
   , prioFunctions
   , deprioFunctions
   , mapInternalTacticRanking
@@ -44,6 +44,7 @@ module Theory.Constraint.Solver.Heuristics (
 
   , goalRankingIdentifiers
   , goalRankingIdentifiersDiff
+  , goalRankingToChar
 
   , stringToGoalRankingMay
   , stringToGoalRanking
@@ -64,7 +65,7 @@ import           Data.Binary
 import           Control.DeepSeq
 import           Data.Maybe         (fromMaybe)
 import qualified Data.Map as M
-import           Data.List          (find)
+import           Data.List          (find,intercalate)
 import           System.FilePath
 import           Text.Show.Functions()
 
@@ -87,10 +88,14 @@ data Oracle = Oracle {
 ------------------------------------------------------------------------------
 
 data Prio = Prio {
-      functionsPrio :: [AnnotatedGoal -> Bool]  
+       functionsPrio :: [AnnotatedGoal -> Bool]  
+     , stringsPrio :: [String]
     }
     --deriving Show
-    deriving( Show, Generic )
+    deriving( Generic )
+
+instance Show Prio where
+    show p = intercalate ", " $ prioString p
 
 instance Eq Prio where
     (==) _ _ = True
@@ -107,10 +112,13 @@ instance Binary Prio where
     get = return Prio{..}
 
 data Deprio = Deprio {
-      functionsDeprio :: [AnnotatedGoal -> Bool]
+       functionsDeprio :: [AnnotatedGoal -> Bool]
+     , stringsDeprio :: [String]
     }
-    deriving ( Show, Generic )
-    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
+    deriving ( Generic )
+
+instance Show Deprio where
+    show d = intercalate ", " $ deprioString d
 
 instance Eq Deprio where
     (==) _ _ = True
@@ -129,11 +137,9 @@ instance Binary Deprio where
 -- | New type for Tactis inside the theory file
 data TacticI = TacticI{
       _name :: String,
-      _presort :: Char,
+      _presort :: GoalRanking,
       _prios :: [Prio],
-      _prioString :: [[String]],
-      _deprios :: [Deprio],
-      _deprioString :: [[String]]
+      _deprios :: [Deprio]
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
     --deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -169,7 +175,7 @@ defaultHeuristic :: Bool -> Heuristic
 defaultHeuristic = Heuristic . defaultRankings
 
 defaultTacticI :: TacticI
-defaultTacticI = TacticI "default" 's' [] [] [] []
+defaultTacticI = TacticI "default" (SmartRanking False) [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -201,26 +207,27 @@ mapInternalTacticRanking _ r = r
 tacticiName :: TacticI -> String
 tacticiName TacticI{..} = _name
 
-tacticiPresort :: TacticI -> Char
+tacticiPresort :: TacticI -> GoalRanking
 tacticiPresort TacticI{..} = _presort
 
 tacticiPrio :: TacticI -> [Prio]
 tacticiPrio TacticI{..} = _prios
 
-tacticiPrioString :: TacticI -> [[String]]
-tacticiPrioString TacticI{..} = _prioString
+prioString :: Prio -> [String]
+prioString Prio{..} = stringsPrio
 
 prioFunctions :: Prio -> [AnnotatedGoal -> Bool] 
 prioFunctions Prio{..} = functionsPrio
 
-deprioFunctions :: Deprio -> [AnnotatedGoal -> Bool] 
-deprioFunctions Deprio{..} = functionsDeprio
 
 tacticiDeprio :: TacticI -> [Deprio]
 tacticiDeprio TacticI{..} = _deprios
 
-tacticiDeprioString :: TacticI -> [[String]]
-tacticiDeprioString TacticI{..} = _deprioString
+deprioFunctions :: Deprio -> [AnnotatedGoal -> Bool] 
+deprioFunctions Deprio{..} = functionsDeprio
+
+deprioString :: Deprio -> [String]
+deprioString Deprio{..} = stringsDeprio
 
 --setTact
 
@@ -251,6 +258,18 @@ goalRankingIdentifiersNoOracle = M.fromList
                         , ("I", InjRanking True)
                         ]
 
+goalRankingToIdentifiersNoOracle :: M.Map GoalRanking Char
+goalRankingToIdentifiersNoOracle = M.fromList
+                        [ (SmartRanking False, 's')
+                        , (SmartRanking True, 'S')
+                        , (SapicRanking, 'p')
+                        , (SapicPKCS11Ranking, 'P')
+                        , (UsefulGoalNrRanking, 'c')
+                        , (GoalNrRanking, 'C')
+                        , (InjRanking False, 'i')
+                        , (InjRanking True, 'I')
+                        ]
+
 goalRankingIdentifiersDiff :: M.Map String GoalRanking
 goalRankingIdentifiersDiff  = M.fromList
                             [ ("s", SmartDiffRanking)
@@ -260,44 +279,53 @@ goalRankingIdentifiersDiff  = M.fromList
                             , ("C", GoalNrRanking)
                             ]
 
-stringToGoalRankingMay :: String -> String -> Maybe GoalRanking
-stringToGoalRankingMay "noOracle" s = M.lookup s goalRankingIdentifiersNoOracle
-stringToGoalRankingMay      _     s = M.lookup s goalRankingIdentifiers
+goalRankingIdentifiersDiffNoOracle :: M.Map String GoalRanking
+goalRankingIdentifiersDiffNoOracle  = M.fromList
+                            [ ("s", SmartDiffRanking)
+                            , ("c", UsefulGoalNrRanking)
+                            , ("C", GoalNrRanking)
+                            ]
 
-stringToGoalRanking :: String -> String -> GoalRanking
-stringToGoalRanking "noOracle" s = fromMaybe
+stringToGoalRankingMay :: Bool -> String -> Maybe GoalRanking
+stringToGoalRankingMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersNoOracle else M.lookup s goalRankingIdentifiers
+
+goalRankingToChar :: GoalRanking -> Char
+goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown goal ranking.")
+    $ M.lookup g goalRankingToIdentifiersNoOracle
+
+stringToGoalRanking :: Bool -> String -> GoalRanking
+stringToGoalRanking noOracle s = fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
-        ++ "'. Use one of the following:\n" ++ listGoalRankingsNoOracle)
-    $ stringToGoalRankingMay "noOracle" s
-stringToGoalRanking    _     s = fromMaybe
+        ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
+    $ stringToGoalRankingMay noOracle s
+
+
+stringToGoalRankingDiffMay :: Bool -> String -> Maybe GoalRanking
+stringToGoalRankingDiffMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersDiffNoOracle else M.lookup s goalRankingIdentifiersDiff
+
+stringToGoalRankingDiff :: Bool -> String -> GoalRanking
+stringToGoalRankingDiff noOracle s = fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
-        ++ "'. Use one of the following:\n" ++ listGoalRankings)
-    $ stringToGoalRankingMay "" s
+        ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
+    $ stringToGoalRankingDiffMay noOracle s  
 
-stringToGoalRankingDiffMay :: String -> Maybe GoalRanking
-stringToGoalRankingDiffMay s = M.lookup s goalRankingIdentifiersDiff
+listGoalRankings :: Bool -> String
+listGoalRankings noOracle = M.foldMapWithKey
+    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersList
+    where
+        goalRankingIdentifiersList = if noOracle then goalRankingIdentifiersNoOracle else goalRankingIdentifiers
 
-stringToGoalRankingDiff :: String -> GoalRanking
-stringToGoalRankingDiff s = fromMaybe
-    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
-        ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff)
-    $ stringToGoalRankingDiffMay s
 
-listGoalRankings :: String
-listGoalRankings = M.foldMapWithKey
-    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiers
+listGoalRankingsDiff :: Bool -> String
+listGoalRankingsDiff noOracle = M.foldMapWithKey
+    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiffList
+    where
+        goalRankingIdentifiersDiffList = if noOracle then goalRankingIdentifiersDiffNoOracle else goalRankingIdentifiersDiff
 
-listGoalRankingsNoOracle :: String
-listGoalRankingsNoOracle = M.foldMapWithKey
-    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersNoOracle
-
-listGoalRankingsDiff :: String
-listGoalRankingsDiff = M.foldMapWithKey
-    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiff
 
 filterHeuristic :: String -> [GoalRanking]
-filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) ' ' [] [] [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
-filterHeuristic (c:t)   = (stringToGoalRanking "" [c]):(filterHeuristic t)
+filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
+filterHeuristic (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic t)
 filterHeuristic ("")    = []
 
 -- | The name/explanation of a 'GoalRanking'.

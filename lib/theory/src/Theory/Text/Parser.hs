@@ -169,7 +169,7 @@ theory flags0 inFile = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems flags thy'
-      , do thy' <- liftedAddTacticI thy =<< tactic
+      , do thy' <- liftedAddTacticI thy =<< tactic False
            addItems flags thy'
       , do thy' <- builtins thy
            msig <- getState
@@ -258,7 +258,7 @@ diffTheory flags0 inFile = do
     addItems flags thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems flags thy'
-      , do thy' <- liftedAddTacticI thy =<< tactic
+      , do thy' <- liftedAddTacticI thy =<< tactic True
            addItems flags thy'
       , do
            diffbuiltins

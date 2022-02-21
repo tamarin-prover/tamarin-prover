@@ -198,8 +198,7 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
 
            return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
 
-       toGoalRanking = if diff then stringToGoalRankingDiff else stringToGoalRanking ""
-
+       toGoalRanking = if diff then stringToGoalRankingDiff False else stringToGoalRanking False
 
 liftedAddPredicate :: Catch.MonadThrow m =>
                       Theory sig c r p SapicElement

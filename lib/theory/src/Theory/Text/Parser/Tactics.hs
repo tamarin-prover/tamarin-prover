@@ -21,11 +21,14 @@ import qualified Data.Map                   as M
 
 import           Theory
 import           Theory.Constraint.Solver.AnnotatedGoals
+import           Theory.Constraint.Solver.Heuristics
 import           Theory.Text.Pretty         hiding (char,colon,symbol,opLAnd,opLOr, space)
 import           Theory.Text.Parser.Token
+import           Theory.Text.Parser.Signature
 
 import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.Posix
+
 
 -- import           Debug.Trace
 
@@ -35,18 +38,23 @@ tacticName :: Parser String
 tacticName = do
     _ <- symbol "tactic"
     _ <- colon
---    _ <- skipMany (char ' ')
-    tName <- identifier -- many (alphaNum <|> oneOf "_-@")
---    _ <- newline
+    tName <- identifier
     return tName
 
+goalRankingPresort :: Bool -> Parser GoalRanking
+goalRankingPresort diff = regularRanking <?> "goal ranking"
+   where
+       regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
+
+       toGoalRanking = if diff then stringToGoalRankingDiff True else stringToGoalRanking True
+
 -- Default heuristic
-selectedPreSort :: Parser Char
-selectedPreSort = do
+selectedPreSort :: Bool -> Parser GoalRanking
+selectedPreSort diff = do
     _ <- symbol "presort"
     _ <- colon
-    presort <- identifier -- Should be (but lacking imports): (goalRanking diff workDir)
-    return $ presort!!0   -- Dirty HACK! FIXME
+    presort <- goalRankingPresort diff <* lexeme spaces 
+    return $ presort
 
 --Function name
 functionName :: Parser String
@@ -54,23 +62,14 @@ functionName = many space *> many (alphaNum <|> oneOf "[]_-@")
 
 --Function value
 functionValue :: Parser String
-functionValue = many $ noneOf "\n|&\""
-    {-liftA concat (manyTill (many (noneOf "\n)\\") <|> char '\\' *> escaped) eof )
-    where
-        escaped = do
-            c <- anyChar
-            return $ '\\':[c] -}
+functionValue = many $ noneOf "\"" --interdit de mettre des " dans les regex, dommage
+
 
 --Fonction
 function :: Parser (AnnotatedGoal -> Bool, String)
 function = do
-    -- _ <- skipMany (char ' ')
     f <- identifier
-    -- _ <- skipMany $ char ' '
-    -- _ <- char '"'
     v <- doubleQuoted functionValue
-    -- _ <- char '"'
-    -- _ <- skipMany (char ' ')
     return $ (nameToFunction (f,v),f++" \""++v++"\"")
 
 functionNot :: (AnnotatedGoal -> Bool, String) -> (AnnotatedGoal -> Bool, String)
@@ -85,7 +84,6 @@ functionOr (f,s1) (g,s2) = ((\x -> or [f x, g x]),s1++" | "++s2)
 -- | Parse a negation.
 negation :: Parser (AnnotatedGoal -> Bool, String)
 negation = opLNot *> (functionNot <$> function) <|> function
--- opLNot *> (functionNot <$> between (char '(') (char ')') function) <|> between (char '(') (char ')') function
 
 -- | Parse a left-associative sequence of conjunctions.
 conjuncts :: Parser (AnnotatedGoal -> Bool, String)
@@ -96,36 +94,29 @@ disjuncts :: Parser (AnnotatedGoal -> Bool, String)
 disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr)) -- error here is not triggered when empty prio (appends higher -> function parsing)
 
 --Parsing prio
-prio :: Parser (Prio, [String])
+prio :: Parser Prio
 prio = do
     _ <- symbol "prio"
     _ <- colon
-    -- _ <- skipMany (char ' ')
-    -- _ <- newline
     fs <- many1 disjuncts
-    -- _ <- newline
-    return $ (Prio $ map fst fs, map snd fs)
+    return $ Prio (map fst fs) (map snd fs)
 
 --Parsing deprio
-deprio :: Parser (Deprio, [String])
+deprio :: Parser Deprio
 deprio = do
     _ <- symbol "deprio"
     _ <- colon
-    -- _ <- skipMany (char ' ')
-    -- _ <- newline
     fs <- many1 disjuncts
-    -- _ <- newline
-    return $ (Deprio $ map fst fs, map snd fs)
+    return $ Deprio (map fst fs) (map snd fs)
 
 
-tactic :: Parser TacticI
-tactic = do
+tactic :: Bool -> Parser TacticI
+tactic diff = do
     tName <- tacticName
-    heuristicDef <- option 's' selectedPreSort
+    presort <- option (SmartRanking False) (selectedPreSort diff)
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
-    -- _ <- newline
-    return $ TacticI tName heuristicDef (map fst prios) (map snd prios) (map fst deprios) (map snd deprios)
+    return $ TacticI tName presort prios deprios
 
 tacticFunctions :: M.Map String (String -> AnnotatedGoal -> Bool)
 tacticFunctions = M.fromList
@@ -142,7 +133,7 @@ tacticFunctions = M.fromList
 
     isFactName :: String -> AnnotatedGoal -> Bool
     isFactName s ((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)) = test == s
-    -- Ligne pas forcément utile
+    -- Not necessarily usefull line
     isFactName s (ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ) = show test == s
     isFactName _ _ = False
 
