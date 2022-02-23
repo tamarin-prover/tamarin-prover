@@ -199,7 +199,6 @@ equations:
         P2)=accept
 
 tactic: oracle_corr
-presort: C
 prio:
     regex "Host_"
     regex "!SignatureVerified"
