@@ -1,108 +1,30 @@
 oracle_correctness_two_certs_same_credentials_same_bsn
+tactic
 
-real	0m0,524s
-user	0m5,305s
-sys	0m3,502s
+real	19m45,140s
+user	281m46,822s
+sys	238m22,631s
 oracle_correctness_two_certs_same_credentials_different_bsn
+tactic
 
-real	0m0,402s
-user	0m6,165s
-sys	0m0,403s
+real	20m7,438s
+user	290m38,040s
+sys	242m45,969s
 oracle_correctness_two_certs_different_credentials_same_bsn
+tactic
 
-real	0m0,138s
-user	0m0,879s
-sys	0m0,609s
+real	21m7,764s
+user	314m29,068s
+sys	260m36,139s
 oracle_correctness_two_certs_different_credentials_different_bsn
+tactic
 
-real	0m0,139s
-user	0m1,243s
-sys	0m0,261s
+real	21m43,986s
+user	320m2,612s
+sys	264m15,461s
 oracle_correctness_two_valid_linked_certs
-
-real	0m0,147s
-user	0m1,373s
-sys	0m0,396s
-oracle_correctness_two_valid_unlinked_certs
-
-real	0m0,237s
-user	0m2,904s
-sys	0m0,225s
-oracle_correctness_join_only
-
-real	0m0,189s
-user	0m2,279s
-sys	0m0,179s
-oracle_correctness_no_verify
-
-real	0m0,315s
-user	0m4,755s
-sys	0m0,361s
-oracle_correctness_with_verify
-
-real	0m0,177s
-user	0m1,694s
-sys	0m0,302s
-oracle_auth_aliveness_host_very_weak
-
-real	0m0,157s
-user	0m1,562s
-sys	0m0,138s
-oracle_auth_aliveness_host
-
-real	0m0,344s
-user	0m5,459s
-sys	0m0,291s
-oracle_auth_aliveness_issuer
-
-real	0m0,126s
-user	0m0,911s
-sys	0m0,330s
-oracle_auth_weak_agreement_host
-
-real	0m0,438s
-user	0m7,273s
-sys	0m0,412s
-oracle_auth_non_injective_agreement_host_issuer
-
-real	0m0,152s
-user	0m1,437s
-sys	0m0,228s
-oracle_auth_injective_agreement_host_issuer
-
-real	0m0,406s
-user	0m7,418s
-sys	0m0,363s
-oracle_auth_secrecy_cre
-
-real	0m0,133s
-user	0m1,307s
-sys	0m0,255s
-oracle_SP3_Unforgeability
-
-real	0m0,627s
-user	0m11,163s
-sys	0m0,581s
-oracle_correctness_two_certs_same_credentials_same_bsn
-
-real	22m4,692s
-user	317m7,171s
-sys	211m51,998s
-oracle_correctness_two_certs_same_credentials_different_bsn
-
-real	22m46,183s
-user	328m49,429s
-sys	210m37,862s
-oracle_correctness_two_certs_different_credentials_same_bsn
-
-real	24m9,195s
-user	363m20,826s
-sys	238m49,749s
-oracle_correctness_two_certs_different_credentials_different_bsn
-
-real	24m1,510s
-user	356m52,259s
-sys	231m45,042s
+tactic
 oracle_correctness_two_valid_linked_certs
-oracle_correctness_two_certs_same_credentials_same_bsn
+tactic
 oracle_correctness_two_valid_linked_certs
+tactic
