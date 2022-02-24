@@ -100,9 +100,6 @@ rule (modulo E) R_Complete:
     6. ~eb   = ~eb.139
        X     = x.271^(x.272*inv((~eb.139*x.273)))
        z     = x.271^(x.272*inv(x.273))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) R_Expire:
@@ -395,9 +392,6 @@ solve( (¬(role = 'I'))  ∥
               next
                 case split_case_6
                 by contradiction /* from formulas */
-              next
-                case split_case_7
-                by contradiction /* from formulas */
               qed
             next
               case Reveal_SessionKey_case_3
@@ -418,9 +412,6 @@ solve( (¬(role = 'I'))  ∥
                 by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction /* from formulas */
-              next
-                case split_case_7
                 by contradiction /* from formulas */
               qed
             next
@@ -733,9 +724,6 @@ next
               next
                 case split_case_6
                 by contradiction /* from formulas */
-              next
-                case split_case_7
-                by contradiction /* from formulas */
               qed
             next
               case Reveal_SessionKey_case_3
@@ -756,9 +744,6 @@ next
                 by contradiction /* from formulas */
               next
                 case split_case_6
-                by contradiction /* from formulas */
-              next
-                case split_case_7
                 by contradiction /* from formulas */
               qed
             next
@@ -805,9 +790,9 @@ analyzing: examples/ake/dh/UM_one_pass_fix.spthy
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 2.040961719s
+  processing time: 1.867010436s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  CK_secure (all-traces): verified (174 steps)
+  CK_secure (all-traces): verified (170 steps)
 
 ------------------------------------------------------------------------------
 
@@ -817,9 +802,9 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 2.040961719s
+  processing time: 1.867010436s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  CK_secure (all-traces): verified (174 steps)
+  CK_secure (all-traces): verified (170 steps)
 
 ==============================================================================
 */

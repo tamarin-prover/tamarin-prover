@@ -241,7 +241,7 @@ analyzing: examples/sapic/fast/basic/design-choices.spthy
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.376111299s
+  processing time: 0.338865872s
   visit_once (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.376111299s
+  processing time: 0.338865872s
   visit_once (all-traces): verified (26 steps)
 
 ==============================================================================

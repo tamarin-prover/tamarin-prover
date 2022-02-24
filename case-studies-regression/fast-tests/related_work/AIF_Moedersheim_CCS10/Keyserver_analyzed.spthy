@@ -146,7 +146,7 @@ analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.126524051s
+  processing time: 0.103222135s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.126524051s
+  processing time: 0.103222135s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

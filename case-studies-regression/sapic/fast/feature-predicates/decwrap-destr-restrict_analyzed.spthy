@@ -1007,7 +1007,7 @@ analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy.tmp
-  processing time: 2.449735424s
+  processing time: 2.758982516s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)
@@ -1022,7 +1022,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy.tmp
-  processing time: 2.449735424s
+  processing time: 2.758982516s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)

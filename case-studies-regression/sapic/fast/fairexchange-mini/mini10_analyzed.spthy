@@ -108,7 +108,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini10.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini10.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini10.spthy.tmp
-  processing time: 0.101825902s
+  processing time: 0.103993526s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 
@@ -120,7 +120,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini10.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini10.spthy.tmp
-  processing time: 0.101825902s
+  processing time: 0.103993526s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 

@@ -18,7 +18,7 @@ module Term.Term (
     -- ** Smart constructors
     , fAppOne
     , fAppZero
-    , fAppGrpId
+    , fAppDHNeutral
     , fAppDiff
     , fAppExp
     , fAppInv
@@ -64,7 +64,7 @@ module Term.Term (
     , emapSymString
     , unionSymString
     , oneSymString
-    , grpidSymString
+    , dhNeutralSymString
     , multSymString
     , zeroSymString
     , xorSymString
@@ -75,7 +75,7 @@ module Term.Term (
     , pmultSym
     , oneSym
     , zeroSym
-    , grpidSym
+    , dhNeutralSym
     -- ** concrete signatures
     , dhFunSig
     , bpFunSig
@@ -112,8 +112,8 @@ import           Term.Term.Raw
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
-fAppGrpId :: Term a
-fAppGrpId = fAppNoEq grpidSym []
+fAppDHNeutral :: Term a
+fAppDHNeutral = fAppNoEq dhNeutralSym []
 
 fAppZero :: Term a
 fAppZero = fAppNoEq zeroSym []

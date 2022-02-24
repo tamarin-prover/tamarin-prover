@@ -428,7 +428,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 1.775867849s
+  processing time: 1.431777479s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)
@@ -443,7 +443,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 1.775867849s
+  processing time: 1.431777479s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)

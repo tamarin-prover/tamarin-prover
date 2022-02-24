@@ -125,7 +125,7 @@ analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 12.830410539s
+  processing time: 14.346087476s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 12.830410539s
+  processing time: 14.346087476s
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

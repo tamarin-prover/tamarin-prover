@@ -95,9 +95,6 @@ rule (modulo E) Init_2:
     6. ~ex   = ~ex.18
        Y     = x.30^(x.31*inv((~ex.18*x.32)))
        z     = x.30^(x.31*inv(x.32))
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -152,13 +149,10 @@ rule (modulo E) Resp_1:
     6. ~ey   = ~ey.375
        X     = x.744^(x.745*inv((~ey.375*x.746)))
        z     = x.744^(x.745*inv(x.746))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 restriction notneutral:
-  "∀ x #i. (NotNeutral( x ) @ #i) ⇒ (¬(x = grpid))"
+  "∀ x #i. (NotNeutral( x ) @ #i) ⇒ (¬(x = DH_neutral))"
   // safety formula
 
 lemma key_agreement_reachable:
@@ -1118,9 +1112,6 @@ next
             case c_exp
             by solve( !KU( ~ex ) @ #vk.15 )
           qed
-        next
-          case split_case_7
-          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1802,9 +1793,6 @@ next
             case c_exp
             by solve( !KU( ~ey ) @ #vk.15 )
           qed
-        next
-          case split_case_7
-          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1826,9 +1814,9 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 20.005654462s
+  processing time: 21.595820781s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (520 steps)
+  key_secrecy (all-traces): verified (518 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1838,9 +1826,9 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 20.005654462s
+  processing time: 21.595820781s
   key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (520 steps)
+  key_secrecy (all-traces): verified (518 steps)
 
 ==============================================================================
 */

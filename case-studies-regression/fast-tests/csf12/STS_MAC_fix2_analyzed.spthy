@@ -85,9 +85,6 @@ rule (modulo E) Init_2:
     6. ~ekI  = ~ekI.67
        Y     = x.128^(x.129*inv((~ekI.67*x.130)))
        z     = x.128^(x.129*inv(x.130))
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -134,9 +131,6 @@ rule (modulo E) Resp_1:
     6. ~ekR  = ~ekR.48
        X     = x.90^(x.91*inv((~ekR.48*x.92)))
        z     = x.90^(x.91*inv(x.92))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp_2:
@@ -183,9 +177,6 @@ rule (modulo E) Resp_2:
     6. ~ekR  = ~ekR.54
        X     = x.102^(x.103*inv((~ekR.54*x.104)))
        z     = x.102^(x.103*inv(x.104))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Sessionkey_Reveal:
@@ -430,7 +421,7 @@ analyzing: examples/csf12/STS_MAC_fix2.spthy
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 1.422161725s
+  processing time: 1.680249106s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 
@@ -442,7 +433,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 1.422161725s
+  processing time: 1.680249106s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
 

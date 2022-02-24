@@ -72,7 +72,7 @@ analyzing: examples/features/xor/basicfunctionality/xor0.spthy
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.123582872s
+  processing time: 0.112611568s
   crworks (exists-trace): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.123582872s
+  processing time: 0.112611568s
   crworks (exists-trace): verified (6 steps)
 
 ==============================================================================

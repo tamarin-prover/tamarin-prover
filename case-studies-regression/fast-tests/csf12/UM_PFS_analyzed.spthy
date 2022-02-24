@@ -57,9 +57,6 @@ rule (modulo E) Init_2:
     6. ~ekI  = ~ekI.147
        Y     = x.288^(x.289*inv((~ekI.147*x.290)))
        z     = x.288^(x.289*inv(x.290))
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -99,9 +96,6 @@ rule (modulo E) Resp_1:
     6. ~ekR  = ~ekR.222
        X     = x.438^(x.439*inv((~ekR.222*x.440)))
        z     = x.438^(x.439*inv(x.440))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -145,12 +139,18 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, hkI ) ▶₀ #i1 )
     solve( !KU( h(<z, 'g'^(~lkI*~x)>) ) @ #vk.1 )
       case c_h
       solve( !KU( 'g'^(~lkI*~x) ) @ #vk.4 )
-        case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.5 )
+        case c_exp
+        solve( !KU( ~lkI ) @ #vk.7 )
           case Ltk_reveal
-          solve( splitEqs(0) )
-            case split_case_7
-            SOLVED // trace found
+          solve( !KU( ~x ) @ #vk.8 )
+            case Ltk_reveal
+            solve( splitEqs(0) )
+              case split_case_1
+              solve( !KU( hkR^~ekI ) @ #vk.7 )
+                case Init_1
+                SOLVED // trace found
+              qed
+            qed
           qed
         qed
       qed
@@ -184,12 +184,18 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
     solve( !KU( h(<z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
       case c_h
       solve( !KU( 'g'^(~lkR*~x) ) @ #vk.4 )
-        case generate_ltk_case_1
-        solve( !KU( ~lkR ) @ #vk.5 )
+        case c_exp
+        solve( !KU( ~lkR ) @ #vk.7 )
           case Ltk_reveal
-          solve( splitEqs(0) )
-            case split_case_7
-            SOLVED // trace found
+          solve( !KU( ~x ) @ #vk.8 )
+            case Ltk_reveal
+            solve( splitEqs(0) )
+              case split_case_1
+              solve( !KU( hkI^~ekR ) @ #vk.7 )
+                case Resp_1
+                SOLVED // trace found
+              qed
+            qed
           qed
         qed
       qed
@@ -212,9 +218,9 @@ analyzing: examples/csf12/UM_PFS.spthy
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.741298343s
-  wPFS_initiator_key (all-traces): falsified - found trace (8 steps)
-  wPFS_responder_key (all-traces): falsified - found trace (8 steps)
+  processing time: 0.866323389s
+  wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
+  wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
 ------------------------------------------------------------------------------
 
@@ -224,9 +230,9 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.741298343s
-  wPFS_initiator_key (all-traces): falsified - found trace (8 steps)
-  wPFS_responder_key (all-traces): falsified - found trace (8 steps)
+  processing time: 0.866323389s
+  wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
+  wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
 ==============================================================================
 */

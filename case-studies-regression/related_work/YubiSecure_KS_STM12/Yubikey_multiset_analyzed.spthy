@@ -1502,7 +1502,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 18.957767107s
+  processing time: 21.875310715s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   slightly_weaker_invariant (all-traces): verified (420 steps)
@@ -1518,7 +1518,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 18.957767107s
+  processing time: 21.875310715s
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   slightly_weaker_invariant (all-traces): verified (420 steps)

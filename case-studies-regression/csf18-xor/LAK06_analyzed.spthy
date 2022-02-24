@@ -6570,7 +6570,7 @@ analyzing: examples/csf18-xor/LAK06.spthy
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 18.290707623s
+  processing time: 21.597421475s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2082 steps)
@@ -6584,7 +6584,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 18.290707623s
+  processing time: 21.597421475s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2082 steps)

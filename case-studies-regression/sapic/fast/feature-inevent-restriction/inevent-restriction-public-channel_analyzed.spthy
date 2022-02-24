@@ -81,7 +81,7 @@ analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-p
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.095872989s
+  processing time: 0.066367282s
   test (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.095872989s
+  processing time: 0.066367282s
   test (all-traces): verified (4 steps)
 
 ==============================================================================

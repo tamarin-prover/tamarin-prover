@@ -68,7 +68,7 @@ analyzing: examples/sapic/fast/basic/no-replication.spthy
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.08064843s
+  processing time: 0.086494188s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.08064843s
+  processing time: 0.086494188s
   onlyOneSecret (all-traces): verified (4 steps)
 
 ==============================================================================

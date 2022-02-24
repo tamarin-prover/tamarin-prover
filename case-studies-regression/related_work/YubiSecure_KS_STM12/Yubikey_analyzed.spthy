@@ -3795,7 +3795,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 11.874305309s
+  processing time: 13.011914963s
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1145 steps)
   no_replay (all-traces): verified (4 steps)
@@ -3810,7 +3810,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 11.874305309s
+  processing time: 13.011914963s
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1145 steps)
   no_replay (all-traces): verified (4 steps)

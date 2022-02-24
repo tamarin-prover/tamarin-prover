@@ -1550,7 +1550,7 @@ analyzing: examples/sapic/fast/feature-locations/SOC.spthy
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 9.275502334s
+  processing time: 9.798238872s
   secrecy (all-traces): verified (5 steps)
   Input (all-traces): verified (41 steps)
   secrecy_computes2 (all-traces): verified (11 steps)
@@ -1565,7 +1565,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 9.275502334s
+  processing time: 9.798238872s
   secrecy (all-traces): verified (5 steps)
   Input (all-traces): verified (41 steps)
   secrecy_computes2 (all-traces): verified (11 steps)

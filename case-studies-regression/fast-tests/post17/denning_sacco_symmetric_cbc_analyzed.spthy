@@ -129,7 +129,7 @@ analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.322041762s
+  processing time: 0.346752662s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
@@ -141,7 +141,7 @@ summary of summaries:
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.322041762s
+  processing time: 0.346752662s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 

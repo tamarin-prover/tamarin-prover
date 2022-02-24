@@ -231,7 +231,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/ndc-nested-2.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-nested-2.spthy.tmp
-  processing time: 0.12261245s
+  processing time: 0.141321384s
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)
@@ -245,7 +245,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-nested-2.spthy.tmp
-  processing time: 0.12261245s
+  processing time: 0.141321384s
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)
   C_possible (exists-trace): verified (7 steps)

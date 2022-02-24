@@ -60,9 +60,6 @@ rule (modulo E) Init_2:
     6. ~lkI  = ~lkI.144
        Y     = x.281^(x.282*inv((~lkI.144*x.283)))
        z     = x.281^(x.282*inv(x.283))
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp_1:
@@ -108,9 +105,6 @@ rule (modulo E) Resp_1:
     6. ~lkR  = ~lkR.216
        X     = x.424^(x.425*inv((~lkR.216*x.426)))
        z     = x.424^(x.425*inv(x.426))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Sessk_reveal:
@@ -294,7 +288,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.480969018s
+  processing time: 0.518310666s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -306,7 +300,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.480969018s
+  processing time: 0.518310666s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 

@@ -71,7 +71,7 @@ analyzing: examples/sapic/fast/basic/channels2.spthy
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.080221554s
+  processing time: 0.07784918s
   received (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.080221554s
+  processing time: 0.07784918s
   received (all-traces): verified (2 steps)
 
 ==============================================================================

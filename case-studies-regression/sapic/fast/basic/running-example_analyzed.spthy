@@ -741,7 +741,7 @@ analyzing: examples/sapic/fast/basic/running-example.spthy
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 2.435468523s
+  processing time: 2.308673667s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)
@@ -756,7 +756,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 2.435468523s
+  processing time: 2.308673667s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)

@@ -823,7 +823,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 83.573636945s
+  processing time: 88.425156522s
   attested_comput (exists-trace): verified (31 steps)
 
 ------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 83.573636945s
+  processing time: 88.425156522s
   attested_comput (exists-trace): verified (31 steps)
 
 ==============================================================================

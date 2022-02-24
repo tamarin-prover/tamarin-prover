@@ -666,7 +666,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 85.005260069s
+  processing time: 90.497306873s
   attested_comput_second_step (exists-trace): verified (27 steps)
 
 ------------------------------------------------------------------------------
@@ -677,7 +677,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 85.005260069s
+  processing time: 90.497306873s
   attested_comput_second_step (exists-trace): verified (27 steps)
 
 ==============================================================================

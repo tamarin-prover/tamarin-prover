@@ -49,9 +49,6 @@ rule (modulo E) Step2:
     6. ~x    = ~x.9
        Y     = x.7^x.8
        z     = x.7^(x.8*~x.9)
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) RevealKey:
@@ -135,7 +132,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.181620899s
+  processing time: 0.188963086s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -147,7 +144,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.181620899s
+  processing time: 0.188963086s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

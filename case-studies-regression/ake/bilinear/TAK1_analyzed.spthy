@@ -315,10 +315,6 @@ rule (modulo E) Proto3:
        emXBXC
              = x.962^(x.963*inv((~ex.486*x.964)))
        z     = x.962^(x.963*inv(x.964))
-    
-    7. emXBXC
-             = grpid
-       z     = grpid
   */
 
 lemma session_key_establish:
@@ -2654,7 +2650,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 58.163754722s
+  processing time: 58.329091684s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2666,7 +2662,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 58.163754722s
+  processing time: 58.329091684s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

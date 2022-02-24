@@ -76,7 +76,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-1.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-1.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-1.spthy.tmp
-  processing time: 0.06044169s
+  processing time: 0.083020328s
   semicolon_binds_stronger_than_parallel (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-1.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-1.spthy.tmp
-  processing time: 0.06044169s
+  processing time: 0.083020328s
   semicolon_binds_stronger_than_parallel (exists-trace): verified (3 steps)
 
 ==============================================================================

@@ -78,9 +78,6 @@ rule (modulo E) Init_2:
     6. ~ekI  = ~ekI.12
        Y     = x.18^(x.19*inv((~ekI.12*x.20)))
        z     = x.18^(x.19*inv(x.20))
-    
-    7. Y     = grpid
-       z     = grpid
   */
 
 rule (modulo E) Resp:
@@ -123,9 +120,6 @@ rule (modulo E) Resp:
     6. ~ekR  = ~ekR.66
        X     = x.126^(x.127*inv((~ekR.66*x.128)))
        z     = x.126^(x.127*inv(x.128))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 lemma Perfect_Forward_Secrecy:
@@ -223,7 +217,7 @@ analyzing: examples/csf12/SignedDH_PFS.spthy
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.443057667s
+  processing time: 0.525832745s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ------------------------------------------------------------------------------
@@ -234,7 +228,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.443057667s
+  processing time: 0.525832745s
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

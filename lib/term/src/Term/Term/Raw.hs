@@ -144,7 +144,7 @@ unsafefApp :: FunSym -> [Term a] -> Term a
 unsafefApp fsym as = FAPP fsym as
 
 -- | View on terms that distinguishes function application of builtin symbols like exp.
-data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | One | Grp_id
+data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | One | DHNeutral
                  | FPMult (Term a) (Term a) | FEMap (Term a) (Term a)
                  | FXor [Term a] | Zero
                  | FUnion [Term a]
@@ -176,12 +176,12 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == diffSym   -> FDiff  t1 t2
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
-    []         | o == grpidSym  -> Grp_id
+    []         | o == dhNeutralSym  -> DHNeutral
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
     _                           -> FAppNoEq o ts
   where
     -- special symbols
-    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, grpidSym ]
+    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
 
 ----------------------------------------------------------------------
 -- Instances

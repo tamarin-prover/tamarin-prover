@@ -793,7 +793,7 @@ analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 555.494656893s
+  processing time: 560.800152319s
   can_obtain_key (exists-trace): verified (24 steps)
 
 ------------------------------------------------------------------------------
@@ -804,7 +804,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 555.494656893s
+  processing time: 560.800152319s
   can_obtain_key (exists-trace): verified (24 steps)
 
 ==============================================================================

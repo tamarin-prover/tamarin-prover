@@ -165,7 +165,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.10520653s
+  processing time: 0.112946235s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)
@@ -180,7 +180,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.10520653s
+  processing time: 0.112946235s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)

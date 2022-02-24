@@ -100,9 +100,6 @@ rule (modulo E) R_Complete:
     6. ~eb   = ~eb.139
        X     = x.271^(x.272*inv((~eb.139*x.273)))
        z     = x.271^(x.272*inv(x.273))
-    
-    7. X     = grpid
-       z     = grpid
   */
 
 rule (modulo E) R_Expire:
@@ -337,7 +334,7 @@ analyzing: examples/ake/dh/UM_one_pass_attack.spthy
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 3.63777833s
+  processing time: 3.472863111s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 
@@ -349,7 +346,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 3.63777833s
+  processing time: 3.472863111s
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

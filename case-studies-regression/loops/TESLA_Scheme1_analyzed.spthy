@@ -783,7 +783,7 @@ analyzing: examples/loops/TESLA_Scheme1.spthy
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 4.95753506s
+  processing time: 4.772442187s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 
@@ -795,7 +795,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 4.95753506s
+  processing time: 4.772442187s
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

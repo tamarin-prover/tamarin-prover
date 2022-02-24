@@ -97,7 +97,7 @@ rule Resp_1:
   ]
 
 restriction notneutral:
- "All x #i. NotNeutral(x)@i ==> not(x=grpid)"
+ "All x #i. NotNeutral(x)@i ==> not(x=DH_neutral)"
 
 lemma key_agreement_reachable:
   exists-trace

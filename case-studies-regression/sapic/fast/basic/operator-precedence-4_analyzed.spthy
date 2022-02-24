@@ -83,7 +83,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-4.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.058604693s
+  processing time: 0.066916528s
   second_process_covered (all-traces): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.058604693s
+  processing time: 0.066916528s
   second_process_covered (all-traces): verified (4 steps)
 
 ==============================================================================
