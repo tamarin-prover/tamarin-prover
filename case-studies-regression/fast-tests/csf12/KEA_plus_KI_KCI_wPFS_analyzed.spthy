@@ -274,7 +274,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -284,7 +284,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.80403474s
+  processing time: 1.120229786s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -296,7 +296,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.80403474s
+  processing time: 1.120229786s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

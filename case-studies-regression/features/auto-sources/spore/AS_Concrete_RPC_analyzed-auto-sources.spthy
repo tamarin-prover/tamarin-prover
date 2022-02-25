@@ -456,7 +456,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -466,7 +466,7 @@ analyzing: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 9.894984613s
+  processing time: 23.589006094s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)
@@ -482,7 +482,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 9.894984613s
+  processing time: 23.589006094s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

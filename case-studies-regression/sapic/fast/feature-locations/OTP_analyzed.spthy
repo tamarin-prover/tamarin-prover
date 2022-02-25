@@ -1167,7 +1167,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1177,7 +1177,7 @@ analyzing: examples/sapic/fast/feature-locations/OTP.spthy
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 8.568364236s
+  processing time: 10.665532012s
   secrecy_key (all-traces): verified (8 steps)
   key_ex (all-traces): verified (15 steps)
   secrecy_ex (all-traces): verified (11 steps)
@@ -1195,7 +1195,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 8.568364236s
+  processing time: 10.665532012s
   secrecy_key (all-traces): verified (8 steps)
   key_ex (all-traces): verified (15 steps)
   secrecy_ex (all-traces): verified (11 steps)

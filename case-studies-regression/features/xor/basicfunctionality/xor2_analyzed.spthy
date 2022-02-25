@@ -71,7 +71,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -81,7 +81,7 @@ analyzing: examples/features/xor/basicfunctionality/xor2.spthy
 analyzed: examples/features/xor/basicfunctionality/xor2.spthy
 
   output:          examples/features/xor/basicfunctionality/xor2.spthy.tmp
-  processing time: 0.14813302s
+  processing time: 0.227988277s
   secrecybroken (all-traces): falsified - found trace (5 steps)
 
 ------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor2.spthy
 
   output:          examples/features/xor/basicfunctionality/xor2.spthy.tmp
-  processing time: 0.14813302s
+  processing time: 0.227988277s
   secrecybroken (all-traces): falsified - found trace (5 steps)
 
 ==============================================================================

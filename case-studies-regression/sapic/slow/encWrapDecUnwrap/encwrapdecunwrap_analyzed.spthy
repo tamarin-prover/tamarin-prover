@@ -17628,7 +17628,7 @@ restriction locking_6:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -17638,7 +17638,7 @@ analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 141.916559885s
+  processing time: 297.979840238s
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1236 steps)
   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps)
@@ -17654,7 +17654,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 141.916559885s
+  processing time: 297.979840238s
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1236 steps)
   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps)

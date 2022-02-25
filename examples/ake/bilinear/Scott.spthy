@@ -72,6 +72,7 @@ rule Init_2:
     , Sid( ~ex, <'Init',$A,$B,X,Y> )
     // a matching session for ~ex has the following sid
     , Match( ~ex, <'Resp',$B,$A,X,Y> )
+    , NotNeutral(Y)
     ]->
   [ !Sessk( ~ex, sessKey ) ]
 
@@ -89,11 +90,14 @@ rule Resp_1:
     , Sid( ~ey, <'Resp',$B,$A,X,Y> )
     // a matching session for ~ey has the following sid
     , Match( ~ey, <'Init',$A,$B,X,Y> )
+    , NotNeutral(X)    
     ]->
   [ Out( Y )
   , !Sessk( ~ey, sessKey )
   ]
 
+restriction notneutral:
+ "All x #i. NotNeutral(x)@i ==> not(x=DH_neutral)"
 
 lemma key_agreement_reachable:
   exists-trace
