@@ -255,7 +255,6 @@ prio:
     regex "!KU\( KDF_EK\(~TPM_EK_Seed\)"
 
 tactic: oracle_SP3_Unfo
-presort: c
 prio:
     regex "!Pk\("
     regex "!TPM_"
@@ -333,7 +332,7 @@ prio:
     regex "!KU\( KDF_AES\(~TPM"
 
 tactic: oracle_auth_alive
-presort: c
+
 prio:
     regex "Host_"
 prio:
@@ -342,7 +341,6 @@ prio:
     regex "In_S\("
 
 tactic: oracle_auth_many
-presort: c
 prio:
     regex "In_S\( $B"
     regex "In_S\( $A"
@@ -385,7 +383,6 @@ prio:
     regex "splitEqs\(0\)" | regex "KU\( Nonce\(~n_J\)"
 
 tactic: oracle_auth_secrecy
-presort: c
 prio:
     regex "In_S\( \$B,"
     regex "In_S\( \$A,"
@@ -394,9 +391,9 @@ prio:
     regex "_State_"
     regex "!Pk\("
 prio:
-    regex "createDAAKey\'>"
-    regex "createPrimary\'\)"
-    regex "returnEK\'>"
+    regex "createDAAKey'>"
+    regex "createPrimary'\)"
+    regex "returnEK'>"
     regex "returnDAAKey\'>"
 prio:
     regex "In_S\("
@@ -433,7 +430,6 @@ prio:
 
 
 tactic: oracle_SP4_Non
-presort: c
 prio:
     regex "!SignatureVerified"
 prio:
