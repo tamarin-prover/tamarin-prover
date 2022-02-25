@@ -1,0 +1,33 @@
+oracle_correctness_two_certs_same_credentials_same_bsn
+oracle
+
+real	6m23,107s
+user	27m33,095s
+sys	16m23,589s
+oracle_correctness_two_certs_same_credentials_different_bsn
+oracle
+
+real	6m10,871s
+user	27m41,651s
+sys	16m2,507s
+oracle_correctness_two_certs_different_credentials_same_bsn
+oracle
+
+real	6m30,938s
+user	30m23,507s
+sys	17m5,110s
+oracle_correctness_two_certs_different_credentials_different_bsn
+oracle
+
+real	6m44,540s
+user	29m51,450s
+sys	17m8,072s
+oracle_correctness_two_valid_linked_certs
+oracle
+./script.sh : ligne 23 : 29306 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=../../$3 ../../$theoryFile +RTS -N10 -RTS > oracle_$line 2>&1
+
+real	8m23,707s
+user	33m55,637s
+sys	24m42,929s
+oracle_correctness_two_valid_unlinked_certs
+oracle

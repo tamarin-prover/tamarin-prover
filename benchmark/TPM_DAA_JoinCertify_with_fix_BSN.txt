@@ -1,0 +1,107 @@
+oracle_correctness_two_certs_same_credentials_same_bsn
+oracle
+
+real	6m7,412s
+user	26m20,660s
+sys	15m30,694s
+oracle_correctness_two_certs_same_credentials_different_bsn
+oracle
+
+real	6m8,039s
+user	26m23,515s
+sys	15m29,890s
+oracle_correctness_two_certs_different_credentials_same_bsn
+oracle
+
+real	6m29,547s
+user	29m10,084s
+sys	16m26,020s
+oracle_correctness_two_certs_different_credentials_different_bsn
+oracle
+
+real	6m27,022s
+user	28m56,284s
+sys	16m16,075s
+oracle_correctness_two_valid_linked_certs
+oracle
+./script.sh : ligne 23 : 104245 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=$3 $theoryFile +RTS -N10 -RTS > benchmark/oracle_$line.txt 2>&1
+
+real	7m30,469s
+user	30m47,812s
+sys	20m33,837s
+oracle_correctness_two_valid_unlinked_certs
+oracle
+./script.sh : ligne 23 : 106976 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=$3 $theoryFile +RTS -N10 -RTS > benchmark/oracle_$line.txt 2>&1
+
+real	22m57,175s
+user	94m37,534s
+sys	65m9,886s
+oracle_correctness_join_only
+oracle
+
+real	0m46,104s
+user	3m34,695s
+sys	1m3,424s
+oracle_correctness_no_verify
+oracle
+./script.sh : ligne 23 : 114777 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=$3 $theoryFile +RTS -N10 -RTS > benchmark/oracle_$line.txt 2>&1
+
+real	12m16,916s
+user	45m7,763s
+sys	34m4,505s
+oracle_correctness_with_verify
+oracle
+./script.sh : ligne 23 : 123961 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=$3 $theoryFile +RTS -N10 -RTS > benchmark/oracle_$line.txt 2>&1
+
+real	14m5,061s
+user	50m50,987s
+sys	39m26,316s
+oracle_auth_aliveness_host_very_weak
+oracle
+
+real	0m24,215s
+user	3m20,821s
+sys	0m29,079s
+oracle_auth_aliveness_host
+oracle
+
+real	15m57,743s
+user	53m4,909s
+sys	43m39,586s
+oracle_auth_aliveness_issuer
+oracle
+
+real	0m25,551s
+user	3m19,495s
+sys	0m33,008s
+oracle_auth_weak_agreement_host
+oracle
+
+real	3m42,073s
+user	12m58,251s
+sys	8m44,525s
+oracle_auth_non_injective_agreement_host_issuer
+oracle
+
+real	3m30,848s
+user	12m55,894s
+sys	8m45,839s
+oracle_auth_injective_agreement_host_issuer
+oracle
+./script.sh : ligne 23 : 145882 Processus arrêté      tamarin-prover --prove=$line --heuristic=o --oraclename=$3 $theoryFile +RTS -N10 -RTS > benchmark/oracle_$line.txt 2>&1
+
+real	74m26,201s
+user	246m43,269s
+sys	195m1,411s
+oracle_auth_secrecy_cre
+oracle
+
+real	1m47,610s
+user	6m57,690s
+sys	3m49,488s
+oracle_SP3_Unforgeability
+oracle
+
+real	4m11,476s
+user	15m32,284s
+sys	10m9,628s
