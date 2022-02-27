@@ -25,15 +25,15 @@ for i in {0..9}; do
 	while read line; do
 		if [ $# -eq 3 ] ; then 
 			if [ ${line:0:1} != '#' ] ; then
-				echo $line >> $timeFile
-				echo "oracle" >> $timeFile
-				{ time tamarin-prover --prove=$line --heuristic=o --oraclename=../../$3 ../../$theoryFile +RTS -N10 -RTS  > oracle_$cpt"_"$line 2>&1 ; } 2>> $timeFile
+				echo $line >> $timeFile"_"$i
+				echo "oracle" >> $timeFile"_"$i
+				{ time tamarin-prover --prove=$line --heuristic=o --oraclename=../../$3 ../../$theoryFile +RTS -N10 -RTS  > oracle_$cpt"_"$i"_"$line 2>&1 ; } 2>> $timeFile"_"$i
 			fi
 		else
 			if [ ${line:0:1} != '#' ] ; then
-				echo $line >> $timeFile
-			echo "tactic" >> $timeFile
-				{ time tamarin-prover --prove=$line ../../$theoryFile +RTS -N10 -RTS  > tactic_$cpt"_"$line 2>&1 ; } 2>> $timeFile
+				echo $line >> $timeFile"_"$i
+				echo "tactic" >> $timeFile"_"$i
+				{ time tamarin-prover --prove=$line ../../$theoryFile +RTS -N10 -RTS  > tactic_$cpt"_"$i"_"$line 2>&1 ; } 2>> $timeFile"_"$i
 			fi
 		fi
 	done < ../../$lemmaFilename
