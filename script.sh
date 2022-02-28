@@ -14,11 +14,12 @@ fi
 cd $theoryName
 
 cpt=0
-timeFile="time_"$cpt
-while [ -f $timeFile ]; do
+timeFile="time_"$cpt"_"*
+while compgen -G "$timeFile" > /dev/null; do
 	cpt=$((cpt+1))
-	timeFile="time_"$cpt
+	timeFile="time_"$cpt"_"*
 done
+timeFile="time_"$cpt
 
 for i in {0..9}; do 
 	echo "Iteration: "$i

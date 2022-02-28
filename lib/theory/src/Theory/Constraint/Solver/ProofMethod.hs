@@ -610,6 +610,7 @@ oracleSmartRanking oracle ctxt _sys ags0
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
+      _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
       -- guard $ trace indices True
 
