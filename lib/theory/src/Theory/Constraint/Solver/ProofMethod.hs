@@ -231,7 +231,6 @@ instance HasFrees DiffProofMethod where
 -- Proof method execution
 -------------------------
 
-
 -- @execMethod rules method se@ checks first if the @method@ is applicable to
 -- the sequent @se@. Then, it applies the @method@ to the sequent under the
 -- assumption that the @rules@ describe all rewriting rules in scope.
@@ -610,7 +609,7 @@ oracleSmartRanking oracle ctxt _sys ags0
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      _ <- getLine
+      -- _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
       -- guard $ trace indices True
 
@@ -641,8 +640,8 @@ itRanking tactic ags = result
       indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions) ags -- find the first prio that match every goal
       indexedPrio = sortOn fst $ zip indexPrio ags                                 -- ordening of goals given the fisrt prio they meet 
       groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio  -- grouping goals by prio
-      rankedPrioGoals = snd $ unzip $ concat $ (tail groupedPrio)                         -- recovering ranked goals only (no prio = Nothing = fst)
-
+      rankedPrioGoals = if (Nothing `elem` indexPrio) then snd $ unzip $ concat $ (tail groupedPrio) else snd $ unzip $ (concat groupedPrio)    -- recovering ranked goals only (no prio = Nothing = fst)
+      
       -- Getting the functions from depriorities
       -- deprioName = tacticiDeprio tactic
       -- deprioTab = map deprioFunctions deprioName
@@ -650,7 +649,7 @@ itRanking tactic ags = result
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
       groupedDeprio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedDeprio
-      rankedDeprioGoals = snd $ unzip $ concat (tail groupedDeprio)
+      rankedDeprioGoals = if (Nothing `elem` indexDeprio) then snd $ unzip $ concat (tail groupedDeprio) else snd $ unzip $ (concat groupedDeprio)
 
       --Concatenation of results
       nonRanked = filter (`notElem` rankedPrioGoals++rankedDeprioGoals) ags
@@ -672,9 +671,12 @@ internalTacticRanking tactic ctxt _sys ags0 =
           -- out = map (show . snd) (sortOn fst (zip orderIndex index))
       let dict = M.fromList (zip ags [(0::Int)..])
           outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
-      let prettyOut = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip outp res))
+      --let prettyOut = unlines
+      --            (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+      --                 (zip outp res))
+      let prettyOut = unlines (map show outp)
+      --          (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+      --              (zip outp res))
       let logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
