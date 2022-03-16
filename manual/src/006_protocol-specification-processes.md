@@ -106,7 +106,7 @@ in(x); let <'pair',y,z> = x in out(z); out(z)
 ```
 To avoid user errors, pattern matchings are explicit in which variables they
 bind and which they compare for equality, e.g.,
-`let <y,=z>=x in ..` compares with y and binds to x.
+`let <y,=z>=x in ..` checks if `x` is a pair and if the second element equals `z`; then it binds the first element to x.
 (Note: previous versions of Tamarin/SAPIC considered let-bindings as syntactic
 sugar adhering to the same rules as [let-bindings in rules](#sec:let-rules).
 Now `let` is a first-class primitive. )
