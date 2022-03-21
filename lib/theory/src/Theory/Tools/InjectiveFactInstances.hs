@@ -22,6 +22,7 @@ import           Extension.Prelude   (sortednub)
 import           Control.Monad.Fresh
 import           Data.Label
 import qualified Data.Set            as S
+import           Data.List
 import           Safe                (headMay)
 
 import           Theory.Model
@@ -32,11 +33,11 @@ import           Theory.Model
 -- argument of the fact-tag.
 --
 -- We compute the under-approximation by checking that
--- (1) the fact-tag is linear,
--- (2) every introduction of such a fact-tag is protected by a Fr-fact of the
---     first term, and
--- (3) every rule has at most one copy of this fact-tag in the conclusion and
---     the first term arguments agree.
+-- (1) the fact-tag is linear
+-- (2) for each occurrence of the fact-tag in a rule:
+--     there is no other occurrence with the same first term and
+--       (a) either there is a Fr-fact of the first term as a premise
+--       (b) or there is the same fact-tag with the same first term in a premise
 --
 -- We exclude facts that are not copied in a rule, as they are already handled
 -- properly by the naive backwards reasoning.
@@ -54,16 +55,20 @@ simpleInjectiveFactInstances rules = S.fromList $ do
         return tag
 
     guardedSingletonCopy tag ru =
-        length copies <= 1 && all guardedCopy copies
+        all guardedCopy copies
       where
         prems              = get rPrems ru
         copies             = filter ((tag ==) . factTag) (get rConcs ru)
         firstTerm          = headMay . factTerms
-
+        
+        -- duplicateFirstTerms are the first terms that appear at least twice - i.e. the corresponding fact cannot be injective 
+        allFirstTerms = sort [t | c <- copies, let Just t = firstTerm c]
+        duplicateFirstTerms = S.fromList [a | (a, b) <- zip (drop 1 allFirstTerms) (take (length allFirstTerms - 1) allFirstTerms), a==b]
+        
         -- True if there is a first term and a premise guarding it
         guardedCopy faConc = case firstTerm faConc of
             Nothing    -> False
-            Just tConc -> freshFact tConc `elem` prems || guardedInPrems tConc
+            Just tConc -> tConc `S.notMember` duplicateFirstTerms && (freshFact tConc `elem` prems || guardedInPrems tConc)
 
         -- True if there is a premise with the same tag and first term
         guardedInPrems tConc = (`any` prems) $ \faPrem ->
