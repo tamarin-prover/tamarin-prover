@@ -2640,7 +2640,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -2650,7 +2650,7 @@ analyzing: examples/ake/bilinear/TAK1.spthy
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 65.867014029s
+  processing time: 47.444157046s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 
@@ -2662,7 +2662,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 65.867014029s
+  processing time: 47.444157046s
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
 

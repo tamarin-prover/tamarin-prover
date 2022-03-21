@@ -98,7 +98,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -108,7 +108,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/match_new.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.078117298s
+  processing time: 0.083793658s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 
@@ -120,7 +120,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/match_new.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/match_new.spthy.tmp
-  processing time: 0.078117298s
+  processing time: 0.083793658s
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)
 

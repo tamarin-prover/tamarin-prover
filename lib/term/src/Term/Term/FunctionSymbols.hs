@@ -27,6 +27,7 @@ module Term.Term.FunctionSymbols (
     , diffSymString
     , expSymString
     , invSymString
+    , dhNeutralSymString
     , pmultSymString
     , emapSymString
     , unionSymString
@@ -44,6 +45,7 @@ module Term.Term.FunctionSymbols (
     , expSym
     , pmultSym
     , oneSym
+    , dhNeutralSym
     , invSym
     , pairSym
     , fstSym
@@ -115,13 +117,14 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, fstSymString, sndSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, expSymString, invSymString, oneSymString, fstSymString, sndSymString, dhNeutralSymString, multSymString, zeroSymString, xorSymString :: ByteString
 diffSymString = "diff"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
 fstSymString = "fst"
 sndSymString = "snd"
+dhNeutralSymString = "DH_neutral"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
@@ -137,7 +140,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym, natOneSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, dhNeutralSym, fstSym, sndSym, pmultSym, zeroSym, natOneSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public))
 -- | Diff.
@@ -148,6 +151,8 @@ expSym   = (expSymString,(2,Public))
 invSym   = (invSymString,(1,Public))
 -- | The one in the group of exponents.
 oneSym   = (oneSymString,(0,Public))
+-- | The groupd identity
+dhNeutralSym = (dhNeutralSymString,(0,Public))
 -- | Projection of first component of pair.
 fstSym   = ("fst",(1,Public))
 -- | Projection of second component of pair.
@@ -156,10 +161,8 @@ sndSym   = ("snd",(1,Public))
 pmultSym = (pmultSymString,(2,Public))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public))
---zeroSym    = NoEqSym zeroSymString 0 Public Nothing
 -- | One for natural numbers.
 natOneSym = (natOneSymString, (0,Public))
---natOneSym  = NoEqSym natOneSymString 0 Public (Just ["Nat"])
 
 
 ----------------------------------------------------------------------
@@ -168,7 +171,7 @@ natOneSym = (natOneSymString, (0,Public))
 
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
-dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
+dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym, NoEq dhNeutralSym ]
 
 -- | The signature for Xor function symbols.
 xorFunSig :: FunSig

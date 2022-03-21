@@ -283,7 +283,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -293,7 +293,7 @@ analyzing: examples/sapic/fast/feature-locations/AKE.spthy
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.633703224s
+  processing time: 0.578711966s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 
@@ -305,7 +305,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.633703224s
+  processing time: 0.578711966s
   sanity3 (all-traces): verified (3 steps)
   secrecy (all-traces): verified (7 steps)
 

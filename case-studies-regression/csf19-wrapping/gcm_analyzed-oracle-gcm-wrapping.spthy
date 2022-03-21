@@ -12134,7 +12134,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -12144,7 +12144,7 @@ analyzing: examples/csf19-wrapping/gcm.spthy
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 146.290592321s
+  processing time: 115.533011739s
   origin (all-traces): verified (1597 steps)
   Counter_Monotonicity (all-traces): verified (1302 steps)
   IV_Uniqueness (all-traces): verified (8 steps)
@@ -12160,7 +12160,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 146.290592321s
+  processing time: 115.533011739s
   origin (all-traces): verified (1597 steps)
   Counter_Monotonicity (all-traces): verified (1302 steps)
   IV_Uniqueness (all-traces): verified (8 steps)

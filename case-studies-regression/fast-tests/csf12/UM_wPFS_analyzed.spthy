@@ -407,7 +407,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -417,7 +417,7 @@ analyzing: examples/csf12/UM_wPFS.spthy
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.734257643s
+  processing time: 0.920472842s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -429,7 +429,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.734257643s
+  processing time: 0.920472842s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

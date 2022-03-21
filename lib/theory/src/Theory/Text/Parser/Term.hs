@@ -100,10 +100,11 @@ term :: Parser LNTerm -> Bool -> Parser LNTerm
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1:nat" *> pure fAppNatOne
-    , symbol "%1"    *> pure fAppNatOne
-    , symbol "1"     *> pure fAppOne
-    , application   <?> "function application"
+    , symbol "1:nat"      *> pure fAppNatOne
+    , symbol "%1"         *> pure fAppNatOne
+    , symbol "1"          *> pure fAppOne
+    , symbol "DH_neutral" *> pure fAppDHNeutral
+    , application        <?> "function application"
     , nullaryApp
     , plit
     ]
@@ -162,7 +163,7 @@ natterm eqn plit = do
       , symbol "1"     *> pure fAppNatOne  -- if we expect a nat, we take 1 as nat instead of diffie-hellman
       , natLlit
       ]
-      
+
     natLlit = varTerm <$> asum
       [ try $ sortedLVar [LSortNat]
       , do (n, i) <- indexedIdentifier

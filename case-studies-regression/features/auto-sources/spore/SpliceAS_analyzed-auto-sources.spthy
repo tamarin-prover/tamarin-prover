@@ -725,7 +725,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -735,7 +735,7 @@ analyzing: examples/features/auto-sources/spore/SpliceAS.spthy
 analyzed: examples/features/auto-sources/spore/SpliceAS.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS.spthy.tmp
-  processing time: 5.039027594s
+  processing time: 10.802245527s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (11 steps)
   injectiveagreement_B (all-traces): falsified - found trace (15 steps)
@@ -752,7 +752,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS.spthy.tmp
-  processing time: 5.039027594s
+  processing time: 10.802245527s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (11 steps)
   injectiveagreement_B (all-traces): falsified - found trace (15 steps)
