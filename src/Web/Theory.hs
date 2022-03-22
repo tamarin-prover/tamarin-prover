@@ -850,7 +850,7 @@ reqCasesDiffSnippet renderUrl tidx s kind isdiff thy = vcat $
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
     [ ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         vsep $ map prettyRuleAC msrRules
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -859,6 +859,9 @@ rulesSnippet thy = vcat
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
     injFacts   = S.toList $ getInjectiveFactInsts thy
+    showInjFact (tag, (eqPos, monPos)) = showFactTagArity tag
+        ++ (if S.null eqPos then "" else " non-changing positions: " ++ show (S.toList eqPos))
+        ++ (if S.null monPos then "" else " monotonic positions: " ++ show (S.toList monPos))
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -899,7 +902,7 @@ rulesDiffSnippet thy = vcat
 rulesDiffSnippetSide :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
 rulesDiffSnippetSide s isdiff thy = vcat
     [ ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         vsep $ map prettyRuleAC msrRules
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -908,6 +911,10 @@ rulesDiffSnippetSide s isdiff thy = vcat
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
+    showInjFact (tag, (eqPos, monPos)) = showFactTagArity tag
+        ++ (if (S.empty == eqPos) then "" else " non-changing positions: " ++ show (S.toList eqPos))
+        ++ (if (S.empty == monPos) then "" else " monotonic positions: " ++ show (S.toList monPos))
+        ++ "\n"
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc

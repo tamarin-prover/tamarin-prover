@@ -186,7 +186,7 @@ nonInjectiveFactInstances ctxt se = do
         kTerm              = firstTerm kFaPrem
         conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
 
-    guard (kTag `S.member` L.get pcInjectiveFactInsts ctxt)
+    guard (kTag `S.member` S.map fst (L.get pcInjectiveFactInsts ctxt))
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) &&

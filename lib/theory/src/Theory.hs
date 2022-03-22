@@ -350,7 +350,7 @@ data ClosedRuleCache = ClosedRuleCache
        { _crcRules               :: ClassifiedRules
        , _crcRawSources          :: [Source]
        , _crcRefinedSources      :: [Source]
-       , _crcInjectiveFactInsts  :: S.Set FactTag
+       , _crcInjectiveFactInsts  :: S.Set (FactTag, (S.Set Int, S.Set Int))
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -463,9 +463,13 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
+    -- Maude handle
+    hnd = L.get sigmMaudeHandle sig
+    reducible = reducibleFunSyms $ mhMaudeSig hnd
+    
     -- inj fact instances
     injFactInstances =
-        simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
+        simpleInjectiveFactInstances reducible $ L.get cprRuleE <$> protoRules
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
@@ -473,9 +477,6 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
     safetyRestrictions = filter isSafetyFormula restrictions
     rawSources         = precomputeSources ctxt0 safetyRestrictions
     refinedSources     = refineWithSourceAsms typAsms ctxt0 rawSources
-
-    -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
 
     -- close intruder rules
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
@@ -1966,11 +1967,11 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
 
 -- | The facts with injective instances in this theory
-getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
+getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, (S.Set Int, S.Set Int))
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The facts with injective instances in this theory
-getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set FactTag
+getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set (FactTag, (S.Set Int, S.Set Int))
 getDiffInjectiveFactInsts s isdiff = case (s, isdiff) of
            (LHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
            (RHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheRight)
@@ -2873,7 +2874,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
             []   -> emptyDoc
             tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
-                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+                      , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 -- | Pretty print a closed diff theory.
 prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
@@ -2912,7 +2913,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
             []   -> emptyDoc
             tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
-                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+                      , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 prettyClosedSummary :: Document d => ClosedTheory -> d
 prettyClosedSummary thy =
