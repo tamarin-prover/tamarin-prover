@@ -344,9 +344,9 @@ isTrueFalse _ Nothing _ = Nothing
 isTrueFalse reducible (Just sst) st =
       case isTrueFalse reducible Nothing st of
         Just res -> Just res
-        Nothing -> if cyclic || natCyclic                  then Just False
+        Nothing -> if isInside && not isNegatedInside      then Just True
                    else if isNegatedInside && not isInside then Just False
-                   else if isInside && not isNegatedInside then Just True
+                   else if cyclic || natCyclic             then Just False
                    else                                         Nothing
           where
             sstInserted = modify posSubterms (S.insert st) sst

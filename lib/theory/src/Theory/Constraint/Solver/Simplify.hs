@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE TupleSections      #-}
+{-# LANGUAGE LambdaCase         #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -33,7 +34,9 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe, listToMaybe)
+import           Data.Maybe                         (mapMaybe, listToMaybe, maybeToList)
+import           Data.Bifunctor                     (bimap)
+import           Safe                               (atMay, headMay)
 
 import           Control.Basics
 import           Control.Category
@@ -93,19 +96,21 @@ simplifySystem = do
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
+              c11 <- simpInjectiveFactEqMon
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
---                     , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
-                    , ("orderings for ~vars (S_fresh-order)", c9)
-                    , ("simplification of SubtermStore",     c10)
+                    [ ("unique fresh instances (DG4)",                    c1)
+--                     , ("unique K↓-facts (N5↓)",                           c2)
+                    , ("unique K↑-facts (N5↑)",                           c3)
+                    , ("unique (linear) edges (DG2 and DG3)",             c4)
+                    , ("solve unambiguous actions (S_@)",                 c5)
+                    , ("decompose trace formula",                         c6)
+                    , ("propagate atom valuation to formula",             c7)
+                    , ("saturate under ∀-clauses (S_∀)",                  c8)
+                    , ("orderings for ~vars (S_fresh-order)",             c9)
+                    , ("simplification of SubtermStore",                  c10)
+                    , ("equations and monotonicity from injective Facts", c11)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -127,19 +132,21 @@ simplifySystem = do
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
+              c11 <- simpInjectiveFactEqMon
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
-                    , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
-                    , ("orderings for ~vars (S_fresh-order)", c9)
-                    , ("simplification of SubtermStore",     c10)
+                    [ ("unique fresh instances (DG4)",                    c1)
+                    , ("unique K↓-facts (N5↓)",                           c2)
+                    , ("unique K↑-facts (N5↑)",                           c3)
+                    , ("unique (linear) edges (DG2 and DG3)",             c4)
+                    , ("solve unambiguous actions (S_@)",                 c5)
+                    , ("decompose trace formula",                         c6)
+                    , ("propagate atom valuation to formula",             c7)
+                    , ("saturate under ∀-clauses (S_∀)",                  c8)
+                    , ("orderings for ~vars (S_fresh-order)",             c9)
+                    , ("simplification of SubtermStore",                  c10)
+                    , ("equations and monotonicity from injective Facts", c11)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -528,6 +535,75 @@ simpSubterms = do
     --            but it is hard to search for these collisions.
 
 
+-- | if there are two instances @i and @j of an injective fact with the same first term, then
+-- - (1) for each eqPos, an equation is inserted, that these two terms are the same
+-- - for each two terms s,t at a monotonic position in monPos:
+--   - (2) if s=t, then i=j is inserted
+--   - (3) if s⊏t, then i<j is inserted
+--   - (4) if i<j or j<i, then s≠t is inserted  -- only needed as a semi-replacement of (6) (especially in combination with 5) because (2) is directly applied if s=t
+--   - (5) if ¬s⊏t and ¬s=t, (i.e., t⊏s must hold because of monotonicity) then j<i is inserted
+--   - (6) if i<j, then s⊏t is inserted    -- has the potential to break many old proofs because subterms appear in the goals
+simpInjectiveFactEqMon :: Reduction ChangeIndicator
+simpInjectiveFactEqMon = do
+  -- get some values out of the reduction
+  inj <- S.toList <$> askM pcInjectiveFactInsts
+  nodes <- getM sNodes
+  sys <- gets id
+  reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+  sst <- getM sSubtermStore
+  let monPairs = getPairs inj nodes snd
+  let triviallySmaller small big = Just True == isTrueFalse reducible (Just sst) (small, big)
+  let triviallyNotSmaller small big = Just False == isTrueFalse reducible (Just sst) (small, big)
+  oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  let inequalities = S.fromList $ concatMap (\case
+                    GGuarded All [] [EqE (bTermToLTerm->s) (bTermToLTerm->t)] gf | gf == gfalse -> [(s, t), (t, s)]
+                    _                                                                           -> [])
+                      $ S.toList oldFormulas
+  let notEq s t = (s,t) `S.notMember` inequalities  --TODO-MY this can be improved by partialAtomValuation
+
+  -- compute new sets of formulas/lesses to insert
+  let newEquations = filter (uncurry (/=)) (map (bimap snd snd) $ getPairs inj nodes fst)  -- (1)
+  let monNewEqualNodeIds = [(i, j) | ((i,s), (j,t)) <- monPairs, s==t, i/=j]  -- (2)
+  let monNewLesses = [(i, j) | ((i,s), (j,t)) <- monPairs, triviallySmaller s t, not $ alwaysBefore sys i j]   -- (3)
+  let monNewInequalities = [(s, t) | ((i,s), (j,t)) <- monPairs, alwaysBefore sys i j || alwaysBefore sys j i, notEq s t]   -- (4)
+  let monNewInverseLesses = [(j, i) | ((i,s), (j,t)) <- monPairs, triviallyNotSmaller s t, (s,t) `S.member` inequalities, not $ alwaysBefore sys j i]   -- (5)
+  let monNewSubterms = [(s, t) | ((i,s), (j,t)) <- monPairs, alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6)  -- todo:double check that alwaysbefore i i does not hold
+
+  -- insert new formulas and less relations
+  let newFormulas = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- newEquations]
+                       ++ [GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | (i,j) <- monNewEqualNodeIds]
+                       ++ [gnotAtom $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- monNewInequalities]
+                       ++ [GAto $ Subterm (lTermToBTerm t) (lTermToBTerm t) | (s,t) <- monNewSubterms]
+  mapM_ insertFormula newFormulas
+  mapM_ (uncurry insertLess) (monNewLesses ++ monNewInverseLesses)
+
+  -- check if anything changed
+  return $ if
+      all (`elem` oldFormulas) newFormulas &&
+      null (monNewLesses ++ monNewInverseLesses)
+      then Unchanged else Changed
+
+    where
+      getPairs :: [(FactTag, (S.Set Int, S.Set Int))] -> M.Map NodeId RuleACInst -> ((S.Set Int, S.Set Int) -> S.Set Int) -> [((NodeId, LNTerm), (NodeId, LNTerm))]
+      getPairs inj nodes fstOrSnd = [((i, s), (j, t)) |
+                                          ((tag1, pos1, first1), l1) <- M.toList reordered,
+                                          ((tag2, pos2, first2), l2) <- M.toList reordered,  --compare each element with each other (quadratic)
+                                          tag1==tag2, pos1==pos2, first1==first2,  -- early sort out non-matching pairs
+                                          (i, s) <- l1,
+                                          (j, t) <- l2,
+                                          i /= j]
+        where
+          nodePremises = M.map (get rPrems) nodes
+          terms = M.map (concatMap (positionsFromFact (map (second fstOrSnd) inj))) nodePremises
+          reordered = M.fromListWith (++) [ ((tag, pos, firstT), [(i, t)]) | (i, l) <- M.toList terms, (tag, pos, firstT, t) <- l]
+
+          positionsFromFact :: [(FactTag, S.Set Int)] -> LNFact -> [(FactTag, Int, LNTerm, LNTerm)]
+          positionsFromFact inj2 fact = [(tag, pos, firstT, t) |
+                                          (tag, positions) <- inj2,
+                                          tag == factTag fact,
+                                          firstT <- maybeToList $ headMay (factTerms fact),
+                                          pos <- S.toList positions,
+                                          t <- maybeToList $ atMay (factTerms fact) pos]
 
 
 
