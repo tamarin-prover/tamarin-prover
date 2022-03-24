@@ -570,10 +570,11 @@ simpInjectiveFactEqMon = do
   let monNewSubterms = [(s, t) | ((i,s), (j,t)) <- monPairs, alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6)  -- todo:double check that alwaysbefore i i does not hold
 
   -- insert new formulas and less relations
-  let newFormulas = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- newEquations]
+  let newFormulas = --trace (show ("simpInj", newEquations, monPairs, monNewEqualNodeIds, monNewLesses, monNewInequalities, monNewInverseLesses, monNewSubterms)) 
+                          [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- newEquations]
                        ++ [GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | (i,j) <- monNewEqualNodeIds]
                        ++ [gnotAtom $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- monNewInequalities]
-                       ++ [GAto $ Subterm (lTermToBTerm t) (lTermToBTerm t) | (s,t) <- monNewSubterms]
+                       ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | (s,t) <- monNewSubterms]
   mapM_ insertFormula newFormulas
   mapM_ (uncurry insertLess) (monNewLesses ++ monNewInverseLesses)
 

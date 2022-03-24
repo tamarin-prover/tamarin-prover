@@ -80,7 +80,7 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
     --   - the second to indicate where the arguments are strictly increasing
     -- all conclusions of the given FactTag have to fulfill that
     getMaybeEqStrict :: FactTag -> ProtoRuleE -> Maybe (S.Set Int, S.Set Int)
-    getMaybeEqStrict tag ru =
+    getMaybeEqStrict tag ru = --trace (show ("getMaybeEqStrict", tag, ru, intersectAll (map getMaybeEqMonConclusion copies) (factTagArity tag))) $
         intersectAll (map getMaybeEqMonConclusion copies) (factTagArity tag)
       where
         prems              = get rPrems ru
