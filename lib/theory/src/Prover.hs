@@ -441,3 +441,98 @@ openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items) =
       (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
 
+------------------------------------------------------------------------------
+-- References to lemmas
+------------------------------------------------------------------------------
+
+-- | Lemmas are referenced by their name.
+type LemmaRef = String
+
+-- | Resolve a path in a theory.
+lookupLemmaProof :: LemmaRef -> ClosedTheory -> Maybe IncrementalProof
+lookupLemmaProof name thy = L.get lProof <$> lookupLemma name thy
+
+
+-- | Resolve a path in a diff theory.
+lookupLemmaProofDiff :: Side -> LemmaRef -> ClosedDiffTheory -> Maybe IncrementalProof
+lookupLemmaProofDiff s name thy = L.get lProof <$> lookupLemmaDiff s name thy
+
+
+-- | Resolve a path in a diff theory.
+lookupDiffLemmaProof :: LemmaRef -> ClosedDiffTheory -> Maybe IncrementalDiffProof
+lookupDiffLemmaProof name thy = L.get lDiffProof <$> lookupDiffLemma name thy
+
+
+-- | Modify the proof at the given lemma ref, if there is one. Fails if the
+-- path is not present or if the prover fails.
+modifyLemmaProof :: Prover -> LemmaRef -> ClosedTheory -> Maybe ClosedTheory
+modifyLemmaProof prover name thy =
+    modA thyItems changeItems thy
+  where
+    findLemma (LemmaItem lem) = name == L.get lName lem
+    findLemma _               = False
+
+    change preItems (LemmaItem lem) = do
+         let ctxt = getProofContext lem thy
+             sys  = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
+         lem' <- modA lProof (runProver prover ctxt 0 sys) lem
+         return $ LemmaItem lem'
+    change _ _ = error "LemmaProof: change: impossible"
+
+    changeItems items = case break findLemma items of
+        (pre, i:post) -> do
+             i' <- change pre i
+             return $ pre ++ i':post
+        (_, []) -> Nothing
+
+
+-- | Modify the proof at the given lemma ref, if there is one. Fails if the
+-- path is not present or if the prover fails.
+modifyLemmaProofDiff :: Side -> Prover -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyLemmaProofDiff s prover name thy =
+    modA diffThyItems (changeItems s) thy
+  where
+    findLemma s'' (EitherLemmaItem (s''', lem)) = (name == L.get lName lem) && (s''' == s'')
+    findLemma _ _                               = False
+
+    change s'' preItems (EitherLemmaItem (s''', lem)) = if s''==s'''
+        then
+          do
+            let ctxt = getProofContextDiff s'' lem thy
+                sys  = mkSystemDiff s'' ctxt (diffTheoryRestrictions thy) preItems $ L.get lFormula lem
+            lem' <- modA lProof (runProver prover ctxt 0 sys) lem
+            return $ EitherLemmaItem (s''', lem')
+        else
+          error "LemmaProof: change: impossible"
+    change _ _ _ = error "LemmaProof: change: impossible"
+
+    changeItems s' items = case break (findLemma s') items of
+        (pre, i:post) -> do
+             i' <- change s' pre i
+             return $ pre ++ i':post
+        (_, []) -> Nothing
+
+
+-- | Modify the proof at the given diff lemma ref, if there is one. Fails if the
+-- path is not present or if the prover fails.
+modifyDiffLemmaProof :: DiffProver -> LemmaRef -> ClosedDiffTheory -> Maybe ClosedDiffTheory
+modifyDiffLemmaProof prover name thy = -- error $ show $ -- name ++ show thy
+     modA diffThyItems changeItems thy
+  where
+    findLemma (DiffLemmaItem lem) = (name == L.get lDiffName lem)
+    findLemma  _                  = False
+
+    change preItems (DiffLemmaItem lem) =
+          do
+            -- I don't get why we need this here, but anyway the empty system does not seem to be a problem.
+            let ctxt = getDiffProofContext lem thy
+                sys  = mkDiffSystem ctxt (diffTheoryRestrictions thy) preItems
+            lem' <- modA lDiffProof (runDiffProver prover ctxt 0 sys) lem
+            return $ DiffLemmaItem lem'
+    change _ _ = error "DiffLemmaProof: change: impossible"
+
+    changeItems items = case break findLemma items of
+        (pre, i:post) -> do
+             i' <- change pre i
+             return $ pre ++ i':post
+        (_, []) -> Nothing

@@ -284,4 +284,3 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 -- -- | Convert a lemma to the corresponding guarded formula.
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
 -- lemmaToGuarded lem =
-

@@ -679,3 +679,6 @@ normalizeTheory =
                      Contradiction _ -> Contradiction Nothing
                      _               -> method)
                   ()
+
+
+
