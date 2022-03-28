@@ -117,6 +117,7 @@ library
       SpecificProof
       Rule
       Prover
+      Pretty
 
     other-modules:
       Theory.Text.Parser.Exceptions
