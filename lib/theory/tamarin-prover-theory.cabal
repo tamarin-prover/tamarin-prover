@@ -113,6 +113,7 @@ library
       Options
       Lemmas
       OpenTheory
+      ClosedTheory
       SpecificProof
       Rule
 

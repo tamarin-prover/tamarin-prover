@@ -10,10 +10,6 @@ module OpenTheory (
     , module Rule
     ) where
 
-import GHC.Generics
-import Control.DeepSeq
-import Data.Binary
-
 import           Prelude                             hiding (id, (.))
 
 import           Data.List
@@ -30,9 +26,6 @@ import qualified Extension.Data.Label                as L
 
 import           Theory.Model
 import           Theory.Proof
-import           Theory.Tools.InjectiveFactInstances
-import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
 
 import           Term.Positions
 
@@ -67,27 +60,11 @@ type OpenTranslatedTheory =
 type OpenDiffTheory =
     DiffTheory SignaturePure [IntrRuleAC] DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
 
--- | Closed theories can be proven. Invariants:
---     1. Lemma names are unique
---     2. All proof steps with annotated sequents are sound with respect to the
---        closed rule set of the theory.
---     3. Maude is running under the given handle.
-type ClosedTheory =
-    Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof ()
-
--- | Closed Diff theories can be proven. Invariants:
---     1. Lemma names are unique
---     2. All proof steps with annotated sequents are sound with respect to the
---        closed rule set of the theory.
---     3. Maude is running under the given handle.
-type ClosedDiffTheory =
-    DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
-
 -- | Either Therories can be Either a normal or a diff theory
 
 -- type EitherTheory = Either Theory  DiffTheory
 type EitherOpenTheory = Either OpenTheory OpenDiffTheory
-type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
+
 
 
 -- remove Sapic items and convert other items to identical item but with unit type for sapic elements
@@ -573,23 +550,6 @@ mergeLeftRightRulesDiff rs = map clean $ concatMap (foldr mergeRules []) $ group
        | getLeftRule ruE `equalRuleUpToDiffAnnotation` ruEL
         && getRightRule ruE `equalRuleUpToDiffAnnotation` ruER = DiffRuleItem (DiffProtoRule ruE Nothing)
     clean i                                                    = i
-
--- | Open a theory by dropping the closed world assumption and values whose
--- soundness depends on it.
-openTheory :: ClosedTheory -> OpenTheory
-openTheory  (Theory n h sig c items opts) = openTranslatedTheory(
-    Theory n h (toSignaturePure sig) (openRuleCache c)
-    -- We merge duplicate rules if they were split into variants
-      (mergeOpenProtoRules $ map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
-      opts)
-
--- | Open a theory by dropping the closed world assumption and values whose
--- soundness depends on it.
-openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items) =
-    -- We merge duplicate rules if they were split into variants
-    DiffTheory n h (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
 
 
 -- | Find the open protocol rule with the given name.
