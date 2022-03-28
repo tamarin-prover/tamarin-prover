@@ -109,6 +109,7 @@ library
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
+      N_Theory
 
     other-modules:
       Theory.Text.Parser.Exceptions
