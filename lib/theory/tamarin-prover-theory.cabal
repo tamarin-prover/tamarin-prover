@@ -114,6 +114,7 @@ library
       Lemmas
       OpenTheory
       SpecificProof
+      Rule
 
     other-modules:
       Theory.Text.Parser.Exceptions

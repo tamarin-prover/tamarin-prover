@@ -5,6 +5,8 @@ module SpecificProof (
 import           Prelude                             hiding (id, (.))
 
 import           Theory.Proof
+import Lemmas
+import Theory.Model
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -36,3 +38,21 @@ skeletonToIncrementalDiffProof = fmap (fmap (const Nothing))
 incrementalToSkeletonDiffProof :: IncrementalDiffProof -> DiffProofSkeleton
 incrementalToSkeletonDiffProof = fmap (fmap (const ()))
 
+-- Lemma construction/modification
+----------------------------------
+
+-- | Create a new unproven lemma from a formula modulo E.
+unprovenLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> LNFormula
+              -> Lemma ProofSkeleton
+unprovenLemma name atts qua fm = Lemma name qua fm atts (unproven ())
+
+skeletonLemma :: String -> [LemmaAttribute] -> TraceQuantifier -> f -> p -> ProtoLemma f p
+skeletonLemma name atts qua fm = Lemma name qua fm atts
+
+-- | Create a new unproven diff lemma.
+unprovenDiffLemma :: String -> [LemmaAttribute]
+              -> DiffLemma DiffProofSkeleton
+unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
+
+skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
+skeletonDiffLemma name atts = DiffLemma name atts
