@@ -110,6 +110,7 @@ library
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
       Theories
+      Options
 
     other-modules:
       Theory.Text.Parser.Exceptions
