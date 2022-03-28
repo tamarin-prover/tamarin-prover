@@ -568,22 +568,6 @@ skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemm
 skeletonDiffLemma name atts = DiffLemma name atts
 
 
--- | The source kind allowed for a lemma.
-lemmaSourceKind :: Lemma p -> SourceKind
-lemmaSourceKind lem
-  | SourceLemma `elem` L.get lAttributes lem = RawSource
-  | otherwise                                = RefinedSource
-
--- | Adds the LHS lemma attribute.
-addLeftLemma :: ProtoLemma f p -> ProtoLemma f p
-addLeftLemma lem =
-     L.set lAttributes (LHSLemma:(L.get lAttributes lem)) lem
-
--- | Adds the RHS lemma attribute.
-addRightLemma :: ProtoLemma f p -> ProtoLemma f p
-addRightLemma lem =
-     L.set lAttributes (RHSLemma:(L.get lAttributes lem)) lem
-
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
