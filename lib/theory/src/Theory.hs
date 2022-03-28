@@ -283,7 +283,7 @@ import           Theories
 
 import OpenTheory
 import ClosedTheory
-
+import Prover
 
 
 

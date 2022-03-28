@@ -116,6 +116,7 @@ library
       ClosedTheory
       SpecificProof
       Rule
+      Prover
 
     other-modules:
       Theory.Text.Parser.Exceptions
