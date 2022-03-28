@@ -227,7 +227,7 @@ module Theory (
 
   , prettyProcess
   , prettyProcessDef
-  , module N_Theory
+  , module Theories
 
   -- * Convenience exports
   , module Theory.Model
@@ -279,7 +279,7 @@ import           Term.Positions
 
 import           Utils.Misc
 
-import N_Theory
+import           Theories
 
 ------------------------------------------------------------------------------
 -- Specific proof types
