@@ -1,21 +1,8 @@
-{-# LANGUAGE FlexibleInstances #-}
-
-
 module Lemma (
   LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
-  , Lemma(..)
-  , SyntacticLemma(..)
   , DiffLemma(..)
-  , lName
-  , lTraceQuantifier 
-  , lFormula        
-  , lAttributes     
-  , lProof
-  , lDiffName
-  , lDiffAttributes
-  , lDiffProof
   , lemmaSourceKind
   , addLeftLemma
   , addRightLemma

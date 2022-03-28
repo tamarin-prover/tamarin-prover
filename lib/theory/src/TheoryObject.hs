@@ -1,11 +1,3 @@
-
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
 module TheoryObject (
    module Lemma
   , module Items.OptionItem
@@ -23,31 +15,7 @@ module TheoryObject (
   , ProcessDef(..)
   , Predicate(..)
   , Option(..)
-  , FormalComment
   , SapicElement (..)
-  , pName
-  , pBody
-  , thyName     
-  , thyHeuristic
-  , thySignature
-  , thyCache    
-  , thyItems    
-  , thyOptions 
-  , pFact           
-  , pFormula
-  --, transAllowPatternMatchinginLookup   
-  --, transProgress            
-  --, transReliable            
-  --, transReport  
-  , diffThyName           
-  , diffThyHeuristic      
-  , diffThySignature      
-  , diffThyCacheLeft      
-  , diffThyCacheRight     
-  , diffThyDiffCacheLeft  
-  , diffThyDiffCacheRight 
-  , diffThyItems
-  , filterSide
   , foldSapicItem
   , foldDiffTheoryItem
   , mapTheoryItem
@@ -97,11 +65,9 @@ module TheoryObject (
   , lookupLemmaDiff
   , lookupLemma
   , lookupProcessDef
-  ) where
+  , filterSide) where
 
-import Theory.Sapic
-import GHC.Generics
-import Data.Binary (Binary)
+import Theory.Sapic ( Process )
 import Theory.Constraint.Solver.Heuristics
 import Data.Label as L
 import Theory.Model.Restriction
@@ -126,7 +92,6 @@ import           Data.Maybe
 
 import           Control.Basics
 import           Control.Category
-import           Control.DeepSeq
 
 import           Theory.Model
 

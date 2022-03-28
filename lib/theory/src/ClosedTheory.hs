@@ -1,6 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
-
 module ClosedTheory (
     module ClosedTheory
     ,module Items.ClosedTheoryItem

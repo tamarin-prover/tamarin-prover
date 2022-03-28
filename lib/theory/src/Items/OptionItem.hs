@@ -4,7 +4,7 @@
 
 module Items.OptionItem (
     Option(..)
-  ,module Items.OptionItem
+    ,module Items.OptionItem
 ) where
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
