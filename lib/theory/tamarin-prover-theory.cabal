@@ -111,6 +111,7 @@ library
       Theory.Tools.Wellformedness
       Theories
       Options
+      Lemmas
 
     other-modules:
       Theory.Text.Parser.Exceptions
