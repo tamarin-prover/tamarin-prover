@@ -1,13 +1,10 @@
-
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
-module Options (
+
+module Items.OptionItem (
     Option(..)
-  ,  transAllowPatternMatchinginLookup   
-  , transProgress            
-  , transReliable            
-  , transReport  
+  ,module Items.OptionItem
 ) where
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)

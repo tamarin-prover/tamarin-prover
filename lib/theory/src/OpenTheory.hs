@@ -8,6 +8,7 @@ module OpenTheory (
     module OpenTheory
     , module SpecificProof
     , module Rule
+    , module Items.OpenTheoryItem
     ) where
 
 import           Prelude                             hiding (id, (.))
@@ -38,33 +39,7 @@ import TheoryObject
 import SpecificProof
 
 import Rule
-
-
-
--- | Open theories can be extended. Invariants:
---   1. Lemma names are unique.
-type OpenTheory =
-    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton SapicElement
-
-type OpenTheoryItem = TheoryItem OpenProtoRule ProofSkeleton SapicElement
-
-
--- | Open theories can be extended. Invariants:
---   1. Lemma names are unique.
---   2. All SapicItems are translated
-type OpenTranslatedTheory =
-    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton ()
-
--- | Open diff theories can be extended. Invariants:
---   1. Lemma names are unique.
-type OpenDiffTheory =
-    DiffTheory SignaturePure [IntrRuleAC] DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton
-
--- | Either Therories can be Either a normal or a diff theory
-
--- type EitherTheory = Either Theory  DiffTheory
-type EitherOpenTheory = Either OpenTheory OpenDiffTheory
-
+import Items.OpenTheoryItem
 
 
 -- remove Sapic items and convert other items to identical item but with unit type for sapic elements

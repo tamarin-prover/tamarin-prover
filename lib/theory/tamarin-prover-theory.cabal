@@ -110,7 +110,6 @@ library
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
       TheoryObject
-      Options
       Lemma
       OpenTheory
       ClosedTheory
@@ -118,6 +117,11 @@ library
       Rule
       Prover
       Pretty
+      Items.LemmaItem
+      Items.ClosedTheoryItem
+      Items.OpenTheoryItem
+      Items.OptionItem
+      Items.RuleItem
 
     other-modules:
       Theory.Text.Parser.Exceptions

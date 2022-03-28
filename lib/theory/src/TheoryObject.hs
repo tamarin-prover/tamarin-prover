@@ -7,8 +7,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
 module TheoryObject (
-   module Options
-  , module Lemma
+   module Lemma
+  , module Items.OptionItem
   ,  LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
@@ -106,7 +106,7 @@ import Theory.Model.Fact
 import Term.LTerm
 import Theory.Constraint.Solver
 
-import Options
+import Items.OptionItem
 import Lemma
 import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
