@@ -123,6 +123,8 @@ library
       Items.OptionItem
       Items.RuleItem
       Items.ProcessItem
+      Items.PredicateItem
+      Items.TheoryItem
 
     other-modules:
       Theory.Text.Parser.Exceptions
