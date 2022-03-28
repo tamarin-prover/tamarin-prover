@@ -1,4 +1,3 @@
-
 -- FIXME: for functions prove
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
@@ -217,7 +216,6 @@ module Theory (
 
   , prettyProcess
   , prettyProcessDef
-  , module Theory
 
   -- * Convenience exports
   , module Theory.Model
@@ -257,10 +255,22 @@ import           TheoryObject
 import OpenTheory
 import ClosedTheory
 import Prover
-import Pretty
+--import Pretty
 
 
+------------------------------------------------------------------------------
+-- Pretty printing
+------------------------------------------------------------------------------
 
+-- | Pretty print a side for parameters
+prettySide :: HighlightDocument d => Side -> d
+prettySide LHS = text "[left]"
+prettySide RHS = text "[right]"
+
+-- | Pretty print a formal comment
+prettyFormalComment :: HighlightDocument d => String -> String -> d
+prettyFormalComment "" body = multiComment_ [body]
+prettyFormalComment header body = text $ header ++ "{*" ++ body ++ "*}"
 
 -- | Pretty print a theory.
 prettyTheoryWithSapic :: HighlightDocument d

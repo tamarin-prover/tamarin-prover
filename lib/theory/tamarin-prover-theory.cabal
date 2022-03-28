@@ -116,7 +116,6 @@ library
       SpecificProof
       Rule
       Prover
-      Pretty
       Items.LemmaItem
       Items.ClosedTheoryItem
       Items.OpenTheoryItem
