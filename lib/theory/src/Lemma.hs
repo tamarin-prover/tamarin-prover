@@ -6,7 +6,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 
-module Lemmas (
+module Lemma (
   LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)

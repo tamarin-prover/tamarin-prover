@@ -6,9 +6,9 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
-module Theories (
+module TheoryObject (
    module Options
-  , module Lemmas
+  , module Lemma
   ,  LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
@@ -98,11 +98,8 @@ module Theories (
 
 import Theory.Sapic
 import GHC.Generics
-import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Theory.Model (LNFormula)
 import Theory.Constraint.Solver.Heuristics
-import Theory.Model.Formula (SyntacticLNFormula)
 import Data.Label as L
 import Theory.Model.Restriction
 import Theory.Model.Fact
@@ -110,10 +107,9 @@ import Term.LTerm
 import Theory.Constraint.Solver
 
 import Options
-import Lemmas-- | Fold a theory
+import Lemma
 import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
-import qualified Data.Set as S
 
 
 

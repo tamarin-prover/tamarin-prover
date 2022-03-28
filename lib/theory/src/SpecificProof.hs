@@ -5,7 +5,7 @@ module SpecificProof (
 import           Prelude                             hiding (id, (.))
 
 import           Theory.Proof
-import Lemmas
+import Lemma
 import Theory.Model
 
 ------------------------------------------------------------------------------

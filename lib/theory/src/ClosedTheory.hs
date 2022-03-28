@@ -7,31 +7,22 @@ module ClosedTheory (
 
 import           Prelude                             hiding (id, (.))
 
-import           Data.Maybe
 import qualified Data.Set                            as S
 
 import           Control.Basics
 import           Control.Category
-import           Control.Monad.Reader
-import qualified Control.Monad.State                 as MS
-import           Control.Parallel.Strategies
 
-import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 -- import qualified Data.Label.Total
 
 
 import           Theory.Model
 import           Theory.Proof
-import           Theory.Text.Pretty
-import           Theory.Tools.AbstractInterpretation
-import           Theory.Tools.LoopBreakers
 
 
-import Lemmas
-import Theories
+import Lemma
+import TheoryObject
 import Rule
-import OpenTheory
 import Safe
 
 

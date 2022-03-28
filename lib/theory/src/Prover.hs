@@ -24,9 +24,9 @@ import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.LoopBreakers
-import Lemmas
+import Lemma
 import ClosedTheory
-import Theories
+import TheoryObject
 import OpenTheory
 
 

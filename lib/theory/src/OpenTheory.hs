@@ -32,7 +32,7 @@ import           Term.Positions
 import           Utils.Misc
 import Safe
 
-import Theories
+import TheoryObject
 
 
 import SpecificProof

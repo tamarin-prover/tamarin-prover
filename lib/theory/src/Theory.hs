@@ -1,15 +1,5 @@
-{-# LANGUAGE DeriveFunctor        #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TupleSections        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+
 -- FIXME: for functions prove
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE ViewPatterns         #-}
-{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -227,7 +217,7 @@ module Theory (
 
   , prettyProcess
   , prettyProcessDef
-  , module Theories
+  , module Theory
 
   -- * Convenience exports
   , module Theory.Model
@@ -239,47 +229,30 @@ module Theory (
 
 import           Prelude                             hiding (id, (.))
 
-import           GHC.Generics                        (Generic)
 
 -- import           Data.Typeable
-import           Data.Binary
 import           Data.List
 import           Data.Maybe
-import           Data.Either
 import           Data.Monoid                         (Sum(..))
 import qualified Data.Set                            as S
 
 import           Control.Basics
 import           Control.Category
-import           Control.DeepSeq
-import           Control.Monad.Reader
-import qualified Control.Monad.State                 as MS
 import           Control.Parallel.Strategies
 
-import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
-import qualified Data.Label.Point
-import qualified Data.Label.Poly
 -- import qualified Data.Label.Total
 
-import           Safe                                (headMay, atMay)
 
 import           Theory.Model
 import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Proof
 import           Theory.Text.Pretty
-import           Theory.Tools.AbstractInterpretation
-import           Theory.Tools.InjectiveFactInstances
-import           Theory.Tools.LoopBreakers
-import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
 
-import           Term.Positions
 
-import           Utils.Misc
 
-import           Theories
+import           TheoryObject
 
 import OpenTheory
 import ClosedTheory

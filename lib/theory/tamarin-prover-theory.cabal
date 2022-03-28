@@ -109,9 +109,9 @@ library
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
-      Theories
+      TheoryObject
       Options
-      Lemmas
+      Lemma
       OpenTheory
       ClosedTheory
       SpecificProof
