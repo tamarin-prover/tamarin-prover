@@ -9,6 +9,7 @@
 module TheoryObject (
    module Lemma
   , module Items.OptionItem
+  , module Items.ProcessItem
   ,  LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
@@ -107,6 +108,7 @@ import Term.LTerm
 import Theory.Constraint.Solver
 
 import Items.OptionItem
+import Items.ProcessItem
 import Lemma
 import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
@@ -129,18 +131,7 @@ import           Theory.Text.Pretty
 import           Prelude                             hiding (id, (.))
 
 
-------------------------------------------------------------------------------
--- Processes
-------------------------------------------------------------------------------
 
-data ProcessDef = ProcessDef
-        { _pName            :: String
-        , _pBody            :: Process
-        }
-        deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''ProcessDef])
-
--- generate accessors for ProcessDef data structure records
 
 
 ------------------------------------------------------------------------------

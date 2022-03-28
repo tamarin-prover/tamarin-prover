@@ -122,6 +122,7 @@ library
       Items.OpenTheoryItem
       Items.OptionItem
       Items.RuleItem
+      Items.ProcessItem
 
     other-modules:
       Theory.Text.Parser.Exceptions
