@@ -1219,3 +1219,4 @@ prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo
 
 prettyRuleACInst :: HighlightDocument d => RuleACInst -> d
 prettyRuleACInst = prettyNamedRule (kwInstanceModulo "AC") (const emptyDoc)
+

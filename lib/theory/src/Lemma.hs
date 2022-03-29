@@ -11,13 +11,18 @@ module Lemma (
   , isLeftLemma
   , isRightLemma
   ,module Items.LemmaItem
-
+  , module Lemma
 ) where
 
 import Data.Label as L
 import Theory.Constraint.System
 import Items.LemmaItem
 
+
+import Text.PrettyPrint.Highlight
+import Theory.Text.Pretty
+import Theory.Model
+import Theory.Constraint.Solver
 
 
 -- | The source kind allowed for a lemma.
@@ -64,3 +69,91 @@ isRightLemma lem =
 -- isBothLemma :: Lemma p -> Bool
 -- isBothLemma lem =
 --      (BothLemma `elem` L.get lAttributes lem)
+
+-- | Pretty print the lemma name together with its attributes.
+prettyLemmaName :: HighlightDocument d => Lemma p -> d
+prettyLemmaName l = case L.get lAttributes l of
+      [] -> text (L.get lName l)
+      as -> text (L.get lName l) <->
+            (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
+  where
+    prettyLemmaAttribute SourceLemma        = text "sources"
+    prettyLemmaAttribute ReuseLemma         = text "reuse"
+    prettyLemmaAttribute ReuseDiffLemma     = text "diff_reuse"
+    prettyLemmaAttribute InvariantLemma     = text "use_induction"
+    prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
+    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+    prettyLemmaAttribute LHSLemma           = text "left"
+    prettyLemmaAttribute RHSLemma           = text "right"
+--     prettyLemmaAttribute BothLemma      = text "both"
+
+
+-- | Pretty print the diff lemma name
+prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
+prettyDiffLemmaName l = text ((L.get lDiffName l))
+
+    -- | Pretty print a lemma.
+prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
+prettyLemma ppPrf lem =
+    kwLemma <-> prettyLemmaName lem <> colon $-$
+    (nest 2 $
+      sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          ]
+    )
+    $-$
+    ppLNFormulaGuarded (L.get lFormula lem)
+    $-$
+    ppPrf (L.get lProof lem)
+  where
+    ppLNFormulaGuarded fm = case formulaToGuarded fm of
+        Left err -> multiComment $
+            text "conversion to guarded formula failed:" $$
+            nest 2 err
+        Right gf -> case toSystemTraceQuantifier $ L.get lTraceQuantifier lem of
+          ExistsNoTrace -> multiComment
+            ( text "guarded formula characterizing all counter-examples:" $-$
+              doubleQuotes (prettyGuarded (gnot gf)) )
+          ExistsSomeTrace -> multiComment
+            ( text "guarded formula characterizing all satisfying traces:" $-$
+              doubleQuotes (prettyGuarded gf) )
+
+-- | Pretty print an Either lemma.
+prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
+prettyEitherLemma ppPrf (_, lem) =
+    kwLemma <-> prettyLemmaName lem <> colon $-$
+    (nest 2 $
+      sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          ]
+    )
+    $-$
+    ppLNFormulaGuarded (L.get lFormula lem)
+    $-$
+    ppPrf (L.get lProof lem)
+  where
+    ppLNFormulaGuarded fm = case formulaToGuarded fm of
+        Left err -> multiComment $
+            text "conversion to guarded formula failed:" $$
+            nest 2 err
+        Right gf -> case toSystemTraceQuantifier $ L.get lTraceQuantifier lem of
+          ExistsNoTrace -> multiComment
+            ( text "guarded formula characterizing all counter-examples:" $-$
+              doubleQuotes (prettyGuarded (gnot gf)) )
+          ExistsSomeTrace -> multiComment
+            ( text "guarded formula characterizing all satisfying traces:" $-$
+              doubleQuotes (prettyGuarded gf) )
+
+-- | Pretty print a diff lemma.
+prettyDiffLemma :: HighlightDocument d => (p -> d) -> DiffLemma p -> d
+prettyDiffLemma ppPrf lem =
+    kwDiffLemma <-> prettyDiffLemmaName lem <> colon
+    $-$
+    ppPrf (L.get lDiffProof lem)
+
+-- | Pretty print a 'TraceQuantifier'.
+prettyTraceQuantifier :: Document d => TraceQuantifier -> d
+prettyTraceQuantifier ExistsTrace = text "exists-trace"
+prettyTraceQuantifier AllTraces   = text "all-traces"
+
+-- FIXME: Sort instances into the right files

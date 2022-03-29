@@ -27,6 +27,10 @@ import TheoryObject
 import Utils.Misc
 import Prelude hiding (id, (.))
 
+import Pretty
+import Theory.Text.Pretty
+import Control.Parallel.Strategies
+
 
 -- remove Sapic items and convert other items to identical item but with unit type for sapic elements
 removeSapicItems :: OpenTheory -> OpenTranslatedTheory
@@ -643,3 +647,97 @@ normalizeTheory =
 
 
 
+
+
+
+
+
+-- | Pretty print an open rule together with its assertion soundness proof.
+prettyOpenProtoRule :: HighlightDocument d => OpenProtoRule -> d
+prettyOpenProtoRule (OpenProtoRule ruE [])       = prettyProtoRuleE ruE
+prettyOpenProtoRule (OpenProtoRule _   [ruAC])   = prettyProtoRuleACasE ruAC
+prettyOpenProtoRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
+    nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
+  where
+    ppList _  []     = emptyDoc
+    ppList pp [x]    = pp x
+    ppList pp (x:xr) = pp x $-$ comma $-$ ppList pp xr
+
+-- | Pretty print an open rule together with its assertion soundness proof.
+prettyOpenProtoRuleAsClosedRule :: HighlightDocument d => OpenProtoRule -> d
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE [])
+    = prettyProtoRuleE ruE $--$
+    -- cannot show loop breakers here, as we do not have the information
+    (nest 2 $ emptyDoc $-$
+     multiComment_ ["has exactly the trivial AC variant"])
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule _ [ruAC@(Rule (ProtoRuleACInfo _ _ (Disj disj) _) _ _ _ _)])
+    = prettyProtoRuleACasE ruAC $--$
+    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+     if length disj == 1 then
+       multiComment_ ["has exactly the trivial AC variant"]
+     else
+       multiComment $ prettyProtoRuleAC ruAC
+    )
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE variants) = prettyProtoRuleE ruE $-$
+    nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
+  where
+    ppList _  []     = emptyDoc
+    ppList pp [x]    = pp x
+    ppList pp (x:xr) = pp x $-$ comma $-$ ppList pp xr
+
+-- | Pretty print a diff rule
+prettyDiffRule :: HighlightDocument d => DiffProtoRule -> d
+prettyDiffRule (DiffProtoRule ruE Nothing           ) = prettyProtoRuleE ruE
+prettyDiffRule (DiffProtoRule ruE (Just (ruL,  ruR))) = prettyProtoRuleE ruE $-$
+    nest 1
+    (kwLeft  $-$ nest 1 (prettyOpenProtoRule ruL) $-$
+     kwRight $-$ nest 1 (prettyOpenProtoRule ruR))
+
+-- | Pretty print an either rule
+prettyEitherRule :: HighlightDocument d => (Side, OpenProtoRule) -> d
+prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
+
+
+
+
+-- | Pretty print an open theory.
+prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
+prettyOpenTheory =
+    prettyTheoryWithSapic prettySignaturePure
+                 (const emptyDoc) prettyOpenProtoRule prettyProof prettySapicElement
+                 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
+
+-- | Pretty print an open theory.
+prettyOpenDiffTheory :: HighlightDocument d => OpenDiffTheory -> d
+prettyOpenDiffTheory =
+    prettyDiffTheory prettySignaturePure
+                 (const emptyDoc) prettyEitherRule prettyDiffProof prettyProof
+                 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
+
+-- | Pretty print a translated Open Theory
+prettyOpenTranslatedTheory :: HighlightDocument d => OpenTranslatedTheory -> d
+prettyOpenTranslatedTheory =
+    prettyTheory prettySignaturePure
+                 (const emptyDoc) prettyOpenProtoRule prettyProof emptyString
+
+
+-- | Pretty print a diff theory.
+prettyDiffTheory :: HighlightDocument d
+                 => (sig -> d) -> (c -> d) -> ((Side, r2) -> d) -> (p -> d) -> (p2 -> d)
+                 -> DiffTheory sig c DiffProtoRule r2 p p2 -> d
+prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
+    [ kwTheoryHeader $ text $ L.get diffThyName thy
+    , lineComment_ "Function signature and definition of the equational theory E"
+    , ppSig $ L.get diffThySignature thy
+    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
+    , ppCache $ L.get diffThyCacheLeft thy
+    , ppCache $ L.get diffThyCacheRight thy
+    , ppCache $ L.get diffThyDiffCacheLeft thy
+    , ppCache $ L.get diffThyDiffCacheRight thy
+    ] ++
+    parMap rdeepseq ppItem (L.get diffThyItems thy) ++
+    [ kwEnd ]
+  where
+    ppItem = foldDiffTheoryItem
+        prettyDiffRule ppRule (prettyDiffLemma ppDiffPrf) (prettyEitherLemma ppPrf) prettyEitherRestriction (uncurry prettyFormalComment)
+    thyH = L.get diffThyHeuristic thy

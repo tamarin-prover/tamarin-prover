@@ -65,7 +65,9 @@ module TheoryObject (
   , lookupLemmaDiff
   , lookupLemma
   , lookupProcessDef
-  , filterSide) where
+  , filterSide
+  , module TheoryObject
+  ) where
 
 import Theory.Sapic ( Process )
 import Theory.Constraint.Solver.Heuristics
@@ -99,7 +101,9 @@ import           Theory.Text.Pretty
 
 import           Prelude                             hiding (id, (.))
 
-
+import Pretty
+import Theory.Sapic.Print
+import Control.Parallel.Strategies
 
 
 -- Shared theory modification functions
@@ -437,3 +441,73 @@ itemToRule _            = Nothing
 
 
 
+-- | Pretty print a theory.
+prettyTheoryWithSapic :: HighlightDocument d
+             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (SapicElement -> d)
+             -> Theory sig c r p SapicElement -> d
+prettyTheoryWithSapic ppSig ppCache ppRule ppPrf ppSap thy = vsep $
+    [ kwTheoryHeader $ text $ L.get thyName thy
+    , lineComment_ "Function signature and definition of the equational theory E"
+    , ppSig $ L.get thySignature thy
+    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
+    , ppCache $ L.get thyCache thy
+    ] ++
+    parMap rdeepseq ppItem (L.get thyItems thy) ++
+    [ kwEnd ]
+  where
+    ppItem = foldTheoryItem
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
+    thyH = L.get thyHeuristic thy
+
+--Pretty print a theory
+prettyTheory :: HighlightDocument d
+             => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (() -> d)
+             -> Theory sig c r p () -> d
+prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
+    [ kwTheoryHeader $ text $ L.get thyName thy
+    , lineComment_ "Function signature and definition of the equational theory E"
+    , ppSig $ L.get thySignature thy
+    , if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
+    , ppCache $ L.get thyCache thy
+    ] ++
+    parMap rdeepseq ppItem (L.get thyItems thy) ++
+    [ kwEnd ]
+  where
+    ppItem = foldTheoryItem
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
+    thyH = L.get thyHeuristic thy
+
+
+prettySapicElement :: HighlightDocument d => SapicElement -> d
+prettySapicElement _ = text ("TODO prettyPrint SapicItems")
+
+prettyPredicate :: HighlightDocument d => Predicate -> d
+prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
+    where
+        factstr = render $ prettyFact prettyLVar $ L.get pFact p
+        formulastr = render $ prettyLNFormula $ L.get pFormula p
+
+prettyProcess :: HighlightDocument d => Process -> d
+prettyProcess p = text (prettySapic p)
+
+prettyProcessDef :: HighlightDocument d => ProcessDef -> d
+prettyProcessDef pDef = text ("let " ++ (L.get pName pDef) ++ " = " ++ (prettySapic (L.get pBody pDef)))
+
+
+-- | Pretty print a restriction.
+prettyRestriction :: HighlightDocument d => Restriction -> d
+prettyRestriction rstr =
+    kwRestriction <-> text (L.get rstrName rstr) <> colon $-$
+    (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
+    (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
+  where
+    safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
+
+-- | Pretty print an either restriction.
+prettyEitherRestriction :: HighlightDocument d => (Side, Restriction) -> d
+prettyEitherRestriction (s, rstr) =
+    kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s <> colon $-$
+    (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr) $-$
+    (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
+  where
+    safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr

@@ -15,6 +15,20 @@ import Theory.Model
 import Theory.Proof
 import TheoryObject
 import Prelude hiding (id, (.))
+import Text.PrettyPrint.Highlight
+
+
+import           Prelude                             hiding (id, (.))
+
+
+-- import           Data.Typeable
+import           Data.Monoid                         (Sum(..))
+
+-- import qualified Data.Label.Total
+
+import           Theory.Text.Pretty
+import OpenTheory
+import Pretty
 
 ------------------------------------------------------------------------------
 -- Closed theory querying / construction / modification
@@ -265,3 +279,212 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
 -- -- | Convert a lemma to the corresponding guarded formula.
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded
 -- lemmaToGuarded lem =
+
+
+-- | Pretty print an closed rule.
+prettyClosedProtoRule :: HighlightDocument d => ClosedProtoRule -> d
+prettyClosedProtoRule cru =
+  if isTrivialProtoVariantAC ruAC ruE then
+  -- We have a rule that only has one trivial variant, and without added annotations
+  -- Hence showing the initial rule modulo E
+    (prettyProtoRuleE ruE) $--$
+    (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+     multiComment_ ["has exactly the trivial AC variant"])
+  else
+    if ruleName ruAC == ruleName ruE then
+      if not (equalUpToTerms ruAC ruE) then
+      -- Here we have a rule with added annotations,
+      -- hence showing the annotated rule as if it was a rule mod E
+      -- note that we can do that, as we unfolded variants
+        (prettyProtoRuleACasE ruAC) $--$
+        (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+         multiComment_ ["has exactly the trivial AC variant"])
+      else
+      -- Here we have a rule with one or multiple variants, but without other annotations
+      -- Hence showing the rule mod E with commented variants
+        (prettyProtoRuleE ruE) $--$
+        (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+         (multiComment $ prettyProtoRuleAC ruAC))
+    else
+    -- Here we have a variant of a rule that has multiple variants.
+    -- Hence showing only the variant as a rule modulo AC. This should not
+    -- normally be used, as it breaks the ability to re-import.
+      (prettyProtoRuleAC ruAC) $--$
+      (nest 3 $ prettyLoopBreakers (L.get rInfo ruAC) $-$
+          (multiComment_ ["variant of"]) $-$
+          (multiComment $ prettyProtoRuleE ruE)
+      )
+ where
+    ruAC      = L.get cprRuleAC cru
+    ruE       = L.get cprRuleE cru
+
+-- -- | Pretty print an closed rule.
+-- prettyClosedEitherRule :: HighlightDocument d => (Side, ClosedProtoRule) -> d
+-- prettyClosedEitherRule (s, cru) =
+--     text ((show s) ++ ": ") <>
+--     (prettyProtoRuleE ruE) $--$
+--     (nest 2 $ prettyLoopBreakers (L.get rInfo ruAC) $-$ ppRuleAC)
+--   where
+--     ruAC = L.get cprRuleAC cru
+--     ruE  = L.get cprRuleE cru
+--     ppRuleAC
+--       | isTrivialProtoVariantAC ruAC ruE = multiComment_ ["has exactly the trivial AC variant"]
+--       | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
+
+-- | Pretty print a closed theory.
+prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
+prettyClosedTheory thy = if containsManualRuleVariants mergedRules
+    then
+      prettyTheory prettySignatureWithMaude
+                       ppInjectiveFactInsts
+                       -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                       prettyOpenProtoRuleAsClosedRule
+                       prettyIncrementalProof
+                       emptyString
+                       thy'
+    else
+      prettyTheory prettySignatureWithMaude
+               ppInjectiveFactInsts
+               -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+               prettyClosedProtoRule
+               prettyIncrementalProof
+               emptyString
+               thy
+  where
+    items = L.get thyItems thy
+    mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
+    thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
+    thy' = Theory {_thyName=(L.get thyName thy)
+            ,_thyHeuristic=(L.get thyHeuristic thy)
+            ,_thySignature=(L.get thySignature thy)
+            ,_thyCache=(L.get thyCache thy)
+            ,_thyItems = mergedRules
+            ,_thyOptions =(L.get thyOptions thy)}
+    ppInjectiveFactInsts crc =
+        case S.toList $ L.get crcInjectiveFactInsts crc of
+            []   -> emptyDoc
+            tags -> multiComment $ sep
+                      [ text "looping facts with injective instances:"
+                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+
+-- | Pretty print a closed diff theory.
+prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
+prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
+    then
+      prettyDiffTheory prettySignatureWithMaude
+                 ppInjectiveFactInsts
+                 -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                 (\_ -> emptyDoc) --prettyClosedEitherRule
+                 prettyIncrementalDiffProof
+                 prettyIncrementalProof
+                 thy'
+    else
+        prettyDiffTheory prettySignatureWithMaude
+                   ppInjectiveFactInsts
+                   -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                   (\_ -> emptyDoc) --prettyClosedEitherRule
+                   prettyIncrementalDiffProof
+                   prettyIncrementalProof
+                   thy
+  where
+    items = L.get diffThyItems thy
+    mergedRules = mergeLeftRightRulesDiff $ mergeOpenProtoRulesDiff $
+       map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) id id) items
+    thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
+    thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
+            ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
+            ,_diffThySignature=(L.get diffThySignature thy)
+            ,_diffThyCacheLeft=(L.get diffThyCacheLeft thy)
+            ,_diffThyCacheRight=(L.get diffThyCacheRight thy)
+            ,_diffThyDiffCacheLeft=(L.get diffThyDiffCacheLeft thy)
+            ,_diffThyDiffCacheRight=(L.get diffThyDiffCacheRight thy)
+            ,_diffThyItems = mergedRules}
+    ppInjectiveFactInsts crc =
+        case S.toList $ L.get crcInjectiveFactInsts crc of
+            []   -> emptyDoc
+            tags -> multiComment $ sep
+                      [ text "looping facts with injective instances:"
+                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+
+prettyClosedSummary :: Document d => ClosedTheory -> d
+prettyClosedSummary thy =
+    vcat lemmaSummaries
+  where
+    lemmaSummaries = do
+        LemmaItem lem  <- L.get thyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
+        let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
+            quantifier = (toSystemTraceQuantifier $ L.get lTraceQuantifier lem)
+            analysisType = parens $ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+        return $ text (L.get lName lem) <-> analysisType <> colon <->
+                 text (showProofStatus quantifier status) <->
+                 parens (integer siz <-> text "steps")
+
+    proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+
+prettyClosedDiffSummary :: Document d => ClosedDiffTheory -> d
+prettyClosedDiffSummary thy =
+    (vcat lemmaSummaries) $$ (vcat diffLemmaSummaries)
+  where
+    lemmaSummaries = do
+        EitherLemmaItem (s, lem)  <- L.get diffThyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
+        let (status, Sum siz) = foldProof proofStepSummary $ L.get lProof lem
+            quantifier = (toSystemTraceQuantifier $ L.get lTraceQuantifier lem)
+            analysisType = parens $ prettyTraceQuantifier $ L.get lTraceQuantifier lem
+        return $ text (show s) <-> text ": " <-> text (L.get lName lem) <-> analysisType <> colon <->
+                 text (showProofStatus quantifier status) <->
+                 parens (integer siz <-> text "steps")
+
+    diffLemmaSummaries = do
+        DiffLemmaItem (lem)  <- L.get diffThyItems thy
+        -- Note that here we are relying on the invariant that all proof steps
+        -- with a 'Just' annotation follow from the application of
+        -- 'execProofMethod' to their parent and are valid in the sense that
+        -- the application of 'execProofMethod' to their method and constraint
+        -- system is guaranteed to succeed.
+        --
+        -- This is guaranteed initially by 'closeTheory' and is (must be)
+        -- maintained by the provers being applied to the theory using
+        -- 'modifyLemmaProof' or 'proveTheory'. Note that we could check the
+        -- proof right before computing its status. This is however quite
+        -- expensive, as it requires recomputing all intermediate constraint
+        -- systems.
+        --
+        -- TODO: The whole consruction seems a bit hacky. Think of a more
+        -- principled constrution with better correctness guarantees.
+        let (status, Sum siz) = foldDiffProof diffProofStepSummary $ L.get lDiffProof lem
+        return $ text "DiffLemma: " <-> text (L.get lDiffName lem) <-> colon <->
+                 text (showDiffProofStatus status) <->
+                 parens (integer siz <-> text "steps")
+
+    proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+    diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))

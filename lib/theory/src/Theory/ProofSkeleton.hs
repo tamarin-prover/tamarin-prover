@@ -9,6 +9,7 @@ module Theory.ProofSkeleton
     unprovenDiffLemma,
     skeletonDiffLemma,
     incrementalToSkeletonDiffProof,
+    module Theory.ProofSkeleton
   )
 where
 
@@ -17,6 +18,11 @@ import           Prelude                             hiding (id, (.))
 import           Theory.Proof
 import Lemma
 import Theory.Model
+import Pretty
+import Text.PrettyPrint.Highlight
+import Theory.Text.Pretty
+import Control.Category
+import Data.Maybe
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -66,3 +72,27 @@ unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 
 skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
 skeletonDiffLemma = DiffLemma
+
+
+
+
+prettyIncrementalProof :: HighlightDocument d => IncrementalProof -> d
+prettyIncrementalProof = prettyProofWith ppStep (const id)
+  where
+    ppStep step = sep
+      [ prettyProofMethod (psMethod step)
+      , if isNothing (psInfo step) then multiComment_ ["unannotated"]
+                                   else emptyDoc
+      ]
+
+prettyIncrementalDiffProof :: HighlightDocument d => IncrementalDiffProof -> d
+prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
+  where
+    ppStep step = sep
+      [ prettyDiffProofMethod (dpsMethod step)
+      , if isNothing (dpsInfo step) then multiComment_ ["unannotated"]
+                                    else emptyDoc
+      ]
+
+
+
