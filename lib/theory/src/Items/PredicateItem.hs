@@ -9,16 +9,13 @@ module Items.PredicateItem (
     module Items.PredicateItem
 ) where
 
-
-import GHC.Generics
+import Control.DeepSeq
 import Data.Binary (Binary)
 import Data.Label as L
-import Theory.Model.Fact
+import GHC.Generics
 import Term.LTerm
-import           Prelude                             hiding (id, (.))
-import           Control.DeepSeq
-import           Theory.Model
-import           Prelude                             hiding (id, (.))
+import Theory.Model
+import Prelude hiding (id, (.))
 
 
 ------------------------------------------------------------------------------

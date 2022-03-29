@@ -70,6 +70,7 @@ library
     exposed-modules:
       Theory
       Theory.Proof
+      Theory.ProofSkeleton
 
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
@@ -113,11 +114,9 @@ library
       Lemma
       OpenTheory
       ClosedTheory
-      SpecificProof
       Rule
       Prover
       Items.LemmaItem
-      Items.ClosedTheoryItem
       Items.OpenTheoryItem
       Items.OptionItem
       Items.RuleItem

@@ -3,40 +3,29 @@
 
 module OpenTheory (
     module OpenTheory
-    , module SpecificProof
+    , module Theory.ProofSkeleton
     , module Rule
     , module Items.OpenTheoryItem
     ) where
-
-import           Prelude                             hiding (id, (.))
-
-import           Data.List
-import           Data.Maybe
-import           Data.Either
-import qualified Data.Set                            as S
-
-import           Control.Basics
-import           Control.Category
-import           Control.Monad.Reader
-
-import           Extension.Data.Label                hiding (get)
-import qualified Extension.Data.Label                as L
-
-import           Theory.Model
-import           Theory.Proof
-
-import           Term.Positions
-
-import           Utils.Misc
-import Safe
-
-import TheoryObject
-
-
-import SpecificProof
-
-import Rule
+import Control.Basics
+import Control.Category
+import Control.Monad.Reader
+import Data.Either
+import Data.List
+import Data.Maybe
+import qualified Data.Set as S
+import Extension.Data.Label hiding (get)
+import qualified Extension.Data.Label as L
 import Items.OpenTheoryItem
+import Theory.ProofSkeleton
+import Rule
+import Safe
+import Term.Positions
+import Theory.Model
+import Theory.Proof
+import TheoryObject
+import Utils.Misc
+import Prelude hiding (id, (.))
 
 
 -- remove Sapic items and convert other items to identical item but with unit type for sapic elements

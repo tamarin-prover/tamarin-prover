@@ -1,6 +1,16 @@
-module SpecificProof (
-    module SpecificProof
-) where
+module Theory.ProofSkeleton
+  ( ProofSkeleton,
+    DiffProofSkeleton,
+    skeletonToIncrementalProof,
+    incrementalToSkeletonProof,
+    skeletonToIncrementalDiffProof,
+    unprovenLemma,
+    skeletonLemma,
+    unprovenDiffLemma,
+    skeletonDiffLemma,
+    incrementalToSkeletonDiffProof,
+  )
+where
 
 import           Prelude                             hiding (id, (.))
 
@@ -55,4 +65,4 @@ unprovenDiffLemma :: String -> [LemmaAttribute]
 unprovenDiffLemma name atts = DiffLemma name atts (diffUnproven ())
 
 skeletonDiffLemma :: String -> [LemmaAttribute] -> DiffProofSkeleton -> DiffLemma DiffProofSkeleton
-skeletonDiffLemma name atts = DiffLemma name atts
+skeletonDiffLemma = DiffLemma

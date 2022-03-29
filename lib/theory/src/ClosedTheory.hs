@@ -1,33 +1,43 @@
 module ClosedTheory (
     module ClosedTheory
-    ,module Items.ClosedTheoryItem
 ) where
 
-import           Prelude                             hiding (id, (.))
-
-import qualified Data.Set                            as S
-
-import           Control.Basics
-import           Control.Category
-
-import qualified Extension.Data.Label                as L
+import Control.Basics
+import Control.Category
+import qualified Data.Set as S
+import qualified Extension.Data.Label as L
 -- import qualified Data.Label.Total
 
-
-import           Theory.Model
-import           Theory.Proof
-
-
 import Lemma
-import TheoryObject
 import Rule
 import Safe
-
-import Items.ClosedTheoryItem
+import Theory.Model
+import Theory.Proof
+import TheoryObject
+import Prelude hiding (id, (.))
 
 ------------------------------------------------------------------------------
 -- Closed theory querying / construction / modification
 ------------------------------------------------------------------------------
+
+-- | Closed theories can be proven. Invariants:
+--     1. Lemma names are unique
+--     2. All proof steps with annotated sequents are sound with respect to the
+--        closed rule set of the theory.
+--     3. Maude is running under the given handle.
+type ClosedTheory =
+    Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof ()
+
+-- | Closed Diff theories can be proven. Invariants:
+--     1. Lemma names are unique
+--     2. All proof steps with annotated sequents are sound with respect to the
+--        closed rule set of the theory.
+--     3. Maude is running under the given handle.
+type ClosedDiffTheory =
+    DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
+
+-- | Either Therories can be Either a normal or a diff theory
+type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 -- querying
 -----------

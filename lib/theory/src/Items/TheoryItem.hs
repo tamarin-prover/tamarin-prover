@@ -26,9 +26,6 @@ import           Prelude                             hiding (id, (.))
 import           Control.DeepSeq
 import           Prelude                             hiding (id, (.))
 
-
-
-
 ------------------------------------------------------------------------------
 -- Theories
 ------------------------------------------------------------------------------
@@ -36,7 +33,6 @@ import           Prelude                             hiding (id, (.))
 -- | A formal comment is a header together with the body of the comment.
 
 type FormalComment = (String, String)
-
 
 -- | SapicItems can be processes and accountability lemmas
 data SapicElement=

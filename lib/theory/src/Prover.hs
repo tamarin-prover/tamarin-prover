@@ -400,7 +400,7 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
       | isEitherRuleItem item  =
           [ DiffTextItem ("text", render ppAbsState)
        -- Here we loose imported variants!
-          ] ++ map (\x -> EitherRuleItem (LHS, (OpenProtoRule x []))) ruEsL' ++ map (\x -> EitherRuleItem (RHS, (OpenProtoRule x []))) ruEsR' ++ filter (not . isEitherRuleItem) items
+          ] ++ map (\x -> EitherRuleItem (LHS, OpenProtoRule x [])) ruEsL' ++ map (\x -> EitherRuleItem (RHS, OpenProtoRule x [])) ruEsR' ++ filter (not . isEitherRuleItem) items
       | otherwise        = item : replaceProtoRules items
 
     isEitherRuleItem (EitherRuleItem _) = True
