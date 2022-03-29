@@ -38,16 +38,3 @@ emptyString _ = text ("")
 
 
 
--- | Pretty-print a non-empty bunch of intruder rules.
-prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d
-prettyIntruderVariants vs = vcat . intersperse (text "") $ map prettyIntrRuleAC vs
-
-{-
--- | Pretty-print the intruder variants section.
-prettyIntrVariantsSection :: HighlightDocument d => [IntrRuleAC] -> d
-prettyIntrVariantsSection rules =
-    prettyFormalComment "section" " Finite Variants of the Intruder Rules " $--$
-    nest 1 (prettyIntruderVariants rules)
--}
-
-

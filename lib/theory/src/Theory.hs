@@ -230,24 +230,13 @@ import           Prelude                             hiding (id, (.))
 
 
 -- import           Data.Typeable
-import           Data.List
-import           Data.Maybe
-import           Data.Monoid                         (Sum(..))
-import qualified Data.Set                            as S
 
-import           Control.Basics
-import           Control.Category
-import           Control.Parallel.Strategies
 
-import qualified Extension.Data.Label                as L
 -- import qualified Data.Label.Total
 
 
 import           Theory.Model
-import           Theory.Sapic
-import           Theory.Sapic.Print
 import           Theory.Proof
-import           Theory.Text.Pretty
 
 
 
