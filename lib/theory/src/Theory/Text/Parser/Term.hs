@@ -13,6 +13,7 @@ module Theory.Text.Parser.Term (
     , llit
     , term
     , llitNoPub
+    , llitWithNode
 )
 where
 
@@ -32,6 +33,10 @@ import           Theory.Text.Parser.Token
 -- | Parse an lit with logical variables.
 llit :: Parser LNTerm
 llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
+
+-- | Parse an lit with logical variables including timepoint variables
+llitWithNode :: Parser LNTerm
+llitWithNode = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> lvar]
 
 -- | Parse an lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
