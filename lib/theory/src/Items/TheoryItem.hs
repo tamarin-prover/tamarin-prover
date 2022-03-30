@@ -13,12 +13,9 @@ module Items.TheoryItem (
 import Theory.Sapic
 import GHC.Generics
 import Data.Binary (Binary)
-import Theory.Constraint.Solver.Heuristics
-import Data.Label as L
 import Theory.Model.Restriction
 import Theory.Constraint.Solver
 
-import Items.OptionItem
 import Items.ProcessItem
 import Items.PredicateItem
 import Lemma
@@ -65,33 +62,5 @@ data DiffTheoryItem r r2 p p2 =
      | DiffTextItem FormalComment
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
--- | A theory contains a single set of rewriting rules modeling a protocol
--- and the lemmas that
-data Theory sig c r p s = Theory {
-         _thyName      :: String
-       , _thyHeuristic :: [GoalRanking]
-       , _thySignature :: sig
-       , _thyCache     :: c
-       , _thyItems     :: [TheoryItem r p s]
-       , _thyOptions   :: Option
-       }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
-$(mkLabels [''Theory])
-
-
--- | A diff theory contains a set of rewriting rules with diff modeling two instances
-data DiffTheory sig c r r2 p p2 = DiffTheory {
-         _diffThyName           :: String
-       , _diffThyHeuristic      :: [GoalRanking]
-       , _diffThySignature      :: sig
-       , _diffThyCacheLeft      :: c
-       , _diffThyCacheRight     :: c
-       , _diffThyDiffCacheLeft  :: c
-       , _diffThyDiffCacheRight :: c
-       , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
-       }
-       deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''DiffTheory])
 
 
