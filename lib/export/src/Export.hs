@@ -99,8 +99,8 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
-                                          `S.union` prochd `S.union` macroprochd)
+  headers2 <- checkDuplicates  . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd 
+  let hd = attribHeaders tc $ S.toList headers2
   return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
@@ -111,7 +111,6 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
-
 
 -- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProVerifHeader =
@@ -155,6 +154,19 @@ filterHeaders s = S.filter (not . isForbidden) s
         isForbidden (Type "bitstring") = True
         isForbidden _ = False
 
+-- We cannot define a a constant and a function with the same name in proverif
+checkDuplicates :: MonadFail m => S.Set ProVerifHeader -> m (S.Set ProVerifHeader)
+checkDuplicates hd = do
+  let (fun_names, const_names) = S.fold (\x (fn,cn) -> case x of
+                                 Fun _ n _ _ _ -> (S.insert n fn, cn)
+                                 Sym _ n _ _ -> (fn, S.insert n cn)
+                                 _ -> (fn, cn)) (S.empty, S.empty) hd in
+    let conflicts = S.intersection fun_names const_names in  
+    if S.null conflicts then
+      return hd
+    else
+      fail ("The string " <> S.elemAt 0 conflicts <> " is used both as a function name and as a constant name. You should rename one or the other.")
+
 ppPubName :: NameId -> Doc
 ppPubName (NameId "zero") = text "0"
 ppPubName (NameId "one") = text "1"
@@ -187,8 +199,8 @@ proverifEquivTemplate headers queries equivlemmas macroproc =
 prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifEquivTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  let hd = attribHeaders tc $ S.toList (filterHeaders $  base_headers `S.union` headers
-                                          `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd)
+  headers2 <- checkDuplicates . filterHeaders $ base_headers `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
+  let hd = attribHeaders tc $ S.toList headers2
   return $ proverifEquivTemplate hd queries finalproc macroproc
   where
     tc = emptyTC{predicates = theoryPredicates thy }
@@ -203,6 +215,7 @@ prettyProVerifEquivTheory (thy, typEnv) = do
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
+
 
 
 ------------------------------------------------------------------------------
