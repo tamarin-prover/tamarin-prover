@@ -168,13 +168,17 @@ substCreatesNonNormalTerms hnd sys fsubst =
 --
 --   i < j < k
 --
--- and let there be an edge from (i,u) to (k,w) for some indices u and v
+-- and let there be an edge from (i,u) to (k,w) for some indices u and v,
+-- as well as an injectif fact `f(t,...)` in the conclusion (i,u).
 --
--- Then, we have a contradiction if both the premise (k,w) that requires a
--- fact 'f(t,...)' and there is a premise (j,v) requiring a fact 'f(t,...)'.
+-- Then, we have a contradiction either if:
+--  1) both the premises (k,w) and (j,v) requires a
+-- fact 'f(t,...)'.
+--  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
 --
--- These two premises would have to be merged, but cannot due to the ordering
--- constraint 'j < k'.
+-- In the first case, (k,w) and (j,v) would have to be merged, and in the second
+-- case (i,u) and (j,v) would have to be merged, but the merging contradicts the
+-- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
