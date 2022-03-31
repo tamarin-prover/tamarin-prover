@@ -99,8 +99,8 @@ proverifTemplate headers queries process macroproc lemmas =
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates  . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd 
-  let hd = attribHeaders tc $ S.toList headers2
+  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd 
+  let hd = attribHeaders tc headers2
   return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
@@ -117,15 +117,16 @@ data ProVerifHeader =
    Type String  -- type declaration
   | Sym String String String [String] -- symbol declaration, (symkind,name,type,attr)
   | Fun String String Int String [String] -- symbol declaration, (symkind,name,arity,types,attr)
-  | HEvent String
+  | HEvent String String
+  | Table String String
   | Eq String String String -- eqtype, quantif, equation
   deriving (Ord, Show, Eq)
 
 
 state_headers :: S.Set ProVerifHeader
 state_headers = S.fromList [
-  HEvent "table tbl_states_handle(bitstring,channel).", --the table for linking states identifiers and channels
-  HEvent "table tbl_locks_handle(bitstring,channel)." --the table for linking locks identifiers and channels
+  Table "tbl_states_handle" "(bitstring,channel)", --the table for linking states identifiers and channels
+  Table "tbl_locks_handle" "(bitstring,channel)" --the table for linking locks identifiers and channels
   ]
 
 -- We provide a dedicated DDH builtin.
@@ -152,20 +153,23 @@ filterHeaders :: S.Set ProVerifHeader -> S.Set ProVerifHeader
 filterHeaders s = S.filter (not . isForbidden) s
   where isForbidden (Fun "fun" "true" _ _ _) = True
         isForbidden (Type "bitstring") = True
+        isForbidden (Type "channel") = True        
         isForbidden _ = False
 
 -- We cannot define a a constant and a function with the same name in proverif
-checkDuplicates :: MonadFail m => S.Set ProVerifHeader -> m (S.Set ProVerifHeader)
+checkDuplicates :: MonadFail m => [ProVerifHeader] -> m ([ProVerifHeader])
 checkDuplicates hd = do
-  let (fun_names, const_names) = S.fold (\x (fn,cn) -> case x of
-                                 Fun _ n _ _ _ -> (S.insert n fn, cn)
-                                 Sym _ n _ _ -> (fn, S.insert n cn)
-                                 _ -> (fn, cn)) (S.empty, S.empty) hd in
-    let conflicts = S.intersection fun_names const_names in  
-    if S.null conflicts then
+  let names = foldl (\acc x -> case x of
+                                 Fun _ n _ _ _ -> n : acc
+                                 Sym _ n _ _ -> n : acc
+                                 HEvent n _ -> n : acc
+                                 Table n _ -> n : acc
+                                 _ -> acc) [] hd in
+    let conflicts = filter ((>1) . length) . group $ sort names in  
+    if null conflicts then
       return hd
     else
-      fail ("The string " <> S.elemAt 0 conflicts <> " is used both as a function name and as a constant name. You should rename one or the other.")
+      fail ("The string " <> (head $ head conflicts) <> " is used for distinct constructs (function name, constant or events). You should rename the constructs.")
 
 ppPubName :: NameId -> Doc
 ppPubName (NameId "zero") = text "0"
@@ -199,8 +203,8 @@ proverifEquivTemplate headers queries equivlemmas macroproc =
 prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifEquivTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates . filterHeaders $ base_headers `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
-  let hd = attribHeaders tc $ S.toList headers2
+  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
+  let hd = attribHeaders tc headers2
   return $ proverifEquivTemplate hd queries finalproc macroproc
   where
     tc = emptyTC{predicates = theoryPredicates thy }
@@ -981,7 +985,7 @@ loadHeaders tc thy typeEnv = do
 
 
         -- events headers
-        eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ("event " ++ showFactTag tag ++ "("++ make_argtypes  types ++  ").") `S.insert` acc) S.empty (events typeEnv)
+        eventHeaders = M.foldrWithKey (\tag types acc -> HEvent (showFactTag tag) ("("++ make_argtypes  types ++  ")") `S.insert` acc) S.empty (events typeEnv)
         -- generating headers for equations
         sigRules = stRules sig
 
@@ -1022,7 +1026,8 @@ headersOfRule tc typeEnv r |  (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
 
 prettyProVerifHeader :: ProVerifHeader -> Doc
 prettyProVerifHeader (Type s) = text "type " <> text s <> text "."
-prettyProVerifHeader (HEvent s) = text s
+prettyProVerifHeader (HEvent s ty ) = text "event " <> text s <> text ty <> text "."
+prettyProVerifHeader (Table s ty ) = text "table " <> text s <> text ty <> text "."
 prettyProVerifHeader (Eq eqtype quant eq) = text eqtype <> text " " <> text quant <>  text " " <> text eq <>  text "."
 prettyProVerifHeader (Sym symkind name symtype []) = text symkind <> text " " <> text name <> text symtype  <> text "."
 prettyProVerifHeader (Sym symkind name symtype attr) = text symkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]"  <> text "."
@@ -1035,7 +1040,8 @@ prettyProVerifHeader (Fun fkind name _ symtype attr ) =
 prettyDeepSecHeader :: ProVerifHeader -> Doc
 prettyDeepSecHeader (Type _) = text "" -- no types in deepsec
 prettyDeepSecHeader (Eq eqtype _ eq) = text eqtype <> text " " <> text eq <>  text "."
-prettyDeepSecHeader (HEvent _) = text ""
+prettyDeepSecHeader (HEvent _ _) = text ""
+prettyDeepSecHeader (Table _ _) = text ""
 -- drop symtypes in symbol declarations
 prettyDeepSecHeader (Sym symkind name _ []) = text symkind <> text " " <> text name <> text "."
 prettyDeepSecHeader (Sym symkind name _ attr) =
@@ -1070,7 +1076,8 @@ attribHeaders tc hd =
           | Sym _ _ _ _ <- x = (e1,f1,(pph x):s1)
           | Fun _ _ _ _ _<- x =  (e1,(pph x):f1,s1)
           | Eq _ _ _ <- x =  ((pph x):e1,f1,s1)
-          | HEvent _ <- x =  ((pph x):e1,f1,s1)
+          | HEvent _ _ <- x =  ((pph x):e1,f1,s1)
+          | Table _ _ <- x =  ((pph x):e1,f1,s1)          
           | Type _ <- x = (e1,f1,(pph x):s1)
           where (e1,f1,s1) = splitHeaders xs
 
