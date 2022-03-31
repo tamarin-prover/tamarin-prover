@@ -36,7 +36,6 @@ import           Main.TheoryLoader
 import           Main.Utils
 
 import           Theory.Module
-import Theory (removeLemma)
 -- import           Debug.Trace
 
 -- | Batch processing mode.

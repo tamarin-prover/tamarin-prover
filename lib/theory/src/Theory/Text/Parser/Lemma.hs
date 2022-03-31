@@ -27,7 +27,6 @@ import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
-import Theory.Text.Parser.Sapic
 
 import Data.Functor (($>))
 

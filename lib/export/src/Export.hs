@@ -492,15 +492,15 @@ ppSapic tc (ProcessComb (Let t1 t2 mvars) _ pl pr)  =   ( text "let "  <> pt1 <>
                                            (pt2, sh2) = ppSapicTerm tc t2
 
 -- if the process call does not have any argument, we just inline
-ppSapic tc (ProcessComb (ProcessCall _ _ []) _ pl _)  =   (ppl, pshl)
+ppSapic tc (ProcessComb (ProcessCall _ []) _ pl _)  =   (ppl, pshl)
                                      where (ppl, pshl) = ppSapic tc pl
 
 -- if there are state or lock channels created by addStateChannels, we must inline
-ppSapic tc@TranslationContext{hasBoundStates = True} (ProcessComb (ProcessCall _ _ _) _ pl _)  =
+ppSapic tc@TranslationContext{hasBoundStates = True} (ProcessComb (ProcessCall {}) _ pl _)  =
    (ppl, pshl)
   where (ppl, pshl) = ppSapic tc pl
 
-ppSapic tc (ProcessComb (ProcessCall name _ ts) _ _ _)  =
+ppSapic tc (ProcessComb (ProcessCall name ts) _ _ _)  =
       (text name <>
        parens (fsep (punctuate comma ppts ))
       ,

@@ -36,7 +36,7 @@ import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Let
 import Theory.Text.Parser.Formula
 import Theory.Sapic.Pattern
-import qualified Data.Functor.Identity
+import qualified Data.Functor.Identity ()
 
 
 -- used for debugging
@@ -307,7 +307,7 @@ actionprocess thy=
                                   ++ acc) [] base_subst
                         substP <- applyM (substFromList extend_sup) p
                         return (ProcessComb
-                                (ProcessCall (BC.unpack i) vars ts) mempty
+                                (ProcessCall (BC.unpack i) ts) mempty
                                 (processAddAnnotation substP (mempty {processnames =  [BC.unpack i]}))
                                 (ProcessNull mempty))
                         )

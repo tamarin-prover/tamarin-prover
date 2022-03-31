@@ -92,7 +92,7 @@ deriving instance (Data v, Generic v, Ord v) => Data (SapicAction v)
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
         | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v
         | Let { letLeft :: SapicNTerm v, letRight :: SapicNTerm v, letMatch :: Set v}
-        | ProcessCall String [v] [SapicNTerm v]
+        | ProcessCall String [SapicNTerm v]
             deriving (Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -166,7 +166,7 @@ mapTermsComb f ff fv c
         | (Lookup t v) <- c = Lookup (f t) (fv v)
         | Parallel <- c = Parallel
         | NDC    <- c   = NDC
-        | ProcessCall s vs ts <- c = ProcessCall s (map fv vs) (map f ts)
+        | ProcessCall s ts <- c = ProcessCall s (map f ts)
 
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
@@ -278,7 +278,7 @@ traverseTermsComb ft ff fv c
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
-        | ProcessCall s vs ts <- c = ProcessCall s <$> traverse fv vs <*> traverse ft ts
+        | ProcessCall s ts <- c = ProcessCall s <$> traverse ft ts
 
 -- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (Process ann v -> a) -> Process ann v -> a
@@ -472,7 +472,7 @@ prettySapicComb (Let t t' vs) = "let "++ p' t ++ "=" ++ p t'
                                           p'= render . prettyPattern' vs
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm
-prettySapicComb (ProcessCall s _ ts) = s ++ "("++ p ts ++ ")"
+prettySapicComb (ProcessCall s ts) = s ++ "("++ p ts ++ ")"
                                     where p pts = render $
                                             fsep (punctuate comma (map prettySapicTerm pts))
 
