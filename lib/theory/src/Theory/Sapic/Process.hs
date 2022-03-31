@@ -358,7 +358,7 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Proces
 
 -- | Get all variables for a process
 varsProc :: (Ord v, Show v) => Process ann v -> Set v
-varsProc p = foldMap singleton p -- foldProcess fNull fAct fComb gAct gComb empty p
+varsProc = foldMap singleton -- foldProcess fNull fAct fComb gAct gComb empty p
 
 -------------------------
 -- Applying substitutions ( with error messages )
@@ -475,28 +475,6 @@ prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
 prettySapicComb (ProcessCall s _ ts) = s ++ "("++ p ts ++ ")"
                                     where p pts = render $
                                             fsep (punctuate comma (map prettySapicTerm pts))
-
--- | Printer for SAPIC processes..
--- TODO use highlight document (see commented code below)
--- TODO put parens, but only where needed (NOTE mostly done, replication needs parents unless continuation is processcall)
--- prettySapic' :: ([SapicNFact SapicLVar]
---     -> [SapicNFact SapicLVar]
---     -> [SapicNFact SapicLVar]
---     -> [SapicNFormula SapicLVar]
---     -> Set SapicLVar
---     -> [Char])
---     -> Process ann SapicLVar -> [Char]
--- prettySapic' prettyRuleRestr p
---     | (ProcessNull _) <- p = "0"
---     | (ProcessComb c@ProcessCall {} _ _ _) <- p = prettySapicComb c
---     | (ProcessComb c _ pl pr) <- p = r pl ++ " "++ prettySapicComb c ++ " " ++ r pr
---     | (ProcessAction Rep _ p') <- p = ppAct Rep ++ r p'
---     | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
---     | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a ++ "; (" ++ r p' ++ ")"
---     | (ProcessAction a _ p') <- p = ppAct a ++ "; " ++ r p'
---     where
---         r = prettySapic' prettyRuleRestr -- recursion shortcut
---         ppAct = prettySapicAction' prettyRuleRestr
 
 prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFact SapicLVar]

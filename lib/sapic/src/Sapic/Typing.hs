@@ -27,6 +27,7 @@ import Sapic.Bindings
 import Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 import Data.Bifunctor ( Bifunctor(second) )
+import GHC.Stack (HasCallStack)
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
 smallerType :: Eq a => Maybe a -> Maybe a -> Bool
@@ -195,25 +196,17 @@ typeTheory th = fst <$> typeTheoryEnv th
 -- | Rename a process so that all its names are unique. Returns renamed process
 -- p' and substitution such that: let (p',subst) = renameUnique p in apply subst
 -- p' equals p
--- renameUnique :: (MonadThrow m, GoodAnnotation ann) =>
---     Process ann SapicLVar -> m (Process ann SapicLVar, SapicSubst)
--- renameUnique :: (MonadThrow m, GoodAnnotation ann, Monoid ann) =>
---     Process ann SapicLVar -> m (Process ann SapicLVar)
-renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
+renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann, HasCallStack) =>
     Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique p = Precise.evalFreshT actualCall initState
     where
         actualCall = renameUnique' emptySubst p
         initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
 
--- renameUnique' ::
---     (MonadThrow m, MonadFresh m, GoodAnnotation ann, Monoid ann)  =>
---     Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
-renameUnique' :: (MonadFresh m, Apply (Subst Name LVar) ann, GoodAnnotation ann
-    ) =>
-    Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
+renameUnique' ::
+  (MonadFresh m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
+  Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
-        -- p' <- applyM initSubst p -- apply outstanding substitution subst
         let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best
         case p' of
             ProcessNull _ -> return p'

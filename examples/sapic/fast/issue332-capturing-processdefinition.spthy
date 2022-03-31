@@ -14,5 +14,6 @@ let Pr(x) = out(x)
 process:
     let x = 't' in
     Pr(x)
+
 end
 
