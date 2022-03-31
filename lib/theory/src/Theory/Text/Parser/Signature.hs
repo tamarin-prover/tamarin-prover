@@ -129,11 +129,11 @@ function =  do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
-        sig <- sig <$> getState
+        sign <- sig <$> getState
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
-        case lookup f (S.toList $ stFunSyms sig) of
+        case lookup f (S.toList $ stFunSyms sign) of
           Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
