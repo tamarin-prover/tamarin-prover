@@ -859,9 +859,11 @@ rulesSnippet thy = vcat
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
     injFacts   = S.toList $ getInjectiveFactInsts thy
-    showInjFact (tag, (eqPos, monPos)) = showFactTagArity tag
-        ++ (if S.null eqPos then "" else " non-changing positions: " ++ show (S.toList eqPos))
-        ++ (if S.null monPos then "" else " monotonic positions: " ++ show (S.toList monPos))
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -911,10 +913,11 @@ rulesDiffSnippetSide s isdiff thy = vcat
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
-    showInjFact (tag, (eqPos, monPos)) = showFactTagArity tag
-        ++ (if (S.empty == eqPos) then "" else " non-changing positions: " ++ show (S.toList eqPos))
-        ++ (if (S.empty == monPos) then "" else " monotonic positions: " ++ show (S.toList monPos))
-        ++ "\n"
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc

@@ -350,7 +350,7 @@ data ClosedRuleCache = ClosedRuleCache
        { _crcRules               :: ClassifiedRules
        , _crcRawSources          :: [Source]
        , _crcRefinedSources      :: [Source]
-       , _crcInjectiveFactInsts  :: S.Set (FactTag, (S.Set Int, S.Set Int))
+       , _crcInjectiveFactInsts  :: S.Set (FactTag, [[MonotonicBehaviour]])
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -1967,11 +1967,11 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
 
 -- | The facts with injective instances in this theory
-getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, (S.Set Int, S.Set Int))
+getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The facts with injective instances in this theory
-getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set (FactTag, (S.Set Int, S.Set Int))
+getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
 getDiffInjectiveFactInsts s isdiff = case (s, isdiff) of
            (LHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
            (RHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheRight)

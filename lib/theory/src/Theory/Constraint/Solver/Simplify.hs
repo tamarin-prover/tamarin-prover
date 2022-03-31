@@ -54,6 +54,7 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
+import           Theory.Tools.InjectiveFactInstances
 
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
@@ -536,13 +537,18 @@ simpSubterms = do
 
 
 -- | if there are two instances @i and @j of an injective fact with the same first term, then
--- - (1) for each eqPos, an equation is inserted, that these two terms are the same
--- - for each two terms s,t at a monotonic position in monPos:
+-- - (1) for each two terms s,t at a constant position, s=t is inserted
+-- - for each two terms s,t at a strictly increasing position:
 --   - (2) if s=t, then i=j is inserted
 --   - (3) if s⊏t, then i<j is inserted
 --   - (4) if i<j or j<i, then s≠t is inserted  -- only needed as a semi-replacement of (6) (especially in combination with 5) because (2) is directly applied if s=t
---   - (5) if ¬s⊏t and ¬s=t, (i.e., t⊏s must hold because of monotonicity) then j<i is inserted
+--   - (5) if ¬s⊏t and ¬s=t, (i.e., t⊏s must hold because of strict monotonicity) then j<i is inserted
 --   - (6) if i<j, then s⊏t is inserted    -- has the potential to break many old proofs because subterms appear in the goals
+-- - for each two terms s,t at an increasing position:
+--   - (3) if s⊏t, then i<j is inserted
+--   - (5) if ¬s⊏t and ¬s=t, (i.e., t⊏s must hold because of monotonicity) then j<i is inserted
+--   - (6.1) if i<j, then (s⊏t ∨ s=t) is inserted    -- has the potential to break many old proofs because subterms appear in the goals
+-- - for decreasing and strictly decreasing, the inverse of the increasing cases is done
 simpInjectiveFactEqMon :: Reduction ChangeIndicator
 simpInjectiveFactEqMon = do
   -- get some values out of the reduction
@@ -551,67 +557,73 @@ simpInjectiveFactEqMon = do
   sys <- gets id
   reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
   sst <- getM sSubtermStore
-  let monPairs = getPairs inj nodes snd
   let triviallySmaller small big = Just True == isTrueFalse reducible (Just sst) (small, big)
   let triviallyNotSmaller small big = Just False == isTrueFalse reducible (Just sst) (small, big)
+
   oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
   let inequalities = S.fromList $ concatMap (\case
                     GGuarded All [] [EqE (bTermToLTerm->s) (bTermToLTerm->t)] gf | gf == gfalse -> [(s, t), (t, s)]
                     _                                                                           -> [])
                       $ S.toList oldFormulas
-  let notEq s t = (s,t) `S.notMember` inequalities  --TODO-MY this can be improved by partialAtomValuation
+  let notIneq s t = (s,t) `S.notMember` inequalities
+  let ineq s t = (s,t) `S.member` inequalities
 
-  -- compute new sets of formulas/lesses to insert
-  let newEquations = filter (uncurry (/=)) (map (bimap snd snd) $ getPairs inj nodes fst)  -- (1)
-  let monNewEqualNodeIds = [(i, j) | ((i,s), (j,t)) <- monPairs, s==t, i/=j]  -- (2)
-  let monNewLesses = [(i, j) | ((i,s), (j,t)) <- monPairs, triviallySmaller s t, not $ alwaysBefore sys i j]   -- (3)
-  let monNewInequalities = [(s, t) | ((i,s), (j,t)) <- monPairs, alwaysBefore sys i j || alwaysBefore sys j i, notEq s t]   -- (4)
-  let monNewInverseLesses = [(j, i) | ((i,s), (j,t)) <- monPairs, triviallyNotSmaller s t, (s,t) `S.member` inequalities, not $ alwaysBefore sys j i]   -- (5)
-  let monNewSubterms = [(s, t) | ((i,s), (j,t)) <- monPairs, alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6)  -- todo:double check that alwaysbefore i i does not hold
+  --  :: (MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm)) -> ([LNGuarded], [(NodeId, NodeId)])
+  let simpSingle (behaviour, (i, s), (j, t)) = case behaviour of
+                                                Unspecified -> ([], [])
+                                                Unstable -> ([], [])
+                                                Decreasing -> simpSingle (Increasing, (j, s), (i, t))
+                                                StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
+                                                Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | i==j, s/=t], [])  -- (1)
+                                                StrictlyIncreasing ->
+                                                    ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t, i/=j]  -- (2)
+                                                  ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, notIneq s t]   -- (4)
+                                                  ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6)
+                                                   , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
+                                                  ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
+                                                Increasing ->
+                                                  ([ gdisj [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
+                                                            GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
+                                                    | alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6.1)
+                                                  , snd $ simpSingle (behaviour, (i, s), (j, t)))
+  
+  let (newFormulas, newLesses) = (concat *** concat) $ unzip $ map simpSingle (getPairs inj nodes)
 
-  -- insert new formulas and less relations
-  let newFormulas = --trace (show ("simpInj", newEquations, monPairs, monNewEqualNodeIds, monNewLesses, monNewInequalities, monNewInverseLesses, monNewSubterms)) 
-                          [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- newEquations]
-                       ++ [GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | (i,j) <- monNewEqualNodeIds]
-                       ++ [gnotAtom $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- monNewInequalities]
-                       ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | (s,t) <- monNewSubterms]
   mapM_ insertFormula newFormulas
-  mapM_ (uncurry insertLess) (monNewLesses ++ monNewInverseLesses)
+  mapM_ (uncurry insertLess) newLesses
 
   -- check if anything changed
   return $ if
       all (`elem` oldFormulas) newFormulas &&
-      null (monNewLesses ++ monNewInverseLesses)
+      null newLesses
       then Unchanged else Changed
 
     where
-      getPairs :: [(FactTag, (S.Set Int, S.Set Int))] -> M.Map NodeId RuleACInst -> ((S.Set Int, S.Set Int) -> S.Set Int) -> [((NodeId, LNTerm), (NodeId, LNTerm))]
-      getPairs inj nodes fstOrSnd = [((i, s), (j, t)) |
-                                          ((tag1, pos1, first1), l1) <- M.toList reordered,
-                                          ((tag2, pos2, first2), l2) <- M.toList reordered,  --compare each element with each other (quadratic)
-                                          tag1==tag2, pos1==pos2, first1==first2,  -- early sort out non-matching pairs
-                                          (i, s) <- l1,
-                                          (j, t) <- l2,
-                                          i /= j]
+
+      getPairs :: [(FactTag, [[MonotonicBehaviour]])] -> M.Map NodeId RuleACInst -> [(MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm))]
+      getPairs [] _ = []
+      getPairs ((tag, behaviours):rest) nodes = paired ++ getPairs rest nodes
         where
-          nodePremises = M.map (get rPrems) nodes
-          terms = M.map (concatMap (positionsFromFact (map (second fstOrSnd) inj))) nodePremises
-          reordered = M.fromListWith (++) [ ((tag, pos, firstT), [(i, t)]) | (i, l) <- M.toList terms, (tag, pos, firstT, t) <- l]
+          getPairTerms :: LNTerm -> [LNTerm]
+          getPairTerms (viewTerm2 -> FPair t1 t2) = t1 : getPairTerms t2
+          getPairTerms t = [t]
 
-          positionsFromFact :: [(FactTag, S.Set Int)] -> LNFact -> [(FactTag, Int, LNTerm, LNTerm)]
-          positionsFromFact inj2 fact = [(tag, pos, firstT, t) |
-                                          (tag, positions) <- inj2,
-                                          tag == factTag fact,
-                                          firstT <- maybeToList $ headMay (factTerms fact),
-                                          pos <- S.toList positions,
-                                          t <- maybeToList $ atMay (factTerms fact) pos]
+          trimmedPairTerms :: LNFact -> (LNTerm, [(MonotonicBehaviour, LNTerm)])
+          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith zip behaviours (map getPairTerms terms))  -- zip automatically orients itself on the shorter list
+          trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
+          behaviourTerms :: M.Map NodeId [(LNTerm, [(MonotonicBehaviour, LNTerm)])]
+          behaviourTerms = M.map (map trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
 
-
-
-
-
-
+          paired :: [(MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm))]
+          paired = [(b, (i, s), (j,t)) |
+            (i, l1) <- M.toList behaviourTerms,
+            (j, l2) <- M.toList behaviourTerms,
+            (first1, ss) <- l1,
+            (first2, tt) <- l2,
+            first1 == first2,
+            ((b, s),(_,t)) <- zip ss tt  -- the b and _ are automatically the same
+            ]
 
 
 

@@ -235,6 +235,7 @@ import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.SubtermStore
 import           Theory.Tools.EquationStore
+import           Theory.Tools.InjectiveFactInstances
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -378,7 +379,7 @@ data InductionHint = UseInduction | AvoidInduction
 data ProofContext = ProofContext
        { _pcSignature          :: SignatureWithMaude
        , _pcRules              :: ClassifiedRules
-       , _pcInjectiveFactInsts :: S.Set (FactTag, (S.Set Int, S.Set Int))
+       , _pcInjectiveFactInsts :: S.Set (FactTag, [[MonotonicBehaviour]])
        , _pcSourceKind         :: SourceKind
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
