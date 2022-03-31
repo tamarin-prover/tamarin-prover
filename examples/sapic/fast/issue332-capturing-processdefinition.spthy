@@ -1,0 +1,18 @@
+theory issue332 
+
+// issue 332 from project.cispa.saarland
+// The let binding with a variable with the same name as the macro process raises an error:
+//
+// tamarin-prover: apply (LVar): variable 'x.1' substituted with term ''t''
+//  CallStack (from HasCallStack):
+//    error, called at src/Term/Substitution/SubstVFree.hs:244:11 in tamarin-prover-term-1.7.1-CTfkxg1Ui7cCBvk1Ebl25t:Term.Substitution.SubstVFree
+
+begin
+
+let Pr(x) = out(x)
+
+process:
+    let x = 't' in
+    Pr(x)
+end
+
