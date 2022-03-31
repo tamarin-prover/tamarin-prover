@@ -10,7 +10,7 @@
 
 module Sapic.Exceptions (
     WFLockTag(..),
-    WFerrror(..),
+    WFerror(..),
     SapicException(..)
 ) where
 import Data.Typeable
@@ -30,7 +30,7 @@ prettyWFLockTag WFRep = "replication"
 prettyWFLockTag WFPar = "a parallel"
 
 -- | Wellformedness errors, see instance of show below for explanation.
-data WFerrror p = WFLock WFLockTag p
+data WFerror p = WFLock WFLockTag p
                 | WFUnboundProto (Set LVar)
                 | WFUnbound (Set LVar) p
                 | WFReliable
@@ -48,7 +48,7 @@ data SapicException p = NotImplementedError String
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
                     -- | UnAnnotatedLock String
-                    | ProcessNotWellformed (WFerrror p)
+                    | ProcessNotWellformed (WFerror p)
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
                     | MoreThanOneProcess
@@ -77,8 +77,7 @@ instance (Show p) => Show (SapicException p) where
                               ++ get rstrName rstr
                               ++ "."
 
-
-instance (Show p) => Show (WFerrror p) where
+instance (Show p) => Show (WFerror p) where
     show (WFUnboundProto varset) =
                    "The variable or variables "
                    ++
@@ -122,4 +121,5 @@ instance (Show p) => Show (WFerrror p) where
     show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
         
 
+instance (Typeable a, Show a) => Exception (WFerror a)
 instance (Typeable a, Show a) => Exception (SapicException a)

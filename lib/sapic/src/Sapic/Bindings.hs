@@ -1,10 +1,10 @@
 {-# LANGUAGE PatternGuards         #-}
 module Sapic.Bindings(
-    bindings
-,   bindingsAct
-,   bindingsComb
-,   accBindings
-) where
+  bindings
+, bindingsAct
+, bindingsComb
+, accBindings
+, capturedVariables) where
 
 import Theory.Sapic
 import Data.List
@@ -35,3 +35,13 @@ bindingsComb _ c
 -- | accumulate all bound variables in a list
 accBindings :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
 accBindings = pfoldMap bindings
+
+-- | Find out which variables or names bound in the subprocess are captured *by the current process*
+capturedVariablesAt :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
+capturedVariablesAt (ProcessAction ac ann p)  = bindingsAct ann ac `intersect` accBindings p
+capturedVariablesAt (ProcessComb c ann pl pr) = bindingsComb ann c `intersect` (accBindings pl `union` accBindings pr)
+capturedVariablesAt (ProcessNull _) = []
+
+-- | List all variables or names captured somewhere in theprocess
+capturedVariables :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
+capturedVariables = pfoldMap capturedVariablesAt 

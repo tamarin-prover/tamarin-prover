@@ -12,9 +12,10 @@
 -- Translation from Theories with Processes to multiset rewrite rules
 
 module Sapic (
-     translate
-   , module Sapic.Typing
-) where
+translate
+, module Sapic.Typing
+, module Sapic.Warnings
+, ) where
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
@@ -40,6 +41,7 @@ import qualified Sapic.Basetranslation as BT
 import qualified Sapic.ProgressTranslation as PT
 import qualified Sapic.ReliableChannelTranslation as RCT
 import Theory.Text.Parser
+import Sapic.Warnings
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>

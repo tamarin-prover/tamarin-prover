@@ -24,11 +24,10 @@ import           Extension.Data.Label
 import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory
-import           Theory.Tools.Wellformedness     (checkWellformedness, checkWellformednessDiff)
+import           Theory.Tools.Wellformedness     (checkWellformednessDiff)
 
-import           Sapic
-
-import           Export
+import qualified Sapic
+import qualified Export
 
 import           Main.Console
 import           Main.Environment
@@ -125,46 +124,34 @@ run thisMode as
     -- theory processing functions
     ------------------------------
 
-    processThy :: FilePath -> IO (Pretty.Doc)
+    processThy :: FilePath -> IO Pretty.Doc
     processThy inFile
-      -- bla | argExists "html" as =
-      --     generateHtml inFile =<< loadClosedThy as inFile
-      | (argExists "parseOnly" as) && (argExists "diff" as) =
+      | argExists "parseOnly" as && argExists "diff" as =
           out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
-      | (argExists "parseOnly" as) || (argExists "outModule" as) =
-          -- out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
-          out (const Pretty.emptyDoc) choosePretty (loadOpenThy       as inFile)
+      | argExists "parseOnly" as || argExists "outModule" as =
+          out (const Pretty.emptyDoc) choosePretty (loadOpenThy as inFile)
       | argExists "diff" as =
           out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy as inFile)
-      | otherwise        =
-          out ppWfAndSummary          (return . prettyClosedTheory)     (loadClosedThy     as inFile)
+      | otherwise        = do
+          (thy,report) <- loadClosedThyWf as inFile
+          out (ppWfAndSummary report) (return . prettyClosedTheory) (return thy)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
-        ppWfAndSummary thy =
-            case checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy) of
-                []   -> Pretty.emptyDoc
-                errs -> Pretty.vcat $ map Pretty.text $
-                          [ "WARNING: " ++ show (length errs)
-                                        ++ " wellformedness check failed!"
-                          , "         The analysis results might be wrong!" ]
+        ppWfAndSummary report thy = do
+            report
             Pretty.$--$ prettyClosedSummary thy
 
-        ppWfAndSummaryDiff thy =
-            case checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy) of
-                []   -> Pretty.emptyDoc
-                errs -> Pretty.vcat $ map Pretty.text $
-                          [ "WARNING: " ++ show (length errs)
-                                        ++ " wellformedness check failed!"
-                          , "         The analysis results might be wrong!" ]
+        ppWfAndSummaryDiff thy = do 
+            reportWellformednessDoc $ checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
             Pretty.$--$ prettyClosedDiffSummary thy
 
         choosePretty = case getOutputModule as of
-          ModuleSpthy      -> return . prettyOpenTheory  -- output as is, including SAPIC elements
-          ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory -- additionally type
-          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< filterLemmas'  <=< Sapic.translate  <=< Sapic.typeTheory
-          ModuleProVerif              -> prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv
-          ModuleProVerifEquivalence   -> prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
-          ModuleDeepSec               -> prettyDeepSecTheory <=< Sapic.typeTheory
+          ModuleSpthy      -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
+          ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory <=< Sapic.warnings  -- additionally type
+          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< filterLemmas'  <=< Sapic.translate  <=< Sapic.typeTheory <=< Sapic.warnings
+          ModuleProVerif              -> Export.prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv <=< Sapic.warnings
+          ModuleProVerifEquivalence   -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv <=< Sapic.warnings
+          ModuleDeepSec               -> Export.prettyDeepSecTheory <=< Sapic.typeTheory <=< Sapic.warnings
 
         filterLemmas' thy = return $ filterLemma (lemmaSelector as) thy
 

@@ -189,8 +189,8 @@ typeTheoryEnv th = do
                   _ -> return p -- should not be taken
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
+-- | Type the Sapic processes in a theory
 typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
--- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
 typeTheory th = fst <$> typeTheoryEnv th
 
 -- | Rename a process so that all its names are unique. Returns renamed process
@@ -213,7 +213,7 @@ renameUnique' initSubst p = do
             ProcessAction ac ann pl -> do
                 (subst,inv) <- mkSubst $ bindingsAct ann ac
                 let ann' = mappendProcessParsedAnnotation (mempty {backSubstitution = inv}) ann
-                let ac' = apply subst ac -- use apply instead applyM because we want to ignore capturing, i.e., rename bound names...
+                let ac' = apply subst ac -- use apply instead of applyM because we want to ignore capturing, i.e., rename bound names...
                 pl' <- renameUnique' subst pl
                 return $ ProcessAction ac' ann' pl'
             ProcessComb comb ann pl pr -> do

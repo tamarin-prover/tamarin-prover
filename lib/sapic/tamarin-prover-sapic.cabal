@@ -78,6 +78,7 @@ library
       , Sapic.Report
       , Sapic.States
       , Sapic.Typing
+      , Sapic.Warnings
       , Sapic
 
     other-modules:

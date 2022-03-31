@@ -17,9 +17,11 @@ module Main.TheoryLoader (
 
   -- ** Loading and closing theories
   , loadClosedThy
+  , loadClosedThyWf
   , loadClosedThyWfReport
   , loadClosedThyString
   , reportOnClosedThyStringWellformedness
+  , reportWellformednessDoc
 
   -- ** Loading open diff theories
   , loadOpenDiffThy
@@ -71,7 +73,7 @@ import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
-
+import qualified Theory.Text.Pretty as Pretty
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -132,6 +134,8 @@ diff as = if (argExists "diff" as) then ["diff"] else []
 quitOnWarning :: Arguments -> [String]
 quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
 
+hasQuitOnWarning :: Arguments -> Bool
+hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
 lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
 lemmaSelectorByModule as lem = case lemmaModules of
@@ -172,13 +176,11 @@ diffLemmaSelector as lem
 
 -- | Load an open theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
-loadOpenDiffThy as fp = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as) fp
+loadOpenDiffThy as = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning as)
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
-loadOpenThy as inFile =  do
-    thy <- parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
-    return thy
+loadOpenThy as = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as)
 
 -- | Load a closed theory.
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -189,32 +191,70 @@ loadClosedDiffThy as inFile = do
 
 -- | Load a closed theory.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = loadOpenThy as inFile >>= Sapic.typeTheory >>= Sapic.translate >>= closeThy as
+loadClosedThy as inFile =
+  loadOpenThy as inFile
+    >>= Sapic.typeTheory
+    >>= Sapic.translate
+    >>= closeThy as
 
--- | Load a closed theory and report on well-formedness errors.
-loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThyWfReport as inFile = do
-    thy <- loadOpenThy as inFile
-          >>= Sapic.typeTheory
-          >>= Sapic.translate
-          >>= addMessageDeductionRuleVariants
-    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
-    -- report
-    case checkWellformedness thy sig of
-      []     -> return ()
-      report -> do
+
+reportWellformednessDoc :: Pretty.Document p => [a] -> p
+reportWellformednessDoc [] =  Pretty.emptyDoc
+reportWellformednessDoc errs  = Pretty.vcat $ map Pretty.text $
+                          [ "WARNING: " ++ show (length errs)
+                                        ++ " wellformedness check failed!"
+                          , "         The analysis results might be wrong!" ]
+
+-- | Report well-formedness errors unless empty. Quit on warning. Start with prefix `prefixAct`
+reportWellformedness :: IO a -> Bool -> WfErrorReport -> IO ()
+reportWellformedness _          _            []       = return ()
+reportWellformedness prefixAct quit           wfreport =
+   do
+      _ <- prefixAct -- optional: printout of file name or similar
+      putStrLn "WARNING: ignoring the following wellformedness errors"
+      putStrLn ""
+      putStrLn $ renderDoc $ prettyWfErrorReport wfreport
+      putStrLn $ replicate 78 '-'
+      if quit then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+
+-- | helper function: print header with theory filename 
+printFileName :: [Char] -> IO ()
+printFileName inFile = do
           putStrLn ""
           putStrLn $ replicate 78 '-'
           putStrLn $ "Theory file '" ++ inFile ++ "'"
           putStrLn $ replicate 78 '-'
           putStrLn ""
-          putStrLn $ "WARNING: ignoring the following wellformedness errors"
-          putStrLn ""
-          putStrLn $ renderDoc $ prettyWfErrorReport report
-          putStrLn $ replicate 78 '-'
-          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+
+loadClosedThyWf :: Pretty.Document b => Arguments -> FilePath -> IO (ClosedTheory, b)
+loadClosedThyWf as inFile = do
+    thy <- loadOpenThy as inFile
+    thy'<- Sapic.typeTheory thy
+          >>= Sapic.translate
+          >>= addMessageDeductionRuleVariants
+    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
+    -- report
+    -- let prefix = printFileName inFile
+    let errors = checkWellformedness thy' sig ++ Sapic.checkWellformednessSapic thy
+    let report = reportWellformednessDoc errors
     -- return closed theory
-    closeThyWithMaude sig as thy
+    closedTheory <- closeThyWithMaude sig as thy'
+    return (closedTheory, report)
+
+-- | Load a closed theory and report on well-formedness errors.
+loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
+loadClosedThyWfReport as inFile = do
+    thy <- loadOpenThy as inFile
+    thy'<- Sapic.typeTheory thy
+          >>= Sapic.translate
+          >>= addMessageDeductionRuleVariants
+    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
+    -- report
+    let prefix = printFileName inFile
+    let errors = checkWellformedness thy' sig ++ Sapic.checkWellformednessSapic thy
+    reportWellformedness prefix (hasQuitOnWarning as) errors
+    -- return closed theory
+    closeThyWithMaude sig as thy'
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -223,19 +263,9 @@ loadClosedDiffThyWfReport as inFile = do
     thy1 <- addMessageDeductionRuleVariantsDiff thy0
     sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
     -- report
-    case checkWellformednessDiff thy1 sig of
-      []     -> return ()
-      report -> do
-          putStrLn ""
-          putStrLn $ replicate 78 '-'
-          putStrLn $ "Theory file '" ++ inFile ++ "'"
-          putStrLn $ replicate 78 '-'
-          putStrLn ""
-          putStrLn $ "WARNING: ignoring the following wellformedness errors"
-          putStrLn ""
-          putStrLn $ renderDoc $ prettyWfErrorReport report
-          putStrLn $ replicate 78 '-'
-          if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
+    let prefix = printFileName inFile
+    let errors = checkWellformednessDiff thy1 sig
+    reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
     closeDiffThyWithMaude sig as thy1
 
@@ -244,7 +274,7 @@ loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
-            thy' <- Sapic.typeTheory thy
+            thy' <-  Sapic.typeTheory thy
                   >>= Sapic.translate
             Right <$> closeThy as thy' -- No "return" because closeThy gives IO (ClosedTheory)
 
@@ -274,7 +304,9 @@ reportOnClosedThyStringWellformedness as input =
             thy' <- Sapic.typeTheory thy
                   >>= Sapic.translate
             sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
-            case checkWellformedness thy' sig of
+            -- report
+            let errors = checkWellformedness thy' sig ++ Sapic.checkWellformednessSapic thy
+            case errors of 
                   []     -> return ""
                   report -> do
                     if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -294,7 +326,6 @@ reportOnClosedDiffThyStringWellformedness as input = do
           report -> do
             if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
             return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
-
 
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTranslatedTheory -> IO ClosedTheory
