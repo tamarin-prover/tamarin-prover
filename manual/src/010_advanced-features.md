@@ -146,7 +146,30 @@ by including both separated by commas---e.g., a premise
 
 ### Using an Oracle
 
-We present a small example to demonstrate how an oracle can be used to generate
+Oracles allow to implement user-defined heuristics as custom rankings of proof
+goals. They are invoked as a process with the lemma under scrutiny as the first
+argument and all current proof goals seperated by EOL over stdin. Proof goals
+match the regex `(\d+):(.+)` where `(\d+)` is the goal's index, and `(.+)` is
+the actual goal. A proof goal is formatted like one of the applicable proof
+methods shown in the interactive view, but without **solve(...)** surrounding
+it. One can also observe the input to the oracle in the stdout of tamarin
+itself. Oracle calls are logged between `START INPUT`, `START OUTPUT`, and
+`END Oracle call`.
+
+The oracle can set the new order of proof goals by writing the proof indices to
+stdout, separated by EOL. The order of the indices determines the new order of
+proof goals. An oracle does not need to rank all goals. Unranked goals will be
+ranked with lower priority than ranked goals but kept in order. For example, if
+an oracle was given the goals 1-4, and would output:
+```
+4
+2
+```
+the new ranking would be 4, 2, 1, 3. In particular, this implies that an oracle
+which does not output anything, behaves like the identity function on the
+ranking.
+
+Next, we present a small example to demonstrate how an oracle can be used to generate
 efficient proofs.
 
 Assume we want to prove the uniqueness of a pair `<xcomplicated,xsimple>`, where
