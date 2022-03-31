@@ -104,8 +104,8 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
   return $ proverifTemplate hd queries proc macroproc lemmas
   where
     tc = emptyTC{predicates = theoryPredicates thy }
-    (proc, prochd, hasBoundState) = loadProc tc thy
-    base_headers = if hasBoundState then state_headers else S.empty
+    (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
+    base_headers = if hasUnboundState then state_headers else S.empty
     queries = loadQueries thy
     lemmas = loadLemmas lemSel tc typEnv thy
     (macroproc, macroprochd) =
@@ -204,9 +204,9 @@ prettyProVerifEquivTheory (thy, typEnv) = do
   return $ proverifEquivTemplate hd queries finalproc macroproc
   where
     tc = emptyTC{predicates = theoryPredicates thy }
-    (equivlemmas, equivhd, hasBoundState) =  loadEquivProc tc thy
-    (diffEquivlemmas, diffEquivhd, diffHasBoundState) =  loadDiffProc tc thy
-    base_headers = if hasBoundState || diffHasBoundState then state_headers else S.empty
+    (equivlemmas, equivhd, hasBoundState, hasUnboundState) =  loadEquivProc tc thy
+    (diffEquivlemmas, diffEquivhd, _, diffHasUnboundState) =  loadDiffProc tc thy
+    base_headers = if hasUnboundState || diffHasUnboundState then state_headers else S.empty
     finalproc = if length equivlemmas + length diffEquivlemmas > 1 then
                   [text "Error: Proverif can only support at most one equivalence or diff equivalence query."]
                 else
@@ -247,7 +247,7 @@ prettyDeepSecTheory thy = do
         tc = emptyTC{trans = DeepSec}
         requests = loadRequests thy
         (macroproc, macroprochd) = loadMacroProc tc thy
-        (equivlemmas, equivhd, _) =  loadEquivProc tc thy
+        (equivlemmas, equivhd, _, _) =  loadEquivProc tc thy
 
 
 
@@ -470,13 +470,14 @@ ppAction ProcessAnnotation{stateChannel = Nothing, pureState=True} TranslationCo
 
 -- must rely on the table
 ppAction ProcessAnnotation{stateChannel = Nothing, pureState=False} tc@TranslationContext{trans=ProVerif} (Insert t t2) =
-    (text "in(" <> text ptvar <> text ", " <> pt <> text "_dump:bitstring);"
-     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ") | ", sh `S.union` sh2, False)
+    (text "in(" <> text ptvar <> text ", " <> text dumpvar <> text ":bitstring);"
+     $$ text "out(" <> text ptvar <> text" , " <> pt2 <> text ") | ", S.insert hd $ sh `S.union` sh2, False)
   where
     (pt, sh) = ppSapicTerm tc t
     (pt2, sh2) = ppSapicTerm tc t2
     ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
-
+    dumpvar = "dumpvar" ++ stripNonAlphanumerical (render pt)
+    hd =  Sym "free" ptvar ":channel" []
 
 ppAction _  _ _  = (text "Action not supported for translation", S.empty, True)
 
@@ -647,21 +648,21 @@ addAttackerReportProc tc thy p =
 -- Main printer for processes
 ------------------------------------------------------------------------------
 
-loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProVerifHeader, Bool)
+loadProc :: TranslationContext -> OpenTheory -> (Doc, S.Set ProVerifHeader, Bool, Bool)
 loadProc tc thy = case theoryProcesses thy of
-  []  -> (text "", S.empty, False)
+  []  -> (text "", S.empty, False, False)
   [pr] -> let (d,headers) = ppSapic tc2 p in
           let finald =
                   if (List.find (\x -> x=="locations-report") $ theoryBuiltins thy) == Nothing
                   then d
                   else addAttackerReportProc tc2 thy d
           in
-           (finald,S.union hd headers, fst hasStates)
+           (finald,S.union hd headers, fst hasStates, snd hasStates)
 
    where p = makeAnnotations thy pr
          hasStates =  hasBoundUnboundStates p
          (tc2, hd) = mkAttackerContext tc{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
-  _  -> (text "Multiple sapic processes detected, error", S.empty, False)
+  _  -> (text "Multiple sapic processes detected, error", S.empty, False, False)
 
 
 loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader)
@@ -691,26 +692,26 @@ loadMacroProcs tc thy (p:q) =
           Just _ -> (tc, S.empty)
     tc3 = tc2{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates}
 
-loadDiffProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
+loadDiffProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool, Bool)
 loadDiffProc tc thy = case theoryDiffEquivLemmas thy of
-  []  -> ([], S.empty, False)
+  []  -> ([], S.empty, False, False)
   [pr] -> let (d,headers) = ppSapic tc2 p in
-           ([text "process" $$ (nest 4 d)], S.union hd headers, fst hasStates)
+           ([text "process" $$ (nest 4 d)], S.union hd headers, fst hasStates, snd hasStates)
 
    where p = makeAnnotations thy pr
          hasStates =  hasBoundUnboundStates p
          (tc2, hd) = mkAttackerContext tc{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
-  _  -> ([text "Multiple sapic processes detected, error"], S.empty, False)
+  _  -> ([text "Multiple sapic processes detected, error"], S.empty, False, False)
 
 
 
-loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
+loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool, Bool)
 loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
 
-loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader, Bool)
-loadEquivProcs _ _ [] = ([], S.empty, False)
+loadEquivProcs :: TranslationContext -> OpenTheory -> [(PlainProcess, PlainProcess)] ->  ([Doc], S.Set ProVerifHeader, Bool, Bool)
+loadEquivProcs _ _ [] = ([], S.empty, False, False)
 loadEquivProcs tc thy ((p1,p2):q) =
-      let (docs,  heads, hadBoundStates) = loadEquivProcs tc3 thy q in
+      let (docs,  heads, hadBoundStates, hadUnboundStates) = loadEquivProcs tc3 thy q in
       let (new_text1, new_heads1) = ppSapic tc3 mainProc1 in
       let (new_text2, new_heads2) = ppSapic tc3 mainProc2 in
       let macro_def =
@@ -723,13 +724,14 @@ loadEquivProcs tc thy ((p1,p2):q) =
                       (nest 4 new_text2) <> text ")."
 
       in
-        (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads, hasBoundSt && hadBoundStates)
+        (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads, hasBoundSt || hadBoundStates, hasUnboundSt || hadUnboundStates)
   where
     mainProc1 = makeAnnotations thy p1
     mainProc2 = makeAnnotations thy p2
     hasStates1 = hasBoundUnboundStates mainProc1
     hasStates2 =  hasBoundUnboundStates mainProc2
     hasBoundSt = fst hasStates1 || fst hasStates2
+    hasUnboundSt = snd hasStates1 || snd hasStates2    
     (tc2,hd) = case attackerChannel tc of
           -- we set up the attacker channel if it does not already exists
           Nothing -> mkAttackerContext tc mainProc2
@@ -849,7 +851,7 @@ isPropFormula (Conn _ p q) = isPropFormula p && isPropFormula q
 ppQueryFormula :: (MonadFresh m, Functor s) => TypingEnvironment -> ProtoFormula s (String, LSort) Name LVar -> [LVar] -> m Doc
 ppQueryFormula te fm extravs = do
   (vs,(p,typeVars)) <- ppLFormula te ppNAtom fm
-  return $ sep [text "query " <>  fsep (punctuate comma (map (ppTimeTypeVar typeVars) (extravs++vs))) <> text ";",
+  return $ sep [text "query " <>  fsep (punctuate comma (map (ppTimeTypeVar typeVars) (S.toList . S.fromList $ extravs++vs))) <> text ";",
          nest 1 p,
          text "."]
 
