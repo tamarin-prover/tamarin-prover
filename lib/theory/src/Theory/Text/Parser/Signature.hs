@@ -134,10 +134,12 @@ function =  do
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
         case lookup f (S.toList $ stFunSyms sig) of
-          Just kp' | kp' /= (k,priv,destr) ->
+          Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
                    " for `" ++ BC.unpack f
+          Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
+                return ((f,kp'),argTypes,outType)
           _ -> do
                 modifyStateSig $ addFunSym (f,(k,priv,destr))
                 return ((f,(k,priv,destr)),argTypes,outType)
