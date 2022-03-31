@@ -664,18 +664,19 @@ loadMacroProcs tc thy (p:q) =
           pvars ->
             let (new_text, new_heads) = ppSapic tc3 mainProc in
             let vrs  = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc3) pvars ))) <> text ")"in
+             let headers = headersOfType $ map extractType pvars in  
              let macro_def = text "let " <> (text $ L.get pName p) <> vrs <> text "=" $$
                              (nest 4 new_text) <> text "." in
-               (macro_def : docs, hd `S.union` new_heads `S.union` heads)
+               (macro_def : docs, hd `S.union` new_heads `S.union` heads `S.union` headers)
   where
     mainProc = makeAnnotations thy $ L.get pBody p
+    extractType (SapicLVar _ ty) = ty
     hasStates = hasBoundUnboundStates mainProc
     (tc2,hd) = case attackerChannel tc of
           -- we set up the attacker channel if it does not already exists
           Nothing -> mkAttackerContext tc mainProc
           Just _ -> (tc, S.empty)
     tc3 = tc2{hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates}
-
 
 loadDiffProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool)
 loadDiffProc tc thy = case theoryDiffEquivLemmas thy of
