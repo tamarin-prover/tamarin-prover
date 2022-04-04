@@ -128,11 +128,11 @@ defines = findArg "defines"
 
 -- | Diff flag in the argument
 diff :: Arguments -> [String]
-diff as = if (argExists "diff" as) then ["diff"] else []
+diff as = if argExists "diff" as then ["diff"] else []
 
 -- | quit-on-warning flag in the argument
 quitOnWarning :: Arguments -> [String]
-quitOnWarning as = if (argExists "quit-on-warning" as) then ["quit-on-warning"] else []
+quitOnWarning as = if argExists "quit-on-warning" as then ["quit-on-warning"] else []
 
 hasQuitOnWarning :: Arguments -> Bool
 hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
