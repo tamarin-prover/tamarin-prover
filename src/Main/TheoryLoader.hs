@@ -198,12 +198,13 @@ loadClosedThy as inFile =
     >>= closeThy as
 
 
-reportWellformednessDoc :: Pretty.Document p => [a] -> p
 reportWellformednessDoc [] =  Pretty.emptyDoc
-reportWellformednessDoc errs  = Pretty.vcat $ map Pretty.text $
-                          [ "WARNING: " ++ show (length errs)
-                                        ++ " wellformedness check failed!"
-                          , "         The analysis results might be wrong!" ]
+reportWellformednessDoc errs  = Pretty.vcat 
+                          [ Pretty.text $ "WARNING: " ++ show (length errs)
+                                                      ++ " wellformedness check failed!"
+                          , Pretty.text "         The analysis results might be wrong!"
+                          , prettyWfErrorReport errs
+                          ]
 
 -- | Report well-formedness errors unless empty. Quit on warning. Start with prefix `prefixAct`
 reportWellformedness :: IO a -> Bool -> WfErrorReport -> IO ()
@@ -226,7 +227,7 @@ printFileName inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
 
-loadClosedThyWf :: Pretty.Document b => Arguments -> FilePath -> IO (ClosedTheory, b)
+loadClosedThyWf :: Arguments -> FilePath -> IO (ClosedTheory, Pretty.Doc)
 loadClosedThyWf as inFile = do
     thy <- loadOpenThy as inFile
     thy'<- Sapic.typeTheory thy

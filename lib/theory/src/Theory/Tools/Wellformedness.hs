@@ -161,9 +161,9 @@ quote cs = '`' : cs ++ "'"
 sortsClashCheck :: HasFrees t => String -> t -> WfErrorReport
 sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     [] -> []
-    cs -> return $
+    cs -> return
             ( "sorts"
-            , text info $-$ (nest 2 $ numbered' $ map prettyVarList cs)
+            , text info $-$ nest 2 (numbered' $ map prettyVarList cs)
             )
   where
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)

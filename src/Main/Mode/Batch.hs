@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -80,19 +79,19 @@ batchMode = tamarinMode
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
-  | (argExists "parseOnly" as) || (argExists "outModule" as) = do
-      _ <- mapM processThy $ inFiles
-      putStrLn $ ""
+  | argExists "parseOnly" as || argExists "outModule" as = do
+      mapM_ processThy inFiles
+      putStrLn ""
   | otherwise  = do
       _ <- ensureMaude as
-      putStrLn $ ""
-      summaries <- mapM processThy $ inFiles
-      putStrLn $ ""
+      putStrLn ""
+      summaries <- mapM processThy inFiles
+      putStrLn ""
       putStrLn $ replicate 78 '='
-      putStrLn $ "summary of summaries:"
-      putStrLn $ ""
+      putStrLn "summary of summaries:"
+      putStrLn ""
       putStrLn $ renderDoc $ Pretty.vcat $ intersperse (Pretty.text "") summaries
-      putStrLn $ ""
+      putStrLn ""
       putStrLn $ replicate 78 '='
   where
     -- handles to arguments
@@ -141,7 +140,7 @@ run thisMode as
             report
             Pretty.$--$ prettyClosedSummary thy
 
-        ppWfAndSummaryDiff thy = do 
+        ppWfAndSummaryDiff thy = do
             reportWellformednessDoc $ checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
             Pretty.$--$ prettyClosedDiffSummary thy
 
