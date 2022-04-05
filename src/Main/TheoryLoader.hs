@@ -198,6 +198,7 @@ loadClosedThy as inFile =
     >>= closeThy as
 
 
+reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
 reportWellformednessDoc [] =  Pretty.emptyDoc
 reportWellformednessDoc errs  = Pretty.vcat 
                           [ Pretty.text $ "WARNING: " ++ show (length errs)
