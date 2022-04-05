@@ -23,9 +23,7 @@ you choose. Currently, it supports ProVerif, Deepsec, GSVerif, and Tamarin.
 Then, it will run the provers concurrently, report the result and the time
 the first prover took to finish, and abort the calls to the other provers. 
 
-To get *tamarin-troop* you have to ... TODO.
-<!-- TODO: Add guide on how to find/get tamarin-troop -->
-
+To get *tamarin-troop* copy `etc/tamarin-troop.py` into your `$PATH`.
 
 How to use Tamarin-Troop
 ---------------
@@ -121,4 +119,4 @@ for more information.
     ProVerif.
 
   - **-to** sets a timeout for the calls *tamarin-troop*
-    starts. The default is TODO minutes.
+    starts. The default is 5 seconds. 
