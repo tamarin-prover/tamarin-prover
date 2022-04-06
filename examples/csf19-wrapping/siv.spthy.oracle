@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 part of the tamarin theory pkcs11_gcm
 invocation: use smart heuristic ordering, e.g.
