@@ -47,6 +47,8 @@ instance Show (ParsingException) where
     show (DuplicateItem (SapicItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
     show (DuplicateItem (SapicItem (ExportInfoItem _))) = "duplicate exportinfo  item"
     show (DuplicateItem (SapicItem (SignatureBuiltin s))) = "duplicate BuiltIn signature: " ++ show s
+    show (DuplicateItem (SapicItem (DiffEquivLemma _))) = "duplicate diff equiv lemma item"
+    show (DuplicateItem (SapicItem (EquivLemma _ _))) = "duplicate equiv lemma item"    
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException

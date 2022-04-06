@@ -40,7 +40,7 @@ import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets, modify)
+import           Control.Monad.State                (gets)
 
 import           Safe                           (headMay)
 
