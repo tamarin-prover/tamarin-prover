@@ -165,7 +165,7 @@ rule CheckAuthClaim:
 
 restriction Eq_checks_succeed: "(All x y #j. Eq(x, y) @ j ==> x = y)"
 
-//restriction Neq_checks_succeed: "(All x #j. Neq(x, x) @ j ==> F)"
+restriction Neq_checks_succeed: "(All x #j. Neq(x, x) @ j ==> F)"
 
 // The security condition of TESLA guarantees that
 restriction Security_condition:
@@ -193,7 +193,7 @@ lemma knows_only_expired_chain_keys [use_induction, reuse]:
 // The current proof idea is to assume this restriction because we cannot yet prove
 // it. Proving it requires support for multisets or repeated function
 // application.
-lemma FromSender_charn[reuse, use_induction]: // [use_induction]:
+restriction FromSender_charn: // [use_induction]:
   // "All m S k0 lid k args check #i.
   "All lid k args #i #j.
          // FromSender(m, S, k0, check) @ i

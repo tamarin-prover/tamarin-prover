@@ -569,7 +569,8 @@ simpInjectiveFactEqMon = do
   let ineq s t = (s,t) `S.member` inequalities
 
   --  :: (MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm)) -> ([LNGuarded], [(NodeId, NodeId)])
-  let simpSingle (behaviour, (i, s), (j, t)) = case behaviour of
+  let simpSingle (behaviour, (i, s), (j, t)) = --trace (show ("simpSingle", behaviour, i, s, j, t)) $
+         case behaviour of
                                                 Unspecified -> ([], [])
                                                 Unstable -> ([], [])
                                                 Decreasing -> simpSingle (Increasing, (j, s), (i, t))
@@ -581,20 +582,22 @@ simpInjectiveFactEqMon = do
                                                   ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6)
                                                    , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
                                                   ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
-                                                Increasing ->
-                                                  ([ gdisj [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
+                                                Increasing -> ([], [])
+                                                  {-([ gdisj [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
                                                             GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
-                                                    | alwaysBefore sys i j, not $ triviallySmaller s t]   -- (6.1)
-                                                  , snd $ simpSingle (behaviour, (i, s), (j, t)))
-  
+                                                    | alwaysBefore sys i j, not $ triviallySmaller s t, s /= t]   -- (6.1)
+                                                  , snd $ simpSingle (behaviour, (i, s), (j, t)))-}
+
+  -- generate and execute changes
   let (newFormulas, newLesses) = (concat *** concat) $ unzip $ map simpSingle (getPairs inj nodes)
-
   mapM_ insertFormula newFormulas
-  mapM_ (uncurry insertLess) newLesses
-
+  mapM_ (uncurry insertLess) -- $ trace (show ("newLesses", newLesses))
+                              newLesses
+  
   -- check if anything changed
+  updatedFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
   return $ if
-      all (`elem` oldFormulas) newFormulas &&
+      updatedFormulas == oldFormulas &&
       null newLesses
       then Unchanged else Changed
 
