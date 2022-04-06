@@ -521,7 +521,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -531,7 +531,7 @@ analyzing: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 4.433134401s
+  processing time: 10.371940715s
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)
   agreement_B (all-traces): verified (7 steps)
@@ -547,7 +547,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 4.433134401s
+  processing time: 10.371940715s
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)
   agreement_B (all-traces): verified (7 steps)

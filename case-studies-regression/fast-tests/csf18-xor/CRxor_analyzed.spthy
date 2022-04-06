@@ -516,7 +516,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -526,7 +526,7 @@ analyzing: examples/csf18-xor/CRxor.spthy
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.911065946s
+  processing time: 1.327716397s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
@@ -539,7 +539,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.911065946s
+  processing time: 1.327716397s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)

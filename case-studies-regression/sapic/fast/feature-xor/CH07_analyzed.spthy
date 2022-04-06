@@ -1362,7 +1362,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1372,7 +1372,7 @@ analyzing: examples/sapic/fast/feature-xor/CH07.spthy
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 7.021436595s
+  processing time: 8.650198134s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (77 steps)
@@ -1387,7 +1387,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 7.021436595s
+  processing time: 8.650198134s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (77 steps)

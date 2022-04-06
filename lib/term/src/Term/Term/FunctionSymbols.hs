@@ -29,6 +29,7 @@ module Term.Term.FunctionSymbols (
     , munSymString
     , expSymString
     , invSymString
+    , dhNeutralSymString
     , pmultSymString
     , emapSymString
     , unionSymString
@@ -42,6 +43,7 @@ module Term.Term.FunctionSymbols (
     , expSym
     , pmultSym
     , oneSym
+    , dhNeutralSym
     , invSym
     , pairSym
     , fstSym
@@ -116,12 +118,13 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, munSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, munSymString, expSymString, invSymString, dhNeutralSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
 diffSymString = "diff"
 munSymString = "mun"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
+dhNeutralSymString = "DH_neutral"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
@@ -133,7 +136,7 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, dhNeutralSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
 -- | Pairing.
 pairSym  = ("pair",(2,Public,Constructor))
 -- | Diff.
@@ -144,6 +147,8 @@ expSym   = (expSymString,(2,Public,Constructor))
 invSym   = (invSymString,(1,Public,Constructor))
 -- | The one in the group of exponents.
 oneSym   = (oneSymString,(0,Public,Constructor))
+-- | The groupd identity
+dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor))
 -- | Projection of first component of pair.
 fstSym   = ("fst",(1,Public,Destructor))
 -- | Projection of second component of pair.
@@ -159,7 +164,7 @@ zeroSym  = (zeroSymString,(0,Public,Constructor))
 
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
-dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
+dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym, NoEq dhNeutralSym ]
 
 -- | The signature for Xor function symbols.
 xorFunSig :: FunSig

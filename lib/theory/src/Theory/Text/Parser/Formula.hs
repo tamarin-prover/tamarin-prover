@@ -47,7 +47,8 @@ blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VT
 blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact (vlit varp))                    <?> "predicate atom"
+  , Syntactic . Pred <$> try (fact (vlitWithNode varp))                    <?> "predicate atom"
+      -- (Predicates can be called for timepoints in addition to other logical vars)
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , smallerp varp <?> "multiset comparisson"
   , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"

@@ -85320,7 +85320,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -85330,7 +85330,7 @@ analyzing: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 163.993371417s
+  processing time: 365.716701813s
   RHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   LHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   DiffLemma:  Observational_equivalence : verified (17784 steps)
@@ -85343,7 +85343,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 163.993371417s
+  processing time: 365.716701813s
   RHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   LHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   DiffLemma:  Observational_equivalence : verified (17784 steps)
