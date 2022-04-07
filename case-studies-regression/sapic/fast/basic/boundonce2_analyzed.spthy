@@ -1,0 +1,60 @@
+theory BoundOnce begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1[destructor], pair/2, snd/1[destructor]
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+rule (modulo E) Init[color=#ffffff, process="new x.1;"]:
+   [ Fr( x.1 ), Fr( x.2 ) ] --[ Init( ) ]-> [ ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new x.1;"]:
+     [ Fr( x ), Fr( x.1 ) ] --[ Init( ) ]-> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.0. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/boundonce2.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/boundonce2.spthy
+
+  output:          examples/sapic/fast/basic/boundonce2.spthy.tmp
+  processing time: 0.003773948s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  Wellformedness-error in Process:
+    Variable bound twice: x.
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/boundonce2.spthy
+
+  output:          examples/sapic/fast/basic/boundonce2.spthy.tmp
+  processing time: 0.003773948s
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  Wellformedness-error in Process:
+    Variable bound twice: x.
+
+==============================================================================
+*/

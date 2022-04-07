@@ -1,0 +1,66 @@
+theory Typing begin
+
+// Function signature and definition of the equational theory E
+
+functions: f/1, fst/1[destructor], pair/2, snd/1[destructor]
+equations: f(x) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process="new x.1:lol;"]:
+   [ Fr( x.1 ) ] --[ Init( ) ]-> [ State_1( x.1 ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new x.1:lol;"]:
+     [ Fr( x ) ] --[ Init( ) ]-> [ State_1( x ) ]
+  */
+
+rule (modulo E) eventTestxlol_0_1[color=#ffffff,
+                                  process="event Test( x.1:lol );"]:
+   [ State_1( x.1 ) ] --[ Test( x.1 ) ]-> [ Out( f(f(x.1)) ) ]
+
+  /*
+  rule (modulo AC) eventTestxlol_0_1[color=#ffffff,
+                                     process="event Test( x.1:lol );"]:
+     [ State_1( x ) ] --[ Test( x ) ]-> [ Out( x ) ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.0. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/basic/typing2.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/basic/typing2.spthy
+
+  output:          examples/sapic/fast/basic/typing2.spthy.tmp
+  processing time: 0.005202921s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/typing2.spthy
+
+  output:          examples/sapic/fast/basic/typing2.spthy.tmp
+  processing time: 0.005202921s
+
+
+==============================================================================
+*/

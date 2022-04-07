@@ -3,8 +3,12 @@ theory KEA_plus_KI_KCI_wPFS begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, h/1, pair/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -284,7 +288,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 1.120229786s
+  processing time: 0.97899811s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -296,7 +300,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 1.120229786s
+  processing time: 0.97899811s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

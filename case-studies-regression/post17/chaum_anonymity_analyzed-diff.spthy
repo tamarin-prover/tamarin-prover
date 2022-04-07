@@ -2,8 +2,8 @@ theory Chaum_Anonymity begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, fst/1, pair/2, pk/1, sign/2, snd/1,
-           unblind/2
+functions: blind/2, checksign/2, fst/1[destructor], pair/2, pk/1, sign/2,
+           snd/1[destructor], unblind/2
 equations:
     checksign(sign(m, k), pk(k)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -2293,7 +2293,7 @@ analyzing: examples/post17/chaum_anonymity.spthy
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 10.759491857s
+  processing time: 8.881162991s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)
@@ -2306,7 +2306,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 10.759491857s
+  processing time: 8.881162991s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)

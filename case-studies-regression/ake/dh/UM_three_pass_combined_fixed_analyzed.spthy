@@ -3,11 +3,18 @@ theory UM_three_pass_combined begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, multiset
-functions: MAC/2, concat/2, first/1, fst/1, h/1, pair/2, second/1, snd/1
+functions: MAC/2, concat/2, first/1, fst/1[destructor], h/1, pair/2,
+           second/1, snd/1[destructor]
 equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
 
 
 
@@ -5119,6 +5126,14 @@ next
   qed
 qed
 
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -5134,7 +5149,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 48.889843378s
+  processing time: 43.481116147s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)
@@ -5147,7 +5162,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 48.889843378s
+  processing time: 43.481116147s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
   CK_secure (all-traces): verified (142 steps)

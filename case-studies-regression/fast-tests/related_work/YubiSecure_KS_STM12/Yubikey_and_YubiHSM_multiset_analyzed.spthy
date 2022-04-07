@@ -3,9 +3,9 @@ theory YubikeyHSMmultiset begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
-           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2, senc/2, snd/1,
-           xorc/2
+functions: demac/2, dexor1/2, dexor2/2, fst/1[destructor], keystream/2,
+           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2[destructor], senc/2,
+           snd/1[destructor], xorc/2
 equations:
     demac(mac(m, k), k) = m,
     dexor1(xorc(a, b), a) = b,
@@ -21,6 +21,10 @@ equations:
 /* looping facts with injective instances: S_Counter/2, Y_counter/2 */
 
 section{* The Yubikey-Protocol with a YubiHSM *}
+
+
+
+
 
 rule (modulo E) isendHSM:
    [ In( x ) ] --[ HSMWrite( x ) ]-> [ InHSM( x ) ]
@@ -553,7 +557,7 @@ next
       case case_2
       solve( S_Counter( pid, otc2 ) ▶₃ #t2 )
         case BuyANewYubikey
-        by contradiction /* non-injective facts (#vr,#t1,#t2) */
+        by contradiction /* cyclic */
       next
         case Server_ReceiveOTP_NewSession_case_1
         solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
@@ -571,79 +575,79 @@ next
           solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
                  (#t1 < #vr)  ∥ (#vr = #t1) )
             case case_1_case_01
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_02
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_03
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_04
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_05
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_06
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_07
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_08
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_09
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_10
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_11
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_12
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_13
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_14
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_15
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_16
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_17
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_18
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_19
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_20
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_21
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_22
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_23
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_24
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_25
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_2_case_01
             by contradiction /* from formulas */
@@ -744,79 +748,79 @@ next
           solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
                  (#t1 < #vr)  ∥ (#vr = #t1) )
             case case_1_case_01
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_02
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_03
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_04
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_05
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_06
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_07
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_08
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_09
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_10
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_11
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_12
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_13
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_14
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_15
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_16
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_17
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_18
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_19
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_20
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_21
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_22
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_23
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_24
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_1_case_25
-            by contradiction /* non-injective facts (#vr,#t1,#t2) */
+            by contradiction /* cyclic */
           next
             case case_2_case_01
             by contradiction /* from formulas */
@@ -1206,6 +1210,22 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -1221,7 +1241,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multise
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 7.241005265s
+  processing time: 6.568469722s
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
@@ -1238,7 +1258,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 7.241005265s
+  processing time: 6.568469722s
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)

@@ -3,7 +3,7 @@ theory issue198_1 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -287,7 +287,7 @@ analyzing: examples/regression/diff/issue198-1.spthy
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.613180433s
+  processing time: 0.592464352s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.613180433s
+  processing time: 0.592464352s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ==============================================================================
