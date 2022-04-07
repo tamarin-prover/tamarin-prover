@@ -31,6 +31,7 @@ import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
 import           Data.ByteString.Internal        (unpackChars)
+import Data.Functor (($>))
 
 
 -- | Parse a lit with logical variables parsed by @varp@
@@ -54,7 +55,7 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy,Constructability)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms $ maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,priv,cnstr) -> return (k,priv,cnstr)
 
@@ -121,8 +122,8 @@ term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1" *> pure fAppOne
-    , symbol "DH_neutral" *> pure fAppDHNeutral    
+    , symbol "1" $> fAppOne
+    , symbol "DH_neutral" $> fAppDHNeutral    
     , application <?> "function application"
     , nullaryApp
     , plit
@@ -134,8 +135,8 @@ term plit eqn = asum
     nullaryApp = do
       maudeSig <- sig <$> getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp fs [])
-           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms $ maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) $> fApp fs []
+           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
