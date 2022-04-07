@@ -1,0 +1,53 @@
+theory test begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1[destructor], pair/2, snd/1[destructor]
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process="0"]:
+   [ ] --[ Init( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.0. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
+
+  output:          examples/sapic/fast/regression-tests/issue332-notype-header.spthy.tmp
+  processing time: 0.002547641s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
+
+  output:          examples/sapic/fast/regression-tests/issue332-notype-header.spthy.tmp
+  processing time: 0.002547641s
+
+
+==============================================================================
+*/

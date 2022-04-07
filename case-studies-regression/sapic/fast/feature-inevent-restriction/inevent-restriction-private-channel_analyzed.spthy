@@ -2,10 +2,12 @@ theory InEventRestrictionPrivateChannel begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
 
 lemma test:
   all-traces
@@ -23,7 +25,10 @@ simplify
 solve( State_( ) ▶₀ #a )
   case Init
   solve( State_11( ) ▶₀ #b )
-    case inca_0_1
+    case inca_1_1
+    by contradiction /* from formulas */
+  next
+    case inca_3_1
     by contradiction /* from formulas */
   qed
 qed
@@ -39,24 +44,29 @@ rule (modulo E) eventA_0_[color=#ffffff, process="event A( );"]:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) inca_0_1[color=#ffffff, process="in('c','a');"]:
-   [ State_1( ), In( <'c', 'a'> ) ]
-  --[ ChannelIn( <'c', 'a'> ) ]->
-   [ State_11( ) ]
+   [ State_1( ), Message( 'c', x ) ] --> [ Let_11( x ), Ack( 'c', x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inca_2_1[color=#ffffff, process="in('c','a');"]:
+   [ State_1( ), In( <'c', x> ) ]
+  --[ ChannelIn( <'c', x> ) ]->
+   [ Let_11( x ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) inca_1_1[color=#ffffff, process="in('c','a');"]:
-   [ State_1( ), Message( 'c', 'a' ) ] --> [ Ack( 'c', 'a' ), State_11( ) ]
+   [ Let_11( 'a' ) ] --> [ State_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inca_3_1[color=#ffffff, process="in('c','a');"]:
+   [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
-   [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( ) ] --> [ ]
+   [ State_11( ) ] --[ B( ), Event( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -64,7 +74,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction in_event:
+restriction ass_immedeate:
   "∀ x #t3.
     (ChannelIn( x ) @ #t3) ⇒
     (∃ #t2.
@@ -88,8 +98,8 @@ analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-p
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.090420689s
-  test (all-traces): verified (4 steps)
+  processing time: 0.037478092s
+  test (all-traces): verified (5 steps)
 
 ------------------------------------------------------------------------------
 
@@ -99,8 +109,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.090420689s
-  test (all-traces): verified (4 steps)
+  processing time: 0.037478092s
+  test (all-traces): verified (5 steps)
 
 ==============================================================================
 */

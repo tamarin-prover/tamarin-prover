@@ -3,8 +3,8 @@ theory FOO_Vote_Privacy begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
-           sign/2, snd/1, unblind/2
+functions: blind/2, checksign/2, commit/2, fst/1[destructor], open/2,
+           pair/2, pk/1, sign/2, snd/1[destructor], unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -21899,7 +21899,7 @@ analyzing: examples/post17/foo_vote_privacy.spthy
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 455.400922753s
+  processing time: 436.576306144s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)
@@ -21912,7 +21912,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 455.400922753s
+  processing time: 436.576306144s
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

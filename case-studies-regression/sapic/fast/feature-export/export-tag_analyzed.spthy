@@ -1,0 +1,44 @@
+theory ExportInfo begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1[destructor], pair/2, snd/1[destructor]
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+/* All well-formedness checks were successful. */
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.0. OK.
+ checking installation: OK.
+
+
+analyzing: examples/sapic/fast/feature-export/export-tag.spthy
+
+------------------------------------------------------------------------------
+analyzed: examples/sapic/fast/feature-export/export-tag.spthy
+
+  output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
+  processing time: 0.001045524s
+
+
+------------------------------------------------------------------------------
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-export/export-tag.spthy
+
+  output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
+  processing time: 0.001045524s
+
+
+==============================================================================
+*/

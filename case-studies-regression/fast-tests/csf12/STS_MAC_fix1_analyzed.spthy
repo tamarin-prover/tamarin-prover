@@ -3,12 +3,16 @@ theory STS_MAC_fix1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: KDF/1, fst/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
-           verify/3
+functions: KDF/1, fst/1[destructor], mac/2, pair/2, pk/1, sign/2,
+           snd/1[destructor], true/0, verify/3[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
 
 
 
@@ -1084,6 +1088,10 @@ next
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -1099,7 +1107,7 @@ analyzing: examples/csf12/STS_MAC_fix1.spthy
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
   output:          examples/csf12/STS_MAC_fix1.spthy.tmp
-  processing time: 8.506194543s
+  processing time: 7.5589037s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (109 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (160 steps)
 
@@ -1111,7 +1119,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
   output:          examples/csf12/STS_MAC_fix1.spthy.tmp
-  processing time: 8.506194543s
+  processing time: 7.5589037s
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (109 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (160 steps)
 

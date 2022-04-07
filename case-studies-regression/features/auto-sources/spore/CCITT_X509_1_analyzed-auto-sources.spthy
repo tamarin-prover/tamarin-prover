@@ -2,13 +2,17 @@ theory CcittX509_1 begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
-           true/0, verify/3
+functions: adec/2[destructor], aenc/2, fst/1[destructor], h/1, pair/2,
+           pk/1, sign/2, snd/1[destructor], true/0, verify/3[destructor]
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
 
 
 
@@ -261,6 +265,8 @@ solve( !Pk( $B, pkB ) ▶₀ #i )
   qed
 qed
 
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -276,7 +282,7 @@ analyzing: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 2.553924914s
+  processing time: 2.42584236s
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)
   agreement_B (all-traces): verified (7 steps)
@@ -290,7 +296,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 2.553924914s
+  processing time: 2.42584236s
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)
   agreement_B (all-traces): verified (7 steps)
