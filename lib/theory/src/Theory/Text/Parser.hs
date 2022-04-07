@@ -34,7 +34,9 @@ import qualified Data.Set                   as S
 import           System.FilePath
 import           Control.Category
 import           Control.Monad
+import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
+import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 import           Theory
@@ -56,29 +58,28 @@ import Theory.Text.Parser.Sapic
 parseOpenTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenTheory
-parseOpenTheory flags inFile = parseFile (theory flags (Just inFile)) inFile
+parseOpenTheory flags0 inFile = parseFile flags0 (theory (Just inFile)) inFile
 
 -- | Parse a security protocol theory file.
 parseOpenDiffTheory :: [String] -- ^ Defined flags
                 -> FilePath
                 -> IO OpenDiffTheory
-parseOpenDiffTheory flags inFile = parseFile (diffTheory flags (Just inFile)) inFile
+parseOpenDiffTheory flags0 inFile = parseFile flags0 (diffTheory (Just inFile)) inFile
 
 
 -- | Parse a security protocol theory from a string.
 parseOpenTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenTheory
-parseOpenTheoryString flags = parseString "<unknown source>" (theory flags Nothing)
+parseOpenTheoryString flags0 = parseString flags0 "<unknown source>" (theory Nothing)
 
 -- | Parse a security protocol theory from a string.
 parseOpenDiffTheoryString :: [String]  -- ^ Defined flags.
                       -> String -> Either ParseError OpenDiffTheory
-parseOpenDiffTheoryString flags = parseString "<unknown source>" (diffTheory flags Nothing)
+parseOpenDiffTheoryString flags0 = parseString flags0 "<unknown source>" (diffTheory Nothing)
 
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
-parseLemma = parseString "<unknown source>" (lemma Nothing)
-
+parseLemma = parseString [] "<unknown source>" (lemma Nothing)
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
@@ -150,12 +151,7 @@ liftedAddCaseTest thy cTest =
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
 liftedAddProtoRule thy ru
-    | (StandRule (DefdRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
-        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
-        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
-        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
-        return thy''
-    | (StandRule (SAPiCRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = do
+    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
         rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
@@ -173,86 +169,155 @@ liftedAddProtoRule thy ru
                 fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
                 counter = zip [1::Int ..]
 
+-- | Flag formulas
+
+data FlagFormula =
+     FAtom String
+   | FOr FlagFormula FlagFormula
+   | FAnd FlagFormula FlagFormula
+   | FNot FlagFormula
+
+flagatom :: Parser FlagFormula
+flagatom = FAtom <$> try identifier
+
+-- | Parse a negation.
+flagnegation :: Parser FlagFormula
+flagnegation = opLNot *> (FNot <$> flagatom) <|> flagatom
+
+-- | Parse a left-associative sequence of conjunctions.
+flagconjuncts :: Parser FlagFormula
+flagconjuncts = chainl1 flagnegation (FAnd <$ opLAnd)
+
+-- | Parse a left-associative sequence of disjunctions.
+flagdisjuncts :: Parser FlagFormula
+flagdisjuncts = chainl1 flagconjuncts (FOr <$ opLOr)
+
+evalformula :: S.Set String -> FlagFormula -> Bool
+evalformula flags0 (FAtom t) = S.member t flags0
+evalformula flags0 (FNot t) = not (evalformula flags0 t)
+evalformula flags0 (FOr t1 t2) = (evalformula flags0 t1) || (evalformula flags0 t2)
+evalformula flags0 (FAnd t1 t2) = (evalformula flags0 t1) && (evalformula flags0 t2)
+
 -- | Parse a theory.
-theory :: [String]   -- ^ Defined flags.
-       -> Maybe FilePath
+theory :: Maybe FilePath
        -> Parser OpenTheory
-theory flags0 inFile = do
-    msig <- getState
-    when ("diff" `S.member` (S.fromList flags0)) $ putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+theory inFile = do
+    flags0 <- flags <$> getState
+    when ("diff" `S.member` flags0) $ modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    symbol_ "begin"
-        *> addItems (S.fromList flags0) (set thyName thyId (defaultOpenTheory ("diff" `S.member` (S.fromList flags0))))
+    thy' <- symbol_ "begin"
+        *> addItems inFile (set thyName thyId (defaultOpenTheory ("diff" `S.member` flags0)))
         <* symbol "end"
+    return thy'
   where
-    addItems :: S.Set String -> OpenTheory -> Parser OpenTheory
-    addItems flags thy = asum
+    addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
+    addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- builtins thy
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy'
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
-           addItems flags thy'
+           addItems inFile0 thy'
       , do functions
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
       , do equations
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . thySignature) msig thy
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems flags thy'
+--           addItems inFile0 flags thy'
       , do thy' <- liftedAddRestriction thy =<< restriction
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
-           addItems flags thy'
+           addItems inFile0 thy'
            -- add legacy deprecation warning output
       , do test <- caseTest
            thy1 <- liftedAddCaseTest thy test
            thy2 <- maybe (return thy1) (liftedAddPredicate thy1) (caseTestToPredicate test)
-           addItems flags thy2
+           addItems inFile0 thy2
       , do accLem <- lemmaAcc workDir
            let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
            thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- liftedAddLemma thy =<< lemma workDir
-           addItems flags thy'
+           addItems inFile0 thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
            -- thy'' <- foldM liftedAddRestriction thy' $
            --  map (Restriction "name") [get (preRestriction . rInfo) ru]
-           addItems flags thy'
+           addItems inFile0 thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACs [r] thy)
+           addItems inFile0 (addIntrRuleACs [r] thy)
       , do c <- formalComment
-           addItems flags (addFormalComment c thy)
+           addItems inFile0 (addFormalComment c thy)
       , do procc <- process thy                          -- try parsing a process
-           addItems flags (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
+           addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems inFile0 call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- preddeclaration thy
-           addItems flags (thy')
-      , do ifdef flags thy
-      , do define flags thy
+           addItems inFile0 (thy')
+      , do ifdef inFile0 thy
+      , do define inFile0 thy
+      , do include inFile0 thy
       , do return thy
       ]
-
-    workDir = takeDirectory <$> inFile
-
-    define flags thy = do
+      where workDir = (takeDirectory <$> inFile0)
+    define inFile0 thy = do
        flag <- try (symbol "#define") *> identifier
-       addItems (S.insert flag flags) thy
+       modifyStateFlag (S.insert flag)
+       addItems inFile0 thy
 
-    ifdef :: S.Set String -> OpenTheory -> Parser OpenTheory
-    ifdef flags thy = do
-       flag <- symbol_ "#ifdef" *> identifier
-       if flag `S.member` flags
-         then do thy' <- addItems flags thy
-                 symbol_ "#endif"
-                 addItems flags thy'
-         else do _ <- manyTill anyChar (try (symbol_ "#endif"))
-                 addItems flags thy
+
+    include :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
+    include inFile0 thy = do
+         filepath <- try (symbol "#include") *> filePathParser
+         st <- getState
+         let (thy', st') = unsafePerformIO (parseFileWState st (addItems' (Just filepath) thy) filepath)
+         _ <- putState st'
+         addItems inFile0 $ set (sigpMaudeSig . thySignature) (sig st') thy'
+      where
+        addItems' :: Maybe FilePath -> OpenTheory -> Parser (OpenTheory, ParserState)
+        addItems' inFile1 thy1 = do
+             thy' <- addItems inFile1 thy1
+             st <- getState
+             return (thy', st)
+
+        filePathParser = case takeDirectory <$> inFile0 of
+              Nothing -> do
+                x <- doubleQuoted filePath
+                return (x <> [pathSeparator])
+              Just s ->  do
+                x <- doubleQuoted filePath
+                return (s </> x)
+
+    ifdef :: Maybe FilePath -> OpenTheory ->  Parser OpenTheory
+    ifdef inFile0 thy = do
+       flagf <- symbol_ "#ifdef" *> flagdisjuncts
+       flags0 <- flags <$> getState
+       if evalformula flags0 flagf
+         then do thy' <- addItems inFile0 thy
+                 asum [do symbol_ "#else"
+                          _ <- manyTill anyChar (try (symbol_ "#endif"))
+                          addItems inFile0 thy'
+                       ,do symbol_ "#endif"
+                           addItems inFile0 thy'
+                      ]
+
+         else parseelse
+         where
+           parseelse =
+             do _ <- manyTill anyChar (try (symbol_ "#"))
+                asum
+                 [do (symbol_ "else")
+                     thy' <- addItems inFile0 thy
+                     symbol_ "#endif"
+                     addItems inFile0 thy'
+                 ,do _ <- symbol_ "endif"
+                     addItems inFile0 thy
+                 , parseelse
+                 ]
 
     -- check process defined only once
     -- add process to theoryitems
@@ -265,72 +330,112 @@ theory flags0 inFile = do
         Nothing   -> fail $ "default heuristic already defined"
 
 -- | Parse a diff theory.
-diffTheory :: [String]   -- ^ Defined flags.
-       -> Maybe FilePath
+diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
-diffTheory flags0 inFile = do
-    msig <- getState
-    putState (msig `mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+diffTheory inFile = do
+    flags0 <- flags <$> getState
+    modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    symbol_ "begin"
-        *> addItems (S.fromList flags0) (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` (S.fromList flags0))))
+    thy' <- symbol_ "begin"
+        *> addItems inFile (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0)))
         <* symbol "end"
+    return thy'
   where
-    addItems :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
-    addItems flags thy = asum
+    addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
+    addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
-           addItems flags thy'
+           addItems inFile0 thy'
       , do
            diffbuiltins
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
       , do functions
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
       , do equations
-           msig <- getState
-           addItems flags $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- sig <$> getState
+           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems flags thy'
+--           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< diffRestriction
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
-           addItems flags thy'
+           addItems inFile0 thy'
            -- add legacy deprecation warning output
       , do thy' <- liftedAddLemma' thy =<< plainLemma workDir
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma workDir
-           addItems flags thy'
+           addItems inFile0 thy'
       , do ru <- diffRule
            thy' <- liftedAddDiffRule thy ru
-           addItems flags thy'
+           addItems inFile0 thy'
       , do r <- intrRule
-           addItems flags (addIntrRuleACsDiffAll [r] thy)
+           addItems inFile0 (addIntrRuleACsDiffAll [r] thy)
       , do c <- formalComment
-           addItems flags (addFormalCommentDiff c thy)
-      , do ifdef flags thy
-      , do define flags thy
+           addItems inFile0 (addFormalCommentDiff c thy)
+      , do ifdef inFile0 thy
+      , do define inFile0 thy
+      , do include inFile0 thy
       , do return thy
       ]
+      where  workDir = takeDirectory <$> inFile
 
-    workDir = takeDirectory <$> inFile
-
-    define :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
-    define flags thy = do
+    define :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
+    define inFile0 thy = do
        flag <- try (symbol "#define") *> identifier
-       addItems (S.insert flag flags) thy
+       modifyStateFlag (S.insert flag)
+       addItems inFile0 thy
 
-    ifdef :: S.Set String -> OpenDiffTheory -> Parser OpenDiffTheory
-    ifdef flags thy = do
-       flag <- symbol_ "#ifdef" *> identifier
-       if flag `S.member` flags
-         then do thy' <- addItems flags thy
-                 symbol_ "#endif"
-                 addItems flags thy'
-         else do _ <- manyTill anyChar (try (string "#"))
-                 symbol_ "endif"
-                 addItems flags thy
+    ifdef :: Maybe FilePath -> OpenDiffTheory ->  Parser OpenDiffTheory
+    ifdef inFile0 thy = do
+       flagf <- symbol_ "#ifdef" *> flagdisjuncts
+       flags0 <- flags <$> getState
+       if evalformula flags0 flagf
+         then do thy' <- addItems inFile0 thy
+                 asum [do symbol_ "#else"
+                          _ <- manyTill anyChar (try (symbol_ "#endif"))
+                          addItems inFile0 thy'
+                       ,do symbol_ "#endif"
+                           addItems inFile0 thy'
+                      ]
+
+         else parseelse
+         where
+           parseelse =
+             do _ <- manyTill anyChar (try (symbol_ "#"))
+                asum
+                 [do (symbol_ "else")
+                     thy' <- addItems inFile0 thy
+                     symbol_ "#endif"
+                     addItems inFile0 thy'
+                 ,do _ <- symbol_ "endif"
+                     addItems inFile0 thy
+                 , parseelse
+                 ]
+
+    include :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
+    include inFile0 thy = do
+         filepath <- try (symbol "#include") *> filePathParser
+         st <- getState
+         let (thy', st') = unsafePerformIO (parseFileWState st (addItems' (Just filepath) thy) filepath)
+         _ <- putState st'
+         addItems inFile0 $ set (sigpMaudeSig . diffThySignature) (sig st') thy'
+      where
+        addItems' :: Maybe FilePath -> OpenDiffTheory -> Parser (OpenDiffTheory, ParserState)
+        addItems' inFile1 thy1 = do
+             thy' <- addItems inFile1 thy1
+             st' <- getState
+             return (thy', st')
+
+        filePathParser = case takeDirectory <$> inFile0 of
+              Nothing -> do
+                x <- doubleQuoted filePath
+                return (x <> [pathSeparator])
+              Just s ->  do
+                x <- doubleQuoted filePath
+                return (s </> x)
+
 
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'

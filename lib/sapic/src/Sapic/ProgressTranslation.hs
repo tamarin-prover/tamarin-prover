@@ -80,21 +80,27 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
                                   . addProgressTo invPF (rhsP pos)
 
 -- | Add ProgressTo events:
--- corresponds to step2 (child[12] p) in Firsttranslation.ml if one of the
--- direct childen of anrule is in the range of the pf it has an inverse. We
--- thus add ProgressTo to each such rule that has the *old* state in the
--- premise (we don't want to move into Semistates too early). ProgressTo is
--- annotated with the inverse of the child's position, for verification
--- speedup.
-addProgressTo :: Foldable t =>
-                 ([Int] -> Maybe ProcessPosition)
-                 -> [Int]
-                 -> (t TransFact, [TransAction], c, d)
-                 -> (t TransFact, [TransAction], c,d )
+--   (corresponds to step2 (child[12] p) in Firsttranslation.ml)
+-- If one of the direct childen of anrule is in the range of the pf it has an
+-- inverse. We thus add ProgressTo to each such rule that has the *old* state in
+-- the premise (we don't want to move into Semistates too early). ProgressTo is
+-- annotated with the inverse of the child's position, for verification speedup.
+-- addProgressTo :: Foldable t =>
+--                  ([Int] -> Maybe ProcessPosition)
+--                  -> [Int]
+--                  -> ([] TransFact, [TransAction], c, d)
+--                  -> (t TransFact, [TransAction], c,d )
+addProgressTo :: Foldable t => ([Int] -> Maybe ProcessPosition) -> [Int] -> (a, [TransAction], t TransFact, d) -> (a, [TransAction], t TransFact, d)
 addProgressTo invPF child (l,a,r,res) 
-  | any isState l
+--   | any isState l
+--   , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
+  | any isTargetState r
   , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
   | otherwise                     = (l,a,r,res)
+  where
+      isTargetState (State kind nextPos _) = nextPos == child && (kind == PState || kind == LState)
+      isTargetState _ = False
+
 
 
 -- | Null Processes are translated without any modification
@@ -156,10 +162,9 @@ progressRestr anP restrictions  = do
     where 
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anP pos
-            restrL <- mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
-            return restrL
+            mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
             where
-                name tos = "Progress_" ++ show pos ++ "_to_" ++ List.intercalate "_or_" (map show $ toList tos)
+                name tos = "Progress_" ++ prettyPosition pos ++ "_to_" ++ List.intercalate "_or_" (map prettyPosition $ toList tos)
                 formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion tos
                 pvar = msgVarProgress pos
                 t1var = LVar "t" LSortNode 1

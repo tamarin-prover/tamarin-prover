@@ -220,10 +220,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ccs15/probEnc.spthy
@@ -232,7 +230,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.309664s
+  processing time: 0.173091763s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -243,7 +241,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.309664s
+  processing time: 0.173091763s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

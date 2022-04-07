@@ -46,7 +46,8 @@ lemma can_run_v: //for sanity
 	"Ex #t h .Voutput(h)@t"
 */
 
-lemma attested_comput_second_step[reuse]:
-	"All #t1 o2 i2 o i.  Voutput(<o2,i2,<o,list(i,'init')>>)@t1 ==> (Ex #t2 . Poutput(<o2,i2,<o,list(i,'init')>>)@t2 & t2<t1)"
+lemma attested_comput_second_step:
+    exists-trace
+	"not(All #t1 o2 i2 o i.  Voutput(<o2,i2,<o,list(i,'init')>>)@t1 ==> (Ex #t2 . Poutput(<o2,i2,<o,list(i,'init')>>)@t2 & t2<t1))"
 
 end

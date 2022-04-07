@@ -275,38 +275,6 @@ lemma dec_limits[use_induction, reuse]:
         /*    ) @ t )) */
         "
 
-//automatic ATM
-//lemma get_keyvalue[sources]: 
-//    "All k #t2 . GetKeyValue(k)@t2 ==> Ex L_h #t1 . NewKey(L_h,k,'off')@t1"
-
-//automatic ATM
-lemma trusted_as_ut_impossible[reuse]: 
-    "not (Ex L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-        Insert( <'obj', L_h>,
-                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'trusted'>
-           ) @ t )"
-
-//automatic ATM
-lemma untrusted_as_ut_impossible[reuse]: 
-    "not (Ex L_h k wrap unwrap enc dec sens extr trus wwt wt #t.
-        Insert( <'obj', L_h>,
-                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, 'untrusted'>
-           ) @ t )"
-
-//automatic ATM
-lemma untrusted_as_wt_impossible[reuse]: 
-    "not (Ex L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-        Insert( <'obj', L_h>,
-                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'untrusted', ut>
-           ) @ t )"
-
-//automatic ATM
-lemma trusted_as_wt_impossible[reuse]: 
-    "not (Ex L_h k wrap unwrap enc dec sens extr trus wwt ut #t.
-        Insert( <'obj', L_h>,
-                   <k, wrap, unwrap, enc, dec, sens, extr, trus, wwt, 'trusted', ut>
-           ) @ t )"
-
 //currently automatic with lots of time Di 14 Okt 2014 19:21:24 CEST
 
 //need to instantiate insert at t2.2 and t2.1 early, see bad_keys-my_policy_manual_part.spthy

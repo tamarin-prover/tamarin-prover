@@ -33,7 +33,8 @@ blatom :: Parser (SyntacticAtom BLTerm)
 blatom = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
+  , Syntactic . Pred <$> try (fact llitWithNode )                    <?> "predicate atom"
+      -- (Predicates can be called for timepoints in addition to other logical vars)
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"

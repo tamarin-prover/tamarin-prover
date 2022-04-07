@@ -101,22 +101,6 @@ data JSONGraphNode = JSONGraphNode
     , jgnMetadata :: Maybe JSONGraphNodeMetadata
     } deriving (Show)
 
--- | Optional fields are not handled correctly with automatically derived instances
--- hence, we have our own here.
-instance FromJSON JSONGraphNode where
-    parseJSON = withObject "JSONGraphNode" $ \o -> JSONGraphNode
-        <$> o .: "jgnId"
-        <*> o .: "jgnType"
-        <*> o .: "jgnLabel"
-        <*> o .:? "jgnMetadata"
-
-instance ToJSON JSONGraphNode where
-    toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata') = object $ catMaybes
-        [ ("jgnId" .=) <$> pure jgnId'
-        , ("jgnType" .=) <$> pure jgnType'
-        , ("jgnLabel" .=) <$> pure jgnLabel'
-        , ("jgnMetadata" .=) <$> jgnMetadata' ]
-
 -- | Representation of an edge of a JSON graph.
 data JSONGraphEdge = JSONGraphEdge 
     {
@@ -146,6 +130,22 @@ data JSONGraphs = JSONGraphs
 
 -- | Derive ToJSON and FromJSON. 
 concat <$> mapM (deriveJSON defaultOptions) [''JSONGraphNodeFact, ''JSONGraphNodeMetadata, ''JSONGraphEdge, ''JSONGraph, ''JSONGraphs]
+
+-- | Optional fields are not handled correctly with automatically derived instances
+-- hence, we have our own here.
+instance FromJSON JSONGraphNode where
+    parseJSON = withObject "JSONGraphNode" $ \o -> JSONGraphNode
+        <$> o .: "jgnId"
+        <*> o .: "jgnType"
+        <*> o .: "jgnLabel"
+        <*> o .:? "jgnMetadata"
+
+instance ToJSON JSONGraphNode where
+    toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata') = object $ catMaybes
+        [ ("jgnId" .=) <$> pure jgnId'
+        , ("jgnType" .=) <$> pure jgnType'
+        , ("jgnLabel" .=) <$> pure jgnLabel'
+        , ("jgnMetadata" .=) <$> jgnMetadata' ]
 
 -- | Generation of JSON text from JSON graphs.
 

@@ -17,10 +17,10 @@ module Sapic.Basetranslation (
    , baseRestr
    -- types
    , TransFact
-   , TranslationResultNull 
-   , TranslationResultAct 
-   , TranslationResultComb 
-   , TransFNull 
+   , TranslationResultNull
+   , TranslationResultAct
+   , TranslationResultComb
+   , TransFNull
    , TransFAct
    , TransFComb
 ) where
@@ -38,7 +38,7 @@ import           Theory
 import           Theory.Sapic
 import           Theory.Sapic.Print
 import           Theory.Text.Parser
-import           Debug.Trace
+-- import           Debug.Trace
 
 type TranslationResultNull  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])])
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
@@ -66,8 +66,8 @@ baseTrans :: MonadThrow m => Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction needsAssImmediate ac an p tx,
+baseTrans needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction needsInEvRes ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -76,7 +76,7 @@ baseTransNull :: TransFNull TranslationResultNull
 baseTransNull _ p tildex =  [([State LState p tildex ], [], [], [])]
 
 baseTransAction :: Bool -> TransFAct TranslationResultAct
-baseTransAction needsAssImmediate ac an p tildex
+baseTransAction needsInEvRes ac an p tildex
     |  Rep <- ac = ([
           ([def_state], [], [State PSemiState (p++[1]) tildex ], []),
           ([State PSemiState (p++[1]) tildex], [], [def_state' tildex], [])
@@ -91,11 +91,11 @@ baseTransAction needsAssImmediate ac an p tildex
           let tx' = freeset tc `union` freeset t `union` tildex in
           let ts  = fAppPair (tc,t) in
           ([
-          ([def_state, In ts], if needsAssImmediate then [ ChannelIn ts] else [], [def_state' tx'], []),
+          ([def_state, In ts], [ChannelIn ts | needsInEvRes], [def_state' tx'], []),
           ([def_state, Message tc t], [], [Ack tc t, def_state' tx'], [])], tx')
     | (ChIn Nothing t) <- ac =
           let tx' = freeset t `union` tildex in
-          ([ ([def_state, In t ], [ ], [def_state' tx'], []) ], tx')
+          ([ ([def_state, In t ], [ChannelIn t | needsInEvRes], [def_state' tx'], []) ], tx')
     | (ChOut (Just tc) t) <- ac, (Just (AnLVar _)) <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
@@ -104,7 +104,7 @@ baseTransAction needsAssImmediate ac an p tildex
     | (ChOut (Just tc) t) <- ac, Nothing <- secretChannel an =
           let semistate = State LSemiState (p++[1]) tildex in
           ([
-          ([def_state, In tc], if needsAssImmediate then [ ChannelIn tc] else [], [Out t, def_state' tildex], []),
+          ([def_state, In tc], [ChannelIn tc | needsInEvRes], [Out t, def_state' tildex], []),
           ([def_state], [], [Message tc t,semistate], []),
           ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
     | (ChOut Nothing t) <- ac =
@@ -126,10 +126,10 @@ baseTransAction needsAssImmediate ac an p tildex
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
     | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
     | (Event f ) <- ac =
-          ([([def_state], [TamarinAct f] ++ if needsAssImmediate then [EventEmpty] else [], [def_state' tildex], [])], tildex)
+          ([([def_state], TamarinAct f : [EventEmpty | needsInEvRes], [def_state' tildex], [])], tildex)
     | (MSR (l,a,r,res)) <- ac =
           let tx' = freeset' l `union` tildex in
-          ([(def_state:map TamarinFact l, map TamarinAct a ++ if needsAssImmediate then [EventEmpty] else [], def_state' tx':map TamarinFact r, res)], tx')
+          ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsInEvRes], def_state' tx':map TamarinFact r, res)], tx')
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
@@ -162,7 +162,7 @@ baseTransComb c _ p tildex
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
         else
-                    throw ( 
+                    throw (
                     ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
 
@@ -174,7 +174,7 @@ baseTransComb c _ p tildex
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
-                    throw ( 
+                    throw (
                     ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
     | Lookup t v <- c =
@@ -213,31 +213,31 @@ toEx s
     | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
 resSetIn :: String
-resSetIn = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
+resSetIn = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
 & ( All #t1 . Delete(x)@t1 ==> (#t1<#t2 |  #t3<#t1))
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotIn :: String
 resSetNotIn = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
         (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )
-  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3  
+  | ( Ex #t1 .   Delete(x)@t1 & #t1<#t3
                 &  (All #t2 y . Insert(x,y)@t2 & #t2<#t3 ==>  #t2<#t1))"
 |]
 
 resSetInNoDelete :: String
-resSetInNoDelete = [QQ.r|restriction set_in: 
-"All x y #t3 . IsIn(x,y)@t3 ==>  
-(Ex #t2 . Insert(x,y)@t2 & #t2<#t3 
-& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1)) 
+resSetInNoDelete = [QQ.r|restriction set_in:
+"All x y #t3 . IsIn(x,y)@t3 ==>
+(Ex #t2 . Insert(x,y)@t2 & #t2<#t3
+& ( All #t1 yp . Insert(x,yp)@t1 ==> (#t1<#t2 | #t1=#t2 | #t3<#t1))
 )" |]
 
 resSetNotInNoDelete :: String
 resSetNotInNoDelete = [QQ.r|restriction set_notin:
-"All x #t3 . IsNotSet(x)@t3 ==> 
+"All x #t3 . IsNotSet(x)@t3 ==>
 (All #t1 y . Insert(x,y)@t1 ==>  #t3<#t1 )"
 |]
 
@@ -250,12 +250,12 @@ resSingleSession = [QQ.r|restrictionsingle_session: // for a single session
 -- should be modified below.
 resLockingL :: String
 resLockingL  = [QQ.r|restriction locking:
-"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3 
-        ==> 
-        ( #t1<#t3 
-                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3 
-                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2) 
-                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0) 
+"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3
+        ==>
+        ( #t1<#t3
+                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3
+                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2)
+                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0)
                  & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
                 ))
         | #t3<#t1 | #t1=#t3"
@@ -264,18 +264,18 @@ resLockingL  = [QQ.r|restriction locking:
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingLNoUnlockPOS :: String
 resLockingLNoUnlockPOS  = [QQ.r|restriction locking:
-"All p l x #t1 . LockPOS(p,l,x)@t1 
+"All p l x #t1 . LockPOS(p,l,x)@t1
                    ==> (All pp lp #t2. LockPOS(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
 -- | Restriction for Locking where no Unlock is necessary.
 resLockingNoUnlock :: String
 resLockingNoUnlock  = [QQ.r|restriction locking:
-"All p l x #t1 . Lock(p,l,x)@t1 
+"All p l x #t1 . Lock(p,l,x)@t1
                    ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2)"
 |]
 
--- | Produce locking lemma for variable v by instantiating resLockingL 
+-- | Produce locking lemma for variable v by instantiating resLockingL
 --  with (Un)Lock_pos instead of (Un)LockPOS, where pos is the variable id
 --  of v.
 resLocking :: MonadThrow m => Bool -> LVar -> m SyntacticRestriction
@@ -312,7 +312,7 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 
 
 resInEv :: String
-resInEv = [QQ.r|restriction ass_immediate:
+resInEv = [QQ.r|restriction in_event:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
                                 & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
@@ -321,8 +321,8 @@ resInEv = [QQ.r|restriction ass_immediate:
 
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
-baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithControl prevRestr =
+baseRestr :: (MonadThrow m, MonadCatch m) => AnProcess ProcessAnnotation -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
+baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -335,7 +335,7 @@ baseRestr anP needsAssImmediate containChannelIn hasAccountabilityLemmaWithContr
         ++
         addIf hasAccountabilityLemmaWithControl [resSingleSession]
         ++
-        addIf (needsAssImmediate && containChannelIn) [resInEv]
+        addIf needsInEvRes [resInEv]
     in
     do
         hardcoded <- mapM toEx hardcoded_l

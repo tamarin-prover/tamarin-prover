@@ -559,6 +559,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/trace/#Int/debug/*TheoryPath             TheoryPathDR            GET
 /thy/trace/#Int/graph/*TheoryPath             TheoryGraphR            GET
 /thy/trace/#Int/autoprove/#SolutionExtractor/#Int/*TheoryPath AutoProverR             GET
+/thy/trace/#Int/autoproveAll/#SolutionExtractor/#Int/*TheoryPath AutoProverAllR             GET
 /thy/trace/#Int/next/#String/*TheoryPath      NextTheoryPathR         GET
 /thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET
 -- /thy/trace/#Int/save                             SaveTheoryR             GET
@@ -575,6 +576,7 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/equiv/#Int/graph/*DiffTheoryPath         TheoryGraphDiffR            GET
 /thy/equiv/#Int/mirror/*DiffTheoryPath        TheoryMirrorDiffR            GET
 /thy/equiv/#Int/autoprove/#SolutionExtractor/#Int/#Side/*DiffTheoryPath AutoProverDiffR             GET
+/thy/equiv/#Int/autoproveAll/#SolutionExtractor/#Int AutoProverAllDiffR             GET
 /thy/equiv/#Int/autoproveDiff/#SolutionExtractor/#Int/*DiffTheoryPath AutoDiffProverR             GET
 /thy/equiv/#Int/next/#String/*DiffTheoryPath  NextTheoryPathDiffR         GET
 /thy/equiv/#Int/prev/#String/*DiffTheoryPath  PrevTheoryPathDiffR         GET

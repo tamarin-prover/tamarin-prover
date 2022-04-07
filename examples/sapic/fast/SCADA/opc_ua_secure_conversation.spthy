@@ -38,11 +38,10 @@ let B = (
     let id = <b,a> in
     !( lock id;
        in('r', <MH, SH, senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, kSign)>, kEnc)>);
-       event Seq_Recv(a, b, seq);
-       event Recv(a, b, m);
-       unlock id
+           event Seq_Recv(a, b, seq);
+           event Recv(a, b, m);
+           unlock id
      )
-
 )
 
 /* Main process */

@@ -598,7 +598,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           by contradiction /* from formulas */
         next
           case split_case_2
-          by contradiction /* from formulas */
+          by contradiction /* cyclic */
         next
           case split_case_3
           by contradiction /* from formulas */
@@ -732,10 +732,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/CH07.spthy
@@ -744,7 +742,7 @@ analyzing: examples/csf18-xor/CH07.spthy
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.620686s
+  processing time: 1.930082021s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)
@@ -759,7 +757,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.620686s
+  processing time: 1.930082021s
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
   noninjectiveagreement_tag (all-traces): verified (25 steps)

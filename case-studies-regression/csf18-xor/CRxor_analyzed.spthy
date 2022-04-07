@@ -165,7 +165,7 @@ solve( Initiated( ~na ) ▶₀ #i )
         by solve( !KU( ~k ) @ #vk.3 )
       next
         case responder
-        by contradiction /* from formulas */
+        by contradiction /* cyclic */
       qed
     next
       case split_case_3
@@ -516,10 +516,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/CRxor.spthy
@@ -528,7 +526,7 @@ analyzing: examples/csf18-xor/CRxor.spthy
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 1.124793s
+  processing time: 1.546657979s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
@@ -541,7 +539,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 1.124793s
+  processing time: 1.546657979s
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)

@@ -56,17 +56,17 @@ data TransAction =
   | IsNotSet SapicTerm
   | InsertA SapicTerm SapicTerm
   | DeleteA SapicTerm
-  --    locks
+  -- locks
   | LockUnnamed SapicTerm LVar
   | LockNamed SapicTerm LVar
   | UnlockUnnamed SapicTerm LVar
   | UnlockNamed SapicTerm LVar
-  --     ass_immedeate
+  -- in_event restriction
   | ChannelIn SapicTerm
   | EventEmpty
-  --    support for msrs
+  -- support for msrs
   | TamarinAct LNFact
-  --    predicate support
+  -- predicate support
   | PredicateA LNFact
   | NegPredicateA LNFact
   -- progress translation
@@ -86,6 +86,7 @@ data TransAction =
 -- actions. Semistates are used in rules where a SAPIC step might take more
 -- than one MSR step, i.e., messages over private channels.
 data StateKind  = LState | PState | LSemiState | PSemiState
+  deriving Eq
 data TransFact =  Fr LVar | In SapicTerm
             | Out SapicTerm
             | Message SapicTerm SapicTerm
@@ -231,7 +232,7 @@ factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMI
 factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTerm$ varMID p ]
 factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
-        name k = if isSemiState k then "semistate" else "state"
+        name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
 
@@ -292,19 +293,19 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule (nameType name)) attr restr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
           where
-            nameType = case processName of
-              Just _ -> DefdRuleName
-              Nothing -> SAPiCRuleName
             name = case processName of
                 Just s -> s
-                Nothing -> stripSemicolon(prettySapicTopLevel process)
-                         ++ "#_" ++ show index ++ "_"
+                Nothing -> 
+                         unNull (stripNonAlphanumerical (prettySapicTopLevel process))
+                         ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
-            stripSemicolon = filter (/= ';')
+            stripNonAlphanumerical = filter isAlpha
+            unNull s = if null s then "p" else s
+

@@ -28,7 +28,7 @@ import           Theory.Sapic
 reliableChannelInit :: Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
 reliableChannelInit anP (initrules,initTx) = return (messageidrule : initrules, initTx)
   where
-        messageidrule = AnnotatedRule (Just "MessageID-rule") anP (Right NoPosition)
+        messageidrule = AnnotatedRule (Just "MessageIDRule") anP (Right NoPosition)
                     [ Fr  $ varMID [] ] -- prem
                     []                -- act
                     [ MessageIDReceiver [], MessageIDSender [] ]

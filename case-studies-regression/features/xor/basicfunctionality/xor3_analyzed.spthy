@@ -103,10 +103,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features/xor/basicfunctionality/xor3.spthy
@@ -115,7 +113,7 @@ analyzing: examples/features/xor/basicfunctionality/xor3.spthy
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.179596s
+  processing time: 0.413382863s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ------------------------------------------------------------------------------
@@ -126,7 +124,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.179596s
+  processing time: 0.413382863s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ==============================================================================

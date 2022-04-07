@@ -24,6 +24,7 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
+import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -39,6 +40,7 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
+
 
 
 -- | Parse a "(modulo ..)" information.
@@ -65,10 +67,11 @@ typeAssertions = fmap TypingE $
 -}
 
 -- | Parse a 'RuleAttribute'.
-ruleAttribute :: Parser RuleAttribute
+ruleAttribute :: Parser (Maybe RuleAttribute)
 ruleAttribute = asum
-    [ symbol "colour=" *> (RuleColor <$> parseColor)
-    , symbol "color="  *> (RuleColor <$> parseColor)
+    [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
+    , symbol "color="  *> (Just . RuleColor <$> parseColor)
+    , symbol "process="  *> parseAndIgnore
     ]
   where
     parseColor = do
@@ -76,6 +79,13 @@ ruleAttribute = asum
         case hexToRGB hc of
             Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
+    parseAndIgnore = do
+                        _ <-  symbol "\""
+                        _ <- manyTill anyChar (try (symbol "\""))
+                        return Nothing
+
+ruleAttributesp :: Parser [RuleAttribute]
+ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute
 
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
@@ -83,16 +93,16 @@ protoRuleInfo = do
                 _ <- symbol "rule"
                 _ <- optional moduloE
                 ident <- identifier
-                att <- option [] $ list ruleAttribute
+                att <- ruleAttributesp
                 _ <- colon
-                return $ ProtoRuleEInfo (StandRule (DefdRuleName ident)) att []
+                return $ ProtoRuleEInfo (StandRule ident) att []
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 diffRule :: Parser DiffProtoRule
 diffRule = do
-    ri@(ProtoRuleEInfo (StandRule (DefdRuleName name)) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -106,7 +116,7 @@ diffRule = do
 -- contains them
 protoRule :: Parser OpenProtoRule
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule (DefdRuleName name)) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -117,16 +127,16 @@ protoRule = do
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
-protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> DefdRuleName <$> 
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
                                         (symbol "rule" *> moduloAC *> identifier))
-                               <*> (option [] $ list ruleAttribute))
+                               <*> ruleAttributesp)
                                <*> pure (Disj [emptySubstVFresh]) <*> pure []
                                <*  colon
 
 -- | Parse a protocol rule variant modulo AC.
 protoRuleAC :: Parser ProtoRuleAC
 protoRuleAC = do
-    ri@(ProtoRuleACInfo (StandRule (DefdRuleName name)) _ _ _)  <- try protoRuleACInfo
+    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -180,5 +190,5 @@ addFacts cmd =
 parseIntruderRules
     :: MaudeSig -> String -> B.ByteString -> Either ParseError [IntrRuleAC]
 parseIntruderRules msig ctxtDesc =
-    parseString ctxtDesc (setState msig >> many intrRule)
+    parseString [] ctxtDesc (setState (mkStateSig msig) >> many intrRule)
   . T.unpack . TE.decodeUtf8

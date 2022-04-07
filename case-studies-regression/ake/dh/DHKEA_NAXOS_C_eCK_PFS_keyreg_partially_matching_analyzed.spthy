@@ -2048,7 +2048,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                           <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'DHKEA'>
                      ) @ #i3.1 )
                 case Init_DHKEA_1
-                by contradiction /* cyclic */
+                by contradiction /* from formulas */
               qed
             next
               case Init_DHKEA_2_case_5
@@ -2067,7 +2067,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                       by contradiction /* from formulas */
                     next
                       case Sessk_reveal_case_2
-                      by contradiction /* cyclic */
+                      by contradiction /* from formulas */
                     next
                       case c_second
                       solve( !KU( h(<'g'^(h1(<~ex, ~ea>)*h1(<~ey, ~eb>)), $A, $B, 
@@ -2179,7 +2179,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                           <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'NAXOS_C'>
                      ) @ #i3.1 )
                 case Init_NAXOS_1
-                by contradiction /* cyclic */
+                by contradiction /* from formulas */
               qed
             next
               case Init_NAXOS_2_case_5
@@ -2199,7 +2199,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                       by contradiction /* from formulas */
                     next
                       case Sessk_reveal_case_2
-                      by contradiction /* cyclic */
+                      by contradiction /* from formulas */
                     next
                       case c_second
                       solve( !KU( h(<'g'^(~ea*h1(<~ey, ~eb>)), 'g'^(~eb*h1(<~ex, ~ea>)), 
@@ -2394,7 +2394,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                       'g'^h1(<~ex, ~ea.1>), 'g'^h1(<~ey, ~ea>), 'DHKEA'>))
                        ) @ #vk )
                   case Sessk_reveal_case_1
-                  by contradiction /* cyclic */
+                  by contradiction /* from formulas */
                 next
                   case Sessk_reveal_case_2
                   by contradiction /* from formulas */
@@ -2451,7 +2451,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                         <$A, $B, (<'1', X>+<'2', 'g'^h1(<~ey, ~ea>)>), matchingRole, 'DHKEA'>
                    ) @ #i3.1 )
               case Resp_DHKEA_1
-              by contradiction /* cyclic */
+              by contradiction /* from formulas */
             qed
           qed
         next
@@ -2520,7 +2520,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                       $B, 'g'^h1(<~ex, ~ea.1>), 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>))
                        ) @ #vk )
                   case Sessk_reveal_case_1
-                  by contradiction /* cyclic */
+                  by contradiction /* from formulas */
                 next
                   case Sessk_reveal_case_2
                   by contradiction /* from formulas */
@@ -2629,7 +2629,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                         <$A, $B, (<'1', X>+<'2', 'g'^h1(<~ey, ~ea>)>), matchingRole, 'NAXOS_C'>
                    ) @ #i3.1 )
               case Resp_NAXOS_1
-              by contradiction /* cyclic */
+              by contradiction /* from formulas */
             qed
           qed
         next
@@ -4898,10 +4898,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
@@ -4910,7 +4908,7 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 96.913721s
+  processing time: 131.299403883s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)
 
@@ -4922,7 +4920,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 96.913721s
+  processing time: 131.299403883s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)
 

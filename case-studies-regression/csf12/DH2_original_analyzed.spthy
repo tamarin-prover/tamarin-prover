@@ -309,10 +309,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                             qed
                           next
                             case Register_pk
-                            solve( !KU( ~m2 ) @ #vk.16 )
-                              case Ephk_reveal
-                              by contradiction /* cyclic */
-                            qed
+                            by contradiction /* cyclic */
                           next
                             case Resp_1_case_1
                             by contradiction /* cyclic */
@@ -1080,10 +1077,7 @@ solve( (∃ ss #i4 #i5 C D ms.
                           qed
                         next
                           case Register_pk
-                          solve( !KU( ~m2 ) @ #vk.19 )
-                            case Ephk_reveal
-                            by contradiction /* cyclic */
-                          qed
+                          by contradiction /* cyclic */
                         next
                           case Resp_1_case_1
                           by contradiction /* cyclic */
@@ -1818,10 +1812,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf12/DH2_original.spthy
@@ -1830,8 +1822,8 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
-  KAS_key_secrecy (all-traces): verified (503 steps)
+  processing time: 23.71053512s
+  KAS_key_secrecy (all-traces): verified (501 steps)
 
 ------------------------------------------------------------------------------
 
@@ -1841,8 +1833,8 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 19.987767s
-  KAS_key_secrecy (all-traces): verified (503 steps)
+  processing time: 23.71053512s
+  KAS_key_secrecy (all-traces): verified (501 steps)
 
 ==============================================================================
 */

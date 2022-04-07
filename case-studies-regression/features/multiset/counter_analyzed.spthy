@@ -117,13 +117,7 @@ next
     case case_2
     solve( Counter( ~s, x ) ▶₀ #i )
       case Create
-      solve( Counter( ~s, y ) ▶₀ #j )
-        case Create
-        by contradiction /* from formulas */
-      next
-        case Inc
-        by contradiction /* from formulas */
-      qed
+      by contradiction /* non-injective facts (#vr,#j,#i) */
     next
       case Inc
       solve( (last(#j))  ∥ (∃ z. ((x+z) = y))  ∥ (∃ z. ((y+z) = x))  ∥
@@ -517,10 +511,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/features//multiset/counter.spthy
@@ -529,8 +521,8 @@ analyzing: examples/features//multiset/counter.spthy
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.724957s
-  counters_linear_order (all-traces): verified (52 steps)
+  processing time: 1.894650482s
+  counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
   lesser_senc_secret (all-traces): verified (26 steps)
@@ -543,8 +535,8 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.724957s
-  counters_linear_order (all-traces): verified (52 steps)
+  processing time: 1.894650482s
+  counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
   counter_increases (all-traces): verified (58 steps)
   lesser_senc_secret (all-traces): verified (26 steps)

@@ -94,10 +94,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
             by solve( !KU( ~k ) @ #vk.8 )
           next
             case tag1
-            solve( !KU( ~r1 ) @ #vk.6 )
-              case reader1
-              by contradiction /* cyclic */
-            qed
+            by contradiction /* from formulas */
           qed
         qed
       qed
@@ -134,10 +131,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                             by solve( !KU( ~k ) @ #vk.11 )
                           next
                             case tag1
-                            solve( !KU( ~r1 ) @ #vk.9 )
-                              case reader1
-                              by contradiction /* cyclic */
-                            qed
+                            by contradiction /* from formulas */
                           qed
                         qed
                       qed
@@ -148,10 +142,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                         by solve( !KU( ~k ) @ #vk.8 )
                       next
                         case tag1
-                        solve( !KU( ~r1 ) @ #vk.6 )
-                          case reader1
-                          by contradiction /* cyclic */
-                        qed
+                        by contradiction /* from formulas */
                       qed
                     qed
                   next
@@ -189,10 +180,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                         case d_0_snd
                         solve( (#vr.6, 0) ~~> (#vk.1, 0) )
                           case Xor
-                          solve( !KU( ~r1 ) @ #vk.2 )
-                            case reader1
-                            by contradiction /* cyclic */
-                          qed
+                          by contradiction /* cyclic */
                         next
                           case d_xor_case_1
                           solve( (#vr.7, 0) ~~> (#vk.1, 0) )
@@ -218,10 +206,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                         by solve( !KU( ~k ) @ #vk.13 )
                                       next
                                         case tag1
-                                        solve( !KU( ~r1 ) @ #vk.11 )
-                                          case reader1
-                                          by contradiction /* cyclic */
-                                        qed
+                                        by contradiction /* from formulas */
                                       qed
                                     qed
                                   qed
@@ -287,10 +272,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                                     by solve( !KU( ~k ) @ #vk.13 )
                                                   next
                                                     case tag1
-                                                    solve( !KU( ~r1 ) @ #vk.11 )
-                                                      case reader1
-                                                      by contradiction /* cyclic */
-                                                    qed
+                                                    by contradiction /* from formulas */
                                                   qed
                                                 qed
                                               qed
@@ -301,10 +283,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                                 by solve( !KU( ~k ) @ #vk.10 )
                                               next
                                                 case tag1
-                                                solve( !KU( ~r1 ) @ #vk.8 )
-                                                  case reader1
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* from formulas */
                                               qed
                                             qed
                                           next
@@ -350,13 +329,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                                   case d_xor_case_2
                                                   solve( (#vr.12, 0) ~~> (#vk.3, 0) )
                                                     case Xor
-                                                    solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.10 )
-                                                      case Setup
-                                                      solve( !KU( ~r1 ) @ #vk.5 )
-                                                        case reader1
-                                                        by contradiction /* cyclic */
-                                                      qed
-                                                    qed
+                                                    by contradiction /* from formulas */
                                                   qed
                                                 next
                                                   case d_xor_case_3
@@ -372,13 +345,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                       qed
                                     next
                                       case Xor_case_2
-                                      solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.7 )
-                                        case Setup
-                                        solve( !KU( ~r1 ) @ #vk.4 )
-                                          case reader1
-                                          by contradiction /* cyclic */
-                                        qed
-                                      qed
+                                      by contradiction /* from formulas */
                                     qed
                                   next
                                     case d_xor_case_3
@@ -395,13 +362,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                           case d_xor_case_2
                           solve( (#vr.7, 0) ~~> (#vk.1, 0) )
                             case Xor
-                            solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.5 )
-                              case Setup
-                              solve( !KU( ~r1 ) @ #vk.3 )
-                                case reader1
-                                by contradiction /* cyclic */
-                              qed
-                            qed
+                            by contradiction /* from formulas */
                           qed
                         next
                           case d_xor_case_3
@@ -435,13 +396,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
             case d_xor_case_2
             solve( (#vr.4, 0) ~~> (#vk, 0) )
               case Xor
-              solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.2 )
-                case Setup
-                solve( !KU( ~r1 ) @ #vk.1 )
-                  case reader1
-                  by contradiction /* cyclic */
-                qed
-              qed
+              by contradiction /* from formulas */
             qed
           next
             case d_xor_case_3
@@ -521,10 +476,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/csf18-xor/KCL07.spthy
@@ -533,8 +486,8 @@ analyzing: examples/csf18-xor/KCL07.spthy
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.426343s
-  recentalive_tag (all-traces): verified (128 steps)
+  processing time: 1.902204926s
+  recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 
 ------------------------------------------------------------------------------
@@ -545,8 +498,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.426343s
-  recentalive_tag (all-traces): verified (128 steps)
+  processing time: 1.902204926s
+  recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 
 ==============================================================================

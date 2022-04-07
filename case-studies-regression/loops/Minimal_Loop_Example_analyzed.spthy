@@ -135,13 +135,7 @@ next
     by contradiction /* non-injective facts (#vr,#j,#i) */
   next
     case Start
-    solve( A( ~n ) ▶₀ #j )
-      case Loop
-      by contradiction /* non-injective facts (#vr,#j,#i) */
-    next
-      case Start
-      by contradiction /* cyclic */
-    qed
+    by contradiction /* non-injective facts (#vr,#j,#i) */
   qed
 qed
 
@@ -162,10 +156,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/loops/Minimal_Loop_Example.spthy
@@ -174,11 +166,11 @@ analyzing: examples/loops/Minimal_Loop_Example.spthy
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.084277s
+  processing time: 0.097179541s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)
-  Stop_unique (all-traces): verified (14 steps)
+  Stop_unique (all-traces): verified (12 steps)
   Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -189,11 +181,11 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.084277s
+  processing time: 0.097179541s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)
-  Stop_unique (all-traces): verified (14 steps)
+  Stop_unique (all-traces): verified (12 steps)
   Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
 
 ==============================================================================

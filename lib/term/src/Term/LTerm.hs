@@ -104,8 +104,6 @@ module Term.LTerm (
   , prettyNodeId
   , prettyNTerm
   , prettyLNTerm
-  , prettyNTermSubscript
-  , prettyLNTermSubscript
   , showLitName
 
   -- * Convenience exports
@@ -142,7 +140,6 @@ import           Logic.Connectives
 
 import           Term.Rewriting.Definitions
 import           Term.VTerm
-import Data.Char (isDigit)
 
 ------------------------------------------------------------------------------
 -- Sorts.
@@ -805,26 +802,6 @@ prettyNTerm = prettyTerm (text . show)
 prettyLNTerm :: Document d => LNTerm -> d
 prettyLNTerm = prettyNTerm
 
--- | Subscript the dots in variables.
-subscriptVar:: Show v => Lit Name v -> String
-subscriptVar nt = subscriptDots $ show nt
-
--- | Add the subscript tag where it is needed.
-subscriptDots::String -> String
-subscriptDots [] = []
-subscriptDots ('.':xr) = "<sub>"++xr++"</sub>" -- variables
-subscriptDots (x:xr) = if containsDigit xr then x:subscriptDots xr else x:xr
-
-containsDigit::String -> Bool
-containsDigit = foldr ((||) . isDigit) False
-
--- | Pretty print an @NTerm@.
-prettyNTermSubscript :: (Show v, Document d) => NTerm v -> d
-prettyNTermSubscript = prettyTerm (text . subscriptVar)
-
--- | Pretty print an @LTerm@.
-prettyLNTermSubscript :: Document d => LNTerm -> d
-prettyLNTermSubscript = prettyNTermSubscript
 
 -- | Pretty print a literal for case generation.
 showLitName :: Lit Name LVar -> String

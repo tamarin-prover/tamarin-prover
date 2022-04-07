@@ -106,14 +106,10 @@ import           Text.PrettyPrint.Highlight
 
 import           Theory.Model
 
+import           Data.Functor.Identity
 
--- Control.Monad.Fail import will become redundant in GHC 8.8+
-import qualified Control.Monad.Fail as Fail
-
-import Data.Functor.Identity
-
-instance Fail.MonadFail Identity where
-  fail = Fail.fail
+instance MonadFail Identity where
+  fail = fail
 
 ------------------------------------------------------------------------------
 -- Types
@@ -512,7 +508,7 @@ formulaToGuarded fmOrig =
                 -- FIXME: We do not consider the terms, e.g., for ug=[x,y],
                 -- s=pair(x,a), and t=pair(b,y), we could define ug'=[].
                 go ug ((GEqE s t):gatoms)  = go ug' gatoms
-                  where ug' | covered s ug = ug \\ frees t 
+                  where ug' | covered s ug = ug \\ frees t
                             | covered t ug = ug \\ frees s
                             | otherwise    = ug
                 covered a vs = frees a `intersect` vs == []

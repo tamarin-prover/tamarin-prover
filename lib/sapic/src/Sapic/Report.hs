@@ -29,11 +29,10 @@ import           Theory
 import           Theory.Sapic
 import           Term.Builtin.Signature
 
-
 reportInit ::  Monad m => AnProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
 reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
   where
-        reportrule = AnnotatedRule (Just "Report-rule") anP (Right NoPosition)
+        reportrule = AnnotatedRule (Just "ReportRule") anP (Right NoPosition)
                     [In $ fAppPair (varTerm x,varTerm loc)] -- prem
                     []
                     [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]

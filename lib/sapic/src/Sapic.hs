@@ -57,7 +57,7 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map (\x -> (OpenProtoRule (toRule x) [])) $ initRules ++ protoRule
                 -- add restrictions
-                rest<- restrictions an_proc protoRule
+                rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 let th4 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
@@ -93,13 +93,13 @@ translate th = case theoryProcesses th of
                         , checkOps transReliable (RCT.reliableChannelInit anP)
                         , checkOps transReport (reportInit anP)
                       ]
-    trans anP = foldr ($) (BT.baseTrans needsAssImmediate)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
+    trans anP = foldr ($) (BT.baseTrans needsInEvRes)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
                         $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
                         (transProgress, PT.progressTrans anP)
                       , (transReliable, RCT.reliableChannelTrans )
                       ]
-    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> [AnnotatedRule ProcessAnnotation] -> m1 [SyntacticRestriction]
-    restrictions anP pRules = foldM (flip ($)) []  --- fold from left to right
+    restrictions:: (MonadThrow m1, MonadCatch m1) => AnProcess ProcessAnnotation -> m1 [SyntacticRestriction]
+    restrictions anP = foldM (flip ($)) []  --- fold from left to right
                                                                  --- TODO once accountability is supported, substitute True
                                                                  -- with predicate saying whether we need single_session lemma
                                                                  -- need to incorporate lemma2string_noacc once we handle accountability
@@ -111,14 +111,13 @@ translate th = case theoryProcesses th of
                                                                  -- else
                                                                  --   restrs
                                                                  --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP needsAssImmediate (containChannelIn pRules) True] ++
+                        $ [BT.baseRestr anP needsInEvRes True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
                           , (transReliable, RCT.reliableChannelRestr anP)
                            ]
     heuristics = [SapicRanking]
-    needsAssImmediate = any (not . checkAssImmediate) (theoryLemmas th)
-    containChannelIn rules = not $ null [a | anR <- rules, a@(ChannelIn {}) <- acts anR]
+    needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
 
   -- TODO This function is not yet complete. This is what the ocaml code
   -- was doing:
@@ -209,11 +208,11 @@ isPosNegFormula fm = case fm of
       and2 (x, y) (p, q) = (x && p, y && q)
       swap (x, y) = (y, x)
 
--- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is not needed.
-checkAssImmediate :: Lemma p -> Bool
-checkAssImmediate lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
-  (AllTraces,   (_, True))     -> True  -- L- for all-traces
-  (ExistsTrace, (True, _))     -> True  -- L+ for exists-trace
-  (ExistsTrace, (False, True)) -> False -- L- for exists-trace
-  (AllTraces,   (True, False)) -> False -- L+ for all-traces
-  _                            -> False -- not in L- and L+ should not be possible
+-- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
+lemmaNeedsInEvRes :: Lemma p -> Bool
+lemmaNeedsInEvRes lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
+  (AllTraces,   (_, True))     -> False -- L- for all-traces
+  (ExistsTrace, (True, _))     -> False -- L+ for exists-trace
+  (ExistsTrace, (False, True)) -> True  -- L- for exists-trace
+  (AllTraces,   (True, False)) -> True  -- L+ for all-traces
+  _                            -> True  -- not in L- and L+

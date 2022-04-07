@@ -57,7 +57,8 @@ rule (modulo E) Init_2:
    [ Init( ~ex, $A, $B, X ), In( Y ) ]
   --[
   Accept( ~ex, $A, $B, kdf(<Y^~ex, $A, $B, X, Y>) ),
-  Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+  Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> ),
+  NotNeutral( Y )
   ]->
    [ !Sessk( ~ex, kdf(<Y^~ex, $A, $B, X, Y>) ) ]
 
@@ -66,7 +67,8 @@ rule (modulo E) Init_2:
      [ Init( ~ex, $A, $B, X ), In( Y ) ]
     --[
     Accept( ~ex, $A, $B, kdf(<z, $A, $B, X, Y>) ),
-    Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> )
+    Sid( ~ex, <'Init', $A, $B, X, Y> ), Match( ~ex, <'Resp', $B, $A, X, Y> ),
+    NotNeutral( Y )
     ]->
      [ !Sessk( ~ex, kdf(<z, $A, $B, X, Y>) ) ]
     variants (modulo AC)
@@ -102,7 +104,8 @@ rule (modulo E) Resp_1:
           kdf(<X^~ey, $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey>)
   ),
   Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), pmult(~s, hp($B)))^~ey> ),
-  Match( ~ey, <'Init', $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey> )
+  Match( ~ey, <'Init', $A, $B, X, em(hp($A), pmult(~s, hp($B)))^~ey> ),
+  NotNeutral( X )
   ]->
    [
    Out( em(hp($A), pmult(~s, hp($B)))^~ey ),
@@ -115,7 +118,8 @@ rule (modulo E) Resp_1:
     --[
     Accept( ~ey, $B, $A, kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) ),
     Sid( ~ey, <'Resp', $B, $A, X, em(hp($A), hp($B))^(~ey*~x)> ),
-    Match( ~ey, <'Init', $A, $B, X, em(hp($A), hp($B))^(~ey*~x)> )
+    Match( ~ey, <'Init', $A, $B, X, em(hp($A), hp($B))^(~ey*~x)> ),
+    NotNeutral( X )
     ]->
      [
      Out( em(hp($A), hp($B))^(~ey*~x) ),
@@ -146,6 +150,10 @@ rule (modulo E) Resp_1:
        X     = x.744^(x.745*inv((~ey.375*x.746)))
        z     = x.744^(x.745*inv(x.746))
   */
+
+restriction notneutral:
+  "∀ x #i. (NotNeutral( x ) @ #i) ⇒ (¬(x = DH_neutral))"
+  // safety formula
 
 lemma key_agreement_reachable:
   exists-trace
@@ -1796,10 +1804,8 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
-SAPIC tool: 'sapic'
-Checking availablity ... OK.
 
 
 analyzing: examples/ake/bilinear/Scott.spthy
@@ -1808,7 +1814,7 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 15.758025s
+  processing time: 21.595820781s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1820,7 +1826,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 15.758025s
+  processing time: 21.595820781s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
