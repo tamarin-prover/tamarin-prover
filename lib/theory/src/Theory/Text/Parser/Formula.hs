@@ -112,7 +112,7 @@ standardFormula = iff
 
 plainFormula :: Parser LNFormula
 plainFormula = try $ do
-    lnf <- toLNFormula <$> (standardFormula msgvar nodevar)
+    lnf <- toLNFormula <$> standardFormula msgvar nodevar
     case lnf of
         Nothing -> fail "Syntactic sugar is not allowed, guarded formula expected."
         Just lnf' -> return lnf'
