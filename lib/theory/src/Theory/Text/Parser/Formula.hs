@@ -47,8 +47,10 @@ blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VT
 blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact (vlitWithNode varp))                    <?> "predicate atom"
-      -- (Predicates can be called for timepoints in addition to other logical vars)
+  , Syntactic . Pred <$> try (fact (vlit (try varp <|> nodep) ))                    <?> "predicate atom"
+      -- Predicates can be called for timepoints in addition to other logical vars.
+      -- Note that lexemes that are ambigous (e.g., a variable without a sort)
+      -- will be interpreted by varp.
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , smallerp varp <?> "multiset comparisson"
   , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
@@ -62,22 +64,22 @@ blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
 -- | Parse an atom of a formula.
 fatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
 fatom varp nodep = asum
-  [ pure lfalse <* opLFalse
-  , pure ltrue  <* opLTrue
+  [ lfalse <$ opLFalse
+  , ltrue <$ opLTrue
   , Ato <$> try (blatom varp nodep)
   , quantification
   , parens (iff varp nodep)
   ]
   where
     quantification = do
-        q <- (pure forall <* opForall) <|> (pure exists <* opExists)
+        q <- (forall <$ opForall) <|> (exists <$ opExists)
         vs <- many1 (try varp <|> nodep)  <* dot
         f  <- iff varp nodep
         return $ foldr (hinted q) f vs
 
 -- | Parse a negation.
 negation :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
-negation varp nodep = opLNot *> (Not <$> (fatom varp nodep)) <|> (fatom varp nodep)
+negation varp nodep = opLNot *> (Not <$> fatom varp nodep) <|> fatom varp nodep
 
 -- | Parse a left-associative sequence of conjunctions.
 conjuncts :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)

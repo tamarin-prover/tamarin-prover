@@ -15,7 +15,6 @@ module Theory.Text.Parser.Term (
     , term
     , llitNoPub
     , reservedBuiltins
-    , vlitWithNode
     , llitWithNode    
 )
 where
@@ -42,15 +41,9 @@ vlit varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> varp
 llit :: Parser LNTerm
 llit = vlit msgvar
 
-
--- | Parse a lit with logical variables including timepoint variables parsed by @varp@
-vlitWithNode :: Parser v -> Parser (NTerm v)
-vlitWithNode varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> varp]
-
 -- | Parse a lit with logical variables including timepoint variables
 llitWithNode :: Parser LNTerm
-llitWithNode = vlitWithNode lvar
-
+llitWithNode = vlit lvar
 
 -- | Parse an lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
