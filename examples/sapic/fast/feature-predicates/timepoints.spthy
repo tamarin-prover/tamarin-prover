@@ -9,7 +9,7 @@ lemma hi:
   exists-trace "∃ #t. Exists(#t)"
 
 lemma ho:
-  exists-trace "∃ a. ExistsVal(a)"
+  exists-trace "∃ a. ExistsVatl(a)"
 
 end
 
