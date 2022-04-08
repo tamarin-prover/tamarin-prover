@@ -165,8 +165,15 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
               Just faPrem -> Just behaviours
                 where
                   shape = fromJust $ M.lookup tag candidates
+                  
+                  shapeTerm :: LNTerm -> Int -> [LNTerm]
+                  shapeTerm (viewTerm2 -> FPair t1 t2) x | x>1 = t1 : shapeTerm t2 (x-1)
+                  shapeTerm _ x | x>1 = error "shapeTerm: the term does not have enough pairs"
+                  shapeTerm t x | x==1 = [t]
+                  shapeTerm _ _ = error "shapeTerm: cannot take an integer with size less than 1" 
+                  
                   trimmedPairTerms :: LNFact -> [[LNTerm]]
-                  trimmedPairTerms (factTerms->_:terms) = map (map snd) $ zipWith zip shape (map getPairTerms terms)  -- zip automatically orients itself on the shorter list
+                  trimmedPairTerms (factTerms->_:terms) = zipWith shapeTerm terms (map length shape)
                   trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
                   zipped = zipWith zip (trimmedPairTerms faPrem) (trimmedPairTerms faConc)
