@@ -19,3 +19,52 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install camlp4 graphviz libgmp-dev ocaml opam
+      - name: Pre-install
+        run: |
+          mkdir -p ~/.local/bin
+          export PATH=$HOME/.local/bin:$PATH
+          curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+          chmod a+x ~/.local/bin/stack
+          stack --no-terminal setup
+          curl -L https://github.com/tamarin-prover/tamarin-prover/releases/download/1.6.0/Maude-2.7.1-linux.zip > maude.zip
+          unzip -o maude.zip -d ~/.local/bin/
+          mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
+          chmod a+x ~/.local/bin/maude
+          mkdir -p case-studies case-studies/ake case-studies/ake/bilinear case-studies/ake/dh case-studies/related_work
+          mkdir -p case-studies/related_work/StatVerif_ARR_CSF11 case-studies/related_work/AIF_Moedersheim_CCS10
+          mkdir -p case-studies/related_work/TPM_DKRS_CSF11 case-studies/related_work/YubiSecure_KS_STM12 case-studies/features
+          mkdir -p case-studies/features/auto-sources case-studies/features/auto-sources/spore case-studies/features/xor
+          mkdir -p case-studies/features/xor/basicfunctionality case-studies/features/injectivity case-studies/features/multiset
+          mkdir -p case-studies/features/private_function_symbols case-studies/features/equivalence case-studies/fast-tests
+          mkdir -p case-studies/fast-tests/related_work case-studies/fast-tests/related_work/StatVerif_ARR_CSF11
+          mkdir -p case-studies/fast-tests/related_work/AIF_Moedersheim_CCS10 case-studies/fast-tests/related_work/TPM_DKRS_CSF11
+          mkdir -p case-studies/fast-tests/related_work/YubiSecure_KS_STM12 case-studies/fast-tests/features
+          mkdir -p case-studies/fast-tests/features/injectivity case-studies/fast-tests/features/multiset
+          mkdir -p case-studies/fast-tests/features/private_function_symbols case-studies/fast-tests/features/equivalence
+          mkdir -p case-studies/fast-tests/csf18-xor case-studies/fast-tests/csf18-xor/diff-models case-studies/fast-tests/regression
+          mkdir -p case-studies/fast-tests/regression/diff case-studies/fast-tests/cav13 case-studies/fast-tests/post17
+          mkdir -p case-studies/fast-tests/csf12 case-studies/fast-tests/loops case-studies/fast-tests/ccs15 case-studies/classic
+          mkdir -p case-studies/sapic case-studies/sapic/fast case-studies/sapic/fast/GJM-contract case-studies/sapic/fast/statVerifLeftRight
+          mkdir -p case-studies/sapic/fast/feature-inevent-restriction case-studies/sapic/fast/basic
+          mkdir -p case-studies/sapic/fast/MoedersheimWebService case-studies/sapic/fast/feature-let-bindings
+          mkdir -p case-studies/sapic/fast/feature-locations case-studies/sapic/fast/feature-boundonce case-studies/sapic/fast/feature-xor
+          mkdir -p case-studies/sapic/fast/SCADA case-studies/sapic/fast/feature-secret-channel case-studies/sapic/fast/fairexchange-mini
+          mkdir -p case-studies/sapic/fast/feature-predicates case-studies/sapic/slow case-studies/sapic/slow/NSL case-studies/sapic/slow/PKCS11
+          mkdir -p case-studies/sapic/slow/encWrapDecUnwrap case-studies/sapic/slow/feature-locations case-studies/sapic/slow/Yubikey
+          mkdir -p case-studies/csf18-xor case-studies/csf18-xor/diff-models case-studies/regression case-studies/regression/trace
+          mkdir -p case-studies/regression/diff case-studies/cav13 case-studies/post17 case-studies/csf12 case-studies/csf19-wrapping
+          mkdir -p case-studies/loops case-studies/ccs15 case-studies/classic case-studies/fast-tests/ake case-studies/fast-tests/ake/bilinear
+      - name: Compilation
+        run: |
+          stack --no-terminal build mwc-random SHA -j 1
+          stack --no-terminal install
+        # SAPIC
+        # opam init
+        # eval `opam config env`
+          stack install
+        # make -C plugins/sapic
+      - name: Regression tests
+        run: |
+          tamarin-prover test
+        # make sapic-case-studies
+          python3 regressionTests.py -noi
