@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install camlp4 graphviz libgmp-dev ocaml opam
       - name: Pre-install
-        run: |
+        run:
           mkdir -p ~/.local/bin
           export PATH=$HOME/.local/bin:$PATH
           travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
@@ -53,6 +53,7 @@ jobs:
           mkdir -p case-studies/sapic/slow/encWrapDecUnwrap case-studies/sapic/slow/feature-locations case-studies/sapic/slow/Yubikey
           mkdir -p case-studies/csf18-xor case-studies/csf18-xor/diff-models case-studies/regression case-studies/regression/trace
           mkdir -p case-studies/regression/diff case-studies/cav13 case-studies/post17 case-studies/csf12 case-studies/csf19-wrapping
+          mkdir -p case-studies/loops case-studies/ccs15 case-studies/classic case-studies/fast-tests/ake case-studies/fast-tests/ake/bilinear
       - name: Compilation
         run: |
           stack --no-terminal build mwc-random SHA -j 1
