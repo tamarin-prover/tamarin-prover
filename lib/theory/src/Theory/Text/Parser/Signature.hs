@@ -52,7 +52,7 @@ builtins thy0 =do
     setOption' thy Nothing  = thy
     setOption' thy (Just l) = setOption l thy
     extendSig msig = do
-        modifyState (`mappend` msig)
+        modifyStateSig (`mappend` msig)
         return Nothing
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
@@ -73,7 +73,7 @@ builtins thy0 =do
           *> extendSig revealSignatureMaudeSig
       , try (symbol "locations-report")
           *>  do
-          modifyState (`mappend` locationReportMaudeSig)
+          modifyStateSig (`mappend` locationReportMaudeSig)
           return (Just transReport)
       , try ( symbol "reliable-channel")
              *> return (Just transReliable)
@@ -85,7 +85,7 @@ diffbuiltins :: Parser ()
 diffbuiltins =
     symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
   where
-    extendSig msig = modifyState (`mappend` msig)
+    extendSig msig = modifyStateSig (`mappend` msig)
     builtinTheory = asum
       [ try (symbol "diffie-hellman")
           *> extendSig dhMaudeSig
@@ -119,13 +119,13 @@ functions =
         if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
           then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
           else return ()
-        sig <- getState
-        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
+        sign <- sig <$> getState
+        case lookup f [ o | o <- (S.toList $ stFunSyms sign)] of
           Just kp' | kp' /= (k,priv) ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,(k,priv)) sig)
+          _ -> modifyStateSig $ addFunSym (f,(k,priv))
 
 equations :: Parser ()
 equations =
@@ -135,7 +135,7 @@ equations =
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addCtxtStRule str)
+              modifyStateSig (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 

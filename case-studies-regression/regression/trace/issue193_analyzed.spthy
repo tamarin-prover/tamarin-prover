@@ -66,7 +66,7 @@ restriction equality:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -76,7 +76,7 @@ analyzing: examples/regression/trace/issue193.spthy
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.069941213s
+  processing time: 0.111261397s
   debug (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.069941213s
+  processing time: 0.111261397s
   debug (exists-trace): verified (4 steps)
 
 ==============================================================================

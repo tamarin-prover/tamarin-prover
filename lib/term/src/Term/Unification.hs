@@ -64,6 +64,7 @@ module Term.Unification (
   , funSyms
   , stRules
   , irreducibleFunSyms
+  , reducibleFunSyms
   , noEqFunSyms
   , addFunSym
   , addCtxtStRule

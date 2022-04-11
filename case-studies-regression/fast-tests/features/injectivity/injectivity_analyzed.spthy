@@ -58,7 +58,7 @@ next
     case Init
     solve( Inj( ~i.1 ) ▶₀ #k )
       case Copy
-      by contradiction /* non-injective facts (#vr,#j,#k) */
+      by contradiction /* non-injective facts (#i,#vr,#j) */
     qed
   qed
 qed
@@ -68,7 +68,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -78,7 +78,7 @@ analyzing: examples/features//injectivity/injectivity.spthy
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.037805045s
+  processing time: 0.077110214s
   injectivity_check (all-traces): verified (9 steps)
 
 ------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.037805045s
+  processing time: 0.077110214s
   injectivity_check (all-traces): verified (9 steps)
 
 ==============================================================================

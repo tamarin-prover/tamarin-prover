@@ -23,6 +23,9 @@ module Theory.Text.Parser.Token (
   -- ** Formal comments
   , formalComment
 
+  -- ** File Path
+  , filePath
+
   -- * Identifiers and Variables
   , identifier
   , indexedIdentifier
@@ -94,20 +97,35 @@ module Theory.Text.Parser.Token (
   , commaSep1
   , list
 
+  -- * Parsing State
+  , ParserState(..)
+  , mkStateSig
+  , modifyStateSig
+  , modifyStateFlag
+
     -- * Basic Parsing
   , Parser
   , parseFile
+  , parseFileWState
   , parseString
   ) where
 
 import           Prelude             hiding (id, (.))
 
 import           Data.Foldable       (asum)
+-- import           Data.Label
+-- import           Data.Binary
 import           Data.List (foldl')
+-- import           Control.DeepSeq
+import qualified Data.Set                   as S
+
+-- import           GHC.Generics                        (Generic)
 
 import           Control.Applicative hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
+
+import           System.FilePath
 
 import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
@@ -121,15 +139,42 @@ import Data.Functor.Identity
 -- Parser
 ------------------------------------------------------------------------------
 
+data ParserState = PState
+       { sig  :: MaudeSig              -- Current signature
+       , flags ::  S.Set String        -- Defined flags for pre-processing
+       }
+       deriving( Eq, Ord, Show )
+
+-- | A monoid instance to combine parser signatures.
+instance Semigroup ParserState where
+ PState sig1 flags1 <> PState sig2 flags2 =
+   PState (sig1 <> sig2) (flags1 `S.union` flags2)
+
+instance Monoid ParserState where
+  mempty = PState {sig=mempty, flags = S.empty}
+
+mkStateSig :: MaudeSig -> ParserState
+mkStateSig sign = mempty {sig=sign}
+
+modifyStateSig ::  Monad m => (MaudeSig -> MaudeSig) -> ParsecT s ParserState m ()
+modifyStateSig modifier = do
+   st <- getState
+   setState (st {sig = modifier $ sig st})
+
+modifyStateFlag ::  Monad m => (S.Set String -> S.Set String) -> ParsecT s ParserState m ()
+modifyStateFlag modifier = do
+   st <- getState
+   setState (st {flags = modifier $ flags st})
+
 -- | A parser for a stream of tokens.
-type Parser a = Parsec String MaudeSig a
+type Parser a = Parsec String ParserState a
 
 -- We can throw exceptions, but not catch them
-instance Catch.MonadThrow (ParsecT String MaudeSig Data.Functor.Identity.Identity) where
+instance Catch.MonadThrow (ParsecT String ParserState Data.Functor.Identity.Identity) where
     throwM e = fail (show e)
 
 -- Use Parsec's support for defining token parsers.
-spthy :: T.TokenParser MaudeSig
+spthy :: T.TokenParser ParserState
 spthy =
     T.makeTokenParser spthyStyle
   where
@@ -148,27 +193,41 @@ spthy =
       }
 
 -- | Run a parser on the contents of a file.
-parseFile :: Parser a -> FilePath -> IO a
-parseFile parser inFile = do
+parseFileWState :: ParserState -> Parser a -> FilePath -> IO a
+parseFileWState initState parser inFile = do
     inp <- readFile inFile
-    case parseString inFile parser inp of
+    case parseStringWState initState inFile parser inp of
         Right x  -> return x
         Left err -> error $ show err
 
 -- | Run a given parser on a given string.
-parseString :: FilePath
+parseStringWState :: ParserState
+            -> FilePath
             -- ^ Description of the source file. (For error reporting.)"
             -> Parser a
             -> String         -- ^ Input string.
             -> Either ParseError a
-parseString srcDesc parser =
-    runParser (T.whiteSpace spthy *> parser) pairMaudeSig srcDesc
+parseStringWState initState srcDesc parser =
+    runParser (T.whiteSpace spthy *> parser) initState srcDesc
                                            -- was "minimalMaudeSig" -> could lead to errors with parsing diff terms!
+
+-- | Run a given parser on a given string.
+parseString :: [String] -- flags
+            -> FilePath
+            -- ^ Description of the source file. (For error reporting.)"
+            -> Parser a
+            -> String         -- ^ Input string.
+            -> Either ParseError a
+parseString flags0 = parseStringWState $ mempty {sig=pairMaudeSig, flags=S.fromList flags0}
+
+parseFile :: [String] -> Parser a -> FilePath -> IO a
+parseFile flags0 = parseFileWState $ mempty {sig=pairMaudeSig, flags=S.fromList flags0}
+
 
 -- Token parsers
 ----------------
 
-lexeme :: ParsecT String MaudeSig Identity a -> ParsecT String MaudeSig Identity a
+lexeme :: ParsecT String ParserState Identity a -> ParsecT String ParserState Identity a
 lexeme = T.lexeme spthy
 
 -- | Parse a symbol.
@@ -233,15 +292,15 @@ naturalSubscript = T.lexeme spthy $ do
     subscriptDigitToInteger d = toInteger $ fromEnum d - fromEnum '₀'
 
 
--- | A comma separated list of elements.
+-- | A comma separated list of elements, optionally ended with a comma.
 commaSep :: Parser a -> Parser [a]
-commaSep = T.commaSep spthy
+commaSep = flip sepEndBy comma
 
--- | A comma separated non-empty list of elements.
+-- | A comma separated non-empty list of elements, optionally ended with a comma.
 commaSep1 :: Parser a -> Parser [a]
-commaSep1 = T.commaSep1 spthy
+commaSep1 = flip sepEndBy1 comma
 
--- | Parse a list of items '[' item ',' ... ',' item ']'
+-- | Parse a list of items '[' item ',' ... ',' item ']', or ended with ',]'
 list :: Parser a -> Parser [a]
 list = brackets . commaSep
 
@@ -471,3 +530,11 @@ opNDC = symbol_ "+"
 -- | Operator for 0-process (terminator of sequence)
 opNull :: Parser()
 opNull = symbol_ "0"
+
+
+-- File Path
+-- | Parse a file path, returned with the given prefix s
+filePath :: Parser FilePath
+filePath = many charDir
+  where
+    charDir = alphaNum <|> oneOf ("." <> [pathSeparator])

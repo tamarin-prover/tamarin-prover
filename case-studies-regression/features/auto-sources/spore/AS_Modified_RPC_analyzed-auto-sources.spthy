@@ -1810,7 +1810,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1820,7 +1820,7 @@ analyzing: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 analyzed: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Modified_RPC.spthy.tmp
-  processing time: 131.161118207s
+  processing time: 214.910524506s
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (9 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)
@@ -1837,7 +1837,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Modified_RPC.spthy.tmp
-  processing time: 131.161118207s
+  processing time: 214.910524506s
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (9 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

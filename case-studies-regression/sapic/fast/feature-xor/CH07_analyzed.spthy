@@ -219,7 +219,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           by solve( !KU( ~k ) @ #vk.3 )
         next
           case split_case_2
-          by contradiction /* from formulas */
+          by contradiction /* cyclic */
         next
           case split_case_3
           solve( splitEqs(4) )
@@ -251,36 +251,12 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_6
           solve( !KU( (~k⊕~r2⊕z) ) @ #vk.3 )
             case c_xor_case_1
-            solve( !KU( (~k⊕z) ) @ #vk.6 )
-              case c_xor
-              solve( !KU( ~r2 ) @ #vk.7 )
-                case outrlhhkrrrotidhkrr_0_1111211111
-                by contradiction /* cyclic */
-              qed
-            next
-              case coerce
-              solve( !KD( (~k⊕z) ) ▶₀ #vk.3 )
-                case outr_0_1111111
-                by contradiction /* impossible chain */
-              next
-                case outrhhkrrrotidhkrr_0_11111111111111
-                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-              next
-                case outrlhhkrrrotidhkrr_0_1111211111
-                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.38, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
+            by contradiction /* cyclic */
           next
             case c_xor_case_2
             solve( !KU( (~r2⊕z) ) @ #vk.6 )
               case c_xor
-              by solve( !KU( ~k ) @ #vk.7 )
+              by contradiction /* cyclic */
             next
               case coerce
               solve( !KD( (~r2⊕z) ) ▶₀ #vk.3 )
@@ -304,10 +280,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
             case c_xor_case_3
             solve( !KU( (~k⊕~r2) ) @ #vk.7 )
               case c_xor
-              solve( !KU( ~r2 ) @ #vk.8 )
-                case outrlhhkrrrotidhkrr_0_1111211111
-                by contradiction /* cyclic */
-              qed
+              by contradiction /* cyclic */
             next
               case coerce
               solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 )
@@ -352,10 +325,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
             case split
             solve( !KU( (~r2⊕x) ) @ #vk.3 )
               case c_xor
-              solve( !KU( ~r2 ) @ #vk.7 )
-                case outrlhhkrrrotidhkrr_0_1111211111
-                by contradiction /* cyclic */
-              qed
+              by contradiction /* cyclic */
             next
               case coerce
               solve( !KD( (~r2⊕x) ) ▶₀ #vk.2 )
@@ -459,7 +429,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         by solve( !KU( ~k ) @ #vk.2 )
       next
         case split_case_2
-        by contradiction /* from formulas */
+        by contradiction /* cyclic */
       next
         case split_case_3
         solve( splitEqs(3) )
@@ -1392,7 +1362,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1402,10 +1372,10 @@ analyzing: examples/sapic/fast/feature-xor/CH07.spthy
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 7.815719898s
+  processing time: 8.650198134s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (87 steps)
+  noninjectiveagreement_tag (all-traces): verified (77 steps)
   noninjectiveagreement_reader (all-traces): verified (77 steps)
   executable (exists-trace): verified (11 steps)
 
@@ -1417,10 +1387,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 7.815719898s
+  processing time: 8.650198134s
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (87 steps)
+  noninjectiveagreement_tag (all-traces): verified (77 steps)
   noninjectiveagreement_reader (all-traces): verified (77 steps)
   executable (exists-trace): verified (11 steps)
 

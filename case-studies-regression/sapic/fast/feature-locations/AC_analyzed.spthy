@@ -1039,7 +1039,7 @@ restriction locking_1:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1049,7 +1049,7 @@ analyzing: examples/sapic/fast/feature-locations/AC.spthy
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 5.842934502s
+  processing time: 7.405606817s
   attested_comput (all-traces): verified (184 steps)
 
 ------------------------------------------------------------------------------
@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 5.842934502s
+  processing time: 7.405606817s
   attested_comput (all-traces): verified (184 steps)
 
 ==============================================================================

@@ -40,7 +40,7 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
-import Theory.Sapic ( AnProcess(ProcessNull) )
+
 
 
 -- | Parse a "(modulo ..)" information.
@@ -81,7 +81,7 @@ ruleAttribute = asum
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
     parseAndIgnore = do
                         _ <-  symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\"")) 
+                        _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
 
 ruleAttributesp :: Parser [RuleAttribute]
@@ -190,5 +190,5 @@ addFacts cmd =
 parseIntruderRules
     :: MaudeSig -> String -> B.ByteString -> Either ParseError [IntrRuleAC]
 parseIntruderRules msig ctxtDesc =
-    parseString ctxtDesc (setState msig >> many intrRule)
+    parseString [] ctxtDesc (setState (mkStateSig msig) >> many intrRule)
   . T.unpack . TE.decodeUtf8
