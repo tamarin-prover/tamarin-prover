@@ -22,8 +22,6 @@ jobs:
       - name: Pre-install
         run: |
           mkdir -p ~/.local/bin
-          export PATH=$HOME/.local/bin:$PATH
-#          curl -sSL https://get.haskellstack.org/ | sh
       - name: Compilation
         run: |
           stack --no-terminal build mwc-random SHA -j 1
