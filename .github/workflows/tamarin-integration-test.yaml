@@ -19,18 +19,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install camlp4 graphviz libgmp-dev ocaml opam
-      - name: Pre-install
-        run: |
-#          mkdir -p ~/.local/bin
-          export PATH=$HOME/.local/bin:$PATH
-#          curl -sSL https://get.haskellstack.org/ | sh
-          curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-          chmod a+x ~/.local/bin/stack
-          stack --no-terminal setup
-          curl -L https://github.com/tamarin-prover/tamarin-prover/releases/download/1.6.0/Maude-2.7.1-linux.zip > maude.zip
-          unzip -o maude.zip -d ~/.local/bin/
-          mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
-          chmod a+x ~/.local/bin/maude
       - name: Compilation
         run: |
           stack --no-terminal build mwc-random SHA -j 1
