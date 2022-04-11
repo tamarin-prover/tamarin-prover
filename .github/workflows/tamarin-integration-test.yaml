@@ -15,21 +15,3 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      - name: Installation of dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install camlp4 graphviz libgmp-dev ocaml opam
-      - name: Compilation
-        run: |
-          stack --no-terminal build mwc-random SHA -j 1
-          stack --no-terminal install
-        # SAPIC
-        # opam init
-        # eval `opam config env`
-          stack install
-        # make -C plugins/sapic
-      - name: Regression tests
-        run: |
-          tamarin-prover test
-        # make sapic-case-studies
-          python3 regressionTests.py -noi
